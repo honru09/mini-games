@@ -27,7 +27,10 @@ const CORS = {
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
   'Access-Control-Max-Age': '86400',
 };
-const GAME_NAMES = { tictactoe: '井字棋', gomoku: '五子棋', ludo: '飞行棋', monopoly: '大富翁', checker: '弹珠跳棋' };
+const GAME_NAMES = {
+  tictactoe: '井字棋', gomoku: '五子棋', ludo: '飞行棋', monopoly: '大富翁', checker: '弹珠跳棋',
+  tank: '坦克大战', snake: '贪吃蛇', tetris: '俄罗斯方块', draughts: '跳棋', jungle: '斗兽棋', xiangqi: '象棋',
+};
 
 function buildAIPrompt(game, state, options){
   const name = GAME_NAMES[game] || game || '棋牌游戏';
@@ -136,6 +139,12 @@ const server = http.createServer((req, res) => {
     handleAI(req, res);
     return;
   }
+  if (req.method === 'GET' && urlPath === '/api/ip'){
+    res.writeHead(200, { ...CORS, 'Content-Type': 'application/json' });
+    const fwd = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim();
+    res.end(JSON.stringify({ ip: fwd || req.socket.remoteAddress || '' }));
+    return;
+  }
   let file = path.normalize(path.join(PUBLIC, urlPath === '/' ? 'index.html' : urlPath));
   if (!file.startsWith(PUBLIC)) {
     res.writeHead(403);
@@ -158,8 +167,8 @@ const WS_GUID = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11';
 const rooms = new Map(); // roomId -> { host, clients: Map<ws, player>, game }
 const sessions = new Set();
 const pendingInvites = new Map(); // toUid -> [{fromUid, fromName, room, game}]
-const GAME_MAX = { tictactoe: 2, gomoku: 2, ludo: 4, monopoly: 5, checker: 5 };
-const GAME_MIN = { tictactoe: 2, gomoku: 2, ludo: 2, monopoly: 2, checker: 2 };
+const GAME_MAX = { tictactoe: 2, gomoku: 2, ludo: 4, monopoly: 5, checker: 5, tank: 2, snake: 4, tetris: 4, draughts: 2, jungle: 2, xiangqi: 2 };
+const GAME_MIN = { tictactoe: 2, gomoku: 2, ludo: 2, monopoly: 2, checker: 2, tank: 2, snake: 2, tetris: 2, draughts: 2, jungle: 2, xiangqi: 2 };
 
 /* ---------------- Supabase 数据库（可选，配置环境变量后启用） ---------------- */
 const SUPABASE_URL = (process.env.SUPABASE_URL || '').replace(/\/+$/, '');
@@ -181,10 +190,15 @@ async function sbFetch(path, options = {}){
 async function sbLoadProfiles(){
   if (!useSupabase) return;
   try {
-    const rows = await sbFetch('profiles?select=uid,name,avatar,coins,played,total&order=coins.desc&limit=5000');
+    const rows = await sbFetch('profiles?select=uid,name,avatar,coins,played,total,background,frame,effect,owned,pin_hash&order=coins.desc&limit=5000');
     const users = {};
     for (const r of rows){
-      users[r.uid] = { name: r.name, avatar: r.avatar, coins: r.coins || 0, played: r.played || {}, total: r.total || 0 };
+      users[r.uid] = {
+        name: r.name, avatar: r.avatar, coins: r.coins || 0, played: r.played || {}, total: r.total || 0,
+        background: r.background || 0, frame: r.frame || 0, effect: r.effect || 0,
+        owned: r.owned || { avatars: [], frames: [], effects: [], backgrounds: [] },
+        pin_hash: r.pin_hash || null,
+      };
     }
     db.users = users;
     console.log('已从 Supabase 加载 ' + Object.keys(users).length + ' 位玩家');
@@ -198,7 +212,13 @@ async function sbSyncProfile(u){
     await sbFetch('profiles?on_conflict=uid', {
       method: 'POST',
       headers: { Prefer: 'resolution=merge-duplicates' },
-      body: JSON.stringify({ uid: u.uid, name: u.name, avatar: u.avatar, coins: u.coins, played: u.played, total: u.total, updated_at: new Date().toISOString() }),
+      body: JSON.stringify({
+        uid: u.uid, name: u.name, avatar: u.avatar, coins: u.coins, played: u.played, total: u.total,
+        background: u.background || 0, frame: u.frame || 0, effect: u.effect || 0,
+        owned: u.owned || { avatars: [], frames: [], effects: [], backgrounds: [] },
+        pin_hash: u.pin_hash || null,
+        updated_at: new Date().toISOString(),
+      }),
     });
   } catch (e) { console.error('Supabase 同步档案失败:', e.message); }
 }
@@ -240,7 +260,12 @@ function leaderboardPayload(){
   const list = Object.keys(db.users)
     .map(uid => {
       const u = db.users[uid];
-      return { uid, name: u.name, avatar: u.avatar, coins: u.coins || 0, played: u.played || {}, total: u.total || 0, online: onlineUids.has(uid) };
+      return {
+        uid, name: u.name, avatar: u.avatar,
+        background: u.background || 0, frame: u.frame || 0, effect: u.effect || 0,
+        owned: u.owned || { avatars: [], frames: [], effects: [], backgrounds: [] },
+        coins: u.coins || 0, played: u.played || {}, total: u.total || 0, online: onlineUids.has(uid),
+      };
     })
     .sort((a, b) => (b.coins - a.coins) || (b.total - a.total) || String(a.name).localeCompare(String(b.name)))
     .slice(0, 200);
@@ -294,6 +319,32 @@ function genCode(){
   let s = '';
   for (let i = 0; i < 6; i++) s += chars[Math.floor(Math.random() * chars.length)];
   return s;
+}
+function genUid(){
+  return 'u_' + crypto.randomBytes(6).toString('hex');
+}
+function hashPin(pin){
+  return crypto.createHash('sha256').update('mg-pin:' + String(pin).trim().toLowerCase()).digest('hex');
+}
+function validPin(pin){
+  return /^[A-Za-z0-9]{4,20}$/.test(String(pin).trim());
+}
+function profileObj(u){
+  return {
+    uid: u.uid, name: u.name, avatar: u.avatar,
+    background: u.background || 0, frame: u.frame || 0, effect: u.effect || 0,
+    owned: u.owned || { avatars: [], frames: [], effects: [], backgrounds: [] },
+    coins: u.coins || 0, played: u.played || {}, total: u.total || 0,
+  };
+}
+function normalizeOwned(o){
+  const base = { avatars: [], frames: [], effects: [], backgrounds: [] };
+  if (o && typeof o === 'object'){
+    for (const k of Object.keys(base)){
+      if (Array.isArray(o[k])) base[k] = o[k].map(Number).filter(Number.isInteger).slice(0, 500);
+    }
+  }
+  return base;
 }
 function sendFrame(socket, opcode, payload){
   const data = Buffer.isBuffer(payload) ? payload : Buffer.from(payload || '');
@@ -384,17 +435,78 @@ class Session {
       }
       return;
     }
+    if (type === 'register'){
+      const pin = String((payload && payload.pin) || '').trim();
+      if (!validPin(pin)){
+        this.sendText(JSON.stringify({ type: 'auth_error', msg: 'PIN 只能使用字母和数字，长度 4-20 位' }));
+        return;
+      }
+      const ph = hashPin(pin);
+      if (Object.values(db.users).some(u => u.pin_hash === ph)){
+        this.sendText(JSON.stringify({ type: 'auth_error', msg: '该 PIN 已被其他玩家使用，请换一个' }));
+        return;
+      }
+      const proposed = String((payload && payload.uid) || '');
+      const uid = /^u_[a-z0-9]{6,32}$/.test(proposed) ? proposed : genUid();
+      const name = String((payload && payload.name) || '').trim().slice(0, 12) || '玩家';
+      const avatar = Number.isInteger(payload && payload.avatar) ? Math.max(0, Math.min(27, payload.avatar)) : 0;
+      const u = {
+        uid, name, avatar,
+        background: Number.isInteger(payload && payload.background) ? Math.max(0, Math.min(12, payload.background)) : 0,
+        frame: Number.isInteger(payload && payload.frame) ? Math.max(0, Math.min(12, payload.frame)) : 0,
+        effect: Number.isInteger(payload && payload.effect) ? Math.max(0, Math.min(12, payload.effect)) : 0,
+        owned: normalizeOwned(payload && payload.owned),
+        coins: 0, played: {}, total: 0, pin_hash: ph, created_at: Date.now(),
+      };
+      db.users[uid] = u;
+      saveDB();
+      sbSyncProfile(u);
+      this.uid = uid;
+      this.sendText(JSON.stringify({ type: 'registered', payload: { uid, profile: profileObj(u) } }));
+      broadcastLeaderboard();
+      broadcastLobby();
+      return;
+    }
+    if (type === 'login'){
+      const pin = String((payload && payload.pin) || '').trim();
+      if (!validPin(pin)){
+        this.sendText(JSON.stringify({ type: 'auth_error', msg: 'PIN 只能使用字母和数字，长度 4-20 位' }));
+        return;
+      }
+      const ph = hashPin(pin);
+      const u = Object.values(db.users).find(x => x.pin_hash === ph);
+      if (!u){
+        this.sendText(JSON.stringify({ type: 'auth_error', msg: 'PIN 不存在，请检查后重试' }));
+        return;
+      }
+      this.uid = u.uid;
+      this.sendText(JSON.stringify({ type: 'logged_in', payload: { uid: u.uid, profile: profileObj(u) } }));
+      broadcastLeaderboard();
+      broadcastLobby();
+      return;
+    }
+    if (type === 'profile_get'){
+      const uid = String((payload && payload.uid) || '');
+      const u = uid && db.users[uid];
+      this.sendText(JSON.stringify({ type: 'profile_data', payload: u ? profileObj(u) : null }));
+      return;
+    }
     if (type === 'profile'){
       const uid = payload && payload.uid;
       const name = String(payload && payload.name || '').trim().slice(0, 12) || '玩家';
       if (!uid) return;
-      const avatar = Number.isInteger(payload.avatar) ? Math.max(0, Math.min(19, payload.avatar)) : 0;
+      const avatar = Number.isInteger(payload.avatar) ? Math.max(0, Math.min(27, payload.avatar)) : 0;
       const u = db.users[uid] || (db.users[uid] = { name, avatar, coins: 0, played: {}, total: 0 });
       u.name = name;
       u.avatar = avatar;
+      if (payload.background !== undefined) u.background = Number.isInteger(payload.background) ? Math.max(0, Math.min(12, payload.background)) : (u.background || 0);
+      if (payload.frame !== undefined) u.frame = Number.isInteger(payload.frame) ? Math.max(0, Math.min(12, payload.frame)) : (u.frame || 0);
+      if (payload.effect !== undefined) u.effect = Number.isInteger(payload.effect) ? Math.max(0, Math.min(12, payload.effect)) : (u.effect || 0);
+      if (payload.owned) u.owned = normalizeOwned(payload.owned);
+      if (payload.pin_hash) u.pin_hash = String(payload.pin_hash);
       saveDB();
       sbSyncProfile(u);
-      this.sendText(JSON.stringify({ type: 'profile_ok', payload: { uid, name: u.name, avatar: u.avatar, coins: u.coins, played: u.played, total: u.total } }));
+      this.sendText(JSON.stringify({ type: 'profile_ok', payload: profileObj(u) }));
       broadcastLeaderboard();
       return;
     }

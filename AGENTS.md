@@ -5,9 +5,12 @@
 
 ## 1. 项目一句话
 
-网页版多人小游戏合集：井字棋、五子棋、飞行棋、迷你大富翁、弹珠跳棋。
+网页版多人小游戏合集：井字棋、五子棋、飞行棋、迷你大富翁、弹珠跳棋、
+坦克大战、贪吃蛇、俄罗斯方块、国际跳棋、斗兽棋、象棋，共 11 款。
 支持三种玩法：**本地热座**（2-5 人一台设备）、**人机对战**（DeepSeek AI 对手）、
 **联机对战**（WebSocket 房间 + 游戏大厅 + 邀请 + 在线状态 + 全球排行榜）。
+另含 **PIN 账号体系**（唯一账号、设备识别、换机登录）与 **$ 货币商城**
+（头像 / 头像框 / 动态效果 / 背景）。
 
 ## 2. 线上地址与仓库
 
@@ -22,8 +25,8 @@
 mini-games-online/
 ├── AGENTS.md            # 本文件（新窗口/新机器的入口）
 ├── README.md            # 用户向说明：玩法、部署、消息协议
-├── public/index.html    # 整个前端（单文件：HTML+CSS+JS，约 2500+ 行）
-│                         # 包含：5 款游戏逻辑、联机客户端、AI 客户端、主题/UI
+├── public/index.html    # 整个前端（单文件：HTML+CSS+JS，约 5000+ 行）
+│                         # 包含：11 款游戏逻辑、联机客户端、AI 客户端、主题/UI、账号/商城
 ├── server/index.js      # 零依赖 Node 服务（约 600 行）
 │                         # 静态文件 + 手写 WebSocket(/ws) + /api/ai DeepSeek 代理 + Supabase 可选持久化
 ├── scripts/             # 运维脚本（不进游戏逻辑）
@@ -32,8 +35,9 @@ mini-games-online/
 │   ├── render-deploy.js # 手动触发 Render 部署（API 建的服务无 webhook，推送后必须手动触发）
 │   └── ws-live-test.js  # 线上 WebSocket 冒烟（2 人局 + 多人局 + 结束切游戏）
 ├── qa/                  # 测试（DOM 桩，无需真实浏览器）
-│   ├── dom-smoke.js     # 前端冒烟：5 游戏各人数初始化/结算/档案/人机
-│   └── e2e-online.js    # 端到端联机：真实 server + 多客户端，覆盖 2 人/3 人/4 人房间
+│   ├── dom-smoke.js     # 前端冒烟：11 款游戏各人数初始化/结算/账号/人机
+│   ├── e2e-online.js    # 端到端联机：真实 server + 多客户端，覆盖 2 人/3 人/4 人房间
+│   └── ws-close-test.js # WS 断开最小复现（guest 断开 host 收到 peer_left）
 ├── supabase/schema.sql  # 数据库建表（profiles / history）+ 常用管理查询
 ├── render.yaml          # Render Blueprint（备用，实际服务已用 API 创建）
 ├── package.json         # 零依赖，scripts.start = node server/index.js
@@ -48,7 +52,7 @@ node server/index.js            # 打开 http://localhost:8080
 
 # 2) 测试（先装依赖？不需要，零依赖）
 node qa/dom-smoke.js            # 前端冒烟，约 15 秒，预期 ALL_PASS
-node qa/e2e-online.js           # 联机 E2E，约 60-90 秒，预期 E2E_ALL_PASS
+node --experimental-websocket qa/e2e-online.js   # Node 20 需此开关（Node 21+ 可直接跑）
 
 # 3) 本地调试 AI（可选）
 $env:DEEPSEEK_KEY='sk-...'      # Windows PowerShell
@@ -93,8 +97,21 @@ node server/index.js
 - 骰子类游戏（飞行棋/大富翁）AI 掷骰是本地随机，AI API 只做“选子/买地”等决策。
 - DeepSeek Key 只存在服务端环境变量 `DEEPSEEK_KEY`，绝不能写进前端或仓库。
 
+### 账号与 PIN（重要）
+- 本机不自动建档：首次进入会弹「创建账号」——填昵称、选头像/背景、设 PIN（4-20 位仅字母数字）。
+- mg_account（localStorage）保存账号；deviceFingerprint() 用 UA/语言/屏幕/时区/平台生成设备指纹，
+  同一设备刷新自动登录（不重建 uid）；换设备时用 PIN 登录（loginAccount），服务端按 pin_hash 校验唯一性。
+- 服务端消息：register（PIN 唯一性校验）/ login / profile_get / profile（个人化字段）/ result（$ 结算）。
+- 商城数据（owned / background / frame / effect / 头像 20-27）随 profile 同步到服务端。
+
+### 货币与商城
+- 币种显示为 $（内部字段仍叫 coins，胜者 +1 $，平/负 0）。
+- 商城 openShop()：头像（基础 0-19 免费 + 商城 20-27）、头像框、动态效果、背景，购买后写入 owned。
+- 点击任意玩家头像（排行榜/玩家列表/大厅/自己的档案）会弹出详情小框 openProfileModal。
+
 ### UI
 - 主题：`html[data-theme="dark"]` 变量切换（`initTheme`/`applyTheme`，localStorage `mg_theme`）。
+- 大厅为双栏布局：主栏（模式/人数/联机/游戏卡）+ 侧栏（大厅/排行榜/玩家列表）。
 - 毛玻璃：CSS 变量 `--card` 半透明 + `backdrop-filter`；深色主题覆盖在 CSS 末尾。
 - 3D 骰子：`makeDice3D(size, sm)` 返回 `{wrap, die, roll, reset}`，飞行棋/大富翁在用。
 - 开局倒计时：`runCountdown()` 在 board-area 上盖 3-2-1 遮罩（联机开局/重开时）。
@@ -128,6 +145,10 @@ node scripts/render-env.js
 - GitHub PAT、Render API Key、DeepSeek Key 都曾出现在对话里，**建议用户轮换**。
 - 本文件与仓库内**不允许出现任何明文 token**；要用时向用户索要。
 
+### Node 版本注意
+- 本机 Node v20 没有全局 WebSocket 客户端：跑联机 E2E / WS 调试脚本需加 `--experimental-websocket`。
+- Node 21+ 可直接 `node qa/e2e-online.js`。若换机器建议直接装 Node 22 LTS。
+
 ## 7. 项目历程（为什么是这样）
 
 - 最初：用户要求 2-5 人小游戏网页版 → 5 款游戏本地热座（单文件 index.html）。
@@ -137,13 +158,18 @@ node scripts/render-env.js
   房间内「结束本局」切换游戏、不满人数开局。
 - 部署：GitHub Pages（前端）+ Render（后端）；Supabase 表结构已备好但**尚未接入**
   （用户要求“先游戏完美运行，再接入数据库”）。
+- 2026-08：新增 6 款游戏（坦克大战/贪吃蛇/俄罗斯方块/国际跳棋/斗兽棋/象棋）、PIN 账号体系、
+  $ 货币商城（头像/头像框/背景/特效）、点击头像查看他人档案、双栏大厅、AI 智能化
+  （井字棋 minimax 永不胜、五子棋启发式、飞行棋/大富翁/跳棋启发式）。
 
 ## 8. 当前状态与待办
 
-✅ 已完成：5 游戏三模式、联机大厅/邀请/在线状态/排行榜、人机 AI、主题/UI、多人局与切游戏。
+✅ 已完成：11 款游戏三模式、联机大厅/邀请/在线状态/排行榜、人机 AI、主题/UI、多人局与切游戏、
+  PIN 账号体系、$ 货币商城、点击头像查看档案、双栏大厅。
 
 ⏳ 待办：
-1. **接入 Supabase**：等用户提供 Project URL + anon key → `scripts/render-env.js` 写入 → 触发部署。
+1. **接入 Supabase**：代码与 `supabase/schema.sql`（含 pin_hash/个人化字段）已就绪，
+   只等用户提供 Project URL + anon key → `scripts/render-env.js` 写入 → 触发部署。
    （目前排行榜数据在 Render 实例的临时磁盘 `data/leaderboard.json`，实例重启会丢。）
 2. 可选：给 Render 挂 GitHub webhook，让推代码自动部署后端。
 3. 可选：用户提示过的“换电脑后 token 轮换”。
@@ -154,6 +180,6 @@ node scripts/render-env.js
 
 - 先读本文件 + `README.md` + `server/index.js` 的 handleMessage + `public/index.html` 的
   `online` 对象与 5 个 `game*` 函数，再动手。
-- 改前端后跑 `node qa/dom-smoke.js`；改联机逻辑后跑 `node qa/e2e-online.js`，全绿再推。
+- 改前端后跑 `node qa/dom-smoke.js`；改联机逻辑后跑 `node --experimental-websocket qa/e2e-online.js`，全绿再推。
 - e2e 用例顺序敏感、对状态文案有断言，改 `setStatus`/`renderRoomPanel` 文案时同步更新断言。
 - 测试会在仓库根生成 `qa/e2e-run.log`（已被 .gitignore 忽略，勿提交）。

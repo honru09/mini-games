@@ -147,6 +147,11 @@ function makeEnv(label, hash){
   sandbox.window.window = sandbox.window;
   const context = vm.createContext(sandbox);
   vm.runInContext(script, context, { filename: label + '.js' });
+  // PIN 账号系统：每个测试环境注册一个唯一账号（本地立即生效，连接后同步到服务端）
+  try {
+    const pin = 'pin' + label.replace(/[^A-Za-z0-9]/g, '').slice(0, 10);
+    context.window.__gameInfo.registerAccount('测试' + label, pin, 0, 0);
+  } catch {}
   return {
     label,
     context,
@@ -430,8 +435,13 @@ async function main(){
       const btns = host.$('player-list').querySelectorAll('button').filter(b => b.textContent === '邀请');
       return btns.length >= 1;
     }, '玩家列表出现邀请按钮', 4000);
-    const invBtns = host.$('player-list').querySelectorAll('button').filter(b => b.textContent === '邀请');
-    invBtns[invBtns.length - 1].dispatch('click');
+    const invUid = invitee.info().deviceUid;
+    const invRow = host.$('player-list').children.find(row => {
+      return !!row.querySelector('[data-uid="' + invUid + '"]');
+    });
+    const invBtn = invRow && invRow.children.find(b => b.textContent === '邀请');
+    if (!invBtn) throw new Error('未找到 guest-inv 的邀请按钮');
+    invBtn.dispatch('click');
     await waitFor(invitee, () => btnByText(invitee.context.document.body, '接受') !== null, '受邀者收到邀请弹窗', 4000);
     const acceptBtn = btnByText(invitee.context.document.body, '接受');
     acceptBtn.dispatch('click');

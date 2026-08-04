@@ -34,10 +34,20 @@ html[data-theme="dark"] body::before{background:radial-gradient(circle, rgba(79,
 html[data-theme="dark"] body::after{background:radial-gradient(circle, rgba(160,100,255,.20), transparent 62%)}
 button{font-family:inherit; cursor:pointer}
 .hidden{display:none !important}
-#app{max-width:900px; margin:0 auto; padding:20px 16px 40px}
-.app-header{position:relative; text-align:center; margin-bottom:20px}
-.app-header h1{margin:0; font-size:28px; letter-spacing:.5px; background:linear-gradient(120deg,var(--primary),#8b5cf6); -webkit-background-clip:text; background-clip:text; color:transparent}
-.theme-btn{position:absolute; top:2px; right:2px; font-size:19px; padding:6px 11px; border-radius:99px; background:var(--card); border:1px solid var(--border)}
+#app{max-width:1080px; margin:0 auto; padding:18px 16px 40px}
+.app-header{display:flex; align-items:center; justify-content:space-between; margin-bottom:18px}
+.brand{display:flex; align-items:center; gap:8px; font-size:17px; font-weight:700; letter-spacing:.4px}
+.brand .brand-icon{font-size:24px}
+.brand .brand-tag{font-size:12px; color:var(--muted); font-weight:500; letter-spacing:.6px}
+.theme-btn{font-size:19px; padding:6px 11px; border-radius:99px; background:var(--card); border:1px solid var(--border)}
+
+/* 大厅双栏布局 */
+.hub-grid{display:grid; grid-template-columns:minmax(0,1fr) 330px; gap:16px; align-items:start}
+.hub-main{display:flex; flex-direction:column; gap:14px; min-width:0}
+.hub-side{display:flex; flex-direction:column; gap:14px; min-width:0}
+@media (max-width: 880px){
+  .hub-grid{grid-template-columns:1fr}
+}
 
 /* 通用按钮 */
 .btn{
@@ -400,6 +410,134 @@ canvas.board-canvas{width:100%; max-width:560px; display:block; border-radius:12
 }
 @keyframes toastIn{from{opacity:0; transform:translateY(8px)}to{opacity:1; transform:none}}
 
+/* ============ 账号 / 个人化 ============ */
+.auth-hero{
+  border-radius:14px; padding:26px 22px; text-align:center; margin-bottom:14px;
+  background:linear-gradient(135deg, rgba(79,110,247,.16), rgba(139,92,246,.18));
+  border:1px solid var(--border);
+}
+.auth-hero .big{font-size:40px; line-height:1; margin-bottom:8px}
+.auth-hero h2{margin:0 0 4px; font-size:19px}
+.auth-hero p{margin:0; font-size:12.5px; color:var(--muted)}
+.auth-avatar-wrap{display:flex; justify-content:center; margin:12px 0}
+.avatar-stage{position:relative; width:84px; height:84px}
+.avatar-stage canvas{position:relative; z-index:2; display:block; border-radius:50%}
+.avatar-stage .frame-ring{
+  position:absolute; inset:-7px; border-radius:50%; z-index:1; pointer-events:none;
+  border:3px solid transparent; background-clip:padding-box;
+}
+.avatar-stage .frame-ring.frame-1{border-color:linear-gradient(135deg,#f6d365,#fda085)}
+.avatar-stage .frame-ring.frame-1{border-color:#e8b63a; box-shadow:0 0 14px rgba(232,182,58,.75)}
+.avatar-stage .frame-ring.frame-2{border-color:#22d3ee; box-shadow:0 0 14px rgba(34,211,238,.85)}
+.avatar-stage .frame-ring.frame-3{border-color:#a78bfa; box-shadow:0 0 14px rgba(167,139,250,.9)}
+.avatar-stage .frame-ring.frame-4{box-shadow:0 0 0 3px #fff, 0 0 18px rgba(244,63,94,.9)}
+.avatar-stage.effect-1 canvas{animation:fxPulse 2s ease-in-out infinite}
+.avatar-stage.effect-2 canvas{animation:fxTwinkle 1.8s ease-in-out infinite}
+.avatar-stage.effect-3{animation:fxFloat 3s ease-in-out infinite}
+.avatar-stage.effect-4{animation:fxSpin 6s linear infinite}
+.avatar-stage.effect-4 .frame-ring{animation:none}
+@keyframes fxPulse{0%,100%{box-shadow:0 0 0 0 rgba(79,110,247,.55)}50%{box-shadow:0 0 0 12px rgba(79,110,247,0)}}
+@keyframes fxTwinkle{0%,100%{filter:brightness(1)}50%{filter:brightness(1.35) saturate(1.3)}}
+@keyframes fxFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes fxSpin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+.mini-avatar-stage{position:relative; display:inline-flex; align-items:center; justify-content:center; flex:none}
+.mini-avatar-stage canvas{position:relative; z-index:2; border-radius:50%; display:block}
+.mini-avatar-stage .frame-ring{
+  position:absolute; inset:-4px; border-radius:50%; z-index:1; pointer-events:none; border:2px solid transparent;
+}
+.mini-avatar-stage .frame-ring.frame-1{border-color:#e8b63a; box-shadow:0 0 8px rgba(232,182,58,.7)}
+.mini-avatar-stage .frame-ring.frame-2{border-color:#22d3ee; box-shadow:0 0 8px rgba(34,211,238,.8)}
+.mini-avatar-stage .frame-ring.frame-3{border-color:#a78bfa; box-shadow:0 0 8px rgba(167,139,250,.85)}
+.mini-avatar-stage .frame-ring.frame-4{box-shadow:0 0 0 2px #fff, 0 0 10px rgba(244,63,94,.85)}
+.mini-avatar-stage.effect-1 canvas{animation:fxPulseMini 2s ease-in-out infinite}
+.mini-avatar-stage.effect-2 canvas{animation:fxTwinkle 1.8s ease-in-out infinite}
+.mini-avatar-stage.effect-3{animation:fxFloat 3s ease-in-out infinite}
+@keyframes fxPulseMini{0%,100%{box-shadow:0 0 0 0 rgba(79,110,247,.5)}50%{box-shadow:0 0 0 7px rgba(79,110,247,0)}}
+.profile-hero{
+  position:relative; border-radius:14px; padding:20px 18px 16px; text-align:center; overflow:hidden;
+  border:1px solid var(--border); margin-bottom:12px;
+}
+.profile-hero.bg-0{background:linear-gradient(135deg,#eef1f8,#dfe7fb)}
+.profile-hero.bg-1{background:linear-gradient(135deg,#ede9fe,#c4b5fd)}
+.profile-hero.bg-2{background:linear-gradient(135deg,#dbeafe,#93c5fd)}
+.profile-hero.bg-3{background:linear-gradient(135deg,#ffedd5,#fdba74)}
+.profile-hero.bg-4{background:linear-gradient(135deg,#dcfce7,#86efac)}
+.profile-hero.bg-5{background:linear-gradient(135deg,#fce7f3,#f9a8d4)}
+.profile-hero.bg-6{background:linear-gradient(135deg,#1e293b,#334155); color:#e2e8f0}
+.profile-hero .hero-avatar{display:flex; justify-content:center; margin-bottom:8px}
+.profile-hero .pname{font-size:18px; font-weight:700}
+.profile-hero .pmeta{font-size:12.5px; color:var(--muted); margin-top:3px}
+html[data-theme="dark"] .profile-hero.bg-6{border-color:rgba(148,163,198,.25)}
+.shop-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(104px,1fr)); gap:8px; margin:8px 0 12px}
+.shop-item{
+  border:1.5px solid var(--border); border-radius:12px; padding:10px 6px; text-align:center;
+  background:var(--card); display:flex; flex-direction:column; align-items:center; gap:5px; font-size:12px;
+}
+.shop-item:hover{border-color:var(--primary)}
+.shop-item .si-name{font-weight:600}
+.shop-item .si-price{color:var(--muted); font-size:11.5px}
+.shop-item.selected{border-color:var(--primary); background:rgba(79,110,247,.08)}
+.shop-item.owned{border-style:dashed}
+.shop-item button{padding:3px 10px; font-size:11.5px}
+.shop-tabs{display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px}
+.shop-tab{padding:5px 12px; font-size:12.5px; border-radius:99px}
+.bg-swatch{
+  width:38px; height:38px; border-radius:10px; border:2px solid var(--border); cursor:pointer;
+}
+.bg-swatch.selected{border-color:var(--primary); box-shadow:0 0 0 2px rgba(79,110,247,.35)}
+.bg-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(44px,1fr)); gap:8px; margin:8px 0 12px}
+.pin-hint{font-size:11.5px; color:var(--muted); margin-top:2px}
+.profile-links{display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin-top:10px}
+
+/* ============ 坦克大战 ============ */
+.tank-board{position:relative; background:var(--card); border:1px solid var(--border); border-radius:14px; box-shadow:var(--shadow)}
+.tank-cell{position:absolute; border-radius:4px; display:flex; align-items:center; justify-content:center; font-size:11px}
+.tank-cell.brick{background:repeating-linear-gradient(45deg,#c9885f,#c9885f 5px,#a96a45 5px,#a96a45 10px); border:1px solid #8a5133}
+.tank-cell.steel{background:linear-gradient(135deg,#cbd5e1,#94a3b8); border:1px solid #64748b}
+.tank-cell.base{background:rgba(79,110,247,.18); border:1px dashed var(--primary); font-size:15px}
+.tank-cell.tank0{background:#e5484d; border:2px solid #fff; box-shadow:0 2px 6px rgba(0,0,0,.3)}
+.tank-cell.tank1{background:#3b82f6; border:2px solid #fff; box-shadow:0 2px 6px rgba(0,0,0,.3)}
+.tank-cell .hp{position:absolute; bottom:-12px; font-size:9px; color:var(--muted); white-space:nowrap}
+.tank-actions{display:flex; gap:6px; justify-content:center; flex-wrap:wrap; margin-top:8px}
+.tank-actions button{min-width:42px}
+
+/* ============ 贪吃蛇 ============ */
+.snake-board{position:relative; background:var(--card); border:1px solid var(--border); border-radius:14px; box-shadow:var(--shadow)}
+.snake-cell{position:absolute; border-radius:3px}
+.snake-cell.head0,.snake-cell.head1,.snake-cell.head2,.snake-cell.head3{border-radius:5px}
+.snake-actions{display:flex; gap:6px; justify-content:center; flex-wrap:wrap; margin-top:8px}
+
+/* ============ 俄罗斯方块 ============ */
+.tetris-wrap{display:flex; gap:14px; justify-content:center; flex-wrap:wrap}
+.tetris-well{position:relative; background:#0f172a; border:2px solid var(--border); border-radius:8px; overflow:hidden}
+.tetris-cell{position:absolute; border-radius:2px}
+.tetris-cell.ghost{opacity:.28}
+.tetris-score{text-align:center; margin-bottom:6px; font-size:13px; color:var(--muted)}
+.tetris-actions{display:flex; gap:6px; justify-content:center; flex-wrap:wrap; margin-top:8px}
+
+/* ============ 国际跳棋 ============ */
+.drg-canvas{width:100%; max-width:560px; display:block; border-radius:12px; background:var(--card); border:1px solid var(--border)}
+
+/* ============ 斗兽棋 ============ */
+.jungle-board{position:relative; background:var(--card); border:1px solid var(--border); border-radius:14px; box-shadow:var(--shadow)}
+.j-cell{position:absolute; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:19px; cursor:pointer; transition:transform .08s ease}
+.j-cell:hover{transform:scale(1.08)}
+.j-cell.water{background:linear-gradient(180deg,#a5d8ff,#5cb0f0); box-shadow:inset 0 2px 6px rgba(0,0,0,.18)}
+.j-cell.trap{background:rgba(244,63,94,.18); box-shadow:inset 0 0 0 2px rgba(244,63,94,.5)}
+.j-cell.den{background:rgba(139,92,246,.22); box-shadow:inset 0 0 0 2px rgba(139,92,246,.55); font-size:22px}
+.j-cell.sel{outline:3px solid var(--primary); outline-offset:1px}
+.j-cell.king0{outline:2px solid #e5484d; outline-offset:1px}
+.j-cell.king1{outline:2px solid #3b82f6; outline-offset:1px}
+.j-cell .j-sub{position:absolute; bottom:1px; font-size:8px; color:var(--muted)}
+
+/* ============ 象棋 ============ */
+.xiangqi-wrap{display:flex; gap:14px; justify-content:center; flex-wrap:wrap}
+.xiangqi-board{position:relative; background:var(--card); border-radius:14px; box-shadow:var(--shadow); overflow:hidden}
+.xq-cell{position:absolute; display:flex; align-items:center; justify-content:center; font-size:21px; cursor:pointer; border-radius:6px}
+.xq-cell.sel{background:rgba(79,110,247,.18)}
+.xq-cell.legal{background:rgba(34,160,107,.18)}
+.xq-cell.last{box-shadow:inset 0 0 0 2px rgba(245,158,11,.8)}
+
 /* 深色主题下的硬编码浅色面 */
 html[data-theme="dark"] .lobby-row,
 html[data-theme="dark"] .roster-item,
@@ -422,65 +560,71 @@ html[data-theme="dark"] .online-dot{box-shadow:0 0 0 2px #1a2238}
 <body>
 <div id="app">
   <header class="app-header">
-    <h1>🎮 小游戏合集</h1>
+    <div class="brand"><span class="brand-icon">🎮</span><span>Playroom</span><span class="brand-tag">5+ 款小游戏 · 联机对战</span></div>
     <button type="button" class="btn theme-btn" id="btn-theme" title="切换黑夜/白昼主题">🌙</button>
   </header>
 
   <section id="screen-hub">
-    <div class="hub-meta">
-      <button type="button" class="me-chip" id="btn-me" title="点击编辑我的档案"></button>
-    </div>
-    <div class="slots-row" id="slots-row"></div>
-    <div class="room-panel hidden" id="room-panel">
-      <div class="room-head">
-        <h3>🚪 我的房间</h3>
-        <span class="room-code-big" id="room-code-big"></span>
-      </div>
-      <div class="room-info" id="room-info"></div>
-      <div class="room-status" id="room-status"></div>
-      <div class="room-actions" id="room-actions"></div>
-    </div>
-    <div class="hub-count">
-      <div class="mode-group" id="mode-group" role="group" aria-label="游戏模式">
-        <button type="button" class="btn count-btn" data-mode="local" aria-pressed="true">👥 本地热座</button>
-        <button type="button" class="btn count-btn" data-mode="ai" aria-pressed="false">🤖 人机对战</button>
-      </div>
-      <span class="hub-label" id="count-label">玩家人数</span>
-      <div class="count-group" id="count-group" role="group" aria-label="选择玩家人数">
-        <button type="button" class="btn count-btn" data-n="2" aria-pressed="true">2 人</button>
-        <button type="button" class="btn count-btn" data-n="3" aria-pressed="false">3 人</button>
-        <button type="button" class="btn count-btn" data-n="4" aria-pressed="false">4 人</button>
-        <button type="button" class="btn count-btn" data-n="5" aria-pressed="false">5 人</button>
-      </div>
-    </div>
-    <div class="online-panel">
-      <h3>🌐 联机对战（2-5 人 · 全部游戏）<button type="button" class="btn btn-ghost" id="btn-settings" style="float:right; padding:2px 8px">⚙ 设置</button></h3>
-      <div class="online-row">
-        <button type="button" class="btn btn-primary" id="btn-create-room">🎮 创建房间</button>
-      </div>
-      <div class="online-status" id="online-status">未连接</div>
-    </div>
-    <div class="lobby-panel" id="lobby-panel">
-      <h3>🎮 游戏大厅（等待中的房间）</h3>
-      <div class="lobby-list" id="lobby-list"></div>
-    </div>
-    <div class="game-grid" id="game-grid"></div>
-    <div class="lb-panel">
-      <div class="lb-head">
-        <h3>🏆 总排行榜</h3>
-        <div class="lb-tabs">
-          <button type="button" class="count-btn" id="lb-tab-all" aria-pressed="true">全部</button>
-          <button type="button" class="count-btn" id="lb-tab-online" aria-pressed="false">在线</button>
+    <div class="hub-grid">
+      <div class="hub-main">
+        <div class="hub-meta">
+          <button type="button" class="me-chip" id="btn-me" title="我的档案 / 登录"></button>
         </div>
+        <div class="slots-row" id="slots-row"></div>
+        <div class="room-panel hidden" id="room-panel">
+          <div class="room-head">
+            <h3>🚪 我的房间</h3>
+            <span class="room-code-big" id="room-code-big"></span>
+          </div>
+          <div class="room-info" id="room-info"></div>
+          <div class="room-status" id="room-status"></div>
+          <div class="room-actions" id="room-actions"></div>
+        </div>
+        <div class="hub-count">
+          <div class="mode-group" id="mode-group" role="group" aria-label="游戏模式">
+            <button type="button" class="btn count-btn" data-mode="local" aria-pressed="true">👥 本地热座</button>
+            <button type="button" class="btn count-btn" data-mode="ai" aria-pressed="false">🤖 人机对战</button>
+          </div>
+          <span class="hub-label" id="count-label">玩家人数</span>
+          <div class="count-group" id="count-group" role="group" aria-label="选择玩家人数">
+            <button type="button" class="btn count-btn" data-n="2" aria-pressed="true">2 人</button>
+            <button type="button" class="btn count-btn" data-n="3" aria-pressed="false">3 人</button>
+            <button type="button" class="btn count-btn" data-n="4" aria-pressed="false">4 人</button>
+            <button type="button" class="btn count-btn" data-n="5" aria-pressed="false">5 人</button>
+          </div>
+        </div>
+        <div class="online-panel">
+          <h3>🌐 联机对战（2-5 人 · 全部游戏）<button type="button" class="btn btn-ghost" id="btn-settings" style="float:right; padding:2px 8px">⚙ 设置</button></h3>
+          <div class="online-row">
+            <button type="button" class="btn btn-primary" id="btn-create-room">🎮 创建房间</button>
+          </div>
+          <div class="online-status" id="online-status">未连接</div>
+        </div>
+        <div class="game-grid" id="game-grid"></div>
       </div>
-      <div class="lb-list" id="lb-list"></div>
-      <div class="lb-note" id="lb-note"></div>
-    </div>
-    <div class="lb-panel">
-      <div class="lb-head">
-        <h3>👥 玩家列表</h3>
-      </div>
-      <div class="player-list" id="player-list"></div>
+      <aside class="hub-side">
+        <div class="lobby-panel" id="lobby-panel">
+          <h3>🎮 游戏大厅（等待中的房间）</h3>
+          <div class="lobby-list" id="lobby-list"></div>
+        </div>
+        <div class="lb-panel">
+          <div class="lb-head">
+            <h3>🏆 总排行榜</h3>
+            <div class="lb-tabs">
+              <button type="button" class="count-btn" id="lb-tab-all" aria-pressed="true">全部</button>
+              <button type="button" class="count-btn" id="lb-tab-online" aria-pressed="false">在线</button>
+            </div>
+          </div>
+          <div class="lb-list" id="lb-list"></div>
+          <div class="lb-note" id="lb-note"></div>
+        </div>
+        <div class="lb-panel">
+          <div class="lb-head">
+            <h3>👥 玩家列表</h3>
+          </div>
+          <div class="player-list" id="player-list"></div>
+        </div>
+      </aside>
     </div>
   </section>
 
@@ -527,6 +671,12 @@ const GAMES = {
   ludo:       { name:'飞行棋',     icon:'✈️', desc:'掷骰起飞，四架飞机全部归位获胜', min:2, max:4 },
   monopoly:   { name:'迷你大富翁', icon:'🏙️', desc:'买地收租，坚持到最后的玩家获胜', min:2, max:5 },
   checker:    { name:'弹珠跳棋',   icon:'🔮', desc:'跳子搬家，占领对角营地获胜', min:2, max:5 },
+  tank:       { name:'坦克大战',   icon:'🛡️', desc:'双人对战：走位射击，击毁敌方基地或坦克', min:2, max:2 },
+  snake:      { name:'贪吃蛇',     icon:'🐍', desc:'每人一条蛇竞速吃豆，撞墙/撞己即出局', min:2, max:4 },
+  tetris:     { name:'俄罗斯方块', icon:'🧱', desc:'轮流行进消行，得分最高者获胜', min:2, max:4 },
+  draughts:   { name:'跳棋',       icon:'⚪', desc:'8×8 国际跳棋：斜走吃子、成王连跳', min:2, max:2 },
+  jungle:     { name:'斗兽棋',     icon:'🐘', desc:'8 兽互克过河，占领对方兽穴获胜', min:2, max:2 },
+  xiangqi:    { name:'象棋',       icon:'♞', desc:'经典中国象棋：将死或困毙对方即获胜', min:2, max:2 },
 };
 const RULES = {
   tictactoe: ['3×3 棋盘，两名玩家轮流落子。','横、竖或斜向连成三子即获胜。','九格下满仍无人连成三子则为平局。'],
@@ -534,6 +684,12 @@ const RULES = {
   ludo: ['支持 2-4 人，每人 4 架飞机，从基地起飞。','掷出 6 才能起飞，并额外再掷一次。','飞机沿轨道绕行一圈后进入自己的终点航线。','落在对方飞机所在格，可将其击回基地。','点数必须正好够到终点；四架全部归位即获胜。'],
   monopoly: ['支持 2-5 人，轮流掷两颗骰子前进。','走到未购买的地块可购买；他人地块需付租金。','机会卡包含随机事件；经过起点获得 2000。','资金不足即破产出局，地块回归银行。','第 30 轮结束时资产最多者获胜，也可随时提前结算。'],
   checker: ['每名玩家 10 颗弹珠，各自占领棋盘一个角。','轮流移动：可走相邻空位，或跳过相邻棋子（可连续跳）。','把 10 颗弹珠全部移入对角营地即获胜。','支持悔棋和提示。'],
+  tank: ['两名玩家各操控一辆坦克与一座基地。','每回合可移动 1 格（方向键）或开炮（射击键）。','炮弹直线飞行，命中敌方坦克或基地即得分/获胜。','砖墙可被炮弹摧毁，钢墙不可摧毁。','先击毁敌方基地，或先击毁敌方坦克 3 次者获胜。'],
+  snake: ['支持 2-4 人，每人一条蛇在同一棋盘上竞速吃豆。','每人每次操作时让蛇向一个方向前进一格。','吃到豆子蛇身加长、得分 +1，豆子会重新刷新。','撞墙、撞到自己或别人的蛇身即出局。','存活到最后者获胜；若同时出局，得分高者胜。'],
+  tetris: ['支持 2-4 人，每人一个 10×18 的方块井。','轮到自己时操控方块：← → 移动、↑ 旋转、↓ 加速下落。','填满一整行即消行得分；方块堆到顶即出局。','每人限时或限固定方块数，结束后得分最高者获胜。','AI 难度适中，适合新手练习。'],
+  draughts: ['8×8 棋盘，双方各 12 枚棋子，只可在深色格斜走。','普通棋子只能向前斜走一格；能跳吃时必须跳吃。','到达对方底线即升王，王可前后斜走与跳吃。','吃光对方棋子，或对方无子可动即获胜。'],
+  jungle: ['每方 8 兽：象>狮>虎>豹>狼>狗>猫>鼠，鼠可吃象。','鼠可入水；在水中只能被鼠吃。','狮/虎可跳过河流（路径无鼠阻挡）。','进入对方兽穴即获胜；兽穴旁陷阱可弱化任意入陷阱的敌方棋子。','双方兽穴不能进入己方兽穴。'],
+  xiangqi: ['9×10 棋盘，双方各 16 子：将/帅、士、象/相、马、车、炮、兵/卒。','将帅在九宫内走；士斜走九宫；象走田不可过河。','马走日受蹩马腿限制；车直行；炮隔山打；兵过河后可横走。','将帅不能照面；被将军必须应将。','将死对方或对方无子可动即获胜。'],
 };
 
 function el(tag, cls, text){
@@ -715,6 +871,12 @@ const online = {
       this.send({ type: 'hello', payload: { uid: typeof deviceUid !== 'undefined' ? deviceUid : null } });
       this.send({ type: 'lobby' });
       if (typeof syncProfiles === 'function') syncProfiles();
+      if (account && account.uid && !account.registered){
+        this.send({ type: 'register', payload: {
+          uid: account.uid, pin: account.pin, name: account.name, avatar: account.avatar,
+          background: account.background, frame: account.frame, effect: account.effect, owned: account.owned,
+        } });
+      }
       if (this._hb) clearInterval(this._hb);
       this._hb = setInterval(() => { if (this.connected) this.send({ type: 'ping' }); }, 10000);
       if (this.pending){
@@ -736,6 +898,7 @@ const online = {
   status(text){ $('online-status').innerHTML = text; },
   send(msg){ if (this.ws && this.ws.readyState === 1) this.ws.send(JSON.stringify(msg)); },
   create(){
+    if (!account){ toast('请先创建账号或登录后再联机'); openAuthModal(); return; }
     if (this.connected){
       this.send({type:'create', payload:{ capacity: playerCount }});
       this.status('正在创建房间…');
@@ -746,6 +909,7 @@ const online = {
     }
   },
   join(code){
+    if (!account){ toast('请先创建账号或登录后再联机'); openAuthModal(); return; }
     code = String(code || '').trim().toUpperCase();
     if (code.length < 4){ toast('请输入房间码'); return; }
     if (this.connected){
@@ -838,6 +1002,43 @@ const online = {
         renderLeaderboard();
         break;
       case 'profile_ok':
+        if (msg.payload && account && msg.payload.uid === account.uid){
+          // profile_ok 只是档案同步回执：只更新展示字段，不覆盖本地金币/局数（以免回写 0）
+          account.name = msg.payload.name;
+          account.avatar = msg.payload.avatar;
+          account.background = msg.payload.background || account.background || 0;
+          account.frame = msg.payload.frame || account.frame || 0;
+          account.effect = msg.payload.effect || account.effect || 0;
+          const me = roster.find(x => x.uid === account.uid);
+          if (me){ me.name = account.name; me.avatar = account.avatar; }
+          saveRoster(); saveAccount();
+          renderMe(); renderSlots();
+        }
+        break;
+      case 'registered':
+        if (msg.payload && msg.payload.uid){
+          account.pin = account.pin || '';
+          account.registered = true;
+          updateAccountProfile(msg.payload.profile);
+          toast('🎉 账号创建成功，欢迎 ' + account.name);
+          if (authModalEl){ authModalEl.remove(); authModalEl = null; }
+        }
+        break;
+      case 'logged_in':
+        if (msg.payload && msg.payload.uid){
+          account = Object.assign({}, msg.payload.profile, { device: deviceFingerprint() });
+          updateAccountProfile(msg.payload.profile);
+          toast('✅ 登录成功：' + account.name);
+          if (authModalEl){ authModalEl.remove(); authModalEl = null; }
+        }
+        break;
+      case 'auth_error':
+        toast(msg.msg || '账号验证失败');
+        break;
+      case 'profile_data':
+        if (msg.payload){
+          renderProfilePopup(msg.payload, false);
+        }
         break;
     }
   },
@@ -949,10 +1150,10 @@ function openInvitePicker(){
       const item = el('button','roster-item');
       item.type = 'button';
       const av = el('span','av');
-      av.appendChild(avatarCanvas(u.avatar, 24));
+      av.appendChild(avatarStageNode(u, 24));
       item.appendChild(av);
       item.appendChild(el('span','nm', u.name));
-      item.appendChild(el('span','lb-game', (u.coins || 0) + ' 枚'));
+      item.appendChild(el('span','lb-game', '$' + (u.coins || 0)));
       item.addEventListener('click', () => {
         bd.remove();
         inviteUser(u.uid);
@@ -983,7 +1184,10 @@ function renderLobby(){
     if (r.room === online.room) return;
     const row = el('div','lobby-row');
     const av = el('span','av');
-    av.appendChild(avatarCanvas(r.hostAvatar, 30));
+    const hostProf = { uid: r.hostUid, avatar: r.hostAvatar, name: r.hostName, frame: 0, effect: 0 };
+    av.appendChild(avatarStageNode(hostProf, 30));
+    av.style.cursor = 'pointer';
+  av.addEventListener('click', e => { if (e && e.stopPropagation) e.stopPropagation(); if (r.hostUid) openProfileModal(r.hostUid); });
     row.appendChild(av);
     const info = el('div','info');
     info.appendChild(el('div','nm', r.hostName + ' 的房间'));
@@ -1010,20 +1214,24 @@ function renderAccounts(){
   list.forEach(u => {
     const row = el('div','player-row' + (u.uid === deviceUid ? ' me' : ''));
     const av = el('span','lb-av');
-    av.appendChild(avatarCanvas(u.avatar, 20));
+    av.appendChild(avatarStageNode(u, 20));
+    av.style.cursor = 'pointer';
+  av.addEventListener('click', e => { if (e && e.stopPropagation) e.stopPropagation(); openProfileModal(u.uid); });
     row.appendChild(av);
     row.appendChild(el('span','nm', u.name + (u.uid === deviceUid ? '（我）' : '')));
     if (u.online) row.appendChild(el('span','online-dot',''));
     const coinLine = el('span','coin-line');
-    coinLine.appendChild(el('span','coin sm','L'));
+    coinLine.appendChild(el('span','coin sm','$'));
     coinLine.appendChild(el('span','pts', (u.coins || 0)));
     row.appendChild(coinLine);
     if (u.uid !== deviceUid){
       const inv = el('button','btn invite-btn','邀请');
       inv.disabled = !u.online || (online.room && !online.isHost);
-      inv.addEventListener('click', () => inviteUser(u.uid));
+  inv.addEventListener('click', e => { if (e && e.stopPropagation) e.stopPropagation(); inviteUser(u.uid); });
       row.appendChild(inv);
     }
+    row.style.cursor = 'pointer';
+    row.addEventListener('click', () => openProfileModal(u.uid));
     listEl.appendChild(row);
   });
 }
@@ -1090,13 +1298,369 @@ function openSettings(){
   document.body.appendChild(bd);
 }
 
+/* ================= 账号注册 / PIN 登录 ================= */
+function openAuthModal(mode){
+  const bd = el('div','modal-backdrop auth-backdrop');
+  authModalEl = bd;
+  const card = el('div','modal-card');
+  card.style.width = '460px';
+  let m = mode || 'register';
+  function render(){
+    card.innerHTML = '';
+    const hero = el('div','auth-hero');
+    hero.appendChild(el('div','big', m === 'register' ? '✨' : '🔑'));
+    hero.appendChild(el('h2', null, m === 'register' ? '创建你的账号' : 'PIN 登录'));
+    hero.appendChild(el('p', null, m === 'register' ? '设置昵称、头像、背景，并创建一个专属 PIN 码。以后在任何设备输入 PIN 即可登录，账号永不丢失。' : '输入注册时设置的 PIN 码即可登录（仅限字母和数字）。'));
+    card.appendChild(hero);
+    if (m === 'register'){
+      let avatar = 0, bg = 0;
+      const nameInput = el('input','nick-input');
+      nameInput.type = 'text'; nameInput.maxLength = 12;
+      nameInput.placeholder = '昵称（12 字以内）';
+      card.appendChild(nameInput);
+      const avLabel = el('div','lb-note','选择头像');
+      card.appendChild(avLabel);
+      const grid = el('div','avatar-grid');
+      for (let i = 0; i < 20; i++){
+        const opt = el('button','avatar-opt' + (i === avatar ? ' selected' : ''));
+        opt.type = 'button';
+        opt.appendChild(avatarCanvas(i, 26));
+        opt.addEventListener('click', () => {
+          avatar = i;
+          grid.querySelectorAll('.avatar-opt').forEach(o => o.classList.toggle('selected', o === opt));
+        });
+        grid.appendChild(opt);
+      }
+      card.appendChild(grid);
+      card.appendChild(el('div','lb-note','选择背景'));
+      const bgGrid = el('div','bg-grid');
+      SHOP.backgrounds.forEach(b => {
+        const sw = el('div','bg-swatch' + (b.id === bg ? ' selected' : '') + ' ' + b.cls);
+        sw.title = b.name;
+        sw.addEventListener('click', () => {
+          bg = b.id;
+          bgGrid.querySelectorAll('.bg-swatch').forEach(x => x.classList.toggle('selected', x === sw));
+        });
+        bgGrid.appendChild(sw);
+      });
+      card.appendChild(bgGrid);
+      const pinInput = el('input','nick-input');
+      pinInput.type = 'text'; pinInput.maxLength = 20;
+      pinInput.placeholder = '设置 PIN 码（4-20 位，仅字母和数字）';
+      card.appendChild(pinInput);
+      const pin2 = el('input','nick-input');
+      pin2.type = 'text'; pin2.maxLength = 20;
+      pin2.placeholder = '再次输入 PIN 码确认';
+      card.appendChild(pin2);
+      card.appendChild(el('p','pin-hint','PIN 是唯一识别你账号的代码，登录时使用，请务必牢记。'));
+      const submit = el('button','btn btn-primary','创建账号');
+      submit.addEventListener('click', () => {
+        const nm = nameInput.value.trim();
+        if (!nm){ toast('请输入昵称'); return; }
+        if (pinInput.value !== pin2.value){ toast('两次输入的 PIN 不一致'); return; }
+        if (!/^[A-Za-z0-9]{4,20}$/.test(pinInput.value)){ toast('PIN 只能包含字母和数字，长度 4-20 位'); return; }
+        registerAccount(nm, pinInput.value, avatar, bg);
+      });
+      card.appendChild(submit);
+      const toLogin = el('button','btn btn-ghost','已有账号？输入 PIN 登录');
+      toLogin.addEventListener('click', () => { m = 'login'; render(); });
+      card.appendChild(toLogin);
+    } else {
+      const pinInput = el('input','nick-input');
+      pinInput.type = 'text'; pinInput.maxLength = 20;
+      pinInput.placeholder = '输入 PIN 码';
+      card.appendChild(pinInput);
+      const submit = el('button','btn btn-primary','登录');
+      submit.addEventListener('click', () => loginAccount(pinInput.value));
+      card.appendChild(submit);
+      const toReg = el('button','btn btn-ghost','没有账号？去注册');
+      toReg.addEventListener('click', () => { m = 'register'; render(); });
+      card.appendChild(toReg);
+    }
+    const cancel = el('button','btn','取消');
+    cancel.addEventListener('click', () => bd.remove());
+    card.appendChild(cancel);
+  }
+  render();
+  bd.appendChild(card);
+  bd.addEventListener('click', e => { if (e.target === bd) bd.remove(); });
+  document.body.appendChild(bd);
+}
+
+/* ================= 个人档案弹层（自己的 / 他人的） ================= */
+function openProfileModal(uid){
+  if (!uid){
+    if (!account){ openAuthModal(); return; }
+    renderProfilePopup(account, true);
+    return;
+  }
+  const isMe = account && account.uid === uid;
+  if (isMe){ renderProfilePopup(account, true); return; }
+  const local = profileByUid(uid);
+  if (online.connected && lastServerLB){
+    const u = lastServerLB.list.find(x => x.uid === uid);
+    if (u) renderProfilePopup(u, false);
+    else if (local) renderProfilePopup(local, false);
+  } else if (local){
+    renderProfilePopup(local, false);
+  } else {
+    toast('未找到该玩家档案');
+  }
+}
+function renderProfilePopup(p, isMe){
+  if (!p) return;
+  const bd = el('div','modal-backdrop');
+  const card = el('div','modal-card');
+  card.style.width = '420px';
+  const hero = el('div','profile-hero bg-' + (p.background || 0));
+  const avWrap = el('div','hero-avatar');
+  const stage = el('div','avatar-stage effect-' + (p.effect || 0));
+  const fr = p.frame || 0;
+  if (fr) stage.appendChild(el('span','frame-ring ' + (SHOP.frames.find(f => f.id === fr) ? SHOP.frames.find(f => f.id === fr).cls : ''), ''));
+  stage.appendChild(avatarCanvas(p.avatar, 74));
+  avWrap.appendChild(stage);
+  hero.appendChild(avWrap);
+  hero.appendChild(el('div','pname', p.name + (isMe ? '（我）' : '')));
+  const coinLine = el('div','pmeta');
+  coinLine.appendChild(el('span','coin','$'));
+  coinLine.appendChild(el('span', null, ' ' + (p.coins || 0) + ' · 共 ' + (p.total || 0) + ' 局' + (p.online ? ' · 🟢在线' : ' · ⚪离线')));
+  hero.appendChild(coinLine);
+  card.appendChild(hero);
+  const stats = el('div','profile-stats');
+  GAME_KEYS.forEach(k => {
+    const s = el('div','stat-chip small');
+    s.textContent = GAMES[k].icon + ' ' + ((p.played && p.played[k]) || 0) + ' 局';
+    stats.appendChild(s);
+  });
+  card.appendChild(stats);
+  const links = el('div','profile-links');
+  if (isMe && account){
+    const edit = el('button','btn btn-primary','✏️ 编辑档案');
+    edit.addEventListener('click', () => { bd.remove(); openProfileEditor(account.uid); });
+    links.appendChild(edit);
+    const shop = el('button','btn','🛍️ 商城');
+    shop.addEventListener('click', () => { bd.remove(); openShop(); });
+    links.appendChild(shop);
+    const logout = el('button','btn','退出登录');
+    logout.addEventListener('click', () => { bd.remove(); logoutAccount(); });
+    links.appendChild(logout);
+  } else if (online.room && online.isHost && !online.game){
+    const inv = el('button','btn btn-primary','📨 邀请');
+    inv.addEventListener('click', () => {
+      bd.remove();
+      if (online.room){ online.send({ type: 'invite', payload: { toUid: p.uid } }); toast('邀请已发送'); }
+      else { online.inviteTarget = p.uid; online.create(); }
+    });
+    links.appendChild(inv);
+  }
+  if (!links.children.length) card.appendChild(el('div','lb-note','这是其他玩家的公开档案'));
+  card.appendChild(links);
+  const close = el('button','btn','关闭');
+  close.addEventListener('click', () => bd.remove());
+  card.appendChild(close);
+  bd.appendChild(card);
+  bd.addEventListener('click', e => { if (e.target === bd) bd.remove(); });
+  document.body.appendChild(bd);
+}
+
+/* ================= 商城（头像 / 边框 / 特效 / 背景） ================= */
+function openShop(){
+  if (!account){ openAuthModal(); return; }
+  const bd = el('div','modal-backdrop');
+  const card = el('div','modal-card');
+  card.style.width = '520px';
+  card.appendChild(el('h3', null, '🛍️ 个性商城'));
+  const bal = el('div','stat-chip');
+  bal.appendChild(el('span','coin','$'));
+  bal.appendChild(el('span', null, ' ' + (account.coins || 0) + ' 可用'));
+  card.appendChild(bal);
+  let tab = 'avatars';
+  const tabs = el('div','shop-tabs');
+  const defs = [
+    ['avatars','头像'], ['frames','头像框'], ['effects','动态效果'], ['backgrounds','背景'],
+  ];
+  defs.forEach(([k, label]) => {
+    const t = el('button','btn shop-tab' + (k === tab ? ' btn-primary' : ''), label);
+    t.addEventListener('click', () => { tab = k; render(); });
+    tabs.appendChild(t);
+  });
+  const listEl = el('div','shop-grid');
+  function render(){
+    listEl.innerHTML = '';
+    tabs.children.forEach((t, i) => t.classList.toggle('btn-primary', defs[i][0] === tab));
+    if (tab === 'avatars'){
+      const FREE = 20;
+      for (let i = 0; i < FREE; i++){
+        const it = el('div','shop-item' + (account.avatar === i ? ' selected' : ''));
+        it.appendChild(avatarCanvas(i, 34));
+        it.appendChild(el('div','si-name','基础头像 ' + (i+1)));
+        it.appendChild(el('div','si-price','免费'));
+        const use = el('button','btn','使用');
+        use.addEventListener('click', () => { account.avatar = i; saveAccount(); syncProfiles(); bd.remove(); toast('头像已更换'); });
+        it.appendChild(use);
+        listEl.appendChild(it);
+      }
+      SHOP.avatars.forEach(a => {
+        const owned = ownItem(account, 'avatars', a.id);
+        const it = el('div','shop-item' + (account.avatar === a.id ? ' selected' : '') + (owned ? ' owned' : ''));
+        it.appendChild(avatarCanvas(a.id, 34));
+        it.appendChild(el('div','si-name', a.name));
+        if (!owned){
+          const price = el('div','si-price');
+          price.appendChild(el('span','coin sm','$'));
+          price.appendChild(el('span', null, ' ' + a.price));
+          it.appendChild(price);
+          const buy = el('button','btn btn-primary','购买');
+          buy.addEventListener('click', () => {
+            if ((account.coins || 0) < a.price){ toast('余额不足，先去赢几局吧'); return; }
+            account.coins -= a.price;
+            addOwned(account, 'avatars', a.id);
+            saveAccount(); syncProfiles(); render(); renderMe();
+            toast('✅ 已购买「' + a.name + '」');
+          });
+          it.appendChild(buy);
+        } else {
+          it.appendChild(el('div','si-price','已拥有'));
+          const use = el('button','btn','使用');
+          use.addEventListener('click', () => { account.avatar = a.id; saveAccount(); syncProfiles(); bd.remove(); toast('头像已更换'); });
+          it.appendChild(use);
+        }
+        listEl.appendChild(it);
+      });
+    } else {
+      const cat = tab;
+      SHOP[cat].forEach(item => {
+        const owned = ownItem(account, cat, item.id);
+        const active = (tab === 'frames' && account.frame === item.id) ||
+          (tab === 'effects' && account.effect === item.id) ||
+          (tab === 'backgrounds' && account.background === item.id);
+        const it = el('div','shop-item' + (active ? ' selected' : '') + (owned ? ' owned' : ''));
+        if (tab === 'backgrounds'){
+          const sw = el('div','bg-swatch ' + item.cls);
+          sw.style.width = '38px'; sw.style.height = '38px';
+          it.appendChild(sw);
+        } else {
+          const st = el('div','mini-avatar-stage' + (tab === 'effects' ? ' ' + item.cls : ''));
+          const ring = el('span','frame-ring ' + (tab === 'frames' ? item.cls : ''), '');
+          if (tab === 'frames') st.appendChild(ring);
+          st.appendChild(avatarCanvas(account.avatar, 30));
+          it.appendChild(st);
+        }
+        it.appendChild(el('div','si-name', item.name));
+        if (!owned){
+          const price = el('div','si-price');
+          price.appendChild(el('span','coin sm','$'));
+          price.appendChild(el('span', null, ' ' + item.price));
+          it.appendChild(price);
+          const buy = el('button','btn btn-primary','购买');
+          buy.addEventListener('click', () => {
+            if ((account.coins || 0) < item.price){ toast('余额不足，先去赢几局吧'); return; }
+            account.coins -= item.price;
+            addOwned(account, cat, item.id);
+            saveAccount(); syncProfiles(); render(); renderMe();
+            toast('✅ 已购买「' + item.name + '」');
+          });
+          it.appendChild(buy);
+        } else {
+          it.appendChild(el('div','si-price','已拥有'));
+          const use = el('button','btn','使用');
+          use.addEventListener('click', () => {
+            if (tab === 'frames') account.frame = item.id;
+            else if (tab === 'effects') account.effect = item.id;
+            else account.background = item.id;
+            saveAccount(); syncProfiles(); render(); renderMe(); renderSlots();
+            toast('✅ 已应用「' + item.name + '」');
+          });
+          it.appendChild(use);
+        }
+        listEl.appendChild(it);
+      });
+    }
+  }
+  render();
+  const close = el('button','btn','关闭');
+  close.addEventListener('click', () => bd.remove());
+  card.appendChild(tabs);
+  card.appendChild(listEl);
+  card.appendChild(close);
+  bd.appendChild(card);
+  bd.addEventListener('click', e => { if (e.target === bd) bd.remove(); });
+  document.body.appendChild(bd);
+}
+
 /* ================= 用户档案与积分 ================= */
-const AVATAR_COUNT = 20;
+const AVATAR_COUNT = 28; // 0-19 免费，20-27 商城
+const CURRENCY = '$';
+const SHOP = {
+  avatars: [
+    { id: 20, name: '金冠骑士', price: 8 },
+    { id: 21, name: '太空人',   price: 8 },
+    { id: 22, name: '小恶魔',   price: 10 },
+    { id: 23, name: '机器人',   price: 10 },
+    { id: 24, name: '忍者',     price: 12 },
+    { id: 25, name: '海盗',     price: 12 },
+    { id: 26, name: '巫师',     price: 15 },
+    { id: 27, name: '龙骑士',   price: 20 },
+  ],
+  frames: [
+    { id: 1, name: '金色边框', price: 5, cls: 'frame-1' },
+    { id: 2, name: '霓虹边框', price: 8, cls: 'frame-2' },
+    { id: 3, name: '紫焰边框', price: 12, cls: 'frame-3' },
+    { id: 4, name: '极光光环', price: 16, cls: 'frame-4' },
+  ],
+  effects: [
+    { id: 1, name: '呼吸光效', price: 6, cls: 'effect-1' },
+    { id: 2, name: '闪耀星光', price: 9, cls: 'effect-2' },
+    { id: 3, name: '漂浮',     price: 9, cls: 'effect-3' },
+    { id: 4, name: '环绕旋转', price: 15, cls: 'effect-4' },
+  ],
+  backgrounds: [
+    { id: 1, name: '薰衣草紫', price: 3, cls: 'bg-1' },
+    { id: 2, name: '天空蓝',   price: 3, cls: 'bg-2' },
+    { id: 3, name: '日落橙',   price: 3, cls: 'bg-3' },
+    { id: 4, name: '森林绿',   price: 3, cls: 'bg-4' },
+    { id: 5, name: '樱花粉',   price: 3, cls: 'bg-5' },
+    { id: 6, name: '暗夜',     price: 5, cls: 'bg-6' },
+  ],
+};
+function avatarMeta(idx){
+  const p = SHOP.avatars.find(a => a.id === idx);
+  return p ? p : null;
+}
+function ownItem(acc, kind, id){
+  if (!acc) return false;
+  const list = (acc.owned && acc.owned[kind]) || [];
+  return list.includes(id);
+}
+function addOwned(acc, kind, id){
+  if (!acc) return;
+  if (!acc.owned) acc.owned = { avatars: [], frames: [], effects: [], backgrounds: [] };
+  if (!acc.owned[kind]) acc.owned[kind] = [];
+  if (!acc.owned[kind].includes(id)) acc.owned[kind].push(id);
+}
 function makeAvatar(idx){
   const BG = ['#fde68a','#fbcfe8','#bfdbfe','#bbf7d0','#e9d5ff','#fed7aa','#a5f3fc','#fecaca'];
   const SKIN = ['#ffdbac','#f1c27d','#e0ac69','#c68642','#8d5524','#ffe0bd'];
   const HAIR = ['#1f2937','#6b4226','#eab308','#dc2626','#2563eb','#ec4899'];
   const SHIRT = ['#ef4444','#3b82f6','#22c55e','#eab308','#a855f7','#14b8a6'];
+  if (idx >= 20){
+    const PRE = [
+      { bg:'#fef08a', skin:'#ffdbac', hair:'#d97706', shirt:'#f59e0b', hat:'#fbbf24', glasses:true, crown:true },
+      { bg:'#c7d2fe', skin:'#f1c27d', hair:'#e5e7eb', shirt:'#6366f1', visor:true },
+      { bg:'#fecaca', skin:'#e0ac69', hair:'#b91c1c', shirt:'#dc2626', horns:true },
+      { bg:'#a5f3fc', skin:'#cbd5e1', hair:'#64748b', shirt:'#0ea5e9', antenna:true, robot:true },
+      { bg:'#bbf7d0', skin:'#c68642', hair:'#111827', shirt:'#16a34a', mask:true },
+      { bg:'#dbeafe', skin:'#f1c27d', hair:'#78350f', shirt:'#f97316', eyePatch:true },
+      { bg:'#ddd6fe', skin:'#ffe0bd', hair:'#7c3aed', shirt:'#8b5cf6', hat:true, stars:true },
+      { bg:'#fde68a', skin:'#ffdbac', hair:'#1e40af', shirt:'#3b82f6', crown:true, scales:true },
+    ][idx - 20];
+    return {
+      bg: PRE.bg, skin: PRE.skin, hair: PRE.hair, shirt: PRE.shirt,
+      style: (idx * 3) % 4, glasses: !!PRE.glasses, blush: idx % 2 === 0, hat: !!PRE.hat,
+      crown: !!PRE.crown, visor: !!PRE.visor, horns: !!PRE.horns, antenna: !!PRE.antenna, robot: !!PRE.robot,
+      mask: !!PRE.mask, eyePatch: !!PRE.eyePatch, stars: !!PRE.stars, scales: !!PRE.scales,
+    };
+  }
   return {
     bg: BG[idx % 8],
     skin: SKIN[Math.floor(idx / 3) % 6],
@@ -1140,6 +1704,17 @@ function avatarCanvas(idx, size){
     rect(4, 1, 11, 3, st.hair); px(4, 4, st.hair); px(7, 4, st.hair); px(11, 4, st.hair);
   }
   if (st.hat){ rect(2, 0, 13, 3, '#ef4444'); rect(1, 4, 14, 4, '#dc2626'); }
+  if (st.crown){
+    px(3, 0, '#fbbf24'); px(5, 0, '#fbbf24'); px(7, 0, '#fbbf24'); px(9, 0, '#fbbf24'); px(11, 0, '#fbbf24');
+    rect(2, 1, 12, 3, '#f59e0b'); px(6, 2, '#fde047');
+  }
+  if (st.visor){ rect(2, 5, 13, 8, '#0f172a'); rect(4, 6, 11, 7, '#38bdf8'); }
+  if (st.horns){ px(4, 1, '#f59e0b'); px(11, 1, '#f59e0b'); px(4, 2, '#fbbf24'); px(11, 2, '#fbbf24'); }
+  if (st.antenna){ px(7, 0, '#94a3b8'); px(7, 1, '#ef4444'); }
+  if (st.mask){ rect(5, 7, 10, 8, '#111827'); px(6, 7, '#ef4444'); px(9, 7, '#ef4444'); }
+  if (st.eyePatch){ rect(8, 6, 10, 8, '#111827'); rect(9, 8, 9, 9, '#78350f'); }
+  if (st.stars){ px(2, 2, '#fde047'); px(13, 3, '#fde047'); px(3, 12, '#fde047'); px(12, 13, '#fde047'); }
+  if (st.scales){ px(3, 12, '#22d3ee'); px(5, 12, '#22d3ee'); px(10, 12, '#22d3ee'); px(12, 12, '#22d3ee'); }
   if (st.glasses){
     rect(5, 7, 6, 8, '#111827'); rect(8, 7, 9, 8, '#111827'); px(7, 7, '#111827');
   } else {
@@ -1155,14 +1730,49 @@ function avatarCanvas(idx, size){
   ctx.drawImage(off, 0, 0, size, size);
   return c;
 }
+function avatarStageNode(profile, size, extraCls){
+  const st = el('span', 'mini-avatar-stage' + (extraCls ? ' ' + extraCls : ''));
+  st.setAttribute('data-uid', profile && profile.uid || '');
+  const fr = profile && profile.frame || 0;
+  const fx = profile && profile.effect || 0;
+  if (fr) st.appendChild(el('span', 'frame-ring ' + (SHOP.frames.find(f => f.id === fr) ? SHOP.frames.find(f => f.id === fr).cls : ''), ''));
+  const cv = avatarCanvas(profile ? profile.avatar : 0, size || 22);
+  st.appendChild(cv);
+  if (fx) st.classList.add(SHOP.effects.find(e => e.id === fx) ? SHOP.effects.find(e => e.id === fx).cls : '');
+  return st;
+}
 const GAME_KEYS = Object.keys(GAMES);
 const LS_ROSTER = 'mg_roster';
+const LS_ACCOUNT = 'mg_account';
 let roster = [];
+let account = null;
 let deviceUid = null;
 let slots = [];
 let lastServerLB = null;
 let lbFilter = 'all';
+let authModalEl = null;
 
+function deviceFingerprint(){
+  let s = '';
+  try { s += (navigator.userAgent || '') + '|'; } catch {}
+  try { s += (navigator.language || '') + '|'; } catch {}
+  try { s += String(screen.width) + 'x' + String(screen.height) + '|'; } catch {}
+  try { s += String(navigator.hardwareConcurrency || 0) + '|'; } catch {}
+  try { s += (Intl.DateTimeFormat().resolvedOptions().timeZone || '') + '|'; } catch {}
+  try { s += (navigator.platform || '') + '|'; } catch {}
+  let h1 = 0, h2 = 0;
+  for (let i = 0; i < s.length; i++){
+    h1 = (h1 * 31 + s.charCodeAt(i)) | 0;
+    h2 = (h2 * 33 + s.charCodeAt(i)) | 0;
+  }
+  return 'd' + Math.abs(h1).toString(36) + Math.abs(h2).toString(36);
+}
+function defaultOwned(){
+  return {
+    avatars: Array.from({ length: 20 }, (_, i) => i),
+    frames: [0], effects: [0], backgrounds: [0],
+  };
+}
 function loadRoster(){
   try {
     const raw = localStorage.getItem(LS_ROSTER);
@@ -1175,17 +1785,21 @@ function loadRoster(){
     if (!p.played) p.played = {};
     if (!p.total) p.total = 0;
   });
-  const savedUid = localStorage.getItem('mg_uid');
-  if (roster.length){
-    deviceUid = savedUid && roster.some(p => p.uid === savedUid) ? savedUid : roster[0].uid;
+  try {
+    const raw = localStorage.getItem(LS_ACCOUNT);
+    account = raw ? JSON.parse(raw) : null;
+  } catch { account = null; }
+  if (account && account.uid && account.device === deviceFingerprint()){
+    deviceUid = account.uid;
+    const me = roster.find(p => p.uid === account.uid);
+    if (!me) roster.unshift({ uid: account.uid, name: account.name, avatar: account.avatar, coins: account.coins || 0, played: account.played || {}, total: account.total || 0 });
   } else {
-    deviceUid = genUid();
-    roster = [{ uid: deviceUid, name: '我', avatar: Math.floor(Math.random() * AVATAR_COUNT), coins: 0, played: {}, total: 0 }];
-    saveRoster();
+    deviceUid = null;
   }
-  localStorage.setItem('mg_uid', deviceUid);
+  try { localStorage.setItem('mg_uid', deviceUid || ''); } catch {}
 }
 function saveRoster(){ try { localStorage.setItem(LS_ROSTER, JSON.stringify(roster)); } catch {} }
+function saveAccount(){ try { localStorage.setItem(LS_ACCOUNT, JSON.stringify(account)); } catch {} }
 function genUid(){
   if (typeof crypto !== 'undefined' && crypto.randomUUID) return 'u_' + crypto.randomUUID().slice(0, 8);
   return 'u_' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
@@ -1199,23 +1813,95 @@ function createProfile(name, avatar){
 }
 function syncProfiles(){
   if (!online.connected) return;
-  roster.forEach(p => online.send({ type: 'profile', payload: { uid: p.uid, name: p.name, avatar: p.avatar } }));
+  if (account && account.uid){
+    online.send({ type: 'profile', payload: {
+      uid: account.uid, name: account.name, avatar: account.avatar,
+      background: account.background || 0, frame: account.frame || 0, effect: account.effect || 0,
+      owned: account.owned || defaultOwned(),
+    } });
+  }
+}
+function registerAccount(name, pin, avatar, background, frame, effect){
+  name = String(name || '').trim().slice(0, 12) || '玩家';
+  pin = String(pin || '').trim();
+  if (!/^[A-Za-z0-9]{4,20}$/.test(pin)){
+    toast('PIN 只能包含字母和数字，长度 4-20 位');
+    return null;
+  }
+  const uid = genUid();
+  account = {
+    uid, pin, name,
+    avatar: Number.isInteger(avatar) ? Math.max(0, Math.min(AVATAR_COUNT - 1, avatar)) : 0,
+    background: Number.isInteger(background) ? Math.max(0, background) : 0,
+    frame: Number.isInteger(frame) ? Math.max(0, frame) : 0,
+    effect: Number.isInteger(effect) ? Math.max(0, effect) : 0,
+    owned: defaultOwned(), coins: 0, played: {}, total: 0, device: deviceFingerprint(),
+  };
+  const me = roster.find(p => p.uid === uid);
+  if (me){ me.name = name; me.avatar = account.avatar; }
+  else roster.unshift({ uid, name, avatar: account.avatar, coins: 0, played: {}, total: 0 });
+  deviceUid = uid;
+  saveRoster(); saveAccount();
+  if (online.connected){
+    online.send({ type: 'register', payload: {
+      uid, pin, name, avatar: account.avatar, background: account.background,
+      frame: account.frame, effect: account.effect, owned: account.owned,
+    } });
+  }
+  renderMe(); renderSlots(); renderLeaderboard();
+  if (authModalEl) authModalEl.remove();
+  authModalEl = null;
+  return account;
+}
+function loginAccount(pin){
+  pin = String(pin || '').trim();
+  if (!/^[A-Za-z0-9]{4,20}$/.test(pin)){ toast('PIN 只能包含字母和数字，长度 4-20 位'); return; }
+  if (!online.connected){ toast('请先连接服务器后再登录'); return; }
+  online.send({ type: 'login', payload: { pin } });
+}
+function logoutAccount(){
+  account = null;
+  deviceUid = null;
+  try { localStorage.removeItem(LS_ACCOUNT); localStorage.setItem('mg_uid', ''); } catch {}
+  renderMe(); renderSlots(); renderLeaderboard();
+  openAuthModal();
+}
+function updateAccountProfile(p){
+  if (!account) return;
+  account.uid = p.uid; account.name = p.name; account.avatar = p.avatar;
+  account.background = p.background || 0; account.frame = p.frame || 0; account.effect = p.effect || 0;
+  account.owned = p.owned || defaultOwned(); account.coins = p.coins || 0;
+  account.played = p.played || {}; account.total = p.total || 0;
+  const me = roster.find(x => x.uid === p.uid);
+  if (me){ me.name = p.name; me.avatar = p.avatar; me.coins = p.coins || 0; me.played = p.played || {}; me.total = p.total || 0; }
+  else roster.unshift({ uid: p.uid, name: p.name, avatar: p.avatar, coins: p.coins || 0, played: p.played || {}, total: p.total || 0 });
+  deviceUid = p.uid;
+  saveRoster(); saveAccount();
 }
 function renderMe(){
-  const me = profileByUid(deviceUid);
   const btn = $('btn-me');
+  if (!account){
+    btn.innerHTML = '';
+    btn.appendChild(el('span','me-av','🔑'));
+    btn.appendChild(el('span', null, '登录 / 注册'));
+    btn.title = '创建账号或使用 PIN 登录';
+    return;
+  }
+  const me = profileByUid(deviceUid);
+  if (!me) return;
   btn.innerHTML = '';
   const av = el('span','me-av');
-  av.appendChild(avatarCanvas(me.avatar, 26));
+  av.appendChild(avatarStageNode(account, 26));
   btn.appendChild(av);
-  btn.appendChild(el('span', null, me.name));
+  btn.appendChild(el('span', null, account.name));
   const coinLine = el('span','coin-line');
-  coinLine.appendChild(el('span','coin','L'));
-  coinLine.appendChild(el('span','me-pts', (me.coins || 0) + ' · ' + (me.total || 0) + '局'));
+  coinLine.appendChild(el('span','coin','$'));
+  coinLine.appendChild(el('span','me-pts', (account.coins || 0) + ' · ' + (account.total || 0) + '局'));
   btn.appendChild(coinLine);
   if (online.connected){
     btn.appendChild(el('span','me-online','●'));
   }
+  btn.title = '查看我的档案';
 }
 function renderSlots(){
   const row = $('slots-row');
@@ -1236,11 +1922,12 @@ function renderSlots(){
     chip.type = 'button';
     if (p){
       const av = el('span','av');
-      av.appendChild(avatarCanvas(p.avatar, 30));
+      const prof = p.uid === (account && account.uid) ? account : p;
+      av.appendChild(avatarStageNode(prof, 30));
       chip.appendChild(av);
       chip.appendChild(el('span','nm', p.name));
       const coinLine = el('span','coin-line');
-      coinLine.appendChild(el('span','coin sm','L'));
+      coinLine.appendChild(el('span','coin sm','$'));
       coinLine.appendChild(el('span','pts', (p.coins || 0) + ' · ' + (p.total || 0) + '局'));
       chip.appendChild(coinLine);
     } else {
@@ -1253,8 +1940,9 @@ function renderSlots(){
   }
 }
 function ensureSlots(){
+  slots = slots.slice(0, playerCount);
   while (slots.length < playerCount) slots.push(null);
-  if (!slots[0]) slots[0] = deviceUid;
+  if (deviceUid) slots[0] = deviceUid;
   if (aiMode){
     for (let i = 1; i < slots.length; i++) slots[i] = null;
     return;
@@ -1275,7 +1963,7 @@ function openSlotPicker(i){
     av.appendChild(avatarCanvas(p.avatar, 24));
     item.appendChild(av);
     item.appendChild(el('span','nm', p.name));
-    item.appendChild(el('span','lb-game', (p.coins || 0) + ' 枚 · ' + (p.total || 0) + '局'));
+      item.appendChild(el('span','lb-game', '$' + (p.coins || 0) + ' · ' + (p.total || 0) + '局'));
     item.addEventListener('click', () => {
       slots[i] = p.uid;
       bd.remove();
@@ -1299,8 +1987,10 @@ function openSlotPicker(i){
 }
 function openProfileEditor(uid, slotIndex){
   const editing = uid ? profileByUid(uid) : null;
+  const editingMe = !!(account && uid === account.uid);
   let name = editing ? editing.name : '';
   let avatar = editing ? editing.avatar : Math.floor(Math.random() * AVATAR_COUNT);
+  let background = editingMe ? (account.background || 0) : 0;
   const bd = el('div','modal-backdrop');
   const card = el('div','modal-card');
   card.appendChild(el('h3', null, editing ? '编辑档案' : '新建档案'));
@@ -1317,17 +2007,37 @@ function openProfileEditor(uid, slotIndex){
     opt.appendChild(avatarCanvas(i, 26));
     opt.setAttribute('aria-label', '头像 ' + (i+1));
     opt.addEventListener('click', () => {
+      if (i >= 20 && !ownItem(account, 'avatars', i)){
+        const meta = avatarMeta(i);
+        toast('「' + (meta ? meta.name : '头像') + '」需在商城购买（$' + (meta ? meta.price : 0) + '）');
+        return;
+      }
       avatar = i;
       grid.querySelectorAll('.avatar-opt').forEach(o => o.classList.toggle('selected', o === opt));
     });
     grid.appendChild(opt);
   }
   card.appendChild(grid);
+  if (editingMe){
+    card.appendChild(el('div','lb-note','背景'));
+    const bgGrid = el('div','bg-grid');
+    SHOP.backgrounds.forEach(b => {
+      const sw = el('div','bg-swatch' + (b.id === background ? ' selected' : '') + ' ' + b.cls);
+      sw.title = b.name;
+      sw.addEventListener('click', () => {
+        if (!ownItem(account, 'backgrounds', b.id)){ toast('背景「' + b.name + '」需在商城购买'); return; }
+        background = b.id;
+        bgGrid.querySelectorAll('.bg-swatch').forEach(x => x.classList.toggle('selected', x === sw));
+      });
+      bgGrid.appendChild(sw);
+    });
+    card.appendChild(bgGrid);
+  }
   const stats = el('div','profile-stats');
   if (editing){
     const c1 = el('div','stat-chip');
-    c1.appendChild(el('span','coin sm','L'));
-    c1.appendChild(el('span', null, (editing.coins || 0) + ' 枚金币'));
+    c1.appendChild(el('span','coin sm','$'));
+    c1.appendChild(el('span', null, (editing.coins || 0) + ' 余额'));
     const c2 = el('div','stat-chip');
     c2.textContent = '共 ' + (editing.total || 0) + ' 局';
     stats.appendChild(c1);
@@ -1338,7 +2048,7 @@ function openProfileEditor(uid, slotIndex){
       stats.appendChild(s);
     });
   } else {
-    stats.appendChild(el('div','stat-chip','新档案：完成首局后开始累积 L金币与统计'));
+    stats.appendChild(el('div','stat-chip','新档案：完成首局后开始累积 ' + CURRENCY + ' 与统计'));
   }
   card.appendChild(stats);
   const save = el('button','btn btn-primary','保存');
@@ -1348,6 +2058,12 @@ function openProfileEditor(uid, slotIndex){
     if (editing){
       editing.name = finalName;
       editing.avatar = avatar;
+      if (editingMe){
+        account.name = finalName;
+        account.avatar = avatar;
+        account.background = background;
+        saveAccount();
+      }
     } else {
       targetUid = createProfile(finalName, avatar);
       if (slotIndex !== undefined && slotIndex !== null) slots[slotIndex] = targetUid;
@@ -1390,17 +2106,21 @@ function renderLeaderboard(){
     const row = el('div','lb-row' + (u.uid === deviceUid ? ' me' : ''));
     row.appendChild(el('span','lb-rank', String(i + 1)));
     const av = el('span','lb-av');
-    av.appendChild(avatarCanvas(u.avatar, 22));
+    av.appendChild(avatarStageNode(u, 22));
+    av.style.cursor = 'pointer';
+  av.addEventListener('click', e => { if (e && e.stopPropagation) e.stopPropagation(); openProfileModal(u.uid); });
     row.appendChild(av);
     const nameWrap = el('span','lb-name');
     nameWrap.textContent = u.name;
+    row.style.cursor = 'pointer';
+    row.addEventListener('click', () => openProfileModal(u.uid));
     row.appendChild(nameWrap);
     if (u.online) row.appendChild(el('span','online-dot',''));
     const g = u.played || {};
     const gameStr = GAME_KEYS.filter(k => g[k]).map(k => GAMES[k].name + ' ' + g[k] + '局').join(' · ');
     row.appendChild(el('span','lb-game', gameStr));
     const coinLine = el('span','coin-line');
-    coinLine.appendChild(el('span','coin','L'));
+    coinLine.appendChild(el('span','coin','$'));
     coinLine.appendChild(el('span','lb-pts', (u.coins || 0) + ' · ' + (u.total || 0) + '局'));
     row.appendChild(coinLine);
     listEl.appendChild(row);
@@ -1424,8 +2144,14 @@ function applyGameResult(results){
     if (r.coins === 1) p.coins = (p.coins || 0) + 1;
     p.played[gameId] = (p.played[gameId] || 0) + 1;
     p.total = (p.total || 0) + 1;
+    if (account && p.uid === account.uid){
+      account.coins = p.coins;
+      account.played = p.played;
+      account.total = p.total;
+      saveAccount();
+    }
     entries.push({ uid:p.uid, name:p.name, avatar:p.avatar, game:gameId, coins: r.coins === 1 ? 1 : 0, played: 1 });
-    parts.push(p.name + (r.coins === 1 ? ' 获得 1 枚 L金币' : ' 本局无金币'));
+    parts.push(p.name + (r.coins === 1 ? ' 获得 $1' : ' 本局无奖励'));
   });
   saveRoster();
   if (entries.length){
@@ -1480,6 +2206,7 @@ function showGame(id){
 function startGame(id){
   const meta = GAMES[id];
   if (online.connected && online.room){
+    if (!account){ toast('请先创建账号或登录后再联机'); openAuthModal(); return; }
     if (online.game){ toast('本局已开始，点「结束本局」后可在房间内切换游戏'); return; }
     const size = (online.roomInfo && online.roomInfo.size) || online.capacity || 2;
     if (size > meta.max){ toast(meta.name + ' 联机最多 ' + meta.max + ' 人，当前房间 ' + size + ' 人'); return; }
@@ -1576,7 +2303,7 @@ if (typeof document !== 'undefined'){
   });
   $('btn-create-room').addEventListener('click', () => online.create());
   $('btn-settings').addEventListener('click', openSettings);
-  $('btn-me').addEventListener('click', () => openProfileEditor(deviceUid));
+  $('btn-me').addEventListener('click', () => openProfileModal(deviceUid));
   const setLbTab = (which) => {
     lbFilter = which;
     $('lb-tab-all').setAttribute('aria-pressed', String(which === 'all'));
@@ -1586,7 +2313,7 @@ if (typeof document !== 'undefined'){
   $('lb-tab-all').addEventListener('click', () => setLbTab('all'));
   $('lb-tab-online').addEventListener('click', () => setLbTab('online'));
   window.__gameInfo = {
-    GAMES, startGame,
+    GAMES, startGame, registerAccount, loginAccount, logoutAccount, loadRoster,
     get playerCount(){ return playerCount; },
     set playerCount(v){ playerCount = v; },
     get aiMode(){ return aiMode; },
@@ -1616,21 +2343,47 @@ function gameTicTacToe(area, extra, n, opts){
   const LINES = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
   let board = Array(9).fill(null), cur = 0, over = false, winLine = null;
   let aiPending = false;
+  function tttScore(bd, turn){
+    for (const L of LINES){
+      if (bd[L[0]] !== null && bd[L[0]] === bd[L[1]] && bd[L[1]] === bd[L[2]]){
+        return bd[L[0]] === 0 ? 10 : -10;
+      }
+    }
+    if (bd.every(v => v !== null)) return 0;
+    if (turn === 0){
+      let best = -Infinity;
+      for (let i = 0; i < 9; i++){
+        if (bd[i] === null){ bd[i] = 0; best = Math.max(best, tttScore(bd, 1)); bd[i] = null; }
+      }
+      return best;
+    }
+    let best = Infinity;
+    for (let i = 0; i < 9; i++){
+      if (bd[i] === null){ bd[i] = 1; best = Math.min(best, tttScore(bd, 0)); bd[i] = null; }
+    }
+    return best;
+  }
   function scheduleAI(){
     if (aiPending || over) return;
     if (!opts.ai || !opts.ai.has(cur)) return;
     aiPending = true;
-    setTimeout(async () => {
+    setTimeout(() => {
       aiPending = false;
       if (over) return;
       const legal = [];
       for (let i = 0; i < 9; i++) if (board[i] === null) legal.push(String(i));
       if (!legal.length) return;
-      setStatus('🤖 AI 思考中…');
-      let ch = await aiChoose('tictactoe', { board: board.map(v => v === null ? '·' : (v === 0 ? '✕' : '◯')), turn: cur }, legal);
-      if (!legal.includes(ch)) ch = aiPick(legal);
-      applyMove(Number(ch));
-    }, 650);
+      // 完美走法：minimax（AI 永不输）
+      let bestI = -1, bestV = -Infinity;
+      for (const s of legal){
+        const i = Number(s);
+        board[i] = cur;
+        const v = tttScore(board, cur ^ 1);
+        board[i] = null;
+        if (v > bestV){ bestV = v; bestI = i; }
+      }
+      applyMove(bestI);
+    }, 500);
   }
   function render(){
     area.innerHTML = '';
@@ -1718,22 +2471,40 @@ function gameGomoku(area, extra, n, opts){
   let grid = Array.from({length:N}, () => Array(N).fill(-1));
   let cur = 0, over = false, hist = [], last = null;
   let aiPending = false;
+  function gomokuLineScore(r, c, p){
+    let best = 0;
+    for (const [dr,dc] of [[1,0],[0,1],[1,1],[1,-1]]){
+      let cnt = 1, open = 0;
+      for (const s of [1,-1]){
+        let nr = r + dr*s, nc = c + dc*s;
+        while (nr >= 0 && nr < N && nc >= 0 && nc < N && grid[nr][nc] === p){ cnt++; nr += dr*s; nc += dc*s; }
+        if (nr >= 0 && nr < N && nc >= 0 && nc < N && grid[nr][nc] === -1) open++;
+      }
+      if (cnt >= 5) return 1e9;
+      best = Math.max(best, Math.pow(cnt, 3) * (open + 1));
+    }
+    return best;
+  }
   function scheduleAI(){
     if (aiPending || over) return;
     if (!opts.ai || !opts.ai.has(cur)) return;
     aiPending = true;
-    setTimeout(async () => {
+    setTimeout(() => {
       aiPending = false;
       if (over) return;
       const empties = [];
       for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) if (grid[r][c] === -1) empties.push(r + ',' + c);
       if (!empties.length) return;
-      setStatus('🤖 AI 思考中…');
-      let ch = await aiChoose('gomoku', grid.map(row => row.map(v => v === -1 ? '·' : (v === 0 ? 'X' : 'O')).join(' ')).join('\n'), null);
-      if (!ch || !empties.includes(ch)) ch = aiPick(empties);
-      const [r, c] = ch.split(',').map(Number);
+      let bestR = -1, bestC = -1, bestV = -1;
+      for (const s of empties){
+        const [r, c] = s.split(',').map(Number);
+        const atk = gomokuLineScore(r, c, cur);
+        const def = gomokuLineScore(r, c, cur ^ 1);
+        const v = Math.max(atk, def * 1.1);
+        if (v > bestV){ bestV = v; bestR = r; bestC = c; }
+      }
       applyMove(r, c);
-    }, 650);
+    }, 550);
   }
   const canvas = document.createElement('canvas');
   canvas.className = 'board-canvas';
@@ -1863,11 +2634,28 @@ function gameLudo(area, extra, n, opts){
       if (phase === 'pick'){
         const mv = movable();
         if (!mv.length){ nextTurn('无子可动'); return; }
-        setStatus('🤖 AI 思考中…');
-        const list = mv.map(String);
-        let ch = await aiChoose('ludo', { dice, turn: curIdx, tokens: tokens.map(t => t.slice()) }, list);
-        if (!list.includes(ch)) ch = aiPick(list);
-        pick(curPid(), Number(ch));
+        // 启发式：优先击落/回家，其次推进
+        let bestT = mv[0], bestS = -1e9;
+        mv.forEach(ti => {
+          const arr = tokens[curIdx];
+          const curPos = arr[ti];
+          const newPos = curPos === -1 ? 0 : Math.min(HOME, curPos + dice);
+          let s = curPos === -1 ? 6 : (newPos === HOME ? 120 : newPos);
+          if (newPos <= 50){
+            const cell = cellOf(curPid(), newPos);
+            let hit = 0;
+            pids.forEach((p2, p2i) => {
+              if (p2 === curPid()) return;
+              for (let j = 0; j < 4; j++){
+                const t2 = tokens[p2i][j];
+                if (t2 >= 0 && t2 <= 50 && cellOf(p2, t2) === cell) hit++;
+              }
+            });
+            s += hit * 45;
+          }
+          if (s > bestS){ bestS = s; bestT = ti; }
+        });
+        pick(curPid(), bestT);
       }
     }, 700);
   }
@@ -2203,13 +2991,9 @@ function gameMonopoly(area, extra, n, opts){
       if (phase === 'buy'){
         const p = players[cur];
         const cell = CELLS[p.pos];
-        setStatus('🤖 AI 思考中…');
-        const list = ['buy', 'pass'];
-        let ch = await aiChoose('monopoly', {
-          round, cur, money: p.money, pos: p.pos, cell: cell.name, price: cell.price,
-        }, list);
-        if (!list.includes(ch)) ch = aiPick(list);
-        applyDecision(cur, ch);
+        // 启发式：买得起的便宜地就买，贵地保留现金
+        const buy = p.money >= cell.price && (p.money - cell.price >= 800 || cell.price <= 400);
+        applyDecision(cur, buy ? 'buy' : 'pass');
       }
     }, 750);
   }
@@ -2647,17 +3431,22 @@ function gameChecker(area, extra, n, opts){
         const d = checkerReachable(holeSet, occ, m);
         for (const dk of d){
           const [q, r] = dk.split(',').map(Number);
-          list.push(m.q + ',' + m.r + '->' + q + ',' + r);
+          const isJump = Math.abs(q - m.q) + Math.abs(r - m.r) > 1;
+          list.push({ from: m, to: {q, r}, isJump });
         }
       });
       if (!list.length){ toast('AI 无子可动'); return; }
-      setStatus('🤖 AI 思考中…');
-      let ch = await aiChoose('checker', { turn: cur, marbles: marbles.map(l => l.map(h => [h.q, h.r])) }, list);
-      if (!list.includes(ch)) ch = aiPick(list);
-      const [f, t] = ch.split('->');
-      const [fq, fr] = f.split(',').map(Number);
-      const [tq, tr] = t.split(',').map(Number);
-      applyCheckerMove({ q: fq, r: fr }, { q: tq, r: tr });
+      // 启发式：优先跳吃，其次向对角营地推进
+      const target = arms[(cornerSel[cur] + 3) % 6].map(key);
+      const tSet = new Set(target);
+      let best = list[0], bestS = -1e9;
+      list.forEach(mv => {
+        let s = mv.isJump ? 12 : 0;
+        s += tSet.has(key(mv.to)) ? 6 : 0;
+        s -= Math.abs(mv.to.q - mv.from.q) + Math.abs(mv.to.r - mv.from.r);
+        if (s > bestS){ bestS = s; best = mv; }
+      });
+      applyCheckerMove(best.from, best.to);
     }, 700);
   }
   const canvas = document.createElement('canvas');
@@ -2888,6 +3677,1407 @@ function gameChecker(area, extra, n, opts){
   };
 }
 
+/* ================= 坦克大战 ================= */
+function gameTank(area, extra, n, opts){
+  opts = opts || {};
+  const W = 13, H = 13;
+  const dirs = [[-1,0],[0,1],[1,0],[0,-1]]; // 上右下左
+  const DIR_KEYS = ['⬆','➡','⬇','⬅'];
+  const BASE0 = [1,1], BASE1 = [11,11], T0 = [2,1], T1 = [10,11];
+  let grid = Array.from({length:H}, () => Array(W).fill(0));
+  let t0 = { r:T0[0], c:T0[1], d:1, lives:3 };
+  let t1 = { r:T1[0], c:T1[1], d:3, lives:3 };
+  let cur = 0, over = false, winner = -1;
+  let aiPending = false;
+  function isWall(r,c){ return grid[r] && grid[r][c] === 2; }
+  function isSteel(r,c){ return grid[r] && grid[r][c] === 3; }
+  function occupied(r,c){
+    if (r === t0.r && c === t0.c) return 0;
+    if (r === t1.r && c === t1.c) return 1;
+    return -1;
+  }
+  function scheduleAI(){
+    if (aiPending || over) return;
+    if (!opts.ai || !opts.ai.has(cur)) return;
+    aiPending = true;
+    setTimeout(async () => {
+      aiPending = false;
+      if (over) return;
+      const me = cur === 0 ? t0 : t1;
+      const foe = cur === 0 ? t1 : t0;
+      // 同排/同列且路径无障碍 → 射击
+      if (me.r === foe.r || me.c === foe.c){
+        const dr = Math.sign(foe.r - me.r), dc = Math.sign(foe.c - me.c);
+        let rr = me.r + dr, cc = me.c + dc, blocked = false;
+        while (rr >= 0 && rr < H && cc >= 0 && cc < W && !(rr === foe.r && cc === foe.c)){
+          if (grid[rr][cc] !== 0){ blocked = true; break; }
+          rr += dr; cc += dc;
+        }
+        if (!blocked){
+          if (opts.online) opts.sendMove({ act: 'shoot' });
+          shoot();
+          return;
+        }
+      }
+      // 朝对方靠近（贪心）
+      const optsMoves = [];
+      dirs.forEach((d, di) => {
+        const nr = me.r + d[0], nc = me.c + d[1];
+        if (nr < 0 || nr >= H || nc < 0 || nc >= W) return;
+        if (grid[nr][nc] !== 0) return;
+        if (occupied(nr, nc) >= 0) return;
+        optsMoves.push(di);
+      });
+      if (!optsMoves.length){ if (opts.online) opts.sendMove({ act: 'shoot' }); shoot(); return; }
+      let best = optsMoves[0], bestD = 1e9;
+      optsMoves.forEach(di => {
+        const d = dirs[di];
+        const nd = Math.abs(me.r + d[0] - foe.r) + Math.abs(me.c + d[1] - foe.c);
+        if (nd < bestD){ bestD = nd; best = di; }
+      });
+      if (opts.online) opts.sendMove({ act: 'move', d: best });
+      moveTank(cur, best);
+    }, 700);
+  }
+  function buildMap(){
+    grid = Array.from({length:H}, () => Array(W).fill(0));
+    for (let i = 0; i < W; i++){ grid[0][i] = 3; grid[H-1][i] = 3; }
+    for (let i = 0; i < H; i++){ grid[i][0] = 3; grid[i][W-1] = 3; }
+    const bricks = [[3,3],[3,4],[4,3],[8,8],[8,9],[9,8],[6,2],[6,10],[2,6],[10,6],[5,5],[5,6],[5,7],[7,5],[7,6],[7,7],[3,9],[9,3]];
+    bricks.forEach(([r,c]) => { if (grid[r][c] === 0) grid[r][c] = 2; });
+    grid[BASE0[0]][BASE0[1]] = 4;
+    grid[BASE1[0]][BASE1[1]] = 4;
+    grid[T0[0]][T0[1]] = 0;
+    grid[T1[0]][T1[1]] = 0;
+  }
+  function moveTank(pi, d){
+    const me = pi === 0 ? t0 : t1;
+    me.d = d;
+    const nr = me.r + dirs[d][0], nc = me.c + dirs[d][1];
+    if (nr < 0 || nr >= H || nc < 0 || nc >= W) return;
+    if (grid[nr][nc] !== 0) return;
+    if (occupied(nr, nc) >= 0) return;
+    me.r = nr; me.c = nc;
+    endTurn();
+  }
+  function shoot(){
+    const me = cur === 0 ? t0 : t1;
+    const foe = cur === 0 ? t1 : t0;
+    const d = dirs[me.d];
+    let rr = me.r + d[0], cc = me.c + d[1];
+    while (rr >= 0 && rr < H && cc >= 0 && cc < W){
+      if (grid[rr][cc] === 3){ break; }
+      if (grid[rr][cc] === 2){ grid[rr][cc] = 0; break; }
+      if (grid[rr][cc] === 4){
+        over = true; winner = cur;
+        if (opts.onEnd) opts.onEnd([{ slot: cur, coins: 1, rank: 1 }, { slot: cur ^ 1, coins: 0, rank: 2 }]);
+        render();
+        return;
+      }
+      if (rr === foe.r && cc === foe.c){
+        foe.lives--;
+        if (foe.lives <= 0){
+          over = true; winner = cur;
+          if (opts.onEnd) opts.onEnd([{ slot: cur, coins: 1, rank: 1 }, { slot: cur ^ 1, coins: 0, rank: 2 }]);
+        } else {
+          if (cur === 0){ t1.r = T1[0]; t1.c = T1[1]; t1.d = 3; }
+          else { t0.r = T0[0]; t0.c = T0[1]; t0.d = 1; }
+          toast('💥 敌方坦克被击毁！');
+        }
+        render();
+        endTurn();
+        return;
+      }
+      rr += d[0]; cc += d[1];
+    }
+    render();
+    endTurn();
+  }
+  function endTurn(){
+    if (over) return;
+    cur ^= 1;
+    render();
+    setStatus('轮到玩家' + (cur+1) + '，移动或开炮');
+    scheduleAI();
+  }
+  function render(){
+    const w = area.clientWidth || 520;
+    const S = Math.min(w, 540);
+    area.innerHTML = '';
+    const board = el('div','tank-board');
+    board.style.width = S + 'px'; board.style.height = S + 'px';
+    const cs = S / W;
+    for (let r = 0; r < H; r++){
+      for (let c = 0; c < W; c++){
+        const cell = el('div','tank-cell');
+        cell.style.left = (c*cs) + 'px'; cell.style.top = (r*cs) + 'px';
+        cell.style.width = cs + 'px'; cell.style.height = cs + 'px';
+        if (grid[r][c] === 2) cell.classList.add('brick');
+        else if (grid[r][c] === 3) cell.classList.add('steel');
+        else if (grid[r][c] === 4) { cell.classList.add('base'); cell.textContent = '🏳️'; }
+        board.appendChild(cell);
+      }
+    }
+    const place = (t, cls, emoji) => {
+      const tank = el('div','tank-cell ' + cls);
+      tank.style.left = (t.c*cs) + 'px'; tank.style.top = (t.r*cs) + 'px';
+      tank.style.width = cs + 'px'; tank.style.height = cs + 'px';
+      tank.textContent = emoji;
+      tank.style.transform = 'rotate(' + (t.d*90) + 'deg)';
+      tank.appendChild(el('span','hp','♥'.repeat(Math.max(0,t.lives))));
+      board.appendChild(tank);
+    };
+    place(t0, 'tank0', '🛡️');
+    place(t1, 'tank1', '🛡️');
+    if (over){
+      const ov = el('div','overlay');
+      const card = el('div','overlay-card');
+      card.appendChild(el('div','big','🏆'));
+      card.appendChild(el('h3', null, '玩家' + (winner+1) + ' 获胜！'));
+      card.appendChild(el('p', null, '坦克大战'));
+      const btn = el('button','btn btn-primary','再来一局');
+      btn.addEventListener('click', reset);
+      card.appendChild(btn);
+      ov.appendChild(card);
+      board.appendChild(ov);
+    }
+    area.appendChild(board);
+    renderPlayers(cur, [t0.lives + ' ❤', t1.lives + ' ❤']);
+  }
+  extra.innerHTML = '';
+  const actions = el('div','tank-actions');
+  if (!opts.online){
+    DIR_KEYS.forEach((k, di) => {
+      const b = el('button','btn',k);
+      b.addEventListener('click', () => {
+        if (over) return;
+        if (opts.ai && opts.ai.has(cur)) return;
+        if (opts.online) opts.sendMove({ act: 'move', d: di });
+        moveTank(cur, di);
+      });
+      actions.appendChild(b);
+    });
+    const shootBtn = el('button','btn btn-primary','💥 开炮');
+    shootBtn.addEventListener('click', () => {
+      if (over) return;
+      if (opts.ai && opts.ai.has(cur)) return;
+      if (opts.online) opts.sendMove({ act: 'shoot' });
+      shoot();
+    });
+    actions.appendChild(shootBtn);
+  }
+  extra.appendChild(actions);
+  opts.onMove = payload => {
+    if (!payload) return;
+    if (payload.act === 'shoot') shoot();
+    else if (payload.act === 'move') moveTank(cur, payload.d);
+  };
+  function resetLocal(){
+    buildMap();
+    t0 = { r:T0[0], c:T0[1], d:1, lives:3 };
+    t1 = { r:T1[0], c:T1[1], d:3, lives:3 };
+    cur = 0; over = false; winner = -1; aiPending = false;
+    render();
+    setStatus('玩家1 的回合，移动或开炮');
+  }
+  function reset(){
+    if (opts.online && !opts.isHost){ toast('由房主开始新一局'); return; }
+    if (opts.online) opts.sendRestart();
+    resetLocal();
+  }
+  resetLocal();
+  return { reset, onMove: opts.onMove, onRestart: resetLocal, snapshot: () => ({ t0: {...t0}, t1: {...t1}, cur, over, winner, grid: grid.map(r => r.slice()) }) };
+}
+
+/* ================= 贪吃蛇 ================= */
+function gameSnake(area, extra, n, opts){
+  opts = opts || {};
+  const W = 15, H = 15;
+  const starts = [[1,1,1],[1,13,3],[13,13,3],[13,1,1]]; // r,c,d
+  const dirs = [[-1,0],[0,1],[1,0],[0,-1]];
+  let snakes = [];
+  let food = [7,7];
+  let cur = 0, over = false, winner = -1, aliveCount = 0;
+  let aiPending = false;
+  function scheduleAI(){
+    if (aiPending || over) return;
+    if (!opts.ai || !opts.ai.has(cur)) return;
+    aiPending = true;
+    setTimeout(async () => {
+      aiPending = false;
+      if (over) return;
+      const s = snakes[cur];
+      if (!s || !s.alive) return;
+      const head = s.body[0];
+      const legal = [];
+      dirs.forEach((d, di) => {
+        if ((di + 2) % 4 === s.d) return;
+        const nr = head[0] + d[0], nc = head[1] + d[1];
+        if (nr < 0 || nr >= H || nc < 0 || nc >= W) return;
+        if (hitTest(nr, nc, cur, false)) return;
+        legal.push(di);
+      });
+      if (!legal.length){ die(cur); return; }
+      // 优先朝食物方向
+      let best = legal[0], bestD = 1e9;
+      legal.forEach(di => {
+        const d = dirs[di];
+        const nd = Math.abs(head[0]+d[0]-food[0]) + Math.abs(head[1]+d[1]-food[1]);
+        if (nd < bestD){ bestD = nd; best = di; }
+      });
+      step(cur, best, null);
+    }, 650);
+  }
+  function hitTest(r, c, except, allowFood){
+    if (r < 0 || r >= H || c < 0 || c >= W) return true;
+    for (let i = 0; i < snakes.length; i++){
+      const s = snakes[i];
+      if (!s || !s.alive) continue;
+      const body = allowFood && i === except ? s.body.slice(0, -1) : s.body;
+      if (body.some(p => p[0] === r && p[1] === c)) return true;
+    }
+    return false;
+  }
+  function die(pi){
+    snakes[pi].alive = false;
+    aliveCount--;
+    toast('💀 玩家' + (pi+1) + ' 的蛇撞了！');
+    if (aliveCount <= 1){
+      const alives = snakes.map((s, i) => s.alive ? i : -1).filter(i => i >= 0);
+      if (alives.length === 1){
+        over = true; winner = alives[0];
+        if (opts.onEnd) opts.onEnd(snakes.map((s, i) => ({ slot: i, coins: i === winner ? 1 : 0, rank: i === winner ? 1 : 2 })));
+      } else {
+        over = true;
+        let best = 0;
+        snakes.forEach((s, i) => { if (s.score > snakes[best].score) best = i; });
+        winner = best;
+        if (opts.onEnd) opts.onEnd(snakes.map((s, i) => ({ slot: i, coins: i === winner ? 1 : 0, rank: i === winner ? 1 : 2 })));
+      }
+      render();
+      return;
+    }
+    render();
+    endTurn();
+  }
+  function step(pi, d, newFood){
+    const s = snakes[pi];
+    s.d = d;
+    const head = s.body[0];
+    const nr = head[0] + dirs[d][0], nc = head[1] + dirs[d][1];
+    if (nr < 0 || nr >= H || nc < 0 || nc >= W){ die(pi); return; }
+    if (hitTest(nr, nc, pi, false)){ die(pi); return; }
+    s.body.unshift([nr, nc]);
+    if (nr === food[0] && nc === food[1]){
+      s.score++;
+      if (newFood) food = newFood;
+      else food = [1 + Math.floor(Math.random()*(H-2)), 1 + Math.floor(Math.random()*(W-2))];
+      toast('🍎 玩家' + (pi+1) + ' 吃豆 +1！');
+    } else {
+      s.body.pop();
+    }
+    if (s.score >= 10){
+      over = true; winner = pi;
+      if (opts.onEnd) opts.onEnd(snakes.map((s2, i) => ({ slot: i, coins: i === pi ? 1 : 0, rank: i === pi ? 1 : 2 })));
+      render();
+      return;
+    }
+    render();
+    endTurn();
+  }
+  function endTurn(){
+    if (over) return;
+    do { cur = (cur + 1) % snakes.length; } while (snakes[cur] && !snakes[cur].alive);
+    render();
+    setStatus('轮到玩家' + (cur+1) + '，选择方向');
+    scheduleAI();
+  }
+  function render(){
+    const w = area.clientWidth || 520;
+    const S = Math.min(w, 540);
+    area.innerHTML = '';
+    const board = el('div','snake-board');
+    board.style.width = S + 'px'; board.style.height = S + 'px';
+    const cs = S / W;
+    for (let r = 0; r < H; r++){
+      for (let c = 0; c < W; c++){
+        const cell = el('div','snake-cell');
+        cell.style.left = (c*cs) + 'px'; cell.style.top = (r*cs) + 'px';
+        cell.style.width = cs + 'px'; cell.style.height = cs + 'px';
+        if (r % 2 === c % 2) cell.style.background = 'rgba(128,150,190,.06)';
+        board.appendChild(cell);
+      }
+    }
+    const foodEl = el('div','snake-cell');
+    foodEl.style.left = (food[1]*cs) + 'px'; foodEl.style.top = (food[0]*cs) + 'px';
+    foodEl.style.width = cs + 'px'; foodEl.style.height = cs + 'px';
+    foodEl.style.background = '#e5484d'; foodEl.style.borderRadius = '50%';
+    board.appendChild(foodEl);
+    snakes.forEach((s, pi) => {
+      if (!s || !s.alive) return;
+      s.body.forEach((p, i) => {
+        const seg = el('div','snake-cell' + (i === 0 ? ' head' + pi : ''));
+        seg.style.left = (p[1]*cs) + 'px'; seg.style.top = (p[0]*cs) + 'px';
+        seg.style.width = cs + 'px'; seg.style.height = cs + 'px';
+        seg.style.background = PLAYER_COLORS[pi];
+        if (i === 0) seg.style.boxShadow = '0 0 8px ' + PLAYER_COLORS[pi];
+        board.appendChild(seg);
+      });
+    });
+    if (over){
+      const ov = el('div','overlay');
+      const card = el('div','overlay-card');
+      card.appendChild(el('div','big','🏆'));
+      card.appendChild(el('h3', null, '玩家' + (winner+1) + ' 获胜！'));
+      card.appendChild(el('p', null, '得分 ' + snakes[winner].score));
+      const btn = el('button','btn btn-primary','再来一局');
+      btn.addEventListener('click', reset);
+      card.appendChild(btn);
+      ov.appendChild(card);
+      board.appendChild(ov);
+    }
+    area.appendChild(board);
+    renderPlayers(cur, snakes.map((s, i) => s.alive ? ('🍎 ' + s.score) : '💀 出局'));
+  }
+  extra.innerHTML = '';
+  const actions = el('div','snake-actions');
+  ['⬆','➡','⬇','⬅'].forEach((k, di) => {
+    const b = el('button','btn',k);
+    b.addEventListener('click', () => {
+      if (over) return;
+      if (opts.ai && opts.ai.has(cur)) return;
+      const s = snakes[cur];
+      if (!s || !s.alive) return;
+      if ((di + 2) % 4 === s.d) return;
+      if (opts.online){
+        const nr = s.body[0][0] + dirs[di][0], nc = s.body[0][1] + dirs[di][1];
+        const eat = nr === food[0] && nc === food[1];
+        const nf = eat ? [1 + Math.floor(Math.random()*(H-2)), 1 + Math.floor(Math.random()*(W-2))] : null;
+        opts.sendMove({ d: di, food: nf });
+      }
+      step(cur, di, null);
+    });
+    actions.appendChild(b);
+  });
+  extra.appendChild(actions);
+  opts.onMove = payload => {
+    if (!payload) return;
+    if (payload.food) food = payload.food;
+    step(cur, payload.d, payload.food || null);
+  };
+  function resetLocal(){
+    snakes = starts.slice(0, n).map(([r, c, d]) => ({ body: [[r,c],[r - dirs[d][0], c - dirs[d][1]]], d, score: 0, alive: true }));
+    food = [7,7];
+    cur = 0; over = false; winner = -1; aliveCount = n; aiPending = false;
+    render();
+    setStatus('玩家1 的回合，选择方向');
+  }
+  function reset(){
+    if (opts.online && !opts.isHost){ toast('由房主开始新一局'); return; }
+    if (opts.online) opts.sendRestart();
+    resetLocal();
+  }
+  resetLocal();
+  return { reset, onMove: opts.onMove, onRestart: resetLocal, snapshot: () => ({ snakes: snakes.map(s => ({ body: s.body.map(b => b.slice()), d: s.d, score: s.score, alive: s.alive })), food: food.slice(), cur, over, winner }) };
+}
+
+/* ================= 俄罗斯方块 ================= */
+function gameTetris(area, extra, n, opts){
+  opts = opts || {};
+  const COLS = 10, ROWS = 18;
+  const SHAPES = [
+    [[1,1,1,1]],                                   // I
+    [[1,1],[1,1]],                                 // O
+    [[1,0,0],[1,1,1]],                             // J
+    [[0,0,1],[1,1,1]],                             // L
+    [[0,1,1],[1,1,0]],                             // S
+    [[1,1,0],[0,1,1]],                             // Z
+    [[0,1,0],[1,1,1]],                             // T
+  ];
+  const COLORS = ['#22d3ee','#facc15','#a78bfa','#fb923c','#34d399','#f87171','#e879f9'];
+  let wells = [];
+  let scores = [];
+  let cur = 0, over = false, winner = -1;
+  let piece = null; // {shape, x, y, rot}
+  let pieceCount = 0;
+  const MAX_PIECES = 8;
+  let aiPending = false;
+  function rotate(m){
+    const rows = m.length, cols = m[0].length;
+    const out = Array.from({length: cols}, () => Array(rows).fill(0));
+    for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) out[c][rows-1-r] = m[r][c];
+    return out;
+  }
+  function cloneWell(w){ return w.map(r => r.slice()); }
+  function collide(well, sh, x, y){
+    for (let r = 0; r < sh.length; r++){
+      for (let c = 0; c < sh[r].length; c++){
+        if (!sh[r][c]) continue;
+        const rr = y + r, cc = x + c;
+        if (cc < 0 || cc >= COLS || rr >= ROWS) return true;
+        if (rr >= 0 && well[rr][cc]) return true;
+      }
+    }
+    return false;
+  }
+  function lock(well, sh, x, y){
+    const w = cloneWell(well);
+    for (let r = 0; r < sh.length; r++){
+      for (let c = 0; c < sh[r].length; c++){
+        if (sh[r][c]){
+          const rr = y + r, cc = x + c;
+          if (rr < 0) return { well: w, cleared: -1 }; // top out
+          w[rr][cc] = 1;
+        }
+      }
+    }
+    let cleared = 0;
+    for (let r = ROWS - 1; r >= 0; r--){
+      if (w[r].every(v => v)){
+        w.splice(r, 1);
+        w.unshift(Array(COLS).fill(0));
+        cleared++; r++;
+      }
+    }
+    return { well: w, cleared };
+  }
+  function evaluatePlacement(well, sh, x, y){
+    const res = lock(well, sh, x, y);
+    if (res.cleared === -1) return -1e9;
+    let height = 0, holes = 0;
+    for (let c = 0; c < COLS; c++){
+      let colH = 0, found = false;
+      for (let r = 0; r < ROWS; r++){
+        if (res.well[r][c]){ if (!found){ found = true; colH = ROWS - r; } }
+        else if (found) holes++;
+      }
+      height = Math.max(height, colH);
+    }
+    return res.cleared * 1000 - height * 2 - holes * 3;
+  }
+  function aiBestPlacement(well, shape){
+    let best = null, bestV = -1e9;
+    for (let rot = 0; rot < 4; rot++){
+      let sh = shape;
+      for (let i = 0; i < rot; i++) sh = rotate(sh);
+      for (let x = -3; x <= COLS; x++){
+        let y = 0;
+        while (!collide(well, sh, x, y + 1)) y++;
+        if (collide(well, sh, x, y)) continue;
+        const v = evaluatePlacement(well, sh, x, y);
+        if (v > bestV){ bestV = v; best = { x, y, sh }; }
+      }
+    }
+    return best;
+  }
+  function scheduleAI(){
+    if (aiPending || over) return;
+    if (!opts.ai || !opts.ai.has(cur)) return;
+    aiPending = true;
+    setTimeout(() => {
+      aiPending = false;
+      if (over) return;
+      if (!piece) return;
+      const idx = 0 | Math.floor(Math.random() * SHAPES.length);
+      const best = aiBestPlacement(wells[cur], SHAPES[idx]);
+      if (!best){ topOut(cur); return; }
+      if (opts.online) opts.sendMove({ piece: idx, x: best.x, y: best.y, rot: best.rot || 0, sh: best.sh });
+      applyPlacement(cur, idx, best.x, best.y, best.sh);
+    }, 700);
+  }
+  function applyPlacement(pi, idx, x, y, sh){
+    const res = lock(wells[pi], sh, x, y);
+    if (res.cleared === -1){ topOut(pi); return; }
+    wells[pi] = res.well;
+    const pts = [0, 100, 300, 500, 800][Math.min(4, res.cleared)];
+    scores[pi] += pts;
+    pieceCount++;
+    piece = null;
+    render();
+    if (pieceCount >= MAX_PIECES * n){
+      over = true;
+      winner = scores.reduce((a, b, i) => b > scores[a] ? i : a, 0);
+      if (opts.onEnd) opts.onEnd(scores.map((s, i) => ({ slot: i, coins: i === winner ? 1 : 0, rank: i === winner ? 1 : 2 })));
+      render();
+      return;
+    }
+    endTurn();
+  }
+  function topOut(pi){
+    scores[pi] = -1;
+    toast('💀 玩家' + (pi+1) + ' 方块堆到顶出局！');
+    over = true;
+    winner = scores.reduce((a, b, i) => b > scores[a] ? i : a, 0);
+    if (opts.onEnd) opts.onEnd(scores.map((s, i) => ({ slot: i, coins: i === winner ? 1 : 0, rank: i === winner ? 1 : 2 })));
+    render();
+  }
+  function endTurn(){
+    if (over) return;
+    cur = (cur + 1) % n;
+    piece = null;
+    render();
+    setStatus('轮到玩家' + (cur+1) + '，自动放置方块（AI）或点「放一个」');
+    scheduleAI();
+  }
+  function render(){
+    const w = area.clientWidth || 520;
+    const S = Math.min(w, 540);
+    area.innerHTML = '';
+    const wrap = el('div','tetris-wrap');
+    wells.forEach((wdata, pi) => {
+      const colW = S / n - 10;
+      const cell = Math.min(22, colW / COLS);
+      const boardW = cell * COLS, boardH = cell * ROWS;
+      const box = el('div');
+      box.style.width = boardW + 'px';
+      box.appendChild(el('div','tetris-score','玩家' + (pi+1) + ' · ' + Math.max(0, scores[pi]) + ' 分' + (pi === cur && !over ? ' ⏩' : '')));
+      const well = el('div','tetris-well');
+      well.style.width = boardW + 'px'; well.style.height = boardH + 'px';
+      for (let r = 0; r < ROWS; r++){
+        for (let c = 0; c < COLS; c++){
+          if (wdata[r][c]){
+            const cellEl = el('div','tetris-cell');
+            cellEl.style.left = (c*cell) + 'px'; cellEl.style.top = (r*cell) + 'px';
+            cellEl.style.width = cell + 'px'; cellEl.style.height = cell + 'px';
+            cellEl.style.background = COLORS[(r*COLS+c) % 7];
+            well.appendChild(cellEl);
+          }
+        }
+      }
+      if (pi === cur && piece){
+        for (let r = 0; r < piece.sh.length; r++){
+          for (let c = 0; c < piece.sh[r].length; c++){
+            if (piece.sh[r][c]){
+              const cellEl = el('div','tetris-cell');
+              cellEl.style.left = ((piece.x+c)*cell) + 'px'; cellEl.style.top = ((piece.y+r)*cell) + 'px';
+              cellEl.style.width = cell + 'px'; cellEl.style.height = cell + 'px';
+              cellEl.style.background = COLORS[piece.idx % 7];
+              well.appendChild(cellEl);
+            }
+          }
+        }
+      }
+      box.appendChild(well);
+      wrap.appendChild(box);
+    });
+    if (over){
+      const ov = el('div','overlay');
+      const card = el('div','overlay-card');
+      card.appendChild(el('div','big','🏆'));
+      card.appendChild(el('h3', null, '玩家' + (winner+1) + ' 获胜！'));
+      card.appendChild(el('p', null, '得分 ' + Math.max(0, scores[winner])));
+      const btn = el('button','btn btn-primary','再来一局');
+      btn.addEventListener('click', reset);
+      card.appendChild(btn);
+      ov.appendChild(card);
+      wrap.appendChild(ov);
+    }
+    area.appendChild(wrap);
+    renderPlayers(cur, scores.map((s, i) => s < 0 ? '💀' : (s + ' 分')));
+  }
+  extra.innerHTML = '';
+  if (!opts.online){
+    const actions = el('div','tetris-actions');
+    const placeBtn = el('button','btn btn-primary','🧱 放一个');
+    placeBtn.addEventListener('click', () => {
+      if (over) return;
+      if (opts.ai && opts.ai.has(cur)) return;
+      const idx = 0 | Math.floor(Math.random() * SHAPES.length);
+      const best = aiBestPlacement(wells[cur], SHAPES[idx]);
+      if (!best){ topOut(cur); return; }
+      applyPlacement(cur, idx, best.x, best.y, best.sh);
+    });
+    actions.appendChild(placeBtn);
+    extra.appendChild(actions);
+  }
+  opts.onMove = payload => {
+    if (!payload) return;
+    applyPlacement(cur, payload.piece, payload.x, payload.y, payload.sh);
+  };
+  function resetLocal(){
+    wells = Array.from({length: n}, () => Array.from({length: ROWS}, () => Array(COLS).fill(0)));
+    scores = Array(n).fill(0);
+    cur = 0; over = false; winner = -1; piece = null; pieceCount = 0; aiPending = false;
+    render();
+    setStatus('玩家1 的回合，点「放一个」放置方块');
+  }
+  function reset(){
+    if (opts.online && !opts.isHost){ toast('由房主开始新一局'); return; }
+    if (opts.online) opts.sendRestart();
+    resetLocal();
+  }
+  resetLocal();
+  return { reset, onMove: opts.onMove, onRestart: resetLocal, snapshot: () => ({ wells: wells.map(w => w.map(r => r.slice())), scores: scores.slice(), cur, over, winner }) };
+}
+
+/* ================= 国际跳棋 ================= */
+function gameDraughts(area, extra, n, opts){
+  opts = opts || {};
+  const N = 8;
+  let board = Array.from({length:N}, () => Array(N).fill(null)); // {p, king}
+  let cur = 0, over = false, winner = -1, mustCapture = null;
+  let aiPending = false;
+  const cv = document.createElement('canvas');
+  cv.className = 'drg-canvas';
+  const dpr = window.devicePixelRatio || 1;
+  cv.addEventListener('click', e => {
+    if (over) return;
+    if (opts.online && cur !== opts.myIdx) return;
+    if (opts.ai && opts.ai.has(cur)) return;
+    const rect = cv.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width;
+    const y = (e.clientY - rect.top) / rect.height;
+    handleClick(0 | Math.floor(y * N), 0 | Math.floor(x * N));
+  });
+  function handleClick(r, c){
+    if (mustCapture){
+      const from = mustCapture;
+      if (board[r][c] && board[r][c].p === cur && capturesFor(cur, r, c).length){ mustCapture = [r,c]; render(); return; }
+      const caps = capturesFor(cur, from[0], from[1]);
+      const hit = caps.find(cap => cap[0] === r && cap[1] === c);
+      if (hit){
+        if (opts.online) opts.sendMove({ from, to: [r,c], via: [hit[2],hit[3]] });
+        applyMove(cur, from, [r,c], [hit[2],hit[3]]);
+        mustCapture = null;
+      }
+      return;
+    }
+    if (board[r][c] && board[r][c].p === cur){
+      mustCapture = [r,c];
+      render();
+    }
+  }
+  function initBoard(){
+    board = Array.from({length:N}, () => Array(N).fill(null));
+    for (let r = 0; r < 3; r++){
+      for (let c = 0; c < N; c++){
+        if ((r + c) % 2 === 1) board[r][c] = { p: 0, king: false };
+      }
+    }
+    for (let r = 5; r < 8; r++){
+      for (let c = 0; c < N; c++){
+        if ((r + c) % 2 === 1) board[r][c] = { p: 1, king: false };
+      }
+    }
+  }
+  function capturesFor(pi, r, c){
+    const piece = board[r][c];
+    if (!piece || piece.p !== pi) return [];
+    const res = [];
+    const drs = piece.king ? [-1,1] : (pi === 0 ? [1] : [-1]);
+    for (const dr of drs){
+      for (const dc of [-1,1]){
+        const mr = r + dr, mc = c + dc;
+        const lr = r + 2*dr, lc = c + 2*dc;
+        if (lr < 0 || lr >= N || lc < 0 || lc >= N) continue;
+        const mid = board[mr] && board[mr][mc];
+        if (mid && mid.p !== pi && !board[lr][lc]) res.push([lr, lc, mr, mc]);
+      }
+    }
+    return res;
+  }
+  function allCaptures(pi){
+    const res = [];
+    for (let r = 0; r < N; r++){
+      for (let c = 0; c < N; c++){
+        if (board[r][c] && board[r][c].p === pi){
+          capturesFor(pi, r, c).forEach(cap => res.push({ from: [r,c], to: [cap[0],cap[1]], via: [cap[2],cap[3]] }));
+        }
+      }
+    }
+    return res;
+  }
+  function simpleMoves(pi){
+    const res = [];
+    for (let r = 0; r < N; r++){
+      for (let c = 0; c < N; c++){
+        const piece = board[r][c];
+        if (!piece || piece.p !== pi) continue;
+        const drs = piece.king ? [-1,1] : (pi === 0 ? [1] : [-1]);
+        for (const dr of drs){
+          for (const dc of [-1,1]){
+            const nr = r + dr, nc = c + dc;
+            if (nr < 0 || nr >= N || nc < 0 || nc >= N) continue;
+            if (!board[nr][nc]) res.push({ from: [r,c], to: [nr,nc] });
+          }
+        }
+      }
+    }
+    return res;
+  }
+  function scheduleAI(){
+    if (aiPending || over) return;
+    if (!opts.ai || !opts.ai.has(cur)) return;
+    aiPending = true;
+    setTimeout(() => {
+      aiPending = false;
+      if (over) return;
+      const caps = allCaptures(cur);
+      let moves = caps.length ? caps : simpleMoves(cur);
+      if (!moves.length){ lose(cur); return; }
+      let pick = moves[0];
+      if (caps.length){
+        pick = caps.sort((a, b) => {
+          const ka = board[a.from[0]][a.from[1]].king ? 1 : 0, kb = board[b.from[0]][b.from[1]].king ? 1 : 0;
+          return kb - ka;
+        })[0];
+      } else {
+        let best = -1e9;
+        moves.forEach(mv => {
+          let v = (mv.to[0] === (cur === 0 ? 7 : 0) ? 3 : 0) - Math.abs(mv.to[0] - (cur === 0 ? 7 : 0));
+          if (v > best){ best = v; pick = mv; }
+        });
+      }
+      applyMove(cur, pick.from, pick.to);
+    }, 600);
+  }
+  function applyMove(pi, from, to, via){
+    const piece = board[from[0]][from[1]];
+    board[from[0]][from[1]] = null;
+    if (via) board[via[0]][via[1]] = null;
+    let king = piece.king;
+    if (!king && ((pi === 0 && to[0] === 7) || (pi === 1 && to[0] === 0))) king = true;
+    board[to[0]][to[1]] = { p: pi, king };
+    // 连跳
+    if (via && capturesFor(pi, to[0], to[1]).length && !king){
+      setTimeout(() => {
+        // 简化：连续跳时保持回合
+        const caps = capturesFor(pi, to[0], to[1]);
+        if (caps.length){
+          // 由玩家继续
+          render();
+          return;
+        }
+        endTurn();
+      }, 200);
+      render();
+      return;
+    }
+    endTurn();
+  }
+  function lose(pi){
+    over = true;
+    winner = pi ^ 1;
+    if (opts.onEnd) opts.onEnd([{ slot: winner, coins: 1, rank: 1 }, { slot: pi, coins: 0, rank: 2 }]);
+    render();
+  }
+  function countPieces(pi){
+    let c = 0;
+    for (let r = 0; r < N; r++) for (let x = 0; x < N; x++) if (board[r][x] && board[r][x].p === pi) c++;
+    return c;
+  }
+  function endTurn(){
+    if (over) return;
+    cur ^= 1;
+    if (!countPieces(cur) || !(allCaptures(cur).length || simpleMoves(cur).length)){
+      lose(cur);
+      return;
+    }
+    render();
+    setStatus('轮到玩家' + (cur+1) + '，点击自己的棋子');
+    scheduleAI();
+  }
+  function render(){
+    const w = area.clientWidth || 520;
+    const S = Math.min(w, 560);
+    area.innerHTML = '';
+    cv.width = S*dpr; cv.height = S*dpr;
+    area.appendChild(cv);
+    const ctx = cv.getContext('2d');
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    const cs = S / N;
+    for (let r = 0; r < N; r++){
+      for (let c = 0; c < N; c++){
+        ctx.fillStyle = (r + c) % 2 === 0 ? '#f1eee4' : '#7b5e3b';
+        ctx.fillRect(c*cs, r*cs, cs, cs);
+        const piece = board[r][c];
+        if (piece){
+          ctx.beginPath();
+          ctx.arc((c+0.5)*cs, (r+0.5)*cs, cs*0.36, 0, Math.PI*2);
+          ctx.fillStyle = piece.p === 0 ? '#e5484d' : '#3b82f6';
+          ctx.fill();
+          ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
+          if (piece.king){
+            ctx.fillStyle = '#fbbf24';
+            ctx.font = (cs*0.5) + 'px sans-serif';
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText('★', (c+0.5)*cs, (r+0.52)*cs);
+          }
+        }
+      }
+    }
+    if (over){
+      const ov = el('div','overlay');
+      const card = el('div','overlay-card');
+      card.appendChild(el('div','big','🏆'));
+      card.appendChild(el('h3', null, '玩家' + (winner+1) + ' 获胜！'));
+      const btn = el('button','btn btn-primary','再来一局');
+      btn.addEventListener('click', reset);
+      card.appendChild(btn);
+      ov.appendChild(card);
+      area.appendChild(ov);
+    }
+    renderPlayers(cur, null);
+  }
+  opts.onMove = payload => {
+    if (!payload) return;
+    applyMove(cur, payload.from, payload.to, payload.via);
+  };
+  function resetLocal(){
+    initBoard();
+    cur = 0; over = false; winner = -1; mustCapture = null; aiPending = false;
+    render();
+    setStatus('轮到玩家1，点击自己的棋子');
+  }
+  function reset(){
+    if (opts.online && !opts.isHost){ toast('由房主开始新一局'); return; }
+    if (opts.online) opts.sendRestart();
+    resetLocal();
+  }
+  resetLocal();
+  return { reset, onMove: opts.onMove, onRestart: resetLocal, snapshot: () => ({ board: board.map(r => r.map(x => x ? { p: x.p, king: x.king } : null)), cur, over, winner }) };
+}
+
+/* ================= 斗兽棋 ================= */
+function gameJungle(area, extra, n, opts){
+  opts = opts || {};
+  const COLS = 9, ROWS = 7;
+  const RANK = { '鼠':1,'猫':2,'狗':3,'狼':4,'豹':5,'虎':6,'狮':7,'象':8 };
+  const PIECES = ['象','狮','虎','豹','狼','狗','猫','鼠'];
+  const EMOJI = { '象':'🐘','狮':'🦁','虎':'🐯','豹':'🐆','狼':'🐺','狗':'🐶','猫':'🐱','鼠':'🐭' };
+  let board = Array.from({length:ROWS}, () => Array(COLS).fill(null)); // {p, type}
+  let cur = 0, over = false, winner = -1, selected = null, legalMoves = [];
+  let aiPending = false;
+  function isWater(r,c){ return r >= 2 && r <= 4 && ((c >= 1 && c <= 3) || (c >= 5 && c <= 7)); }
+  function denOf(p){ return p === 0 ? [3,0] : [3,8]; }
+  function trapOf(p){
+    const d = denOf(p);
+    if (p === 0) return [[3,1],[2,0],[4,0]];
+    return [[3,7],[2,8],[4,8]];
+  }
+  function initBoard(){
+    board = Array.from({length:ROWS}, () => Array(COLS).fill(null));
+    const row0 = ['象','狮','虎','豹','狼','狗','猫','鼠']; // 蓝方（上方）
+    row0.forEach((t, i) => {
+      const col = i < 4 ? i : i + 1; // 0-3 与 5-8，4 是兽穴
+      board[0][col] = { p: 1, type: t };
+    });
+    const row6 = ['鼠','猫','狗','狼','豹','虎','狮','象']; // 红方（下方）
+    row6.forEach((t, i) => {
+      const col = i < 4 ? i : i + 1;
+      board[6][col] = { p: 0, type: t };
+    });
+  }
+  function inBoard(r,c){ return r >= 0 && r < ROWS && c >= 0 && c < COLS; }
+  function canCapture(att, def, r, c){
+    if (!def) return true;
+    if (att.p === def.p) return false;
+    let ar = RANK[att.type], dr = RANK[def.type];
+    if (isWater(r,c)){
+      if (def.type === '鼠') return att.type === '鼠';
+      return false;
+    }
+    const trap = trapOf(att.p);
+    if (trap.some(([tr,tc]) => tr === r && tc === c)) dr = 0;
+    if (att.type === '鼠' && def.type === '象') return true;
+    return ar > dr;
+  }
+  function movesOf(p, r, c){
+    const piece = board[r][c];
+    if (!piece || piece.p !== p) return [];
+    const res = [];
+    const dirs = [[-1,0],[1,0],[0,-1],[0,1]];
+    for (const [dr,dc] of dirs){
+      const nr = r + dr, nc = c + dc;
+      if (!inBoard(nr,nc)) continue;
+      const d0 = denOf(p);
+      if (nr === d0[0] && nc === d0[1]) continue; // 不能进自己兽穴
+      if (board[nr][nc] && board[nr][nc].p === p) continue;
+      if (isWater(nr,nc)){
+        if (piece.type !== '鼠') continue;
+        if (canCapture(piece, board[nr][nc], nr, nc)) res.push([nr,nc]);
+        continue;
+      }
+      if (canCapture(piece, board[nr][nc], nr, nc)) res.push([nr,nc]);
+    }
+    // 狮/虎跳河
+    if (piece.type === '狮' || piece.type === '虎'){
+      for (const [dr,dc] of [[-1,0],[1,0],[0,-1],[0,1]]){
+        let nr = r + dr, nc = c + dc;
+        if (isWater(nr,nc)){
+          let jumped = false, blockedByRat = false;
+          while (inBoard(nr,nc) && isWater(nr,nc)){
+            if (board[nr][nc]){ blockedByRat = true; break; }
+            nr += dr; nc += dc; jumped = true;
+          }
+          if (jumped && !blockedByRat && inBoard(nr,nc)){
+            const d0 = denOf(p);
+            if (!(nr === d0[0] && nc === d0[1]) && canCapture(piece, board[nr][nc], nr, nc)) res.push([nr,nc]);
+          }
+        }
+      }
+    }
+    return res;
+  }
+  function scheduleAI(){
+    if (aiPending || over) return;
+    if (!opts.ai || !opts.ai.has(cur)) return;
+    aiPending = true;
+    setTimeout(() => {
+      aiPending = false;
+      if (over) return;
+      const all = [];
+      for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++){
+        const piece = board[r][c];
+        if (piece && piece.p === cur){
+          movesOf(cur, r, c).forEach(m => all.push({ from: [r,c], to: m }));
+        }
+      }
+      if (!all.length) return;
+      const d0 = denOf(cur);
+      let best = all[0], bestV = -1e9;
+      all.forEach(mv => {
+        const target = board[mv.to[0]][mv.to[1]];
+        let v = target ? (RANK[target.type] * 10) : 0;
+        if (target && target.type === '象' && board[mv.from[0]][mv.from[1]].type === '鼠') v = 80;
+        v += (Math.abs(mv.to[0] - d0[0]) + Math.abs(mv.to[1] - d0[1])) * 2;
+        if (v > bestV){ bestV = v; best = mv; }
+      });
+      if (opts.online) opts.sendMove({ from: best.from, to: best.to });
+      doMove(best.from, best.to);
+    }, 650);
+  }
+  function doMove(from, to){
+    const piece = board[from[0]][from[1]];
+    board[from[0]][from[1]] = null;
+    board[to[0]][to[1]] = piece;
+    selected = null; legalMoves = [];
+    const d1 = denOf(cur ^ 1);
+    if (to[0] === d1[0] && to[1] === d1[1]){
+      over = true; winner = cur;
+      if (opts.onEnd) opts.onEnd([{ slot: cur, coins: 1, rank: 1 }, { slot: cur ^ 1, coins: 0, rank: 2 }]);
+      render();
+      return;
+    }
+    const cnt0 = board.flat().filter(x => x && x.p === 0).length;
+    const cnt1 = board.flat().filter(x => x && x.p === 1).length;
+    if (cnt1 === 0 || cnt0 === 0){
+      over = true;
+      winner = cnt1 === 0 ? 0 : 1;
+      if (opts.onEnd) opts.onEnd([{ slot: winner, coins: 1, rank: 1 }, { slot: winner ^ 1, coins: 0, rank: 2 }]);
+      render();
+      return;
+    }
+    cur ^= 1;
+    render();
+    setStatus('轮到玩家' + (cur+1) + '，点击棋子');
+    scheduleAI();
+  }
+  function render(){
+    const w = area.clientWidth || 520;
+    const S = Math.min(w, 540);
+    area.innerHTML = '';
+    const boardEl = el('div','jungle-board');
+    boardEl.style.width = S + 'px'; boardEl.style.height = S * ROWS / COLS + 'px';
+    const cs = S / COLS;
+    for (let r = 0; r < ROWS; r++){
+      for (let c = 0; c < COLS; c++){
+        const cell = el('div','j-cell');
+        cell.style.left = (c*cs) + 'px'; cell.style.top = (r*cs) + 'px';
+        cell.style.width = cs + 'px'; cell.style.height = cs + 'px';
+        if (isWater(r,c)) cell.classList.add('water');
+        const trap = trapOf(0).concat(trapOf(1));
+        if (trap.some(([tr,tc]) => tr === r && tc === c)) cell.classList.add('trap');
+        if ((r === 3 && c === 0) || (r === 3 && c === 8)) cell.classList.add('den');
+        const piece = board[r][c];
+        if (piece){
+          cell.textContent = EMOJI[piece.type];
+          cell.classList.add('king' + piece.p);
+          const sub = el('span','j-sub', piece.type);
+          cell.appendChild(sub);
+        }
+        if (selected && selected[0] === r && selected[1] === c) cell.classList.add('sel');
+        if (legalMoves.some(([lr,lc]) => lr === r && lc === c)) cell.style.boxShadow = '0 0 0 3px rgba(34,160,107,.6)';
+        cell.addEventListener('click', () => {
+          if (over) return;
+          if (opts.online && cur !== opts.myIdx) return;
+          if (opts.ai && opts.ai.has(cur)) return;
+          if (selected){
+            if (legalMoves.some(([lr,lc]) => lr === r && lc === c)){
+              if (opts.online) opts.sendMove({ from: selected, to: [r,c] });
+              doMove(selected, [r,c]);
+              return;
+            }
+            selected = null; legalMoves = [];
+          }
+          const piece = board[r][c];
+          if (piece && piece.p === cur){
+            selected = [r,c];
+            legalMoves = movesOf(cur, r, c);
+          }
+          render();
+        });
+        boardEl.appendChild(cell);
+      }
+    }
+    if (over){
+      const ov = el('div','overlay');
+      const card = el('div','overlay-card');
+      card.appendChild(el('div','big','🏆'));
+      card.appendChild(el('h3', null, '玩家' + (winner+1) + ' 获胜！'));
+      const btn = el('button','btn btn-primary','再来一局');
+      btn.addEventListener('click', reset);
+      card.appendChild(btn);
+      ov.appendChild(card);
+      boardEl.appendChild(ov);
+    }
+    area.appendChild(boardEl);
+    const cnt = [board.flat().filter(x => x && x.p === 0).length, board.flat().filter(x => x && x.p === 1).length];
+    renderPlayers(cur, ['🐘x' + cnt[0], '🐘x' + cnt[1]]);
+  }
+  opts.onMove = payload => {
+    if (!payload) return;
+    doMove(payload.from, payload.to);
+  };
+  function resetLocal(){
+    initBoard();
+    cur = 0; over = false; winner = -1; selected = null; legalMoves = []; aiPending = false;
+    render();
+    setStatus('轮到玩家1，点击棋子');
+  }
+  function reset(){
+    if (opts.online && !opts.isHost){ toast('由房主开始新一局'); return; }
+    if (opts.online) opts.sendRestart();
+    resetLocal();
+  }
+  resetLocal();
+  return { reset, onMove: opts.onMove, onRestart: resetLocal, snapshot: () => ({ board: board.map(r => r.map(x => x ? { p: x.p, type: x.type } : null)), cur, over, winner }) };
+}
+
+/* ================= 象棋 ================= */
+function gameXiangqi(area, extra, n, opts){
+  opts = opts || {};
+  const COLS = 9, ROWS = 10;
+  const PIECE = { 'k':'帅','a':'仕','e':'相','h':'马','r':'车','c':'炮','p':'兵' };
+  const BLACK_PIECE = { 'k':'将','a':'士','e':'象','h':'马','r':'车','c':'炮','p':'卒' };
+  const EMOJI = { '帅':'🤴','仕':'🧑‍⚖️','相':'🧓','马':'🐴','车':'🚗','炮':'💣','兵':'🪖','将':'👑','士':'🧑‍⚖️','象':'🐘','卒':'🪖' };
+  let board = Array.from({length:ROWS}, () => Array(COLS).fill(null)); // {p, t}
+  let cur = 0, over = false, winner = -1, selected = null, legalMoves = [], lastMove = null;
+  let aiPending = false;
+  function initBoard(){
+    board = Array.from({length:ROWS}, () => Array(COLS).fill(null));
+    const setup = [
+      ['r','h','e','a','k','a','e','h','r'],
+      [null,null,null,null,null,null,null,null,null],
+      [null,'c',null,null,null,null,null,'c',null],
+      ['p',null,'p',null,'p',null,'p',null,'p'],
+      [null,null,null,null,null,null,null,null,null],
+      [null,null,null,null,null,null,null,null,null],
+      ['p',null,'p',null,'p',null,'p',null,'p'],
+      [null,'c',null,null,null,null,null,'c',null],
+      [null,null,null,null,null,null,null,null,null],
+      ['r','h','e','a','k','a','e','h','r'],
+    ];
+    for (let r = 0; r < ROWS; r++){
+      for (let c = 0; c < COLS; c++){
+        const t = setup[r][c];
+        if (t) board[r][c] = { p: r < 5 ? 1 : 0, t };
+      }
+    }
+  }
+  function inPalace(r, c, p){
+    return c >= 3 && c <= 5 && (p === 1 ? (r >= 0 && r <= 2) : (r >= 7 && r <= 9));
+  }
+  function findKing(p){
+    for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++){
+      if (board[r][c] && board[r][c].p === p && board[r][c].t === 'k') return [r,c];
+    }
+    return null;
+  }
+  function isCheck(p){
+    const k = findKing(p);
+    if (!k) return true;
+    for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++){
+      const piece = board[r][c];
+      if (piece && piece.p !== p){
+        if (movesOf(piece.p, r, c).some(([mr,mc]) => mr === k[0] && mc === k[1])) return true;
+      }
+    }
+    return false;
+  }
+  function movesOf(p, r, c){
+    const piece = board[r][c];
+    if (!piece || piece.p !== p) return [];
+    const res = [];
+    const oppKing = findKing(p ^ 1);
+    const canMoveTo = (nr, nc) => {
+      if (nr < 0 || nr >= ROWS || nc < 0 || nc >= COLS) return false;
+      if (board[nr][nc] && board[nr][nc].p === p) return false;
+      return true;
+    };
+    if (piece.t === 'k'){
+      for (const [dr,dc] of [[-1,0],[1,0],[0,-1],[0,1]]){
+        const nr = r+dr, nc = c+dc;
+        if (inPalace(nr, nc, p) && canMoveTo(nr,nc)) res.push([nr,nc]);
+      }
+      // 飞将
+      if (oppKing && oppKing[1] === c){
+        let blocked = false;
+        for (let rr = Math.min(r, oppKing[0]) + 1; rr < Math.max(r, oppKing[0]); rr++){
+          if (board[rr][c]){ blocked = true; break; }
+        }
+        if (!blocked) res.push(oppKing);
+      }
+    } else if (piece.t === 'a'){
+      for (const [dr,dc] of [[-1,-1],[-1,1],[1,-1],[1,1]]){
+        const nr = r+dr, nc = c+dc;
+        if (inPalace(nr, nc, p) && canMoveTo(nr,nc)) res.push([nr,nc]);
+      }
+    } else if (piece.t === 'e'){
+      for (const [dr,dc] of [[-2,-2],[-2,2],[2,-2],[2,2]]){
+        const nr = r+dr, nc = c+dc;
+        const eye = [r+dr/2, c+dc/2];
+        if (nr < 0 || nr >= ROWS || nc < 0 || nc >= COLS) continue;
+        const cross = p === 1 ? nr <= 4 : nr >= 5;
+        if (!cross) continue;
+        if (board[eye[0]][eye[1]]) continue;
+        if (canMoveTo(nr,nc)) res.push([nr,nc]);
+      }
+    } else if (piece.t === 'h'){
+      const legs = [[[-1,0],[-2,-1]],[[-1,0],[-2,1]],[[1,0],[2,-1]],[[1,0],[2,1]],[[0,-1],[-1,-2]],[[0,-1],[1,-2]],[[0,1],[-1,2]],[[0,1],[1,2]]];
+      for (const [leg, step] of legs){
+        const lr = r+leg[0], lc = c+leg[1];
+        const nr = r+step[0], nc = c+step[1];
+        if (!canMoveTo(nr,nc)) continue;
+        if (board[lr][lc]) continue;
+        res.push([nr,nc]);
+      }
+    } else if (piece.t === 'r'){
+      for (const [dr,dc] of [[-1,0],[1,0],[0,-1],[0,1]]){
+        let nr = r+dr, nc = c+dc;
+        while (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS){
+          if (!board[nr][nc]){ res.push([nr,nc]); }
+          else { if (board[nr][nc].p !== p) res.push([nr,nc]); break; }
+          nr += dr; nc += dc;
+        }
+      }
+    } else if (piece.t === 'c'){
+      for (const [dr,dc] of [[-1,0],[1,0],[0,-1],[0,1]]){
+        let nr = r+dr, nc = c+dc, screen = false;
+        while (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS){
+          if (!screen){
+            if (!board[nr][nc]) res.push([nr,nc]);
+            else screen = true;
+          } else {
+            if (board[nr][nc]){
+              if (board[nr][nc].p !== p) res.push([nr,nc]);
+              break;
+            }
+          }
+          nr += dr; nc += dc;
+        }
+      }
+    } else if (piece.t === 'p'){
+      const fwd = p === 1 ? 1 : -1;
+      const nr = r + fwd;
+      if (nr >= 0 && nr < ROWS && canMoveTo(nr, c)) res.push([nr, c]);
+      if ((p === 1 && r >= 5) || (p === 0 && r <= 4)){
+        for (const dc of [-1,1]){
+          if (canMoveTo(r, c+dc)) res.push([r, c+dc]);
+        }
+      }
+    }
+    return res;
+  }
+  function legalMovesOf(p, r, c){
+    return movesOf(p, r, c).filter(([nr,nc]) => {
+      const from = board[r][c], to = board[nr][nc];
+      board[r][c] = null; board[nr][nc] = from;
+      const bad = isCheck(p);
+      board[r][c] = from; board[nr][nc] = to;
+      return !bad;
+    });
+  }
+  function scheduleAI(){
+    if (aiPending || over) return;
+    if (!opts.ai || !opts.ai.has(cur)) return;
+    aiPending = true;
+    setTimeout(async () => {
+      aiPending = false;
+      if (over) return;
+      const all = [];
+      for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++){
+        const piece = board[r][c];
+        if (piece && piece.p === cur){
+          legalMovesOf(cur, r, c).forEach(m => all.push({ from: [r,c], to: m }));
+        }
+      }
+      if (!all.length){ lose(cur); return; }
+      const VAL = { 'p':1,'a':2,'e':2,'h':4,'c':4.5,'r':9,'k':100 };
+      let best = all[0], bestV = -1e9;
+      all.forEach(mv => {
+        const target = board[mv.to[0]][mv.to[1]];
+        let v = target ? (VAL[target.t] * 10) : 0;
+        const rnd = (Math.random() - 0.5) * 0.5;
+        if (v + rnd > bestV){ bestV = v + rnd; best = mv; }
+      });
+      if (opts.online) opts.sendMove({ from: best.from, to: best.to });
+      doMove(best.from, best.to);
+    }, 750);
+  }
+  function doMove(from, to){
+    const piece = board[from[0]][from[1]];
+    board[from[0]][from[1]] = null;
+    board[to[0]][to[1]] = piece;
+    lastMove = [from, to];
+    selected = null; legalMoves = [];
+    cur ^= 1;
+    // 判断对方是否被将死
+    const all = [];
+    for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++){
+      const p2 = board[r][c];
+      if (p2 && p2.p === cur) legalMovesOf(cur, r, c).forEach(m => all.push([r,c,m]));
+    }
+    if (!all.length){
+      over = true;
+      winner = cur ^ 1;
+      if (opts.onEnd) opts.onEnd([{ slot: winner, coins: 1, rank: 1 }, { slot: cur, coins: 0, rank: 2 }]);
+      render();
+      return;
+    }
+    render();
+    setStatus(isCheck(cur) ? '⚠️ 玩家' + (cur+1) + ' 被将军！请应将' : '轮到玩家' + (cur+1));
+    scheduleAI();
+  }
+  function lose(pi){
+    over = true;
+    winner = pi ^ 1;
+    if (opts.onEnd) opts.onEnd([{ slot: winner, coins: 1, rank: 1 }, { slot: pi, coins: 0, rank: 2 }]);
+    render();
+  }
+  function render(){
+    const w = area.clientWidth || 520;
+    const S = Math.min(w, 560);
+    area.innerHTML = '';
+    const wrap = el('div','xiangqi-wrap');
+    const boardEl = el('div','xiangqi-board');
+    boardEl.style.width = S + 'px'; boardEl.style.height = S * ROWS / COLS + 'px';
+    const cs = S / COLS;
+    const cv = document.createElement('canvas');
+    cv.style.position = 'absolute'; cv.style.left = '0'; cv.style.top = '0';
+    const dpr = window.devicePixelRatio || 1;
+    cv.width = S*dpr; cv.height = S*ROWS/COLS*dpr;
+    boardEl.appendChild(cv);
+    const ctx = cv.getContext('2d');
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    ctx.fillStyle = '#e9c79a'; ctx.fillRect(0,0,S,S*ROWS/COLS);
+    ctx.strokeStyle = '#8a5a2b'; ctx.lineWidth = 1.4;
+    const pad = cs/2;
+    for (let c = 0; c < COLS; c++){
+      ctx.beginPath(); ctx.moveTo(pad + c*cs, pad); ctx.lineTo(pad + c*cs, S - pad); ctx.stroke();
+    }
+    for (let r = 0; r < ROWS; r++){
+      ctx.beginPath(); ctx.moveTo(pad, pad + r*cs); ctx.lineTo(S - pad, pad + r*cs); ctx.stroke();
+    }
+    // 九宫斜线
+    const palace = (r0) => {
+      ctx.beginPath();
+      ctx.moveTo(pad + 3*cs, pad + r0*cs); ctx.lineTo(pad + 5*cs, pad + (r0+2)*cs);
+      ctx.moveTo(pad + 5*cs, pad + r0*cs); ctx.lineTo(pad + 3*cs, pad + (r0+2)*cs);
+      ctx.stroke();
+    };
+    palace(0); palace(7);
+    // 河界
+    ctx.setLineDash([6,5]);
+    ctx.beginPath(); ctx.moveTo(pad, pad + 5*cs); ctx.lineTo(S - pad, pad + 5*cs); ctx.stroke();
+    ctx.setLineDash([]);
+    for (let r = 0; r < ROWS; r++){
+      for (let c = 0; c < COLS; c++){
+        const piece = board[r][c];
+        if (!piece) continue;
+        const x = pad + c*cs, y = pad + r*cs;
+        ctx.beginPath(); ctx.arc(x, y, cs*0.42, 0, Math.PI*2);
+        ctx.fillStyle = piece.p === 0 ? '#fde2d3' : '#d9e6f2';
+        ctx.fill();
+        ctx.strokeStyle = piece.p === 0 ? '#b23a1f' : '#1f4e79';
+        ctx.lineWidth = 1.6; ctx.stroke();
+        const label = piece.p === 0 ? PIECE[piece.t] : BLACK_PIECE[piece.t];
+        ctx.fillStyle = piece.p === 0 ? '#b23a1f' : '#1f4e79';
+        ctx.font = 'bold ' + (cs*0.5) + 'px sans-serif';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(label, x, y + 1);
+        if (lastMove && ((lastMove[0][0] === r && lastMove[0][1] === c) || (lastMove[1][0] === r && lastMove[1][1] === c))){
+          ctx.strokeStyle = '#f59e0b'; ctx.lineWidth = 2.4;
+          ctx.beginPath(); ctx.arc(x, y, cs*0.46, 0, Math.PI*2); ctx.stroke();
+        }
+      }
+    }
+    if (selected){
+      ctx.strokeStyle = '#22c55e'; ctx.lineWidth = 2.4;
+      ctx.beginPath(); ctx.arc(pad + selected[1]*cs, pad + selected[0]*cs, cs*0.46, 0, Math.PI*2); ctx.stroke();
+      legalMoves.forEach(([nr,nc]) => {
+        ctx.fillStyle = 'rgba(34,160,107,.4)';
+        ctx.beginPath(); ctx.arc(pad + nc*cs, pad + nr*cs, cs*0.18, 0, Math.PI*2); ctx.fill();
+      });
+    }
+    boardEl.addEventListener('click', e => {
+      if (over) return;
+      if (opts.online && cur !== opts.myIdx) return;
+      if (opts.ai && opts.ai.has(cur)) return;
+      const rect = boardEl.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width * S;
+      const y = (e.clientY - rect.top) / (rect.height) * S * ROWS / COLS;
+      const c = Math.round((x - pad) / cs), r = Math.round((y - pad) / cs);
+      if (r < 0 || r >= ROWS || c < 0 || c >= COLS) return;
+      if (selected){
+        if (legalMoves.some(([mr,mc]) => mr === r && mc === c)){
+          if (opts.online) opts.sendMove({ from: selected, to: [r,c] });
+          doMove(selected, [r,c]);
+          return;
+        }
+        selected = null; legalMoves = [];
+      }
+      const piece = board[r][c];
+      if (piece && piece.p === cur){
+        selected = [r,c];
+        legalMoves = legalMovesOf(cur, r, c);
+      }
+      render();
+    });
+    if (over){
+      const ov = el('div','overlay');
+      const card = el('div','overlay-card');
+      card.appendChild(el('div','big','🏆'));
+      card.appendChild(el('h3', null, '玩家' + (winner+1) + ' 获胜！'));
+      const btn = el('button','btn btn-primary','再来一局');
+      btn.addEventListener('click', reset);
+      card.appendChild(btn);
+      ov.appendChild(card);
+      boardEl.appendChild(ov);
+    }
+    wrap.appendChild(boardEl);
+    area.appendChild(wrap);
+    renderPlayers(cur, null);
+  }
+  opts.onMove = payload => {
+    if (!payload) return;
+    doMove(payload.from, payload.to);
+  };
+  function resetLocal(){
+    initBoard();
+    cur = 0; over = false; winner = -1; selected = null; legalMoves = []; lastMove = null; aiPending = false;
+    render();
+    setStatus('轮到玩家1，点击棋子走棋');
+  }
+  function reset(){
+    if (opts.online && !opts.isHost){ toast('由房主开始新一局'); return; }
+    if (opts.online) opts.sendRestart();
+    resetLocal();
+  }
+  resetLocal();
+  return { reset, onMove: opts.onMove, onRestart: resetLocal, snapshot: () => ({ board: board.map(r => r.map(x => x ? { p: x.p, t: x.t } : null)), cur, over, winner }) };
+}
+
 /* ================= 游戏注册表 ================= */
 const games = {
   tictactoe: gameTicTacToe,
@@ -2895,6 +5085,12 @@ const games = {
   ludo: gameLudo,
   monopoly: gameMonopoly,
   checker: gameChecker,
+  tank: gameTank,
+  snake: gameSnake,
+  tetris: gameTetris,
+  draughts: gameDraughts,
+  jungle: gameJungle,
+  xiangqi: gameXiangqi,
 };
 
 if (typeof module !== 'undefined' && module.exports){
@@ -2911,6 +5107,7 @@ if (typeof document !== 'undefined'){
   renderHub();
   if (typeof parseHash === 'function') parseHash();
   online.connect();
+  setTimeout(() => { if (!account) openAuthModal(); }, 300);
 }
 </script>
 </body>

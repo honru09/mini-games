@@ -6,12 +6,18 @@ create table if not exists profiles (
   uid text primary key,
   name text not null,
   avatar integer not null default 0,
+  background integer not null default 0,
+  frame integer not null default 0,
+  effect integer not null default 0,
+  owned jsonb not null default '{"avatars":[],"frames":[],"effects":[],"backgrounds":[]}'::jsonb,
+  pin_hash text,
   coins integer not null default 0,
   played jsonb not null default '{}'::jsonb,
   total integer not null default 0,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+create unique index if not exists idx_profiles_pin on profiles (pin_hash) where pin_hash is not null;
 
 -- 对局历史表（每局一条记录，方便日后审计/统计）
 create table if not exists history (

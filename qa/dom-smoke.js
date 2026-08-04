@@ -144,10 +144,19 @@ function check(name, cond){
   console.log((cond ? 'PASS' : 'FAIL') + '  ' + name);
   if (!cond) fails++;
 }
+function findBtnByText(root, text){
+  const stack = [root];
+  while (stack.length){
+    const n = stack.shift();
+    if (n.children && n.children.length) stack.push(...n.children);
+    if (String(n.tagName).toUpperCase() === 'BUTTON' && (n.textContent || '').includes(text)) return n;
+  }
+  return null;
+}
 
 async function main(){
   /* 大厅渲染 */
-  check('大厅渲染 5 张游戏卡', $('game-grid').children.length === 5);
+  check('大厅渲染 11 张游戏卡', $('game-grid').children.length === 11);
   check('默认人数为 2', G.playerCount === 2);
 
   /* 各游戏初始化（支持的人数组合） */
@@ -156,6 +165,10 @@ async function main(){
     ['ludo', 2], ['ludo', 3], ['ludo', 4],
     ['monopoly', 2], ['monopoly', 3], ['monopoly', 4], ['monopoly', 5],
     ['checker', 2], ['checker', 3], ['checker', 4], ['checker', 5],
+    ['tank', 2],
+    ['snake', 2], ['snake', 3], ['snake', 4],
+    ['tetris', 2], ['tetris', 3], ['tetris', 4],
+    ['draughts', 2], ['jungle', 2], ['xiangqi', 2],
   ];
   for (const [id, n] of combos){
     G.playerCount = n;
@@ -273,7 +286,7 @@ async function main(){
   /* 规则弹层 */
   G.playerCount = 2; G.startGame('ludo');
   $('btn-rules').dispatch('click');
-  const backdrops = document.body.children.filter(c => c.classList.contains('modal-backdrop'));
+  const backdrops = document.body.children.filter(c => c.classList.contains('modal-backdrop') && !c.classList.contains('auth-backdrop'));
   check('规则弹层可打开', backdrops.length === 1);
   backdrops.forEach(b => b.remove());
 
@@ -303,18 +316,36 @@ async function main(){
   check('大富翁：显示轮次', $('status-bar').textContent.includes('第 1/30 轮'));
   $('game-extra').children[2].dispatch('click'); // 提前结算
   check('大富翁：提前结算出结果', $('status-bar').textContent.includes('最终赢家'));
-  const settleModals = document.body.children.filter(c => c.classList.contains('modal-backdrop'));
+  const settleModals = document.body.children.filter(c => c.classList.contains('modal-backdrop') && !c.classList.contains('auth-backdrop'));
   check('大富翁：结算排名弹层', settleModals.length >= 1);
   settleModals.forEach(m => m.remove());
 
   /* 用户档案与积分 */
+  // 注册账号（PIN 系统）：不再自动建档，需显式注册
+  const acc = G.registerAccount('小明', 'abc123', 0, 0);
+  check('注册账号成功且获得唯一 uid', !!acc && /^u_[a-z0-9]+$/.test(acc.uid));
+  check('账号持久化：mg_account 已保存', (() => {
+    const saved = JSON.parse(localStorage.getItem('mg_account'));
+    return saved && saved.uid === acc.uid && /^d/.test(saved.device || '');
+  })());
+  const savedUid = acc.uid;
+  G.loadRoster(); // 模拟刷新
+  check('刷新后同一设备自动登录同一账号（不重建）', G.deviceUid === savedUid);
+  const acc2 = G.registerAccount('小明2', 'abc124', 1, 0);
+  check('账号唯一：再次注册生成不同 uid', !!acc2 && acc2.uid !== acc.uid);
+  G.registerAccount('小明', 'abc123', 0, 0); // 恢复主账号
   const roster0 = JSON.parse(localStorage.getItem('mg_roster'));
-  check('首次进入自动创建我的档案', Array.isArray(roster0) && roster0.length >= 1);
+  check('档案已持久化', Array.isArray(roster0) && roster0.length >= 1);
   check('大厅渲染档案按钮与玩家槽位', $('btn-me').children.length >= 2 && $('slots-row').children.length === G.playerCount);
 
   // 编辑我的档案（昵称 + 头像）
   $('btn-me').dispatch('click');
-  let modalBd = document.body.children.find(c => c.classList.contains('modal-backdrop'));
+  let modalBd = document.body.children.find(c => c.classList.contains('modal-backdrop') && !c.classList.contains('auth-backdrop'));
+  check('点击我的档案弹出详情小框', !!modalBd);
+  const editBtn = findBtnByText(modalBd.children[0], '编辑档案');
+  check('档案弹层含编辑入口', !!editBtn);
+  if (editBtn) editBtn.dispatch('click');
+  modalBd = document.body.children.find(c => c.classList.contains('modal-backdrop') && !c.classList.contains('auth-backdrop'));
   let card = modalBd.children[0];
   const nickInput = card.children[1];
   nickInput.value = '小明';
