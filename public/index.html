@@ -1071,7 +1071,7 @@ function openSettings(){
   card.appendChild(el('h3', null, '联机服务设置'));
   const input = el('input','nick-input');
   input.type = 'text';
-  input.placeholder = '服务端地址（留空 = 当前站点）';
+  input.placeholder = '服务端地址（留空 = 自动，线上默认 Render 服务）';
   try { input.value = localStorage.getItem('mg_server') || online.defaultServer; } catch {}
   card.appendChild(input);
   card.appendChild(el('p','lb-note','前端与联机服务不在同一域名时，填写服务端地址（如 https://xxx.onrender.com），保存后重新连接生效。'));
