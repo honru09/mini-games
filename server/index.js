@@ -19,9 +19,123 @@ const MIME = {
   '.json': 'application/json; charset=utf-8',
 };
 
+/* ---------------- AI 代理（DeepSeek） ---------------- */
+const DEEPSEEK_KEY = process.env.DEEPSEEK_KEY || '';
+const CORS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  'Access-Control-Max-Age': '86400',
+};
+const GAME_NAMES = { tictactoe: '井字棋', gomoku: '五子棋', ludo: '飞行棋', monopoly: '大富翁', checker: '弹珠跳棋' };
+
+function buildAIPrompt(game, state, options){
+  const name = GAME_NAMES[game] || game || '棋牌游戏';
+  const stateText = typeof state === 'string' ? state : JSON.stringify(state);
+  if (Array.isArray(options) && options.length){
+    return '游戏：' + name +
+      '\n当前局面：' + stateText +
+      '\n合法选项：' + options.map((o, i) => (i + 1) + '. ' + o).join('；') +
+      '\n请从合法选项中选出最合理的一个，严格只返回 JSON：{"choice":"选项原文"}';
+  }
+  return '游戏：' + name +
+    '\n当前局面：' + stateText +
+    '\n请决定下一步具体走法（例如落子坐标），严格只返回 JSON：{"choice":"具体走法"}';
+}
+
+async function callDeepSeek(messages){
+  const payload = {
+    model: 'deepseek-chat',
+    messages,
+    temperature: 0.4,
+    max_tokens: 200,
+    stream: false,
+    response_format: { type: 'json_object' },
+  };
+  const res = await fetch('https://api.deepseek.com/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + DEEPSEEK_KEY },
+    body: JSON.stringify(payload),
+    signal: AbortSignal.timeout(20000),
+  });
+  if (res.status === 400){
+    // 部分模型不支持 json_object：去掉后重试一次
+    delete payload.response_format;
+    const res2 = await fetch('https://api.deepseek.com/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + DEEPSEEK_KEY },
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(20000),
+    });
+    if (!res2.ok) throw new Error('deepseek ' + res2.status + ': ' + (await res2.text()).slice(0, 160));
+    const data2 = await res2.json();
+    return data2.choices && data2.choices[0] && data2.choices[0].message ? data2.choices[0].message.content : '';
+  }
+  if (!res.ok) throw new Error('deepseek ' + res.status + ': ' + (await res.text()).slice(0, 160));
+  const data = await res.json();
+  return data.choices && data.choices[0] && data.choices[0].message ? data.choices[0].message.content : '';
+}
+
+async function askDeepSeek(game, state, options){
+  const messages = [
+    { role: 'system', content: '你是一个棋牌游戏 AI 助手。你只会输出合法、可执行的棋步，绝不编造不存在的选项。' },
+    { role: 'user', content: buildAIPrompt(game, state, options) },
+  ];
+  const content = await callDeepSeek(messages);
+  let choice = null;
+  const m = /"choice"\s*:\s*"([^"]*)"/.exec(content);
+  if (m) choice = m[1];
+  if (choice === null){
+    try {
+      const cleaned = content.replace(/```json|```/g, '').trim();
+      const parsed = JSON.parse(cleaned);
+      if (parsed && typeof parsed.choice === 'string') choice = parsed.choice;
+    } catch {}
+  }
+  return choice;
+}
+
+async function handleAI(req, res){
+  const chunks = [];
+  let size = 0;
+  for await (const c of req){
+    size += c.length;
+    if (size > 100000){
+      res.writeHead(413, { ...CORS, 'Content-Type': 'application/json' });
+      res.end('{"choice":null}');
+      return;
+    }
+    chunks.push(c);
+  }
+  let body = {};
+  try { body = JSON.parse(Buffer.concat(chunks).toString('utf8')); } catch { body = {}; }
+  const game = String(body.game || '');
+  const options = Array.isArray(body.options) ? body.options.map(String).slice(0, 300) : null;
+  let choice = null;
+  if (DEEPSEEK_KEY){
+    try {
+      choice = await askDeepSeek(game, body.state, options);
+    } catch (e) {
+      console.error('AI 请求失败:', e.message);
+    }
+  }
+  if (options && !options.includes(choice)) choice = null;
+  res.writeHead(200, { ...CORS, 'Content-Type': 'application/json' });
+  res.end(JSON.stringify({ choice }));
+}
+
 /* ---------------- 静态文件 ---------------- */
 const server = http.createServer((req, res) => {
   const urlPath = decodeURIComponent((req.url || '/').split('?')[0]);
+  if (req.method === 'OPTIONS'){
+    res.writeHead(204, CORS);
+    res.end();
+    return;
+  }
+  if (req.method === 'POST' && urlPath === '/api/ai'){
+    handleAI(req, res);
+    return;
+  }
   let file = path.normalize(path.join(PUBLIC, urlPath === '/' ? 'index.html' : urlPath));
   if (!file.startsWith(PUBLIC)) {
     res.writeHead(403);
@@ -45,6 +159,7 @@ const rooms = new Map(); // roomId -> { host, clients: Map<ws, player>, game }
 const sessions = new Set();
 const pendingInvites = new Map(); // toUid -> [{fromUid, fromName, room, game}]
 const GAME_MAX = { tictactoe: 2, gomoku: 2, ludo: 4, monopoly: 5, checker: 5 };
+const GAME_MIN = { tictactoe: 2, gomoku: 2, ludo: 2, monopoly: 2, checker: 2 };
 
 /* ---------------- Supabase 数据库（可选，配置环境变量后启用） ---------------- */
 const SUPABASE_URL = (process.env.SUPABASE_URL || '').replace(/\/+$/, '');
@@ -169,7 +284,7 @@ function broadcastRoom(r){
 function maybeAutoStart(r){
   if (r.game && !r.started && r.clients.size === r.capacity){
     r.started = true;
-    broadcast(r, { type: 'started', game: r.game });
+    broadcast(r, { type: 'started', game: r.game, size: r.clients.size, players: [...r.clients.values()] });
   }
 }
 loadDB();
@@ -370,8 +485,9 @@ class Session {
       if (this !== r.host) return;
       const g = payload && payload.game;
       if (!g) return;
-      if (GAME_MAX[g] && r.capacity > GAME_MAX[g]){
-        this.sendText(JSON.stringify({ type: 'error', msg: '该游戏最多支持 ' + GAME_MAX[g] + ' 人' }));
+      const curSize = r.clients.size;
+      if (GAME_MAX[g] && (r.capacity > GAME_MAX[g] || curSize > GAME_MAX[g])){
+        this.sendText(JSON.stringify({ type: 'error', msg: '该游戏最多支持 ' + GAME_MAX[g] + ' 人，当前房间 ' + r.capacity + ' 人' }));
         return;
       }
       r.game = g;
@@ -380,11 +496,21 @@ class Session {
       maybeAutoStart(r);
       return;
     }
+    if (type === 'end_game'){
+      if (this !== r.host) return;
+      r.started = false;
+      r.game = null;
+      broadcast(r, { type: 'end_game' });
+      broadcastRoom(r);
+      broadcastLobby();
+      return;
+    }
     if (type === 'start'){
       if (this !== r.host) return;
-      if (!r.game || r.clients.size < 2 || r.started) return;
+      if (!r.game || r.started) return;
+      if (r.clients.size < GAME_MIN[r.game] || r.clients.size > GAME_MAX[r.game]) return;
       r.started = true;
-      broadcast(r, { type: 'started', game: r.game });
+      broadcast(r, { type: 'started', game: r.game, size: r.clients.size, players: [...r.clients.values()] });
       broadcastLobby();
       return;
     }
@@ -415,10 +541,13 @@ class Session {
       this.sendText(JSON.stringify({ type: 'error', msg: '你已在房间中' }));
       return;
     }
-    r.clients.set(this, 1);
+    let idx = 0;
+    const taken = new Set(r.clients.values());
+    while (taken.has(idx)) idx++;
+    r.clients.set(this, idx);
     this.room = roomId;
-    this.player = 1;
-    this.sendText(JSON.stringify({ type: 'joined', room: roomId, player: 1 }));
+    this.player = idx;
+    this.sendText(JSON.stringify({ type: 'joined', room: roomId, player: idx }));
     broadcastRoom(r);
     if (fromInvite) r.host.sendText(JSON.stringify({ type: 'invite_result', payload: { accepted: true } }));
     broadcastLobby();
