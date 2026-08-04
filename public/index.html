@@ -137,6 +137,33 @@ button{font-family:inherit; cursor:pointer}
 .roster-item .av{font-size:22px}
 .roster-item .nm{flex:1; font-weight:500}
 
+/* L 金币 */
+.coin{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:16px; height:16px; border-radius:50%; flex:none;
+  background:radial-gradient(circle at 35% 30%, #ffe28a, #f5b400 55%, #c98a00);
+  border:1.5px solid #a06a00; color:#7a4d00; font-size:10px; font-weight:700;
+  box-shadow:0 1px 2px rgba(0,0,0,.2);
+}
+.coin.sm{width:13px; height:13px; font-size:8px; border-width:1px}
+.coin-line{display:inline-flex; align-items:center; gap:3px}
+.online-dot{display:inline-block; width:8px; height:8px; border-radius:50%; background:#22c55e; box-shadow:0 0 0 2px #fff; flex:none}
+.online-dot.off{background:#cbd5e1}
+.me-chip .me-online{margin-left:2px}
+
+/* 房间面板 */
+.room-panel{
+  background:linear-gradient(180deg, rgba(79,110,247,.08), rgba(79,110,247,.03));
+  border:1px solid var(--primary); border-radius:var(--radius);
+  padding:14px 16px; margin-bottom:14px;
+}
+.room-head{display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:6px}
+.room-head h3{margin:0; font-size:15px}
+.room-code-big{font-size:19px; font-weight:700; letter-spacing:2px; color:var(--primary)}
+.room-info{font-size:13px; margin-bottom:6px}
+.room-status{font-size:13px; font-weight:500; margin-bottom:10px; min-height:18px}
+.room-actions{display:flex; gap:8px; flex-wrap:wrap}
+
 /* 游戏顶栏 */
 .game-top{
   display:flex; align-items:center; justify-content:space-between;
@@ -315,6 +342,15 @@ canvas.board-canvas{width:100%; max-width:560px; display:block; border-radius:12
       <button type="button" class="me-chip" id="btn-me" title="点击编辑我的档案"></button>
     </div>
     <div class="slots-row" id="slots-row"></div>
+    <div class="room-panel hidden" id="room-panel">
+      <div class="room-head">
+        <h3>🚪 我的房间</h3>
+        <span class="room-code-big" id="room-code-big"></span>
+      </div>
+      <div class="room-info" id="room-info"></div>
+      <div class="room-status" id="room-status"></div>
+      <div class="room-actions" id="room-actions"></div>
+    </div>
     <div class="hub-count">
       <span class="hub-label">玩家人数</span>
       <div class="count-group" id="count-group" role="group" aria-label="选择玩家人数">
@@ -325,14 +361,11 @@ canvas.board-canvas{width:100%; max-width:560px; display:block; border-radius:12
       </div>
     </div>
     <div class="online-panel">
-      <h3>🌐 联机对战（2 人 · 井字棋 / 五子棋）</h3>
+      <h3>🌐 联机对战（2 人 · 井字棋 / 五子棋）<button type="button" class="btn btn-ghost" id="btn-settings" style="float:right; padding:2px 8px">⚙ 设置</button></h3>
       <div class="online-row">
-        <button type="button" class="btn btn-primary" id="btn-create-room">＋ 创建房间</button>
-        <input id="room-input" placeholder="输入 6 位房间码" maxlength="6" autocomplete="off">
-        <button type="button" class="btn" id="btn-join-room">加入房间</button>
-      </div>
-      <div class="online-row">
-        <input id="server-url" placeholder="联机服务地址（留空 = 当前站点）" autocomplete="off">
+        <button type="button" class="btn btn-primary" id="btn-create-room">🎮 创建房间</button>
+        <input id="room-input" placeholder="或输入房间码加入" maxlength="6" autocomplete="off">
+        <button type="button" class="btn" id="btn-join-room">加入</button>
       </div>
       <div class="online-status" id="online-status">未连接</div>
     </div>
@@ -435,7 +468,7 @@ let currentGameId = null;
 
 /* ================= 联机对战（WebSocket 中继） ================= */
 const online = {
-  ws: null, room: null, player: 0, isHost: false, game: null, connected: false, pending: null,
+  ws: null, room: null, player: 0, isHost: false, game: null, connected: false, pending: null, roomInfo: null,
   connect(){
     if (this.connected) return;
     let wsUrl;
@@ -454,6 +487,7 @@ const online = {
     this.ws.onopen = () => {
       this.connected = true;
       this.status('已连接服务器，可创建或加入房间');
+      this.send({ type: 'hello', payload: { uid: typeof deviceUid !== 'undefined' ? deviceUid : null } });
       if (typeof syncProfiles === 'function') syncProfiles();
       if (this.pending){
         const p = this.pending;
@@ -494,21 +528,27 @@ const online = {
       this.status('正在连接服务器…');
     }
   },
-  start(id){ this.send({type:'start', payload:{game:id}}); },
+  selectGame(id){ this.send({ type:'select_game', payload:{ game:id } }); },
   sendMove(payload){ this.send({type:'move', payload}); },
   sendRestart(){ this.send({type:'restart'}); },
   onMessage(msg){
     switch (msg.type){
       case 'created':
         this.room = msg.room; this.player = msg.player; this.isHost = true;
+        this.roomInfo = { room: msg.room, game: null, players: [{ uid: null, player: 0 }], size: 1 };
         this.status('房间已创建：<span class="room-code">' + msg.room + '</span>，等待对方加入…');
+        renderRoomPanel();
         break;
       case 'joined':
         this.room = msg.room; this.player = msg.player; this.isHost = false;
+        this.roomInfo = { room: msg.room, game: null, players: [{ uid: null, player: 0 }, { uid: null, player: 1 }], size: 1 };
         this.status('已加入房间 <span class="room-code">' + msg.room + '</span>，等待房主开始…');
+        renderRoomPanel();
         break;
-      case 'peer_joined':
-        this.status('对方已加入！房主请选择井字棋或五子棋开始');
+      case 'room_update':
+        this.roomInfo = msg.payload;
+        if (!this.isHost && !this.room) this.room = msg.payload.room;
+        renderRoomPanel();
         break;
       case 'started':
         this.game = msg.game;
@@ -522,9 +562,17 @@ const online = {
         else if (this.game) startOnlineGame(this.game);
         break;
       case 'peer_left':
-        toast('对方已离开');
-        this.resetState();
-        this.status('对方已离开，可重新创建或加入房间');
+        if (this.isHost){
+          this.game = null;
+          toast('对方已离开');
+          if (currentGameId) showHub();
+          this.status('对方已离开，房间仍保留，等待新对手加入…');
+          renderRoomPanel();
+        } else {
+          toast('房主已关闭房间');
+          this.resetState();
+          this.status('房间已关闭，可重新创建或加入房间');
+        }
         break;
       case 'error':
         this.status(msg.msg || '出错了');
@@ -539,8 +587,9 @@ const online = {
     }
   },
   resetState(){
-    this.room = null; this.game = null; this.isHost = false; this.pending = null;
+    this.room = null; this.game = null; this.isHost = false; this.pending = null; this.roomInfo = null;
     $('online-banner').classList.add('hidden');
+    $('room-panel').classList.add('hidden');
     if (currentGameId && $('screen-game') && !$('screen-game').classList.contains('hidden')){
       showHub();
     }
@@ -553,18 +602,86 @@ function startOnlineGame(id){
   banner.classList.remove('hidden');
   banner.textContent = '房间 ' + online.room + ' · 你是玩家' + (online.player+1) + (online.isHost ? '（房主）' : '');
 }
+function renderRoomPanel(){
+  const panel = $('room-panel');
+  if (!online.room || online.game){
+    panel.classList.add('hidden');
+    return;
+  }
+  panel.classList.remove('hidden');
+  $('room-code-big').textContent = online.room;
+  const info = online.roomInfo || { size: 1, players: [], game: null };
+  const names = (info.players || []).map(p => {
+    const prof = p.uid ? profileByUid(p.uid) : null;
+    return (prof ? prof.name : '玩家' + (p.player + 1)) + (p.uid && p.uid === deviceUid ? '（你）' : '');
+  });
+  $('room-info').textContent = '人数 ' + (info.size || 1) + '/2' + (names.length ? ' · ' + names.join(' vs ') : '') + ' · 游戏：' + (info.game ? GAMES[info.game].name : '未选择');
+  let status;
+  if (online.isHost){
+    if (info.game){
+      status = info.size >= 2 ? '对方已加入，对局即将开始…' : '已选择 ' + GAMES[info.game].name + '，等待对方加入…';
+    } else {
+      status = info.size >= 2 ? '对方已加入！请选择井字棋或五子棋开始' : '等待对方加入…（选择游戏后自动开始）';
+    }
+  } else {
+    status = info.game ? '房主已选择 ' + GAMES[info.game].name + '，等待开局…' : '等待房主选择游戏…';
+  }
+  $('room-status').textContent = status;
+  const actions = $('room-actions');
+  actions.innerHTML = '';
+  const invite = el('button','btn btn-primary','🔗 复制邀请链接');
+  invite.addEventListener('click', copyInvite);
+  actions.appendChild(invite);
+  const leave = el('button','btn','离开房间');
+  leave.addEventListener('click', () => online.send({ type: 'leave' }));
+  actions.appendChild(leave);
+}
+function copyInvite(){
+  const link = location.origin + location.pathname + '#join=' + online.room;
+  const done = () => toast('邀请链接已复制，发给对方即可');
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(link).then(done).catch(() => { toast('邀请链接：' + link); });
+  } else {
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = link;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      ta.remove();
+      done();
+    } catch { toast('邀请链接：' + link); }
+  }
+}
+function openSettings(){
+  const bd = el('div','modal-backdrop');
+  const card = el('div','modal-card');
+  card.appendChild(el('h3', null, '联机服务设置'));
+  const input = el('input','nick-input');
+  input.type = 'text';
+  input.placeholder = '服务端地址（留空 = 当前站点）';
+  try { input.value = localStorage.getItem('mg_server') || ''; } catch {}
+  card.appendChild(input);
+  card.appendChild(el('p','lb-note','前端与联机服务不在同一域名时，填写服务端地址（如 https://xxx.onrender.com），保存后重新连接生效。'));
+  const save = el('button','btn btn-primary','保存');
+  save.addEventListener('click', () => {
+    try { localStorage.setItem('mg_server', input.value.trim()); } catch {}
+    bd.remove();
+    toast('设置已保存，重新连接后生效');
+  });
+  const cancel = el('button','btn','取消');
+  cancel.addEventListener('click', () => bd.remove());
+  card.appendChild(save);
+  card.appendChild(cancel);
+  bd.appendChild(card);
+  bd.addEventListener('click', e => { if (e.target === bd) bd.remove(); });
+  document.body.appendChild(bd);
+}
 
 /* ================= 用户档案与积分 ================= */
 const AVATARS = ['😀','😎','🤓','😇','🥳','🤠','😺','🐶','🐼','🦊','🐯','🦁','🐸','🐙','🦄','🐝','🌻','🍀','⭐','🎮'];
 const GAME_KEYS = Object.keys(GAMES);
 const LS_ROSTER = 'mg_roster';
-const SCORE = {
-  tictactoe: { win: 10, lose: 2, draw: 5 },
-  gomoku: { win: 15, lose: 3, draw: 8 },
-  ludo: { win: 30, other: 5 },
-  monopoly: { rank: [40, 20, 10, 5, 2] },
-  checker: { win: 25, other: 4 },
-};
 let roster = [];
 let deviceUid = null;
 let slots = [];
@@ -576,13 +693,18 @@ function loadRoster(){
     roster = raw ? JSON.parse(raw) : [];
   } catch { roster = []; }
   if (!Array.isArray(roster)) roster = [];
-  roster.forEach(p => { if (!p.games) p.games = {}; });
+  roster.forEach(p => {
+    if (p.coins === undefined) p.coins = p.points ? 1 : 0;
+    delete p.points;
+    if (!p.played) p.played = {};
+    if (!p.total) p.total = 0;
+  });
   const savedUid = localStorage.getItem('mg_uid');
   if (roster.length){
     deviceUid = savedUid && roster.some(p => p.uid === savedUid) ? savedUid : roster[0].uid;
   } else {
     deviceUid = genUid();
-    roster = [{ uid: deviceUid, name: '我', avatar: Math.floor(Math.random() * AVATARS.length), points: 0, games: {} }];
+    roster = [{ uid: deviceUid, name: '我', avatar: Math.floor(Math.random() * AVATARS.length), coins: 0, played: {}, total: 0 }];
     saveRoster();
   }
   localStorage.setItem('mg_uid', deviceUid);
@@ -594,7 +716,7 @@ function genUid(){
 }
 function profileByUid(uid){ return roster.find(p => p.uid === uid); }
 function createProfile(name, avatar){
-  const p = { uid: genUid(), name: name || '玩家', avatar: (avatar === undefined ? Math.floor(Math.random() * AVATARS.length) : avatar), points: 0, games: {} };
+  const p = { uid: genUid(), name: name || '玩家', avatar: (avatar === undefined ? Math.floor(Math.random() * AVATARS.length) : avatar), coins: 0, played: {}, total: 0 };
   roster.push(p);
   saveRoster();
   return p.uid;
@@ -609,7 +731,13 @@ function renderMe(){
   btn.innerHTML = '';
   btn.appendChild(el('span','me-av', AVATARS[me.avatar]));
   btn.appendChild(el('span', null, me.name));
-  btn.appendChild(el('span','me-pts', me.points + ' 分'));
+  const coinLine = el('span','coin-line');
+  coinLine.appendChild(el('span','coin','L'));
+  coinLine.appendChild(el('span','me-pts', (me.coins || 0) + ' · ' + (me.total || 0) + '局'));
+  btn.appendChild(coinLine);
+  if (online.connected){
+    btn.appendChild(el('span','me-online','●'));
+  }
 }
 function renderSlots(){
   const row = $('slots-row');
@@ -622,7 +750,10 @@ function renderSlots(){
     if (p){
       chip.appendChild(el('span','av', AVATARS[p.avatar]));
       chip.appendChild(el('span','nm', p.name));
-      chip.appendChild(el('span','pts', p.points + ' 分'));
+      const coinLine = el('span','coin-line');
+      coinLine.appendChild(el('span','coin sm','L'));
+      coinLine.appendChild(el('span','pts', (p.coins || 0) + ' · ' + (p.total || 0) + '局'));
+      chip.appendChild(coinLine);
     } else {
       chip.appendChild(el('span','av','➕'));
       chip.appendChild(el('span','nm','玩家' + (i+1)));
@@ -649,7 +780,7 @@ function openSlotPicker(i){
     item.type = 'button';
     item.appendChild(el('span','av', AVATARS[p.avatar]));
     item.appendChild(el('span','nm', p.name));
-    item.appendChild(el('span','lb-game', p.points + ' 分'));
+    item.appendChild(el('span','lb-game', (p.coins || 0) + ' 枚 · ' + (p.total || 0) + '局'));
     item.addEventListener('click', () => {
       slots[i] = p.uid;
       bd.remove();
@@ -724,8 +855,8 @@ function openProfileEditor(uid, slotIndex){
   setTimeout(() => input.focus(), 0);
 }
 function localLeaderboard(){
-  const list = roster.map(p => ({ uid:p.uid, name:p.name, avatar:p.avatar, points:p.points, games:p.games }))
-    .sort((a,b) => (b.points - a.points) || String(a.name).localeCompare(String(b.name)))
+  const list = roster.map(p => ({ uid:p.uid, name:p.name, avatar:p.avatar, coins:p.coins || 0, played:p.played || {}, total:p.total || 0, online:p.uid === deviceUid && online.connected }))
+    .sort((a,b) => (b.coins - a.coins) || (b.total - a.total) || String(a.name).localeCompare(String(b.name)))
     .slice(0, 50);
   return { list, total: roster.length };
 }
@@ -744,11 +875,17 @@ function renderLeaderboard(){
     const row = el('div','lb-row' + (u.uid === deviceUid ? ' me' : ''));
     row.appendChild(el('span','lb-rank', String(i + 1)));
     row.appendChild(el('span','lb-av', AVATARS[u.avatar] !== undefined ? AVATARS[u.avatar] : '😀'));
-    row.appendChild(el('span','lb-name', u.name));
-    const g = u.games || {};
-    const gameStr = GAME_KEYS.filter(k => g[k]).map(k => GAMES[k].name + ' ' + g[k]).join(' · ');
+    const nameWrap = el('span','lb-name');
+    nameWrap.textContent = u.name;
+    row.appendChild(nameWrap);
+    if (u.online) row.appendChild(el('span','online-dot',''));
+    const g = u.played || {};
+    const gameStr = GAME_KEYS.filter(k => g[k]).map(k => GAMES[k].name + ' ' + g[k] + '局').join(' · ');
     row.appendChild(el('span','lb-game', gameStr));
-    row.appendChild(el('span','lb-pts', (u.points || 0) + ' 分'));
+    const coinLine = el('span','coin-line');
+    coinLine.appendChild(el('span','coin','L'));
+    coinLine.appendChild(el('span','lb-pts', (u.coins || 0) + ' · ' + (u.total || 0) + '局'));
+    row.appendChild(coinLine);
     listEl.appendChild(row);
   });
 }
@@ -766,17 +903,18 @@ function applyGameResult(results){
       uid = slots[r.slot];
     }
     const p = uid ? profileByUid(uid) : null;
-    if (!p || !r.points) return;
-    p.points += r.points;
-    p.games[gameId] = (p.games[gameId] || 0) + r.points;
-    entries.push({ uid:p.uid, name:p.name, avatar:p.avatar, game:gameId, points:r.points });
-    parts.push(p.name + ' +' + r.points);
+    if (!p) return;
+    if (r.coins === 1) p.coins = (p.coins || 0) + 1;
+    p.played[gameId] = (p.played[gameId] || 0) + 1;
+    p.total = (p.total || 0) + 1;
+    entries.push({ uid:p.uid, name:p.name, avatar:p.avatar, game:gameId, coins: r.coins === 1 ? 1 : 0, played: 1 });
+    parts.push(p.name + (r.coins === 1 ? ' 获得 1 枚 L金币' : ' 本局无金币'));
   });
   saveRoster();
   if (entries.length){
     if (online.connected){
       entries.forEach(e => online.send({ type:'profile', payload:{ uid:e.uid, name:e.name, avatar:e.avatar } }));
-      online.send({ type:'scores', payload: entries.map(e => ({ uid:e.uid, game:e.game, points:e.points })) });
+      online.send({ type:'result', payload: entries.map(e => ({ uid:e.uid, game:e.game, coins:e.coins, played:1 })) });
     }
     toast('🏆 本局结算：' + parts.join('，'));
   }
@@ -815,7 +953,7 @@ function startGame(id){
     if (id !== 'tictactoe' && id !== 'gomoku'){ toast('联机模式暂支持井字棋 / 五子棋'); return; }
     if (!online.isHost){ toast('请等待房主开始游戏'); return; }
     playerCount = 2;
-    online.start(id);
+    online.selectGame(id);
     return;
   }
   if (playerCount < meta.min || playerCount > meta.max){
@@ -880,9 +1018,7 @@ if (typeof document !== 'undefined'){
   $('btn-create-room').addEventListener('click', () => online.create());
   $('btn-join-room').addEventListener('click', () => online.join());
   $('room-input').addEventListener('keydown', e => { if (e.key === 'Enter') online.join(); });
-  $('server-url').addEventListener('change', () => {
-    try { localStorage.setItem('mg_server', $('server-url').value.trim()); } catch {}
-  });
+  $('btn-settings').addEventListener('click', openSettings);
   $('btn-me').addEventListener('click', () => openProfileEditor(deviceUid));
   window.__gameInfo = {
     GAMES, startGame,
@@ -895,14 +1031,22 @@ if (typeof document !== 'undefined'){
     get leaderboard(){ return lastServerLB; },
   };
   // 深链：#game=gomoku&p=2 可直接进入指定游戏
-  (function parseHash(){
-    const h = location.hash.slice(1);
-    const m = /^game=([a-z]+)(?:&p=([2-5]))?/.exec(h);
-    if (!m || !GAMES[m[1]]) return;
-    if (m[2]) playerCount = Number(m[2]);
+  //        #join=XXXXXX 直接加入房间（邀请链接）
+}
+
+function parseHash(){
+  const h = location.hash.slice(1);
+  const j = /^join=([A-Z0-9]{6})/.exec(h);
+  if (j){
     renderHub();
-    startGame(m[1]);
-  })();
+    online.join(j[1]);
+    return;
+  }
+  const m = /^game=([a-z]+)(?:&p=([2-5]))?/.exec(h);
+  if (!m || !GAMES[m[1]]) return;
+  if (m[2]) playerCount = Number(m[2]);
+  renderHub();
+  startGame(m[1]);
 }
 
 /* ================= 井字棋 ================= */
@@ -941,8 +1085,8 @@ function gameTicTacToe(area, extra, n, opts){
       if (L.includes(i) && board[L[0]] !== null && board[L[0]] === board[L[1]] && board[L[1]] === board[L[2]]){
         winLine = L; over = true;
         if (opts.onEnd) opts.onEnd([
-          { slot: cur, points: SCORE.tictactoe.win, rank: 1 },
-          { slot: cur ^ 1, points: SCORE.tictactoe.lose, rank: 2 },
+          { slot: cur, coins: 1, rank: 1 },
+          { slot: cur ^ 1, coins: 0, rank: 2 },
         ]);
         render(); return;
       }
@@ -950,8 +1094,8 @@ function gameTicTacToe(area, extra, n, opts){
     if (board.every(v => v !== null)){
       over = true;
       if (opts.onEnd) opts.onEnd([
-        { slot: 0, points: SCORE.tictactoe.draw, rank: 1 },
-        { slot: 1, points: SCORE.tictactoe.draw, rank: 1 },
+        { slot: 0, coins: 0, rank: 1 },
+        { slot: 1, coins: 0, rank: 1 },
       ]);
     } else {
       cur ^= 1;
@@ -1039,8 +1183,8 @@ function gameGomoku(area, extra, n, opts){
     if (checkGomokuWin(grid, r, c)){
       over = true;
       if (opts.onEnd) opts.onEnd([
-        { slot: cur, points: SCORE.gomoku.win, rank: 1 },
-        { slot: cur ^ 1, points: SCORE.gomoku.lose, rank: 2 },
+        { slot: cur, coins: 1, rank: 1 },
+        { slot: cur ^ 1, coins: 0, rank: 2 },
       ]);
       draw(); renderPlayers(cur, null);
       setStatus('🏆 玩家' + (cur+1) + ' 获胜！', true);
@@ -1049,8 +1193,8 @@ function gameGomoku(area, extra, n, opts){
     if (hist.length === N*N){
       over = true;
       if (opts.onEnd) opts.onEnd([
-        { slot: 0, points: SCORE.gomoku.draw, rank: 1 },
-        { slot: 1, points: SCORE.gomoku.draw, rank: 1 },
+        { slot: 0, coins: 0, rank: 1 },
+        { slot: 1, coins: 0, rank: 1 },
       ]);
       draw(); renderPlayers(cur, null);
       setStatus('🤝 平局', false);
@@ -1307,7 +1451,7 @@ function gameLudo(area, extra, n, opts){
       over = true; winner = pid;
       if (opts.onEnd) opts.onEnd(pids.map((p2, i) => ({
         slot: i,
-        points: i === curIdx ? SCORE.ludo.win : SCORE.ludo.other,
+        coins: i === curIdx ? 1 : 0,
         rank: i === curIdx ? 1 : 2,
       })));
       renderBoard();
@@ -1693,7 +1837,7 @@ function gameMonopoly(area, extra, n, opts){
   function creditGame(){
     const order = players.map((p, i) => i).sort((a, b) =>
       ((players[b].alive ? 1 : 0) - (players[a].alive ? 1 : 0)) || (players[b].money - players[a].money));
-    const res = order.map((i, k) => ({ slot: i, points: SCORE.monopoly.rank[k] || 2, rank: k + 1 }));
+    const res = order.map((i, k) => ({ slot: i, coins: k === 0 ? 1 : 0, rank: k + 1 }));
     if (opts.onEnd) opts.onEnd(res);
   }
   function reset(){
@@ -1898,7 +2042,7 @@ function gameChecker(area, extra, n, opts){
           over = true; winner = cur;
           if (opts.onEnd) opts.onEnd(marbles.map((list, i) => ({
             slot: i,
-            points: i === cur ? SCORE.checker.win : SCORE.checker.other,
+            coins: i === cur ? 1 : 0,
             rank: i === cur ? 1 : 2,
           })));
           draw();
@@ -1979,11 +2123,11 @@ if (typeof module !== 'undefined' && module.exports){
 
 if (typeof document !== 'undefined'){
   loadRoster();
-  try { $('server-url').value = localStorage.getItem('mg_server') || ''; } catch {}
   renderMe();
   renderSlots();
   renderLeaderboard();
   renderHub();
+  if (typeof parseHash === 'function') parseHash();
 }
 </script>
 </body>

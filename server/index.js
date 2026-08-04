@@ -52,6 +52,12 @@ function loadDB(){
     const parsed = JSON.parse(raw);
     db = { users: parsed.users || {}, history: parsed.history || [] };
   } catch { db = { users: {}, history: [] }; }
+  for (const u of Object.values(db.users)){
+    if (u.coins === undefined) u.coins = u.points || 0;
+    delete u.points;
+    if (!u.played) u.played = {};
+    if (!u.total) u.total = 0;
+  }
 }
 function saveDB(){
   fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -60,15 +66,33 @@ function saveDB(){
   fs.renameSync(tmp, DB_FILE);
 }
 function leaderboardPayload(){
+  const onlineUids = new Set();
+  for (const s of sessions) if (s.uid) onlineUids.add(s.uid);
   const list = Object.keys(db.users)
-    .map(uid => ({ uid, ...db.users[uid] }))
-    .sort((a, b) => (b.points - a.points) || String(a.name).localeCompare(String(b.name)))
+    .map(uid => {
+      const u = db.users[uid];
+      return { uid, name: u.name, avatar: u.avatar, coins: u.coins || 0, played: u.played || {}, total: u.total || 0, online: onlineUids.has(uid) };
+    })
+    .sort((a, b) => (b.coins - a.coins) || (b.total - a.total) || String(a.name).localeCompare(String(b.name)))
     .slice(0, 50);
   return { list, total: Object.keys(db.users).length };
 }
 function broadcastLeaderboard(){
   const payload = leaderboardPayload();
   for (const s of sessions) s.sendText(JSON.stringify({ type: 'leaderboard', payload }));
+}
+function roomPayload(r){
+  const players = [...r.clients.entries()]
+    .map(([c, p]) => ({ uid: c.uid || null, player: p }))
+    .sort((a, b) => a.player - b.player);
+  return { room: r.id, game: r.game || null, players, size: r.clients.size };
+}
+function broadcastRoom(r){
+  const text = JSON.stringify({ type: 'room_update', payload: roomPayload(r) });
+  for (const c of r.clients.keys()) c.sendText(text);
+}
+function maybeAutoStart(r){
+  if (r.game && r.clients.size === 2) broadcast(r, { type: 'started', game: r.game });
 }
 loadDB();
 
@@ -108,6 +132,7 @@ class Session {
     this.socket = socket;
     this.room = null;
     this.player = null;
+    this.uid = null;
     this.buffer = Buffer.alloc(0);
     this.alive = true;
   }
@@ -150,31 +175,39 @@ class Session {
     try { msg = JSON.parse(text); } catch { return; }
     const type = msg && msg.type;
     const payload = msg && msg.payload;
+    if (type === 'hello'){
+      const uid = payload && payload.uid;
+      if (uid) this.uid = String(uid);
+      broadcastLeaderboard();
+      return;
+    }
     if (type === 'profile'){
       const uid = payload && payload.uid;
       const name = String(payload && payload.name || '').trim().slice(0, 12) || '玩家';
       if (!uid) return;
       const avatar = Number.isInteger(payload.avatar) ? Math.max(0, Math.min(19, payload.avatar)) : 0;
-      const u = db.users[uid] || (db.users[uid] = { name, avatar, points: 0, games: {} });
+      const u = db.users[uid] || (db.users[uid] = { name, avatar, coins: 0, played: {}, total: 0 });
       u.name = name;
       u.avatar = avatar;
       saveDB();
-      this.sendText(JSON.stringify({ type: 'profile_ok', payload: { uid, name: u.name, avatar: u.avatar, points: u.points, games: u.games } }));
+      this.sendText(JSON.stringify({ type: 'profile_ok', payload: { uid, name: u.name, avatar: u.avatar, coins: u.coins, played: u.played, total: u.total } }));
       broadcastLeaderboard();
       return;
     }
-    if (type === 'scores'){
+    if (type === 'result'){
       const list = Array.isArray(payload) ? payload : [];
       for (const s of list){
         const uid = s && s.uid;
-        const points = s && Math.floor(Number(s.points));
-        if (!uid || !points || points <= 0) continue;
+        if (!uid) continue;
         const u = db.users[uid];
         if (!u) continue;
         const game = String(s.game || 'other');
-        u.points += points;
-        u.games[game] = (u.games[game] || 0) + points;
-        db.history.push({ uid, game, points, at: Date.now() });
+        const coins = s.coins === 1 ? 1 : 0;
+        const played = s.played === 1 ? 1 : 0;
+        u.coins = (u.coins || 0) + coins;
+        u.played[game] = (u.played[game] || 0) + played;
+        u.total = (u.total || 0) + played;
+        db.history.push({ uid, game, coins, at: Date.now() });
       }
       if (db.history.length > 1000) db.history = db.history.slice(-500);
       saveDB();
@@ -188,10 +221,12 @@ class Session {
     if (type === 'create'){
       if (this.room) return;
       const roomId = genCode();
-      rooms.set(roomId, { host: this, clients: new Map([[this, 0]]), game: null });
+      const r = { id: roomId, host: this, clients: new Map([[this, 0]]), game: null };
+      rooms.set(roomId, r);
       this.room = roomId;
       this.player = 0;
       this.sendText(JSON.stringify({ type: 'created', room: roomId, player: 0 }));
+      broadcastRoom(r);
       return;
     }
     if (type === 'join'){
@@ -213,12 +248,26 @@ class Session {
       this.room = roomId;
       this.player = 1;
       this.sendText(JSON.stringify({ type: 'joined', room: roomId, player: 1 }));
-      r.host.sendText(JSON.stringify({ type: 'peer_joined' }));
+      broadcastRoom(r);
+      maybeAutoStart(r);
+      return;
+    }
+    if (type === 'leave'){
+      this.leaveRoom();
       return;
     }
     if (!this.room) return;
     const r = rooms.get(this.room);
     if (!r) return;
+    if (type === 'select_game'){
+      if (this !== r.host) return;
+      const g = payload && payload.game;
+      if (!g) return;
+      r.game = g;
+      broadcastRoom(r);
+      maybeAutoStart(r);
+      return;
+    }
     if (type === 'start'){
       if (this !== r.host) return;
       r.game = payload && payload.game;
@@ -234,23 +283,28 @@ class Session {
       broadcast(r, { type: 'restart' });
     }
   }
+  leaveRoom(){
+    if (!this.room) return;
+    const r = rooms.get(this.room);
+    if (!r){ this.room = null; this.player = null; return; }
+    const wasHost = this === r.host;
+    r.clients.delete(this);
+    this.room = null;
+    this.player = null;
+    if (wasHost){
+      for (const c of r.clients.keys()) c.sendText(JSON.stringify({ type: 'peer_left' }));
+      rooms.delete(r.id);
+    } else {
+      if (r.clients.size === 0){ rooms.delete(r.id); return; }
+      r.host.sendText(JSON.stringify({ type: 'peer_left' }));
+      broadcastRoom(r);
+    }
+  }
   close(){
     if (!this.alive) return;
     this.alive = false;
     sessions.delete(this);
-    if (this.room){
-      const r = rooms.get(this.room);
-      if (r){
-        r.clients.delete(this);
-        if (this === r.host){
-          const guest = [...r.clients.keys()][0];
-          if (guest) guest.sendText(JSON.stringify({ type: 'peer_left' }));
-          rooms.delete(this.room);
-        } else {
-          r.host.sendText(JSON.stringify({ type: 'peer_left' }));
-        }
-      }
-    }
+    this.leaveRoom();
     try { this.socket.destroy(); } catch {}
   }
 }
