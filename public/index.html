@@ -509,11 +509,12 @@ let currentGameId = null;
 const online = {
   ws: null, room: null, player: 0, isHost: false, game: null, connected: false, pending: null, roomInfo: null, capacity: 2, _hb: null,
   lobby: [], inviteTarget: null,
+  defaultServer: 'https://mini-games-online.onrender.com',
   connect(){
     if (this.connected) return;
     let wsUrl;
     try {
-      const raw = (localStorage.getItem('mg_server') || '').trim();
+      const raw = (localStorage.getItem('mg_server') || '').trim() || this.defaultServer;
       if (raw){
         const u = raw.replace(/\/+$/, '');
         wsUrl = (u.startsWith('https') ? 'wss://' : 'ws://') + u.replace(/^https?:\/\//, '') + '/ws';
@@ -860,7 +861,7 @@ function openSettings(){
   const input = el('input','nick-input');
   input.type = 'text';
   input.placeholder = '服务端地址（留空 = 当前站点）';
-  try { input.value = localStorage.getItem('mg_server') || ''; } catch {}
+  try { input.value = localStorage.getItem('mg_server') || online.defaultServer; } catch {}
   card.appendChild(input);
   card.appendChild(el('p','lb-note','前端与联机服务不在同一域名时，填写服务端地址（如 https://xxx.onrender.com），保存后重新连接生效。'));
   const save = el('button','btn btn-primary','保存');

@@ -1,6 +1,7 @@
 # 小游戏合集（在线版）
 
 一个零依赖的网页版小游戏合集：井字棋、五子棋、飞行棋、迷你大富翁、弹珠跳棋。
+- 线上试玩：https://honru09.github.io/mini-games/（前端 GitHub Pages + 后端 Render + 数据库 Supabase）
 
 - 本地热座模式：2-5 人共用一台设备轮流操作
 - 联机对战模式：全部 5 款游戏均可通过 WebSocket 房间联机（井字棋/五子棋 2 人，
@@ -91,7 +92,7 @@ Railway Volume），否则免费套餐的重启会把数据清空。
    - `Project URL`（形如 `https://xxxx.supabase.co`）
    - `anon public` key（形如 `eyJ...`）
 
-### 3. 服务端：Render（免费 Node 托管，一键从仓库部署）
+### 3. 服务端：Render（已部署 ✅ https://mini-games-online.onrender.com）
 
 1. 打开 https://render.com → 注册/登录（用 GitHub 账号，无需付费）
 2. **New → Blueprint** → 选择本仓库 `honru09/mini-games`
@@ -101,11 +102,11 @@ Railway Volume），否则免费套餐的重启会把数据清空。
    - `SUPABASE_KEY` = 第 2 步的 anon key
    - 保存后服务会自动重启
 
-### 4. 前端连接服务端
+### 4. 前端连接服务端（已默认配置 ✅）
 
-打开线上游戏页（`https://honru09.github.io/mini-games/`）→ 联机面板「⚙ 设置」→
-在"联机服务地址"填入 Render 服务地址（形如 `https://mini-games-online.onrender.com`），
-保存后刷新页面，即可跨设备联机 + 全球排行榜 + 玩家在线状态。
+线上游戏页（`https://honru09.github.io/mini-games/`）已默认连接
+`https://mini-games-online.onrender.com`，打开即可跨设备联机 + 全球排行榜 + 玩家在线状态。
+如需更换后端，仍可在联机面板「⚙ 设置」中修改"联机服务地址"。
 
 > 服务端未配置 Supabase 时会自动回退到本地 JSON 文件存储（`data/leaderboard.json`），
 > 适合本地开发；生产环境请务必配置 Supabase，数据才会永久保存且便于管理。
