@@ -3,6 +3,14 @@
 一个零依赖的网页版小游戏合集：井字棋、五子棋、飞行棋、迷你大富翁、弹珠跳棋。
 - 线上试玩：https://honru09.github.io/mini-games/（前端 GitHub Pages + 后端 Render + 数据库 Supabase）
 
+## 换电脑 / 新环境快速上手
+
+1. 克隆仓库：`git clone https://github.com/honru09/mini-games.git`
+2. 用 Codex 打开克隆下来的文件夹（或直接说「读一下 AGENTS.md 了解项目」）
+3. 本地运行：`node server/index.js` → 打开 http://localhost:8080
+4. 测试：`node qa/dom-smoke.js`（冒烟）、`node qa/e2e-online.js`（联机 E2E）
+5. 需要部署/改后端时看 `AGENTS.md` 第 6 节（凭证需重新向用户索取，不要写入仓库）
+
 - 本地热座模式：2-5 人共用一台设备轮流操作
 - 人机对战模式：🤖 用 DeepSeek AI 当对手，先选人数（含 AI），单人也能玩全部游戏
 - 联机对战模式：全部 5 款游戏均可通过 WebSocket 房间联机（井字棋/五子棋 2 人，
