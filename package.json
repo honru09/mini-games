@@ -1,0 +1,13 @@
+{
+  "name": "mini-games-online",
+  "version": "1.0.0",
+  "private": true,
+  "description": "本地多人小游戏合集（井字棋/五子棋/飞行棋/大富翁/弹珠跳棋），含联机对战模式，零依赖",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
