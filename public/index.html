@@ -167,6 +167,28 @@ button{font-family:inherit; cursor:pointer}
 .room-status{font-size:13px; font-weight:500; margin-bottom:10px; min-height:18px}
 .room-actions{display:flex; gap:8px; flex-wrap:wrap}
 
+/* 游戏大厅 */
+.lobby-panel{
+  background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+  padding:14px 16px; margin-bottom:14px;
+}
+.lobby-panel h3{margin:0 0 10px; font-size:15px}
+.lobby-list{display:flex; flex-direction:column; gap:8px}
+.lobby-row{
+  display:flex; align-items:center; gap:10px; background:#fff;
+  border:1px solid var(--border); border-radius:12px; padding:9px 12px;
+}
+.lobby-row .av{flex:none}
+.lobby-row .info{flex:1; min-width:0}
+.lobby-row .nm{font-weight:600; font-size:14px}
+.lobby-row .meta{font-size:12px; color:var(--muted)}
+.lobby-empty{color:var(--muted); font-size:13px; padding:8px 0}
+.player-list{display:flex; flex-direction:column; gap:4px}
+.player-row{display:flex; align-items:center; gap:10px; font-size:13.5px; padding:5px 8px; border-radius:8px}
+.player-row .nm{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.player-row .pts{font-weight:600; font-variant-numeric:tabular-nums}
+.invite-btn{padding:4px 12px; font-size:12.5px}
+
 /* 游戏顶栏 */
 .game-top{
   display:flex; align-items:center; justify-content:space-between;
@@ -367,10 +389,12 @@ canvas.board-canvas{width:100%; max-width:560px; display:block; border-radius:12
       <h3>🌐 联机对战（2-5 人 · 全部游戏）<button type="button" class="btn btn-ghost" id="btn-settings" style="float:right; padding:2px 8px">⚙ 设置</button></h3>
       <div class="online-row">
         <button type="button" class="btn btn-primary" id="btn-create-room">🎮 创建房间</button>
-        <input id="room-input" placeholder="或输入房间码加入" maxlength="6" autocomplete="off">
-        <button type="button" class="btn" id="btn-join-room">加入</button>
       </div>
       <div class="online-status" id="online-status">未连接</div>
+    </div>
+    <div class="lobby-panel" id="lobby-panel">
+      <h3>🎮 游戏大厅（等待中的房间）</h3>
+      <div class="lobby-list" id="lobby-list"></div>
     </div>
     <div class="game-grid" id="game-grid"></div>
     <div class="lb-panel">
@@ -383,6 +407,12 @@ canvas.board-canvas{width:100%; max-width:560px; display:block; border-radius:12
       </div>
       <div class="lb-list" id="lb-list"></div>
       <div class="lb-note" id="lb-note"></div>
+    </div>
+    <div class="lb-panel">
+      <div class="lb-head">
+        <h3>👥 玩家列表</h3>
+      </div>
+      <div class="player-list" id="player-list"></div>
     </div>
   </section>
 
@@ -478,6 +508,7 @@ let currentGameId = null;
 /* ================= 联机对战（WebSocket 中继） ================= */
 const online = {
   ws: null, room: null, player: 0, isHost: false, game: null, connected: false, pending: null, roomInfo: null, capacity: 2, _hb: null,
+  lobby: [], inviteTarget: null,
   connect(){
     if (this.connected) return;
     let wsUrl;
@@ -497,6 +528,7 @@ const online = {
       this.connected = true;
       this.status('已连接服务器，可创建或加入房间');
       this.send({ type: 'hello', payload: { uid: typeof deviceUid !== 'undefined' ? deviceUid : null } });
+      this.send({ type: 'lobby' });
       if (typeof syncProfiles === 'function') syncProfiles();
       if (this._hb) clearInterval(this._hb);
       this._hb = setInterval(() => { if (this.connected) this.send({ type: 'ping' }); }, 10000);
@@ -529,7 +561,7 @@ const online = {
     }
   },
   join(code){
-    code = code || $('room-input').value.trim().toUpperCase();
+    code = String(code || '').trim().toUpperCase();
     if (code.length < 4){ toast('请输入房间码'); return; }
     if (this.connected){
       this.send({type:'join', payload:{room:code}});
@@ -551,6 +583,12 @@ const online = {
         this.roomInfo = { room: msg.room, game: null, capacity: this.capacity, players: [{ uid: null, player: 0 }], size: 1, started: false };
         this.status('房间已创建：<span class="room-code">' + msg.room + '</span>，等待对方加入…');
         renderRoomPanel();
+        if (this.inviteTarget){
+          const toUid = this.inviteTarget;
+          this.inviteTarget = null;
+          this.send({ type: 'invite', payload: { toUid } });
+          toast('邀请已发送');
+        }
         break;
       case 'joined':
         this.room = msg.room; this.player = msg.player; this.isHost = false;
@@ -563,6 +601,16 @@ const online = {
         this.capacity = msg.payload.capacity || this.capacity;
         if (!this.isHost && !this.room) this.room = msg.payload.room;
         renderRoomPanel();
+        break;
+      case 'lobby':
+        this.lobby = msg.payload || [];
+        renderLobby();
+        break;
+      case 'invite':
+        showInviteModal(msg.payload);
+        break;
+      case 'invite_result':
+        toast(msg.payload && msg.payload.accepted ? '对方已接受邀请 🎉' : '对方拒绝了邀请');
         break;
       case 'started':
         this.game = msg.game;
@@ -601,7 +649,7 @@ const online = {
     }
   },
   resetState(){
-    this.room = null; this.game = null; this.isHost = false; this.pending = null; this.roomInfo = null; this.capacity = 2;
+    this.room = null; this.game = null; this.isHost = false; this.pending = null; this.roomInfo = null; this.capacity = 2; this.inviteTarget = null;
     $('online-banner').classList.add('hidden');
     $('room-panel').classList.add('hidden');
     if (currentGameId && $('screen-game') && !$('screen-game').classList.contains('hidden')){
@@ -663,8 +711,8 @@ function renderRoomPanel(){
       startBtn.addEventListener('click', () => online.send({ type: 'start' }));
       actions.appendChild(startBtn);
     }
-    const invite = el('button','btn btn-primary','🔗 复制邀请链接');
-    invite.addEventListener('click', copyInvite);
+    const invite = el('button','btn btn-primary','📨 邀请玩家');
+    invite.addEventListener('click', openInvitePicker);
     actions.appendChild(invite);
   }
   const leave = el('button','btn','离开房间');
@@ -675,22 +723,135 @@ function renderRoomPanel(){
   });
   actions.appendChild(leave);
 }
-function copyInvite(){
-  const link = location.origin + location.pathname + '#join=' + online.room;
-  const done = () => toast('邀请链接已复制，发给对方即可');
-  if (navigator.clipboard && navigator.clipboard.writeText){
-    navigator.clipboard.writeText(link).then(done).catch(() => { toast('邀请链接：' + link); });
+function openInvitePicker(){
+  const bd = el('div','modal-backdrop');
+  const card = el('div','modal-card');
+  card.appendChild(el('h3', null, '邀请玩家加入房间'));
+  const list = el('div','roster-list');
+  const data = online.connected && lastServerLB ? lastServerLB : localLeaderboard();
+  const onlineUsers = (data.list || []).filter(u => u.online && u.uid !== deviceUid);
+  if (!onlineUsers.length){
+    card.appendChild(el('p','lobby-empty','当前没有其他在线玩家'));
   } else {
-    try {
-      const ta = document.createElement('textarea');
-      ta.value = link;
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand('copy');
-      ta.remove();
-      done();
-    } catch { toast('邀请链接：' + link); }
+    onlineUsers.forEach(u => {
+      const item = el('button','roster-item');
+      item.type = 'button';
+      const av = el('span','av');
+      av.appendChild(avatarCanvas(u.avatar, 24));
+      item.appendChild(av);
+      item.appendChild(el('span','nm', u.name));
+      item.appendChild(el('span','lb-game', (u.coins || 0) + ' 枚'));
+      item.addEventListener('click', () => {
+        bd.remove();
+        inviteUser(u.uid);
+      });
+      list.appendChild(item);
+    });
+    card.appendChild(list);
   }
+  const cancel = el('button','btn','取消');
+  cancel.addEventListener('click', () => bd.remove());
+  card.appendChild(cancel);
+  bd.appendChild(card);
+  bd.addEventListener('click', e => { if (e.target === bd) bd.remove(); });
+  document.body.appendChild(bd);
+}
+function renderLobby(){
+  const listEl = $('lobby-list');
+  listEl.innerHTML = '';
+  if (!online.connected){
+    listEl.appendChild(el('div','lobby-empty','连接服务器后显示等待中的房间'));
+    return;
+  }
+  if (!online.lobby.length){
+    listEl.appendChild(el('div','lobby-empty','暂无等待中的房间，点「创建房间」开一间吧'));
+    return;
+  }
+  online.lobby.forEach(r => {
+    if (r.room === online.room) return;
+    const row = el('div','lobby-row');
+    const av = el('span','av');
+    av.appendChild(avatarCanvas(r.hostAvatar, 30));
+    row.appendChild(av);
+    const info = el('div','info');
+    info.appendChild(el('div','nm', r.hostName + ' 的房间'));
+    info.appendChild(el('div','meta', '人数 ' + r.size + '/' + r.capacity + ' · 游戏：' + (r.game ? GAMES[r.game].name : '未选择')));
+    row.appendChild(info);
+    const joinBtn = el('button','btn btn-primary invite-btn','加入');
+    joinBtn.addEventListener('click', () => {
+      if (online.game){ toast('对局进行中，请先返回大厅离开房间'); return; }
+      online.send({ type: 'join', payload: { room: r.room } });
+    });
+    row.appendChild(joinBtn);
+    listEl.appendChild(row);
+  });
+}
+function renderAccounts(){
+  const listEl = $('player-list');
+  listEl.innerHTML = '';
+  const data = online.connected && lastServerLB ? lastServerLB : localLeaderboard();
+  const list = data.list || [];
+  if (!list.length){
+    listEl.appendChild(el('div','lobby-empty','还没有玩家注册'));
+    return;
+  }
+  list.forEach(u => {
+    const row = el('div','player-row' + (u.uid === deviceUid ? ' me' : ''));
+    const av = el('span','lb-av');
+    av.appendChild(avatarCanvas(u.avatar, 20));
+    row.appendChild(av);
+    row.appendChild(el('span','nm', u.name + (u.uid === deviceUid ? '（我）' : '')));
+    if (u.online) row.appendChild(el('span','online-dot',''));
+    const coinLine = el('span','coin-line');
+    coinLine.appendChild(el('span','coin sm','L'));
+    coinLine.appendChild(el('span','pts', (u.coins || 0)));
+    row.appendChild(coinLine);
+    if (u.uid !== deviceUid){
+      const inv = el('button','btn invite-btn','邀请');
+      inv.disabled = !u.online || (online.room && !online.isHost);
+      inv.addEventListener('click', () => inviteUser(u.uid));
+      row.appendChild(inv);
+    }
+    listEl.appendChild(row);
+  });
+}
+function inviteUser(uid){
+  if (online.room){
+    if (!online.isHost){ toast('只有房主可以邀请'); return; }
+    online.send({ type: 'invite', payload: { toUid: uid } });
+    toast('邀请已发送');
+    return;
+  }
+  online.inviteTarget = uid;
+  online.create();
+}
+function showInviteModal(inv){
+  if (!inv || !inv.room) return;
+  if (online.room){
+    toast('你已在房间中，无法接受新邀请');
+    return;
+  }
+  const bd = el('div','modal-backdrop');
+  const card = el('div','modal-card');
+  card.appendChild(el('h3', null, '📨 收到邀请'));
+  const msg = el('p', null, inv.fromName + ' 邀请你加入房间 ' + inv.room + (inv.game ? '（' + GAMES[inv.game].name + '）' : '（未选游戏）'));
+  msg.style.margin = '0 0 14px';
+  msg.style.fontSize = '14px';
+  card.appendChild(msg);
+  const accept = el('button','btn btn-primary','接受');
+  accept.addEventListener('click', () => {
+    bd.remove();
+    online.send({ type: 'invite_accept', payload: { room: inv.room } });
+  });
+  const decline = el('button','btn','拒绝');
+  decline.addEventListener('click', () => {
+    bd.remove();
+    online.send({ type: 'invite_decline', payload: { room: inv.room } });
+  });
+  card.appendChild(accept);
+  card.appendChild(decline);
+  bd.appendChild(card);
+  document.body.appendChild(bd);
 }
 function openSettings(){
   const bd = el('div','modal-backdrop');
@@ -971,6 +1132,7 @@ function localLeaderboard(){
 }
 function renderLeaderboard(){
   const data = online.connected && lastServerLB ? lastServerLB : localLeaderboard();
+  renderAccounts();
   const listEl = $('lb-list');
   listEl.innerHTML = '';
   $('lb-note').textContent = online.connected
@@ -1130,8 +1292,6 @@ if (typeof document !== 'undefined'){
     if (currentGameId && RULES[currentGameId]) showModal(GAMES[currentGameId].name + ' · 规则', RULES[currentGameId]);
   });
   $('btn-create-room').addEventListener('click', () => online.create());
-  $('btn-join-room').addEventListener('click', () => online.join());
-  $('room-input').addEventListener('keydown', e => { if (e.key === 'Enter') online.join(); });
   $('btn-settings').addEventListener('click', openSettings);
   $('btn-me').addEventListener('click', () => openProfileEditor(deviceUid));
   const setLbTab = (which) => {
@@ -1158,12 +1318,6 @@ if (typeof document !== 'undefined'){
 
 function parseHash(){
   const h = location.hash.slice(1);
-  const j = /^join=([A-Z0-9]{6})/.exec(h);
-  if (j){
-    renderHub();
-    online.join(j[1]);
-    return;
-  }
   const m = /^game=([a-z]+)(?:&p=([2-5]))?/.exec(h);
   if (!m || !GAMES[m[1]]) return;
   if (m[2]) playerCount = Number(m[2]);
@@ -2344,8 +2498,11 @@ if (typeof document !== 'undefined'){
   renderMe();
   renderSlots();
   renderLeaderboard();
+  renderLobby();
+  renderAccounts();
   renderHub();
   if (typeof parseHash === 'function') parseHash();
+  online.connect();
 }
 </script>
 </body>

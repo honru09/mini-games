@@ -43,7 +43,59 @@ const server = http.createServer((req, res) => {
 const WS_GUID = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11';
 const rooms = new Map(); // roomId -> { host, clients: Map<ws, player>, game }
 const sessions = new Set();
+const pendingInvites = new Map(); // toUid -> [{fromUid, fromName, room, game}]
 const GAME_MAX = { tictactoe: 2, gomoku: 2, ludo: 4, monopoly: 5, checker: 5 };
+
+/* ---------------- Supabase 数据库（可选，配置环境变量后启用） ---------------- */
+const SUPABASE_URL = (process.env.SUPABASE_URL || '').replace(/\/+$/, '');
+const SUPABASE_KEY = process.env.SUPABASE_KEY || '';
+const useSupabase = !!(SUPABASE_URL && SUPABASE_KEY);
+async function sbFetch(path, options = {}){
+  const res = await fetch(SUPABASE_URL + '/rest/v1/' + path, {
+    ...options,
+    headers: {
+      apikey: SUPABASE_KEY,
+      Authorization: 'Bearer ' + SUPABASE_KEY,
+      'Content-Type': 'application/json',
+      ...(options.headers || {}),
+    },
+  });
+  if (!res.ok) throw new Error('supabase ' + res.status + ': ' + (await res.text()).slice(0, 200));
+  return res.status === 204 ? null : res.json();
+}
+async function sbLoadProfiles(){
+  if (!useSupabase) return;
+  try {
+    const rows = await sbFetch('profiles?select=uid,name,avatar,coins,played,total&order=coins.desc&limit=5000');
+    const users = {};
+    for (const r of rows){
+      users[r.uid] = { name: r.name, avatar: r.avatar, coins: r.coins || 0, played: r.played || {}, total: r.total || 0 };
+    }
+    db.users = users;
+    console.log('已从 Supabase 加载 ' + Object.keys(users).length + ' 位玩家');
+  } catch (e) {
+    console.error('加载 Supabase 数据失败（继续使用本地数据）:', e.message);
+  }
+}
+async function sbSyncProfile(u){
+  if (!useSupabase) return;
+  try {
+    await sbFetch('profiles?on_conflict=uid', {
+      method: 'POST',
+      headers: { Prefer: 'resolution=merge-duplicates' },
+      body: JSON.stringify({ uid: u.uid, name: u.name, avatar: u.avatar, coins: u.coins, played: u.played, total: u.total, updated_at: new Date().toISOString() }),
+    });
+  } catch (e) { console.error('Supabase 同步档案失败:', e.message); }
+}
+async function sbAddHistory(uid, game, coins){
+  if (!useSupabase) return;
+  try {
+    await sbFetch('history', {
+      method: 'POST',
+      body: JSON.stringify([{ uid, game, coins, created_at: new Date().toISOString() }]),
+    });
+  } catch (e) { console.error('Supabase 写入历史失败:', e.message); }
+}
 
 /* ---------------- 排行榜持久化（JSON 文件） ---------------- */
 let db = { users: {}, history: [] };
@@ -76,12 +128,33 @@ function leaderboardPayload(){
       return { uid, name: u.name, avatar: u.avatar, coins: u.coins || 0, played: u.played || {}, total: u.total || 0, online: onlineUids.has(uid) };
     })
     .sort((a, b) => (b.coins - a.coins) || (b.total - a.total) || String(a.name).localeCompare(String(b.name)))
-    .slice(0, 50);
+    .slice(0, 200);
   return { list, total: Object.keys(db.users).length };
 }
 function broadcastLeaderboard(){
   const payload = leaderboardPayload();
   for (const s of sessions) s.sendText(JSON.stringify({ type: 'leaderboard', payload }));
+}
+function lobbyPayload(){
+  const list = [];
+  for (const r of rooms.values()){
+    if (r.started || r.clients.size >= r.capacity) continue;
+    const hu = r.host.uid ? db.users[r.host.uid] : null;
+    list.push({
+      room: r.id,
+      hostUid: r.host.uid || null,
+      hostName: hu ? hu.name : '玩家',
+      hostAvatar: hu ? hu.avatar : 0,
+      capacity: r.capacity,
+      size: r.clients.size,
+      game: r.game || null,
+    });
+  }
+  return list;
+}
+function broadcastLobby(){
+  const text = JSON.stringify({ type: 'lobby', payload: lobbyPayload() });
+  for (const s of sessions) s.sendText(text);
 }
 function roomPayload(r){
   const players = [...r.clients.entries()]
@@ -187,6 +260,13 @@ class Session {
       const uid = payload && payload.uid;
       if (uid) this.uid = String(uid);
       broadcastLeaderboard();
+      broadcastLobby();
+      if (this.uid){
+        const pend = pendingInvites.get(this.uid);
+        if (pend && pend.length){
+          for (const inv of pend.splice(0)) this.sendText(JSON.stringify({ type: 'invite', payload: inv }));
+        }
+      }
       return;
     }
     if (type === 'profile'){
@@ -198,6 +278,7 @@ class Session {
       u.name = name;
       u.avatar = avatar;
       saveDB();
+      sbSyncProfile(u);
       this.sendText(JSON.stringify({ type: 'profile_ok', payload: { uid, name: u.name, avatar: u.avatar, coins: u.coins, played: u.played, total: u.total } }));
       broadcastLeaderboard();
       return;
@@ -216,6 +297,8 @@ class Session {
         u.played[game] = (u.played[game] || 0) + played;
         u.total = (u.total || 0) + played;
         db.history.push({ uid, game, coins, at: Date.now() });
+        sbAddHistory(uid, game, coins);
+        sbSyncProfile(u);
       }
       if (db.history.length > 1000) db.history = db.history.slice(-500);
       saveDB();
@@ -224,6 +307,21 @@ class Session {
     }
     if (type === 'leaderboard'){
       this.sendText(JSON.stringify({ type: 'leaderboard', payload: leaderboardPayload() }));
+      return;
+    }
+    if (type === 'lobby'){
+      this.sendText(JSON.stringify({ type: 'lobby', payload: lobbyPayload() }));
+      return;
+    }
+    if (type === 'invite_accept'){
+      const roomId = String((payload && payload.room) || '').trim().toUpperCase();
+      this.joinRoom(roomId, true);
+      return;
+    }
+    if (type === 'invite_decline'){
+      const roomId = String((payload && payload.room) || '').trim().toUpperCase();
+      const r = rooms.get(roomId);
+      if (r) r.host.sendText(JSON.stringify({ type: 'invite_result', payload: { accepted: false } }));
       return;
     }
     if (type === 'create'){
@@ -236,29 +334,11 @@ class Session {
       this.player = 0;
       this.sendText(JSON.stringify({ type: 'created', room: roomId, player: 0, capacity: cap }));
       broadcastRoom(r);
+      broadcastLobby();
       return;
     }
     if (type === 'join'){
-      const roomId = String((payload && payload.room) || '').trim().toUpperCase();
-      const r = rooms.get(roomId);
-      if (!r){
-        this.sendText(JSON.stringify({ type: 'error', msg: '房间不存在' }));
-        return;
-      }
-      if (r.clients.size >= r.capacity){
-        this.sendText(JSON.stringify({ type: 'error', msg: '房间已满' }));
-        return;
-      }
-      if (this.room){
-        this.sendText(JSON.stringify({ type: 'error', msg: '你已在房间中' }));
-        return;
-      }
-      r.clients.set(this, 1);
-      this.room = roomId;
-      this.player = 1;
-      this.sendText(JSON.stringify({ type: 'joined', room: roomId, player: 1 }));
-      broadcastRoom(r);
-      maybeAutoStart(r);
+      this.joinRoom(String((payload && payload.room) || '').trim().toUpperCase(), false);
       return;
     }
     if (type === 'leave'){
@@ -268,6 +348,24 @@ class Session {
     if (!this.room) return;
     const r = rooms.get(this.room);
     if (!r) return;
+    if (type === 'invite'){
+      if (this !== r.host) return;
+      const toUid = payload && payload.toUid;
+      if (!toUid) return;
+      if (r.started || r.clients.size >= r.capacity) return;
+      if ([...r.clients.keys()].some(c => c.uid === toUid)) return;
+      const fromU = this.uid ? db.users[this.uid] : null;
+      const inv = { fromUid: this.uid, fromName: fromU ? fromU.name : '玩家', room: r.id, game: r.game || null };
+      let target = null;
+      for (const s of sessions){ if (s.uid === toUid && s !== this){ target = s; break; } }
+      if (target){
+        target.sendText(JSON.stringify({ type: 'invite', payload: inv }));
+      } else {
+        if (!pendingInvites.has(toUid)) pendingInvites.set(toUid, []);
+        pendingInvites.get(toUid).push(inv);
+      }
+      return;
+    }
     if (type === 'select_game'){
       if (this !== r.host) return;
       const g = payload && payload.game;
@@ -278,6 +376,7 @@ class Session {
       }
       r.game = g;
       broadcastRoom(r);
+      broadcastLobby();
       maybeAutoStart(r);
       return;
     }
@@ -286,6 +385,7 @@ class Session {
       if (!r.game || r.clients.size < 2 || r.started) return;
       r.started = true;
       broadcast(r, { type: 'started', game: r.game });
+      broadcastLobby();
       return;
     }
     if (type === 'move'){
@@ -296,6 +396,33 @@ class Session {
       if (this !== r.host) return;
       broadcast(r, { type: 'restart' });
     }
+  }
+  joinRoom(roomId, fromInvite){
+    const r = rooms.get(roomId);
+    if (!r){
+      this.sendText(JSON.stringify({ type: 'error', msg: '房间不存在' }));
+      return;
+    }
+    if (r.started){
+      this.sendText(JSON.stringify({ type: 'error', msg: '对局已开始' }));
+      return;
+    }
+    if (r.clients.size >= r.capacity){
+      this.sendText(JSON.stringify({ type: 'error', msg: '房间已满' }));
+      return;
+    }
+    if (this.room){
+      this.sendText(JSON.stringify({ type: 'error', msg: '你已在房间中' }));
+      return;
+    }
+    r.clients.set(this, 1);
+    this.room = roomId;
+    this.player = 1;
+    this.sendText(JSON.stringify({ type: 'joined', room: roomId, player: 1 }));
+    broadcastRoom(r);
+    if (fromInvite) r.host.sendText(JSON.stringify({ type: 'invite_result', payload: { accepted: true } }));
+    broadcastLobby();
+    maybeAutoStart(r);
   }
   leaveRoom(){
     if (!this.room) return;
@@ -308,11 +435,13 @@ class Session {
     if (wasHost){
       for (const c of r.clients.keys()) c.sendText(JSON.stringify({ type: 'peer_left' }));
       rooms.delete(r.id);
+      broadcastLobby();
     } else {
       if (r.clients.size === 0){ rooms.delete(r.id); return; }
       r.started = false;
       r.host.sendText(JSON.stringify({ type: 'peer_left' }));
       broadcastRoom(r);
+      broadcastLobby();
     }
   }
   close(){
@@ -343,6 +472,8 @@ server.on('upgrade', (req, socket) => {
   socket.on('error', () => session.close());
 });
 
-server.listen(PORT, () => {
-  console.log('小游戏合集在线服务已启动: http://localhost:' + PORT);
+sbLoadProfiles().finally(() => {
+  server.listen(PORT, () => {
+    console.log('小游戏合集在线服务已启动: http://localhost:' + PORT + (useSupabase ? '（Supabase 数据库已连接）' : '（本地 JSON 存储）'));
+  });
 });

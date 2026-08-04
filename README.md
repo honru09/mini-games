@@ -5,12 +5,14 @@
 - 本地热座模式：2-5 人共用一台设备轮流操作
 - 联机对战模式：全部 5 款游戏均可通过 WebSocket 房间联机（井字棋/五子棋 2 人，
   飞行棋 2-4 人，大富翁/弹珠跳棋 2-5 人）
+- 游戏大厅：所有等待中的房间实时展示，玩家一键加入，无需输入房间码或链接
+- 玩家列表：网站收录所有已注册档案，显示在线/离线状态，可直接邀请或接受邀请
 - 用户档案：免账号密码，输入昵称 + 从 20 个程序生成的像素风头像中选一个即可建档
 - L金币货币：每局获胜获得 1 枚 L 金币（平局/失败没有），写入个人档案
 - 对局统计：档案记录每个游戏的游玩局数与总局数
-- 总排行榜：金币数实时更新、在线状态可见（心跳保活）、数据落盘持久保存
-- 联机邀请：复制邀请链接一键加入；房主可设置房间人数并选择游戏，进入等待模式，
-  人齐自动开局或由房主手动开始；大厅实时显示房间（人数/游戏/状态）
+- 总排行榜：金币数实时更新、离线玩家战绩永久保留
+- 数据存储：可接入 Supabase 数据库（PostgreSQL），全部玩家/对局数据集中管理
+- 房主可设置房间人数并选择游戏，进入等待模式，人齐自动开局或由房主手动开始
 - 前端是单个 `public/index.html`，服务端是零依赖的 Node.js（手写 WebSocket，无需 npm install）
 
 ## 本地运行
@@ -23,11 +25,11 @@ node server/index.js
 
 ## 联机怎么玩
 
-1. 房主先在大厅选好人数（2-5 人），点「🎮 创建房间」；
-2. 在大厅房间面板点「🔗 复制邀请链接」发给朋友，朋友点击链接自动加入；
-3. 房主选择任意一款游戏（人数需匹配），进入等待模式；人齐自动开局，
-   也可以由房主点「▶ 开始游戏」提前开始；
-4. 各自在自己设备上操作自己的回合，所有操作实时同步。
+1. 房主在大厅选好人数（2-5 人），点「🎮 创建房间」，选好游戏后进入等待模式；
+2. 房间会自动出现在所有人的「游戏大厅」里（显示房主、人数、游戏）；
+3. 其他玩家在游戏大厅看到房间后点「加入」即可，无需输入任何房间码/链接；
+4. 也可以在「玩家列表」里直接邀请在线玩家，对方收到弹窗点「接受」即加入；
+5. 人齐自动开局，或由房主点「▶ 开始游戏」提前开始；各自操作自己的回合，实时同步。
 
 大厅的房间面板会实时显示：房间码、人数（1/2）、已选游戏、等待状态。
 
@@ -74,40 +76,49 @@ node server/index.js
 启动时自动加载、变更后原子写入。部署时请挂载持久化磁盘（如 Render 的 Persistent Disk /
 Railway Volume），否则免费套餐的重启会把数据清空。
 
-## 部署上线（静态部分）
+## 部署上线（完整版：前端 + 服务端 + 数据库）
 
-这个项目同时包含前端和联机服务端，按需选择：
+### 1. 前端：GitHub Pages（已完成 ✅）
 
-### GitHub Pages（推荐，前端免费上线）
+仓库内置 `.github/workflows/pages.yml`，推送到 `main` 自动发布 `public/`。
 
-仓库已内置 `.github/workflows/pages.yml`，推送到 `main` 分支后自动发布 `public/`：
+### 2. 数据库：Supabase（免费 PostgreSQL，含管理后台）
 
-1. 在 GitHub 新建一个空仓库（或使用已有仓库），把本项目代码推上去
-2. 仓库 Settings → Pages → Source 选 **GitHub Actions**
-3. 首次部署完成后即可通过 `https://<用户名>.github.io/<仓库名>/` 访问
+1. 打开 https://supabase.com → 注册/登录（可用 GitHub 账号）
+2. New project → 起名、设置数据库密码、选离你近的 Region
+3. 左侧 **SQL Editor** → 粘贴执行本仓库 `supabase/schema.sql`（建表）
+4. 左侧 **Project Settings → API**，复制两个值备用：
+   - `Project URL`（形如 `https://xxxx.supabase.co`）
+   - `anon public` key（形如 `eyJ...`）
 
-> 只部署前端时：本地热座 + 本地排行榜可用；联机对战和全球排行榜需要同时部署服务端。
+### 3. 服务端：Render（免费 Node 托管，一键从仓库部署）
 
-### 只玩本地热座（其他静态托管也行）
+1. 打开 https://render.com → 注册/登录（用 GitHub 账号，无需付费）
+2. **New → Blueprint** → 选择本仓库 `honru09/mini-games`
+3. Render 读取 `render.yaml` 自动创建服务
+4. 等首次部署完成后，打开该服务的 **Environment**，填入：
+   - `SUPABASE_URL` = 第 2 步的 Project URL
+   - `SUPABASE_KEY` = 第 2 步的 anon key
+   - 保存后服务会自动重启
 
-直接把 `public/` 目录（或 `public/index.html`）上传到任意静态托管：
+### 4. 前端连接服务端
 
-- **GitHub Pages**：把 `public/` 内容推到仓库 `gh-pages` 分支
-- **Netlify Drop**：拖拽 `public/` 文件夹到 https://app.netlify.com/drop
-- **Vercel**：`vercel deploy`，输出目录设为 `public`
+打开线上游戏页（`https://honru09.github.io/mini-games/`）→ 联机面板「⚙ 设置」→
+在"联机服务地址"填入 Render 服务地址（形如 `https://mini-games-online.onrender.com`），
+保存后刷新页面，即可跨设备联机 + 全球排行榜 + 玩家在线状态。
 
-### 要联机（需要能跑 Node 的服务端）
+> 服务端未配置 Supabase 时会自动回退到本地 JSON 文件存储（`data/leaderboard.json`），
+> 适合本地开发；生产环境请务必配置 Supabase，数据才会永久保存且便于管理。
 
-服务端是纯 Node 标准库实现，没有第三方依赖，可部署到任意支持 Node 的平台：
+### 数据管理（Supabase Dashboard）
 
-- **Render**（免费）：新建 Web Service，Root Directory 填项目根目录，Build Command 留空，
-  Start Command 填 `node server/index.js`，自动监听环境变量 `PORT`；
-  建议同时挂载一个 Persistent Disk 到 `/data` 以保证积分永久保存
-- **Railway / Fly.io**：同样直接跑 `node server/index.js`
-- **自家 VPS / 树莓派**：`node server/index.js` 即可，前面可加 Nginx 反代
+所有数据集中在 Supabase 的 PostgreSQL 里，两张表：
 
-前端部署在 GitHub Pages、服务端在其他平台时，在页面"联机服务地址"输入框里填
-服务端地址（如 `https://xxx.onrender.com`），留空则默认连接当前站点。
+- `profiles`：玩家档案（uid / 昵称 / 头像 / L金币 / 各游戏局数 / 总局数 / 创建与更新时间）
+- `history`：对局流水（玩家 / 游戏 / 金币 / 时间），可用于审计、统计、报表
+
+常用查询见 `supabase/schema.sql` 末尾注释；也可以在 Dashboard 的 Table Editor
+里直接增删改查。若日后需要管理员后台、封禁、数据导出等，都在这套表结构上扩展。
 
 ## 消息协议（联机模式）
 
@@ -117,11 +128,16 @@ WebSocket 端点：`/ws`。所有消息均为 JSON：
 |---|---|---|
 | 客户端→服务端 | `{"type":"hello","payload":{"uid":"u_xxx"}}` | 声明当前档案（用于在线状态） |
 | 客户端→服务端 | `{"type":"profile","payload":{"uid","name","avatar"}}` | 创建/更新档案 |
-| 客户端→服务端 | `{"type":"create"}` | 创建房间 |
+| 客户端→服务端 | `{"type":"create","payload":{"capacity":2}}` | 创建房间 |
 | 服务端→房主 | `{"type":"created","room":"XXXXXX","player":0}` | 返回房间码 |
-| 服务端→双方 | `{"type":"room_update","payload":{"room","game","players","size"}}` | 房间实时状态（人数/游戏） |
+| 服务端→全部 | `{"type":"lobby","payload":[...]}` | 游戏大厅：等待中的房间列表（实时） |
 | 客户端→服务端 | `{"type":"join","payload":{"room":"XXXXXX"}}` | 加入房间 |
 | 服务端→加入者 | `{"type":"joined","room":"XXXXXX","player":1}` | 加入成功 |
+| 客户端→服务端 | `{"type":"invite","payload":{"toUid"}}` | 邀请在线玩家 |
+| 服务端→受邀者 | `{"type":"invite","payload":{"fromName","room","game"}}` | 收到邀请 |
+| 受邀者→服务端 | `{"type":"invite_accept","payload":{"room"}}` / `invite_decline` | 接受/拒绝邀请 |
+| 服务端→房主 | `{"type":"invite_result","payload":{"accepted"}}` | 邀请结果 |
+| 服务端→双方 | `{"type":"room_update","payload":{"room","game","players","size","capacity"}}` | 房间实时状态 |
 | 房主→服务端 | `{"type":"select_game","payload":{"game":"gomoku"}}` | 选择游戏（进入等待模式） |
 | 服务端→双方 | `{"type":"started","game":"gomoku"}` | 双方到齐且已选游戏，自动开局 |
 | 任意→服务端 | `{"type":"move","payload":...}` | 走子（服务端转给另一方） |
@@ -131,8 +147,10 @@ WebSocket 端点：`/ws`。所有消息均为 JSON：
 
 服务端只做房间管理和消息中继，走子校验在两端各自执行；对局状态完全由双方本地确定性同步。
 
-## 后续计划
+## 本地开发
 
-- 联机扩展到飞行棋 / 大富翁 / 弹珠跳棋
-- 断线重连与观战
-- 房间内聊天
+```bash
+node server/index.js   # 默认 http://localhost:8080
+```
+
+本地不配 Supabase 时使用 JSON 文件存储，功能与线上一致。
