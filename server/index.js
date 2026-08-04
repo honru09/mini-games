@@ -43,6 +43,7 @@ const server = http.createServer((req, res) => {
 const WS_GUID = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11';
 const rooms = new Map(); // roomId -> { host, clients: Map<ws, player>, game }
 const sessions = new Set();
+const GAME_MAX = { tictactoe: 2, gomoku: 2, ludo: 4, monopoly: 5, checker: 5 };
 
 /* ---------------- 排行榜持久化（JSON 文件） ---------------- */
 let db = { users: {}, history: [] };
@@ -67,7 +68,8 @@ function saveDB(){
 }
 function leaderboardPayload(){
   const onlineUids = new Set();
-  for (const s of sessions) if (s.uid) onlineUids.add(s.uid);
+  const now = Date.now();
+  for (const s of sessions) if (s.uid && now - s.lastSeen < 40000) onlineUids.add(s.uid);
   const list = Object.keys(db.users)
     .map(uid => {
       const u = db.users[uid];
@@ -85,14 +87,17 @@ function roomPayload(r){
   const players = [...r.clients.entries()]
     .map(([c, p]) => ({ uid: c.uid || null, player: p }))
     .sort((a, b) => a.player - b.player);
-  return { room: r.id, game: r.game || null, players, size: r.clients.size };
+  return { room: r.id, game: r.game || null, capacity: r.capacity, players, size: r.clients.size, started: !!r.started };
 }
 function broadcastRoom(r){
   const text = JSON.stringify({ type: 'room_update', payload: roomPayload(r) });
   for (const c of r.clients.keys()) c.sendText(text);
 }
 function maybeAutoStart(r){
-  if (r.game && r.clients.size === 2) broadcast(r, { type: 'started', game: r.game });
+  if (r.game && !r.started && r.clients.size === r.capacity){
+    r.started = true;
+    broadcast(r, { type: 'started', game: r.game });
+  }
 }
 loadDB();
 
@@ -133,6 +138,7 @@ class Session {
     this.room = null;
     this.player = null;
     this.uid = null;
+    this.lastSeen = Date.now();
     this.buffer = Buffer.alloc(0);
     this.alive = true;
   }
@@ -175,6 +181,8 @@ class Session {
     try { msg = JSON.parse(text); } catch { return; }
     const type = msg && msg.type;
     const payload = msg && msg.payload;
+    this.lastSeen = Date.now();
+    if (type === 'ping') return;
     if (type === 'hello'){
       const uid = payload && payload.uid;
       if (uid) this.uid = String(uid);
@@ -221,11 +229,12 @@ class Session {
     if (type === 'create'){
       if (this.room) return;
       const roomId = genCode();
-      const r = { id: roomId, host: this, clients: new Map([[this, 0]]), game: null };
+      const cap = Math.min(5, Math.max(2, parseInt(payload && payload.capacity, 10) || 2));
+      const r = { id: roomId, host: this, clients: new Map([[this, 0]]), game: null, capacity: cap, started: false };
       rooms.set(roomId, r);
       this.room = roomId;
       this.player = 0;
-      this.sendText(JSON.stringify({ type: 'created', room: roomId, player: 0 }));
+      this.sendText(JSON.stringify({ type: 'created', room: roomId, player: 0, capacity: cap }));
       broadcastRoom(r);
       return;
     }
@@ -236,7 +245,7 @@ class Session {
         this.sendText(JSON.stringify({ type: 'error', msg: '房间不存在' }));
         return;
       }
-      if (r.clients.size >= 2){
+      if (r.clients.size >= r.capacity){
         this.sendText(JSON.stringify({ type: 'error', msg: '房间已满' }));
         return;
       }
@@ -263,6 +272,10 @@ class Session {
       if (this !== r.host) return;
       const g = payload && payload.game;
       if (!g) return;
+      if (GAME_MAX[g] && r.capacity > GAME_MAX[g]){
+        this.sendText(JSON.stringify({ type: 'error', msg: '该游戏最多支持 ' + GAME_MAX[g] + ' 人' }));
+        return;
+      }
       r.game = g;
       broadcastRoom(r);
       maybeAutoStart(r);
@@ -270,7 +283,8 @@ class Session {
     }
     if (type === 'start'){
       if (this !== r.host) return;
-      r.game = payload && payload.game;
+      if (!r.game || r.clients.size < 2 || r.started) return;
+      r.started = true;
       broadcast(r, { type: 'started', game: r.game });
       return;
     }
@@ -296,6 +310,7 @@ class Session {
       rooms.delete(r.id);
     } else {
       if (r.clients.size === 0){ rooms.delete(r.id); return; }
+      r.started = false;
       r.host.sendText(JSON.stringify({ type: 'peer_left' }));
       broadcastRoom(r);
     }

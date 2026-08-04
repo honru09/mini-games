@@ -106,6 +106,9 @@ button{font-family:inherit; cursor:pointer}
 .slot-chip .pts{color:var(--muted); font-size:11px}
 .lb-panel{background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px; margin-top:18px}
 .lb-panel h3{margin:0 0 10px; font-size:15px}
+.lb-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px}
+.lb-head h3{margin:0}
+.lb-tabs{display:flex; gap:6px}
 .lb-list{display:flex; flex-direction:column; gap:4px}
 .lb-row{display:flex; align-items:center; gap:10px; font-size:13.5px; padding:6px 8px; border-radius:8px}
 .lb-row.me{background:rgba(79,110,247,.07)}
@@ -371,7 +374,13 @@ canvas.board-canvas{width:100%; max-width:560px; display:block; border-radius:12
     </div>
     <div class="game-grid" id="game-grid"></div>
     <div class="lb-panel">
-      <h3>🏆 总排行榜</h3>
+      <div class="lb-head">
+        <h3>🏆 总排行榜</h3>
+        <div class="lb-tabs">
+          <button type="button" class="count-btn" id="lb-tab-all" aria-pressed="true">全部</button>
+          <button type="button" class="count-btn" id="lb-tab-online" aria-pressed="false">在线</button>
+        </div>
+      </div>
       <div class="lb-list" id="lb-list"></div>
       <div class="lb-note" id="lb-note"></div>
     </div>
@@ -468,7 +477,7 @@ let currentGameId = null;
 
 /* ================= 联机对战（WebSocket 中继） ================= */
 const online = {
-  ws: null, room: null, player: 0, isHost: false, game: null, connected: false, pending: null, roomInfo: null,
+  ws: null, room: null, player: 0, isHost: false, game: null, connected: false, pending: null, roomInfo: null, capacity: 2, _hb: null,
   connect(){
     if (this.connected) return;
     let wsUrl;
@@ -489,6 +498,8 @@ const online = {
       this.status('已连接服务器，可创建或加入房间');
       this.send({ type: 'hello', payload: { uid: typeof deviceUid !== 'undefined' ? deviceUid : null } });
       if (typeof syncProfiles === 'function') syncProfiles();
+      if (this._hb) clearInterval(this._hb);
+      this._hb = setInterval(() => { if (this.connected) this.send({ type: 'ping' }); }, 10000);
       if (this.pending){
         const p = this.pending;
         this.pending = null;
@@ -499,6 +510,7 @@ const online = {
     this.ws.onmessage = e => this.onMessage(JSON.parse(e.data));
     this.ws.onclose = () => {
       this.connected = false;
+      if (this._hb){ clearInterval(this._hb); this._hb = null; }
       this.status('连接已断开');
       this.resetState();
     };
@@ -508,7 +520,7 @@ const online = {
   send(msg){ if (this.ws && this.ws.readyState === 1) this.ws.send(JSON.stringify(msg)); },
   create(){
     if (this.connected){
-      this.send({type:'create'});
+      this.send({type:'create', payload:{ capacity: playerCount }});
       this.status('正在创建房间…');
     } else {
       this.pending = { type:'create' };
@@ -535,18 +547,20 @@ const online = {
     switch (msg.type){
       case 'created':
         this.room = msg.room; this.player = msg.player; this.isHost = true;
-        this.roomInfo = { room: msg.room, game: null, players: [{ uid: null, player: 0 }], size: 1 };
+        this.capacity = msg.capacity || 2;
+        this.roomInfo = { room: msg.room, game: null, capacity: this.capacity, players: [{ uid: null, player: 0 }], size: 1, started: false };
         this.status('房间已创建：<span class="room-code">' + msg.room + '</span>，等待对方加入…');
         renderRoomPanel();
         break;
       case 'joined':
         this.room = msg.room; this.player = msg.player; this.isHost = false;
-        this.roomInfo = { room: msg.room, game: null, players: [{ uid: null, player: 0 }, { uid: null, player: 1 }], size: 1 };
+        this.roomInfo = { room: msg.room, game: null, capacity: 2, players: [{ uid: null, player: 0 }], size: 1, started: false };
         this.status('已加入房间 <span class="room-code">' + msg.room + '</span>，等待房主开始…');
         renderRoomPanel();
         break;
       case 'room_update':
         this.roomInfo = msg.payload;
+        this.capacity = msg.payload.capacity || this.capacity;
         if (!this.isHost && !this.room) this.room = msg.payload.room;
         renderRoomPanel();
         break;
@@ -587,7 +601,7 @@ const online = {
     }
   },
   resetState(){
-    this.room = null; this.game = null; this.isHost = false; this.pending = null; this.roomInfo = null;
+    this.room = null; this.game = null; this.isHost = false; this.pending = null; this.roomInfo = null; this.capacity = 2;
     $('online-banner').classList.add('hidden');
     $('room-panel').classList.add('hidden');
     if (currentGameId && $('screen-game') && !$('screen-game').classList.contains('hidden')){
@@ -604,36 +618,61 @@ function startOnlineGame(id){
 }
 function renderRoomPanel(){
   const panel = $('room-panel');
-  if (!online.room || online.game){
+  if (!online.room){
     panel.classList.add('hidden');
     return;
   }
   panel.classList.remove('hidden');
   $('room-code-big').textContent = online.room;
-  const info = online.roomInfo || { size: 1, players: [], game: null };
+  const info = online.roomInfo || { size: 1, capacity: 2, players: [], game: null, started: false };
+  const cap = info.capacity || 2;
   const names = (info.players || []).map(p => {
     const prof = p.uid ? profileByUid(p.uid) : null;
     return (prof ? prof.name : '玩家' + (p.player + 1)) + (p.uid && p.uid === deviceUid ? '（你）' : '');
   });
-  $('room-info').textContent = '人数 ' + (info.size || 1) + '/2' + (names.length ? ' · ' + names.join(' vs ') : '') + ' · 游戏：' + (info.game ? GAMES[info.game].name : '未选择');
+  $('room-info').textContent = '人数 ' + (info.size || 1) + '/' + cap + (names.length ? ' · ' + names.join(' vs ') : '') + ' · 游戏：' + (info.game ? GAMES[info.game].name : '未选择');
   let status;
-  if (online.isHost){
+  if (online.game){
+    status = '对局进行中…';
+  } else if (online.isHost){
     if (info.game){
-      status = info.size >= 2 ? '对方已加入，对局即将开始…' : '已选择 ' + GAMES[info.game].name + '，等待对方加入…';
+      if (info.started) status = '对局进行中…';
+      else if (info.size >= cap) status = '房间已满，对局即将开始…';
+      else if (info.size >= 2) status = '已选择 ' + GAMES[info.game].name + '，可点击「开始游戏」或等人到齐';
+      else status = '已选择 ' + GAMES[info.game].name + '，等待其他玩家加入…';
     } else {
-      status = info.size >= 2 ? '对方已加入！请选择井字棋或五子棋开始' : '等待对方加入…（选择游戏后自动开始）';
+      status = info.size >= 2 ? '玩家已就位！请选择游戏' : '等待玩家加入…（选择游戏后开始）';
     }
   } else {
-    status = info.game ? '房主已选择 ' + GAMES[info.game].name + '，等待开局…' : '等待房主选择游戏…';
+    status = info.game
+      ? (info.started ? '对局进行中…' : ('房主已选择 ' + GAMES[info.game].name + (info.size >= cap ? '，即将开始…' : '，等待更多玩家…')))
+      : '等待房主选择游戏…';
   }
   $('room-status').textContent = status;
   const actions = $('room-actions');
   actions.innerHTML = '';
-  const invite = el('button','btn btn-primary','🔗 复制邀请链接');
-  invite.addEventListener('click', copyInvite);
-  actions.appendChild(invite);
+  if (online.game){
+    if (currentGameId && $('screen-hub') && !$('screen-hub').classList.contains('hidden')){
+      const backBtn = el('button','btn','🎮 返回对局');
+      backBtn.addEventListener('click', () => startOnlineGame(online.game));
+      actions.appendChild(backBtn);
+    }
+  } else {
+    if (online.isHost && info.game && info.size >= 2 && !info.started){
+      const startBtn = el('button','btn btn-primary','▶ 开始游戏');
+      startBtn.addEventListener('click', () => online.send({ type: 'start' }));
+      actions.appendChild(startBtn);
+    }
+    const invite = el('button','btn btn-primary','🔗 复制邀请链接');
+    invite.addEventListener('click', copyInvite);
+    actions.appendChild(invite);
+  }
   const leave = el('button','btn','离开房间');
-  leave.addEventListener('click', () => online.send({ type: 'leave' }));
+  leave.addEventListener('click', () => {
+    online.send({ type: 'leave' });
+    online.resetState();
+    online.status('已离开房间');
+  });
   actions.appendChild(leave);
 }
 function copyInvite(){
@@ -679,13 +718,77 @@ function openSettings(){
 }
 
 /* ================= 用户档案与积分 ================= */
-const AVATARS = ['😀','😎','🤓','😇','🥳','🤠','😺','🐶','🐼','🦊','🐯','🦁','🐸','🐙','🦄','🐝','🌻','🍀','⭐','🎮'];
+const AVATAR_COUNT = 20;
+function makeAvatar(idx){
+  const BG = ['#fde68a','#fbcfe8','#bfdbfe','#bbf7d0','#e9d5ff','#fed7aa','#a5f3fc','#fecaca'];
+  const SKIN = ['#ffdbac','#f1c27d','#e0ac69','#c68642','#8d5524','#ffe0bd'];
+  const HAIR = ['#1f2937','#6b4226','#eab308','#dc2626','#2563eb','#ec4899'];
+  const SHIRT = ['#ef4444','#3b82f6','#22c55e','#eab308','#a855f7','#14b8a6'];
+  return {
+    bg: BG[idx % 8],
+    skin: SKIN[Math.floor(idx / 3) % 6],
+    hair: HAIR[(idx * 2 + 1) % 6],
+    shirt: SHIRT[(idx * 3) % 6],
+    style: idx % 4,
+    glasses: idx % 4 === 1,
+    blush: idx % 3 === 0,
+    hat: idx % 5 === 0,
+  };
+}
+function avatarCanvas(idx, size){
+  size = size || 40;
+  const st = makeAvatar(idx);
+  const off = document.createElement('canvas');
+  off.width = 16; off.height = 16;
+  const octx = off.getContext('2d');
+  const img = octx.createImageData(16, 16);
+  const px = (x, y, col) => {
+    if (x < 0 || x > 15 || y < 0 || y > 15) return;
+    const i = (y * 16 + x) * 4;
+    img.data[i] = parseInt(col.slice(1,3), 16);
+    img.data[i+1] = parseInt(col.slice(3,5), 16);
+    img.data[i+2] = parseInt(col.slice(5,7), 16);
+    img.data[i+3] = 255;
+  };
+  const rect = (x0, y0, x1, y1, col) => { for (let x = x0; x <= x1; x++) for (let y = y0; y <= y1; y++) px(x, y, col); };
+  rect(0, 0, 15, 15, st.bg);
+  if (st.style === 2) rect(3, 2, 12, 12, st.hair); // 长发打底
+  rect(6, 12, 9, 15, st.shirt);                    // 衣服
+  rect(4, 3, 11, 12, st.skin);                     // 脸
+  px(3, 7, st.skin); px(12, 7, st.skin);           // 耳朵
+  if (st.style === 0){                              // 短发
+    rect(3, 0, 12, 5, st.hair); rect(3, 3, 4, 6, st.hair); rect(11, 3, 12, 6, st.hair);
+  } else if (st.style === 1){                       // 尖刺头
+    rect(3, 1, 12, 4, st.hair); px(4, 0, st.hair); px(6, 0, st.hair); px(8, 0, st.hair); px(11, 0, st.hair);
+    rect(3, 4, 4, 5, st.hair); rect(11, 4, 12, 5, st.hair);
+  } else if (st.style === 2){                       // 长发
+    rect(3, 3, 3, 10, st.hair); rect(12, 3, 12, 10, st.hair); rect(4, 1, 11, 4, st.hair);
+  } else {                                          // 光头 + 刘海
+    rect(4, 1, 11, 3, st.hair); px(4, 4, st.hair); px(7, 4, st.hair); px(11, 4, st.hair);
+  }
+  if (st.hat){ rect(2, 0, 13, 3, '#ef4444'); rect(1, 4, 14, 4, '#dc2626'); }
+  if (st.glasses){
+    rect(5, 7, 6, 8, '#111827'); rect(8, 7, 9, 8, '#111827'); px(7, 7, '#111827');
+  } else {
+    px(6, 7, '#1f2937'); px(9, 7, '#1f2937');
+  }
+  if (st.blush){ px(5, 9, '#fda4af'); px(10, 9, '#fda4af'); }
+  rect(7, 10, 8, 10, '#b45309'); // 嘴
+  octx.putImageData(img, 0, 0);
+  const c = document.createElement('canvas');
+  c.width = size; c.height = size;
+  const ctx = c.getContext('2d');
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(off, 0, 0, size, size);
+  return c;
+}
 const GAME_KEYS = Object.keys(GAMES);
 const LS_ROSTER = 'mg_roster';
 let roster = [];
 let deviceUid = null;
 let slots = [];
 let lastServerLB = null;
+let lbFilter = 'all';
 
 function loadRoster(){
   try {
@@ -704,7 +807,7 @@ function loadRoster(){
     deviceUid = savedUid && roster.some(p => p.uid === savedUid) ? savedUid : roster[0].uid;
   } else {
     deviceUid = genUid();
-    roster = [{ uid: deviceUid, name: '我', avatar: Math.floor(Math.random() * AVATARS.length), coins: 0, played: {}, total: 0 }];
+    roster = [{ uid: deviceUid, name: '我', avatar: Math.floor(Math.random() * AVATAR_COUNT), coins: 0, played: {}, total: 0 }];
     saveRoster();
   }
   localStorage.setItem('mg_uid', deviceUid);
@@ -716,7 +819,7 @@ function genUid(){
 }
 function profileByUid(uid){ return roster.find(p => p.uid === uid); }
 function createProfile(name, avatar){
-  const p = { uid: genUid(), name: name || '玩家', avatar: (avatar === undefined ? Math.floor(Math.random() * AVATARS.length) : avatar), coins: 0, played: {}, total: 0 };
+  const p = { uid: genUid(), name: name || '玩家', avatar: (avatar === undefined ? Math.floor(Math.random() * AVATAR_COUNT) : avatar), coins: 0, played: {}, total: 0 };
   roster.push(p);
   saveRoster();
   return p.uid;
@@ -729,7 +832,9 @@ function renderMe(){
   const me = profileByUid(deviceUid);
   const btn = $('btn-me');
   btn.innerHTML = '';
-  btn.appendChild(el('span','me-av', AVATARS[me.avatar]));
+  const av = el('span','me-av');
+  av.appendChild(avatarCanvas(me.avatar, 26));
+  btn.appendChild(av);
   btn.appendChild(el('span', null, me.name));
   const coinLine = el('span','coin-line');
   coinLine.appendChild(el('span','coin','L'));
@@ -748,7 +853,9 @@ function renderSlots(){
     const chip = el('button','slot-chip' + (p ? ' set' : ''));
     chip.type = 'button';
     if (p){
-      chip.appendChild(el('span','av', AVATARS[p.avatar]));
+      const av = el('span','av');
+      av.appendChild(avatarCanvas(p.avatar, 30));
+      chip.appendChild(av);
       chip.appendChild(el('span','nm', p.name));
       const coinLine = el('span','coin-line');
       coinLine.appendChild(el('span','coin sm','L'));
@@ -778,7 +885,9 @@ function openSlotPicker(i){
   roster.forEach(p => {
     const item = el('button','roster-item');
     item.type = 'button';
-    item.appendChild(el('span','av', AVATARS[p.avatar]));
+    const av = el('span','av');
+    av.appendChild(avatarCanvas(p.avatar, 24));
+    item.appendChild(av);
     item.appendChild(el('span','nm', p.name));
     item.appendChild(el('span','lb-game', (p.coins || 0) + ' 枚 · ' + (p.total || 0) + '局'));
     item.addEventListener('click', () => {
@@ -805,7 +914,7 @@ function openSlotPicker(i){
 function openProfileEditor(uid, slotIndex){
   const editing = uid ? profileByUid(uid) : null;
   let name = editing ? editing.name : '';
-  let avatar = editing ? editing.avatar : Math.floor(Math.random() * AVATARS.length);
+  let avatar = editing ? editing.avatar : Math.floor(Math.random() * AVATAR_COUNT);
   const bd = el('div','modal-backdrop');
   const card = el('div','modal-card');
   card.appendChild(el('h3', null, editing ? '编辑档案' : '新建档案'));
@@ -816,17 +925,17 @@ function openProfileEditor(uid, slotIndex){
   input.value = name;
   card.appendChild(input);
   const grid = el('div','avatar-grid');
-  AVATARS.forEach((a, i) => {
+  for (let i = 0; i < AVATAR_COUNT; i++){
     const opt = el('button','avatar-opt' + (i === avatar ? ' selected' : ''));
     opt.type = 'button';
-    opt.textContent = a;
+    opt.appendChild(avatarCanvas(i, 26));
     opt.setAttribute('aria-label', '头像 ' + (i+1));
     opt.addEventListener('click', () => {
       avatar = i;
       grid.querySelectorAll('.avatar-opt').forEach(o => o.classList.toggle('selected', o === opt));
     });
     grid.appendChild(opt);
-  });
+  }
   card.appendChild(grid);
   const save = el('button','btn btn-primary','保存');
   save.addEventListener('click', () => {
@@ -867,14 +976,17 @@ function renderLeaderboard(){
   $('lb-note').textContent = online.connected
     ? ('🌐 全球总榜 · 共 ' + data.total + ' 位玩家 · 积分实时更新')
     : ('📱 本地排行榜 · 共 ' + data.total + ' 位玩家（联机服务在线时可查看全球总榜）');
-  if (!data.list || !data.list.length){
-    listEl.appendChild(el('div','lb-empty','还没有积分记录，快来打一局！'));
+  const list = lbFilter === 'online' ? (data.list || []).filter(u => u.online) : (data.list || []);
+  if (!list.length){
+    listEl.appendChild(el('div','lb-empty', lbFilter === 'online' ? '当前没有玩家在线' : '还没有战绩记录，快来打一局！'));
     return;
   }
-  data.list.slice(0, 10).forEach((u, i) => {
+  list.slice(0, 10).forEach((u, i) => {
     const row = el('div','lb-row' + (u.uid === deviceUid ? ' me' : ''));
     row.appendChild(el('span','lb-rank', String(i + 1)));
-    row.appendChild(el('span','lb-av', AVATARS[u.avatar] !== undefined ? AVATARS[u.avatar] : '😀'));
+    const av = el('span','lb-av');
+    av.appendChild(avatarCanvas(u.avatar, 22));
+    row.appendChild(av);
     const nameWrap = el('span','lb-name');
     nameWrap.textContent = u.name;
     row.appendChild(nameWrap);
@@ -896,7 +1008,7 @@ function applyGameResult(results){
   const parts = [];
   results.forEach(r => {
     let uid = null;
-    if (online.connected && (gameId === 'tictactoe' || gameId === 'gomoku')){
+    if (online.connected && online.game){
       if (r.slot !== online.player) return;
       uid = deviceUid;
     } else {
@@ -925,6 +1037,7 @@ function showHub(){
   $('screen-hub').classList.remove('hidden');
   $('screen-game').classList.add('hidden');
   currentGame = null;
+  if (online.room) renderRoomPanel();
 }
 function showGame(id){
   $('screen-hub').classList.add('hidden');
@@ -934,7 +1047,7 @@ function showGame(id){
   currentGameId = id;
   const area = $('board-area'), extra = $('game-extra');
   area.innerHTML = ''; extra.innerHTML = '';
-  const opts = online.connected && (id === 'tictactoe' || id === 'gomoku') ? {
+  const opts = online.connected && online.game ? {
     online: true,
     myIdx: online.player,
     isHost: online.isHost,
@@ -950,9 +1063,10 @@ function startGame(id){
   const meta = GAMES[id];
   if (online.connected){
     if (online.game){ toast('本局已开始，点「新一局」重新开始'); return; }
-    if (id !== 'tictactoe' && id !== 'gomoku'){ toast('联机模式暂支持井字棋 / 五子棋'); return; }
-    if (!online.isHost){ toast('请等待房主开始游戏'); return; }
-    playerCount = 2;
+    const cap = online.capacity || playerCount;
+    if (cap > meta.max){ toast(meta.name + ' 联机最多 ' + meta.max + ' 人，当前房间 ' + cap + ' 人'); return; }
+    if (!online.isHost){ toast('请等待房主选择游戏'); return; }
+    playerCount = cap;
     online.selectGame(id);
     return;
   }
@@ -1020,6 +1134,14 @@ if (typeof document !== 'undefined'){
   $('room-input').addEventListener('keydown', e => { if (e.key === 'Enter') online.join(); });
   $('btn-settings').addEventListener('click', openSettings);
   $('btn-me').addEventListener('click', () => openProfileEditor(deviceUid));
+  const setLbTab = (which) => {
+    lbFilter = which;
+    $('lb-tab-all').setAttribute('aria-pressed', String(which === 'all'));
+    $('lb-tab-online').setAttribute('aria-pressed', String(which === 'online'));
+    renderLeaderboard();
+  };
+  $('lb-tab-all').addEventListener('click', () => setLbTab('all'));
+  $('lb-tab-online').addEventListener('click', () => setLbTab('online'));
   window.__gameInfo = {
     GAMES, startGame,
     get playerCount(){ return playerCount; },
@@ -1255,7 +1377,7 @@ function gameLudo(area, extra, n, opts){
   function canMove(t){ if (t === -1) return dice === 6; if (t >= HOME) return false; return t + dice <= HOME; }
   function movable(){
     const arr = [];
-    for (let i=0;i<4;i++) if (canMove(tokens[curPid()][i])) arr.push(i);
+    for (let i=0;i<4;i++) if (canMove(tokens[curIdx][i])) arr.push(i);
     return arr;
   }
   function cellOf(pid, t){ return (START[pid] + t) % TRACK; }
@@ -1409,11 +1531,18 @@ function gameLudo(area, extra, n, opts){
       const cnt = tokens[pi].filter(t => t === HOME).length;
       return '归位 ' + cnt + '/4';
     });
+    diceBtn.disabled = over || phase !== 'roll' || (opts.online && curIdx !== opts.myIdx);
     renderPlayers(curIdx, infos, null, pids.map(pid => PLAYER_COLORS[pid]));
   }
   function roll(){
     if (over || phase !== 'roll') return;
-    dice = 1 + Math.floor(Math.random()*6);
+    if (opts.online && curIdx !== opts.myIdx) return;
+    const d = 1 + Math.floor(Math.random()*6);
+    if (opts.online) opts.sendMove({ dice: d });
+    applyDice(d);
+  }
+  function applyDice(d){
+    dice = d;
     diceBtn.disabled = true;
     setStatus('玩家' + (curIdx+1) + ' 掷骰子…');
     animateDice([diceFace], dice, () => {
@@ -1429,9 +1558,16 @@ function gameLudo(area, extra, n, opts){
   }
   function pick(pid, ti){
     if (over || phase !== 'pick' || pid !== curPid()) return;
+    if (opts.online && curIdx !== opts.myIdx) return;
     const pi = pids.indexOf(pid);
     const arr = tokens[pi];
     if (!canMove(arr[ti])) return;
+    if (opts.online) opts.sendMove({ ti });
+    applyPick(pid, ti);
+  }
+  function applyPick(pid, ti){
+    const pi = pids.indexOf(pid);
+    const arr = tokens[pi];
     arr[ti] = arr[ti] === -1 ? 0 : arr[ti] + dice;
     if (arr[ti] <= 50){
       const cell = cellOf(pid, arr[ti]);
@@ -1474,7 +1610,11 @@ function gameLudo(area, extra, n, opts){
     renderBoard();
     setStatus((msg ? msg + '，' : '') + '轮到玩家' + (curIdx+1) + '，请掷骰子');
   }
-  function reset(){
+  opts.onMove = payload => {
+    if (payload && payload.dice !== undefined) applyDice(payload.dice);
+    else if (payload && payload.ti !== undefined) applyPick(curPid(), payload.ti);
+  };
+  function resetLocal(){
     tokens = pids.map(() => Array(4).fill(-1));
     curIdx = 0; phase = 'roll'; dice = 0; over = false; winner = -1;
     diceBtn.disabled = false;
@@ -1482,9 +1622,14 @@ function gameLudo(area, extra, n, opts){
     renderBoard();
     setStatus('玩家1 的回合，请掷骰子');
   }
+  function reset(){
+    if (opts.online && !opts.isHost){ toast('由房主开始新一局'); return; }
+    if (opts.online) opts.sendRestart();
+    resetLocal();
+  }
   renderBoard();
   setStatus('玩家1 的回合，请掷骰子');
-  return { reset };
+  return { reset, onMove: opts.onMove, onRestart: resetLocal, snapshot: () => ({ tokens: tokens.map(t => t.slice()), curIdx, phase, dice, over, winner }) };
 }
 
 /* ================= 迷你大富翁 ================= */
@@ -1547,7 +1692,12 @@ function gameMonopoly(area, extra, n, opts){
   const actionRow = el('div');
   extra.appendChild(actionRow);
   const settleBtn = el('button','btn','⏹ 提前结算');
-  settleBtn.addEventListener('click', () => { if (!over) settle(); });
+  settleBtn.addEventListener('click', () => {
+    if (over) return;
+    if (opts.online && !opts.isHost){ toast('只有房主可以提前结算'); return; }
+    if (opts.online) opts.sendMove({ decision: 'settle' });
+    settle();
+  });
   extra.appendChild(settleBtn);
 
   function rentOf(cell){ return Math.round(cell.price/3/10)*10; }
@@ -1556,7 +1706,9 @@ function gameMonopoly(area, extra, n, opts){
     players = Array.from({length:n}, () => ({ money: START_MONEY, pos: 0, alive: true, props: [] }));
     CELLS.forEach(c => { if (c.type==='prop') c.owner = -1; });
     chanceDeck = CHANCE.map((c,i)=>i);
-    for (let i=chanceDeck.length-1;i>0;i--){ const j = Math.floor(Math.random()*(i+1)); [chanceDeck[i],chanceDeck[j]]=[chanceDeck[j],chanceDeck[i]]; }
+    if (!opts.online){
+      for (let i=chanceDeck.length-1;i>0;i--){ const j = Math.floor(Math.random()*(i+1)); [chanceDeck[i],chanceDeck[j]]=[chanceDeck[j],chanceDeck[i]]; }
+    }
     cur = 0; phase = 'roll'; over = false; winner = -1; round = 1;
   }
   function renderBoard(){
@@ -1564,6 +1716,7 @@ function gameMonopoly(area, extra, n, opts){
     S = Math.min(w, 540);
     board.style.width = S + 'px'; board.style.height = S + 'px';
     board.innerHTML = '';
+    rollBtn.disabled = over || phase !== 'roll' || (opts.online && cur !== opts.myIdx);
     const c = S/2, R = S*0.40;
     const ang = i => (-90 + i * 360/CELLS.length) * Math.PI/180;
     const cellSize = Math.min(54, Math.floor(S*0.105));
@@ -1638,7 +1791,12 @@ function gameMonopoly(area, extra, n, opts){
   }
   function roll(){
     if (over || phase !== 'roll') return;
+    if (opts.online && cur !== opts.myIdx) return;
     const d1 = 1 + Math.floor(Math.random()*6), d2 = 1 + Math.floor(Math.random()*6);
+    if (opts.online) opts.sendMove({ roll: [d1, d2] });
+    applyRoll(d1, d2);
+  }
+  function applyRoll(d1, d2){
     rollBtn.disabled = true;
     setStatus('玩家' + (cur+1) + ' 掷骰子…');
     animateDice(diceFaces, d1, () => {
@@ -1685,23 +1843,15 @@ function gameMonopoly(area, extra, n, opts){
         actionRow.innerHTML = '';
         const buy = el('button','btn btn-primary','购买 ¥' + cell.price);
         buy.addEventListener('click', () => {
-          if (p.money >= cell.price){
-            p.money -= cell.price; cell.owner = pi; p.props.push(p.pos);
-            toast('🏠 购入「' + cell.name + '」');
-          } else {
-            toast('资金不足，无法购买');
-          }
-          phase = 'done';
-          actionRow.innerHTML = '';
-          renderBoard();
-          setTimeout(nextTurn, 450);
+          if (opts.online && cur !== opts.myIdx) return;
+          if (opts.online) opts.sendMove({ decision: 'buy' });
+          applyDecision(pi, 'buy');
         });
         const pass = el('button','btn','放弃');
         pass.addEventListener('click', () => {
-          phase = 'done';
-          actionRow.innerHTML = '';
-          renderBoard();
-          setTimeout(nextTurn, 250);
+          if (opts.online && cur !== opts.myIdx) return;
+          if (opts.online) opts.sendMove({ decision: 'pass' });
+          applyDecision(pi, 'pass');
         });
         actionRow.appendChild(buy); actionRow.appendChild(pass);
       } else if (cell.owner === pi){
@@ -1713,6 +1863,22 @@ function gameMonopoly(area, extra, n, opts){
         setTimeout(() => { if (!over) nextTurn(); }, 450);
       }
     }
+  }
+  function applyDecision(pi, decision){
+    const p = players[pi];
+    const cell = CELLS[p.pos];
+    if (decision === 'buy'){
+      if (p.money >= cell.price){
+        p.money -= cell.price; cell.owner = pi; p.props.push(p.pos);
+        toast('🏠 购入「' + cell.name + '」');
+      } else {
+        toast('资金不足，无法购买');
+      }
+    }
+    phase = 'done';
+    actionRow.innerHTML = '';
+    renderBoard();
+    setTimeout(nextTurn, 450);
   }
   function pay(pi, amt, why){
     const p = players[pi];
@@ -1740,6 +1906,10 @@ function gameMonopoly(area, extra, n, opts){
     const idx = chanceDeck.shift();
     chanceDeck.push(idx);
     const card = CHANCE[idx];
+    if (opts.online){
+      applyChance(pi, card, depth);
+      return;
+    }
     const modal = el('div','chance-modal');
     const box = el('div','chance-card');
     box.appendChild(el('div','emo','🎁'));
@@ -1840,7 +2010,13 @@ function gameMonopoly(area, extra, n, opts){
     const res = order.map((i, k) => ({ slot: i, coins: k === 0 ? 1 : 0, rank: k + 1 }));
     if (opts.onEnd) opts.onEnd(res);
   }
-  function reset(){
+  opts.onMove = payload => {
+    if (!payload) return;
+    if (payload.roll) applyRoll(payload.roll[0], payload.roll[1]);
+    else if (payload.decision === 'settle') settle();
+    else if (payload.decision) applyDecision(cur, payload.decision);
+  };
+  function resetLocal(){
     init();
     actionRow.innerHTML = '';
     rollBtn.disabled = false;
@@ -1848,10 +2024,25 @@ function gameMonopoly(area, extra, n, opts){
     renderBoard();
     setStatus('第 1/' + MAX_ROUND + ' 轮 · 玩家1 的回合，请掷骰子');
   }
+  function reset(){
+    if (opts.online && !opts.isHost){ toast('由房主开始新一局'); return; }
+    if (opts.online) opts.sendRestart();
+    resetLocal();
+  }
   init();
   renderBoard();
   setStatus('第 1/' + MAX_ROUND + ' 轮 · 玩家1 的回合，请掷骰子');
-  return { reset };
+  return {
+    reset,
+    onMove: opts.onMove,
+    onRestart: resetLocal,
+    snapshot: () => ({
+      players: players.map(p => ({ money: p.money, pos: p.pos, alive: p.alive, props: p.props.slice() })),
+      cur, phase, round, over, winner,
+      owners: CELLS.map(c => c.owner),
+      deck: chanceDeck.slice(),
+    }),
+  };
 }
 
 /* ================= 弹珠跳棋 ================= */
@@ -1916,35 +2107,37 @@ function gameChecker(area, extra, n, opts){
   canvas.width = W*dpr; canvas.height = H*dpr;
   area.appendChild(canvas);
   const ctx = canvas.getContext('2d');
-  const undoBtn = el('button','btn','↩ 悔棋');
-  undoBtn.addEventListener('click', () => {
-    if (over || !history.length) return;
-    const h = history.pop();
-    marbles[h.pi][h.mi] = h.from;
-    cur = h.pi;
-    selected = null; dests = null;
-    const ov = area.querySelector('.overlay'); if (ov) ov.remove();
-    draw();
-    renderPlayers(cur, progressInfos());
-    setStatus('已悔棋，轮到玩家' + (cur+1) + '，点击自己的棋子');
-  });
-  extra.appendChild(undoBtn);
-  const hintBtn = el('button','btn','💡 提示');
-  hintBtn.addEventListener('click', () => {
-    if (over) return;
-    const occ = occupiedMap();
-    for (let mi = 0; mi < marbles[cur].length; mi++){
-      const d = checkerReachable(holeSet, occ, marbles[cur][mi]);
-      if (d.size){
-        selected = marbles[cur][mi]; dests = d;
-        draw();
-        setStatus('玩家' + (cur+1) + ' 的可移动弹珠已高亮');
-        return;
+  if (!opts.online){
+    const undoBtn = el('button','btn','↩ 悔棋');
+    undoBtn.addEventListener('click', () => {
+      if (over || !history.length) return;
+      const h = history.pop();
+      marbles[h.pi][h.mi] = h.from;
+      cur = h.pi;
+      selected = null; dests = null;
+      const ov = area.querySelector('.overlay'); if (ov) ov.remove();
+      draw();
+      renderPlayers(cur, progressInfos());
+      setStatus('已悔棋，轮到玩家' + (cur+1) + '，点击自己的棋子');
+    });
+    extra.appendChild(undoBtn);
+    const hintBtn = el('button','btn','💡 提示');
+    hintBtn.addEventListener('click', () => {
+      if (over) return;
+      const occ = occupiedMap();
+      for (let mi = 0; mi < marbles[cur].length; mi++){
+        const d = checkerReachable(holeSet, occ, marbles[cur][mi]);
+        if (d.size){
+          selected = marbles[cur][mi]; dests = d;
+          draw();
+          setStatus('玩家' + (cur+1) + ' 的可移动弹珠已高亮');
+          return;
+        }
       }
-    }
-    toast('当前无子可动');
-  });
-  extra.appendChild(hintBtn);
+      toast('当前无子可动');
+    });
+    extra.appendChild(hintBtn);
+  }
   function occupiedMap(){
     const m = new Map();
     marbles.forEach((list, pi) => list.forEach((h, mi) => m.set(key(h), {pi, mi})));
@@ -2018,6 +2211,7 @@ function gameChecker(area, extra, n, opts){
   }
   canvas.addEventListener('click', e => {
     if (over) return;
+    if (opts.online && cur !== opts.myIdx) return;
     const rect = canvas.getBoundingClientRect();
     const px = (e.clientX - rect.left) / rect.width * W;
     const py = (e.clientY - rect.top) / rect.height * H;
@@ -2033,24 +2227,8 @@ function gameChecker(area, extra, n, opts){
     const occ = occupiedMap();
     if (selected){
       if (dests && dests.has(bk)){
-        const hit = occ.get(key(selected));
-        history.push({ pi: hit.pi, mi: hit.mi, from: {q:selected.q, r:selected.r}, to: {q:best.q, r:best.r} });
-        marbles[hit.pi][hit.mi] = best;
-        selected = null; dests = null;
-        const target = new Set(targetKey(cornerSel[cur]));
-        if (marbles[cur].every(m => target.has(key(m)))){
-          over = true; winner = cur;
-          if (opts.onEnd) opts.onEnd(marbles.map((list, i) => ({
-            slot: i,
-            coins: i === cur ? 1 : 0,
-            rank: i === cur ? 1 : 2,
-          })));
-          draw();
-          setStatus('🏆 玩家' + (cur+1) + ' 获胜！', true);
-          showCheckerOver();
-          return;
-        }
-        nextPlayer();
+        if (opts.online) opts.sendMove({ from: [selected.q, selected.r], to: [best.q, best.r] });
+        applyCheckerMove(selected, best);
         return;
       }
       selected = null; dests = null;
@@ -2062,6 +2240,27 @@ function gameChecker(area, extra, n, opts){
     }
     draw();
   });
+  function applyCheckerMove(fromHole, toHole){
+    const occ = occupiedMap();
+    const hit = occ.get(key(fromHole));
+    history.push({ pi: hit.pi, mi: hit.mi, from: {q:fromHole.q, r:fromHole.r}, to: {q:toHole.q, r:toHole.r} });
+    marbles[hit.pi][hit.mi] = toHole;
+    selected = null; dests = null;
+    const target = new Set(targetKey(cornerSel[cur]));
+    if (marbles[cur].every(m => target.has(key(m)))){
+      over = true; winner = cur;
+      if (opts.onEnd) opts.onEnd(marbles.map((list, i) => ({
+        slot: i,
+        coins: i === cur ? 1 : 0,
+        rank: i === cur ? 1 : 2,
+      })));
+      draw();
+      setStatus('🏆 玩家' + (cur+1) + ' 获胜！', true);
+      showCheckerOver();
+      return;
+    }
+    nextPlayer();
+  }
   function nextPlayer(){
     cur = (cur + 1) % n;
     // 跳过无子可动的玩家
@@ -2096,7 +2295,12 @@ function gameChecker(area, extra, n, opts){
     ov.appendChild(card);
     area.appendChild(ov);
   }
-  function reset(){
+  opts.onMove = payload => {
+    if (payload && payload.from && payload.to){
+      applyCheckerMove({ q: payload.from[0], r: payload.from[1] }, { q: payload.to[0], r: payload.to[1] });
+    }
+  };
+  function resetLocal(){
     marbles = cornerSel.map(c => arms[c].map(h => ({q:h.q, r:h.r})));
     cur = 0; over = false; winner = -1; selected = null; dests = null; history = [];
     const ov = area.querySelector('.overlay'); if (ov) ov.remove();
@@ -2104,8 +2308,22 @@ function gameChecker(area, extra, n, opts){
     renderPlayers(0, progressInfos());
     setStatus('轮到玩家1，点击自己的棋子');
   }
+  function reset(){
+    if (opts.online && !opts.isHost){ toast('由房主开始新一局'); return; }
+    if (opts.online) opts.sendRestart();
+    resetLocal();
+  }
   reset();
-  return { reset };
+  return {
+    reset,
+    onMove: opts.onMove,
+    onRestart: resetLocal,
+    snapshot: () => ({
+      marbles: marbles.map(list => list.map(key)),
+      cur, over, winner,
+      history: history.map(h => ({ pi: h.pi, mi: h.mi, from: key(h.from), to: key(h.to) })),
+    }),
+  };
 }
 
 /* ================= 游戏注册表 ================= */
