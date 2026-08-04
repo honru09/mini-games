@@ -42,6 +42,7 @@ function waitFor(c, type, timeout = 15000) {
     c.ws.addEventListener('message', check);
   });
 }
+const lastOf = (c, type) => [...c.log].reverse().find(m => m.type === type);
 
 (async () => {
   setTimeout(() => {
@@ -75,6 +76,43 @@ function waitFor(c, type, timeout = 15000) {
 
   a.ws.close();
   b.ws.close();
+
+  /* ---- 场景2：4 人房间 + 不满人数开局 + 结束切游戏 ---- */
+  const clients = [client('H'), client('P2'), client('P3')];
+  for (const c of clients) await waitOpen(c);
+  send(clients[0], 'hello', { uid: 'live_h_' + Date.now() });
+  send(clients[1], 'hello', { uid: 'live_p2_' + Date.now() });
+  send(clients[2], 'hello', { uid: 'live_p3_' + Date.now() });
+  send(clients[0], 'profile', { uid: 'live_h_' + Date.now(), name: '房主', avatar: 0 });
+  send(clients[0], 'create', { capacity: 4 });
+  const created2 = await waitFor(clients[0], 'created');
+  const room2 = created2.room;
+  console.log('=== 4 人房间创建成功:', room2, '===');
+  send(clients[0], 'select_game', { game: 'monopoly' });
+  for (let i = 1; i < 3; i++){
+    send(clients[i], 'join', { room: room2 });
+    await waitFor(clients[i], 'joined');
+  }
+  for (let w = 0; w < 40; w++){
+    const ru = lastOf(clients[0], 'room_update');
+    if (ru && ru.payload.size === 3) break;
+    await new Promise(r => setTimeout(r, 200));
+  }
+  const ru3 = lastOf(clients[0], 'room_update');
+  const pIdx = ru3.payload.players.map(p => p.player);
+  console.log('=== 玩家索引:', JSON.stringify(pIdx), '===');
+  if (pIdx.join(',') !== '0,1,2') throw new Error('玩家索引异常');
+  send(clients[0], 'start');
+  const started3 = await waitFor(clients[0], 'started');
+  console.log('=== 不满人数开局成功:', started3.size, '人局 ===');
+  if (started3.size !== 3) throw new Error('人数错误');
+  send(clients[0], 'end_game');
+  await waitFor(clients[1], 'end_game');
+  await new Promise(r => setTimeout(r, 500));
+  const afterEnd = lastOf(clients[0], 'room_update');
+  console.log('=== 结束本局后房间 game:', afterEnd.payload.game, 'started:', afterEnd.payload.started, '===');
+  if (afterEnd.payload.game !== null || afterEnd.payload.started !== false) throw new Error('结束本局失败');
+  clients.forEach(c => c.ws.close());
   console.log('\nLIVE TEST PASSED ✅');
   process.exit(0);
 })().catch((e) => {
