@@ -667,7 +667,77 @@ button, canvas, .game-card, .ttt-cell, .j-cell, .xq-cell,
   to { transform: scale(1); opacity: 1; }
 }
 
-/* ???? */
+/* ====== my card ====== */
+#my-card { margin-bottom: 14px; }
+.my-card-empty {
+  text-align: center; padding: 18px 16px; font-size: 13px; color: var(--muted);
+  background: var(--card); border: 1px dashed var(--border); border-radius: var(--radius);
+  cursor: pointer; transition: border-color .15s;
+}
+.my-card-empty:hover { border-color: var(--primary); }
+.my-card {
+  background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 16px 18px; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+}
+.my-card-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.my-card-av { flex: none; }
+.my-card-info { flex: 1; min-width: 0; }
+.my-card-name { font-size: 16px; font-weight: 700; }
+.my-card-title { font-size: 13px; color: var(--primary); font-weight: 500; margin-top: 2px; }
+.my-card-stats { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 12px; }
+.my-card-stat { display: flex; align-items: center; gap: 4px; font-size: 13px; }
+.my-card-stat-val { font-weight: 700; font-variant-numeric: tabular-nums; }
+.my-card-stat-label { color: var(--muted); font-size: 12px; }
+.my-card-tasks { margin-bottom: 12px; }
+.my-card-tasks-title { font-size: 12.5px; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
+.my-card-taskbar { display: flex; gap: 6px; flex-wrap: wrap; }
+.my-card-task {
+  display: inline-flex; align-items: center; gap: 3px; font-size: 11.5px;
+  background: var(--p1bg); border: 1px solid var(--border); border-radius: 99px;
+  padding: 4px 10px; white-space: nowrap;
+}
+.my-card-task.done { background: rgba(34,160,107,.12); border-color: rgba(34,160,107,.35); }
+.my-card-mates { margin-bottom: 12px; }
+.my-card-mate-list { display: flex; gap: 6px; flex-wrap: wrap; }
+.my-card-mate {
+  font-size: 12px; background: transparent; border: 1px solid var(--border);
+  border-radius: 99px; padding: 4px 12px; white-space: nowrap;
+  transition: border-color .15s, background .15s;
+}
+.my-card-mate:hover { border-color: var(--primary); background: rgba(79,110,247,.05); }
+.my-card-mate-info { color: var(--muted); font-size: 11px; margin-left: 4px; }
+.my-card-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* achievements grid */
+.ach-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; margin: 10px 0 14px; }
+.ach-item {
+  display: flex; align-items: center; gap: 8px; padding: 10px 12px; font-size: 12.5px;
+  border-radius: 12px; border: 1px solid var(--border); background: var(--card);
+}
+.ach-item.earned { background: rgba(245,158,11,.08); border-color: rgba(245,158,11,.4); }
+.ach-item.locked { opacity: .5; }
+.ach-icon { font-size: 24px; line-height: 1; flex: none; }
+.ach-info { flex: 1; min-width: 0; }
+.ach-name { font-weight: 600; }
+.ach-desc { font-size: 11px; color: var(--muted); }
+
+/* responsive my-card */
+@media (max-width: 480px) {
+  .my-card { padding: 12px 14px; }
+  .my-card-head { gap: 8px; }
+  .my-card-name { font-size: 14px; }
+  .my-card-title { font-size: 12px; }
+  .my-card-stats { gap: 8px; }
+  .my-card-stat { font-size: 11px; }
+  .my-card-stat-val { font-size: 13px; }
+  .my-card-task { font-size: 10px; padding: 3px 8px; }
+  .my-card-mate { font-size: 11px; padding: 3px 10px; }
+  .my-card-btns { gap: 6px; }
+  .my-card-btns .btn { padding: 6px 10px; font-size: 12px; }
+  .ach-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+\r\n/* ???? */
 .level-badge{
   display:inline-flex; align-items:center; font-size:11px; font-weight:700;
   background:linear-gradient(135deg,#f59e0b,#ef4444); color:#fff;
@@ -675,6 +745,7 @@ button, canvas, .game-card, .ttt-cell, .j-cell, .xq-cell,
   flex:none; letter-spacing:.3px;
 }
 .lb-row .level-badge{font-size:10px; padding:1px 6px}
+.me-title{font-size:11px; color:var(--primary); font-weight:500; margin:0 2px; white-space:nowrap}
 
 </style>
 </head>
@@ -694,6 +765,7 @@ button, canvas, .game-card, .ttt-cell, .j-cell, .xq-cell,
         <div class="hub-meta">
           <button type="button" class="me-chip" id="btn-me" title="我的档案 / 登录"></button>
         </div>
+        <div id="my-card"></div>
         <div class="slots-row" id="slots-row"></div>
         <div class="room-panel hidden" id="room-panel">
           <div class="room-head">
@@ -1331,6 +1403,210 @@ function autoRegisterGames() {
 function listRegisteredGames() {
   return Object.keys(GAME_REGISTRY);
 }
+﻿/* ================= 社交与留存：称号 / 成就 / 每日任务 / 最近一起玩 ================= */
+const TITLES = [
+  { id: 1, name: '新手玩家', icon: '🌱', minLevel: 1 },
+  { id: 2, name: '常胜将军', icon: '⚔️', minLevel: 3 },
+  { id: 3, name: '老赌神', icon: '🎲', minLevel: 5 },
+  { id: 4, name: '棋圣', icon: '♟️', minLevel: 8 },
+  { id: 5, name: '传说玩家', icon: '👑', minLevel: 12 },
+];
+function titleFor(level){
+  let best = TITLES[0];
+  for (const t of TITLES){ if (level >= t.minLevel) best = t; }
+  return best;
+}
+
+const ACHIEVEMENTS = [
+  { id: 'first_win', name: '首胜', icon: '🥇', desc: '赢下第一局', check: p => (p.total || 0) >= 1 && (p.coins || 0) >= 1 },
+  { id: 'win_10', name: '十胜', icon: '💎', desc: '累计赢 10 局', check: p => (p.coins || 0) >= 10 },
+  { id: 'win_50', name: '五十胜', icon: '🏆', desc: '累计赢 50 局', check: p => (p.coins || 0) >= 50 },
+  { id: 'streak_3', name: '三连胜', icon: '🔥', desc: '连胜 3 局', check: p => (p.bestStreak || 0) >= 3 },
+  { id: 'streak_5', name: '五连胜', icon: '⚡', desc: '连胜 5 局', check: p => (p.bestStreak || 0) >= 5 },
+  { id: 'level_5', name: '资深玩家', icon: '🎖️', desc: '达到 5 级', check: p => (p.level || levelFromXp(p.xp || 0)) >= 5 },
+  { id: 'all_games', name: '全能玩家', icon: '🎯', desc: '玩过 5 种游戏', check: p => Object.keys(p.played || {}).filter(k => p.played[k] > 0).length >= 5 },
+  { id: 'social', name: '社交达人', icon: '🤝', desc: '和 3 位不同玩家对局', check: p => Object.keys(p.playmates || {}).length >= 3 },
+];
+function checkAchievements(profile){
+  const earned = [];
+  const p = profile || {};
+  for (const a of ACHIEVEMENTS){
+    if (!(p.achievements || []).includes(a.id) && a.check(p)) earned.push(a.id);
+  }
+  return earned;
+}
+function achievementsEarned(p){
+  return (p.achievements || []).slice();
+}
+
+const DAILY_TASKS = [
+  { id: 'play_1', name: '玩 1 局', icon: '🎮', target: 1, reward: 5, kind: 'play' },
+  { id: 'play_3', name: '玩 3 局', icon: '🕹️', target: 3, reward: 10, kind: 'play' },
+  { id: 'win_1', name: '赢 1 局', icon: '🏅', target: 1, reward: 8, kind: 'win' },
+  { id: 'streak_2', name: '连胜 2 局', icon: '🔥', target: 2, reward: 12, kind: 'streak' },
+];
+function dailyTasksState(profile){
+  const now = new Date();
+  const dayKey = now.toISOString().slice(0, 10);
+  const p = profile || {};
+  if (p.dailyKey !== dayKey){
+    p.dailyKey = dayKey;
+    p.daily = { play: 0, win: 0, streak: 0 };
+  }
+  return p.daily || { play: 0, win: 0, streak: 0 };
+}
+function updateDaily(profile, kind, amount){
+  const p = profile || {};
+  const state = dailyTasksState(p);
+  state[kind] = (state[kind] || 0) + (amount || 1);
+  p.daily = state;
+  return state;
+}
+function dailyProgress(profile){
+  const state = dailyTasksState(profile);
+  return DAILY_TASKS.map(t => {
+    const cur = Math.min(state[t.kind] || 0, t.target);
+    return { ...t, cur, done: cur >= t.target };
+  });
+}
+
+/* ---- 最近一起玩（本地记录 + 服务端同步 playmates） ---- */
+function recordPlaymate(profile, otherUid, otherName, gameId){
+  if (!profile || !otherUid || otherUid === profile.uid) return;
+  if (!profile.playmates) profile.playmates = {};
+  const now = Date.now();
+  const pm = profile.playmates[otherUid] || { name: otherName || '玩家', count: 0, lastAt: 0, games: {} };
+  pm.name = otherName || pm.name;
+  pm.count++;
+  pm.lastAt = now;
+  if (gameId) pm.games[gameId] = (pm.games[gameId] || 0) + 1;
+  profile.playmates[otherUid] = pm;
+}
+function recentPlaymates(profile, limit){
+  const p = profile || {};
+  return Object.keys(p.playmates || {})
+    .map(uid => ({ uid, ...p.playmates[uid] }))
+    .sort((a, b) => (b.lastAt || 0) - (a.lastAt || 0))
+    .slice(0, limit || 5);
+}
+
+/* ---- 成就墙弹窗 ---- */
+function openAchievementsModal(){
+  const bd = el('div','modal-backdrop');
+  const card = el('div','modal-card');
+  card.style.width = '460px';
+  card.appendChild(el('h3', null, 'Achievements'));
+  const grid = el('div','ach-grid');
+  const earned = achievementsEarned(account || {});
+  ACHIEVEMENTS.forEach(a => {
+    const item = el('div','ach-item' + (earned.includes(a.id) ? ' earned' : ' locked'));
+    item.appendChild(el('span','ach-icon', a.icon));
+    const info = el('div','ach-info');
+    info.appendChild(el('div','ach-name', a.name + (earned.includes(a.id) ? ' Unlocked' : '')));
+    info.appendChild(el('div','ach-desc', a.desc));
+    item.appendChild(info);
+    grid.appendChild(item);
+  });
+  card.appendChild(grid);
+  const earnedCount = earned.length;
+  card.appendChild(el('div','lb-note', 'Achievements unlocked: ' + earnedCount + '/' + ACHIEVEMENTS.length));
+  const close = el('button','btn','Close');
+  close.addEventListener('click', () => bd.remove());
+  card.appendChild(close);
+  bd.appendChild(card);
+  bd.addEventListener('click', e => { if (e.target === bd) bd.remove(); });
+  document.body.appendChild(bd);
+}
+
+
+/* ---- 我的卡片渲染（首屏玩家中心） ---- */
+function renderMyCard(){
+  const holder = $('my-card');
+  if (!holder) return;
+  holder.innerHTML = '';
+  if (!account){
+    const empty = el('div', 'my-card-empty');
+    empty.textContent = '登录后查看我的数据';
+    empty.addEventListener('click', () => openAuthModal());
+    holder.appendChild(empty);
+    return;
+  }
+  const me = profileByUid(deviceUid);
+  const p = me || account;
+  const lv = p.level || levelFromXp(p.xp || 0);
+  const title = titleFor(lv);
+  const card = el('div', 'my-card');
+  // 头像 + 昵称 + 等级 + 称号
+  const head = el('div', 'my-card-head');
+  const av = el('span', 'my-card-av');
+  av.appendChild(avatarStageNode(account, 40));
+  head.appendChild(av);
+  const info = el('div', 'my-card-info');
+  info.appendChild(el('div', 'my-card-name', account.name + ' ' + langFlag(account.lang || currentLang)));
+  info.appendChild(el('div', 'my-card-title', title.icon + ' ' + title.name + ' · Lv.' + lv));
+  head.appendChild(info);
+  card.appendChild(head);
+  // 数据行
+  const stats = el('div', 'my-card-stats');
+  const stat = (icon, label, val) => {
+    const s = el('div', 'my-card-stat');
+    s.appendChild(el('span', null, icon));
+    const v = el('span', 'my-card-stat-val', String(val));
+    s.appendChild(v);
+    s.appendChild(el('span', 'my-card-stat-label', label));
+    stats.appendChild(s);
+  };
+  stat('💵', '$', p.coins || 0);
+  stat('⭐', 'XP', p.xp || 0);
+  const earnedCount = achievementsEarned(p).length;
+  stat('🏆', '成就', earnedCount);
+  stat('🔥', '连胜', p.streak || 0);
+  stat('🎮', '胜场', p.coins || 0);
+  card.appendChild(stats);
+  // 每日任务进度
+  const tasks = dailyProgress(p);
+  const doneTasks = tasks.filter(t => t.done).length;
+  const taskRow = el('div', 'my-card-tasks');
+  taskRow.appendChild(el('div', 'my-card-tasks-title', '📋 每日任务 ' + doneTasks + '/' + tasks.length));
+  const taskBar = el('div', 'my-card-taskbar');
+  tasks.slice(0, 3).forEach(t => {
+    const item = el('div', 'my-card-task' + (t.done ? ' done' : ''));
+    item.appendChild(el('span', null, t.icon));
+    item.appendChild(el('span', null, t.name + ' ' + t.cur + '/' + t.target));
+    taskBar.appendChild(item);
+  });
+  taskRow.appendChild(taskBar);
+  card.appendChild(taskRow);
+  // 最近一起玩
+  const mates = recentPlaymates(p, 3);
+  if (mates.length){
+    const mateRow = el('div', 'my-card-mates');
+    mateRow.appendChild(el('div', 'my-card-tasks-title', '👥 最近一起玩'));
+    const list = el('div', 'my-card-mate-list');
+    mates.forEach(m => {
+      const item = el('button', 'my-card-mate');
+      item.appendChild(el('span', null, m.name));
+      item.appendChild(el('span', 'my-card-mate-info', '共 ' + m.count + ' 局'));
+      item.addEventListener('click', () => openProfileModal(m.uid));
+      list.appendChild(item);
+    });
+    mateRow.appendChild(list);
+    card.appendChild(mateRow);
+  }
+  // 按钮
+  const btns = el('div', 'my-card-btns');
+  const shopBtn = el('button', 'btn btn-primary', '🛍️ 商城');
+  shopBtn.addEventListener('click', openShop);
+  btns.appendChild(shopBtn);
+  const achBtn = el('button', 'btn', '🏆 成就');
+  achBtn.addEventListener('click', () => openAchievementsModal());
+  btns.appendChild(achBtn);
+  const profileBtn = el('button', 'btn', '👤 我的档案');
+  profileBtn.addEventListener('click', () => openProfileModal(deviceUid));
+  btns.appendChild(profileBtn);
+  card.appendChild(btns);
+  holder.appendChild(card);
+}
 /* ================= 联机对战（WebSocket 中继） ================= */
 const online = {
   ws: null, room: null, player: 0, isHost: false, game: null, connected: false, pending: null, roomInfo: null, capacity: 2, _hb: null,
@@ -1513,6 +1789,7 @@ const online = {
           account.pin = account.pin || '';
           account.registered = true;
           updateAccountProfile(msg.payload.profile);
+          renderMyCard();
           toast('🎉 账号创建成功，欢迎 ' + account.name);
           if (authModalEl){ authModalEl.remove(); authModalEl = null; }
         }
@@ -1521,6 +1798,7 @@ const online = {
         if (msg.payload && msg.payload.uid){
           account = Object.assign({}, msg.payload.profile, { device: deviceFingerprint() });
           updateAccountProfile(msg.payload.profile);
+          renderMyCard();
           toast('✅ 登录成功：' + account.name);
           if (authModalEl){ authModalEl.remove(); authModalEl = null; }
         }
@@ -1912,7 +2190,10 @@ function renderProfilePopup(p, isMe){
   stage.appendChild(avatarCanvas(p.avatar, 74));
   avWrap.appendChild(stage);
   hero.appendChild(avWrap);
-  hero.appendChild(el('div','pname', p.name + ' [Lv.' + (p.level || levelFromXp(p.xp || 0)) + ']' + ' ' + (p.lang ? langFlag(p.lang) : '') + (isMe ? t('profile_mine') : '')));
+  const pLv = p.level || levelFromXp(p.xp || 0);
+  const pTitle = titleFor(pLv);
+  hero.appendChild(el('div','pname', p.name + ' [Lv.' + pLv + ']' + ' ' + (p.lang ? langFlag(p.lang) : '') + (isMe ? t('profile_mine') : '')));
+  hero.appendChild(el('div','pmeta', pTitle.icon + ' ' + pTitle.name + ' · ' + (p.achievements ? p.achievements.length : 0) + ' achievements'));
   const coinLine = el('div','pmeta');
   coinLine.appendChild(el('span','coin','$'));
   coinLine.appendChild(el('span', null, ' ' + (p.coins || 0) + ' · 共 ' + (p.total || 0) + ' 局' + (p.online ? ' · 🟢在线' : ' · ⚪离线')));
@@ -1930,6 +2211,9 @@ function renderProfilePopup(p, isMe){
     const edit = el('button','btn btn-primary','✏️ 编辑档案');
     edit.addEventListener('click', () => { bd.remove(); openProfileEditor(account.uid); });
     links.appendChild(edit);
+    const achBtn = el('button','btn','🏆 成就');
+    achBtn.addEventListener('click', () => { bd.remove(); openAchievementsModal(); });
+    links.appendChild(achBtn);
     const shop = el('button','btn','🛍️ 商城');
     shop.addEventListener('click', () => { bd.remove(); openShop(); });
     links.appendChild(shop);
@@ -2370,6 +2654,9 @@ function updateAccountProfile(p){
   if (me){ me.name = p.name; me.avatar = p.avatar; me.coins = p.coins || 0; me.xp = p.xp || 0; me.level = p.level || 1; me.streak = p.streak || 0; me.bestStreak = p.bestStreak || 0; me.played = p.played || {}; me.total = p.total || 0; }
   else roster.unshift({ uid: p.uid, name: p.name, avatar: p.avatar, coins: p.coins || 0, played: p.played || {}, total: p.total || 0 });
   deviceUid = p.uid;
+  account.achievements = p.achievements || [];
+  account.playmates = p.playmates || {};
+  account.daily = p.daily || { play: 0, win: 0, streak: 0 };
   saveRoster(); saveAccount();
 }
 function renderMe(){
@@ -2388,12 +2675,16 @@ function renderMe(){
   av.appendChild(avatarStageNode(account, 26));
   btn.appendChild(av);
   btn.appendChild(el('span', null, account.name + ' ' + langFlag(account.lang || currentLang)));
-  const lvBadge = el('span','level-badge', 'Lv.' + (account.level || levelFromXp(account.xp || 0)));
+  const lv = account.level || levelFromXp(account.xp || 0);
+  const title = titleFor(lv);
+  btn.appendChild(el('span','me-title', title.icon + ' ' + title.name));
+  const lvBadge = el('span','level-badge', 'Lv.' + lv);
   btn.appendChild(lvBadge);
   const coinLine = el('span','coin-line');
   coinLine.appendChild(el('span','coin','$'));
   coinLine.appendChild(el('span','me-pts', (account.coins || 0) + ' · ' + (account.total || 0) + '局'));
   btn.appendChild(coinLine);
+  renderMyCard();
   if (online.connected){
     btn.appendChild(el('span','me-online','●'));
   }
@@ -2639,6 +2930,26 @@ function xpForLevel(level){
   if (level <= 5) return thresholds[level - 1];
   return 280 + (level - 5) * 150;
 }
+
+function recordPlaymatesFromResult(results, currentResult, gameId){
+  if (!account) return;
+  results.forEach(other => {
+    if (other.slot === currentResult.slot) return;
+    const otherUid = online.connected && online.game ? null : slots[other.slot];
+    if (!otherUid) return;
+    const otherP = profileByUid(otherUid);
+    if (otherP) recordPlaymate(account, otherUid, otherP.name, gameId);
+  });
+  // Also record online opponents via player list
+  if (online.connected && online.game && online.roomInfo) {
+    const players = online.roomInfo.players || [];
+    players.forEach(pl => {
+      if (pl.uid && pl.uid !== account.uid) {
+        recordPlaymate(account, pl.uid, pl.name || 'Player', gameId);
+      }
+    });
+  }
+}
 function applyGameResult(results){
   if (!results || !results.length) return;
   const gameId = currentGameId;
@@ -2669,6 +2980,19 @@ function applyGameResult(results){
     p.total = (p.total || 0) + 1;
     if (account && p.uid === account.uid){
       account.coins = p.coins;
+      updateDaily(account, 'play', 1);
+      if (r.coins === 1) updateDaily(account, 'win', 1);
+      if (account.streak >= 2) updateDaily(account, 'streak', 1);
+      const newAch = checkAchievements(account);
+      if (newAch.length) {
+        account.achievements = [...(account.achievements || []), ...newAch];
+        newAch.forEach(aid => {
+          const a = ACHIEVEMENTS.find(x => x.id === aid);
+          if (a) toast('Achievement unlocked: ' + a.icon + ' ' + a.name + ' - ' + a.desc);
+        });
+      }
+      // Record playmates
+      recordPlaymatesFromResult(results, r, gameId);
       account.xp = p.xp;
       account.level = p.level;
       account.streak = p.streak;

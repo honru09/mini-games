@@ -208,6 +208,7 @@ async function sbLoadProfiles(){
         background: r.background || 0, frame: r.frame || 0, effect: r.effect || 0,
         owned: r.owned || { avatars: [], frames: [], effects: [], backgrounds: [] },
         pin_hash: r.pin_hash || null, lang: r.lang || 'zh-CN',
+        achievements: r.achievements || [], playmates: r.playmates || {}, daily: r.daily || { play: 0, win: 0, streak: 0 },
       };
     }
     db.users = users;
@@ -227,6 +228,7 @@ async function sbSyncProfile(u){
         background: u.background || 0, frame: u.frame || 0, effect: u.effect || 0,
         owned: u.owned || { avatars: [], frames: [], effects: [], backgrounds: [] },
         pin_hash: u.pin_hash || null, lang: u.lang || 'zh-CN',
+        achievements: u.achievements || [], playmates: u.playmates || {}, daily: u.daily || { play: 0, win: 0, streak: 0 },
         updated_at: new Date().toISOString(),
       }),
     });
@@ -275,6 +277,7 @@ function leaderboardPayload(){
         background: u.background || 0, frame: u.frame || 0, effect: u.effect || 0,
         owned: u.owned || { avatars: [], frames: [], effects: [], backgrounds: [] },
         coins: u.coins || 0, xp: u.xp || 0, level: u.level || 1, streak: u.streak || 0, bestStreak: u.bestStreak || 0, played: u.played || {}, total: u.total || 0, lang: u.lang || 'zh-CN', online: onlineUids.has(uid),
+        achievements: u.achievements || [], playmates: u.playmates || {}, daily: u.daily || { play: 0, win: 0, streak: 0 },
       };
     })
     .sort((a, b) => (b.coins - a.coins) || (b.total - a.total) || String(a.name).localeCompare(String(b.name)))
@@ -345,7 +348,9 @@ function profileObj(u){
     uid: u.uid, name: u.name, avatar: u.avatar,
     background: u.background || 0, frame: u.frame || 0, effect: u.effect || 0,
     owned: u.owned || { avatars: [], frames: [], effects: [], backgrounds: [] },
-    coins: u.coins || 0, played: u.played || {}, total: u.total || 0, lang: u.lang || 'zh-CN',
+    coins: u.coins || 0, xp: u.xp || 0, level: u.level || 1, streak: u.streak || 0, bestStreak: u.bestStreak || 0,
+    played: u.played || {}, total: u.total || 0, lang: u.lang || 'zh-CN',
+    achievements: u.achievements || [], playmates: u.playmates || {}, daily: u.daily || { play: 0, win: 0, streak: 0 },
   };
 }
 function normalizeOwned(o){
@@ -467,6 +472,7 @@ class Session {
         background: Number.isInteger(payload && payload.background) ? Math.max(0, Math.min(12, payload.background)) : 0,
         frame: Number.isInteger(payload && payload.frame) ? Math.max(0, Math.min(12, payload.frame)) : 0,
         effect: Number.isInteger(payload && payload.effect) ? Math.max(0, Math.min(12, payload.effect)) : 0,
+        achievements: [], playmates: {}, daily: { play: 0, win: 0, streak: 0 },
         owned: normalizeOwned(payload && payload.owned),
         xp: 0, level: 1, streak: 0, bestStreak: 0, coins: 0, played: {}, total: 0, pin_hash: ph, lang: (payload && ['zh-CN','en-US','uk-UA'].includes(payload.lang) ? payload.lang : 'zh-CN'), created_at: Date.now(),
       };
@@ -515,6 +521,13 @@ class Session {
       if (payload.frame !== undefined) u.frame = Number.isInteger(payload.frame) ? Math.max(0, Math.min(12, payload.frame)) : (u.frame || 0);
       if (payload.effect !== undefined) u.effect = Number.isInteger(payload.effect) ? Math.max(0, Math.min(12, payload.effect)) : (u.effect || 0);
       if (payload.owned) u.owned = normalizeOwned(payload.owned);
+      if (payload.achievements !== undefined) u.achievements = Array.isArray(payload.achievements) ? payload.achievements : [];
+      if (payload.playmates !== undefined) u.playmates = (payload.playmates && typeof payload.playmates === 'object') ? payload.playmates : {};
+      if (payload.daily !== undefined) u.daily = (payload.daily && typeof payload.daily === 'object') ? payload.daily : { play: 0, win: 0, streak: 0 };
+      if (payload.xp !== undefined) u.xp = Number.isInteger(payload.xp) ? Math.max(0, payload.xp) : (u.xp || 0);
+      if (payload.level !== undefined) u.level = Number.isInteger(payload.level) ? Math.max(1, payload.level) : (u.level || 1);
+      if (payload.streak !== undefined) u.streak = Number.isInteger(payload.streak) ? Math.max(0, payload.streak) : (u.streak || 0);
+      if (payload.bestStreak !== undefined) u.bestStreak = Number.isInteger(payload.bestStreak) ? Math.max(0, payload.bestStreak) : (u.bestStreak || 0);
       if (payload.pin_hash) u.pin_hash = String(payload.pin_hash);
       if (payload.lang && ['zh-CN','en-US','uk-UA'].includes(payload.lang)) u.lang = payload.lang;
       if (payload.xp !== undefined) u.xp = Math.max(0, parseInt(payload.xp, 10) || 0);
@@ -543,6 +556,20 @@ class Session {
         if (coins === 1){ u.streak = (u.streak || 0) + 1; if (u.streak > (u.bestStreak || 0)) u.bestStreak = u.streak; } else { u.streak = 0; }
         u.played[game] = (u.played[game] || 0) + played;
         u.total = (u.total || 0) + played;
+        // Playmates from opponents
+        if (Array.isArray(s.opponents)) {
+          if (!u.playmates) u.playmates = {};
+          s.opponents.forEach(op => {
+            if (op && op.uid && op.uid !== uid) {
+              const pm = u.playmates[op.uid] || { name: op.name || 'Player', count: 0, lastAt: 0, games: {} };
+              pm.name = op.name || pm.name;
+              pm.count++;
+              pm.lastAt = Date.now();
+              if (game) pm.games[game] = (pm.games[game] || 0) + 1;
+              u.playmates[op.uid] = pm;
+            }
+          });
+        }
         db.history.push({ uid, game, coins, at: Date.now() });
         sbAddHistory(uid, game, coins);
         sbSyncProfile(u);

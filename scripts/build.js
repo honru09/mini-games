@@ -16,6 +16,7 @@ const MODULES = [
   'core/01-utils.js',
   'core/02-app-shell.js',
   'core/03-game-framework.js',
+  'core/04-social.js',
   'online/03-websocket.js',
   'shop/04-auth.js',
   'shop/05-profile.js',

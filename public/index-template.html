@@ -667,7 +667,77 @@ button, canvas, .game-card, .ttt-cell, .j-cell, .xq-cell,
   to { transform: scale(1); opacity: 1; }
 }
 
-/* ???? */
+/* ====== my card ====== */
+#my-card { margin-bottom: 14px; }
+.my-card-empty {
+  text-align: center; padding: 18px 16px; font-size: 13px; color: var(--muted);
+  background: var(--card); border: 1px dashed var(--border); border-radius: var(--radius);
+  cursor: pointer; transition: border-color .15s;
+}
+.my-card-empty:hover { border-color: var(--primary); }
+.my-card {
+  background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 16px 18px; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+}
+.my-card-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.my-card-av { flex: none; }
+.my-card-info { flex: 1; min-width: 0; }
+.my-card-name { font-size: 16px; font-weight: 700; }
+.my-card-title { font-size: 13px; color: var(--primary); font-weight: 500; margin-top: 2px; }
+.my-card-stats { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 12px; }
+.my-card-stat { display: flex; align-items: center; gap: 4px; font-size: 13px; }
+.my-card-stat-val { font-weight: 700; font-variant-numeric: tabular-nums; }
+.my-card-stat-label { color: var(--muted); font-size: 12px; }
+.my-card-tasks { margin-bottom: 12px; }
+.my-card-tasks-title { font-size: 12.5px; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
+.my-card-taskbar { display: flex; gap: 6px; flex-wrap: wrap; }
+.my-card-task {
+  display: inline-flex; align-items: center; gap: 3px; font-size: 11.5px;
+  background: var(--p1bg); border: 1px solid var(--border); border-radius: 99px;
+  padding: 4px 10px; white-space: nowrap;
+}
+.my-card-task.done { background: rgba(34,160,107,.12); border-color: rgba(34,160,107,.35); }
+.my-card-mates { margin-bottom: 12px; }
+.my-card-mate-list { display: flex; gap: 6px; flex-wrap: wrap; }
+.my-card-mate {
+  font-size: 12px; background: transparent; border: 1px solid var(--border);
+  border-radius: 99px; padding: 4px 12px; white-space: nowrap;
+  transition: border-color .15s, background .15s;
+}
+.my-card-mate:hover { border-color: var(--primary); background: rgba(79,110,247,.05); }
+.my-card-mate-info { color: var(--muted); font-size: 11px; margin-left: 4px; }
+.my-card-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* achievements grid */
+.ach-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; margin: 10px 0 14px; }
+.ach-item {
+  display: flex; align-items: center; gap: 8px; padding: 10px 12px; font-size: 12.5px;
+  border-radius: 12px; border: 1px solid var(--border); background: var(--card);
+}
+.ach-item.earned { background: rgba(245,158,11,.08); border-color: rgba(245,158,11,.4); }
+.ach-item.locked { opacity: .5; }
+.ach-icon { font-size: 24px; line-height: 1; flex: none; }
+.ach-info { flex: 1; min-width: 0; }
+.ach-name { font-weight: 600; }
+.ach-desc { font-size: 11px; color: var(--muted); }
+
+/* responsive my-card */
+@media (max-width: 480px) {
+  .my-card { padding: 12px 14px; }
+  .my-card-head { gap: 8px; }
+  .my-card-name { font-size: 14px; }
+  .my-card-title { font-size: 12px; }
+  .my-card-stats { gap: 8px; }
+  .my-card-stat { font-size: 11px; }
+  .my-card-stat-val { font-size: 13px; }
+  .my-card-task { font-size: 10px; padding: 3px 8px; }
+  .my-card-mate { font-size: 11px; padding: 3px 10px; }
+  .my-card-btns { gap: 6px; }
+  .my-card-btns .btn { padding: 6px 10px; font-size: 12px; }
+  .ach-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+\r\n/* ???? */
 .level-badge{
   display:inline-flex; align-items:center; font-size:11px; font-weight:700;
   background:linear-gradient(135deg,#f59e0b,#ef4444); color:#fff;
@@ -675,6 +745,7 @@ button, canvas, .game-card, .ttt-cell, .j-cell, .xq-cell,
   flex:none; letter-spacing:.3px;
 }
 .lb-row .level-badge{font-size:10px; padding:1px 6px}
+.me-title{font-size:11px; color:var(--primary); font-weight:500; margin:0 2px; white-space:nowrap}
 
 </style>
 </head>
@@ -694,6 +765,7 @@ button, canvas, .game-card, .ttt-cell, .j-cell, .xq-cell,
         <div class="hub-meta">
           <button type="button" class="me-chip" id="btn-me" title="我的档案 / 登录"></button>
         </div>
+        <div id="my-card"></div>
         <div class="slots-row" id="slots-row"></div>
         <div class="room-panel hidden" id="room-panel">
           <div class="room-head">

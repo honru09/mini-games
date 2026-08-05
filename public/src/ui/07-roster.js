@@ -290,6 +290,9 @@ function updateAccountProfile(p){
   if (me){ me.name = p.name; me.avatar = p.avatar; me.coins = p.coins || 0; me.xp = p.xp || 0; me.level = p.level || 1; me.streak = p.streak || 0; me.bestStreak = p.bestStreak || 0; me.played = p.played || {}; me.total = p.total || 0; }
   else roster.unshift({ uid: p.uid, name: p.name, avatar: p.avatar, coins: p.coins || 0, played: p.played || {}, total: p.total || 0 });
   deviceUid = p.uid;
+  account.achievements = p.achievements || [];
+  account.playmates = p.playmates || {};
+  account.daily = p.daily || { play: 0, win: 0, streak: 0 };
   saveRoster(); saveAccount();
 }
 function renderMe(){
@@ -308,12 +311,16 @@ function renderMe(){
   av.appendChild(avatarStageNode(account, 26));
   btn.appendChild(av);
   btn.appendChild(el('span', null, account.name + ' ' + langFlag(account.lang || currentLang)));
-  const lvBadge = el('span','level-badge', 'Lv.' + (account.level || levelFromXp(account.xp || 0)));
+  const lv = account.level || levelFromXp(account.xp || 0);
+  const title = titleFor(lv);
+  btn.appendChild(el('span','me-title', title.icon + ' ' + title.name));
+  const lvBadge = el('span','level-badge', 'Lv.' + lv);
   btn.appendChild(lvBadge);
   const coinLine = el('span','coin-line');
   coinLine.appendChild(el('span','coin','$'));
   coinLine.appendChild(el('span','me-pts', (account.coins || 0) + ' · ' + (account.total || 0) + '局'));
   btn.appendChild(coinLine);
+  renderMyCard();
   if (online.connected){
     btn.appendChild(el('span','me-online','●'));
   }
@@ -559,6 +566,26 @@ function xpForLevel(level){
   if (level <= 5) return thresholds[level - 1];
   return 280 + (level - 5) * 150;
 }
+
+function recordPlaymatesFromResult(results, currentResult, gameId){
+  if (!account) return;
+  results.forEach(other => {
+    if (other.slot === currentResult.slot) return;
+    const otherUid = online.connected && online.game ? null : slots[other.slot];
+    if (!otherUid) return;
+    const otherP = profileByUid(otherUid);
+    if (otherP) recordPlaymate(account, otherUid, otherP.name, gameId);
+  });
+  // Also record online opponents via player list
+  if (online.connected && online.game && online.roomInfo) {
+    const players = online.roomInfo.players || [];
+    players.forEach(pl => {
+      if (pl.uid && pl.uid !== account.uid) {
+        recordPlaymate(account, pl.uid, pl.name || 'Player', gameId);
+      }
+    });
+  }
+}
 function applyGameResult(results){
   if (!results || !results.length) return;
   const gameId = currentGameId;
@@ -589,6 +616,19 @@ function applyGameResult(results){
     p.total = (p.total || 0) + 1;
     if (account && p.uid === account.uid){
       account.coins = p.coins;
+      updateDaily(account, 'play', 1);
+      if (r.coins === 1) updateDaily(account, 'win', 1);
+      if (account.streak >= 2) updateDaily(account, 'streak', 1);
+      const newAch = checkAchievements(account);
+      if (newAch.length) {
+        account.achievements = [...(account.achievements || []), ...newAch];
+        newAch.forEach(aid => {
+          const a = ACHIEVEMENTS.find(x => x.id === aid);
+          if (a) toast('Achievement unlocked: ' + a.icon + ' ' + a.name + ' - ' + a.desc);
+        });
+      }
+      // Record playmates
+      recordPlaymatesFromResult(results, r, gameId);
       account.xp = p.xp;
       account.level = p.level;
       account.streak = p.streak;

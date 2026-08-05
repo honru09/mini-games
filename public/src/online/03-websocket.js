@@ -180,6 +180,7 @@ const online = {
           account.pin = account.pin || '';
           account.registered = true;
           updateAccountProfile(msg.payload.profile);
+          renderMyCard();
           toast('🎉 账号创建成功，欢迎 ' + account.name);
           if (authModalEl){ authModalEl.remove(); authModalEl = null; }
         }
@@ -188,6 +189,7 @@ const online = {
         if (msg.payload && msg.payload.uid){
           account = Object.assign({}, msg.payload.profile, { device: deviceFingerprint() });
           updateAccountProfile(msg.payload.profile);
+          renderMyCard();
           toast('✅ 登录成功：' + account.name);
           if (authModalEl){ authModalEl.remove(); authModalEl = null; }
         }

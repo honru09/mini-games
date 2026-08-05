@@ -31,7 +31,10 @@ function renderProfilePopup(p, isMe){
   stage.appendChild(avatarCanvas(p.avatar, 74));
   avWrap.appendChild(stage);
   hero.appendChild(avWrap);
-  hero.appendChild(el('div','pname', p.name + ' [Lv.' + (p.level || levelFromXp(p.xp || 0)) + ']' + ' ' + (p.lang ? langFlag(p.lang) : '') + (isMe ? t('profile_mine') : '')));
+  const pLv = p.level || levelFromXp(p.xp || 0);
+  const pTitle = titleFor(pLv);
+  hero.appendChild(el('div','pname', p.name + ' [Lv.' + pLv + ']' + ' ' + (p.lang ? langFlag(p.lang) : '') + (isMe ? t('profile_mine') : '')));
+  hero.appendChild(el('div','pmeta', pTitle.icon + ' ' + pTitle.name + ' · ' + (p.achievements ? p.achievements.length : 0) + ' achievements'));
   const coinLine = el('div','pmeta');
   coinLine.appendChild(el('span','coin','$'));
   coinLine.appendChild(el('span', null, ' ' + (p.coins || 0) + ' · 共 ' + (p.total || 0) + ' 局' + (p.online ? ' · 🟢在线' : ' · ⚪离线')));
@@ -49,6 +52,9 @@ function renderProfilePopup(p, isMe){
     const edit = el('button','btn btn-primary','✏️ 编辑档案');
     edit.addEventListener('click', () => { bd.remove(); openProfileEditor(account.uid); });
     links.appendChild(edit);
+    const achBtn = el('button','btn','🏆 成就');
+    achBtn.addEventListener('click', () => { bd.remove(); openAchievementsModal(); });
+    links.appendChild(achBtn);
     const shop = el('button','btn','🛍️ 商城');
     shop.addEventListener('click', () => { bd.remove(); openShop(); });
     links.appendChild(shop);
