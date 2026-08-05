@@ -1,4 +1,4 @@
-// 小游戏合集在线服务：静态文件 + WebSocket 房间中继（零依赖，手写 RFC6455）
+﻿// 小游戏合集在线服务：静态文件 + WebSocket 房间中继（零依赖，手写 RFC6455）
 'use strict';
 const http = require('http');
 const fs = require('fs');
@@ -190,14 +190,14 @@ async function sbFetch(path, options = {}){
 async function sbLoadProfiles(){
   if (!useSupabase) return;
   try {
-    const rows = await sbFetch('profiles?select=uid,name,avatar,coins,played,total,background,frame,effect,owned,pin_hash&order=coins.desc&limit=5000');
+    const rows = await sbFetch('profiles?select=uid,name,avatar,coins,played,total,background,frame,effect,owned,pin_hash,lang&order=coins.desc&limit=5000');
     const users = {};
     for (const r of rows){
       users[r.uid] = {
         name: r.name, avatar: r.avatar, coins: r.coins || 0, played: r.played || {}, total: r.total || 0,
         background: r.background || 0, frame: r.frame || 0, effect: r.effect || 0,
         owned: r.owned || { avatars: [], frames: [], effects: [], backgrounds: [] },
-        pin_hash: r.pin_hash || null,
+        pin_hash: r.pin_hash || null, lang: r.lang || 'zh-CN',
       };
     }
     db.users = users;
@@ -216,7 +216,7 @@ async function sbSyncProfile(u){
         uid: u.uid, name: u.name, avatar: u.avatar, coins: u.coins, played: u.played, total: u.total,
         background: u.background || 0, frame: u.frame || 0, effect: u.effect || 0,
         owned: u.owned || { avatars: [], frames: [], effects: [], backgrounds: [] },
-        pin_hash: u.pin_hash || null,
+        pin_hash: u.pin_hash || null, lang: u.lang || 'zh-CN',
         updated_at: new Date().toISOString(),
       }),
     });
@@ -264,7 +264,7 @@ function leaderboardPayload(){
         uid, name: u.name, avatar: u.avatar,
         background: u.background || 0, frame: u.frame || 0, effect: u.effect || 0,
         owned: u.owned || { avatars: [], frames: [], effects: [], backgrounds: [] },
-        coins: u.coins || 0, played: u.played || {}, total: u.total || 0, online: onlineUids.has(uid),
+        coins: u.coins || 0, played: u.played || {}, total: u.total || 0, lang: u.lang || 'zh-CN', online: onlineUids.has(uid), lang: u.lang || 'zh-CN',
       };
     })
     .sort((a, b) => (b.coins - a.coins) || (b.total - a.total) || String(a.name).localeCompare(String(b.name)))
@@ -285,6 +285,7 @@ function lobbyPayload(){
       hostUid: r.host.uid || null,
       hostName: hu ? hu.name : '玩家',
       hostAvatar: hu ? hu.avatar : 0,
+      hostLang: hu ? (hu.lang || 'zh-CN') : 'zh-CN',
       capacity: r.capacity,
       size: r.clients.size,
       game: r.game || null,
@@ -334,7 +335,7 @@ function profileObj(u){
     uid: u.uid, name: u.name, avatar: u.avatar,
     background: u.background || 0, frame: u.frame || 0, effect: u.effect || 0,
     owned: u.owned || { avatars: [], frames: [], effects: [], backgrounds: [] },
-    coins: u.coins || 0, played: u.played || {}, total: u.total || 0,
+    coins: u.coins || 0, played: u.played || {}, total: u.total || 0, lang: u.lang || 'zh-CN',
   };
 }
 function normalizeOwned(o){
@@ -456,7 +457,7 @@ class Session {
         frame: Number.isInteger(payload && payload.frame) ? Math.max(0, Math.min(12, payload.frame)) : 0,
         effect: Number.isInteger(payload && payload.effect) ? Math.max(0, Math.min(12, payload.effect)) : 0,
         owned: normalizeOwned(payload && payload.owned),
-        coins: 0, played: {}, total: 0, pin_hash: ph, created_at: Date.now(),
+        coins: 0, played: {}, total: 0, pin_hash: ph, lang: (payload && ['zh-CN','en-US','uk-UA'].includes(payload.lang) ? payload.lang : 'zh-CN'), created_at: Date.now(),
       };
       db.users[uid] = u;
       saveDB();
@@ -504,6 +505,7 @@ class Session {
       if (payload.effect !== undefined) u.effect = Number.isInteger(payload.effect) ? Math.max(0, Math.min(12, payload.effect)) : (u.effect || 0);
       if (payload.owned) u.owned = normalizeOwned(payload.owned);
       if (payload.pin_hash) u.pin_hash = String(payload.pin_hash);
+      if (payload.lang && ['zh-CN','en-US','uk-UA'].includes(payload.lang)) u.lang = payload.lang;
       saveDB();
       sbSyncProfile(u);
       this.sendText(JSON.stringify({ type: 'profile_ok', payload: profileObj(u) }));

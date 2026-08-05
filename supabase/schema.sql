@@ -1,4 +1,4 @@
--- 小游戏合集 · Supabase 数据库初始化脚本
+﻿-- 小游戏合集 · Supabase 数据库初始化脚本
 -- 在 Supabase 控制台 → SQL Editor 里粘贴执行一次即可
 
 -- 玩家档案表（所有注册玩家，uid 由前端本地生成，全局唯一）
@@ -10,7 +10,8 @@ create table if not exists profiles (
   frame integer not null default 0,
   effect integer not null default 0,
   owned jsonb not null default '{"avatars":[],"frames":[],"effects":[],"backgrounds":[]}'::jsonb,
-  pin_hash text,
+  pin_hash TEXT,
+  lang VARCHAR(10) DEFAULT 'zh-CN',
   coins integer not null default 0,
   played jsonb not null default '{}'::jsonb,
   total integer not null default 0,
