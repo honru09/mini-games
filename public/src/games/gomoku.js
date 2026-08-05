@@ -107,7 +107,7 @@ function gameGomoku(area, extra, n, opts){
       setStatus('🏆 玩家' + (cur+1) + ' 获胜！', true);
       showVictoryOverlay(area, {
         winner: cur, winnerName: '玩家' + (cur+1), emoji: '🎉',
-        subtitle: '五子连线', coins: 1, onRestart: resetLocal
+        subtitle: '五子连线', coins: 1, onRestart: resetLocal, onShare: () => shareGameLink('gomoku'), onInvite: online.room && online.isHost ? () => openInvitePicker() : null
       });
       return;
     }
@@ -120,7 +120,7 @@ function gameGomoku(area, extra, n, opts){
       draw(); renderPlayers(cur, null);
       setStatus(t('result_draw'), false);
       showVictoryOverlay(area, {
-        winner: 0, emoji: '🤝', subtitle: '棋盘已满，平局', coins: 0, onRestart: resetLocal
+        winner: 0, emoji: '🤝', subtitle: '棋盘已满，平局', coins: 0, onRestart: resetLocal, onShare: () => shareGameLink('gomoku')
       });
       return;
     }

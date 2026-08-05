@@ -253,6 +253,25 @@ function showVictoryOverlay(area, opts) {
   area.appendChild(ov);
 }
 
+
+/* ====== 分享 & 邀请 ====== */
+function shareGameLink(gameId, roomCode) {
+  const base = location.origin + location.pathname;
+  let url = base;
+  if (roomCode) {
+    url += '#join=' + roomCode;
+  } else if (gameId) {
+    url += '#game=' + gameId + '&p=2';
+  }
+  const text = '来 Playroom 一起玩' + (gameId && GAMES[gameId] ? GAMES[gameId].name : '小游戏') + '！';
+  if (navigator.share) {
+    navigator.share({ title: 'Playroom', text: text, url: url }).catch(() => {});
+  } else {
+    try { navigator.clipboard.writeText(url); toast('📋 链接已复制，发送给朋友即可加入'); } catch(e) {}
+  }
+  toast('📤 分享链接：' + url);
+}
+
 /* ====== 触屏归一化 ====== */
 // 为 canvas 元素提供统一的触摸/鼠标坐标提取
 function getEventPos(e, element) {

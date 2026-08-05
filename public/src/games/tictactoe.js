@@ -70,11 +70,11 @@ function gameTicTacToe(area, extra, n, opts){
       if (winLine) {
         showVictoryOverlay(area, {
           winner: cur, winnerName: '玩家' + (cur+1), emoji: '🎉',
-          subtitle: '三子连线', coins: 1, onRestart: resetLocal
+          subtitle: '三子连线', coins: 1, onRestart: resetLocal, onShare: () => shareGameLink('tictactoe'), onInvite: online.room && online.isHost ? () => openInvitePicker() : null
         });
       } else {
         showVictoryOverlay(area, {
-          winner: 0, emoji: '🤝', subtitle: '平局，无人获胜', coins: 0, onRestart: resetLocal
+          winner: 0, emoji: '🤝', subtitle: '平局，无人获胜', coins: 0, onRestart: resetLocal, onShare: () => shareGameLink('tictactoe')
         });
       }
     } else {
