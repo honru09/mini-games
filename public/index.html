@@ -4610,14 +4610,14 @@ function gameTetris(area, extra, n, opts){
           }
         }
       }
-      if (pi === cur && piece){
-        for (let r = 0; r < piece.sh.length; r++){
-          for (let c = 0; c < piece.sh[r].length; c++){
-            if (piece.sh[r][c]){
+      if (pi === cur && (piece || humanSh)){
+        for (let r = 0; r < (piece ? piece.sh : humanSh).length; r++){
+          for (let c = 0; c < (piece ? piece.sh[r] : humanSh[r]).length; c++){
+            if ((piece ? piece.sh[r][c] : humanSh[r][c])){
               const cellEl = el('div','tetris-cell');
-              cellEl.style.left = ((piece.x+c)*cell) + 'px'; cellEl.style.top = ((piece.y+r)*cell) + 'px';
+              cellEl.style.left = (((piece ? piece.x : humanX)+c)*cell) + 'px'; cellEl.style.top = (((piece ? piece.y : humanY)+r)*cell) + 'px';
               cellEl.style.width = cell + 'px'; cellEl.style.height = cell + 'px';
-              cellEl.style.background = COLORS[piece.idx % 7];
+              cellEl.style.background = COLORS[(piece ? piece.idx : humanIdx) % 7];
               well.appendChild(cellEl);
             }
           }
