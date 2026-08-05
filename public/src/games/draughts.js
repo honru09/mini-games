@@ -166,6 +166,32 @@ function gameDraughts(area, extra, n, opts){
     scheduleAI();
   }
   function render(){
+  // Add hint button for local mode
+  extra.innerHTML = '';
+  if (!opts.online) {
+    const hintBtn = el('button','btn','💡 提示');
+    hintBtn.addEventListener('click', () => {
+      if (over) return;
+      if (opts.ai && opts.ai.has(cur)) return;
+      const caps = allCaptures(cur);
+      if (caps.length) {
+        mustCapture = caps[0].from;
+        render();
+        setStatus('必须吃子：点击高亮棋子');
+        return;
+      }
+      const moves = simpleMoves(cur);
+      if (moves.length) {
+        const mv = moves[Math.floor(Math.random() * moves.length)];
+        mustCapture = mv.from;
+        render();
+        setStatus('提示：点击高亮棋子移动');
+      } else {
+        toast('无子可动');
+      }
+    });
+    extra.appendChild(hintBtn);
+  }
     const w = area.clientWidth || 520;
     const S = Math.min(w, 560);
     area.innerHTML = '';
@@ -195,15 +221,11 @@ function gameDraughts(area, extra, n, opts){
       }
     }
     if (over){
-      const ov = el('div','overlay');
-      const card = el('div','overlay-card');
-      card.appendChild(el('div','big','🏆'));
-      card.appendChild(el('h3', null, '玩家' + (winner+1) + ' 获胜！'));
-      const btn = el('button','btn btn-primary','再来一局');
-      btn.addEventListener('click', reset);
-      card.appendChild(btn);
-      ov.appendChild(card);
-      area.appendChild(ov);
+      const winnerName = '玩家' + (winner+1);
+      showVictoryOverlay(area, {
+        winner: winner, winnerName: winnerName,
+        emoji: '🏆', subtitle: '国际跳棋获胜', coins: 1, onRestart: resetLocal
+      });
     }
     renderPlayers(cur, null);
   }

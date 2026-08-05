@@ -148,16 +148,12 @@ function gameMonopoly(area, extra, n, opts){
     board.appendChild(center);
     // 结束覆盖层
     if (over){
-      const ov = el('div','overlay');
-      const card = el('div','overlay-card');
-      card.appendChild(el('div','big','🏆'));
-      card.appendChild(el('h3', null, '玩家' + (winner+1) + ' 是最终赢家！'));
-      card.appendChild(el('p', null, '资产 ¥' + players[winner].money));
-      const btn = el('button','btn btn-primary','再来一局');
-      btn.addEventListener('click', reset);
-      card.appendChild(btn);
-      ov.appendChild(card);
-      board.appendChild(ov);
+      const winnerName = '玩家' + (winner+1);
+      const w = players[winner];
+      showVictoryOverlay(area, {
+        winner: winner, winnerName: winnerName,
+        emoji: '🏆', subtitle: '资产 ¥' + (w ? w.money : 0), coins: 1, onRestart: resetLocal
+      });
     }
     renderMoney();
   }

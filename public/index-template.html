@@ -620,6 +620,52 @@ button, canvas, .game-card, .ttt-cell, .j-cell, .xq-cell,
   .invite-btn { padding: 6px 14px; }
   .online-row { gap: 6px; }
 }
+
+/* ====== 胜利结算动画 ====== */
+.victory-overlay {
+  background: rgba(12,17,32,.62); backdrop-filter: blur(8px); 
+  -webkit-backdrop-filter: blur(8px); z-index: 50;
+  animation: vicFadeIn .35s ease;
+}
+.victory-card {
+  text-align: center; padding: 28px 30px; max-width: 380px;
+}
+.victory-emoji {
+  font-size: 56px; line-height: 1; margin-bottom: 8px;
+  animation: vicBounce .7s cubic-bezier(.22,.86,.4,1.2);
+}
+.victory-title {
+  font-size: 20px; margin: 6px 0 4px; font-weight: 700;
+  background: linear-gradient(120deg, #f59e0b, #ef4444);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.victory-subtitle {
+  font-size: 13px; color: var(--muted); margin: 4px 0 10px;
+}
+.victory-coins {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 22px; font-weight: 700; color: #f59e0b;
+  background: rgba(245,158,11,.1); border-radius: 99px;
+  padding: 6px 18px; margin-bottom: 14px;
+  animation: vicCoinPop .5s .3s ease both;
+}
+.coin-lg {
+  width: 28px; height: 28px; font-size: 16px;
+}
+.victory-btns {
+  display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;
+}
+.victory-btn { padding: 10px 20px; font-size: 14px; }
+@keyframes vicFadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes vicBounce {
+  0% { transform: scale(.2); opacity: 0; }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes vicCoinPop {
+  from { transform: scale(.5); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
 </style>
 </head>
 <body>

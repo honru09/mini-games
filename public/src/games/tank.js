@@ -151,16 +151,11 @@ function gameTank(area, extra, n, opts){
     place(t0, 'tank0', '🛡️');
     place(t1, 'tank1', '🛡️');
     if (over){
-      const ov = el('div','overlay');
-      const card = el('div','overlay-card');
-      card.appendChild(el('div','big','🏆'));
-      card.appendChild(el('h3', null, '玩家' + (winner+1) + ' 获胜！'));
-      card.appendChild(el('p', null, '坦克大战'));
-      const btn = el('button','btn btn-primary', t('come_back'));
-      btn.addEventListener('click', reset);
-      card.appendChild(btn);
-      ov.appendChild(card);
-      board.appendChild(ov);
+      const winnerName = '玩家' + (winner+1);
+      showVictoryOverlay(area, {
+        winner: winner, winnerName: winnerName,
+        emoji: '🏆', subtitle: '坦克大战获胜', coins: 1, onRestart: resetLocal
+      });
     }
     area.appendChild(board);
     renderPlayers(cur, [t0.lives + ' ❤', t1.lives + ' ❤']);

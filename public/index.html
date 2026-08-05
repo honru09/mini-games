@@ -620,6 +620,52 @@ button, canvas, .game-card, .ttt-cell, .j-cell, .xq-cell,
   .invite-btn { padding: 6px 14px; }
   .online-row { gap: 6px; }
 }
+
+/* ====== 胜利结算动画 ====== */
+.victory-overlay {
+  background: rgba(12,17,32,.62); backdrop-filter: blur(8px); 
+  -webkit-backdrop-filter: blur(8px); z-index: 50;
+  animation: vicFadeIn .35s ease;
+}
+.victory-card {
+  text-align: center; padding: 28px 30px; max-width: 380px;
+}
+.victory-emoji {
+  font-size: 56px; line-height: 1; margin-bottom: 8px;
+  animation: vicBounce .7s cubic-bezier(.22,.86,.4,1.2);
+}
+.victory-title {
+  font-size: 20px; margin: 6px 0 4px; font-weight: 700;
+  background: linear-gradient(120deg, #f59e0b, #ef4444);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.victory-subtitle {
+  font-size: 13px; color: var(--muted); margin: 4px 0 10px;
+}
+.victory-coins {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 22px; font-weight: 700; color: #f59e0b;
+  background: rgba(245,158,11,.1); border-radius: 99px;
+  padding: 6px 18px; margin-bottom: 14px;
+  animation: vicCoinPop .5s .3s ease both;
+}
+.coin-lg {
+  width: 28px; height: 28px; font-size: 16px;
+}
+.victory-btns {
+  display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;
+}
+.victory-btn { padding: 10px 20px; font-size: 14px; }
+@keyframes vicFadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes vicBounce {
+  0% { transform: scale(.2); opacity: 0; }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes vicCoinPop {
+  from { transform: scale(.5); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
 </style>
 </head>
 <body>
@@ -1000,6 +1046,71 @@ function runCountdown(){
       setTimeout(() => ov.remove(), 260);
     }
   }, 700);
+}
+
+
+/* ====== 统一胜利叠加层 ====== */
+function showVictoryOverlay(area, opts) {
+  // opts: { winner, winnerName, subtitle, emoji, coins, slot, playerCount, onRestart, onShare, onInvite }
+  const ov = el('div', 'overlay victory-overlay');
+  const card = el('div', 'overlay-card victory-card');
+  
+  // 大动画图标
+  const big = el('div', 'victory-emoji', opts.emoji || '🏆');
+  card.appendChild(big);
+  
+  // 标题
+  const title = el('h3', 'victory-title', opts.winnerName 
+    ? (opts.winnerName + ' ' + t('result_winner', opts.winner + 1).replace(/🏆 玩家\d+/, '🏆'))
+    : t('result_winner', (opts.winner || 0) + 1));
+  card.appendChild(title);
+  
+  // 副标题
+  if (opts.subtitle) {
+    card.appendChild(el('p', 'victory-subtitle', opts.subtitle));
+  }
+  
+  // 金币动画
+  if (opts.coins) {
+    const coinRow = el('div', 'victory-coins');
+    const coinIcon = el('span', 'coin coin-lg');
+    coinIcon.textContent = '$';
+    coinRow.appendChild(coinIcon);
+    coinRow.appendChild(el('span', null, ' +' + opts.coins));
+    card.appendChild(coinRow);
+  }
+  
+  // 按钮行
+  const btnRow = el('div', 'victory-btns');
+  
+  const again = el('button', 'btn btn-primary victory-btn', t('come_back'));
+  again.addEventListener('click', () => {
+    ov.remove();
+    if (opts.onRestart) opts.onRestart();
+  });
+  btnRow.appendChild(again);
+  
+  if (opts.onInvite) {
+    const invite = el('button', 'btn victory-btn', t('invite_player'));
+    invite.addEventListener('click', opts.onInvite);
+    btnRow.appendChild(invite);
+  }
+  
+  if (opts.onShare) {
+    const share = el('button', 'btn victory-btn', '📤 分享');
+    share.addEventListener('click', opts.onShare);
+    btnRow.appendChild(share);
+  }
+  
+  card.appendChild(btnRow);
+  ov.appendChild(card);
+  
+  // 点击背景关闭
+  ov.addEventListener('click', e => { 
+    if (e.target === ov) { ov.remove(); }
+  });
+  
+  area.appendChild(ov);
 }
 
 /* ====== 触屏归一化 ====== */
@@ -2675,7 +2786,17 @@ function gameTicTacToe(area, extra, n, opts){
     area.appendChild(grid);
     renderPlayers(cur, null);
     if (over){
-      setStatus(winLine ? ('🏆 玩家' + (cur+1) + ' 获胜！') : '🤝 平局', !!winLine);
+      setStatus(winLine ? ('🏆 玩家' + (cur+1) + ' 获胜！') : t('result_draw'), !!winLine);
+      if (winLine) {
+        showVictoryOverlay(area, {
+          winner: cur, winnerName: '玩家' + (cur+1), emoji: '🎉',
+          subtitle: '三子连线', coins: 1, onRestart: resetLocal
+        });
+      } else {
+        showVictoryOverlay(area, {
+          winner: 0, emoji: '🤝', subtitle: '平局，无人获胜', coins: 0, onRestart: resetLocal
+        });
+      }
     } else {
       setStatus(opts.online ? (cur === opts.myIdx ? t('your_turn') + '，点击空格落子' : t('opponent_turn') + '…') : ('玩家' + (cur+1) + ' 的回合'));
     }
@@ -2827,6 +2948,10 @@ function gameGomoku(area, extra, n, opts){
       ]);
       draw(); renderPlayers(cur, null);
       setStatus('🏆 玩家' + (cur+1) + ' 获胜！', true);
+      showVictoryOverlay(area, {
+        winner: cur, winnerName: '玩家' + (cur+1), emoji: '🎉',
+        subtitle: '五子连线', coins: 1, onRestart: resetLocal
+      });
       return;
     }
     if (hist.length === N*N){
@@ -2836,7 +2961,10 @@ function gameGomoku(area, extra, n, opts){
         { slot: 1, coins: 0, rank: 1 },
       ]);
       draw(); renderPlayers(cur, null);
-      setStatus('🤝 平局', false);
+      setStatus(t('result_draw'), false);
+      showVictoryOverlay(area, {
+        winner: 0, emoji: '🤝', subtitle: '棋盘已满，平局', coins: 0, onRestart: resetLocal
+      });
       return;
     }
     cur ^= 1;
@@ -3070,16 +3198,11 @@ function gameLudo(area, extra, n, opts){
     }
     // 结束覆盖层
     if (over){
-      const ov = el('div','overlay');
-      const card = el('div','overlay-card');
-      card.appendChild(el('div','big','🏆'));
-      card.appendChild(el('h3', null, '玩家' + (pids.indexOf(winner)+1) + ' 获胜！'));
-      card.appendChild(el('p', null, '四架飞机全部归位'));
-      const btn = el('button','btn btn-primary','再来一局');
-      btn.addEventListener('click', reset);
-      card.appendChild(btn);
-      ov.appendChild(card);
-      board.appendChild(ov);
+      const winnerName = '玩家' + (pids.indexOf(winner)+1);
+      showVictoryOverlay(area, {
+        winner: pids.indexOf(winner), winnerName: winnerName,
+        emoji: '🏆', subtitle: '四架飞机全部归位', coins: 1, onRestart: resetLocal
+      });
     }
     const infos = pids.map(pid => {
       const pi = pids.indexOf(pid);
@@ -3341,16 +3464,12 @@ function gameMonopoly(area, extra, n, opts){
     board.appendChild(center);
     // 结束覆盖层
     if (over){
-      const ov = el('div','overlay');
-      const card = el('div','overlay-card');
-      card.appendChild(el('div','big','🏆'));
-      card.appendChild(el('h3', null, '玩家' + (winner+1) + ' 是最终赢家！'));
-      card.appendChild(el('p', null, '资产 ¥' + players[winner].money));
-      const btn = el('button','btn btn-primary','再来一局');
-      btn.addEventListener('click', reset);
-      card.appendChild(btn);
-      ov.appendChild(card);
-      board.appendChild(ov);
+      const winnerName = '玩家' + (winner+1);
+      const w = players[winner];
+      showVictoryOverlay(area, {
+        winner: winner, winnerName: winnerName,
+        emoji: '🏆', subtitle: '资产 ¥' + (w ? w.money : 0), coins: 1, onRestart: resetLocal
+      });
     }
     renderMoney();
   }
@@ -3900,17 +4019,11 @@ function gameChecker(area, extra, n, opts){
     });
   }
   function showCheckerOver(){
-    const ov = el('div','overlay');
-    ov.style.borderRadius = '16px';
-    const card = el('div','overlay-card');
-    card.appendChild(el('div','big','🏆'));
-    card.appendChild(el('h3', null, '玩家' + (winner+1) + ' 获胜！'));
-    card.appendChild(el('p', null, '10 颗弹珠全部到达对角营地'));
-    const btn = el('button','btn btn-primary','再来一局');
-    btn.addEventListener('click', reset);
-    card.appendChild(btn);
-    ov.appendChild(card);
-    area.appendChild(ov);
+    const winnerName = '玩家' + (winner+1);
+    showVictoryOverlay(area, {
+      winner: winner, winnerName: winnerName,
+      emoji: '🏆', subtitle: '10 颗弹珠全部到达对角营地', coins: 1, onRestart: resetLocal
+    });
   }
   opts.onMove = payload => {
     if (payload && payload.from && payload.to){
@@ -4095,16 +4208,11 @@ function gameTank(area, extra, n, opts){
     place(t0, 'tank0', '🛡️');
     place(t1, 'tank1', '🛡️');
     if (over){
-      const ov = el('div','overlay');
-      const card = el('div','overlay-card');
-      card.appendChild(el('div','big','🏆'));
-      card.appendChild(el('h3', null, '玩家' + (winner+1) + ' 获胜！'));
-      card.appendChild(el('p', null, '坦克大战'));
-      const btn = el('button','btn btn-primary', t('come_back'));
-      btn.addEventListener('click', reset);
-      card.appendChild(btn);
-      ov.appendChild(card);
-      board.appendChild(ov);
+      const winnerName = '玩家' + (winner+1);
+      showVictoryOverlay(area, {
+        winner: winner, winnerName: winnerName,
+        emoji: '🏆', subtitle: '坦克大战获胜', coins: 1, onRestart: resetLocal
+      });
     }
     area.appendChild(board);
     renderPlayers(cur, [t0.lives + ' ❤', t1.lives + ' ❤']);
@@ -4289,16 +4397,11 @@ function gameSnake(area, extra, n, opts){
       });
     });
     if (over){
-      const ov = el('div','overlay');
-      const card = el('div','overlay-card');
-      card.appendChild(el('div','big','🏆'));
-      card.appendChild(el('h3', null, '玩家' + (winner+1) + ' 获胜！'));
-      card.appendChild(el('p', null, '得分 ' + snakes[winner].score));
-      const btn = el('button','btn btn-primary', t('come_back'));
-      btn.addEventListener('click', reset);
-      card.appendChild(btn);
-      ov.appendChild(card);
-      board.appendChild(ov);
+      const winnerName = '玩家' + (winner+1);
+      showVictoryOverlay(area, {
+        winner: winner, winnerName: winnerName,
+        emoji: '🏆', subtitle: '得分 ' + snakes[winner].score, coins: 1, onRestart: resetLocal
+      });
     }
     area.appendChild(board);
     renderPlayers(cur, snakes.map((s, i) => s.alive ? ('🍎 ' + s.score) : '💀 出局'));
@@ -4524,21 +4627,93 @@ function gameTetris(area, extra, n, opts){
       wrap.appendChild(box);
     });
     if (over){
-      const ov = el('div','overlay');
-      const card = el('div','overlay-card');
-      card.appendChild(el('div','big','🏆'));
-      card.appendChild(el('h3', null, '玩家' + (winner+1) + ' 获胜！'));
-      card.appendChild(el('p', null, '得分 ' + Math.max(0, scores[winner])));
-      const btn = el('button','btn btn-primary','再来一局');
-      btn.addEventListener('click', reset);
-      card.appendChild(btn);
-      ov.appendChild(card);
-      wrap.appendChild(ov);
+      const winnerName = '玩家' + (winner+1);
+      showVictoryOverlay(area, {
+        winner: winner, winnerName: winnerName,
+        emoji: '🏆', subtitle: '得分 ' + Math.max(0, scores[winner]), coins: 1, onRestart: resetLocal
+      });
     }
     area.appendChild(wrap);
     renderPlayers(cur, scores.map((s, i) => s < 0 ? '💀' : (s + ' 分')));
   }
   extra.innerHTML = '';
+  // Human player controls: keyboard + buttons
+  let humanPiece = null, humanX = 0, humanY = 0, humanSh = null, humanIdx = 0;
+  const humanKeys = {};
+  
+  function spawnHumanPiece() {
+    humanIdx = 0 | Math.floor(Math.random() * SHAPES.length);
+    humanSh = SHAPES[humanIdx];
+    humanX = Math.floor((COLS - humanSh[0].length) / 2);
+    humanY = 0;
+    if (collide(wells[cur], humanSh, humanX, humanY)) { topOut(cur); return false; }
+    return true;
+  }
+  
+  function moveHuman(dx) {
+    if (!humanSh || over) return;
+    if (!collide(wells[cur], humanSh, humanX + dx, humanY)) {
+      humanX += dx;
+      render();
+    }
+  }
+  
+  function rotateHuman() {
+    if (!humanSh || over) return;
+    const rotated = rotate(humanSh);
+    if (!collide(wells[cur], rotated, humanX, humanY)) {
+      humanSh = rotated;
+      render();
+    }
+  }
+  
+  function dropHuman() {
+    if (!humanSh || over) return;
+    if (!collide(wells[cur], humanSh, humanX, humanY + 1)) {
+      humanY++;
+      render();
+    } else {
+      lockHuman();
+    }
+  }
+  
+  function hardDropHuman() {
+    if (!humanSh || over) return;
+    while (!collide(wells[cur], humanSh, humanX, humanY + 1)) humanY++;
+    lockHuman();
+  }
+  
+  function lockHuman() {
+    if (!humanSh || over) return;
+    if (opts.online) {
+      opts.sendMove({ pieceIdx: humanIdx, x: humanX, y: humanY, sh: humanSh });
+    }
+    applyPlacement(cur, humanIdx, humanX, humanY, humanSh);
+    humanSh = null; humanPiece = null;
+  }
+  
+  function handleTetrisKey(e) {
+    if (over) return;
+    if (opts.ai && opts.ai.has(cur)) return;
+    if (!humanSh && !spawnHumanPiece()) return;
+    switch(e.key) {
+      case 'ArrowLeft': e.preventDefault(); moveHuman(-1); break;
+      case 'ArrowRight': e.preventDefault(); moveHuman(1); break;
+      case 'ArrowDown': e.preventDefault(); dropHuman(); break;
+      case 'ArrowUp': e.preventDefault(); rotateHuman(); break;
+      case ' ': case 'Spacebar': e.preventDefault(); hardDropHuman(); break;
+    }
+  }
+  
+  // Listen for keys globally when this game is active
+  document.addEventListener('keydown', handleTetrisKey);
+  const origReset = resetLocal;
+  resetLocal = function() {
+    document.removeEventListener('keydown', handleTetrisKey);
+    humanSh = null;
+    origReset();
+  };
+  
   if (!opts.online){
     const actions = el('div','tetris-actions');
     const placeBtn = el('button','btn btn-primary','🧱 放一个');
@@ -4740,6 +4915,32 @@ function gameDraughts(area, extra, n, opts){
     scheduleAI();
   }
   function render(){
+  // Add hint button for local mode
+  extra.innerHTML = '';
+  if (!opts.online) {
+    const hintBtn = el('button','btn','💡 提示');
+    hintBtn.addEventListener('click', () => {
+      if (over) return;
+      if (opts.ai && opts.ai.has(cur)) return;
+      const caps = allCaptures(cur);
+      if (caps.length) {
+        mustCapture = caps[0].from;
+        render();
+        setStatus('必须吃子：点击高亮棋子');
+        return;
+      }
+      const moves = simpleMoves(cur);
+      if (moves.length) {
+        const mv = moves[Math.floor(Math.random() * moves.length)];
+        mustCapture = mv.from;
+        render();
+        setStatus('提示：点击高亮棋子移动');
+      } else {
+        toast('无子可动');
+      }
+    });
+    extra.appendChild(hintBtn);
+  }
     const w = area.clientWidth || 520;
     const S = Math.min(w, 560);
     area.innerHTML = '';
@@ -4769,15 +4970,11 @@ function gameDraughts(area, extra, n, opts){
       }
     }
     if (over){
-      const ov = el('div','overlay');
-      const card = el('div','overlay-card');
-      card.appendChild(el('div','big','🏆'));
-      card.appendChild(el('h3', null, '玩家' + (winner+1) + ' 获胜！'));
-      const btn = el('button','btn btn-primary','再来一局');
-      btn.addEventListener('click', reset);
-      card.appendChild(btn);
-      ov.appendChild(card);
-      area.appendChild(ov);
+      const winnerName = '玩家' + (winner+1);
+      showVictoryOverlay(area, {
+        winner: winner, winnerName: winnerName,
+        emoji: '🏆', subtitle: '国际跳棋获胜', coins: 1, onRestart: resetLocal
+      });
     }
     renderPlayers(cur, null);
   }
@@ -4935,6 +5132,29 @@ function gameJungle(area, extra, n, opts){
     scheduleAI();
   }
   function render(){
+  // Add hint button for local mode
+  extra.innerHTML = '';
+  if (!opts.online) {
+    const hintBtn = el('button','btn','💡 提示');
+    hintBtn.addEventListener('click', () => {
+      if (over) return;
+      if (opts.ai && opts.ai.has(cur)) return;
+      const all = [];
+      for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++){
+        const piece = board[r][c];
+        if (piece && piece.p === cur) movesOf(cur, r, c).forEach(m => all.push({from:[r,c],to:m}));
+      }
+      if (!all.length) { toast('无子可动'); return; }
+      // Prefer captures
+      const caps = all.filter(mv => board[mv.to[0]][mv.to[1]] && board[mv.to[0]][mv.to[1]].p !== cur);
+      const pick = caps.length ? caps[Math.floor(Math.random() * caps.length)] : all[Math.floor(Math.random() * all.length)];
+      selected = pick.from;
+      legalMoves = movesOf(cur, pick.from[0], pick.from[1]);
+      render();
+      setStatus('提示：点击高亮棋子走棋');
+    });
+    extra.appendChild(hintBtn);
+  }
     const w = area.clientWidth || 520;
     const S = Math.min(w, 540);
     area.innerHTML = '';
@@ -4982,15 +5202,11 @@ function gameJungle(area, extra, n, opts){
       }
     }
     if (over){
-      const ov = el('div','overlay');
-      const card = el('div','overlay-card');
-      card.appendChild(el('div','big','🏆'));
-      card.appendChild(el('h3', null, '玩家' + (winner+1) + ' 获胜！'));
-      const btn = el('button','btn btn-primary','再来一局');
-      btn.addEventListener('click', reset);
-      card.appendChild(btn);
-      ov.appendChild(card);
-      boardEl.appendChild(ov);
+      const winnerName = '玩家' + (winner+1);
+      showVictoryOverlay(area, {
+        winner: winner, winnerName: winnerName,
+        emoji: '🏆', subtitle: '斗兽棋获胜', coins: 1, onRestart: resetLocal
+      });
     }
     area.appendChild(boardEl);
     const cnt = [board.flat().filter(x => x && x.p === 0).length, board.flat().filter(x => x && x.p === 1).length];
@@ -5305,15 +5521,11 @@ function gameXiangqi(area, extra, n, opts){
       render();
     });
     if (over){
-      const ov = el('div','overlay');
-      const card = el('div','overlay-card');
-      card.appendChild(el('div','big','🏆'));
-      card.appendChild(el('h3', null, '玩家' + (winner+1) + ' 获胜！'));
-      const btn = el('button','btn btn-primary','再来一局');
-      btn.addEventListener('click', reset);
-      card.appendChild(btn);
-      ov.appendChild(card);
-      boardEl.appendChild(ov);
+      const winnerName = '玩家' + (winner+1);
+      showVictoryOverlay(area, {
+        winner: winner, winnerName: winnerName,
+        emoji: '🏆', subtitle: '象棋获胜', coins: 1, onRestart: resetLocal
+      });
     }
     wrap.appendChild(boardEl);
     area.appendChild(wrap);

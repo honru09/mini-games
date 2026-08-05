@@ -195,16 +195,11 @@ function gameLudo(area, extra, n, opts){
     }
     // 结束覆盖层
     if (over){
-      const ov = el('div','overlay');
-      const card = el('div','overlay-card');
-      card.appendChild(el('div','big','🏆'));
-      card.appendChild(el('h3', null, '玩家' + (pids.indexOf(winner)+1) + ' 获胜！'));
-      card.appendChild(el('p', null, '四架飞机全部归位'));
-      const btn = el('button','btn btn-primary','再来一局');
-      btn.addEventListener('click', reset);
-      card.appendChild(btn);
-      ov.appendChild(card);
-      board.appendChild(ov);
+      const winnerName = '玩家' + (pids.indexOf(winner)+1);
+      showVictoryOverlay(area, {
+        winner: pids.indexOf(winner), winnerName: winnerName,
+        emoji: '🏆', subtitle: '四架飞机全部归位', coins: 1, onRestart: resetLocal
+      });
     }
     const infos = pids.map(pid => {
       const pi = pids.indexOf(pid);

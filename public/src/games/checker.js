@@ -270,17 +270,11 @@ function gameChecker(area, extra, n, opts){
     });
   }
   function showCheckerOver(){
-    const ov = el('div','overlay');
-    ov.style.borderRadius = '16px';
-    const card = el('div','overlay-card');
-    card.appendChild(el('div','big','🏆'));
-    card.appendChild(el('h3', null, '玩家' + (winner+1) + ' 获胜！'));
-    card.appendChild(el('p', null, '10 颗弹珠全部到达对角营地'));
-    const btn = el('button','btn btn-primary','再来一局');
-    btn.addEventListener('click', reset);
-    card.appendChild(btn);
-    ov.appendChild(card);
-    area.appendChild(ov);
+    const winnerName = '玩家' + (winner+1);
+    showVictoryOverlay(area, {
+      winner: winner, winnerName: winnerName,
+      emoji: '🏆', subtitle: '10 颗弹珠全部到达对角营地', coins: 1, onRestart: resetLocal
+    });
   }
   opts.onMove = payload => {
     if (payload && payload.from && payload.to){

@@ -188,6 +188,71 @@ function runCountdown(){
   }, 700);
 }
 
+
+/* ====== 统一胜利叠加层 ====== */
+function showVictoryOverlay(area, opts) {
+  // opts: { winner, winnerName, subtitle, emoji, coins, slot, playerCount, onRestart, onShare, onInvite }
+  const ov = el('div', 'overlay victory-overlay');
+  const card = el('div', 'overlay-card victory-card');
+  
+  // 大动画图标
+  const big = el('div', 'victory-emoji', opts.emoji || '🏆');
+  card.appendChild(big);
+  
+  // 标题
+  const title = el('h3', 'victory-title', opts.winnerName 
+    ? (opts.winnerName + ' ' + t('result_winner', opts.winner + 1).replace(/🏆 玩家\d+/, '🏆'))
+    : t('result_winner', (opts.winner || 0) + 1));
+  card.appendChild(title);
+  
+  // 副标题
+  if (opts.subtitle) {
+    card.appendChild(el('p', 'victory-subtitle', opts.subtitle));
+  }
+  
+  // 金币动画
+  if (opts.coins) {
+    const coinRow = el('div', 'victory-coins');
+    const coinIcon = el('span', 'coin coin-lg');
+    coinIcon.textContent = '$';
+    coinRow.appendChild(coinIcon);
+    coinRow.appendChild(el('span', null, ' +' + opts.coins));
+    card.appendChild(coinRow);
+  }
+  
+  // 按钮行
+  const btnRow = el('div', 'victory-btns');
+  
+  const again = el('button', 'btn btn-primary victory-btn', t('come_back'));
+  again.addEventListener('click', () => {
+    ov.remove();
+    if (opts.onRestart) opts.onRestart();
+  });
+  btnRow.appendChild(again);
+  
+  if (opts.onInvite) {
+    const invite = el('button', 'btn victory-btn', t('invite_player'));
+    invite.addEventListener('click', opts.onInvite);
+    btnRow.appendChild(invite);
+  }
+  
+  if (opts.onShare) {
+    const share = el('button', 'btn victory-btn', '📤 分享');
+    share.addEventListener('click', opts.onShare);
+    btnRow.appendChild(share);
+  }
+  
+  card.appendChild(btnRow);
+  ov.appendChild(card);
+  
+  // 点击背景关闭
+  ov.addEventListener('click', e => { 
+    if (e.target === ov) { ov.remove(); }
+  });
+  
+  area.appendChild(ov);
+}
+
 /* ====== 触屏归一化 ====== */
 // 为 canvas 元素提供统一的触摸/鼠标坐标提取
 function getEventPos(e, element) {

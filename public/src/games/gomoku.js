@@ -105,6 +105,10 @@ function gameGomoku(area, extra, n, opts){
       ]);
       draw(); renderPlayers(cur, null);
       setStatus('🏆 玩家' + (cur+1) + ' 获胜！', true);
+      showVictoryOverlay(area, {
+        winner: cur, winnerName: '玩家' + (cur+1), emoji: '🎉',
+        subtitle: '五子连线', coins: 1, onRestart: resetLocal
+      });
       return;
     }
     if (hist.length === N*N){
@@ -114,7 +118,10 @@ function gameGomoku(area, extra, n, opts){
         { slot: 1, coins: 0, rank: 1 },
       ]);
       draw(); renderPlayers(cur, null);
-      setStatus('🤝 平局', false);
+      setStatus(t('result_draw'), false);
+      showVictoryOverlay(area, {
+        winner: 0, emoji: '🤝', subtitle: '棋盘已满，平局', coins: 0, onRestart: resetLocal
+      });
       return;
     }
     cur ^= 1;

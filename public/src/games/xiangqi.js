@@ -289,15 +289,11 @@ function gameXiangqi(area, extra, n, opts){
       render();
     });
     if (over){
-      const ov = el('div','overlay');
-      const card = el('div','overlay-card');
-      card.appendChild(el('div','big','🏆'));
-      card.appendChild(el('h3', null, '玩家' + (winner+1) + ' 获胜！'));
-      const btn = el('button','btn btn-primary','再来一局');
-      btn.addEventListener('click', reset);
-      card.appendChild(btn);
-      ov.appendChild(card);
-      boardEl.appendChild(ov);
+      const winnerName = '玩家' + (winner+1);
+      showVictoryOverlay(area, {
+        winner: winner, winnerName: winnerName,
+        emoji: '🏆', subtitle: '象棋获胜', coins: 1, onRestart: resetLocal
+      });
     }
     wrap.appendChild(boardEl);
     area.appendChild(wrap);

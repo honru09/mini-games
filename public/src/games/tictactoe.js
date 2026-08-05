@@ -66,7 +66,17 @@ function gameTicTacToe(area, extra, n, opts){
     area.appendChild(grid);
     renderPlayers(cur, null);
     if (over){
-      setStatus(winLine ? ('🏆 玩家' + (cur+1) + ' 获胜！') : '🤝 平局', !!winLine);
+      setStatus(winLine ? ('🏆 玩家' + (cur+1) + ' 获胜！') : t('result_draw'), !!winLine);
+      if (winLine) {
+        showVictoryOverlay(area, {
+          winner: cur, winnerName: '玩家' + (cur+1), emoji: '🎉',
+          subtitle: '三子连线', coins: 1, onRestart: resetLocal
+        });
+      } else {
+        showVictoryOverlay(area, {
+          winner: 0, emoji: '🤝', subtitle: '平局，无人获胜', coins: 0, onRestart: resetLocal
+        });
+      }
     } else {
       setStatus(opts.online ? (cur === opts.myIdx ? t('your_turn') + '，点击空格落子' : t('opponent_turn') + '…') : ('玩家' + (cur+1) + ' 的回合'));
     }

@@ -134,16 +134,11 @@ function gameSnake(area, extra, n, opts){
       });
     });
     if (over){
-      const ov = el('div','overlay');
-      const card = el('div','overlay-card');
-      card.appendChild(el('div','big','🏆'));
-      card.appendChild(el('h3', null, '玩家' + (winner+1) + ' 获胜！'));
-      card.appendChild(el('p', null, '得分 ' + snakes[winner].score));
-      const btn = el('button','btn btn-primary', t('come_back'));
-      btn.addEventListener('click', reset);
-      card.appendChild(btn);
-      ov.appendChild(card);
-      board.appendChild(ov);
+      const winnerName = '玩家' + (winner+1);
+      showVictoryOverlay(area, {
+        winner: winner, winnerName: winnerName,
+        emoji: '🏆', subtitle: '得分 ' + snakes[winner].score, coins: 1, onRestart: resetLocal
+      });
     }
     area.appendChild(board);
     renderPlayers(cur, snakes.map((s, i) => s.alive ? ('🍎 ' + s.score) : '💀 出局'));

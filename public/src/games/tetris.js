@@ -178,21 +178,93 @@ function gameTetris(area, extra, n, opts){
       wrap.appendChild(box);
     });
     if (over){
-      const ov = el('div','overlay');
-      const card = el('div','overlay-card');
-      card.appendChild(el('div','big','🏆'));
-      card.appendChild(el('h3', null, '玩家' + (winner+1) + ' 获胜！'));
-      card.appendChild(el('p', null, '得分 ' + Math.max(0, scores[winner])));
-      const btn = el('button','btn btn-primary','再来一局');
-      btn.addEventListener('click', reset);
-      card.appendChild(btn);
-      ov.appendChild(card);
-      wrap.appendChild(ov);
+      const winnerName = '玩家' + (winner+1);
+      showVictoryOverlay(area, {
+        winner: winner, winnerName: winnerName,
+        emoji: '🏆', subtitle: '得分 ' + Math.max(0, scores[winner]), coins: 1, onRestart: resetLocal
+      });
     }
     area.appendChild(wrap);
     renderPlayers(cur, scores.map((s, i) => s < 0 ? '💀' : (s + ' 分')));
   }
   extra.innerHTML = '';
+  // Human player controls: keyboard + buttons
+  let humanPiece = null, humanX = 0, humanY = 0, humanSh = null, humanIdx = 0;
+  const humanKeys = {};
+  
+  function spawnHumanPiece() {
+    humanIdx = 0 | Math.floor(Math.random() * SHAPES.length);
+    humanSh = SHAPES[humanIdx];
+    humanX = Math.floor((COLS - humanSh[0].length) / 2);
+    humanY = 0;
+    if (collide(wells[cur], humanSh, humanX, humanY)) { topOut(cur); return false; }
+    return true;
+  }
+  
+  function moveHuman(dx) {
+    if (!humanSh || over) return;
+    if (!collide(wells[cur], humanSh, humanX + dx, humanY)) {
+      humanX += dx;
+      render();
+    }
+  }
+  
+  function rotateHuman() {
+    if (!humanSh || over) return;
+    const rotated = rotate(humanSh);
+    if (!collide(wells[cur], rotated, humanX, humanY)) {
+      humanSh = rotated;
+      render();
+    }
+  }
+  
+  function dropHuman() {
+    if (!humanSh || over) return;
+    if (!collide(wells[cur], humanSh, humanX, humanY + 1)) {
+      humanY++;
+      render();
+    } else {
+      lockHuman();
+    }
+  }
+  
+  function hardDropHuman() {
+    if (!humanSh || over) return;
+    while (!collide(wells[cur], humanSh, humanX, humanY + 1)) humanY++;
+    lockHuman();
+  }
+  
+  function lockHuman() {
+    if (!humanSh || over) return;
+    if (opts.online) {
+      opts.sendMove({ pieceIdx: humanIdx, x: humanX, y: humanY, sh: humanSh });
+    }
+    applyPlacement(cur, humanIdx, humanX, humanY, humanSh);
+    humanSh = null; humanPiece = null;
+  }
+  
+  function handleTetrisKey(e) {
+    if (over) return;
+    if (opts.ai && opts.ai.has(cur)) return;
+    if (!humanSh && !spawnHumanPiece()) return;
+    switch(e.key) {
+      case 'ArrowLeft': e.preventDefault(); moveHuman(-1); break;
+      case 'ArrowRight': e.preventDefault(); moveHuman(1); break;
+      case 'ArrowDown': e.preventDefault(); dropHuman(); break;
+      case 'ArrowUp': e.preventDefault(); rotateHuman(); break;
+      case ' ': case 'Spacebar': e.preventDefault(); hardDropHuman(); break;
+    }
+  }
+  
+  // Listen for keys globally when this game is active
+  document.addEventListener('keydown', handleTetrisKey);
+  const origReset = resetLocal;
+  resetLocal = function() {
+    document.removeEventListener('keydown', handleTetrisKey);
+    humanSh = null;
+    origReset();
+  };
+  
   if (!opts.online){
     const actions = el('div','tetris-actions');
     const placeBtn = el('button','btn btn-primary','🧱 放一个');
