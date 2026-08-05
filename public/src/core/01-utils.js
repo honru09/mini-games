@@ -297,8 +297,10 @@ function getEventPos(e, element) {
 }
 
 // 阻止双击缩放（在游戏区内）
-document.addEventListener('dblclick', function(e) {
-  if (e.target.closest && (e.target.closest('#board-area') || e.target.closest('canvas'))) {
-    e.preventDefault();
-  }
-}, { passive: false });
+if (typeof document !== 'undefined' && document.addEventListener){
+  document.addEventListener('dblclick', function(e) {
+    if (e.target.closest && (e.target.closest('#board-area') || e.target.closest('canvas'))) {
+      e.preventDefault();
+    }
+  }, { passive: false });
+}

@@ -28,7 +28,6 @@ if (typeof document !== 'undefined'){
   renderAccounts();
   renderHub();
   if (typeof parseHash === 'function') parseHash();
-  });
   online.connect();
   setTimeout(() => { if (!account) openAuthModal(); }, 300);
 }

@@ -54,7 +54,7 @@ function applyI18n(root) {
     const key = el.getAttribute('data-i18n-placeholder');
     if (key) el.placeholder = t(key);
   });
-  const titleEl = document.querySelector('title[data-i18n]');
+  const titleEl = typeof document !== 'undefined' && document.querySelector ? document.querySelector('title[data-i18n]') : null;
   if (titleEl) titleEl.textContent = t(titleEl.getAttribute('data-i18n'));
 }
 
@@ -70,7 +70,7 @@ function setLanguage(lang) {
     document.documentElement.setAttribute('data-lang', lang);
     document.documentElement.setAttribute('lang', lang);
   }
-  loadLocale(lang).then(() => {
+  return loadLocale(lang).then(() => {
     applyI18n();
     renderHub();
     renderLeaderboard();
@@ -89,7 +89,7 @@ function initI18n() {
   let lang = 'zh-CN';
   try { lang = localStorage.getItem('mg_lang') || 'zh-CN'; } catch {}
   if (!['zh-CN','en-US','uk-UA'].includes(lang)) lang = 'zh-CN';
-  setLanguage(lang);
+  return setLanguage(lang);
 }
 
 'use strict';

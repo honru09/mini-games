@@ -829,7 +829,7 @@ function applyI18n(root) {
     const key = el.getAttribute('data-i18n-placeholder');
     if (key) el.placeholder = t(key);
   });
-  const titleEl = document.querySelector('title[data-i18n]');
+  const titleEl = typeof document !== 'undefined' && document.querySelector ? document.querySelector('title[data-i18n]') : null;
   if (titleEl) titleEl.textContent = t(titleEl.getAttribute('data-i18n'));
 }
 
@@ -845,7 +845,7 @@ function setLanguage(lang) {
     document.documentElement.setAttribute('data-lang', lang);
     document.documentElement.setAttribute('lang', lang);
   }
-  loadLocale(lang).then(() => {
+  return loadLocale(lang).then(() => {
     applyI18n();
     renderHub();
     renderLeaderboard();
@@ -864,7 +864,7 @@ function initI18n() {
   let lang = 'zh-CN';
   try { lang = localStorage.getItem('mg_lang') || 'zh-CN'; } catch {}
   if (!['zh-CN','en-US','uk-UA'].includes(lang)) lang = 'zh-CN';
-  setLanguage(lang);
+  return setLanguage(lang);
 }
 
 'use strict';
@@ -1167,11 +1167,13 @@ function getEventPos(e, element) {
 }
 
 // 阻止双击缩放（在游戏区内）
-document.addEventListener('dblclick', function(e) {
-  if (e.target.closest && (e.target.closest('#board-area') || e.target.closest('canvas'))) {
-    e.preventDefault();
-  }
-}, { passive: false });
+if (typeof document !== 'undefined' && document.addEventListener){
+  document.addEventListener('dblclick', function(e) {
+    if (e.target.closest && (e.target.closest('#board-area') || e.target.closest('canvas'))) {
+      e.preventDefault();
+    }
+  }, { passive: false });
+}
 /* ================= 应用外壳 ================= */
 let playerCount = 2;
 let aiMode = false;
@@ -1311,7 +1313,7 @@ function createGameInstance(id, area, extra, playerCount, opts) {
     // ---- 兼容别名（旧代码仍可用） ----
     reset: raw.reset || raw.resetLocal || (() => {}),
     onMove: raw.onMove || (() => {}),
-    onRestart: raw.resetLocal || raw.reset || (() => {}),
+    onRestart: raw.onRestart || raw.resetLocal || raw.reset || (() => {}),
     snapshot: raw.snapshot || raw.serialize || (() => null),
   };
   return instance;
@@ -2795,6 +2797,18 @@ function renderHub(){
 }
 
 if (typeof document !== 'undefined'){
+  window.__gameInfo = {
+    GAMES, startGame, registerAccount, loginAccount, logoutAccount, loadRoster,
+    get playerCount(){ return playerCount; },
+    set playerCount(v){ playerCount = v; },
+    get aiMode(){ return aiMode; },
+    set aiMode(v){ aiMode = !!v; },
+    get game(){ return currentGame; },
+    get online(){ return online; },
+    get roster(){ return roster; },
+    get deviceUid(){ return deviceUid; },
+    get leaderboard(){ return lastServerLB; },
+  };
   initI18n().then(() => {
   initTheme();
   $('count-group').addEventListener('click', e => {
@@ -2842,20 +2856,10 @@ if (typeof document !== 'undefined'){
   };
   $('lb-tab-all').addEventListener('click', () => setLbTab('all'));
   $('lb-tab-online').addEventListener('click', () => setLbTab('online'));
-  window.__gameInfo = {
-    GAMES, startGame, registerAccount, loginAccount, logoutAccount, loadRoster,
-    get playerCount(){ return playerCount; },
-    set playerCount(v){ playerCount = v; },
-    get aiMode(){ return aiMode; },
-    set aiMode(v){ aiMode = !!v; },
-    get game(){ return currentGame; },
-    get online(){ return online; },
-    get roster(){ return roster; },
-    get deviceUid(){ return deviceUid; },
-    get leaderboard(){ return lastServerLB; },
-  };
+
   // 深链：#game=gomoku&p=2 可直接进入指定游戏
   //        #join=XXXXXX 直接加入房间（邀请链接）
+  });
 }
 
 function parseHash(){
@@ -5727,7 +5731,6 @@ if (typeof document !== 'undefined'){
   renderAccounts();
   renderHub();
   if (typeof parseHash === 'function') parseHash();
-  });
   online.connect();
   setTimeout(() => { if (!account) openAuthModal(); }, 300);
 }

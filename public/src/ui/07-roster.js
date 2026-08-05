@@ -717,6 +717,18 @@ function renderHub(){
 }
 
 if (typeof document !== 'undefined'){
+  window.__gameInfo = {
+    GAMES, startGame, registerAccount, loginAccount, logoutAccount, loadRoster,
+    get playerCount(){ return playerCount; },
+    set playerCount(v){ playerCount = v; },
+    get aiMode(){ return aiMode; },
+    set aiMode(v){ aiMode = !!v; },
+    get game(){ return currentGame; },
+    get online(){ return online; },
+    get roster(){ return roster; },
+    get deviceUid(){ return deviceUid; },
+    get leaderboard(){ return lastServerLB; },
+  };
   initI18n().then(() => {
   initTheme();
   $('count-group').addEventListener('click', e => {
@@ -764,20 +776,10 @@ if (typeof document !== 'undefined'){
   };
   $('lb-tab-all').addEventListener('click', () => setLbTab('all'));
   $('lb-tab-online').addEventListener('click', () => setLbTab('online'));
-  window.__gameInfo = {
-    GAMES, startGame, registerAccount, loginAccount, logoutAccount, loadRoster,
-    get playerCount(){ return playerCount; },
-    set playerCount(v){ playerCount = v; },
-    get aiMode(){ return aiMode; },
-    set aiMode(v){ aiMode = !!v; },
-    get game(){ return currentGame; },
-    get online(){ return online; },
-    get roster(){ return roster; },
-    get deviceUid(){ return deviceUid; },
-    get leaderboard(){ return lastServerLB; },
-  };
+
   // 深链：#game=gomoku&p=2 可直接进入指定游戏
   //        #join=XXXXXX 直接加入房间（邀请链接）
+  });
 }
 
 function parseHash(){

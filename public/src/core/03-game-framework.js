@@ -54,7 +54,7 @@ function createGameInstance(id, area, extra, playerCount, opts) {
     // ---- 兼容别名（旧代码仍可用） ----
     reset: raw.reset || raw.resetLocal || (() => {}),
     onMove: raw.onMove || (() => {}),
-    onRestart: raw.resetLocal || raw.reset || (() => {}),
+    onRestart: raw.onRestart || raw.resetLocal || raw.reset || (() => {}),
     snapshot: raw.snapshot || raw.serialize || (() => null),
   };
   return instance;
