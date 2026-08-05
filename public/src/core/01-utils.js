@@ -1,5 +1,6 @@
 /* ================= 通用工具 ================= */
 const $ = id => document.getElementById(id);
+const PROTOCOL_VERSION = 1;
 function applyTheme(theme){
   if (document.documentElement && document.documentElement.setAttribute){
     document.documentElement.setAttribute('data-theme', theme);

@@ -227,7 +227,7 @@ function syncProfiles(){
   if (account && account.uid){
     online.send({ type: 'profile', payload: {
       lang: account.lang || currentLang,
-      uid: account.uid, name: account.name, avatar: account.avatar,
+      uid: account.uid, name: account.name, avatar: account.avatar, xp: account.xp || 0, level: account.level || 1, streak: account.streak || 0, bestStreak: account.bestStreak || 0,
       background: account.background || 0, frame: account.frame || 0, effect: account.effect || 0,
       owned: account.owned || defaultOwned(),
     } });
@@ -284,9 +284,10 @@ function updateAccountProfile(p){
   account.uid = p.uid; account.name = p.name; account.avatar = p.avatar;
   account.background = p.background || 0; account.frame = p.frame || 0; account.effect = p.effect || 0;
   account.owned = p.owned || defaultOwned(); account.coins = p.coins || 0;
+  account.xp = p.xp || 0; account.level = p.level || 1; account.streak = p.streak || 0; account.bestStreak = p.bestStreak || 0;
   account.played = p.played || {}; account.total = p.total || 0; account.lang = p.lang || account.lang || 'zh-CN';
   const me = roster.find(x => x.uid === p.uid);
-  if (me){ me.name = p.name; me.avatar = p.avatar; me.coins = p.coins || 0; me.played = p.played || {}; me.total = p.total || 0; }
+  if (me){ me.name = p.name; me.avatar = p.avatar; me.coins = p.coins || 0; me.xp = p.xp || 0; me.level = p.level || 1; me.streak = p.streak || 0; me.bestStreak = p.bestStreak || 0; me.played = p.played || {}; me.total = p.total || 0; }
   else roster.unshift({ uid: p.uid, name: p.name, avatar: p.avatar, coins: p.coins || 0, played: p.played || {}, total: p.total || 0 });
   deviceUid = p.uid;
   saveRoster(); saveAccount();
@@ -307,6 +308,8 @@ function renderMe(){
   av.appendChild(avatarStageNode(account, 26));
   btn.appendChild(av);
   btn.appendChild(el('span', null, account.name + ' ' + langFlag(account.lang || currentLang)));
+  const lvBadge = el('span','level-badge', 'Lv.' + (account.level || levelFromXp(account.xp || 0)));
+  btn.appendChild(lvBadge);
   const coinLine = el('span','coin-line');
   coinLine.appendChild(el('span','coin','$'));
   coinLine.appendChild(el('span','me-pts', (account.coins || 0) + ' · ' + (account.total || 0) + '局'));
@@ -497,7 +500,7 @@ function openProfileEditor(uid, slotIndex){
   setTimeout(() => input.focus(), 0);
 }
 function localLeaderboard(){
-  const list = roster.map(p => ({ uid:p.uid, name:p.name, avatar:p.avatar, coins:p.coins || 0, played:p.played || {}, total:p.total || 0, online:p.uid === deviceUid && online.connected }))
+  const list = roster.map(p => ({ uid:p.uid, name:p.name, avatar:p.avatar, coins:p.coins || 0, xp:p.xp || 0, level:p.level || 1, streak:p.streak || 0, bestStreak:p.bestStreak || 0, played:p.played || {}, total:p.total || 0, online:p.uid === deviceUid && online.connected }))
     .sort((a,b) => (b.coins - a.coins) || (b.total - a.total) || String(a.name).localeCompare(String(b.name)))
     .slice(0, 50);
   return { list, total: roster.length };
@@ -524,7 +527,8 @@ function renderLeaderboard(){
   av.addEventListener('click', e => { if (e && e.stopPropagation) e.stopPropagation(); openProfileModal(u.uid); });
     row.appendChild(av);
     const nameWrap = el('span','lb-name');
-    nameWrap.textContent = u.name + ' ' + (u.lang ? langFlag(u.lang) : '');
+    const lv = u.level || (u.xp ? levelFromXp(u.xp) : 1);
+  nameWrap.textContent = u.name + (lv > 1 ? ' [Lv.' + lv + ']' : '') + ' ' + (u.lang ? langFlag(u.lang) : '');
     row.style.cursor = 'pointer';
     row.addEventListener('click', () => openProfileModal(u.uid));
     row.appendChild(nameWrap);
@@ -538,6 +542,22 @@ function renderLeaderboard(){
     row.appendChild(coinLine);
     listEl.appendChild(row);
   });
+}
+// 等级 = 对局经验（XP），不是金币
+// 1 级 0 XP，2 级 30，3 级 80，4 级 160，5 级 280，之后每级 +150
+function levelFromXp(xp){
+  xp = Math.max(0, xp || 0);
+  if (xp < 30) return 1;
+  if (xp < 80) return 2;
+  if (xp < 160) return 3;
+  if (xp < 280) return 4;
+  return 5 + Math.floor((xp - 280) / 150);
+}
+function xpForLevel(level){
+  if (level <= 1) return 0;
+  const thresholds = [0, 30, 80, 160, 280];
+  if (level <= 5) return thresholds[level - 1];
+  return 280 + (level - 5) * 150;
 }
 function applyGameResult(results){
   if (!results || !results.length) return;
@@ -555,22 +575,36 @@ function applyGameResult(results){
     const p = uid ? profileByUid(uid) : null;
     if (!p) return;
     if (r.coins === 1) p.coins = (p.coins || 0) + 1;
+    // ---- 成长系统：XP / 等级 / 连胜 ----
+    const xpGain = r.coins === 1 ? 10 : 4; // 胜利 +10 XP，参与 +4 XP
+    p.xp = (p.xp || 0) + xpGain;
+    p.level = levelFromXp(p.xp);
+    if (r.coins === 1) {
+      p.streak = (p.streak || 0) + 1;
+      if (p.streak > (p.bestStreak || 0)) p.bestStreak = p.streak;
+    } else {
+      p.streak = 0;
+    }
     p.played[gameId] = (p.played[gameId] || 0) + 1;
     p.total = (p.total || 0) + 1;
     if (account && p.uid === account.uid){
       account.coins = p.coins;
+      account.xp = p.xp;
+      account.level = p.level;
+      account.streak = p.streak;
+      account.bestStreak = p.bestStreak;
       account.played = p.played;
       account.total = p.total;
       saveAccount();
     }
-    entries.push({ uid:p.uid, name:p.name, avatar:p.avatar, game:gameId, coins: r.coins === 1 ? 1 : 0, played: 1 });
+    entries.push({ uid:p.uid, name:p.name, avatar:p.avatar, game:gameId, coins: r.coins === 1 ? 1 : 0, played: 1, xp: xpGain });
     parts.push(p.name + (r.coins === 1 ? ' 获得 $1' : ' 本局无奖励'));
   });
   saveRoster();
   if (entries.length){
     if (online.connected){
       entries.forEach(e => online.send({ type:'profile', payload:{ uid:e.uid, name:e.name, avatar:e.avatar } }));
-      online.send({ type:'result', payload: entries.map(e => ({ uid:e.uid, game:e.game, coins:e.coins, played:1 })) });
+      online.send({ type:'result', payload: entries.map(e => ({ uid:e.uid, game:e.game, coins:e.coins, played:1, xp:e.xp })) });
     }
     toast(t('toast_win_reward') + parts.join('，'));
   }
@@ -578,14 +612,18 @@ function applyGameResult(results){
 }
 
 function showHub(){
+  if (currentGame && typeof currentGame.destroy === 'function') currentGame.destroy();
   $('screen-hub').classList.remove('hidden');
   $('screen-game').classList.add('hidden');
   currentGame = null;
+  currentGameId = null;
   const endBtn = $('btn-end-game');
   if (endBtn) endBtn.classList.add('hidden');
   if (online.room) renderRoomPanel();
 }
 function showGame(id){
+  if (currentGame && typeof currentGame.destroy === 'function') currentGame.destroy();
+  if (currentGame && currentGame._raw && typeof currentGame._raw.destroy === 'function') currentGame._raw.destroy();
   $('screen-hub').classList.add('hidden');
   $('screen-game').classList.remove('hidden');
   const meta = GAMES[id];
@@ -612,7 +650,7 @@ function showGame(id){
       opts.ai = new Set(Array.from({ length: playerCount - 1 }, (_, i) => i + 1));
     }
   }
-  currentGame = games[id](area, extra, playerCount, opts);
+  currentGame = createGameInstance(id, area, extra, playerCount, opts);
   const endBtn = $('btn-end-game');
   if (endBtn) endBtn.classList.toggle('hidden', !inOnline);
 }

@@ -666,6 +666,16 @@ button, canvas, .game-card, .ttt-cell, .j-cell, .xq-cell,
   from { transform: scale(.5); opacity: 0; }
   to { transform: scale(1); opacity: 1; }
 }
+
+/* ???? */
+.level-badge{
+  display:inline-flex; align-items:center; font-size:11px; font-weight:700;
+  background:linear-gradient(135deg,#f59e0b,#ef4444); color:#fff;
+  border-radius:99px; padding:2px 8px; margin-left:2px;
+  flex:none; letter-spacing:.3px;
+}
+.lb-row .level-badge{font-size:10px; padding:1px 6px}
+
 </style>
 </head>
 <body>
@@ -860,6 +870,7 @@ function initI18n() {
 'use strict';
 /* ================= 通用工具 ================= */
 const $ = id => document.getElementById(id);
+const PROTOCOL_VERSION = 1;
 function applyTheme(theme){
   if (document.documentElement && document.documentElement.setAttribute){
     document.documentElement.setAttribute('data-theme', theme);
@@ -1244,6 +1255,80 @@ function getTheme() {
   } catch {}
   return 'light';
 }
+﻿/* ================= 游戏插件化框架 ================= */
+// 统一 Game 生命周期：
+//   init() / render() / move(payload) / serialize() / deserialize(state)
+//   restart() / destroy()
+// 大厅只认 Game Instance；游戏只需实现标准接口即可被平台使用。
+// 兼容旧接口：raw 返回 { reset, resetLocal, onMove, onRestart, snapshot }。
+
+const GAME_REGISTRY = {}; // id -> factory
+
+function registerGame(id, factory) {
+  GAME_REGISTRY[id] = factory;
+}
+
+function createGameInstance(id, area, extra, playerCount, opts) {
+  const factory = GAME_REGISTRY[id] || (typeof games !== 'undefined' && games[id]);
+  if (!factory) throw new Error('game not found: ' + id);
+  const raw = factory(area, extra, playerCount, opts || {});
+
+  const instance = {
+    id: id,
+    _raw: raw,
+
+    // ---- 统一生命周期 ----
+    init() {
+      if (raw.init) raw.init();
+      else if (raw.resetLocal) raw.resetLocal();
+      else if (raw.reset) raw.reset();
+    },
+    render() {
+      if (raw.render) raw.render();
+    },
+    move(payload) {
+      if (raw.onMove) raw.onMove(payload);
+    },
+    serialize() {
+      if (raw.snapshot) return raw.snapshot();
+      if (raw.serialize) return raw.serialize();
+      return null;
+    },
+    deserialize(state) {
+      if (raw.onRestore) raw.onRestore(state);
+      if (raw.deserialize) raw.deserialize(state);
+    },
+    restart() {
+      if (raw.reset) raw.reset();
+      else if (raw.resetLocal) raw.resetLocal();
+      else if (raw.restart) raw.restart();
+    },
+    destroy() {
+      if (raw.destroy) raw.destroy();
+      // 清理 DOM（可选，由调用方决定是否清空 area/extra）
+    },
+
+    // ---- 兼容别名（旧代码仍可用） ----
+    reset: raw.reset || raw.resetLocal || (() => {}),
+    onMove: raw.onMove || (() => {}),
+    onRestart: raw.resetLocal || raw.reset || (() => {}),
+    snapshot: raw.snapshot || raw.serialize || (() => null),
+  };
+  return instance;
+}
+
+// 从旧 games 注册表自动注册（在 games 定义后调用）
+function autoRegisterGames() {
+  if (typeof games === 'undefined') return;
+  for (const id in games) {
+    if (!GAME_REGISTRY[id]) registerGame(id, games[id]);
+  }
+}
+
+// 获取已注册游戏列表（保持顺序稳定）
+function listRegisteredGames() {
+  return Object.keys(GAME_REGISTRY);
+}
 /* ================= 联机对战（WebSocket 中继） ================= */
 const online = {
   ws: null, room: null, player: 0, isHost: false, game: null, connected: false, pending: null, roomInfo: null, capacity: 2, _hb: null,
@@ -1267,7 +1352,7 @@ const online = {
     this.ws.onopen = () => {
       this.connected = true;
       this.status('已连接服务器，可创建或加入房间');
-      this.send({ type: 'hello', payload: { uid: typeof deviceUid !== 'undefined' ? deviceUid : null } });
+      this.send({ type: 'hello', payload: { uid: typeof deviceUid !== 'undefined' ? deviceUid : null, proto: typeof PROTOCOL_VERSION !== 'undefined' ? PROTOCOL_VERSION : 1 } });
       this.send({ type: 'lobby' });
       if (typeof syncProfiles === 'function') syncProfiles();
       if (account && account.uid && !account.registered){
@@ -1358,6 +1443,8 @@ const online = {
         this.lobby = msg.payload || [];
         renderLobby();
         break;
+      case 'hello_ack':
+        break;
       case 'invite':
         showInviteModal(msg.payload);
         break;
@@ -1409,6 +1496,10 @@ const online = {
           account.frame = msg.payload.frame || account.frame || 0;
           account.effect = msg.payload.effect || account.effect || 0;
           account.lang = msg.payload.lang || account.lang || 'zh-CN';
+          account.xp = msg.payload.xp || account.xp || 0;
+          account.level = msg.payload.level || account.level || 1;
+          account.streak = msg.payload.streak || account.streak || 0;
+          account.bestStreak = msg.payload.bestStreak || account.bestStreak || 0;
           const me = roster.find(x => x.uid === account.uid);
           if (me){ me.name = account.name; me.avatar = account.avatar; }
           saveRoster(); saveAccount();
@@ -1552,7 +1643,7 @@ function openInvitePicker(){
       const av = el('span','av');
       av.appendChild(avatarStageNode(u, 24));
       item.appendChild(av);
-      item.appendChild(el('span','nm', u.name));
+      item.appendChild(el('span','nm', u.name + ' [Lv.' + (u.level || levelFromXp(u.xp || 0)) + ']'));
       item.appendChild(el('span','lb-game', '$' + (u.coins || 0)));
       item.addEventListener('click', () => {
         bd.remove();
@@ -1618,7 +1709,7 @@ function renderAccounts(){
     av.style.cursor = 'pointer';
   av.addEventListener('click', e => { if (e && e.stopPropagation) e.stopPropagation(); openProfileModal(u.uid); });
     row.appendChild(av);
-    row.appendChild(el('span','nm', u.name + (u.uid === deviceUid ? t('profile_mine') : '') + ' ' + (u.lang ? langFlag(u.lang) : '')));
+        row.appendChild(el('span','nm', u.name + ' [Lv.' + (u.level || levelFromXp(u.xp || 0)) + ']' + (u.uid === deviceUid ? t('profile_mine') : '') + ' ' + (u.lang ? langFlag(u.lang) : '')));
     if (u.online) row.appendChild(el('span','online-dot',''));
     const coinLine = el('span','coin-line');
     coinLine.appendChild(el('span','coin sm','$'));
@@ -1819,7 +1910,7 @@ function renderProfilePopup(p, isMe){
   stage.appendChild(avatarCanvas(p.avatar, 74));
   avWrap.appendChild(stage);
   hero.appendChild(avWrap);
-  hero.appendChild(el('div','pname', p.name + ' ' + (p.lang ? langFlag(p.lang) : '') + (isMe ? t('profile_mine') : '')));
+  hero.appendChild(el('div','pname', p.name + ' [Lv.' + (p.level || levelFromXp(p.xp || 0)) + ']' + ' ' + (p.lang ? langFlag(p.lang) : '') + (isMe ? t('profile_mine') : '')));
   const coinLine = el('div','pmeta');
   coinLine.appendChild(el('span','coin','$'));
   coinLine.appendChild(el('span', null, ' ' + (p.coins || 0) + ' · 共 ' + (p.total || 0) + ' 局' + (p.online ? ' · 🟢在线' : ' · ⚪离线')));
@@ -2214,7 +2305,7 @@ function syncProfiles(){
   if (account && account.uid){
     online.send({ type: 'profile', payload: {
       lang: account.lang || currentLang,
-      uid: account.uid, name: account.name, avatar: account.avatar,
+      uid: account.uid, name: account.name, avatar: account.avatar, xp: account.xp || 0, level: account.level || 1, streak: account.streak || 0, bestStreak: account.bestStreak || 0,
       background: account.background || 0, frame: account.frame || 0, effect: account.effect || 0,
       owned: account.owned || defaultOwned(),
     } });
@@ -2271,9 +2362,10 @@ function updateAccountProfile(p){
   account.uid = p.uid; account.name = p.name; account.avatar = p.avatar;
   account.background = p.background || 0; account.frame = p.frame || 0; account.effect = p.effect || 0;
   account.owned = p.owned || defaultOwned(); account.coins = p.coins || 0;
+  account.xp = p.xp || 0; account.level = p.level || 1; account.streak = p.streak || 0; account.bestStreak = p.bestStreak || 0;
   account.played = p.played || {}; account.total = p.total || 0; account.lang = p.lang || account.lang || 'zh-CN';
   const me = roster.find(x => x.uid === p.uid);
-  if (me){ me.name = p.name; me.avatar = p.avatar; me.coins = p.coins || 0; me.played = p.played || {}; me.total = p.total || 0; }
+  if (me){ me.name = p.name; me.avatar = p.avatar; me.coins = p.coins || 0; me.xp = p.xp || 0; me.level = p.level || 1; me.streak = p.streak || 0; me.bestStreak = p.bestStreak || 0; me.played = p.played || {}; me.total = p.total || 0; }
   else roster.unshift({ uid: p.uid, name: p.name, avatar: p.avatar, coins: p.coins || 0, played: p.played || {}, total: p.total || 0 });
   deviceUid = p.uid;
   saveRoster(); saveAccount();
@@ -2294,6 +2386,8 @@ function renderMe(){
   av.appendChild(avatarStageNode(account, 26));
   btn.appendChild(av);
   btn.appendChild(el('span', null, account.name + ' ' + langFlag(account.lang || currentLang)));
+  const lvBadge = el('span','level-badge', 'Lv.' + (account.level || levelFromXp(account.xp || 0)));
+  btn.appendChild(lvBadge);
   const coinLine = el('span','coin-line');
   coinLine.appendChild(el('span','coin','$'));
   coinLine.appendChild(el('span','me-pts', (account.coins || 0) + ' · ' + (account.total || 0) + '局'));
@@ -2484,7 +2578,7 @@ function openProfileEditor(uid, slotIndex){
   setTimeout(() => input.focus(), 0);
 }
 function localLeaderboard(){
-  const list = roster.map(p => ({ uid:p.uid, name:p.name, avatar:p.avatar, coins:p.coins || 0, played:p.played || {}, total:p.total || 0, online:p.uid === deviceUid && online.connected }))
+  const list = roster.map(p => ({ uid:p.uid, name:p.name, avatar:p.avatar, coins:p.coins || 0, xp:p.xp || 0, level:p.level || 1, streak:p.streak || 0, bestStreak:p.bestStreak || 0, played:p.played || {}, total:p.total || 0, online:p.uid === deviceUid && online.connected }))
     .sort((a,b) => (b.coins - a.coins) || (b.total - a.total) || String(a.name).localeCompare(String(b.name)))
     .slice(0, 50);
   return { list, total: roster.length };
@@ -2511,7 +2605,8 @@ function renderLeaderboard(){
   av.addEventListener('click', e => { if (e && e.stopPropagation) e.stopPropagation(); openProfileModal(u.uid); });
     row.appendChild(av);
     const nameWrap = el('span','lb-name');
-    nameWrap.textContent = u.name + ' ' + (u.lang ? langFlag(u.lang) : '');
+    const lv = u.level || (u.xp ? levelFromXp(u.xp) : 1);
+  nameWrap.textContent = u.name + (lv > 1 ? ' [Lv.' + lv + ']' : '') + ' ' + (u.lang ? langFlag(u.lang) : '');
     row.style.cursor = 'pointer';
     row.addEventListener('click', () => openProfileModal(u.uid));
     row.appendChild(nameWrap);
@@ -2525,6 +2620,22 @@ function renderLeaderboard(){
     row.appendChild(coinLine);
     listEl.appendChild(row);
   });
+}
+// 等级 = 对局经验（XP），不是金币
+// 1 级 0 XP，2 级 30，3 级 80，4 级 160，5 级 280，之后每级 +150
+function levelFromXp(xp){
+  xp = Math.max(0, xp || 0);
+  if (xp < 30) return 1;
+  if (xp < 80) return 2;
+  if (xp < 160) return 3;
+  if (xp < 280) return 4;
+  return 5 + Math.floor((xp - 280) / 150);
+}
+function xpForLevel(level){
+  if (level <= 1) return 0;
+  const thresholds = [0, 30, 80, 160, 280];
+  if (level <= 5) return thresholds[level - 1];
+  return 280 + (level - 5) * 150;
 }
 function applyGameResult(results){
   if (!results || !results.length) return;
@@ -2542,22 +2653,36 @@ function applyGameResult(results){
     const p = uid ? profileByUid(uid) : null;
     if (!p) return;
     if (r.coins === 1) p.coins = (p.coins || 0) + 1;
+    // ---- 成长系统：XP / 等级 / 连胜 ----
+    const xpGain = r.coins === 1 ? 10 : 4; // 胜利 +10 XP，参与 +4 XP
+    p.xp = (p.xp || 0) + xpGain;
+    p.level = levelFromXp(p.xp);
+    if (r.coins === 1) {
+      p.streak = (p.streak || 0) + 1;
+      if (p.streak > (p.bestStreak || 0)) p.bestStreak = p.streak;
+    } else {
+      p.streak = 0;
+    }
     p.played[gameId] = (p.played[gameId] || 0) + 1;
     p.total = (p.total || 0) + 1;
     if (account && p.uid === account.uid){
       account.coins = p.coins;
+      account.xp = p.xp;
+      account.level = p.level;
+      account.streak = p.streak;
+      account.bestStreak = p.bestStreak;
       account.played = p.played;
       account.total = p.total;
       saveAccount();
     }
-    entries.push({ uid:p.uid, name:p.name, avatar:p.avatar, game:gameId, coins: r.coins === 1 ? 1 : 0, played: 1 });
+    entries.push({ uid:p.uid, name:p.name, avatar:p.avatar, game:gameId, coins: r.coins === 1 ? 1 : 0, played: 1, xp: xpGain });
     parts.push(p.name + (r.coins === 1 ? ' 获得 $1' : ' 本局无奖励'));
   });
   saveRoster();
   if (entries.length){
     if (online.connected){
       entries.forEach(e => online.send({ type:'profile', payload:{ uid:e.uid, name:e.name, avatar:e.avatar } }));
-      online.send({ type:'result', payload: entries.map(e => ({ uid:e.uid, game:e.game, coins:e.coins, played:1 })) });
+      online.send({ type:'result', payload: entries.map(e => ({ uid:e.uid, game:e.game, coins:e.coins, played:1, xp:e.xp })) });
     }
     toast(t('toast_win_reward') + parts.join('，'));
   }
@@ -2565,14 +2690,18 @@ function applyGameResult(results){
 }
 
 function showHub(){
+  if (currentGame && typeof currentGame.destroy === 'function') currentGame.destroy();
   $('screen-hub').classList.remove('hidden');
   $('screen-game').classList.add('hidden');
   currentGame = null;
+  currentGameId = null;
   const endBtn = $('btn-end-game');
   if (endBtn) endBtn.classList.add('hidden');
   if (online.room) renderRoomPanel();
 }
 function showGame(id){
+  if (currentGame && typeof currentGame.destroy === 'function') currentGame.destroy();
+  if (currentGame && currentGame._raw && typeof currentGame._raw.destroy === 'function') currentGame._raw.destroy();
   $('screen-hub').classList.add('hidden');
   $('screen-game').classList.remove('hidden');
   const meta = GAMES[id];
@@ -2599,7 +2728,7 @@ function showGame(id){
       opts.ai = new Set(Array.from({ length: playerCount - 1 }, (_, i) => i + 1));
     }
   }
-  currentGame = games[id](area, extra, playerCount, opts);
+  currentGame = createGameInstance(id, area, extra, playerCount, opts);
   const endBtn = $('btn-end-game');
   if (endBtn) endBtn.classList.toggle('hidden', !inOnline);
 }
@@ -5582,6 +5711,8 @@ const games = {
   jungle: gameJungle,
   xiangqi: gameXiangqi,
 };
+
+autoRegisterGames();
 
 if (typeof module !== 'undefined' && module.exports){
   module.exports = { makeCheckerBoard, checkerReachable, checkGomokuWin };

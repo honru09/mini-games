@@ -15,6 +15,7 @@ const MODULES = [
   'core/00-i18n.js',
   'core/01-utils.js',
   'core/02-app-shell.js',
+  'core/03-game-framework.js',
   'online/03-websocket.js',
   'shop/04-auth.js',
   'shop/05-profile.js',

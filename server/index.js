@@ -170,6 +170,16 @@ const pendingInvites = new Map(); // toUid -> [{fromUid, fromName, room, game}]
 const GAME_MAX = { tictactoe: 2, gomoku: 2, ludo: 4, monopoly: 5, checker: 5, tank: 2, snake: 4, tetris: 4, draughts: 2, jungle: 2, xiangqi: 2 };
 const GAME_MIN = { tictactoe: 2, gomoku: 2, ludo: 2, monopoly: 2, checker: 2, tank: 2, snake: 2, tetris: 2, draughts: 2, jungle: 2, xiangqi: 2 };
 
+const PROTOCOL_VERSION = 1;
+function levelFromXp(xp){
+  xp = Math.max(0, xp || 0);
+  if (xp < 30) return 1;
+  if (xp < 80) return 2;
+  if (xp < 160) return 3;
+  if (xp < 280) return 4;
+  return 5 + Math.floor((xp - 280) / 150);
+}
+
 /* ---------------- Supabase 数据库（可选，配置环境变量后启用） ---------------- */
 const SUPABASE_URL = (process.env.SUPABASE_URL || '').replace(/\/+$/, '');
 const SUPABASE_KEY = process.env.SUPABASE_KEY || '';
@@ -190,11 +200,11 @@ async function sbFetch(path, options = {}){
 async function sbLoadProfiles(){
   if (!useSupabase) return;
   try {
-    const rows = await sbFetch('profiles?select=uid,name,avatar,coins,played,total,background,frame,effect,owned,pin_hash,lang&order=coins.desc&limit=5000');
+    const rows = await sbFetch('profiles?select=uid,name,avatar,coins,xp,level,streak,best_streak,played,total,background,frame,effect,owned,pin_hash,lang&order=coins.desc&limit=5000');
     const users = {};
     for (const r of rows){
       users[r.uid] = {
-        name: r.name, avatar: r.avatar, coins: r.coins || 0, played: r.played || {}, total: r.total || 0,
+        name: r.name, avatar: r.avatar, coins: r.coins || 0, xp: r.xp || 0, level: r.level || 1, streak: r.streak || 0, bestStreak: r.best_streak || 0, played: r.played || {}, total: r.total || 0,
         background: r.background || 0, frame: r.frame || 0, effect: r.effect || 0,
         owned: r.owned || { avatars: [], frames: [], effects: [], backgrounds: [] },
         pin_hash: r.pin_hash || null, lang: r.lang || 'zh-CN',
@@ -213,7 +223,7 @@ async function sbSyncProfile(u){
       method: 'POST',
       headers: { Prefer: 'resolution=merge-duplicates' },
       body: JSON.stringify({
-        uid: u.uid, name: u.name, avatar: u.avatar, coins: u.coins, played: u.played, total: u.total,
+        uid: u.uid, name: u.name, avatar: u.avatar, coins: u.coins, xp: u.xp || 0, level: u.level || 1, streak: u.streak || 0, best_streak: u.bestStreak || 0, played: u.played, total: u.total,
         background: u.background || 0, frame: u.frame || 0, effect: u.effect || 0,
         owned: u.owned || { avatars: [], frames: [], effects: [], backgrounds: [] },
         pin_hash: u.pin_hash || null, lang: u.lang || 'zh-CN',
@@ -264,7 +274,7 @@ function leaderboardPayload(){
         uid, name: u.name, avatar: u.avatar,
         background: u.background || 0, frame: u.frame || 0, effect: u.effect || 0,
         owned: u.owned || { avatars: [], frames: [], effects: [], backgrounds: [] },
-        coins: u.coins || 0, played: u.played || {}, total: u.total || 0, lang: u.lang || 'zh-CN', online: onlineUids.has(uid), lang: u.lang || 'zh-CN',
+        coins: u.coins || 0, xp: u.xp || 0, level: u.level || 1, streak: u.streak || 0, bestStreak: u.bestStreak || 0, played: u.played || {}, total: u.total || 0, lang: u.lang || 'zh-CN', online: onlineUids.has(uid),
       };
     })
     .sort((a, b) => (b.coins - a.coins) || (b.total - a.total) || String(a.name).localeCompare(String(b.name)))
@@ -426,6 +436,7 @@ class Session {
     if (type === 'hello'){
       const uid = payload && payload.uid;
       if (uid) this.uid = String(uid);
+      this.sendText(JSON.stringify({ type: 'hello_ack', proto: PROTOCOL_VERSION }));
       broadcastLeaderboard();
       broadcastLobby();
       if (this.uid){
@@ -457,7 +468,7 @@ class Session {
         frame: Number.isInteger(payload && payload.frame) ? Math.max(0, Math.min(12, payload.frame)) : 0,
         effect: Number.isInteger(payload && payload.effect) ? Math.max(0, Math.min(12, payload.effect)) : 0,
         owned: normalizeOwned(payload && payload.owned),
-        coins: 0, played: {}, total: 0, pin_hash: ph, lang: (payload && ['zh-CN','en-US','uk-UA'].includes(payload.lang) ? payload.lang : 'zh-CN'), created_at: Date.now(),
+        xp: 0, level: 1, streak: 0, bestStreak: 0, coins: 0, played: {}, total: 0, pin_hash: ph, lang: (payload && ['zh-CN','en-US','uk-UA'].includes(payload.lang) ? payload.lang : 'zh-CN'), created_at: Date.now(),
       };
       db.users[uid] = u;
       saveDB();
@@ -506,6 +517,10 @@ class Session {
       if (payload.owned) u.owned = normalizeOwned(payload.owned);
       if (payload.pin_hash) u.pin_hash = String(payload.pin_hash);
       if (payload.lang && ['zh-CN','en-US','uk-UA'].includes(payload.lang)) u.lang = payload.lang;
+      if (payload.xp !== undefined) u.xp = Math.max(0, parseInt(payload.xp, 10) || 0);
+      if (payload.level !== undefined) u.level = Math.max(1, parseInt(payload.level, 10) || 1);
+      if (payload.streak !== undefined) u.streak = Math.max(0, parseInt(payload.streak, 10) || 0);
+      if (payload.bestStreak !== undefined) u.bestStreak = Math.max(0, parseInt(payload.bestStreak, 10) || 0);
       saveDB();
       sbSyncProfile(u);
       this.sendText(JSON.stringify({ type: 'profile_ok', payload: profileObj(u) }));
@@ -523,6 +538,9 @@ class Session {
         const coins = s.coins === 1 ? 1 : 0;
         const played = s.played === 1 ? 1 : 0;
         u.coins = (u.coins || 0) + coins;
+        u.xp = (u.xp || 0) + (Number.isInteger(s.xp) ? Math.max(0, s.xp) : 0);
+        u.level = levelFromXp(u.xp);
+        if (coins === 1){ u.streak = (u.streak || 0) + 1; if (u.streak > (u.bestStreak || 0)) u.bestStreak = u.streak; } else { u.streak = 0; }
         u.played[game] = (u.played[game] || 0) + played;
         u.total = (u.total || 0) + played;
         db.history.push({ uid, game, coins, at: Date.now() });

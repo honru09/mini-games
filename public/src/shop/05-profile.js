@@ -31,7 +31,7 @@ function renderProfilePopup(p, isMe){
   stage.appendChild(avatarCanvas(p.avatar, 74));
   avWrap.appendChild(stage);
   hero.appendChild(avWrap);
-  hero.appendChild(el('div','pname', p.name + ' ' + (p.lang ? langFlag(p.lang) : '') + (isMe ? t('profile_mine') : '')));
+  hero.appendChild(el('div','pname', p.name + ' [Lv.' + (p.level || levelFromXp(p.xp || 0)) + ']' + ' ' + (p.lang ? langFlag(p.lang) : '') + (isMe ? t('profile_mine') : '')));
   const coinLine = el('div','pmeta');
   coinLine.appendChild(el('span','coin','$'));
   coinLine.appendChild(el('span', null, ' ' + (p.coins || 0) + ' · 共 ' + (p.total || 0) + ' 局' + (p.online ? ' · 🟢在线' : ' · ⚪离线')));

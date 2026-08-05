@@ -13,6 +13,8 @@ const games = {
   xiangqi: gameXiangqi,
 };
 
+autoRegisterGames();
+
 if (typeof module !== 'undefined' && module.exports){
   module.exports = { makeCheckerBoard, checkerReachable, checkGomokuWin };
 }

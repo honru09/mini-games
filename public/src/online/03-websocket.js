@@ -21,7 +21,7 @@ const online = {
     this.ws.onopen = () => {
       this.connected = true;
       this.status('已连接服务器，可创建或加入房间');
-      this.send({ type: 'hello', payload: { uid: typeof deviceUid !== 'undefined' ? deviceUid : null } });
+      this.send({ type: 'hello', payload: { uid: typeof deviceUid !== 'undefined' ? deviceUid : null, proto: typeof PROTOCOL_VERSION !== 'undefined' ? PROTOCOL_VERSION : 1 } });
       this.send({ type: 'lobby' });
       if (typeof syncProfiles === 'function') syncProfiles();
       if (account && account.uid && !account.registered){
@@ -112,6 +112,8 @@ const online = {
         this.lobby = msg.payload || [];
         renderLobby();
         break;
+      case 'hello_ack':
+        break;
       case 'invite':
         showInviteModal(msg.payload);
         break;
@@ -163,6 +165,10 @@ const online = {
           account.frame = msg.payload.frame || account.frame || 0;
           account.effect = msg.payload.effect || account.effect || 0;
           account.lang = msg.payload.lang || account.lang || 'zh-CN';
+          account.xp = msg.payload.xp || account.xp || 0;
+          account.level = msg.payload.level || account.level || 1;
+          account.streak = msg.payload.streak || account.streak || 0;
+          account.bestStreak = msg.payload.bestStreak || account.bestStreak || 0;
           const me = roster.find(x => x.uid === account.uid);
           if (me){ me.name = account.name; me.avatar = account.avatar; }
           saveRoster(); saveAccount();
@@ -306,7 +312,7 @@ function openInvitePicker(){
       const av = el('span','av');
       av.appendChild(avatarStageNode(u, 24));
       item.appendChild(av);
-      item.appendChild(el('span','nm', u.name));
+      item.appendChild(el('span','nm', u.name + ' [Lv.' + (u.level || levelFromXp(u.xp || 0)) + ']'));
       item.appendChild(el('span','lb-game', '$' + (u.coins || 0)));
       item.addEventListener('click', () => {
         bd.remove();
@@ -372,7 +378,7 @@ function renderAccounts(){
     av.style.cursor = 'pointer';
   av.addEventListener('click', e => { if (e && e.stopPropagation) e.stopPropagation(); openProfileModal(u.uid); });
     row.appendChild(av);
-    row.appendChild(el('span','nm', u.name + (u.uid === deviceUid ? t('profile_mine') : '') + ' ' + (u.lang ? langFlag(u.lang) : '')));
+        row.appendChild(el('span','nm', u.name + ' [Lv.' + (u.level || levelFromXp(u.xp || 0)) + ']' + (u.uid === deviceUid ? t('profile_mine') : '') + ' ' + (u.lang ? langFlag(u.lang) : '')));
     if (u.online) row.appendChild(el('span','online-dot',''));
     const coinLine = el('span','coin-line');
     coinLine.appendChild(el('span','coin sm','$'));
