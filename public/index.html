@@ -1316,6 +1316,7 @@ function renderAccounts(){
     row.addEventListener('click', () => openProfileModal(u.uid));
     listEl.appendChild(row);
   });
+  applyI18n(listEl);
 }
 function inviteUser(uid){
   if (online.room){
@@ -2244,7 +2245,7 @@ function applyGameResult(results){
       entries.forEach(e => online.send({ type:'profile', payload:{ uid:e.uid, name:e.name, avatar:e.avatar } }));
       online.send({ type:'result', payload: entries.map(e => ({ uid:e.uid, game:e.game, coins:e.coins, played:1 })) });
     }
-    toast('🏆 本局结算：' + parts.join('，'));
+    toast(t('toast_win_reward') + parts.join('，'));
   }
   renderMe(); renderSlots(); renderLeaderboard();
 }
@@ -2492,7 +2493,7 @@ function gameTicTacToe(area, extra, n, opts){
     if (over){
       setStatus(winLine ? ('🏆 玩家' + (cur+1) + ' 获胜！') : '🤝 平局', !!winLine);
     } else {
-      setStatus(opts.online ? (cur === opts.myIdx ? '你的回合，点击空格落子' : '等待对方落子…') : ('玩家' + (cur+1) + ' 的回合'));
+      setStatus(opts.online ? (cur === opts.myIdx ? t('your_turn') + '，点击空格落子' : t('opponent_turn') + '…') : ('玩家' + (cur+1) + ' 的回合'));
     }
   }
   function applyMove(i){
@@ -3920,7 +3921,7 @@ function gameTank(area, extra, n, opts){
       card.appendChild(el('div','big','🏆'));
       card.appendChild(el('h3', null, '玩家' + (winner+1) + ' 获胜！'));
       card.appendChild(el('p', null, '坦克大战'));
-      const btn = el('button','btn btn-primary','再来一局');
+      const btn = el('button','btn btn-primary', t('come_back'));
       btn.addEventListener('click', reset);
       card.appendChild(btn);
       ov.appendChild(card);
@@ -4115,7 +4116,7 @@ function gameSnake(area, extra, n, opts){
       card.appendChild(el('div','big','🏆'));
       card.appendChild(el('h3', null, '玩家' + (winner+1) + ' 获胜！'));
       card.appendChild(el('p', null, '得分 ' + snakes[winner].score));
-      const btn = el('button','btn btn-primary','再来一局');
+      const btn = el('button','btn btn-primary', t('come_back'));
       btn.addEventListener('click', reset);
       card.appendChild(btn);
       ov.appendChild(card);
