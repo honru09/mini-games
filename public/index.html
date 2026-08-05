@@ -2,7 +2,7 @@
 <html lang="zh-CN" data-lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title data-i18n="app_title">小游戏合集 · 本地多人</title>
 <style>
 :root{
@@ -555,6 +555,71 @@ html[data-theme="dark"] .chance-card{background:rgba(24,31,52,.96)}
 html[data-theme="dark"] .toast{background:#e8edf8; color:#0d1220}
 html[data-theme="dark"] .dice3d .pip::before{background:#dbe4f5}
 html[data-theme="dark"] .online-dot{box-shadow:0 0 0 2px #1a2238}
+
+/* ====== 触屏 & 移动端适配 ====== */
+/* 消除 300ms 延迟，防止双击缩放 */
+button, canvas, .game-card, .ttt-cell, .j-cell, .xq-cell,
+.slot-chip, .lobby-row, .roster-item, .lb-row, .player-row,
+.shop-item, .avatar-opt, .bg-swatch, .shop-tab, .pchip,
+.tcell, .hcell, .m-cell, .tok, .dice-btn, .count-btn, .btn {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 手机横屏 / 小屏 (< 480px) */
+@media (max-width: 480px) {
+  #app { padding: 8px 6px 24px; }
+  .app-header { margin-bottom: 10px; }
+  .brand { font-size: 15px; gap: 5px; }
+  .brand .brand-icon { font-size: 20px; }
+  .brand .brand-tag { font-size: 10px; display: none; }
+  .hub-grid { grid-template-columns: 1fr; gap: 10px; }
+  .hub-side { gap: 10px; }
+  .hub-count { gap: 6px; margin-bottom: 10px; }
+  .hub-label { font-size: 12px; }
+  .count-btn { padding: 6px 12px; font-size: 12px; }
+  .game-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .game-card { padding: 12px 10px; }
+  .game-card .icon { font-size: 26px; }
+  .game-card .name { font-size: 14px; }
+  .game-card .desc { font-size: 11px; min-height: 28px; }
+  .slots-row { gap: 5px; }
+  .slot-chip { padding: 5px 8px; min-width: 60px; font-size: 10px; }
+  .slot-chip .av { font-size: 18px; }
+  .btn { padding: 7px 10px; font-size: 12px; border-radius: 8px; }
+  .online-panel { padding: 10px 12px; }
+  .online-panel h3 { font-size: 13px; }
+  .lb-panel, .lobby-panel { padding: 10px 12px; }
+  .lb-panel h3, .lobby-panel h3 { font-size: 13px; }
+  .modal-card { padding: 16px 18px; max-width: 95vw; width: auto; }
+  .modal-card h3 { font-size: 15px; }
+  .game-top { padding: 8px 10px; }
+  .game-top h2 { font-size: 15px; }
+  canvas.board-canvas { max-width: 100%; }
+}
+
+/* 平板 / 中等屏 (481px - 768px) */
+@media (min-width: 481px) and (max-width: 768px) {
+  .hub-grid { grid-template-columns: 1fr; gap: 12px; }
+  .hub-side { gap: 12px; }
+  .game-grid { grid-template-columns: repeat(3, 1fr); }
+  .brand .brand-tag { font-size: 10px; }
+}
+
+/* 中等屏 (769px - 1024px) */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .hub-grid { grid-template-columns: minmax(0, 1fr) 280px; gap: 12px; }
+}
+
+/* 通用移动端按钮放大（确保至少 44px 触控目标） */
+@media (max-width: 768px) {
+  .btn, .count-btn, .shop-tab {
+    min-height: 40px;
+    min-width: 40px;
+  }
+  .invite-btn { padding: 6px 14px; }
+  .online-row { gap: 6px; }
+}
 </style>
 </head>
 <body>
@@ -651,6 +716,8 @@ html[data-theme="dark"] .online-dot{box-shadow:0 0 0 2px #1a2238}
 <div id="toast-wrap"></div>
 
 <script>
+
+
 
 /* ================= i18n 国际化框架 ================= */
 const LOCALES = {};
@@ -935,6 +1002,35 @@ function runCountdown(){
   }, 700);
 }
 
+/* ====== 触屏归一化 ====== */
+// 为 canvas 元素提供统一的触摸/鼠标坐标提取
+function getEventPos(e, element) {
+  const rect = element.getBoundingClientRect();
+  let clientX, clientY;
+  if (e.touches && e.touches.length > 0) {
+    clientX = e.touches[0].clientX;
+    clientY = e.touches[0].clientY;
+  } else if (e.changedTouches && e.changedTouches.length > 0) {
+    clientX = e.changedTouches[0].clientX;
+    clientY = e.changedTouches[0].clientY;
+  } else {
+    clientX = e.clientX;
+    clientY = e.clientY;
+  }
+  return {
+    x: (clientX - rect.left) / rect.width,
+    y: (clientY - rect.top) / rect.height,
+    px: clientX - rect.left,
+    py: clientY - rect.top,
+  };
+}
+
+// 阻止双击缩放（在游戏区内）
+document.addEventListener('dblclick', function(e) {
+  if (e.target.closest && (e.target.closest('#board-area') || e.target.closest('canvas'))) {
+    e.preventDefault();
+  }
+}, { passive: false });
 /* ================= 应用外壳 ================= */
 let playerCount = 2;
 let aiMode = false;
@@ -1018,7 +1114,6 @@ function getTheme() {
   } catch {}
   return 'light';
 }
-
 /* ================= 联机对战（WebSocket 中继） ================= */
 const online = {
   ws: null, room: null, player: 0, isHost: false, game: null, connected: false, pending: null, roomInfo: null, capacity: 2, _hb: null,
@@ -1473,7 +1568,6 @@ function openSettings(){
   bd.addEventListener('click', e => { if (e.target === bd) bd.remove(); });
   document.body.appendChild(bd);
 }
-
 /* ================= 账号注册 / PIN 登录 ================= */
 function openAuthModal(mode){
   const bd = el('div','modal-backdrop auth-backdrop');
@@ -1562,7 +1656,6 @@ function openAuthModal(mode){
   bd.addEventListener('click', e => { if (e.target === bd) bd.remove(); });
   document.body.appendChild(bd);
 }
-
 /* ================= 个人档案弹层（自己的 / 他人的） ================= */
 function openProfileModal(uid){
   if (!uid){
@@ -1638,7 +1731,6 @@ function renderProfilePopup(p, isMe){
   bd.addEventListener('click', e => { if (e.target === bd) bd.remove(); });
   document.body.appendChild(bd);
 }
-
 /* ================= 商城（头像 / 边框 / 特效 / 背景） ================= */
 function openShop(){
   if (!account){ openAuthModal(); return; }
@@ -1763,7 +1855,6 @@ function openShop(){
   bd.addEventListener('click', e => { if (e.target === bd) bd.remove(); });
   document.body.appendChild(bd);
 }
-
 /* ================= 用户档案与积分 ================= */
 const AVATAR_COUNT = 28; // 0-19 免费，20-27 商城
 const CURRENCY = '$';
@@ -2516,7 +2607,6 @@ function parseHash(){
   renderHub();
   startGame(m[1]);
 }
-
 /* ================= 井字棋 ================= */
 function gameTicTacToe(area, extra, n, opts){
   opts = opts || {};
@@ -2630,7 +2720,6 @@ function gameTicTacToe(area, extra, n, opts){
   render();
   return { reset, onMove: opts.onMove, onRestart: resetLocal, snapshot: () => ({ board: board.slice(), cur, over, winLine: winLine ? winLine.slice() : null }) };
 }
-
 /* ================= 五子棋 ================= */
 function checkGomokuWin(grid, r, c){
   const N = grid.length, p = grid[r][c];
@@ -2784,7 +2873,6 @@ function gameGomoku(area, extra, n, opts){
   resetLocal();
   return { reset, onMove: opts.onMove, onRestart: resetLocal, snapshot: () => ({ hist: hist.map(h => h.slice()), cur, over, last: last ? last.slice() : null }) };
 }
-
 /* ================= 飞行棋 ================= */
 function gameLudo(area, extra, n, opts){
   opts = opts || {};
@@ -3103,7 +3191,6 @@ function gameLudo(area, extra, n, opts){
   setStatus('玩家1 的回合，请掷骰子');
   return { reset, onMove: opts.onMove, onRestart: resetLocal, snapshot: () => ({ tokens: tokens.map(t => t.slice()), curIdx, phase, dice, over, winner }) };
 }
-
 /* ================= 迷你大富翁 ================= */
 function gameMonopoly(area, extra, n, opts){
   opts = opts || {};
@@ -3541,7 +3628,6 @@ function gameMonopoly(area, extra, n, opts){
     }),
   };
 }
-
 /* ================= 弹珠跳棋 ================= */
 function makeCheckerBoard(){
   const key = h => h.q + ',' + h.r;
@@ -3856,7 +3942,6 @@ function gameChecker(area, extra, n, opts){
     }),
   };
 }
-
 /* ================= 坦克大战 ================= */
 function gameTank(area, extra, n, opts){
   opts = opts || {};
@@ -4068,7 +4153,6 @@ function gameTank(area, extra, n, opts){
   resetLocal();
   return { reset, onMove: opts.onMove, onRestart: resetLocal, snapshot: () => ({ t0: {...t0}, t1: {...t1}, cur, over, winner, grid: grid.map(r => r.slice()) }) };
 }
-
 /* ================= 贪吃蛇 ================= */
 function gameSnake(area, extra, n, opts){
   opts = opts || {};
@@ -4260,7 +4344,6 @@ function gameSnake(area, extra, n, opts){
   resetLocal();
   return { reset, onMove: opts.onMove, onRestart: resetLocal, snapshot: () => ({ snakes: snakes.map(s => ({ body: s.body.map(b => b.slice()), d: s.d, score: s.score, alive: s.alive })), food: food.slice(), cur, over, winner }) };
 }
-
 /* ================= 俄罗斯方块 ================= */
 function gameTetris(area, extra, n, opts){
   opts = opts || {};
@@ -4489,7 +4572,6 @@ function gameTetris(area, extra, n, opts){
   resetLocal();
   return { reset, onMove: opts.onMove, onRestart: resetLocal, snapshot: () => ({ wells: wells.map(w => w.map(r => r.slice())), scores: scores.slice(), cur, over, winner }) };
 }
-
 /* ================= 国际跳棋 ================= */
 function gameDraughts(area, extra, n, opts){
   opts = opts || {};
@@ -4717,7 +4799,6 @@ function gameDraughts(area, extra, n, opts){
   resetLocal();
   return { reset, onMove: opts.onMove, onRestart: resetLocal, snapshot: () => ({ board: board.map(r => r.map(x => x ? { p: x.p, king: x.king } : null)), cur, over, winner }) };
 }
-
 /* ================= 斗兽棋 ================= */
 function gameJungle(area, extra, n, opts){
   opts = opts || {};
@@ -4933,7 +5014,6 @@ function gameJungle(area, extra, n, opts){
   resetLocal();
   return { reset, onMove: opts.onMove, onRestart: resetLocal, snapshot: () => ({ board: board.map(r => r.map(x => x ? { p: x.p, type: x.type } : null)), cur, over, winner }) };
 }
-
 /* ================= 象棋 ================= */
 function gameXiangqi(area, extra, n, opts){
   opts = opts || {};
@@ -5257,7 +5337,6 @@ function gameXiangqi(area, extra, n, opts){
   resetLocal();
   return { reset, onMove: opts.onMove, onRestart: resetLocal, snapshot: () => ({ board: board.map(r => r.map(x => x ? { p: x.p, t: x.t } : null)), cur, over, winner }) };
 }
-
 /* ================= 游戏注册表 ================= */
 const games = {
   tictactoe: gameTicTacToe,
@@ -5290,6 +5369,7 @@ if (typeof document !== 'undefined'){
   online.connect();
   setTimeout(() => { if (!account) openAuthModal(); }, 300);
 }
+
 </script>
 </body>
 </html>

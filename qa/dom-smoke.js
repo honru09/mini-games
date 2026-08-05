@@ -1,4 +1,4 @@
-// 轻量 DOM 桩 + 游戏功能冒烟测试（Node 运行，无真实浏览器）
+﻿// 轻量 DOM 桩 + 游戏功能冒烟测试（Node 运行，无真实浏览器）
 'use strict';
 const fs = require('fs');
 const os = require('os');
@@ -131,7 +131,7 @@ global.fetch = async (url, init) => {
 global.AbortSignal = global.AbortSignal || { timeout: () => undefined };
 
 /* ---------- 载入游戏脚本 ---------- */
-const tmp = path.join(os.tmpdir(), 'mini-games-script.js');
+const tmp = path.join(__dirname, '..', 'data', '.smoke-script.js');
 fs.writeFileSync(tmp, script);
 require(tmp);
 const G = global.window.__gameInfo;
