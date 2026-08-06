@@ -82,7 +82,10 @@ function gameChecker(area, extra, n, opts){
         s -= Math.abs(mv.to.q - mv.from.q) + Math.abs(mv.to.r - mv.from.r);
         if (s > bestS){ bestS = s; best = mv; }
       });
-      applyCheckerMove(best.from, best.to);
+      const ckPick = aiPersonaMove(list.length, list.indexOf(best), opts.aiPersona);
+      aiSpeak(opts.aiPersona, 'think');
+      const ckMv = list[ckPick];
+      applyCheckerMove(ckMv.from, ckMv.to);
     }, 700);
   }
   const canvas = document.createElement('canvas');

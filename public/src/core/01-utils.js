@@ -1,16 +1,68 @@
 /* ================= 通用工具 ================= */
 const $ = id => document.getElementById(id);
 const PROTOCOL_VERSION = 1;
+
+/* ---------------- 轻量音效（WebAudio，零资源加载） ---------------- */
+let _actx = null;
+function sfx(kind){
+  try {
+    const AC = (typeof AudioContext !== 'undefined' && AudioContext) || (typeof webkitAudioContext !== 'undefined' && webkitAudioContext);
+    if (!AC) return;
+    if (!_actx) _actx = new AC();
+    if (_actx.state === 'suspended') _actx.resume();
+    const cfg = {
+      click: { f: 520, dur: .05, vol: .06, type: 'sine' },
+      move:  { f: 680, dur: .06, vol: .05, type: 'triangle' },
+      pop:   { f: 440, dur: .04, vol: .04, type: 'sine' },
+      win:   { f: 880, dur: .20, vol: .09, type: 'triangle' },
+      lose:  { f: 320, dur: .16, vol: .06, type: 'sine' },
+    }[kind] || { f: 440, dur: .05, vol: .05, type: 'sine' };
+    const t = _actx.currentTime;
+    const osc = _actx.createOscillator();
+    const gain = _actx.createGain();
+    osc.type = cfg.type;
+    osc.frequency.setValueAtTime(cfg.f, t);
+    if (kind === 'win') osc.frequency.exponentialRampToValueAtTime(cfg.f * 1.5, t + .12);
+    gain.gain.setValueAtTime(cfg.vol, t);
+    gain.gain.exponentialRampToValueAtTime(.0001, t + cfg.dur);
+    osc.connect(gain).connect(_actx.destination);
+    osc.start(t);
+    osc.stop(t + cfg.dur + .03);
+  } catch {}
+}
+if (typeof document !== 'undefined' && document.addEventListener){
+  document.addEventListener('click', function(e){
+    if (e.target && e.target.closest && e.target.closest('.btn')) sfx('click');
+  });
+}
+const THEME_LIST = [
+  { id: 'light',   icon: '☀️', name: 'Light',   nameZh: '日光' },
+  { id: 'midnight',icon: '🌙', name: 'Midnight',nameZh: '午夜' },
+  { id: 'ocean',   icon: '🌊', name: 'Ocean',   nameZh: '海洋' },
+  { id: 'forest',  icon: '🌲', name: 'Forest',  nameZh: '森林' },
+  { id: 'cyber',   icon: '🤖', name: 'Cyber',   nameZh: '赛博' },
+  { id: 'sakura',  icon: '🌸', name: 'Sakura',  nameZh: '樱花' },
+];
+function themeMeta(id){
+  if (id === 'dark') id = 'midnight';
+  return THEME_LIST.find(t => t.id === id) || THEME_LIST[0];
+}
 function applyTheme(theme){
+  if (theme === 'dark') theme = 'midnight'; // 旧值兼容
   if (document.documentElement && document.documentElement.setAttribute){
     document.documentElement.setAttribute('data-theme', theme);
   }
   const btn = $('btn-theme');
-  if (btn) btn.textContent = theme === 'dark' ? '☀️' : '🌙';
+  if (btn){
+    const meta = themeMeta(theme);
+    btn.textContent = meta.icon;
+    btn.title = '切换主题（当前：' + meta.nameZh + '）';
+  }
 }
 function initTheme(){
   let t = 'light';
   try { t = localStorage.getItem('mg_theme') || 'light'; } catch {}
+  if (t === 'dark') t = 'midnight';
   applyTheme(t);
 }
 const PLAYER_COLORS = ['#e5484d','#3b82f6','#22a06b','#f59e0b','#8b5cf6'];
@@ -143,7 +195,7 @@ function makeDice3D(size, sm){
 }
 
 /* ---------------- AI 助手（DeepSeek 代理） ---------------- */
-async function aiChoose(game, state, options){
+async function aiChoose(game, state, options, persona){
   try {
     if (typeof fetch !== 'function') return null;
     const server = resolveServer();
@@ -151,7 +203,7 @@ async function aiChoose(game, state, options){
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ game, state, options }),
+      body: JSON.stringify({ game, state, options, persona: persona || null }),
       signal: (typeof AbortSignal !== 'undefined' && AbortSignal.timeout) ? AbortSignal.timeout(15000) : undefined,
     });
     if (!res.ok) return null;
@@ -199,6 +251,7 @@ function showVictoryOverlay(area, opts) {
   // 大动画图标
   const big = el('div', 'victory-emoji', opts.emoji || '🏆');
   card.appendChild(big);
+  sfx(opts.coins ? 'win' : 'pop');
   
   // 标题
   const title = el('h3', 'victory-title', opts.winnerName 
@@ -213,6 +266,19 @@ function showVictoryOverlay(area, opts) {
   
   // 金币动画
   if (opts.coins) {
+    // 彩带粒子（CSS 动画，零依赖）
+    const CONF_COLORS = ['#f59e0b','#ef4444','#22d3ee','#a78bfa','#f472b6','#34d399','#fbbf24'];
+    for (let i = 0; i < 14; i++){
+      const cf = el('div','confetti');
+      cf.style.left = (8 + Math.random() * 84) + '%';
+      cf.style.background = CONF_COLORS[i % CONF_COLORS.length];
+      const setCssVar = (k, v) => { if (cf.style && cf.style.setProperty) cf.style.setProperty(k, v); else if (cf.style) cf.style[k] = v; };
+      setCssVar('--conf-dur', (1.8 + Math.random() * 1.2) + 's');
+      setCssVar('--conf-fall', (300 + Math.random() * 180) + 'px');
+      setCssVar('--conf-rot', (300 + Math.random() * 500) + 'deg');
+      cf.style.animationDelay = (Math.random() * 0.35) + 's';
+      ov.appendChild(cf);
+    }
     const coinRow = el('div', 'victory-coins');
     const coinIcon = el('span', 'coin coin-lg');
     coinIcon.textContent = '$';

@@ -116,7 +116,10 @@ function gameDraughts(area, extra, n, opts){
           if (v > best){ best = v; pick = mv; }
         });
       }
-      applyMove(cur, pick.from, pick.to);
+      const drgPick = aiPersonaMove(moves.length, moves.indexOf(pick), opts.aiPersona);
+      aiSpeak(opts.aiPersona, 'think');
+      const drgMv = moves[drgPick];
+      applyMove(cur, drgMv.from, drgMv.to);
     }, 600);
   }
   function applyMove(pi, from, to, via){

@@ -24,7 +24,7 @@ function openShop(){
     listEl.innerHTML = '';
     tabs.children.forEach((t, i) => t.classList.toggle('btn-primary', defs[i][0] === tab));
     if (tab === 'avatars'){
-      const FREE = 20;
+      const FREE = 30; // 0-29 free, 30-55 shop-only
       for (let i = 0; i < FREE; i++){
         const it = el('div','shop-item' + (account.avatar === i ? ' selected' : ''));
         it.appendChild(avatarCanvas(i, 34));
@@ -122,3 +122,4 @@ function openShop(){
   bd.addEventListener('click', e => { if (e.target === bd) bd.remove(); });
   document.body.appendChild(bd);
 }
+

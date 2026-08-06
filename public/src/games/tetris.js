@@ -98,6 +98,8 @@ function gameTetris(area, extra, n, opts){
       const idx = 0 | Math.floor(Math.random() * SHAPES.length);
       const best = aiBestPlacement(wells[cur], SHAPES[idx]);
       if (!best){ topOut(cur); return; }
+      if (opts.aiPersona && Math.random() < opts.aiPersona.randomness) best.x = Math.max(0, Math.min(9, best.x + (Math.random() < 0.5 ? -1 : 1)));
+      aiSpeak(opts.aiPersona, 'think');
       if (opts.online) opts.sendMove({ piece: idx, x: best.x, y: best.y, rot: best.rot || 0, sh: best.sh });
       applyPlacement(cur, idx, best.x, best.y, best.sh);
     }, 700);

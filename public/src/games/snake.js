@@ -34,7 +34,9 @@ function gameSnake(area, extra, n, opts){
         const nd = Math.abs(head[0]+d[0]-food[0]) + Math.abs(head[1]+d[1]-food[1]);
         if (nd < bestD){ bestD = nd; best = di; }
       });
-      step(cur, best, null);
+      const snakePick = aiPersonaMove(legal.length, legal.indexOf(best), opts.aiPersona);
+      aiSpeak(opts.aiPersona, 'think');
+      step(cur, legal[snakePick], null);
     }, 650);
   }
   function hitTest(r, c, except, allowFood){

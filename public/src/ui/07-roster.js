@@ -1,22 +1,51 @@
 /* ================= 用户档案与积分 ================= */
-const AVATAR_COUNT = 28; // 0-19 免费，20-27 商城
+const AVATAR_COUNT = 56; // 0-29 免费，30-55 商城（4 分类）
 const CURRENCY = '$';
+const AVATAR_CATEGORIES = [
+  { id: 'fantasy', name: '👑 幻想', icon: '👑' },
+  { id: 'animals', name: '🐾 动物', icon: '🐾' },
+  { id: 'profession', name: '💼 职业', icon: '💼' },
+  { id: 'creative', name: '🎨 创意', icon: '🎨' },
+];
+
 const SHOP = {
   avatars: [
-    { id: 20, name: '金冠骑士', price: 8 },
-    { id: 21, name: '太空人',   price: 8 },
-    { id: 22, name: '小恶魔',   price: 10 },
-    { id: 23, name: '机器人',   price: 10 },
-    { id: 24, name: '忍者',     price: 12 },
-    { id: 25, name: '海盗',     price: 12 },
-    { id: 26, name: '巫师',     price: 15 },
-    { id: 27, name: '龙骑士',   price: 20 },
+    { id: 30, name: '天使', price: 8, category: 'fantasy' },
+    { id: 31, name: '吸血鬼', price: 10, category: 'fantasy' },
+    { id: 32, name: '精灵', price: 10, category: 'fantasy' },
+    { id: 33, name: '人鱼', price: 12, category: 'fantasy' },
+    { id: 34, name: '凤凰战士', price: 15, category: 'fantasy' },
+    { id: 35, name: '暗影刺客', price: 15, category: 'fantasy' },
+    { id: 36, name: '猫咪', price: 6, category: 'animals' },
+    { id: 37, name: '柴犬', price: 6, category: 'animals' },
+    { id: 38, name: '兔子', price: 8, category: 'animals' },
+    { id: 39, name: '小熊', price: 8, category: 'animals' },
+    { id: 40, name: '狐狸', price: 10, category: 'animals' },
+    { id: 41, name: '熊猫', price: 12, category: 'animals' },
+    { id: 42, name: '医生', price: 8, category: 'profession' },
+    { id: 43, name: '厨师', price: 8, category: 'profession' },
+    { id: 44, name: '画家', price: 10, category: 'profession' },
+    { id: 45, name: '音乐家', price: 10, category: 'profession' },
+    { id: 46, name: '运动员', price: 12, category: 'profession' },
+    { id: 47, name: '科学家', price: 12, category: 'profession' },
+    { id: 48, name: '彩虹', price: 8, category: 'creative' },
+    { id: 49, name: '霓虹', price: 10, category: 'creative' },
+    { id: 50, name: '像素英雄', price: 10, category: 'creative' },
+    { id: 51, name: '故障艺术', price: 12, category: 'creative' },
+    { id: 52, name: '宇宙', price: 15, category: 'creative' },
+    { id: 53, name: '暗影', price: 15, category: 'creative' },
+    { id: 54, name: '金冠骑士', price: 8, category: 'fantasy' },
+    { id: 55, name: '龙骑士', price: 20, category: 'fantasy' },
   ],
   frames: [
     { id: 1, name: '金色边框', price: 5, cls: 'frame-1' },
     { id: 2, name: '霓虹边框', price: 8, cls: 'frame-2' },
     { id: 3, name: '紫焰边框', price: 12, cls: 'frame-3' },
     { id: 4, name: '极光光环', price: 16, cls: 'frame-4' },
+    { id: 5, name: '流金脉冲', price: 18, cls: 'frame-5' },
+    { id: 6, name: '烈焰环绕', price: 22, cls: 'frame-6' },
+    { id: 7, name: '彩虹流光', price: 26, cls: 'frame-7' },
+    { id: 8, name: '赛博脉冲', price: 30, cls: 'frame-8' },
   ],
   effects: [
     { id: 1, name: '呼吸光效', price: 6, cls: 'effect-1' },
@@ -31,11 +60,36 @@ const SHOP = {
     { id: 4, name: '森林绿',   price: 3, cls: 'bg-4' },
     { id: 5, name: '樱花粉',   price: 3, cls: 'bg-5' },
     { id: 6, name: '暗夜',     price: 5, cls: 'bg-6' },
+    { id: 7, name: '星空闪烁', price: 10, cls: 'bg-7' },
+    { id: 8, name: '樱花飘落', price: 10, cls: 'bg-8' },
+    { id: 9, name: '赛博矩阵', price: 14, cls: 'bg-9' },
+    { id: 10, name: '海洋波浪', price: 12, cls: 'bg-10' },
   ],
 };
 function avatarMeta(idx){
   const p = SHOP.avatars.find(a => a.id === idx);
   return p ? p : null;
+}
+function nameFxNode(profile, name){
+  const fx = profile && profile.nameFx ? Number(profile.nameFx) : 0;
+  const span = el('span', fx >= 1 && fx <= 4 ? 'name-fx-' + fx : null, name || '');
+  return span;
+}
+function nameFxLabel(fx){
+  return ['无效果','渐变流光','辉光','彩虹','赛博渐变'][fx] || '无效果';
+}
+function avatarCategory(idx) {
+  if (idx < 20) return 'basic';           // 0-19 基础生成头像（免费）
+  if (idx < 30) return 'theme';           // 20-29 主题头像（免费）
+  const meta = SHOP.avatars.find(a => a.id === idx);
+  return meta ? meta.category : 'creative'; // 30-55 商城头像
+}
+function avatarLocked(idx){
+  return idx >= 30 && !ownItem(account, 'avatars', idx);
+}
+function avatarPrice(idx){
+  const meta = SHOP.avatars.find(a => a.id === idx);
+  return meta ? meta.price : 0;
 }
 function ownItem(acc, kind, id){
   if (!acc) return false;
@@ -63,12 +117,51 @@ function makeAvatar(idx){
       { bg:'#dbeafe', skin:'#f1c27d', hair:'#78350f', shirt:'#f97316', eyePatch:true },
       { bg:'#ddd6fe', skin:'#ffe0bd', hair:'#7c3aed', shirt:'#8b5cf6', hat:true, stars:true },
       { bg:'#fde68a', skin:'#ffdbac', hair:'#1e40af', shirt:'#3b82f6', crown:true, scales:true },
-    ][idx - 20];
+      { bg:'#fef7cd', skin:'#e0ac69', hair:'#ca8a04', shirt:'#84cc16', blush:true, antenna:true },
+      { bg:'#fce4ec', skin:'#ffdbac', hair:'#ad1457', shirt:'#f06292', hat:true, blush:true, stars:true },
+    ];
+    // New: indices 30-55, 26 premium avatars across 4 categories
+    const PRE2 = [
+      { bg:'#f0f9ff', skin:'#ffe0bd', hair:'#fde047', shirt:'#f8fafc', hat:true, stars:true },                      // 30 天使
+      { bg:'#1e1b2e', skin:'#ffdbac', hair:'#111827', shirt:'#7f1d1d', glasses:true, crown:true },                  // 31 吸血鬼
+      { bg:'#d4fae8', skin:'#ffe0bd', hair:'#22d3ee', shirt:'#10b981', hat:true, blush:true },                       // 32 精灵
+      { bg:'#c7d2fe', skin:'#ffdbac', hair:'#ec4899', shirt:'#06b6d4', stars:true, scales:true },                    // 33 人鱼
+      { bg:'#fef2f2', skin:'#f1c27d', hair:'#ef4444', shirt:'#f97316', crown:true, stars:true },                     // 34 凤凰
+      { bg:'#0f0f23', skin:'#e0ac69', hair:'#6b21a8', shirt:'#1e1b4b', mask:true, horns:true },                      // 35 暗影
+      { bg:'#fce7f3', skin:'#ffdbac', hair:'#be185d', shirt:'#f472b6', blush:true, hat:true },                       // 36 猫咪
+      { bg:'#fef3c7', skin:'#f1c27d', hair:'#d97706', shirt:'#fbbf24', blush:true, glasses:false },                  // 37 柴犬
+      { bg:'#fdf2f8', skin:'#ffe0bd', hair:'#f9a8d4', shirt:'#ec4899', blush:true, hat:false },                      // 38 兔子
+      { bg:'#fef7ed', skin:'#c68642', hair:'#92400e', shirt:'#d97706', hat:false, blush:true },                      // 39 小熊
+      { bg:'#fff7ed', skin:'#ffdbac', hair:'#ea580c', shirt:'#f97316', blush:true, glasses:false },                  // 40 狐狸
+      { bg:'#ecfdf5', skin:'#ffe0bd', hair:'#111827', shirt:'#10b981', eyePatch:true, blush:true },                  // 41 熊猫
+      { bg:'#eff6ff', skin:'#ffdbac', hair:'#1e40af', shirt:'#60a5fa', hat:true, glasses:false },                    // 42 医生
+      { bg:'#fefce8', skin:'#f1c27d', hair:'#713f12', shirt:'#f8fafc', hat:true, blush:true },                       // 43 厨师
+      { bg:'#f5f3ff', skin:'#e0ac69', hair:'#7c3aed', shirt:'#a78bfa', hat:true, stars:true },                       // 44 画家
+      { bg:'#1e293b', skin:'#ffdbac', hair:'#fde047', shirt:'#334155', glasses:true, hat:false },                    // 45 音乐家
+      { bg:'#f0fdf4', skin:'#f1c27d', hair:'#166534', shirt:'#22c55e', hat:true, blush:false },                      // 46 运动员
+      { bg:'#f8fafc', skin:'#ffe0bd', hair:'#475569', shirt:'#94a3b8', glasses:true, antenna:true },                 // 47 科学家
+      { bg:'#fefce8', skin:'#ffdbac', hair:'#eab308', shirt:'#fde047', stars:true, crown:false },                    // 48 彩虹
+      { bg:'#0f172a', skin:'#f1c27d', hair:'#22d3ee', shirt:'#e11d48', glasses:true, visor:true },                   // 49 霓虹
+      { bg:'#f0fdf4', skin:'#e0ac69', hair:'#22c55e', shirt:'#7c3aed', visor:false, robot:true },                    // 50 像素英雄
+      { bg:'#18181b', skin:'#cbd5e1', hair:'#a1a1aa', shirt:'#dc2626', mask:true, antenna:true },                    // 51 故障
+      { bg:'#020617', skin:'#ffe0bd', hair:'#38bdf8', shirt:'#6366f1', stars:true, visor:true },                     // 52 宇宙
+      { bg:'#0f0f23', skin:'#ffdbac', hair:'#6b21a8', shirt:'#312e81', mask:true, horns:true },                      // 53 暗影
+      { bg:'#fef08a', skin:'#ffdbac', hair:'#d97706', shirt:'#f59e0b', hat:'#fbbf24', glasses:true, crown:true },    // 54 金冠骑士
+      { bg:'#fde68a', skin:'#ffdbac', hair:'#1e40af', shirt:'#3b82f6', crown:true, scales:true },                    // 55 龙骑士
+    ];
+    let P;
+    if (idx >= 20 && idx <= 29) P = PRE[idx - 20];
+    else if (idx >= 30) P = PRE2[idx - 30];
+    else return {
+      bg: BG[idx % 8], skin: SKIN[Math.floor(idx / 3) % 6], hair: HAIR[(idx * 2 + 1) % 6],
+      shirt: SHIRT[(idx * 3) % 6], style: idx % 4, glasses: idx % 4 === 1,
+      blush: idx % 3 === 0, hat: idx % 5 === 0,
+    };
     return {
-      bg: PRE.bg, skin: PRE.skin, hair: PRE.hair, shirt: PRE.shirt,
-      style: (idx * 3) % 4, glasses: !!PRE.glasses, blush: idx % 2 === 0, hat: !!PRE.hat,
-      crown: !!PRE.crown, visor: !!PRE.visor, horns: !!PRE.horns, antenna: !!PRE.antenna, robot: !!PRE.robot,
-      mask: !!PRE.mask, eyePatch: !!PRE.eyePatch, stars: !!PRE.stars, scales: !!PRE.scales,
+      bg: P.bg, skin: P.skin, hair: P.hair, shirt: P.shirt,
+      style: (idx * 3) % 4, glasses: !!P.glasses, blush: idx % 2 === 0, hat: !!P.hat,
+      crown: !!P.crown, visor: !!P.visor, horns: !!P.horns, antenna: !!P.antenna, robot: !!P.robot,
+      mask: !!P.mask, eyePatch: !!P.eyePatch, stars: !!P.stars, scales: !!P.scales,
     };
   }
   return {
@@ -179,7 +272,7 @@ function deviceFingerprint(){
 }
 function defaultOwned(){
   return {
-    avatars: Array.from({ length: 20 }, (_, i) => i),
+    avatars: Array.from({ length: 30 }, (_, i) => i), // 0-19 free
     frames: [0], effects: [0], backgrounds: [0],
   };
 }
@@ -229,7 +322,7 @@ function syncProfiles(){
       lang: account.lang || currentLang,
       uid: account.uid, name: account.name, avatar: account.avatar, xp: account.xp || 0, level: account.level || 1, streak: account.streak || 0, bestStreak: account.bestStreak || 0,
       background: account.background || 0, frame: account.frame || 0, effect: account.effect || 0,
-      owned: account.owned || defaultOwned(),
+      owned: account.owned || defaultOwned(), nameFx: account.nameFx || 0,
     } });
   }
 }
@@ -247,7 +340,7 @@ function registerAccount(name, pin, avatar, background, frame, effect){
     background: Number.isInteger(background) ? Math.max(0, background) : 0,
     frame: Number.isInteger(frame) ? Math.max(0, frame) : 0,
     effect: Number.isInteger(effect) ? Math.max(0, effect) : 0,
-    owned: defaultOwned(), coins: 0, played: {}, total: 0, device: deviceFingerprint(),
+    owned: defaultOwned(), coins: 0, played: {}, total: 0, device: deviceFingerprint(), nameFx: 0,
   };
   const me = roster.find(p => p.uid === uid);
   if (me){ me.name = name; me.avatar = account.avatar; }
@@ -277,7 +370,7 @@ function logoutAccount(){
   deviceUid = null;
   try { localStorage.removeItem(LS_ACCOUNT); localStorage.setItem('mg_uid', ''); } catch {}
   renderMe(); renderSlots(); renderLeaderboard();
-  openAuthModal();
+  openAuthModal("login");
 }
 function updateAccountProfile(p){
   if (!account) return;
@@ -290,6 +383,7 @@ function updateAccountProfile(p){
   if (me){ me.name = p.name; me.avatar = p.avatar; me.coins = p.coins || 0; me.xp = p.xp || 0; me.level = p.level || 1; me.streak = p.streak || 0; me.bestStreak = p.bestStreak || 0; me.played = p.played || {}; me.total = p.total || 0; }
   else roster.unshift({ uid: p.uid, name: p.name, avatar: p.avatar, coins: p.coins || 0, played: p.played || {}, total: p.total || 0 });
   deviceUid = p.uid;
+  account.nameFx = p.nameFx || 0;
   account.achievements = p.achievements || [];
   account.playmates = p.playmates || {};
   account.daily = p.daily || { play: 0, win: 0, streak: 0 };
@@ -298,19 +392,21 @@ function updateAccountProfile(p){
 function renderMe(){
   const btn = $('btn-me');
   if (!account){
+    btn.classList.add('logged-out');
     btn.innerHTML = '';
     btn.appendChild(el('span','me-av','🔑'));
     btn.appendChild(el('span', null, t('login_register')));
     btn.title = '创建账号或使用 PIN 登录';
     return;
   }
+  btn.classList.remove('logged-out');
   const me = profileByUid(deviceUid);
   if (!me) return;
   btn.innerHTML = '';
   const av = el('span','me-av');
   av.appendChild(avatarStageNode(account, 26));
   btn.appendChild(av);
-  btn.appendChild(el('span', null, account.name + ' ' + langFlag(account.lang || currentLang)));
+  btn.appendChild(nameFxNode(account, account.name + ' ' + langFlag(account.lang || currentLang)));
   const lv = account.level || levelFromXp(account.xp || 0);
   const title = titleFor(lv);
   btn.appendChild(el('span','me-title', title.icon + ' ' + title.name));
@@ -423,24 +519,54 @@ function openProfileEditor(uid, slotIndex){
   input.placeholder = '输入昵称（12 字以内）';
   input.value = name;
   card.appendChild(input);
+  const catLabel = el('div','lb-note','选择头像（0-29 免费，30+ 商城）');
+  card.appendChild(catLabel);
+  const editorCats = el('div','shop-tabs');
+  const editorCatsDef = [
+    { id:'all', name:'全部' }, { id:'basic', name:'🎲 基础' }, { id:'theme', name:'✨ 主题' },
+    { id:'fantasy', name:'👑 幻想' }, { id:'animals', name:'🐾 动物' },
+    { id:'profession', name:'💼 职业' }, { id:'creative', name:'🎨 创意' },
+  ];
+  let editorCat = 'all';
   const grid = el('div','avatar-grid');
-  for (let i = 0; i < AVATAR_COUNT; i++){
-    const opt = el('button','avatar-opt' + (i === avatar ? ' selected' : ''));
-    opt.type = 'button';
-    opt.appendChild(avatarCanvas(i, 26));
-    opt.setAttribute('aria-label', '头像 ' + (i+1));
-    opt.addEventListener('click', () => {
-      if (i >= 20 && !ownItem(account, 'avatars', i)){
-        const meta = avatarMeta(i);
-        toast('「' + (meta ? meta.name : '头像') + '」需在商城购买（$' + (meta ? meta.price : 0) + '）');
-        return;
+  function renderEditorGrid(){
+    grid.innerHTML = '';
+    for (let i = 0; i < AVATAR_COUNT; i++){
+      if (editorCat !== 'all' && avatarCategory(i) !== editorCat) continue;
+      const locked = avatarLocked(i);
+      const opt = el('button','avatar-opt' + (i === avatar ? ' selected' : '') + (locked ? ' locked' : ''));
+      opt.type = 'button';
+      opt.appendChild(avatarCanvas(i, 26));
+      opt.setAttribute('aria-label', '头像 ' + (i+1));
+      if (locked){
+        opt.appendChild(el('span','avatar-lock','🔒' + (avatarPrice(i) ? '$' + avatarPrice(i) : '')));
+        opt.addEventListener('click', () => {
+          const meta = avatarMeta(i);
+          toast('「' + (meta ? meta.name : '头像') + '」需在商城购买（$' + (meta ? meta.price : 0) + '）');
+        });
+      } else {
+        opt.addEventListener('click', () => {
+          avatar = i;
+          grid.querySelectorAll('.avatar-opt').forEach(o => o.classList.toggle('selected', o === opt));
+        });
       }
-      avatar = i;
-      grid.querySelectorAll('.avatar-opt').forEach(o => o.classList.toggle('selected', o === opt));
-    });
-    grid.appendChild(opt);
+      grid.appendChild(opt);
+    }
   }
+  editorCatsDef.forEach(c => {
+    const tb = el('button','btn shop-tab' + (editorCat === c.id ? ' btn-primary' : ''));
+    tb.textContent = c.name;
+    tb.addEventListener('click', () => {
+      editorCat = c.id;
+      editorCats.querySelectorAll('.shop-tab').forEach(t => t.classList.remove('btn-primary'));
+      tb.classList.add('btn-primary');
+      renderEditorGrid();
+    });
+    editorCats.appendChild(tb);
+  });
+  card.appendChild(editorCats);
   card.appendChild(grid);
+  renderEditorGrid();
   if (editingMe){
     card.appendChild(el('div','lb-note','背景'));
     const bgGrid = el('div','bg-grid');
@@ -455,6 +581,21 @@ function openProfileEditor(uid, slotIndex){
       bgGrid.appendChild(sw);
     });
     card.appendChild(bgGrid);
+    card.appendChild(el('div','lb-note','昵称效果'));
+    const fxRow = el('div','bg-grid');
+    for (let fx = 0; fx <= 4; fx++){
+      const fxBtn = el('button','btn shop-tab' + (fx === (account.nameFx || 0) ? ' btn-primary' : ''));
+      fxBtn.type = 'button';
+      fxBtn.textContent = nameFxLabel(fx);
+      fxBtn.addEventListener('click', () => {
+        account.nameFx = fx;
+        fxRow.querySelectorAll('.shop-tab').forEach(b => b.classList.remove('btn-primary'));
+        fxBtn.classList.add('btn-primary');
+        saveAccount(); syncProfiles(); renderMe();
+      });
+      fxRow.appendChild(fxBtn);
+    }
+    card.appendChild(fxRow);
   }
   const stats = el('div','profile-stats');
   if (editing){
@@ -535,7 +676,8 @@ function renderLeaderboard(){
     row.appendChild(av);
     const nameWrap = el('span','lb-name');
     const lv = u.level || (u.xp ? levelFromXp(u.xp) : 1);
-  nameWrap.textContent = u.name + (lv > 1 ? ' [Lv.' + lv + ']' : '') + ' ' + (u.lang ? langFlag(u.lang) : '');
+    nameWrap.appendChild(nameFxNode(u, u.name));
+    nameWrap.appendChild(el('span', null, (lv > 1 ? ' [Lv.' + lv + ']' : '') + ' ' + (u.lang ? langFlag(u.lang) : '')));
     row.style.cursor = 'pointer';
     row.addEventListener('click', () => openProfileModal(u.uid));
     row.appendChild(nameWrap);
@@ -640,6 +782,19 @@ function applyGameResult(results){
     entries.push({ uid:p.uid, name:p.name, avatar:p.avatar, game:gameId, coins: r.coins === 1 ? 1 : 0, played: 1, xp: xpGain });
     parts.push(p.name + (r.coins === 1 ? ' 获得 $1' : ' 本局无奖励'));
   });
+  // AI 角色：胜负发言 + 计入「最近一起玩」
+  if (aiMode && account){
+    let aiWon = false, humanWon = false;
+    results.forEach(r => {
+      if (r.slot > 0 && r.coins === 1) aiWon = true;
+      if (r.slot === 0 && r.coins === 1) humanWon = true;
+    });
+    if (aiWon) aiSpeak(currentPersona, 'win');
+    else if (humanWon) aiSpeak(currentPersona, 'lose');
+    const mate = aiMateInfo(currentPersona);
+    recordPlaymate(account, mate.uid, mate.name, gameId);
+    saveAccount();
+  }
   saveRoster();
   if (entries.length){
     if (online.connected){
@@ -688,6 +843,7 @@ function showGame(id){
     opts = { onEnd: results => applyGameResult(results) };
     if (aiMode && playerCount >= 2){
       opts.ai = new Set(Array.from({ length: playerCount - 1 }, (_, i) => i + 1));
+      opts.aiPersona = currentPersona;
     }
   }
   currentGame = createGameInstance(id, area, extra, playerCount, opts);
@@ -734,6 +890,7 @@ function setStatus(text, win){
 }
 
 function renderHub(){
+  renderPersonaRow();
   const grid = $('game-grid');
   grid.innerHTML = '';
   const label = $('count-label');
@@ -767,6 +924,10 @@ if (typeof document !== 'undefined'){
     get online(){ return online; },
     get roster(){ return roster; },
     get deviceUid(){ return deviceUid; },
+    get personas(){ return AI_PERSONAS; },
+    setAiPersona,
+    renderPersonaRow,
+    get currentPersona(){ return currentPersona; },
     get leaderboard(){ return lastServerLB; },
   };
   initI18n().then(() => {
@@ -788,10 +949,12 @@ if (typeof document !== 'undefined'){
   }));
   const themeBtn = $('btn-theme');
   if (themeBtn) themeBtn.addEventListener('click', () => {
-    const cur = (document.documentElement && document.documentElement.getAttribute('data-theme')) === 'dark' ? 'dark' : 'light';
-    const next = cur === 'dark' ? 'light' : 'dark';
+    const cur = getTheme();
+    const idx = THEME_LIST.findIndex(t => t.id === cur);
+    const next = THEME_LIST[(idx + 1) % THEME_LIST.length].id;
     applyTheme(next);
     try { localStorage.setItem('mg_theme', next); } catch {}
+    toast('主题：' + themeMeta(next).icon + ' ' + themeMeta(next).nameZh);
   });
   const endBtn = $('btn-end-game');
   if (endBtn) endBtn.addEventListener('click', () => {
@@ -805,8 +968,15 @@ if (typeof document !== 'undefined'){
   $('btn-rules').addEventListener('click', () => {
     if (currentGameId && RULES[currentGameId]) showModal(GAMES[currentGameId].name + ' · 规则', RULES[currentGameId]);
   });
+  const heroQuick = $('btn-hero-quick');
+  if (heroQuick) heroQuick.addEventListener('click', () => {
+    const playable = Object.keys(GAMES).filter(id => playerCount >= GAMES[id].min && playerCount <= GAMES[id].max);
+    if (!playable.length){ toast('当前人数没有可玩的游戏'); return; }
+    startGame(playable[Math.floor(Math.random() * playable.length)]);
+  });
   $('btn-create-room').addEventListener('click', () => online.create());
-  $('btn-settings').addEventListener('click', openSettings);
+  const settingsBtn = $('btn-settings-page');
+  if (settingsBtn) settingsBtn.addEventListener('click', openSettingsPage);
   $('btn-me').addEventListener('click', () => openProfileModal(deviceUid));
   const setLbTab = (which) => {
     lbFilter = which;
@@ -830,3 +1000,5 @@ function parseHash(){
   renderHub();
   startGame(m[1]);
 }
+
+

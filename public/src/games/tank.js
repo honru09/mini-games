@@ -56,8 +56,10 @@ function gameTank(area, extra, n, opts){
         const nd = Math.abs(me.r + d[0] - foe.r) + Math.abs(me.c + d[1] - foe.c);
         if (nd < bestD){ bestD = nd; best = di; }
       });
-      if (opts.online) opts.sendMove({ act: 'move', d: best });
-      moveTank(cur, best);
+      const tankPick = aiPersonaMove(optsMoves.length, optsMoves.indexOf(best), opts.aiPersona);
+      aiSpeak(opts.aiPersona, 'think');
+      if (opts.online) opts.sendMove({ act: 'move', d: optsMoves[tankPick] });
+      moveTank(cur, optsMoves[tankPick]);
     }, 700);
   }
   function buildMap(){

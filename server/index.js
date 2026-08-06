@@ -46,11 +46,11 @@ function buildAIPrompt(game, state, options){
     '\n请决定下一步具体走法（例如落子坐标），严格只返回 JSON：{"choice":"具体走法"}';
 }
 
-async function callDeepSeek(messages){
+async function callDeepSeek(messages, temperature){
   const payload = {
     model: 'deepseek-chat',
     messages,
-    temperature: 0.4,
+    temperature: (typeof temperature === 'number' && temperature >= 0 && temperature <= 2) ? temperature : 0.4,
     max_tokens: 200,
     stream: false,
     response_format: { type: 'json_object' },
@@ -79,12 +79,14 @@ async function callDeepSeek(messages){
   return data.choices && data.choices[0] && data.choices[0].message ? data.choices[0].message.content : '';
 }
 
-async function askDeepSeek(game, state, options){
+async function askDeepSeek(game, state, options, persona){
+  const base = '你是一个棋牌游戏 AI 助手。你只会输出合法、可执行的棋步，绝不编造不存在的选项。'
+  const sys = persona && persona.systemPrompt ? (base + ' ' + persona.systemPrompt) : base;
   const messages = [
-    { role: 'system', content: '你是一个棋牌游戏 AI 助手。你只会输出合法、可执行的棋步，绝不编造不存在的选项。' },
+    { role: 'system', content: sys },
     { role: 'user', content: buildAIPrompt(game, state, options) },
   ];
-  const content = await callDeepSeek(messages);
+  const content = await callDeepSeek(messages, persona ? persona.temperature : undefined);
   let choice = null;
   const m = /"choice"\s*:\s*"([^"]*)"/.exec(content);
   if (m) choice = m[1];
@@ -114,10 +116,11 @@ async function handleAI(req, res){
   try { body = JSON.parse(Buffer.concat(chunks).toString('utf8')); } catch { body = {}; }
   const game = String(body.game || '');
   const options = Array.isArray(body.options) ? body.options.map(String).slice(0, 300) : null;
+  const persona = (body.persona && typeof body.persona === 'object') ? body.persona : null;
   let choice = null;
   if (DEEPSEEK_KEY){
     try {
-      choice = await askDeepSeek(game, body.state, options);
+      choice = await askDeepSeek(game, body.state, options, persona);
     } catch (e) {
       console.error('AI 请求失败:', e.message);
     }
@@ -200,7 +203,7 @@ async function sbFetch(path, options = {}){
 async function sbLoadProfiles(){
   if (!useSupabase) return;
   try {
-    const rows = await sbFetch('profiles?select=uid,name,avatar,coins,xp,level,streak,best_streak,played,total,background,frame,effect,owned,pin_hash,lang&order=coins.desc&limit=5000');
+    const rows = await sbFetch('profiles?select=uid,name,avatar,coins,xp,level,streak,best_streak,played,total,background,frame,effect,owned,pin_hash,lang,name_fx&order=coins.desc&limit=5000');
     const users = {};
     for (const r of rows){
       users[r.uid] = {
@@ -208,7 +211,7 @@ async function sbLoadProfiles(){
         background: r.background || 0, frame: r.frame || 0, effect: r.effect || 0,
         owned: r.owned || { avatars: [], frames: [], effects: [], backgrounds: [] },
         pin_hash: r.pin_hash || null, lang: r.lang || 'zh-CN',
-        achievements: r.achievements || [], playmates: r.playmates || {}, daily: r.daily || { play: 0, win: 0, streak: 0 },
+        achievements: r.achievements || [], playmates: r.playmates || {}, daily: r.daily || { play: 0, win: 0, streak: 0 }, nameFx: r.name_fx || 0,
       };
     }
     db.users = users;
@@ -228,7 +231,7 @@ async function sbSyncProfile(u){
         background: u.background || 0, frame: u.frame || 0, effect: u.effect || 0,
         owned: u.owned || { avatars: [], frames: [], effects: [], backgrounds: [] },
         pin_hash: u.pin_hash || null, lang: u.lang || 'zh-CN',
-        achievements: u.achievements || [], playmates: u.playmates || {}, daily: u.daily || { play: 0, win: 0, streak: 0 },
+        achievements: u.achievements || [], playmates: u.playmates || {}, daily: u.daily || { play: 0, win: 0, streak: 0 }, name_fx: u.nameFx || 0,
         updated_at: new Date().toISOString(),
       }),
     });
@@ -350,7 +353,7 @@ function profileObj(u){
     owned: u.owned || { avatars: [], frames: [], effects: [], backgrounds: [] },
     coins: u.coins || 0, xp: u.xp || 0, level: u.level || 1, streak: u.streak || 0, bestStreak: u.bestStreak || 0,
     played: u.played || {}, total: u.total || 0, lang: u.lang || 'zh-CN',
-    achievements: u.achievements || [], playmates: u.playmates || {}, daily: u.daily || { play: 0, win: 0, streak: 0 },
+    achievements: u.achievements || [], playmates: u.playmates || {}, daily: u.daily || { play: 0, win: 0, streak: 0 }, nameFx: u.nameFx || 0,
   };
 }
 function normalizeOwned(o){
@@ -472,7 +475,7 @@ class Session {
         background: Number.isInteger(payload && payload.background) ? Math.max(0, Math.min(12, payload.background)) : 0,
         frame: Number.isInteger(payload && payload.frame) ? Math.max(0, Math.min(12, payload.frame)) : 0,
         effect: Number.isInteger(payload && payload.effect) ? Math.max(0, Math.min(12, payload.effect)) : 0,
-        achievements: [], playmates: {}, daily: { play: 0, win: 0, streak: 0 },
+        achievements: [], playmates: {}, daily: { play: 0, win: 0, streak: 0 }, nameFx: 0,
         owned: normalizeOwned(payload && payload.owned),
         xp: 0, level: 1, streak: 0, bestStreak: 0, coins: 0, played: {}, total: 0, pin_hash: ph, lang: (payload && ['zh-CN','en-US','uk-UA'].includes(payload.lang) ? payload.lang : 'zh-CN'), created_at: Date.now(),
       };
@@ -521,6 +524,7 @@ class Session {
       if (payload.frame !== undefined) u.frame = Number.isInteger(payload.frame) ? Math.max(0, Math.min(12, payload.frame)) : (u.frame || 0);
       if (payload.effect !== undefined) u.effect = Number.isInteger(payload.effect) ? Math.max(0, Math.min(12, payload.effect)) : (u.effect || 0);
       if (payload.owned) u.owned = normalizeOwned(payload.owned);
+      if (payload.nameFx !== undefined) u.nameFx = Number.isInteger(payload.nameFx) ? Math.max(0, Math.min(4, payload.nameFx)) : (u.nameFx || 0);
       if (payload.achievements !== undefined) u.achievements = Array.isArray(payload.achievements) ? payload.achievements : [];
       if (payload.playmates !== undefined) u.playmates = (payload.playmates && typeof payload.playmates === 'object') ? payload.playmates : {};
       if (payload.daily !== undefined) u.daily = (payload.daily && typeof payload.daily === 'object') ? payload.daily : { play: 0, win: 0, streak: 0 };

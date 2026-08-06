@@ -43,7 +43,9 @@ function gameTicTacToe(area, extra, n, opts){
         board[i] = null;
         if (v > bestV){ bestV = v; bestI = i; }
       }
-      applyMove(bestI);
+      const tttPick = aiPersonaMove(legal.length, legal.indexOf(String(bestI)), opts.aiPersona);
+      aiSpeak(opts.aiPersona, 'think');
+      applyMove(Number(legal[tttPick]));
     }, 500);
   }
   function render(){

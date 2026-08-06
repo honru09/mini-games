@@ -121,7 +121,13 @@ function renderMyCard(){
   holder.innerHTML = '';
   if (!account){
     const empty = el('div', 'my-card-empty');
-    empty.textContent = '登录后查看我的数据';
+    empty.appendChild(el('div', 'my-card-empty-icon', '🎮'));
+    empty.appendChild(el('div', 'my-card-empty-title', '登录后开启玩家档案'));
+    empty.appendChild(el('div', 'my-card-empty-desc', '记录称号 · 成就 · 每日任务 · 最近一起玩'));
+    const goBtn = el('button', 'btn btn-primary my-card-empty-btn', '🔑 登录 / 注册');
+    goBtn.type = 'button';
+    goBtn.addEventListener('click', e => { e.stopPropagation(); openAuthModal(); });
+    empty.appendChild(goBtn);
     empty.addEventListener('click', () => openAuthModal());
     holder.appendChild(empty);
     return;
@@ -137,7 +143,9 @@ function renderMyCard(){
   av.appendChild(avatarStageNode(account, 40));
   head.appendChild(av);
   const info = el('div', 'my-card-info');
-  info.appendChild(el('div', 'my-card-name', account.name + ' ' + langFlag(account.lang || currentLang)));
+  const nm = el('div', 'my-card-name');
+  nm.appendChild(nameFxNode(account, account.name + ' ' + langFlag(account.lang || currentLang)));
+  info.appendChild(nm);
   info.appendChild(el('div', 'my-card-title', title.icon + ' ' + title.name + ' · Lv.' + lv));
   head.appendChild(info);
   card.appendChild(head);

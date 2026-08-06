@@ -29,7 +29,14 @@ mini-games-online/
 ├── AGENTS.md            # 本文件
 ├── README.md            # 用户向说明
 ├── public/
-│   ├── index.html       # 整个前端（HTML+CSS+JS，约 7800 行）
+│   ├── index.html       # 构建产物（index-template.html + src/ 合并）
+│   ├── index-template.html # 前端骨架模板
+│   ├── src/             # 前端源码（build.js 合并进 index.html）
+│   │   ├── core/        # 00-i18n / 01-utils / 02-app-shell / 03-game-framework / 04-social / 05-ai-personas
+│   │   ├── games/       # 11 款游戏（本地 + 人机 scheduleAI）
+│   │   ├── online/      # WebSocket 客户端（03-websocket）
+│   │   ├── shop/        # 04-auth / 05-profile / 06-shop
+│   │   └── ui/          # 07-roster（档案/排行榜/结算）
 │   └── locales/         # i18n 翻译文件（zh-CN / en-US / uk-UA）
 ├── server/index.js      # 零依赖 Node 服务（约 1260 行）
 │                         # 静态文件 + 手写 WebSocket(/ws) + /api/ai + Supabase 可选持久化
@@ -147,6 +154,11 @@ node scripts/render-env.js
 - 三语言 i18n + Settings 设置页 + 语言旗帜
 - 毛玻璃 UI、3D 骰子、开局倒计时、双栏大厅
 - CI：GitHub Pages 自动构建 + 冒烟 + 部署
+
+✅ 已完成（本轮）：
+- UI/UX 产品级升级：Design System（间距/字号/色彩令牌）、6 套主题、Hero 首屏、卡片入场/按钮光效/胜负彩带/WebAudio 轻音效
+- 个性化系统：动态头像框（8 款）、闪名（4 种特效）、动态档案背景（4 款）、等级进度条
+- 前端冒烟 ALL_PASS + 联机 E2E ALL_PASS + WS 断开测试通过
 
 ⏳ 待办：
 1. 前端拆分：src/ 分模块 → build.js 合并为 index.html

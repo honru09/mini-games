@@ -27,7 +27,7 @@ const online = {
       if (account && account.uid && !account.registered){
         this.send({ type: 'register', payload: {
           uid: account.uid, pin: account.pin, name: account.name, avatar: account.avatar,
-          background: account.background, frame: account.frame, effect: account.effect, owned: account.owned,
+          background: account.background, frame: account.frame, effect: account.effect, owned: account.owned, nameFx: account.nameFx || 0,
         } });
       }
       if (this._hb) clearInterval(this._hb);

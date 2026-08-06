@@ -17,6 +17,7 @@ const MODULES = [
   'core/02-app-shell.js',
   'core/03-game-framework.js',
   'core/04-social.js',
+  'core/05-ai-personas.js',
   'online/03-websocket.js',
   'shop/04-auth.js',
   'shop/05-profile.js',

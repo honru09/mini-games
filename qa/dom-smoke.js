@@ -94,9 +94,9 @@ const ctx = makeCtxProxy();
 
 const IDs = ['count-group','btn-back','btn-restart','btn-rules','btn-end-game','btn-theme','count-label','mode-group','screen-hub','screen-game','game-title',
   'player-bar','status-bar','board-area','game-extra','toast-wrap','game-grid',
-  'btn-create-room','btn-join-room','room-input','btn-settings','online-status','online-banner',
+  'btn-create-room','btn-join-room','room-input','btn-settings-page','online-status','online-banner',
   'room-panel','room-code-big','room-info','room-status','room-actions',
-  'btn-me','slots-row','lb-list','lb-note','lb-tab-all','lb-tab-online',
+  'btn-me','slots-row','persona-row','lb-list','lb-note','lb-tab-all','lb-tab-online',
   'lobby-panel','lobby-list','player-list'];
 const registry = new Map(IDs.map(id => {
   const e = makeEl('div');
@@ -108,8 +108,11 @@ global.document = {
   getElementById: id => registry.get(id) || null,
   createElement: tag => makeEl(tag),
   querySelectorAll: () => [],
+  querySelector: () => null,
   body: makeEl('body'),
   documentElement: makeEl('html'),
+  addEventListener(){},
+  removeEventListener(){},
 };
 global.window = { devicePixelRatio: 1, location: { hash: '' }, __gameInfo: null };
 global.location = { hash: '' };
@@ -347,10 +350,13 @@ async function main(){
   if (editBtn) editBtn.dispatch('click');
   modalBd = document.body.children.find(c => c.classList.contains('modal-backdrop') && !c.classList.contains('auth-backdrop'));
   let card = modalBd.children[0];
-  const nickInput = card.children[1];
+  const nickInput = card.querySelector('.nick-input') || card.children[1];
   nickInput.value = '小明';
-  card.children[2].querySelectorAll('.avatar-opt')[1].dispatch('click');
-  card.children.filter(c => c.textContent === '保存')[0].dispatch('click');
+  const avGrid = card.querySelector('.avatar-grid') || card;
+  const avOpts = avGrid.querySelectorAll('.avatar-opt');
+  if (avOpts.length > 1) avOpts[1].dispatch('click');
+  const saveBtn = card.children.filter(c => c.textContent === '保存')[0] || findBtnByText(card, '保存');
+  saveBtn.dispatch('click');
   const roster1 = JSON.parse(localStorage.getItem('mg_roster'));
   check('档案昵称保存成功', roster1.some(p => p.name === '小明'));
   check('我的档案按钮显示新昵称', $('btn-me').children[1].textContent.includes('小明'));
@@ -405,8 +411,21 @@ async function main(){
   check('人机模式：完整对局可结束', aiOver);
   G.aiMode = false;
 
+  // AI 角色化（Phase 4）
+  check('AI_PERSONAS 定义 5 个角色', G.personas && G.personas.length === 5);
+  const personaBefore = G.currentPersona.id;
+  G.setAiPersona('gambler');
+  check('切换 AI 角色生效', G.currentPersona.id === 'gambler' && G.currentPersona.randomness >= 0.3);
+  G.setAiPersona(personaBefore);
+  G.aiMode = true;
+  G.renderPersonaRow();
+  check('人机模式渲染角色选择卡', $('persona-row').children.length >= 2 && $('persona-row').querySelectorAll('.persona-card').length === 5);
+  G.aiMode = false;
+  G.renderPersonaRow();
+  check('本地模式隐藏角色选择', $('persona-row').classList.contains('hidden'));
+
   // 设置弹层与房间面板初始状态
-  $('btn-settings').dispatch('click');
+  $('btn-settings-page').dispatch('click');
   const stBd = document.body.children.find(c => c.classList.contains('modal-backdrop'));
   check('设置弹层可打开', !!stBd);
   if (stBd) stBd.remove();

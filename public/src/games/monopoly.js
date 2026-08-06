@@ -67,6 +67,8 @@ function gameMonopoly(area, extra, n, opts){
         const cell = CELLS[p.pos];
         // 启发式：买得起的便宜地就买，贵地保留现金
         const buy = p.money >= cell.price && (p.money - cell.price >= 800 || cell.price <= 400);
+        if (opts.aiPersona && Math.random() < opts.aiPersona.randomness) buy = !buy;
+        aiSpeak(opts.aiPersona, 'think');
         applyDecision(cur, buy ? 'buy' : 'pass');
       }
     }, 750);

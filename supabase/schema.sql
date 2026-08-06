@@ -16,6 +16,7 @@ create table if not exists profiles (
   level integer not null default 1,
   streak integer not null default 0,
   best_streak integer not null default 0,
+  name_fx integer not null default 0,
   achievements jsonb not null default '[]'::jsonb,
   playmates jsonb not null default '{}'::jsonb,
   daily jsonb not null default '{"play":0,"win":0,"streak":0}'::jsonb,

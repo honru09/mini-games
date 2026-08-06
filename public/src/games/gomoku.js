@@ -50,7 +50,10 @@ function gameGomoku(area, extra, n, opts){
         const v = Math.max(atk, def * 1.1);
         if (v > bestV){ bestV = v; bestR = r; bestC = c; }
       }
-      applyMove(r, c);
+      const gomokuPick = aiPersonaMove(empties.length, empties.indexOf(bestR + ',' + bestC), opts.aiPersona);
+      const gpArr = empties[gomokuPick].split(',').map(Number);
+      aiSpeak(opts.aiPersona, 'think');
+      applyMove(gpArr[0], gpArr[1]);
     }, 550);
   }
   const canvas = document.createElement('canvas');

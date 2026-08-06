@@ -103,8 +103,11 @@ function gameJungle(area, extra, n, opts){
         v += (Math.abs(mv.to[0] - d0[0]) + Math.abs(mv.to[1] - d0[1])) * 2;
         if (v > bestV){ bestV = v; best = mv; }
       });
-      if (opts.online) opts.sendMove({ from: best.from, to: best.to });
-      doMove(best.from, best.to);
+      const jPick = aiPersonaMove(all.length, all.indexOf(best), opts.aiPersona);
+      aiSpeak(opts.aiPersona, 'think');
+      const jMv = all[jPick];
+      if (opts.online) opts.sendMove({ from: jMv.from, to: jMv.to });
+      doMove(jMv.from, jMv.to);
     }, 650);
   }
   function doMove(from, to){

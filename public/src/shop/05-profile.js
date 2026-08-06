@@ -33,14 +33,33 @@ function renderProfilePopup(p, isMe){
   hero.appendChild(avWrap);
   const pLv = p.level || levelFromXp(p.xp || 0);
   const pTitle = titleFor(pLv);
-  hero.appendChild(el('div','pname', p.name + ' [Lv.' + pLv + ']' + ' ' + (p.lang ? langFlag(p.lang) : '') + (isMe ? t('profile_mine') : '')));
+  const pname = el('div','pname');
+  pname.appendChild(nameFxNode(p, p.name));
+  pname.appendChild(el('span', null, ' [Lv.' + pLv + ']' + ' ' + (p.lang ? langFlag(p.lang) : '') + (isMe ? t('profile_mine') : '')));
+  hero.appendChild(pname);
   hero.appendChild(el('div','pmeta', pTitle.icon + ' ' + pTitle.name + ' · ' + (p.achievements ? p.achievements.length : 0) + ' achievements'));
   const coinLine = el('div','pmeta');
   coinLine.appendChild(el('span','coin','$'));
   coinLine.appendChild(el('span', null, ' ' + (p.coins || 0) + ' · 共 ' + (p.total || 0) + ' 局' + (p.online ? ' · 🟢在线' : ' · ⚪离线')));
   hero.appendChild(coinLine);
+  // 等级进度条
+  const xpNow = p.xp || 0;
+  const needCur = xpForLevel(pLv);
+  const needNext = xpForLevel(pLv + 1);
+  const prog = needNext > needCur ? Math.max(0, Math.min(1, (xpNow - needCur) / (needNext - needCur))) : 1;
+  const lvWrap = el('div','level-bar-wrap');
+  lvWrap.appendChild(el('div','level-bar-label','Lv.' + pLv + ' → ' + (pLv + 1) + ' · ' + (xpNow - needCur) + '/' + (needNext - needCur) + ' XP'));
+  const lvBar = el('div','level-bar');
+  const lvFill = el('div','level-bar-fill');
+  lvFill.style.width = Math.round(prog * 100) + '%';
+  lvBar.appendChild(lvFill);
+  lvWrap.appendChild(lvBar);
+  hero.appendChild(lvWrap);
   card.appendChild(hero);
   const stats = el('div','profile-stats');
+  const achChip = el('div','stat-chip');
+  achChip.textContent = '🏆 成就 ' + ((p.achievements && p.achievements.length) || 0);
+  stats.appendChild(achChip);
   GAME_KEYS.forEach(k => {
     const s = el('div','stat-chip small');
     s.textContent = GAMES[k].icon + ' ' + ((p.played && p.played[k]) || 0) + ' 局';

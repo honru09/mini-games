@@ -165,8 +165,11 @@ function gameXiangqi(area, extra, n, opts){
         const rnd = (Math.random() - 0.5) * 0.5;
         if (v + rnd > bestV){ bestV = v + rnd; best = mv; }
       });
-      if (opts.online) opts.sendMove({ from: best.from, to: best.to });
-      doMove(best.from, best.to);
+      const xqPick = aiPersonaMove(all.length, all.indexOf(best), opts.aiPersona);
+      aiSpeak(opts.aiPersona, 'think');
+      const xqMv = all[xqPick];
+      if (opts.online) opts.sendMove({ from: xqMv.from, to: xqMv.to });
+      doMove(xqMv.from, xqMv.to);
     }, 750);
   }
   function doMove(from, to){

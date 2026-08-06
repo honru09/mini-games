@@ -48,7 +48,9 @@ function gameLudo(area, extra, n, opts){
           }
           if (s > bestS){ bestS = s; bestT = ti; }
         });
-        pick(curPid(), bestT);
+        const ludoPick = aiPersonaMove(mv.length, mv.indexOf(bestT), opts.aiPersona);
+        aiSpeak(opts.aiPersona, 'think');
+        pick(curPid(), mv[ludoPick]);
       }
     }, 700);
   }
