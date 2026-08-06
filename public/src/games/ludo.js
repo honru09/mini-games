@@ -20,6 +20,7 @@ function gameLudo(area, extra, n, opts){
     if (aiPending || over) return;
     if (!opts.ai || !opts.ai.has(curIdx)) return;
     aiPending = true;
+    setStatus('🤖 AI 思考中…');
     setTimeout(async () => {
       aiPending = false;
       if (over) return;
@@ -212,6 +213,7 @@ function gameLudo(area, extra, n, opts){
     renderPlayers(curIdx, infos, null, pids.map(pid => PLAYER_COLORS[pid]));
   }
   function roll(){
+    sfx('pop');
     if (over || phase !== 'roll') return;
     if (opts.online && curIdx !== opts.myIdx) return;
     if (opts.ai && opts.ai.has(curIdx)) return;
@@ -236,6 +238,7 @@ function gameLudo(area, extra, n, opts){
     });
   }
   function pick(pid, ti){
+    playFeedback('move');
     if (over || phase !== 'pick' || pid !== curPid()) return;
     if (opts.online && curIdx !== opts.myIdx) return;
     if (opts.ai && opts.ai.has(curIdx)) return;

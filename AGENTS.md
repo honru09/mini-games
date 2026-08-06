@@ -158,14 +158,15 @@ node scripts/render-env.js
 ✅ 已完成（本轮）：
 - UI/UX 产品级升级：Design System（间距/字号/色彩令牌）、6 套主题、Hero 首屏、卡片入场/按钮光效/胜负彩带/WebAudio 轻音效
 - 个性化系统：动态头像框（8 款）、闪名（4 种特效）、动态档案背景（4 款）、等级进度条
-- 前端冒烟 ALL_PASS + 联机 E2E ALL_PASS + WS 断开测试通过
+- v2.5 产品级打磨：补齐 Motion/Elevation/Icon/Glass 设计令牌与组件规范；统一动效库（转场/入场/弹性/Loading）
+- Game Feel：11 款游戏全量接入分级操作反馈（落子/移动/掷骰/吃子/射击/放置 → 音效+震动+状态提示），AI 思考中提示
+- Visual Polish + a11y：棋盘棋子渐变立体质感、侧栏 sticky、排行榜前三高亮、焦点环/44px 触控目标/最小字号 11px/prefers-reduced-motion
+- 前端冒烟 ALL_PASS（66 项）+ 联机 E2E ALL_PASS（40 项）+ WS 断开测试通过
 
 ⏳ 待办：
-1. 前端拆分：src/ 分模块 → build.js 合并为 index.html
-2. 触屏适配 + 小屏布局优化
-3. 接入 Supabase 数据库（schema 已备好）
-4. 锦标赛模式、文字/社交游戏、AI 角色化
-5. 平台扩展（微信小程序 / App / 桌面版）
+1. 接入 Supabase 数据库（schema 已备好，凭证待提供）
+2. 锦标赛模式、文字/社交游戏
+3. 平台扩展（微信小程序 / App / 桌面版）
 
 ## 8. 项目历程
 

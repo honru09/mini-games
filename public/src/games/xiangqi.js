@@ -146,6 +146,7 @@ function gameXiangqi(area, extra, n, opts){
     if (aiPending || over) return;
     if (!opts.ai || !opts.ai.has(cur)) return;
     aiPending = true;
+    setStatus('🤖 AI 思考中…');
     setTimeout(async () => {
       aiPending = false;
       if (over) return;
@@ -174,6 +175,7 @@ function gameXiangqi(area, extra, n, opts){
   }
   function doMove(from, to){
     const piece = board[from[0]][from[1]];
+    playFeedback(board[to[0]][to[1]] ? 'capture' : 'move');
     board[from[0]][from[1]] = null;
     board[to[0]][to[1]] = piece;
     lastMove = [from, to];

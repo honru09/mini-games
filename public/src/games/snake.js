@@ -12,6 +12,7 @@ function gameSnake(area, extra, n, opts){
     if (aiPending || over) return;
     if (!opts.ai || !opts.ai.has(cur)) return;
     aiPending = true;
+    setStatus('🤖 AI 思考中…');
     setTimeout(async () => {
       aiPending = false;
       if (over) return;
@@ -72,6 +73,7 @@ function gameSnake(area, extra, n, opts){
     endTurn();
   }
   function step(pi, d, newFood){
+    sfx('move');
     const s = snakes[pi];
     s.d = d;
     const head = s.body[0];

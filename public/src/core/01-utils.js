@@ -14,6 +14,9 @@ function sfx(kind){
       click: { f: 520, dur: .05, vol: .06, type: 'sine' },
       move:  { f: 680, dur: .06, vol: .05, type: 'triangle' },
       pop:   { f: 440, dur: .04, vol: .04, type: 'sine' },
+      place: { f: 540, dur: .09, vol: .07, type: 'triangle' },
+      capture:{ f: 220, dur: .12, vol: .08, type: 'sawtooth' },
+      score: { f: 760, dur: .10, vol: .07, type: 'triangle' },
       win:   { f: 880, dur: .20, vol: .09, type: 'triangle' },
       lose:  { f: 320, dur: .16, vol: .06, type: 'sine' },
     }[kind] || { f: 440, dur: .05, vol: .05, type: 'sine' };
@@ -29,6 +32,27 @@ function sfx(kind){
     osc.start(t);
     osc.stop(t + cfg.dur + .03);
   } catch {}
+}
+/* 震动反馈（移动端；桌面端静默忽略） */
+function haptic(kind){
+  try {
+    if (typeof navigator === 'undefined' || !navigator.vibrate) return;
+    const map = { light: 8, medium: [12, 30, 12], strong: [20, 40, 20, 40, 20], win: [30, 60, 30, 60, 40], lose: [60, 40, 60] };
+    navigator.vibrate(map[kind] || map.light);
+  } catch {}
+}
+/* 分级反馈：关键操作重反馈，普通操作轻反馈 */
+function playFeedback(kind){
+  const fx = {
+    tap:     { sfx: 'click',  haptic: 'light' },
+    move:    { sfx: 'move',   haptic: 'light' },
+    place:   { sfx: 'place',  haptic: 'medium' },
+    capture: { sfx: 'capture',haptic: 'strong' },
+    score:   { sfx: 'score',  haptic: 'medium' },
+    win:     { sfx: 'win',    haptic: 'win' },
+    lose:    { sfx: 'lose',   haptic: 'lose' },
+  }[kind] || { sfx: 'click', haptic: 'light' };
+  sfx(fx.sfx); haptic(fx.haptic);
 }
 if (typeof document !== 'undefined' && document.addEventListener){
   document.addEventListener('click', function(e){
@@ -103,6 +127,8 @@ function el(tag, cls, text){
 function toast(msg){
   const wrap = $('toast-wrap');
   const t = el('div', 'toast', msg);
+  t.setAttribute('role', 'status');
+  t.setAttribute('aria-live', 'polite');
   wrap.appendChild(t);
   setTimeout(() => t.remove(), 1900);
 }
@@ -215,6 +241,23 @@ async function aiChoose(game, state, options, persona){
 }
 function aiPick(options){
   return options[Math.floor(Math.random() * options.length)];
+}
+
+/* ---------------- Loading 工具 ---------------- */
+function loadingNode(text){
+  const wrap = el('div','loading-inline');
+  wrap.appendChild(el('div','loading-spinner'));
+  if (text) wrap.appendChild(el('span', null, text));
+  return wrap;
+}
+function setLoading(target, text){
+  if (!target) return;
+  target.innerHTML = '';
+  target.appendChild(loadingNode(text));
+}
+function clearLoading(target){
+  if (!target) return;
+  target.innerHTML = '';
 }
 
 /* ---------------- 开局倒计时 ---------------- */

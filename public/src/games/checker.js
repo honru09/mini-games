@@ -58,6 +58,7 @@ function gameChecker(area, extra, n, opts){
     if (aiPending || over) return;
     if (!opts.ai || !opts.ai.has(cur)) return;
     aiPending = true;
+    setStatus('🤖 AI 思考中…');
     setTimeout(async () => {
       aiPending = false;
       if (over) return;
@@ -230,6 +231,7 @@ function gameChecker(area, extra, n, opts){
     draw();
   });
   function applyCheckerMove(fromHole, toHole){
+    playFeedback('move');
     const occ = occupiedMap();
     const hit = occ.get(key(fromHole));
     history.push({ pi: hit.pi, mi: hit.mi, from: {q:fromHole.q, r:fromHole.r}, to: {q:toHole.q, r:toHole.r} });

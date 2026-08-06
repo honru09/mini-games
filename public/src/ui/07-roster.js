@@ -901,6 +901,7 @@ function renderHub(){
     card.type = 'button';
     const ok = playerCount >= g.min && playerCount <= g.max;
     if (!ok) card.classList.add('disabled');
+    card.setAttribute('aria-label', g.name + '：' + g.desc);
     card.appendChild(el('div','icon', g.icon));
     card.appendChild(el('div','name', g.name));
     card.appendChild(el('div','desc', g.desc));

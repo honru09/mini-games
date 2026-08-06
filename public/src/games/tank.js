@@ -21,6 +21,7 @@ function gameTank(area, extra, n, opts){
     if (aiPending || over) return;
     if (!opts.ai || !opts.ai.has(cur)) return;
     aiPending = true;
+    setStatus('🤖 AI 思考中…');
     setTimeout(async () => {
       aiPending = false;
       if (over) return;
@@ -74,6 +75,7 @@ function gameTank(area, extra, n, opts){
     grid[T1[0]][T1[1]] = 0;
   }
   function moveTank(pi, d){
+    sfx('move');
     const me = pi === 0 ? t0 : t1;
     me.d = d;
     const nr = me.r + dirs[d][0], nc = me.c + dirs[d][1];
@@ -84,6 +86,7 @@ function gameTank(area, extra, n, opts){
     endTurn();
   }
   function shoot(){
+    playFeedback('capture');
     const me = cur === 0 ? t0 : t1;
     const foe = cur === 0 ? t1 : t0;
     const d = dirs[me.d];

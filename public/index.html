@@ -35,6 +35,29 @@
 
   /* --- Shape / Motion --- */
   --radius-sm:8px; --radius-md:12px; --radius-lg:16px; --radius-xl:22px; --radius-full:999px;
+  /* --- Motion System --- */
+  --dur-instant:60ms; --dur-fast:120ms; --dur-base:220ms; --dur-slow:420ms; --dur-slower:640ms;
+  --ease-out:cubic-bezier(.22,.86,.4,1.2); --ease-in:cubic-bezier(.55,.06,.68,.19);
+  --ease-standard:cubic-bezier(.4,0,.2,1); --ease-spring:cubic-bezier(.34,1.56,.64,1); --ease-bounce:cubic-bezier(.18,.89,.32,1.28);
+  --motion-pop:scale(1.05); --motion-press:scale(.97); --motion-rise:translateY(-3px);
+  /* --- Elevation --- */
+  --elev-0:none;
+  --elev-1:0 1px 3px rgba(15,23,42,.08), 0 1px 2px rgba(15,23,42,.04);
+  --elev-2:0 4px 12px rgba(15,23,42,.10), 0 2px 4px rgba(15,23,42,.06);
+  --elev-3:0 12px 28px rgba(15,23,42,.14), 0 4px 10px rgba(15,23,42,.08);
+  --elev-4:0 24px 56px rgba(15,23,42,.20), 0 8px 20px rgba(15,23,42,.12);
+  /* --- Focus / a11y --- */
+  --focus-ring:0 0 0 3px var(--accent-soft);
+  --focus-ring-visible:0 0 0 3px rgba(79,110,247,.45);
+  /* --- Icon --- */
+  --icon-xs:14px; --icon-sm:18px; --icon-md:24px; --icon-lg:32px; --icon-xl:44px;
+  /* --- Component: Badge --- */
+  --badge-pad:3px 9px; --badge-radius:999px; --badge-font:11px; --badge-weight:600;
+  /* --- Glass --- */
+  --glass-bg:rgba(255,255,255,.72);
+  --glass-bg-dark:rgba(25,32,52,.72);
+  --glass-border:var(--border-color);
+  --glass-blur:blur(14px);
   --dur-fast:120ms; --dur-base:220ms; --dur-slow:420ms;
   --ease-out:cubic-bezier(.22,.86,.4,1.2); --ease-standard:cubic-bezier(.4,0,.2,1);
 
@@ -109,9 +132,10 @@ html[data-theme="sakura"]{
 }
 *{box-sizing:border-box}
 body{
-  margin:0; background:var(--bg); color:var(--text);
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
-  -webkit-font-smoothing:antialiased;
+  margin:0; background:var(--bg-main); color:var(--text-primary);
+  font-family:var(--font-primary); font-size:var(--fs-body); line-height:var(--lh-normal);
+  -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+  transition:background var(--dur-base) var(--ease-standard), color var(--dur-base) var(--ease-standard);
 }
 body::before, body::after{
   content:''; position:fixed; z-index:-1; width:64vmax; height:64vmax; border-radius:50%;
@@ -124,8 +148,8 @@ body::after{background:radial-gradient(circle, rgba(245,180,60,.24), transparent
 button{font-family:inherit; cursor:pointer}
 .hidden{display:none !important}
 #app{max-width:1080px; margin:0 auto; padding:18px 16px 40px}
-.app-header{display:flex; align-items:center; justify-content:space-between; margin-bottom:18px}
-.brand{display:flex; align-items:center; gap:8px; font-size:17px; font-weight:700; letter-spacing:.4px}
+.app-header{display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--sp-lg)}
+.brand{display:flex; align-items:center; gap:var(--sp-sm); font-size:var(--fs-subtitle); font-weight:var(--fw-bold); letter-spacing:var(--ls-wide); text-shadow:0 1px 2px rgba(15,23,42,.06)}
 .brand .brand-icon{font-size:24px}
 .brand .brand-tag{font-size:12px; color:var(--muted); font-weight:500; letter-spacing:.6px}
 .theme-btn{font-size:19px; padding:6px 11px; border-radius:99px; background:var(--card); border:1px solid var(--border)}
@@ -1055,6 +1079,151 @@ html[data-theme="ocean"] .profile-hero.bg-10{background:linear-gradient(160deg,#
   *, *::before, *::after{animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important}
 }
 
+
+
+
+
+/* ================= 可访问性（v2） ================= */
+:root{color-scheme:light}
+html[data-theme="dark"], html[data-theme="midnight"], html[data-theme="cyber"]{color-scheme:dark}
+
+/* 键盘可达：可见焦点环 */
+:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:4px}
+
+/* 触控目标 ≥44px（关键交互） */
+@media (max-width:768px){
+  .btn, .count-btn, .shop-tab, .persona-card, .my-card-mate, .slot-chip{
+    min-height:44px; min-width:44px; display:inline-flex; align-items:center; justify-content:center;
+  }
+  .ttt-cell, .j-cell, .xq-cell{min-width:44px; min-height:44px}
+}
+
+/* 最小字号 ≥11px */
+.lb-game, .my-card-stat-label, .my-card-task, .my-card-mate-info, .persona-card .persona-desc{font-size:11px}
+/* ================= Visual Polish（v2） ================= */
+/* --- 棋盘质感：渐变底 + 细纹理 --- */
+canvas.board-canvas, .ttt-grid, .ludo-board, .m-board, .tank-board, .snake-board, .tetris-well, .jungle-board, .xiangqi-board, .drg-canvas{
+  background:var(--bg-card-solid);
+  background:linear-gradient(160deg, var(--bg-card-solid), var(--accent-soft));
+}
+canvas.board-canvas, .drg-canvas{border-radius:var(--radius-lg); box-shadow:var(--elev-2)}
+
+/* --- 棋子质感：立体阴影 --- */
+.tok, .tcell, .m-cell, .tank-cell.tank0, .tank-cell.tank1, .snake-cell, .tetris-cell, .j-cell, .xq-cell{
+  box-shadow:var(--elev-2), inset 0 1px 0 rgba(255,255,255,.35);
+}
+.tok.movable:hover{box-shadow:var(--elev-3), 0 0 0 3px var(--accent-soft)}
+
+/* --- 侧栏信息层级：sticky + 分区标题 --- */
+.hub-side{position:sticky; top:12px; max-height:calc(100vh - 24px); overflow-y:auto; scrollbar-width:thin}
+.hub-side::-webkit-scrollbar{width:5px}
+.hub-side::-webkit-scrollbar-thumb{background:var(--border-color); border-radius:99px}
+.lb-head h3, .lobby-panel h3, .online-panel h3, .player-list-title{letter-spacing:var(--ls-wide); font-size:var(--fs-small); text-transform:uppercase; color:var(--text-secondary)}
+
+/* --- 排行榜首名高亮 --- */
+.lb-row:first-child .lb-rank{color:var(--warning); font-weight:var(--fw-black); text-shadow:0 0 8px rgba(245,158,11,.5)}
+.lb-row:nth-child(2) .lb-rank{color:var(--text-secondary)}
+.lb-row:nth-child(3) .lb-rank{color:#c97b2d}
+
+/* --- 设置页分区 --- */
+.modal-card > div[style*="font-weight:600"]{letter-spacing:var(--ls-wide); color:var(--text-secondary); text-transform:uppercase; font-size:var(--fs-micro)}
+/* ================= Motion Design 系统 ================= */
+/* --- 转场：屏幕切换 --- */
+#screen-hub, #screen-game{animation:screenIn var(--dur-base) var(--ease-standard)}
+@keyframes screenIn{from{opacity:0; transform:translateY(8px)}to{opacity:1; transform:none}}
+/* 返回大厅时不再重放（避免每次渲染抖动） */
+body.entered #screen-hub, body.entered #screen-game{animation:none}
+
+/* --- 房间进入 --- */
+.room-panel:not(.hidden){animation:roomIn var(--dur-slow) var(--ease-spring)}
+@keyframes roomIn{from{opacity:0; transform:scale(.96) translateY(-6px)}to{opacity:1; transform:none}}
+
+/* --- 排行榜更新 --- */
+.lb-row{animation:rowIn var(--dur-base) var(--ease-out)}
+@keyframes rowIn{from{opacity:0; transform:translateX(-8px)}to{opacity:1; transform:none}}
+.lb-row.me{animation:meGlow 2.4s var(--ease-standard) infinite alternate}
+@keyframes meGlow{from{box-shadow:inset 0 0 0 1px var(--accent-soft)}to{box-shadow:inset 0 0 0 1px var(--accent), 0 0 18px var(--accent-soft)}}
+
+/* --- 状态栏 / 提示 --- */
+.status-bar{transition:background var(--dur-base), border-color var(--dur-base)}
+.status-bar.win{animation:statusPop var(--dur-slow) var(--ease-spring)}
+@keyframes statusPop{0%{transform:scale(.94)}60%{transform:scale(1.03)}100%{transform:scale(1)}}
+
+/* --- 骰子质感 --- */
+.dice3d .face{background:var(--bg-card-solid); box-shadow:inset 0 0 12px rgba(0,0,0,.08), var(--elev-2)}
+.dice3d .pip::before{background:var(--text-primary)}
+
+/* --- 移动端卡片按压反馈 --- */
+@media (hover:none){
+  .game-card:active{transform:var(--motion-press); box-shadow:var(--elev-1)}
+  .persona-card:active{transform:var(--motion-press)}
+  .my-card-mate:active{transform:var(--motion-press)}
+}
+/* ================= 组件规范（Design System） ================= */
+/* --- Button 规范 --- */
+.btn{
+  font-size:var(--fs-body); font-weight:var(--fw-medium); line-height:var(--lh-tight);
+  letter-spacing:var(--ls-normal); border-radius:var(--radius-md);
+  padding:var(--sp-sm) var(--sp-md); min-height:38px;
+  border:1px solid var(--border-color); background:var(--bg-card); color:var(--text-primary);
+  box-shadow:var(--elev-1); transition:transform var(--dur-fast) var(--ease-standard), box-shadow var(--dur-base) var(--ease-standard), background var(--dur-base), border-color var(--dur-base), color var(--dur-base);
+}
+.btn:hover{box-shadow:var(--elev-2); transform:var(--motion-rise)}
+.btn:active{transform:var(--motion-press); box-shadow:var(--elev-1)}
+.btn:focus-visible{outline:none; box-shadow:var(--focus-ring)}
+.btn-primary{
+  background:var(--accent); border-color:var(--accent); color:var(--text-on-accent);
+  font-weight:var(--fw-semibold); box-shadow:var(--elev-2);
+}
+.btn-primary:hover{background:var(--accent-strong); box-shadow:var(--elev-3)}
+.btn-primary:active{transform:var(--motion-press)}
+.btn-ghost{background:transparent; border-color:transparent; color:var(--text-secondary); box-shadow:none}
+.btn-ghost:hover{background:var(--accent-soft); color:var(--text-primary); box-shadow:none}
+.btn:disabled{opacity:.45; cursor:not-allowed; box-shadow:none; transform:none}
+
+/* --- Card 规范 --- */
+.card, .lb-panel, .lobby-panel, .online-panel, .room-panel, .my-card, .game-card{
+  border-radius:var(--radius-lg); border:1px solid var(--border-color);
+  background:var(--bg-card); backdrop-filter:var(--glass-blur); -webkit-backdrop-filter:var(--glass-blur);
+  box-shadow:var(--elev-1);
+}
+.game-card:hover{box-shadow:var(--elev-3)}
+
+/* --- Input 规范 --- */
+.nick-input, input[type="text"], input[type="password"], input[type="search"], textarea{
+  font-size:var(--fs-body); font-family:var(--font-primary); color:var(--text-primary);
+  background:var(--bg-card-solid); border:1px solid var(--border-color); border-radius:var(--radius-md);
+  padding:var(--sp-sm) var(--sp-md); min-height:40px;
+  transition:border-color var(--dur-base), box-shadow var(--dur-base);
+}
+.nick-input:focus, input:focus, textarea:focus{outline:none; border-color:var(--accent); box-shadow:var(--focus-ring)}
+.nick-input::placeholder, input::placeholder{color:var(--text-secondary); opacity:.72}
+
+/* --- Dialog 规范 --- */
+.modal-card{
+  border-radius:var(--radius-xl); background:var(--bg-card-solid);
+  box-shadow:var(--elev-4); border:1px solid var(--border-color);
+}
+
+/* --- Avatar 规范 --- */
+.mini-avatar-stage canvas{border-radius:50%; box-shadow:var(--elev-1)}
+.avatar-stage canvas{border-radius:50%; box-shadow:var(--elev-2)}
+
+/* --- Badge 规范 --- */
+.level-badge, .ai-badge, .range, .stat-chip{
+  font-size:var(--badge-font); font-weight:var(--badge-weight); border-radius:var(--badge-radius);
+  padding:var(--badge-pad); letter-spacing:var(--ls-normal);
+}
+
+/* --- Loading 规范 --- */
+.loading-spinner{
+  width:26px; height:26px; border-radius:50%;
+  border:3px solid var(--border-color); border-top-color:var(--accent);
+  animation:spin .8s linear infinite; margin:0 auto;
+}
+.loading-inline{display:inline-flex; align-items:center; gap:var(--sp-sm); color:var(--text-secondary); font-size:var(--fs-small)}
+@keyframes spin{to{transform:rotate(360deg)}}
+
 </style>
 </head>
 <body>
@@ -1271,6 +1440,9 @@ function sfx(kind){
       click: { f: 520, dur: .05, vol: .06, type: 'sine' },
       move:  { f: 680, dur: .06, vol: .05, type: 'triangle' },
       pop:   { f: 440, dur: .04, vol: .04, type: 'sine' },
+      place: { f: 540, dur: .09, vol: .07, type: 'triangle' },
+      capture:{ f: 220, dur: .12, vol: .08, type: 'sawtooth' },
+      score: { f: 760, dur: .10, vol: .07, type: 'triangle' },
       win:   { f: 880, dur: .20, vol: .09, type: 'triangle' },
       lose:  { f: 320, dur: .16, vol: .06, type: 'sine' },
     }[kind] || { f: 440, dur: .05, vol: .05, type: 'sine' };
@@ -1286,6 +1458,27 @@ function sfx(kind){
     osc.start(t);
     osc.stop(t + cfg.dur + .03);
   } catch {}
+}
+/* 震动反馈（移动端；桌面端静默忽略） */
+function haptic(kind){
+  try {
+    if (typeof navigator === 'undefined' || !navigator.vibrate) return;
+    const map = { light: 8, medium: [12, 30, 12], strong: [20, 40, 20, 40, 20], win: [30, 60, 30, 60, 40], lose: [60, 40, 60] };
+    navigator.vibrate(map[kind] || map.light);
+  } catch {}
+}
+/* 分级反馈：关键操作重反馈，普通操作轻反馈 */
+function playFeedback(kind){
+  const fx = {
+    tap:     { sfx: 'click',  haptic: 'light' },
+    move:    { sfx: 'move',   haptic: 'light' },
+    place:   { sfx: 'place',  haptic: 'medium' },
+    capture: { sfx: 'capture',haptic: 'strong' },
+    score:   { sfx: 'score',  haptic: 'medium' },
+    win:     { sfx: 'win',    haptic: 'win' },
+    lose:    { sfx: 'lose',   haptic: 'lose' },
+  }[kind] || { sfx: 'click', haptic: 'light' };
+  sfx(fx.sfx); haptic(fx.haptic);
 }
 if (typeof document !== 'undefined' && document.addEventListener){
   document.addEventListener('click', function(e){
@@ -1360,6 +1553,8 @@ function el(tag, cls, text){
 function toast(msg){
   const wrap = $('toast-wrap');
   const t = el('div', 'toast', msg);
+  t.setAttribute('role', 'status');
+  t.setAttribute('aria-live', 'polite');
   wrap.appendChild(t);
   setTimeout(() => t.remove(), 1900);
 }
@@ -1472,6 +1667,23 @@ async function aiChoose(game, state, options, persona){
 }
 function aiPick(options){
   return options[Math.floor(Math.random() * options.length)];
+}
+
+/* ---------------- Loading 工具 ---------------- */
+function loadingNode(text){
+  const wrap = el('div','loading-inline');
+  wrap.appendChild(el('div','loading-spinner'));
+  if (text) wrap.appendChild(el('span', null, text));
+  return wrap;
+}
+function setLoading(target, text){
+  if (!target) return;
+  target.innerHTML = '';
+  target.appendChild(loadingNode(text));
+}
+function clearLoading(target){
+  if (!target) return;
+  target.innerHTML = '';
 }
 
 /* ---------------- 开局倒计时 ---------------- */
@@ -3893,6 +4105,7 @@ function renderHub(){
     card.type = 'button';
     const ok = playerCount >= g.min && playerCount <= g.max;
     if (!ok) card.classList.add('disabled');
+    card.setAttribute('aria-label', g.name + '：' + g.desc);
     card.appendChild(el('div','icon', g.icon));
     card.appendChild(el('div','name', g.name));
     card.appendChild(el('div','desc', g.desc));
@@ -4024,6 +4237,7 @@ function gameTicTacToe(area, extra, n, opts){
     if (aiPending || over) return;
     if (!opts.ai || !opts.ai.has(cur)) return;
     aiPending = true;
+    setStatus('🤖 AI 思考中…');
     setTimeout(() => {
       aiPending = false;
       if (over) return;
@@ -4080,6 +4294,7 @@ function gameTicTacToe(area, extra, n, opts){
     }
   }
   function applyMove(i){
+    playFeedback('place');
     board[i] = cur;
     for (const L of LINES){
       if (L.includes(i) && board[L[0]] !== null && board[L[0]] === board[L[1]] && board[L[1]] === board[L[2]]){
@@ -4157,6 +4372,7 @@ function gameGomoku(area, extra, n, opts){
     if (aiPending || over) return;
     if (!opts.ai || !opts.ai.has(cur)) return;
     aiPending = true;
+    setStatus('🤖 AI 思考中…');
     setTimeout(() => {
       aiPending = false;
       if (over) return;
@@ -4220,6 +4436,7 @@ function gameGomoku(area, extra, n, opts){
   });
   function applyMove(r, c){
     if (Array.isArray(r)){ c = r[1]; r = r[0]; }
+    playFeedback('place');
     grid[r][c] = cur; last = [r,c]; hist.push([r,c]);
     if (checkGomokuWin(grid, r, c)){
       over = true;
@@ -4304,6 +4521,7 @@ function gameLudo(area, extra, n, opts){
     if (aiPending || over) return;
     if (!opts.ai || !opts.ai.has(curIdx)) return;
     aiPending = true;
+    setStatus('🤖 AI 思考中…');
     setTimeout(async () => {
       aiPending = false;
       if (over) return;
@@ -4496,6 +4714,7 @@ function gameLudo(area, extra, n, opts){
     renderPlayers(curIdx, infos, null, pids.map(pid => PLAYER_COLORS[pid]));
   }
   function roll(){
+    sfx('pop');
     if (over || phase !== 'roll') return;
     if (opts.online && curIdx !== opts.myIdx) return;
     if (opts.ai && opts.ai.has(curIdx)) return;
@@ -4520,6 +4739,7 @@ function gameLudo(area, extra, n, opts){
     });
   }
   function pick(pid, ti){
+    playFeedback('move');
     if (over || phase !== 'pick' || pid !== curPid()) return;
     if (opts.online && curIdx !== opts.myIdx) return;
     if (opts.ai && opts.ai.has(curIdx)) return;
@@ -4657,6 +4877,7 @@ function gameMonopoly(area, extra, n, opts){
     if (aiPending || over) return;
     if (!opts.ai || !opts.ai.has(cur)) return;
     aiPending = true;
+    setStatus('🤖 AI 思考中…');
     setTimeout(async () => {
       aiPending = false;
       if (over) return;
@@ -4771,7 +4992,9 @@ function gameMonopoly(area, extra, n, opts){
     renderPlayers(cur, players.map((p,i) => p.alive ? ('资产 ¥' + p.money) : '破产'), players.map(p => !p.alive));
   }
   function roll(){
+    sfx('pop');
     if (over || phase !== 'roll') return;
+    sfx('pop');
     if (opts.online && cur !== opts.myIdx) return;
     if (opts.ai && opts.ai.has(cur)) return;
     const d1 = 1 + Math.floor(Math.random()*6), d2 = 1 + Math.floor(Math.random()*6);
@@ -4851,6 +5074,7 @@ function gameMonopoly(area, extra, n, opts){
     }
   }
   function applyDecision(pi, decision){
+    playFeedback(decision === 'buy' ? 'score' : 'tap');
     const p = players[pi];
     const cell = CELLS[p.pos];
     if (decision === 'buy'){
@@ -5092,6 +5316,7 @@ function gameChecker(area, extra, n, opts){
     if (aiPending || over) return;
     if (!opts.ai || !opts.ai.has(cur)) return;
     aiPending = true;
+    setStatus('🤖 AI 思考中…');
     setTimeout(async () => {
       aiPending = false;
       if (over) return;
@@ -5264,6 +5489,7 @@ function gameChecker(area, extra, n, opts){
     draw();
   });
   function applyCheckerMove(fromHole, toHole){
+    playFeedback('move');
     const occ = occupiedMap();
     const hit = occ.get(key(fromHole));
     history.push({ pi: hit.pi, mi: hit.mi, from: {q:fromHole.q, r:fromHole.r}, to: {q:toHole.q, r:toHole.r} });
@@ -5366,6 +5592,7 @@ function gameTank(area, extra, n, opts){
     if (aiPending || over) return;
     if (!opts.ai || !opts.ai.has(cur)) return;
     aiPending = true;
+    setStatus('🤖 AI 思考中…');
     setTimeout(async () => {
       aiPending = false;
       if (over) return;
@@ -5419,6 +5646,7 @@ function gameTank(area, extra, n, opts){
     grid[T1[0]][T1[1]] = 0;
   }
   function moveTank(pi, d){
+    sfx('move');
     const me = pi === 0 ? t0 : t1;
     me.d = d;
     const nr = me.r + dirs[d][0], nc = me.c + dirs[d][1];
@@ -5429,6 +5657,7 @@ function gameTank(area, extra, n, opts){
     endTurn();
   }
   function shoot(){
+    playFeedback('capture');
     const me = cur === 0 ? t0 : t1;
     const foe = cur === 0 ? t1 : t0;
     const d = dirs[me.d];
@@ -5565,6 +5794,7 @@ function gameSnake(area, extra, n, opts){
     if (aiPending || over) return;
     if (!opts.ai || !opts.ai.has(cur)) return;
     aiPending = true;
+    setStatus('🤖 AI 思考中…');
     setTimeout(async () => {
       aiPending = false;
       if (over) return;
@@ -5625,6 +5855,7 @@ function gameSnake(area, extra, n, opts){
     endTurn();
   }
   function step(pi, d, newFood){
+    sfx('move');
     const s = snakes[pi];
     s.d = d;
     const head = s.body[0];
@@ -5832,6 +6063,7 @@ function gameTetris(area, extra, n, opts){
     if (aiPending || over) return;
     if (!opts.ai || !opts.ai.has(cur)) return;
     aiPending = true;
+    setStatus('🤖 AI 思考中…');
     setTimeout(() => {
       aiPending = false;
       if (over) return;
@@ -5847,6 +6079,7 @@ function gameTetris(area, extra, n, opts){
   }
   function applyPlacement(pi, idx, x, y, sh){
     const res = lock(wells[pi], sh, x, y);
+    playFeedback(res.cleared > 0 ? 'score' : 'place');
     if (res.cleared === -1){ topOut(pi); return; }
     wells[pi] = res.well;
     const pts = [0, 100, 300, 500, 800][Math.min(4, res.cleared)];
@@ -6140,6 +6373,7 @@ function gameDraughts(area, extra, n, opts){
     if (aiPending || over) return;
     if (!opts.ai || !opts.ai.has(cur)) return;
     aiPending = true;
+    setStatus('🤖 AI 思考中…');
     setTimeout(() => {
       aiPending = false;
       if (over) return;
@@ -6167,6 +6401,7 @@ function gameDraughts(area, extra, n, opts){
   }
   function applyMove(pi, from, to, via){
     const piece = board[from[0]][from[1]];
+    playFeedback(via ? 'capture' : 'move');
     board[from[0]][from[1]] = null;
     if (via) board[via[0]][via[1]] = null;
     let king = piece.king;
@@ -6378,6 +6613,7 @@ function gameJungle(area, extra, n, opts){
     if (aiPending || over) return;
     if (!opts.ai || !opts.ai.has(cur)) return;
     aiPending = true;
+    setStatus('🤖 AI 思考中…');
     setTimeout(() => {
       aiPending = false;
       if (over) return;
@@ -6407,6 +6643,7 @@ function gameJungle(area, extra, n, opts){
   }
   function doMove(from, to){
     const piece = board[from[0]][from[1]];
+    playFeedback(board[to[0]][to[1]] ? 'capture' : 'move');
     board[from[0]][from[1]] = null;
     board[to[0]][to[1]] = piece;
     selected = null; legalMoves = [];
@@ -6678,6 +6915,7 @@ function gameXiangqi(area, extra, n, opts){
     if (aiPending || over) return;
     if (!opts.ai || !opts.ai.has(cur)) return;
     aiPending = true;
+    setStatus('🤖 AI 思考中…');
     setTimeout(async () => {
       aiPending = false;
       if (over) return;
@@ -6706,6 +6944,7 @@ function gameXiangqi(area, extra, n, opts){
   }
   function doMove(from, to){
     const piece = board[from[0]][from[1]];
+    playFeedback(board[to[0]][to[1]] ? 'capture' : 'move');
     board[from[0]][from[1]] = null;
     board[to[0]][to[1]] = piece;
     lastMove = [from, to];

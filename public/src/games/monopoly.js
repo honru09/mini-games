@@ -58,6 +58,7 @@ function gameMonopoly(area, extra, n, opts){
     if (aiPending || over) return;
     if (!opts.ai || !opts.ai.has(cur)) return;
     aiPending = true;
+    setStatus('🤖 AI 思考中…');
     setTimeout(async () => {
       aiPending = false;
       if (over) return;
@@ -172,7 +173,9 @@ function gameMonopoly(area, extra, n, opts){
     renderPlayers(cur, players.map((p,i) => p.alive ? ('资产 ¥' + p.money) : '破产'), players.map(p => !p.alive));
   }
   function roll(){
+    sfx('pop');
     if (over || phase !== 'roll') return;
+    sfx('pop');
     if (opts.online && cur !== opts.myIdx) return;
     if (opts.ai && opts.ai.has(cur)) return;
     const d1 = 1 + Math.floor(Math.random()*6), d2 = 1 + Math.floor(Math.random()*6);
@@ -252,6 +255,7 @@ function gameMonopoly(area, extra, n, opts){
     }
   }
   function applyDecision(pi, decision){
+    playFeedback(decision === 'buy' ? 'score' : 'tap');
     const p = players[pi];
     const cell = CELLS[p.pos];
     if (decision === 'buy'){

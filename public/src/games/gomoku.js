@@ -36,6 +36,7 @@ function gameGomoku(area, extra, n, opts){
     if (aiPending || over) return;
     if (!opts.ai || !opts.ai.has(cur)) return;
     aiPending = true;
+    setStatus('🤖 AI 思考中…');
     setTimeout(() => {
       aiPending = false;
       if (over) return;
@@ -99,6 +100,7 @@ function gameGomoku(area, extra, n, opts){
   });
   function applyMove(r, c){
     if (Array.isArray(r)){ c = r[1]; r = r[0]; }
+    playFeedback('place');
     grid[r][c] = cur; last = [r,c]; hist.push([r,c]);
     if (checkGomokuWin(grid, r, c)){
       over = true;

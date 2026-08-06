@@ -91,6 +91,7 @@ function gameTetris(area, extra, n, opts){
     if (aiPending || over) return;
     if (!opts.ai || !opts.ai.has(cur)) return;
     aiPending = true;
+    setStatus('🤖 AI 思考中…');
     setTimeout(() => {
       aiPending = false;
       if (over) return;
@@ -106,6 +107,7 @@ function gameTetris(area, extra, n, opts){
   }
   function applyPlacement(pi, idx, x, y, sh){
     const res = lock(wells[pi], sh, x, y);
+    playFeedback(res.cleared > 0 ? 'score' : 'place');
     if (res.cleared === -1){ topOut(pi); return; }
     wells[pi] = res.well;
     const pts = [0, 100, 300, 500, 800][Math.min(4, res.cleared)];

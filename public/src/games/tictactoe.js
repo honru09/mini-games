@@ -28,6 +28,7 @@ function gameTicTacToe(area, extra, n, opts){
     if (aiPending || over) return;
     if (!opts.ai || !opts.ai.has(cur)) return;
     aiPending = true;
+    setStatus('🤖 AI 思考中…');
     setTimeout(() => {
       aiPending = false;
       if (over) return;
@@ -84,6 +85,7 @@ function gameTicTacToe(area, extra, n, opts){
     }
   }
   function applyMove(i){
+    playFeedback('place');
     board[i] = cur;
     for (const L of LINES){
       if (L.includes(i) && board[L[0]] !== null && board[L[0]] === board[L[1]] && board[L[1]] === board[L[2]]){

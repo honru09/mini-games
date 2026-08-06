@@ -97,6 +97,7 @@ function gameDraughts(area, extra, n, opts){
     if (aiPending || over) return;
     if (!opts.ai || !opts.ai.has(cur)) return;
     aiPending = true;
+    setStatus('🤖 AI 思考中…');
     setTimeout(() => {
       aiPending = false;
       if (over) return;
@@ -124,6 +125,7 @@ function gameDraughts(area, extra, n, opts){
   }
   function applyMove(pi, from, to, via){
     const piece = board[from[0]][from[1]];
+    playFeedback(via ? 'capture' : 'move');
     board[from[0]][from[1]] = null;
     if (via) board[via[0]][via[1]] = null;
     let king = piece.king;
