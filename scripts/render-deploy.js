@@ -5,6 +5,7 @@ const https = require('https');
 const key = process.env.RENDER_KEY;
 const SERVICE_ID = process.env.SERVICE_ID || 'srv-d9on79jl550s73f0roj0';
 const commit = (process.env.COMMIT || '').trim();
+const REQUEST_TIMEOUT_MS = 15000;
 if (!key) {
   console.error('RENDER_KEY env missing');
   process.exit(1);
@@ -32,6 +33,7 @@ function req(method, path, body) {
       );
     });
     r.on('error', reject);
+    r.setTimeout(REQUEST_TIMEOUT_MS, () => r.destroy(new Error('Render API 请求超时')));
     if (data) r.write(data);
     r.end();
   });
@@ -42,9 +44,14 @@ function req(method, path, body) {
     const payload = { clearCache: 'do_not_clear' };
     if (commit) payload.commitId = commit;
     const r = await req('POST', '/v1/services/' + SERVICE_ID + '/deploys', payload);
-    console.log('status:', r.status);
-    console.log('body:', r.body.slice(0, 400));
+    if (r.status < 200 || r.status >= 300) throw new Error('触发部署失败：HTTP ' + r.status + '（响应已隐藏）');
+    let deploy = {};
+    try { deploy = JSON.parse(r.body); } catch {}
+    deploy = deploy.deploy || deploy;
+    console.log('部署已触发（HTTP ' + r.status + '）');
+    if (deploy.id) console.log('deploy:', deploy.id, '| status:', deploy.status || 'queued');
   } catch (e) {
     console.error('ERR:', e.message);
+    process.exitCode = 1;
   }
 })();

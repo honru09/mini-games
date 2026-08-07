@@ -18,7 +18,7 @@ function gameTetris(area, extra, n, opts){
   let piece = null; // {shape, x, y, rot}
   let pieceCount = 0;
   const MAX_PIECES = 8;
-  let aiPending = false;
+  let aiPending = false, aiEpoch = 0;
   function rotate(m){
     const rows = m.length, cols = m[0].length;
     const out = Array.from({length: cols}, () => Array(rows).fill(0));
@@ -82,27 +82,59 @@ function gameTetris(area, extra, n, opts){
         while (!collide(well, sh, x, y + 1)) y++;
         if (collide(well, sh, x, y)) continue;
         const v = evaluatePlacement(well, sh, x, y);
-        if (v > bestV){ bestV = v; best = { x, y, sh }; }
+        if (v > bestV){ bestV = v; best = { x, y, sh, rot }; }
       }
     }
     return best;
   }
   function scheduleAI(){
-    if (aiPending || over) return;
+    if (opts.destroyed || aiPending || over) return;
     if (!opts.ai || !opts.ai.has(cur)) return;
     aiPending = true;
+    const gen = aiEpoch;
+    const turn = cur;
+    const count = pieceCount;
     setStatus('🤖 AI 思考中…');
-    setTimeout(() => {
-      aiPending = false;
-      if (over) return;
-      if (!piece) return;
+    setTimeout(async () => {
+      if (opts.destroyed || over || gen !== aiEpoch || cur !== turn || !opts.ai.has(cur)){
+        aiPending = false;
+        return;
+      }
       const idx = 0 | Math.floor(Math.random() * SHAPES.length);
-      const best = aiBestPlacement(wells[cur], SHAPES[idx]);
-      if (!best){ topOut(cur); return; }
-      if (opts.aiPersona && Math.random() < opts.aiPersona.randomness) best.x = Math.max(0, Math.min(9, best.x + (Math.random() < 0.5 ? -1 : 1)));
+      const candidates = [];
+      const seenShapes = new Set();
+      for (let rot = 0; rot < 4; rot++){
+        let sh = SHAPES[idx];
+        for (let i = 0; i < rot; i++) sh = rotate(sh);
+        const shapeKey = JSON.stringify(sh);
+        if (seenShapes.has(shapeKey)) continue;
+        seenShapes.add(shapeKey);
+        for (let x = -3; x <= COLS; x++){
+          let y = 0;
+          while (!collide(wells[cur], sh, x, y + 1)) y++;
+          if (collide(wells[cur], sh, x, y)) continue;
+          candidates.push({ option: 'rot:' + rot + ',x:' + x + ',y:' + y, x, y, sh, rot,
+            score: evaluatePlacement(wells[cur], sh, x, y) });
+        }
+      }
+      if (!candidates.length){ aiPending = false; topOut(cur); return; }
+      let bestIdx = 0;
+      candidates.forEach((candidate, i) => { if (candidate.score > candidates[bestIdx].score) bestIdx = i; });
+      const choices = candidates.map(candidate => candidate.option);
+      const remoteChoice = await aiChoose('tetris', {
+        well: wells[cur].map(row => row.join('')), score: scores[cur],
+        piece: idx, turn: cur, pieceCount,
+      }, choices, opts.aiPersona);
+      if (opts.destroyed || over || gen !== aiEpoch || cur !== turn || pieceCount !== count){
+        aiPending = false;
+        return;
+      }
+      let chosenIdx = choices.indexOf(remoteChoice);
+      if (chosenIdx < 0) chosenIdx = bestIdx;
+      const chosen = candidates[chosenIdx];
+      aiPending = false;
       aiSpeak(opts.aiPersona, 'think');
-      if (opts.online) opts.sendMove({ piece: idx, x: best.x, y: best.y, rot: best.rot || 0, sh: best.sh });
-      applyPlacement(cur, idx, best.x, best.y, best.sh);
+      applyPlacement(cur, idx, chosen.x, chosen.y, chosen.sh);
     }, 700);
   }
   function applyPlacement(pi, idx, x, y, sh){
@@ -193,12 +225,19 @@ function gameTetris(area, extra, n, opts){
   }
   extra.innerHTML = '';
   // Human player controls: keyboard + buttons
-  let humanPiece = null, humanX = 0, humanY = 0, humanSh = null, humanIdx = 0;
-  const humanKeys = {};
+  let humanX = 0, humanY = 0, humanSh = null, humanIdx = 0, humanRot = 0;
+
+  function canControl(){
+    if (over || (opts.isReplaying && opts.isReplaying())) return false;
+    if (opts.online && cur !== opts.myIdx) return false;
+    if (opts.ai && opts.ai.has(cur)) return false;
+    return true;
+  }
   
   function spawnHumanPiece() {
     humanIdx = 0 | Math.floor(Math.random() * SHAPES.length);
     humanSh = SHAPES[humanIdx];
+    humanRot = 0;
     humanX = Math.floor((COLS - humanSh[0].length) / 2);
     humanY = 0;
     if (collide(wells[cur], humanSh, humanX, humanY)) { topOut(cur); return false; }
@@ -218,6 +257,7 @@ function gameTetris(area, extra, n, opts){
     const rotated = rotate(humanSh);
     if (!collide(wells[cur], rotated, humanX, humanY)) {
       humanSh = rotated;
+      humanRot = (humanRot + 1) % 4;
       render();
     }
   }
@@ -241,15 +281,14 @@ function gameTetris(area, extra, n, opts){
   function lockHuman() {
     if (!humanSh || over) return;
     if (opts.online) {
-      opts.sendMove({ pieceIdx: humanIdx, x: humanX, y: humanY, sh: humanSh });
+      opts.sendMove({ piece: humanIdx, x: humanX, y: humanY, rot: humanRot });
     }
     applyPlacement(cur, humanIdx, humanX, humanY, humanSh);
-    humanSh = null; humanPiece = null;
+    humanSh = null;
   }
   
   function handleTetrisKey(e) {
-    if (over) return;
-    if (opts.ai && opts.ai.has(cur)) return;
+    if (!canControl()) return;
     if (!humanSh && !spawnHumanPiece()) return;
     switch(e.key) {
       case 'ArrowLeft': e.preventDefault(); moveHuman(-1); break;
@@ -261,16 +300,23 @@ function gameTetris(area, extra, n, opts){
   }
   
   // Listen for keys globally when this game is active
-  document.addEventListener('keydown', handleTetrisKey);
-  const origReset = resetLocal;
-  resetLocal = function() {
-    document.removeEventListener('keydown', handleTetrisKey);
-    humanSh = null;
-    origReset();
+  if (document.addEventListener) document.addEventListener('keydown', handleTetrisKey);
+  const actions = el('div','tetris-actions');
+  const control = (label, fn) => {
+    const b = el('button','btn',label);
+    b.addEventListener('click', () => {
+      if (!canControl()) return;
+      if (!humanSh && !spawnHumanPiece()) return;
+      fn();
+    });
+    actions.appendChild(b);
   };
-  
+  control('⬅', () => moveHuman(-1));
+  control('➡', () => moveHuman(1));
+  control('↻', rotateHuman);
+  control('⬇', dropHuman);
+  control('⤓', hardDropHuman);
   if (!opts.online){
-    const actions = el('div','tetris-actions');
     const placeBtn = el('button','btn btn-primary','🧱 放一个');
     placeBtn.addEventListener('click', () => {
       if (over) return;
@@ -281,16 +327,24 @@ function gameTetris(area, extra, n, opts){
       applyPlacement(cur, idx, best.x, best.y, best.sh);
     });
     actions.appendChild(placeBtn);
-    extra.appendChild(actions);
   }
-  opts.onMove = payload => {
-    if (!payload) return;
-    applyPlacement(cur, payload.piece, payload.x, payload.y, payload.sh);
+  extra.appendChild(actions);
+  opts.onMove = (payload, player) => {
+    if (opts.online && (!Number.isInteger(player) || player !== cur)) return;
+    if (!payload || over) return;
+    const idx = Number(payload.piece), x = Number(payload.x), y = Number(payload.y), rot = Number(payload.rot || 0);
+    if (![idx, x, y, rot].every(Number.isInteger) || idx < 0 || idx >= SHAPES.length || rot < 0 || rot > 3) return;
+    let sh = SHAPES[idx];
+    for (let i = 0; i < rot; i++) sh = rotate(sh);
+    if (collide(wells[cur], sh, x, y) || !collide(wells[cur], sh, x, y + 1)) return;
+    applyPlacement(cur, idx, x, y, sh);
   };
   function resetLocal(){
+    aiEpoch++;
     wells = Array.from({length: n}, () => Array.from({length: ROWS}, () => Array(COLS).fill(0)));
     scores = Array(n).fill(0);
     cur = 0; over = false; winner = -1; piece = null; pieceCount = 0; aiPending = false;
+    humanSh = null; humanRot = 0;
     render();
     setStatus('玩家1 的回合，点「放一个」放置方块');
   }
@@ -300,5 +354,8 @@ function gameTetris(area, extra, n, opts){
     resetLocal();
   }
   resetLocal();
-  return { reset, onMove: opts.onMove, onRestart: resetLocal, snapshot: () => ({ wells: wells.map(w => w.map(r => r.slice())), scores: scores.slice(), cur, over, winner }) };
+  return { reset, onMove: opts.onMove, onRestart: resetLocal, destroy: () => {
+    aiEpoch++; aiPending = false;
+    if (document.removeEventListener) document.removeEventListener('keydown', handleTetrisKey);
+  }, snapshot: () => ({ wells: wells.map(w => w.map(r => r.slice())), scores: scores.slice(), cur, over, winner, pieceCount }) };
 }

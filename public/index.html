@@ -1621,23 +1621,40 @@ function makeDice3D(size, sm){
     6: 'rotateX(0deg) rotateY(180deg)',
   };
   let rolling = false;
+  let rollInterval = null;
+  let settleTimer = null;
+  let generation = 0;
   function roll(final, cb){
-    if (rolling){ if (cb) setTimeout(cb, 60); return; }
+    if (rolling) return false;
+    const gen = ++generation;
     rolling = true;
     die.style.transition = 'transform .09s linear';
     let i = 0;
-    const iv = setInterval(() => {
+    rollInterval = setInterval(() => {
+      if (gen !== generation) return;
       i++;
       die.style.transform = 'rotateX(' + Math.floor(Math.random() * 720) + 'deg) rotateY(' + Math.floor(Math.random() * 720) + 'deg)';
       if (i >= 12){
-        clearInterval(iv);
+        clearInterval(rollInterval);
+        rollInterval = null;
         die.style.transition = 'transform .55s cubic-bezier(.2,.75,.3,1)';
         die.style.transform = ROT[final] || ROT[1];
-        setTimeout(() => { rolling = false; if (cb) cb(); }, 560);
+        settleTimer = setTimeout(() => {
+          settleTimer = null;
+          if (gen !== generation) return;
+          rolling = false;
+          if (cb) cb();
+        }, 560);
       }
     }, 65);
+    return true;
   }
   function reset(){
+    generation++;
+    if (rollInterval) clearInterval(rollInterval);
+    if (settleTimer) clearTimeout(settleTimer);
+    rollInterval = null;
+    settleTimer = null;
     rolling = false;
     die.style.transition = 'none';
     die.style.transform = ROT[1];
@@ -1648,21 +1665,33 @@ function makeDice3D(size, sm){
 
 /* ---------------- AI 助手（DeepSeek 代理） ---------------- */
 async function aiChoose(game, state, options, persona){
+  const token = (typeof account !== 'undefined' && account && typeof account.authToken === 'string')
+    ? account.authToken.trim() : '';
+  if (!token || !Array.isArray(options) || !options.length ||
+      options.some(option => typeof option !== 'string') ||
+      typeof fetch !== 'function' || typeof AbortController === 'undefined') return null;
+  const legalOptions = options.slice(0, 200);
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 2200);
   try {
-    if (typeof fetch !== 'function') return null;
     const server = resolveServer();
     const url = server ? server.replace(/\/+$/, '') + '/api/ai' : '/api/ai';
     const res = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ game, state, options, persona: persona || null }),
-      signal: (typeof AbortSignal !== 'undefined' && AbortSignal.timeout) ? AbortSignal.timeout(15000) : undefined,
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + token,
+      },
+      body: JSON.stringify({ game, state, options: legalOptions, persona: persona || null }),
+      signal: controller.signal,
     });
     if (!res.ok) return null;
     const data = await res.json();
-    return (data && data.choice) || null;
+    return data && legalOptions.includes(data.choice) ? data.choice : null;
   } catch {
     return null;
+  } finally {
+    clearTimeout(timer);
   }
 }
 function aiPick(options){
@@ -1955,7 +1984,9 @@ function registerGame(id, factory) {
 function createGameInstance(id, area, extra, playerCount, opts) {
   const factory = GAME_REGISTRY[id] || (typeof games !== 'undefined' && games[id]);
   if (!factory) throw new Error('game not found: ' + id);
-  const raw = factory(area, extra, playerCount, opts || {});
+  opts = opts || {};
+  opts.destroyed = false;
+  const raw = factory(area, extra, playerCount, opts);
 
   const instance = {
     id: id,
@@ -1970,8 +2001,8 @@ function createGameInstance(id, area, extra, playerCount, opts) {
     render() {
       if (raw.render) raw.render();
     },
-    move(payload) {
-      if (raw.onMove) raw.onMove(payload);
+    move(payload, player) {
+      if (raw.onMove) raw.onMove(payload, player);
     },
     serialize() {
       if (raw.snapshot) return raw.snapshot();
@@ -1988,6 +2019,7 @@ function createGameInstance(id, area, extra, playerCount, opts) {
       else if (raw.restart) raw.restart();
     },
     destroy() {
+      opts.destroyed = true;
       if (raw.destroy) raw.destroy();
       // 清理 DOM（可选，由调用方决定是否清空 area/extra）
     },
@@ -2383,10 +2415,12 @@ if (typeof document !== 'undefined') {
 /* ================= 联机对战（WebSocket 中继） ================= */
 const online = {
   ws: null, room: null, player: 0, isHost: false, game: null, connected: false, pending: null, roomInfo: null, capacity: 2, _hb: null,
-  lobby: [], inviteTarget: null,
+  lobby: [], inviteTarget: null, matchId: null, reportedMatchIds: [], soloReportedIds: [], legacyResultSubmitted: false,
+  resume: null, _reconnectTimer: null, _reconnectAttempts: 0, _manualClose: false, _replaying: false, _liveMoveQueue: [],
+  pendingResultClaim: null, _resultRetryTimer: null, _authenticated: false,
   defaultServer: 'https://mini-games-online.onrender.com',
   connect(){
-    if (this.connected) return;
+    if (this.connected || (this.ws && (this.ws.readyState === 0 || this.ws.readyState === 1))) return;
     let wsUrl;
     try {
       const raw = resolveServer();
@@ -2399,21 +2433,44 @@ const online = {
     } catch {
       wsUrl = (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws';
     }
-    this.ws = new WebSocket(wsUrl);
-    this.ws.onopen = () => {
+    const ws = new WebSocket(wsUrl);
+    this.ws = ws;
+    ws.onopen = () => {
+      if (this.ws !== ws) return;
       this.connected = true;
+      this._authenticated = false;
       this.status('已连接服务器，可创建或加入房间');
-      this.send({ type: 'hello', payload: { uid: typeof deviceUid !== 'undefined' ? deviceUid : null, proto: typeof PROTOCOL_VERSION !== 'undefined' ? PROTOCOL_VERSION : 1 } });
+      const authAccount = typeof account !== 'undefined' ? account : null;
+      const authPin = typeof pendingAuthPin !== 'undefined' ? pendingAuthPin : null;
+      this.send({ type: 'hello', payload: {
+        uid: authAccount && authAccount.uid ? authAccount.uid : (typeof deviceUid !== 'undefined' ? deviceUid : null),
+        token: authAccount && authAccount.authToken ? authAccount.authToken : null,
+        proto: typeof PROTOCOL_VERSION !== 'undefined' ? PROTOCOL_VERSION : 1,
+      } });
       this.send({ type: 'lobby' });
-      if (typeof syncProfiles === 'function') syncProfiles();
-      if (account && account.uid && !account.registered){
+      const needsRegister = authAccount && authAccount.uid && authPin && authAccount.registered === false;
+      const needsLogin = authAccount && authAccount.uid && authPin && !authAccount.authToken && authAccount.registered !== false;
+      if (needsRegister){
         this.send({ type: 'register', payload: {
-          uid: account.uid, pin: account.pin, name: account.name, avatar: account.avatar,
-          background: account.background, frame: account.frame, effect: account.effect, owned: account.owned, nameFx: account.nameFx || 0,
+          uid: authAccount.uid, pin: authPin, name: authAccount.name, avatar: authAccount.avatar,
+          background: authAccount.background, frame: authAccount.frame, effect: authAccount.effect, owned: authAccount.owned, nameFx: authAccount.nameFx || 0,
         } });
+      } else if (needsLogin){
+        this.send({ type: 'login', payload: { pin: authPin } });
+      } else if (typeof syncProfiles === 'function') {
+        syncProfiles();
       }
       if (this._hb) clearInterval(this._hb);
       this._hb = setInterval(() => { if (this.connected) this.send({ type: 'ping' }); }, 10000);
+      if (this.resume){
+        const expectedRoom = this.resume.room;
+        setTimeout(() => {
+          if (this.connected && this.resume && this.resume.room === expectedRoom && !this.room){
+            this.clearResume();
+            this.status(t('room_resume_missing'));
+          }
+        }, 1500);
+      }
       if (this.pending){
         const p = this.pending;
         this.pending = null;
@@ -2421,16 +2478,161 @@ const online = {
         else if (p.type === 'join') this.join(p.room);
       }
     };
-    this.ws.onmessage = e => this.onMessage(JSON.parse(e.data));
-    this.ws.onclose = () => {
+    ws.onmessage = e => { if (this.ws === ws) this.onMessage(JSON.parse(e.data)); };
+    ws.onclose = () => {
+      if (this.ws !== ws) return;
+      const shouldResume = !this._manualClose && !!(account && account.authToken) && !!(this.room || this.resume);
+      if (this.room){
+        this.resume = {
+          room: this.room, player: this.player, isHost: this.isHost, game: this.game,
+          matchId: this.matchId, deadline: Date.now() + 60000,
+        };
+      }
       this.connected = false;
+      this._authenticated = false;
+      this.ws = null;
       if (this._hb){ clearInterval(this._hb); this._hb = null; }
-      this.status('连接已断开');
-      this.resetState();
+      this.status(shouldResume ? t('online_reconnecting') : '连接已断开');
+      this.resetState(shouldResume);
+      if (shouldResume) this.scheduleReconnect();
+      this._manualClose = false;
     };
-    this.ws.onerror = () => this.status('连接失败，请确认服务已启动');
+    ws.onerror = () => { if (this.ws === ws) this.status(this.resume ? t('online_reconnecting') : '连接失败，请确认服务已启动'); };
   },
-  status(text){ $('online-status').innerHTML = text; },
+  scheduleReconnect(){
+    if (!this.resume || !account || !account.authToken) return;
+    if (this.resume.deadline && Date.now() >= this.resume.deadline){
+      this.clearResume();
+      this.status(t('reconnect_timeout'));
+      return;
+    }
+    if (this._reconnectTimer || this.connected || (this.ws && this.ws.readyState === 0)) return;
+    const delay = Math.min(5000, 500 * Math.pow(2, Math.min(4, this._reconnectAttempts++)));
+    this._reconnectTimer = setTimeout(() => {
+      this._reconnectTimer = null;
+      this.connect();
+    }, delay);
+  },
+  clearResume(){
+    if (this._reconnectTimer) clearTimeout(this._reconnectTimer);
+    this._reconnectTimer = null;
+    this._reconnectAttempts = 0;
+    this.resume = null;
+  },
+  loadPendingResultClaim(){
+    if (this.pendingResultClaim || !account || !account.uid) return this.pendingResultClaim;
+    try {
+      const saved = JSON.parse(localStorage.getItem('mg_pending_result_claim') || 'null');
+      if (saved && saved.uid === account.uid && saved.matchId && saved.game && Array.isArray(saved.results)){
+        this.pendingResultClaim = saved;
+      } else if (saved) {
+        localStorage.removeItem('mg_pending_result_claim');
+      }
+    } catch {
+      try { localStorage.removeItem('mg_pending_result_claim'); } catch {}
+    }
+    return this.pendingResultClaim;
+  },
+  savePendingResultClaim(){
+    try {
+      if (this.pendingResultClaim) localStorage.setItem('mg_pending_result_claim', JSON.stringify(this.pendingResultClaim));
+      else localStorage.removeItem('mg_pending_result_claim');
+    } catch {}
+  },
+  clearPendingResultClaim(matchId){
+    if (matchId && this.pendingResultClaim && String(this.pendingResultClaim.matchId) !== String(matchId)) return;
+    if (this._resultRetryTimer) clearTimeout(this._resultRetryTimer);
+    this._resultRetryTimer = null;
+    this.pendingResultClaim = null;
+    this.savePendingResultClaim();
+  },
+  submitResultClaim(claim){
+    if (!claim || !claim.matchId || !claim.game || !Array.isArray(claim.results)) return;
+    if (this.pendingResultClaim && String(this.pendingResultClaim.matchId) === String(claim.matchId)){
+      this.flushPendingResultClaim();
+      return;
+    }
+    this.clearPendingResultClaim();
+    this.pendingResultClaim = {
+      uid: account && account.uid,
+      matchId: String(claim.matchId),
+      game: String(claim.game),
+      results: claim.results,
+      won: !!claim.won,
+      createdAt: Date.now(),
+    };
+    this.savePendingResultClaim();
+    this.flushPendingResultClaim();
+  },
+  scheduleResultRetry(){
+    if (!this.pendingResultClaim || this._resultRetryTimer) return;
+    this._resultRetryTimer = setTimeout(() => {
+      this._resultRetryTimer = null;
+      this.flushPendingResultClaim();
+    }, 3000);
+  },
+  flushPendingResultClaim(){
+    const claim = this.pendingResultClaim || this.loadPendingResultClaim();
+    if (!claim) return;
+    if (!account || claim.uid !== account.uid){ this.clearPendingResultClaim(); return; }
+    if (Date.now() - Number(claim.createdAt || 0) > 10 * 60 * 1000){ this.clearPendingResultClaim(); return; }
+    if (!this.connected || !this._authenticated || !this.room || String(this.matchId || '') !== String(claim.matchId)){
+      this.scheduleResultRetry();
+      return;
+    }
+    this.send({ type: 'result', payload: {
+      matchId: claim.matchId,
+      game: claim.game,
+      results: claim.results,
+    } });
+    this.scheduleResultRetry();
+  },
+  async replayMoveLog(log){
+    const replayGame = currentGame;
+    const gameScreen = $('screen-game');
+    const oldInert = gameScreen ? !!gameScreen.inert : false;
+    this._replaying = true;
+    this._liveMoveQueue = [];
+    if (gameScreen){ gameScreen.inert = true; gameScreen.setAttribute('aria-busy', 'true'); }
+    this.status(t('online_restoring'));
+    try {
+      const events = Array.isArray(log) ? log.slice().sort((a, b) => (a.seq || 0) - (b.seq || 0)) : [];
+      for (const event of events){
+        if (!this.game || currentGame !== replayGame || !replayGame || !replayGame.onMove) break;
+        replayGame.onMove(event && event.payload, event && event.player);
+        const raw = replayGame._raw || replayGame;
+        if (raw && typeof raw.whenIdle === 'function') await raw.whenIdle();
+        else {
+          const p = event && event.payload || {};
+          const delay = p.roll ? 1250 : (p.decision ? 650 : 90);
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
+      }
+    } finally {
+      try {
+        while (currentGame === replayGame && replayGame && replayGame.onMove && this._liveMoveQueue.length){
+          const event = this._liveMoveQueue.shift() || {};
+          const payload = event.payload;
+          replayGame.onMove(payload, event.player);
+          const raw = replayGame._raw || replayGame;
+          if (raw && typeof raw.whenIdle === 'function') await raw.whenIdle();
+        }
+      } finally {
+        this._replaying = false;
+        if (gameScreen){
+          gameScreen.inert = oldInert;
+          if (typeof gameScreen.removeAttribute === 'function') gameScreen.removeAttribute('aria-busy');
+          else gameScreen.setAttribute('aria-busy', 'false');
+        }
+        if (this.room && currentGame === replayGame) this.status(t('online_restored', this.room));
+      }
+    }
+  },
+  status(text, trustedHtml){
+    const node = $('online-status');
+    if (trustedHtml) node.innerHTML = text;
+    else { node.innerHTML = ''; node.textContent = String(text || ''); }
+  },
   send(msg){ if (this.ws && this.ws.readyState === 1) this.ws.send(JSON.stringify(msg)); },
   create(){
     if (!account){ toast('请先创建账号或登录后再联机'); openAuthModal(); return; }
@@ -2462,10 +2664,11 @@ const online = {
   onMessage(msg){
     switch (msg.type){
       case 'created':
+        msg.room = String(msg.room || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12);
         this.room = msg.room; this.player = msg.player; this.isHost = true;
         this.capacity = msg.capacity || 2;
         this.roomInfo = { room: msg.room, game: null, capacity: this.capacity, players: [{ uid: null, player: 0 }], size: 1, started: false };
-        this.status('房间已创建：<span class="room-code">' + msg.room + '</span>，等待对方加入…');
+        this.status('房间已创建：<span class="room-code">' + msg.room + '</span>，等待对方加入…', true);
         renderRoomPanel();
         if (this.inviteTarget){
           const toUid = this.inviteTarget;
@@ -2475,9 +2678,10 @@ const online = {
         }
         break;
       case 'joined':
+        msg.room = String(msg.room || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12);
         this.room = msg.room; this.player = msg.player; this.isHost = false;
         this.roomInfo = { room: msg.room, game: null, capacity: 2, players: [{ uid: null, player: 0 }], size: 1, started: false };
-        this.status('已加入房间 <span class="room-code">' + msg.room + '</span>，等待房主开始…');
+        this.status('已加入房间 <span class="room-code">' + msg.room + '</span>，等待房主开始…', true);
         renderRoomPanel();
         break;
       case 'room_update':
@@ -2495,6 +2699,77 @@ const online = {
         renderLobby();
         break;
       case 'hello_ack':
+        this._authenticated = !!msg.authenticated;
+        if (msg.authenticated){
+          if (!this.resume) this._reconnectAttempts = 0;
+          this.loadPendingResultClaim();
+          this.flushPendingResultClaim();
+        } else if (account && account.authToken){
+          toast('登录会话已失效，请使用 PIN 重新登录');
+          if (typeof completeLocalLogout === 'function') completeLocalLogout(true);
+        }
+        break;
+      case 'rejoined':
+        {
+          const p = msg.payload || {};
+          this.room = p.room;
+          this.player = Number.isInteger(p.player) ? p.player : 0;
+          this.isHost = !!p.isHost;
+          this.capacity = p.capacity || 2;
+          this.matchId = p.matchId || null;
+          this.roomInfo = {
+            room: p.room, game: p.game || null, capacity: this.capacity,
+            players: p.players || [], size: p.size || 1, onlineSize: p.onlineSize || 1,
+            started: !!p.started, matchId: p.matchId || null,
+          };
+          this.game = p.started ? (p.game || null) : null;
+          this.clearResume();
+          renderRoomPanel();
+          if (this.game){
+            startOnlineGame(this.game, p.size);
+            this.replayMoveLog(p.moveLog || []);
+          } else {
+            this.status(t('room_restored', this.room));
+          }
+          this.flushPendingResultClaim();
+        }
+        break;
+      case 'resume_expired':
+        this.clearResume();
+        this.resetState();
+        this.status(t('reconnect_timeout'));
+        toast(t('reconnect_seat_released'));
+        break;
+      case 'peer_status':
+        {
+          const p = msg.payload || {};
+          if (p.online) this.status(t('reconnect_peer_back', (p.player || 0) + 1));
+          else this.status(t('reconnect_peer_wait', (p.player || 0) + 1));
+        }
+        break;
+      case 'reconnect_expired':
+        this.clearPendingResultClaim(this.matchId);
+        this.game = null;
+        this.matchId = null;
+        if (currentGameId) showHub();
+        this.status(t('reconnect_match_ended'));
+        toast(t('reconnect_expired'));
+        renderRoomPanel();
+        break;
+      case 'host_changed':
+        {
+          const p = msg.payload || {};
+          this.isHost = Number(p.player) === Number(this.player);
+          if (this.isHost) toast(t('host_transferred'));
+          renderRoomPanel();
+        }
+        break;
+      case 'player_reassigned':
+        {
+          const p = msg.payload || {};
+          if (Number.isInteger(p.player)) this.player = p.player;
+          renderRoomPanel();
+        }
         break;
       case 'invite':
         showInviteModal(msg.payload);
@@ -2503,13 +2778,26 @@ const online = {
         toast(msg.payload && msg.payload.accepted ? '对方已接受邀请 🎉' : '对方拒绝了邀请');
         break;
       case 'started':
-        this.game = msg.game;
-        startOnlineGame(msg.game, msg.size);
+        {
+          const started = msg.payload || msg;
+          this.game = msg.game || started.game;
+          this.matchId = msg.matchId || started.matchId || null;
+          this.legacyResultSubmitted = false;
+          if (this.pendingResultClaim && String(this.pendingResultClaim.matchId) !== String(this.matchId || '')) this.clearPendingResultClaim();
+          startOnlineGame(this.game, msg.size || started.size);
+        }
         break;
       case 'move':
-        if (this.game && currentGame && currentGame.onMove) currentGame.onMove(msg.payload);
+        if (this._replaying) this._liveMoveQueue.push({ payload: msg.payload, player: msg.player });
+        else if (this.game && currentGame && currentGame.onMove) currentGame.onMove(msg.payload, msg.player);
         break;
       case 'restart':
+        {
+          const restarted = msg.payload || msg;
+          this.matchId = msg.matchId || restarted.matchId || null;
+          this.legacyResultSubmitted = false;
+          if (this.pendingResultClaim && String(this.pendingResultClaim.matchId) !== String(this.matchId || '')) this.clearPendingResultClaim();
+        }
         runCountdown();
         if (currentGame && currentGame.onRestart) currentGame.onRestart();
         else if (this.game) startOnlineGame(this.game);
@@ -2518,16 +2806,32 @@ const online = {
         finishRoomGame();
         break;
       case 'peer_left':
-        if (this.isHost){
+        if (msg.payload && msg.payload.roomClosed === false){
+          const departed = Number(msg.payload.player);
+          this.clearPendingResultClaim(this.matchId);
           this.game = null;
-          toast('对方已离开');
+          this.matchId = null;
+          toast(t('peer_left_match'));
           if (currentGameId) showHub();
-          this.status('对方已离开，房间仍保留，等待新对手加入…');
+          this.status(t('peer_left_waiting', Number.isInteger(departed) ? departed + 1 : '?'));
+          renderRoomPanel();
+        } else if (msg.payload && msg.payload.roomClosed === true){
+          toast(t('host_closed_room'));
+          this.resetState();
+          this.status(t('room_closed_rejoin'));
+        } else if (this.isHost){
+          // 兼容旧服务端：旧版只把非房主离开通知给房主。
+          this.clearPendingResultClaim(this.matchId);
+          this.game = null;
+          this.matchId = null;
+          toast(t('peer_left_match'));
+          if (currentGameId) showHub();
+          this.status(t('peer_left_waiting', '?'));
           renderRoomPanel();
         } else {
-          toast('房主已关闭房间');
+          toast(t('host_closed_room'));
           this.resetState();
-          this.status('房间已关闭，可重新创建或加入房间');
+          this.status(t('room_closed_rejoin'));
         }
         break;
       case 'error':
@@ -2539,62 +2843,133 @@ const online = {
         renderLeaderboard();
         break;
       case 'profile_ok':
-        if (msg.payload && account && msg.payload.uid === account.uid){
-          // profile_ok 只是档案同步回执：只更新展示字段，不覆盖本地金币/局数（以免回写 0）
-          account.name = msg.payload.name;
-          account.avatar = msg.payload.avatar;
-          account.background = msg.payload.background || account.background || 0;
-          account.frame = msg.payload.frame || account.frame || 0;
-          account.effect = msg.payload.effect || account.effect || 0;
-          account.lang = msg.payload.lang || account.lang || 'zh-CN';
-          account.xp = msg.payload.xp || account.xp || 0;
-          account.level = msg.payload.level || account.level || 1;
-          account.streak = msg.payload.streak || account.streak || 0;
-          account.bestStreak = msg.payload.bestStreak || account.bestStreak || 0;
-          const me = roster.find(x => x.uid === account.uid);
-          if (me){ me.name = account.name; me.avatar = account.avatar; }
-          saveRoster(); saveAccount();
-          renderMe(); renderSlots();
+        {
+          const profile = msg.payload && (msg.payload.profile || msg.payload);
+          if (profile && account && profile.uid === account.uid){
+            updateAccountProfile(profile);
+            renderMe(); renderSlots();
+          }
         }
         break;
       case 'registered':
-        if (msg.payload && msg.payload.uid){
-          account.pin = account.pin || '';
-          account.registered = true;
-          updateAccountProfile(msg.payload.profile);
-          renderMyCard();
-          toast('🎉 账号创建成功，欢迎 ' + account.name);
-          if (authModalEl){ authModalEl.remove(); authModalEl = null; }
+        {
+          const payload = msg.payload || {};
+          const profile = payload.profile || msg.profile || (payload.uid && (payload.name !== undefined || payload.avatar !== undefined) ? payload : null);
+          const uid = payload.uid || (profile && profile.uid);
+          if (account && uid){
+            const token = msg.token || payload.token;
+            if (token){ account.authToken = token; delete account.pin; }
+            account.uid = uid;
+            deviceUid = uid;
+            account.registered = true;
+            if (typeof pendingAuthPin !== 'undefined') pendingAuthPin = null;
+            this._authenticated = true;
+            if (profile) updateAccountProfile(profile);
+            else saveAccount();
+            this.loadPendingResultClaim();
+            this.flushPendingResultClaim();
+            if (typeof syncProfiles === 'function') syncProfiles();
+            renderMyCard();
+            toast('🎉 账号创建成功，欢迎 ' + account.name);
+            if (authModalEl){ authModalEl.remove(); authModalEl = null; }
+          }
         }
         break;
       case 'logged_in':
-        if (msg.payload && msg.payload.uid){
-          account = Object.assign({}, msg.payload.profile, { device: deviceFingerprint() });
-          updateAccountProfile(msg.payload.profile);
-          renderMyCard();
-          toast('✅ 登录成功：' + account.name);
-          if (authModalEl){ authModalEl.remove(); authModalEl = null; }
+        {
+          const payload = msg.payload || {};
+          const profile = payload.profile || msg.profile || (payload.uid && (payload.name !== undefined || payload.avatar !== undefined) ? payload : null);
+          const uid = payload.uid || (profile && profile.uid);
+          if (profile && uid){
+            const token = msg.token || payload.token;
+            account = Object.assign({}, profile, { device: deviceFingerprint(), registered: true });
+            if (token){ account.authToken = token; delete account.pin; }
+            this._authenticated = true;
+            updateAccountProfile(profile);
+            this.loadPendingResultClaim();
+            this.flushPendingResultClaim();
+            if (typeof syncProfiles === 'function') syncProfiles();
+            renderMyCard();
+            toast('✅ 登录成功：' + account.name);
+            if (authModalEl){ authModalEl.remove(); authModalEl = null; }
+          }
         }
         break;
       case 'auth_error':
         toast(msg.msg || '账号验证失败');
+        if (account && account.registered === false){
+          if (typeof completeLocalLogout === 'function') completeLocalLogout(false);
+          if (typeof openAuthModal === 'function' && !authModalEl) openAuthModal('register');
+        }
+        break;
+      case 'logged_out':
+        if (typeof completeLocalLogout === 'function') completeLocalLogout(true);
+        else this.resetState();
         break;
       case 'profile_data':
         if (msg.payload){
           renderProfilePopup(msg.payload, false);
         }
         break;
+      case 'purchase_ok':
+        {
+          const payload = msg.payload || {};
+          const profile = payload.profile || msg.profile || (payload.uid && (payload.name !== undefined || payload.avatar !== undefined || payload.coins !== undefined) ? payload : null);
+          if (profile && account && profile.uid === account.uid) updateAccountProfile(profile);
+          if (typeof refreshOpenShop === 'function') refreshOpenShop();
+          if (typeof renderMe === 'function') renderMe();
+          if (typeof renderSlots === 'function') renderSlots();
+          if (typeof renderMyCard === 'function') renderMyCard();
+          toast(payload.msg || msg.msg || t('purchase_success'));
+        }
+        break;
+      case 'purchase_error':
+        toast((msg.payload && msg.payload.msg) || msg.msg || t('purchase_failed'));
+        if (typeof refreshOpenShop === 'function') refreshOpenShop();
+        break;
+      case 'result_ok':
+        {
+          const payload = msg.payload || {};
+          const resultMatchId = msg.matchId || payload.matchId || null;
+          const pendingClaim = this.pendingResultClaim;
+          const profile = payload.profile || msg.profile || (payload.uid && (payload.name !== undefined || payload.avatar !== undefined || payload.coins !== undefined) ? payload : null);
+          if (profile && account && profile.uid === account.uid){
+            updateAccountProfile(profile);
+            if (typeof renderMe === 'function') renderMe();
+            if (typeof renderSlots === 'function') renderSlots();
+            if (typeof renderLeaderboard === 'function') renderLeaderboard();
+          }
+          if (pendingClaim && resultMatchId && String(pendingClaim.matchId) === String(resultMatchId)){
+            const resultName = account && account.name ? account.name : '玩家';
+            toast(t('toast_win_reward') + (pendingClaim.won ? resultName + ' 获得 $1' : resultName + ' 本局无奖励'));
+            this.clearPendingResultClaim(resultMatchId);
+          }
+        }
+        break;
+      case 'result_pending':
+        // 等待房间内其他客户端提交同一份完整结果。
+        this.scheduleResultRetry();
+        break;
+      case 'result_error':
+        {
+          const errorMatchId = msg.matchId || (msg.payload && msg.payload.matchId);
+          if (errorMatchId) this.clearPendingResultClaim(errorMatchId);
+          else if (this.pendingResultClaim && this.room && String(this.matchId || '') === String(this.pendingResultClaim.matchId)) this.clearPendingResultClaim();
+        }
+        toast(msg.msg || (msg.payload && msg.payload.msg) || t('result_failed'));
+        break;
     }
   },
-  resetState(){
+  resetState(preserveResume){
+    if (!preserveResume) this.clearResume();
+    if (!preserveResume) this.clearPendingResultClaim();
     this.room = null; this.game = null; this.isHost = false; this.pending = null; this.roomInfo = null; this.capacity = 2; this.inviteTarget = null;
+    this.matchId = null; this.legacyResultSubmitted = false;
     $('online-banner').classList.add('hidden');
     $('room-panel').classList.add('hidden');
     const endBtn = $('btn-end-game');
     if (endBtn) endBtn.classList.add('hidden');
-    if (currentGameId && $('screen-game') && !$('screen-game').classList.contains('hidden')){
-      showHub();
-    }
+    if (currentGameId) showHub();
   },
 };
 function resolveServer(){
@@ -2607,7 +2982,10 @@ function resolveServer(){
   return online.defaultServer;
 }
 function finishRoomGame(){
+  online.clearPendingResultClaim(online.matchId);
   online.game = null;
+  online.matchId = null;
+  online.legacyResultSubmitted = false;
   toast('本局已结束，可以在当前房间切换游戏');
   showHub();
   renderRoomPanel();
@@ -2659,7 +3037,7 @@ function renderRoomPanel(){
   if (online.game){
     if (currentGameId && $('screen-hub') && !$('screen-hub').classList.contains('hidden')){
       const backBtn = el('button','btn','🎮 返回对局');
-      backBtn.addEventListener('click', () => startOnlineGame(online.game));
+      backBtn.addEventListener('click', () => showGame(online.game));
       actions.appendChild(backBtn);
     }
   } else {
@@ -2674,6 +3052,7 @@ function renderRoomPanel(){
   }
   const leave = el('button','btn','离开房间');
   leave.addEventListener('click', () => {
+    online.clearResume();
     online.send({ type: 'leave' });
     online.resetState();
     online.status('已离开房间');
@@ -2936,11 +3315,11 @@ function openAuthModal(mode){
       });
       card.appendChild(bgGrid);
       const pinInput = el("input","nick-input");
-      pinInput.type = "text"; pinInput.maxLength = 20;
+      pinInput.type = "password"; pinInput.autocomplete = "new-password"; pinInput.setAttribute("autocomplete", "new-password"); pinInput.maxLength = 20;
       pinInput.placeholder = "设置 PIN 码（4-20 位，仅字母和数字）";
       card.appendChild(pinInput);
       const pin2 = el("input","nick-input");
-      pin2.type = "text"; pin2.maxLength = 20;
+      pin2.type = "password"; pin2.autocomplete = "new-password"; pin2.setAttribute("autocomplete", "new-password"); pin2.maxLength = 20;
       pin2.placeholder = "再次输入 PIN 码确认";
       card.appendChild(pin2);
       card.appendChild(el("p","pin-hint","PIN 是唯一识别你账号的代码，登录时使用，请务必牢记。"));
@@ -2958,7 +3337,7 @@ function openAuthModal(mode){
       card.appendChild(toLogin);
     } else {
       const pinInput = el("input","nick-input");
-      pinInput.type = "text"; pinInput.maxLength = 20;
+      pinInput.type = "password"; pinInput.autocomplete = "current-password"; pinInput.setAttribute("autocomplete", "current-password"); pinInput.maxLength = 20;
       pinInput.placeholder = "输入 PIN 码";
       card.appendChild(pinInput);
       const submit = el("button","btn btn-primary","登录");
@@ -3078,6 +3457,34 @@ function renderProfilePopup(p, isMe){
   document.body.appendChild(bd);
 }
 /* ================= 商城（头像 / 边框 / 特效 / 背景） ================= */
+let activeShopRefresh = null;
+let purchaseRequestSeq = 0;
+
+function refreshOpenShop(){
+  if (activeShopRefresh) activeShopRefresh();
+}
+
+function requestPurchase(category, id, button){
+  if (!online.connected){
+    toast(t('shop_connect_required'));
+    return;
+  }
+  const requestId = (typeof crypto !== 'undefined' && crypto.randomUUID)
+    ? 'buy_' + crypto.randomUUID()
+    : 'buy_' + Date.now().toString(36) + '_' + (++purchaseRequestSeq).toString(36);
+  online.send({ type: 'purchase', payload: { category, id, requestId } });
+  if (button){
+    button.disabled = true;
+    button.textContent = t('shop_processing');
+    setTimeout(() => {
+      if (button.isConnected){
+        button.disabled = false;
+        button.textContent = '购买';
+      }
+    }, 8000);
+  }
+}
+
 function openShop(){
   if (!account){ openAuthModal(); return; }
   const bd = el('div','modal-backdrop');
@@ -3086,7 +3493,8 @@ function openShop(){
   card.appendChild(el('h3', null, '🛍️ 个性商城'));
   const bal = el('div','stat-chip');
   bal.appendChild(el('span','coin','$'));
-  bal.appendChild(el('span', null, ' ' + (account.coins || 0) + ' 可用'));
+  const balValue = el('span', null, ' ' + (account.coins || 0) + ' 可用');
+  bal.appendChild(balValue);
   card.appendChild(bal);
   let tab = 'avatars';
   const tabs = el('div','shop-tabs');
@@ -3110,7 +3518,7 @@ function openShop(){
         it.appendChild(el('div','si-name','基础头像 ' + (i+1)));
         it.appendChild(el('div','si-price','免费'));
         const use = el('button','btn','使用');
-        use.addEventListener('click', () => { account.avatar = i; saveAccount(); syncProfiles(); bd.remove(); toast('头像已更换'); });
+        use.addEventListener('click', () => { account.avatar = i; saveAccount(); syncProfiles(); closeShop(); toast('头像已更换'); });
         it.appendChild(use);
         listEl.appendChild(it);
       }
@@ -3126,17 +3534,13 @@ function openShop(){
           it.appendChild(price);
           const buy = el('button','btn btn-primary','购买');
           buy.addEventListener('click', () => {
-            if ((account.coins || 0) < a.price){ toast('余额不足，先去赢几局吧'); return; }
-            account.coins -= a.price;
-            addOwned(account, 'avatars', a.id);
-            saveAccount(); syncProfiles(); render(); renderMe();
-            toast('✅ 已购买「' + a.name + '」');
+            requestPurchase('avatars', a.id, buy);
           });
           it.appendChild(buy);
         } else {
           it.appendChild(el('div','si-price','已拥有'));
           const use = el('button','btn','使用');
-          use.addEventListener('click', () => { account.avatar = a.id; saveAccount(); syncProfiles(); bd.remove(); toast('头像已更换'); });
+          use.addEventListener('click', () => { account.avatar = a.id; saveAccount(); syncProfiles(); closeShop(); toast('头像已更换'); });
           it.appendChild(use);
         }
         listEl.appendChild(it);
@@ -3168,11 +3572,7 @@ function openShop(){
           it.appendChild(price);
           const buy = el('button','btn btn-primary','购买');
           buy.addEventListener('click', () => {
-            if ((account.coins || 0) < item.price){ toast('余额不足，先去赢几局吧'); return; }
-            account.coins -= item.price;
-            addOwned(account, cat, item.id);
-            saveAccount(); syncProfiles(); render(); renderMe();
-            toast('✅ 已购买「' + item.name + '」');
+            requestPurchase(cat, item.id, buy);
           });
           it.appendChild(buy);
         } else {
@@ -3191,17 +3591,25 @@ function openShop(){
       });
     }
   }
+  function refresh(){
+    balValue.textContent = ' ' + (account.coins || 0) + ' 可用';
+    render();
+  }
+  function closeShop(){
+    if (activeShopRefresh === refresh) activeShopRefresh = null;
+    bd.remove();
+  }
+  activeShopRefresh = refresh;
   render();
   const close = el('button','btn','关闭');
-  close.addEventListener('click', () => bd.remove());
+  close.addEventListener('click', closeShop);
   card.appendChild(tabs);
   card.appendChild(listEl);
   card.appendChild(close);
   bd.appendChild(card);
-  bd.addEventListener('click', e => { if (e.target === bd) bd.remove(); });
+  bd.addEventListener('click', e => { if (e.target === bd) closeShop(); });
   document.body.appendChild(bd);
 }
-
 /* ================= 用户档案与积分 ================= */
 const AVATAR_COUNT = 56; // 0-29 免费，30-55 商城（4 分类）
 const CURRENCY = '$';
@@ -3453,6 +3861,7 @@ const LS_ROSTER = 'mg_roster';
 const LS_ACCOUNT = 'mg_account';
 let roster = [];
 let account = null;
+let pendingAuthPin = null;
 let deviceUid = null;
 let slots = [];
 let lastServerLB = null;
@@ -3495,7 +3904,12 @@ function loadRoster(){
   try {
     const raw = localStorage.getItem(LS_ACCOUNT);
     account = raw ? JSON.parse(raw) : null;
-  if (account && !account.lang) account.lang = 'zh-CN';
+    if (account && !account.lang) account.lang = 'zh-CN';
+    if (account && Object.prototype.hasOwnProperty.call(account, 'pin')) delete account.pin;
+    if (account && account.registered === false && !account.authToken){
+      account = null;
+      try { localStorage.removeItem(LS_ACCOUNT); } catch {}
+    }
   } catch { account = null; }
   if (account && account.uid && account.device === deviceFingerprint()){
     deviceUid = account.uid;
@@ -3507,7 +3921,13 @@ function loadRoster(){
   try { localStorage.setItem('mg_uid', deviceUid || ''); } catch {}
 }
 function saveRoster(){ try { localStorage.setItem(LS_ROSTER, JSON.stringify(roster)); } catch {} }
-function saveAccount(){ try { localStorage.setItem(LS_ACCOUNT, JSON.stringify(account)); } catch {} }
+function saveAccount(){
+  try {
+    const safe = account && typeof account === 'object' ? { ...account } : account;
+    if (safe && Object.prototype.hasOwnProperty.call(safe, 'pin')) delete safe.pin;
+    localStorage.setItem(LS_ACCOUNT, JSON.stringify(safe));
+  } catch {}
+}
 function genUid(){
   if (typeof crypto !== 'undefined' && crypto.randomUUID) return 'u_' + crypto.randomUUID().slice(0, 8);
   return 'u_' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
@@ -3523,10 +3943,9 @@ function syncProfiles(){
   if (!online.connected) return;
   if (account && account.uid){
     online.send({ type: 'profile', payload: {
-      lang: account.lang || currentLang,
-      uid: account.uid, name: account.name, avatar: account.avatar, xp: account.xp || 0, level: account.level || 1, streak: account.streak || 0, bestStreak: account.bestStreak || 0,
+      uid: account.uid, name: account.name, avatar: account.avatar,
       background: account.background || 0, frame: account.frame || 0, effect: account.effect || 0,
-      owned: account.owned || defaultOwned(), nameFx: account.nameFx || 0,
+      nameFx: account.nameFx || 0, lang: account.lang || currentLang,
     } });
   }
 }
@@ -3538,13 +3957,15 @@ function registerAccount(name, pin, avatar, background, frame, effect){
     return null;
   }
   const uid = genUid();
+  pendingAuthPin = pin;
   account = {
-    uid, pin, name, lang: currentLang,
+    uid, name, lang: currentLang,
     avatar: Number.isInteger(avatar) ? Math.max(0, Math.min(AVATAR_COUNT - 1, avatar)) : 0,
     background: Number.isInteger(background) ? Math.max(0, background) : 0,
     frame: Number.isInteger(frame) ? Math.max(0, frame) : 0,
     effect: Number.isInteger(effect) ? Math.max(0, effect) : 0,
     owned: defaultOwned(), coins: 0, played: {}, total: 0, device: deviceFingerprint(), nameFx: 0,
+    registered: false,
   };
   const me = roster.find(p => p.uid === uid);
   if (me){ me.name = name; me.avatar = account.avatar; }
@@ -3570,11 +3991,22 @@ function loginAccount(pin){
   online.send({ type: 'login', payload: { pin } });
 }
 function logoutAccount(){
+  if (online && typeof online.clearResume === 'function') online.clearResume();
+  if (online.connected) online.send({ type: 'logout' });
+  completeLocalLogout(true);
+}
+function completeLocalLogout(showLogin){
+  pendingAuthPin = null;
+  if (online){
+    if (typeof online.clearPendingResultClaim === 'function') online.clearPendingResultClaim();
+    if (typeof online.resetState === 'function') online.resetState();
+    online._authenticated = false;
+  }
   account = null;
   deviceUid = null;
   try { localStorage.removeItem(LS_ACCOUNT); localStorage.setItem('mg_uid', ''); } catch {}
   renderMe(); renderSlots(); renderLeaderboard();
-  openAuthModal("login");
+  if (showLogin && !authModalEl) openAuthModal("login");
 }
 function updateAccountProfile(p){
   if (!account) return;
@@ -3932,14 +4364,32 @@ function recordPlaymatesFromResult(results, currentResult, gameId){
     });
   }
 }
-function applyGameResult(results){
+function applyGameResult(results, resultContext){
   if (!results || !results.length) return;
-  const gameId = currentGameId;
+  const gameId = (resultContext && resultContext.game) || currentGameId;
+  const isOnlineMatch = !!((resultContext && resultContext.online) || online.game);
+  const matchId = isOnlineMatch ? online.matchId : null;
+  if (isOnlineMatch){
+    // 已失去对局上下文时绝不能回退为本地结算；重连成功后由仍在房间的实例重新提交。
+    if (!matchId) return;
+    const normalized = results.map(r => ({
+      slot: Number(r.slot),
+      coins: r.coins === 1 ? 1 : 0,
+      rank: Number.isInteger(r.rank) ? r.rank : (r.coins === 1 ? 1 : 2),
+    }));
+    online.submitResultClaim({
+      matchId: String(matchId),
+      game: gameId || online.game,
+      results: normalized,
+      won: normalized.some(r => r.slot === online.player && r.coins === 1),
+    });
+    return;
+  }
   const entries = [];
   const parts = [];
   results.forEach(r => {
     let uid = null;
-    if (online.connected && online.game){
+    if (isOnlineMatch){
       if (r.slot !== online.player) return;
       uid = deviceUid;
     } else {
@@ -4000,29 +4450,49 @@ function applyGameResult(results){
     saveAccount();
   }
   saveRoster();
-  if (entries.length){
-    if (online.connected){
-      entries.forEach(e => online.send({ type:'profile', payload:{ uid:e.uid, name:e.name, avatar:e.avatar } }));
-      online.send({ type:'result', payload: entries.map(e => ({ uid:e.uid, game:e.game, coins:e.coins, played:1, xp:e.xp })) });
+  // 本地/人机模式也保留服务端排行榜同步，但只允许当前认证账号提交自己的结果。
+  // 服务端以 resultId 去重并设置单机结算频控；断网时仍保留本地热座体验。
+  if (!isOnlineMatch && online.connected && account){
+    const mine = entries.find(e => e.uid === account.uid);
+    if (mine){
+      const resultId = (typeof crypto !== 'undefined' && crypto.randomUUID)
+        ? 'solo_' + crypto.randomUUID()
+        : 'solo_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 12);
+      if (!online.soloReportedIds.includes(resultId)){
+        online.soloReportedIds.push(resultId);
+        if (online.soloReportedIds.length > 100) online.soloReportedIds.splice(0, online.soloReportedIds.length - 100);
+        online.send({ type: 'result', payload: { mode: 'solo', resultId, game: gameId, coins: mine.coins } });
+      }
     }
+  }
+  if (entries.length){
     toast(t('toast_win_reward') + parts.join('，'));
   }
   renderMe(); renderSlots(); renderLeaderboard();
 }
 
 function showHub(){
-  if (currentGame && typeof currentGame.destroy === 'function') currentGame.destroy();
+  const preserveOnlineGame = !!(online && online.game && currentGame && currentGameId === online.game);
+  if (!preserveOnlineGame && currentGame && typeof currentGame.destroy === 'function') currentGame.destroy();
   $('screen-hub').classList.remove('hidden');
   $('screen-game').classList.add('hidden');
-  currentGame = null;
-  currentGameId = null;
+  if (!preserveOnlineGame){
+    currentGame = null;
+    currentGameId = null;
+  }
   const endBtn = $('btn-end-game');
   if (endBtn) endBtn.classList.add('hidden');
   if (online.room) renderRoomPanel();
 }
 function showGame(id){
+  if (online && online.game === id && currentGame && currentGameId === id){
+    $('screen-hub').classList.add('hidden');
+    $('screen-game').classList.remove('hidden');
+    const endBtn = $('btn-end-game');
+    if (endBtn) endBtn.classList.remove('hidden');
+    return;
+  }
   if (currentGame && typeof currentGame.destroy === 'function') currentGame.destroy();
-  if (currentGame && currentGame._raw && typeof currentGame._raw.destroy === 'function') currentGame._raw.destroy();
   $('screen-hub').classList.add('hidden');
   $('screen-game').classList.remove('hidden');
   const meta = GAMES[id];
@@ -4039,9 +4509,10 @@ function showGame(id){
       isHost: online.isHost,
       sendMove: p => online.sendMove(p),
       sendRestart: () => online.sendRestart(),
+      isReplaying: () => !!online._replaying,
       onMove: null,
       onRestart: null,
-      onEnd: results => applyGameResult(results),
+      onEnd: results => applyGameResult(results, { online: true, game: id }),
     };
   } else {
     opts = { onEnd: results => applyGameResult(results) };
@@ -4205,14 +4676,15 @@ function parseHash(){
   renderHub();
   startGame(m[1]);
 }
-
-
 /* ================= 井字棋 ================= */
 function gameTicTacToe(area, extra, n, opts){
   opts = opts || {};
   const LINES = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
   let board = Array(9).fill(null), cur = 0, over = false, winLine = null;
-  let aiPending = false;
+  let aiPending = false, aiEpoch = 0;
+  function aiState(){
+    return { board: board.map(v => v === null ? '-' : String(v)).join(''), turn: cur };
+  }
   function tttScore(bd, turn){
     for (const L of LINES){
       if (bd[L[0]] !== null && bd[L[0]] === bd[L[1]] && bd[L[1]] === bd[L[2]]){
@@ -4234,28 +4706,43 @@ function gameTicTacToe(area, extra, n, opts){
     return best;
   }
   function scheduleAI(){
-    if (aiPending || over) return;
+    if (opts.destroyed || aiPending || over) return;
     if (!opts.ai || !opts.ai.has(cur)) return;
     aiPending = true;
+    const epoch = ++aiEpoch;
+    const turn = cur;
+    const state = aiState();
+    const stateKey = JSON.stringify(state);
     setStatus('🤖 AI 思考中…');
-    setTimeout(() => {
-      aiPending = false;
-      if (over) return;
+    setTimeout(async () => {
+      if (opts.destroyed || epoch !== aiEpoch || over || cur !== turn || JSON.stringify(aiState()) !== stateKey){
+        if (epoch === aiEpoch) aiPending = false;
+        return;
+      }
       const legal = [];
       for (let i = 0; i < 9; i++) if (board[i] === null) legal.push(String(i));
-      if (!legal.length) return;
+      if (!legal.length){ aiPending = false; return; }
       // 完美走法：minimax（AI 永不输）
-      let bestI = -1, bestV = -Infinity;
+      let bestI = -1, bestV = cur === 0 ? -Infinity : Infinity;
       for (const s of legal){
         const i = Number(s);
         board[i] = cur;
         const v = tttScore(board, cur ^ 1);
         board[i] = null;
-        if (v > bestV){ bestV = v; bestI = i; }
+        if ((cur === 0 && v > bestV) || (cur === 1 && v < bestV)){ bestV = v; bestI = i; }
       }
       const tttPick = aiPersonaMove(legal.length, legal.indexOf(String(bestI)), opts.aiPersona);
+      const fallback = Number(legal[tttPick]);
+      const moveByChoice = new Map(legal.map(choice => [choice, Number(choice)]));
+      const remoteChoice = await aiChoose('tictactoe', state, legal, opts.aiPersona);
+      if (opts.destroyed || epoch !== aiEpoch || over || cur !== turn || JSON.stringify(aiState()) !== stateKey){
+        if (epoch === aiEpoch) aiPending = false;
+        return;
+      }
+      const chosen = moveByChoice.has(remoteChoice) ? moveByChoice.get(remoteChoice) : fallback;
+      aiPending = false;
       aiSpeak(opts.aiPersona, 'think');
-      applyMove(Number(legal[tttPick]));
+      applyMove(chosen);
     }, 500);
   }
   function render(){
@@ -4294,6 +4781,9 @@ function gameTicTacToe(area, extra, n, opts){
     }
   }
   function applyMove(i){
+    i = Number(i);
+    if (over || !Number.isInteger(i) || i < 0 || i >= board.length || board[i] !== null) return false;
+    aiEpoch++;
     playFeedback('place');
     board[i] = cur;
     for (const L of LINES){
@@ -4303,7 +4793,7 @@ function gameTicTacToe(area, extra, n, opts){
           { slot: cur, coins: 1, rank: 1 },
           { slot: cur ^ 1, coins: 0, rank: 2 },
         ]);
-        render(); return;
+        render(); return true;
       }
     }
     if (board.every(v => v !== null)){
@@ -4317,15 +4807,20 @@ function gameTicTacToe(area, extra, n, opts){
     }
     render();
     scheduleAI();
+    return true;
   }
-  opts.onMove = applyMove;
+  opts.onMove = (i, player) => {
+    if (opts.online && (!Number.isInteger(player) || player !== cur)) return;
+    applyMove(i);
+  };
   function move(i){
     if (opts.online && cur !== opts.myIdx) return;
     if (opts.ai && opts.ai.has(cur)) return;
+    if (over || !Number.isInteger(i) || board[i] !== null) return;
     if (opts.online) opts.sendMove(i);
     applyMove(i);
   }
-  function resetLocal(){ board = Array(9).fill(null); cur = 0; over = false; winLine = null; aiPending = false; render(); }
+  function resetLocal(){ aiEpoch++; board = Array(9).fill(null); cur = 0; over = false; winLine = null; aiPending = false; render(); }
   function reset(){
     if (opts.online && !opts.isHost){ toast('由房主开始新一局'); return; }
     if (opts.online) opts.sendRestart();
@@ -4353,7 +4848,14 @@ function gameGomoku(area, extra, n, opts){
   const N = 15, CELL = 34, PAD = 22, LOGICAL = PAD*2 + CELL*(N-1);
   let grid = Array.from({length:N}, () => Array(N).fill(-1));
   let cur = 0, over = false, hist = [], last = null;
-  let aiPending = false;
+  let aiPending = false, aiEpoch = 0;
+  function aiState(){
+    return {
+      board: grid.map(row => row.map(v => v === -1 ? '.' : String(v)).join('')).join('/'),
+      turn: cur,
+      last: last ? last.join(',') : null,
+    };
+  }
   function gomokuLineScore(r, c, p){
     let best = 0;
     for (const [dr,dc] of [[1,0],[0,1],[1,1],[1,-1]]){
@@ -4369,26 +4871,45 @@ function gameGomoku(area, extra, n, opts){
     return best;
   }
   function scheduleAI(){
-    if (aiPending || over) return;
+    if (opts.destroyed || aiPending || over) return;
     if (!opts.ai || !opts.ai.has(cur)) return;
     aiPending = true;
+    const epoch = ++aiEpoch;
+    const turn = cur;
+    const state = aiState();
+    const stateKey = JSON.stringify(state);
     setStatus('🤖 AI 思考中…');
-    setTimeout(() => {
-      aiPending = false;
-      if (over) return;
+    setTimeout(async () => {
+      if (opts.destroyed || epoch !== aiEpoch || over || cur !== turn || JSON.stringify(aiState()) !== stateKey){
+        if (epoch === aiEpoch) aiPending = false;
+        return;
+      }
       const empties = [];
       for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) if (grid[r][c] === -1) empties.push(r + ',' + c);
-      if (!empties.length) return;
+      if (!empties.length){ aiPending = false; return; }
       let bestR = -1, bestC = -1, bestV = -1;
+      const scored = [];
       for (const s of empties){
         const [r, c] = s.split(',').map(Number);
         const atk = gomokuLineScore(r, c, cur);
         const def = gomokuLineScore(r, c, cur ^ 1);
         const v = Math.max(atk, def * 1.1);
+        scored.push({ choice: s, value: v, center: Math.abs(r - 7) + Math.abs(c - 7) });
         if (v > bestV){ bestV = v; bestR = r; bestC = c; }
       }
       const gomokuPick = aiPersonaMove(empties.length, empties.indexOf(bestR + ',' + bestC), opts.aiPersona);
-      const gpArr = empties[gomokuPick].split(',').map(Number);
+      const fallback = empties[gomokuPick];
+      const choices = scored.slice().sort((a, b) => b.value - a.value || a.center - b.center)
+        .slice(0, 200).map(item => item.choice);
+      const moveByChoice = new Map(empties.map(choice => [choice, choice.split(',').map(Number)]));
+      const remoteChoice = await aiChoose('gomoku', state, choices, opts.aiPersona);
+      if (opts.destroyed || epoch !== aiEpoch || over || cur !== turn || JSON.stringify(aiState()) !== stateKey){
+        if (epoch === aiEpoch) aiPending = false;
+        return;
+      }
+      const chosen = moveByChoice.has(remoteChoice) ? remoteChoice : fallback;
+      const gpArr = moveByChoice.get(chosen);
+      aiPending = false;
       aiSpeak(opts.aiPersona, 'think');
       applyMove(gpArr[0], gpArr[1]);
     }, 550);
@@ -4436,6 +4957,9 @@ function gameGomoku(area, extra, n, opts){
   });
   function applyMove(r, c){
     if (Array.isArray(r)){ c = r[1]; r = r[0]; }
+    r = Number(r); c = Number(c);
+    if (over || !Number.isInteger(r) || !Number.isInteger(c) || r < 0 || r >= N || c < 0 || c >= N || grid[r][c] !== -1) return false;
+    aiEpoch++;
     playFeedback('place');
     grid[r][c] = cur; last = [r,c]; hist.push([r,c]);
     if (checkGomokuWin(grid, r, c)){
@@ -4450,7 +4974,7 @@ function gameGomoku(area, extra, n, opts){
         winner: cur, winnerName: '玩家' + (cur+1), emoji: '🎉',
         subtitle: '五子连线', coins: 1, onRestart: resetLocal, onShare: () => shareGameLink('gomoku'), onInvite: online.room && online.isHost ? () => openInvitePicker() : null
       });
-      return;
+      return true;
     }
     if (hist.length === N*N){
       over = true;
@@ -4463,18 +4987,23 @@ function gameGomoku(area, extra, n, opts){
       showVictoryOverlay(area, {
         winner: 0, emoji: '🤝', subtitle: '棋盘已满，平局', coins: 0, onRestart: resetLocal, onShare: () => shareGameLink('gomoku')
       });
-      return;
+      return true;
     }
     cur ^= 1;
     draw(); renderPlayers(cur, null);
     setStatus(opts.online ? (cur === opts.myIdx ? '你的回合，点击棋盘落子' : '等待对方落子…') : ('玩家' + (cur+1) + ' 的回合'));
     scheduleAI();
+    return true;
   }
-  opts.onMove = applyMove;
+  opts.onMove = (payload, player) => {
+    if (opts.online && (!Number.isInteger(player) || player !== cur)) return;
+    if (Array.isArray(payload) && payload.length === 2) applyMove(payload);
+  };
   if (!opts.online){
     const undoBtn = el('button','btn','↩ 悔棋');
     undoBtn.addEventListener('click', () => {
       if (over || !hist.length) return;
+      aiEpoch++; aiPending = false;
       const [r,c] = hist.pop();
       grid[r][c] = -1;
       cur ^= 1;
@@ -4486,6 +5015,7 @@ function gameGomoku(area, extra, n, opts){
     extra.appendChild(undoBtn);
   }
   function resetLocal(){
+    aiEpoch++;
     grid = Array.from({length:N}, () => Array(N).fill(-1));
     cur = 0; over = false; hist = []; last = null; aiPending = false;
     draw(); renderPlayers(0, null);
@@ -4508,6 +5038,7 @@ function gameLudo(area, extra, n, opts){
   const color = pid => PLAYER_COLORS[pid];
   let tokens = pids.map(() => Array(4).fill(-1));
   let curIdx = 0, phase = 'roll', dice = 0, over = false, winner = -1;
+  let remoteInputs = [], drainingRemoteInputs = false, epoch = 0;
   let S = 520;
   const board = el('div','ludo-board');
   area.appendChild(board);
@@ -4518,17 +5049,26 @@ function gameLudo(area, extra, n, opts){
   extra.appendChild(diceBtn);
   let aiPending = false;
   function scheduleAI(){
-    if (aiPending || over) return;
+    if (opts.destroyed || aiPending || over) return;
     if (!opts.ai || !opts.ai.has(curIdx)) return;
     aiPending = true;
+    const gen = epoch;
+    const turn = curIdx;
     setStatus('🤖 AI 思考中…');
     setTimeout(async () => {
-      aiPending = false;
-      if (over) return;
-      if (phase === 'roll'){ roll(); return; }
+      if (opts.destroyed || over || gen !== epoch || curIdx !== turn || !opts.ai.has(curIdx)){
+        aiPending = false;
+        return;
+      }
+      if (phase === 'roll'){
+        const d = 1 + Math.floor(Math.random() * 6);
+        aiPending = false;
+        applyDice(d);
+        return;
+      }
       if (phase === 'pick'){
         const mv = movable();
-        if (!mv.length){ nextTurn('无子可动'); return; }
+        if (!mv.length){ aiPending = false; nextTurn('无子可动'); return; }
         // 启发式：优先击落/回家，其次推进
         let bestT = mv[0], bestS = -1e9;
         mv.forEach(ti => {
@@ -4550,10 +5090,27 @@ function gameLudo(area, extra, n, opts){
           }
           if (s > bestS){ bestS = s; bestT = ti; }
         });
-        const ludoPick = aiPersonaMove(mv.length, mv.indexOf(bestT), opts.aiPersona);
+        const choices = mv.map(ti => 'token:' + ti);
+        const remoteChoice = await aiChoose('ludo', {
+          tokens: tokens.map(list => list.slice()), turn: curIdx, dice, home: HOME,
+        }, choices, opts.aiPersona);
+        if (opts.destroyed || over || gen !== epoch || curIdx !== turn || phase !== 'pick'){
+          aiPending = false;
+          return;
+        }
+        let ludoPick = choices.indexOf(remoteChoice);
+        if (ludoPick < 0) ludoPick = aiPersonaMove(mv.length, mv.indexOf(bestT), opts.aiPersona);
+        const chosen = mv[ludoPick];
+        if (!movable().includes(chosen)){
+          aiPending = false;
+          return;
+        }
+        aiPending = false;
         aiSpeak(opts.aiPersona, 'think');
-        pick(curPid(), mv[ludoPick]);
+        applyPick(curPid(), chosen);
+        return;
       }
+      aiPending = false;
     }, 700);
   }
 
@@ -4716,6 +5273,7 @@ function gameLudo(area, extra, n, opts){
   function roll(){
     sfx('pop');
     if (over || phase !== 'roll') return;
+    if (opts.isReplaying && opts.isReplaying()) return;
     if (opts.online && curIdx !== opts.myIdx) return;
     if (opts.ai && opts.ai.has(curIdx)) return;
     const d = 1 + Math.floor(Math.random()*6);
@@ -4723,10 +5281,15 @@ function gameLudo(area, extra, n, opts){
     applyDice(d);
   }
   function applyDice(d){
+    if (over || phase !== 'roll' || !Number.isInteger(d) || d < 1 || d > 6) return false;
+    const turn = curIdx;
+    const gen = epoch;
+    phase = 'rolling';
     dice = d;
     diceBtn.disabled = true;
     setStatus('玩家' + (curIdx+1) + ' 掷骰子…');
     dice3d.roll(dice, () => {
+      if (gen !== epoch || over || curIdx !== turn || phase !== 'rolling') return;
       const mv = movable();
       if (!mv.length){
         nextTurn('玩家' + (curIdx+1) + ' 掷出 ' + dice + '，无子可动');
@@ -4735,12 +5298,15 @@ function gameLudo(area, extra, n, opts){
       phase = 'pick';
       renderBoard();
       setStatus('玩家' + (curIdx+1) + ' 掷出 ' + dice + '，点击高亮棋子移动');
-      scheduleAI();
+      drainRemoteInputs();
+      if (phase === 'pick') scheduleAI();
     });
+    return true;
   }
   function pick(pid, ti){
     playFeedback('move');
     if (over || phase !== 'pick' || pid !== curPid()) return;
+    if (opts.isReplaying && opts.isReplaying()) return;
     if (opts.online && curIdx !== opts.myIdx) return;
     if (opts.ai && opts.ai.has(curIdx)) return;
     const pi = pids.indexOf(pid);
@@ -4750,8 +5316,10 @@ function gameLudo(area, extra, n, opts){
     applyPick(pid, ti);
   }
   function applyPick(pid, ti){
+    if (over || phase !== 'pick' || pid !== curPid() || !Number.isInteger(ti) || ti < 0 || ti >= 4) return false;
     const pi = pids.indexOf(pid);
     const arr = tokens[pi];
+    if (pi < 0 || !canMove(arr[ti])) return false;
     arr[ti] = arr[ti] === -1 ? 0 : arr[ti] + dice;
     if (arr[ti] <= 50){
       const cell = cellOf(pid, arr[ti]);
@@ -4776,17 +5344,19 @@ function gameLudo(area, extra, n, opts){
       })));
       renderBoard();
       setStatus('🏆 玩家' + (curIdx+1) + ' 获胜！', true);
-      return;
+      return true;
     }
     if (dice === 6){
       phase = 'roll';
       diceBtn.disabled = false;
       renderBoard();
       setStatus('玩家' + (curIdx+1) + ' 掷出 6，再掷一次！');
-      scheduleAI();
+      drainRemoteInputs();
+      if (phase === 'roll') scheduleAI();
     } else {
       nextTurn('玩家' + (curIdx+1) + ' 完成移动');
     }
+    return true;
   }
   function nextTurn(msg){
     phase = 'roll';
@@ -4794,15 +5364,62 @@ function gameLudo(area, extra, n, opts){
     diceBtn.disabled = false;
     renderBoard();
     setStatus((msg ? msg + '，' : '') + '轮到玩家' + (curIdx+1) + '，请掷骰子');
-    scheduleAI();
+    drainRemoteInputs();
+    if (phase === 'roll') scheduleAI();
   }
-  opts.onMove = payload => {
-    if (payload && payload.dice !== undefined) applyDice(payload.dice);
-    else if (payload && payload.ti !== undefined) applyPick(curPid(), payload.ti);
+  function drainRemoteInputs(){
+    if (drainingRemoteInputs || over) return;
+    drainingRemoteInputs = true;
+    try {
+      while (remoteInputs.length && !over){
+        const event = remoteInputs[0] || {};
+        const payload = event.payload || {};
+        if (!Number.isInteger(event.player)){
+          remoteInputs.shift();
+          continue;
+        }
+        if (event.player !== curIdx){
+          // 下一个玩家可能已在更快的客户端行动；当前骰子动画结束后再判断。
+          if (phase === 'rolling') break;
+          remoteInputs.shift();
+          continue;
+        }
+        if (payload.dice !== undefined){
+          if (phase === 'rolling') break;
+          if (phase !== 'roll'){
+            remoteInputs.shift();
+            continue;
+          }
+          remoteInputs.shift();
+          applyDice(Number(payload.dice));
+          if (phase === 'rolling') break;
+        } else if (payload.ti !== undefined){
+          if (phase === 'rolling') break;
+          if (phase !== 'pick'){
+            remoteInputs.shift();
+            continue;
+          }
+          remoteInputs.shift();
+          applyPick(curPid(), Number(payload.ti));
+        } else {
+          remoteInputs.shift();
+        }
+      }
+    } finally {
+      drainingRemoteInputs = false;
+    }
+  }
+  opts.onMove = (payload, player) => {
+    if (!payload || (payload.dice === undefined && payload.ti === undefined)) return;
+    if (opts.online && !Number.isInteger(player)) return;
+    remoteInputs.push({ payload, player });
+    drainRemoteInputs();
   };
   function resetLocal(){
+    epoch++;
     tokens = pids.map(() => Array(4).fill(-1));
     curIdx = 0; phase = 'roll'; dice = 0; over = false; winner = -1; aiPending = false;
+    remoteInputs = [];
     diceBtn.disabled = false;
     dice3d.reset();
     renderBoard();
@@ -4815,7 +5432,15 @@ function gameLudo(area, extra, n, opts){
   }
   renderBoard();
   setStatus('玩家1 的回合，请掷骰子');
-  return { reset, onMove: opts.onMove, onRestart: resetLocal, snapshot: () => ({ tokens: tokens.map(t => t.slice()), curIdx, phase, dice, over, winner }) };
+  return {
+    reset, onMove: opts.onMove, onRestart: resetLocal,
+    destroy: () => { epoch++; aiPending = false; remoteInputs = []; dice3d.reset(); },
+    whenIdle: () => new Promise(resolve => {
+      const wait = () => (phase !== 'rolling' && !drainingRemoteInputs) ? resolve() : setTimeout(wait, 20);
+      wait();
+    }),
+    snapshot: () => ({ tokens: tokens.map(t => t.slice()), curIdx, phase, dice, over, winner }),
+  };
 }
 /* ================= 迷你大富翁 ================= */
 function gameMonopoly(area, extra, n, opts){
@@ -4860,6 +5485,27 @@ function gameMonopoly(area, extra, n, opts){
   const MAX_ROUND = 30;
   let players = [], cur = 0, phase = 'roll', over = false, winner = -1, round = 1;
   let chanceDeck = [];
+  // WebSocket 保证消息顺序，但不同客户端的动画计时并不同步；远端输入必须等本地逻辑阶段就绪。
+  let remoteInputs = [];
+  let drainingRemoteInputs = false;
+  let epoch = 0;
+  let idleWaiters = [];
+  function isIdle(){ return over || ((phase === 'roll' || phase === 'buy') && !drainingRemoteInputs); }
+  function notifyIdle(){
+    if (!isIdle()) return;
+    const waiters = idleWaiters.splice(0);
+    waiters.forEach(resolve => resolve());
+  }
+  function whenIdle(){ return isIdle() ? Promise.resolve() : new Promise(resolve => idleWaiters.push(resolve)); }
+  function later(fn, delay){
+    const scheduledEpoch = epoch;
+    return setTimeout(() => { if (scheduledEpoch === epoch) fn(); }, delay);
+  }
+  function invalidateAsync(){
+    epoch++;
+    const waiters = idleWaiters.splice(0);
+    waiters.forEach(resolve => resolve());
+  }
   let S = 520;
   const board = el('div','m-board');
   area.appendChild(board);
@@ -4874,23 +5520,47 @@ function gameMonopoly(area, extra, n, opts){
   board.appendChild(center);
   let aiPending = false;
   function scheduleAI(){
-    if (aiPending || over) return;
+    if (opts.destroyed || aiPending || over) return;
     if (!opts.ai || !opts.ai.has(cur)) return;
     aiPending = true;
+    const gen = epoch;
+    const turn = cur;
     setStatus('🤖 AI 思考中…');
-    setTimeout(async () => {
-      aiPending = false;
-      if (over) return;
-      if (phase === 'roll'){ roll(); return; }
+    later(async () => {
+      if (opts.destroyed || over || gen !== epoch || cur !== turn || !opts.ai.has(cur)){
+        aiPending = false;
+        return;
+      }
+      if (phase === 'roll'){
+        const d1 = 1 + Math.floor(Math.random() * 6);
+        const d2 = 1 + Math.floor(Math.random() * 6);
+        aiPending = false;
+        applyRoll(d1, d2);
+        return;
+      }
       if (phase === 'buy'){
         const p = players[cur];
         const cell = CELLS[p.pos];
         // 启发式：买得起的便宜地就买，贵地保留现金
-        const buy = p.money >= cell.price && (p.money - cell.price >= 800 || cell.price <= 400);
+        let buy = p.money >= cell.price && (p.money - cell.price >= 800 || cell.price <= 400);
         if (opts.aiPersona && Math.random() < opts.aiPersona.randomness) buy = !buy;
+        const choices = p.money >= cell.price ? ['buy', 'pass'] : ['pass'];
+        const remoteChoice = await aiChoose('monopoly', {
+          turn: cur, round, money: p.money, position: p.pos,
+          property: { name: cell.name, price: cell.price, owner: cell.owner },
+          owned: p.props.slice(),
+        }, choices, opts.aiPersona);
+        if (opts.destroyed || over || gen !== epoch || cur !== turn || phase !== 'buy' || players[cur].pos !== p.pos){
+          aiPending = false;
+          return;
+        }
+        const decision = choices.includes(remoteChoice) ? remoteChoice : (buy && choices.includes('buy') ? 'buy' : 'pass');
+        aiPending = false;
         aiSpeak(opts.aiPersona, 'think');
-        applyDecision(cur, buy ? 'buy' : 'pass');
+        applyDecision(cur, decision);
+        return;
       }
+      aiPending = false;
     }, 750);
   }
   const moneyRow = el('div','money-row');
@@ -4902,7 +5572,8 @@ function gameMonopoly(area, extra, n, opts){
     if (over) return;
     if (opts.online && !opts.isHost){ toast('只有房主可以提前结算'); return; }
     if (opts.online) opts.sendMove({ decision: 'settle' });
-    settle();
+    remoteInputs.push({ payload: { decision: 'settle' }, trustedHost: true });
+    drainRemoteInputs();
   });
   extra.appendChild(settleBtn);
 
@@ -5002,13 +5673,19 @@ function gameMonopoly(area, extra, n, opts){
     applyRoll(d1, d2);
   }
   function applyRoll(d1, d2){
+    if (over || phase !== 'roll') return;
+    const pi = cur;
+    const actionEpoch = epoch;
+    phase = 'moving';
     rollBtn.disabled = true;
-    setStatus('玩家' + (cur+1) + ' 掷骰子…');
+    setStatus('玩家' + (pi+1) + ' 掷骰子…');
     diceFaces[0].roll(d1, () => {
+      if (actionEpoch !== epoch) return;
       diceFaces[1].roll(d2, () => {
-      movePlayer(cur, d1 + d2, () => {
-        rollBtn.disabled = false;
-        resolveCell(cur);
+      if (actionEpoch !== epoch) return;
+      movePlayer(pi, d1 + d2, () => {
+        if (actionEpoch !== epoch) return;
+        resolveCell(pi);
       });
       });
     });
@@ -5024,7 +5701,7 @@ function gameMonopoly(area, extra, n, opts){
     p.pos = npos;
     renderBoard();
     setStatus('玩家' + (pi+1) + ' 走到「' + CELLS[npos].name + '」');
-    setTimeout(cb, 350);
+    later(cb, 350);
   }
   function resolveCell(pi, depth){
     if (over) return;
@@ -5035,10 +5712,10 @@ function gameMonopoly(area, extra, n, opts){
       nextTurn();
     } else if (cell.type === 'rest'){
       setStatus('玩家' + (pi+1) + ' 在「休息」喝茶，无事发生');
-      setTimeout(nextTurn, 500);
+      later(nextTurn, 500);
     } else if (cell.type === 'tax'){
       pay(pi, cell.amt, '缴纳了 ' + cell.amt + ' 税款');
-      setTimeout(() => { if (!over) nextTurn(); }, 400);
+      later(() => { if (!over) nextTurn(); }, 400);
     } else if (cell.type === 'chance'){
       showChance(pi, depth || 0);
     } else if (cell.type === 'prop'){
@@ -5062,21 +5739,24 @@ function gameMonopoly(area, extra, n, opts){
           applyDecision(pi, 'pass');
         });
         actionRow.appendChild(buy); actionRow.appendChild(pass);
-        scheduleAI();
+        drainRemoteInputs();
+        if (phase === 'buy') { scheduleAI(); notifyIdle(); }
       } else if (cell.owner === pi){
         setStatus('玩家' + (pi+1) + ' 回到自己的地盘');
-        setTimeout(nextTurn, 500);
+        later(nextTurn, 500);
       } else {
         const rent = rentOf(cell);
         pay(pi, rent, '向玩家' + (cell.owner+1) + ' 支付租金 ' + rent);
-        setTimeout(() => { if (!over) nextTurn(); }, 450);
+        later(() => { if (!over) nextTurn(); }, 450);
       }
     }
   }
   function applyDecision(pi, decision){
-    playFeedback(decision === 'buy' ? 'score' : 'tap');
+    if (over || phase !== 'buy' || pi !== cur || (decision !== 'buy' && decision !== 'pass')) return false;
     const p = players[pi];
     const cell = CELLS[p.pos];
+    if (!cell || cell.type !== 'prop' || cell.owner !== -1) return false;
+    playFeedback(decision === 'buy' ? 'score' : 'tap');
     if (decision === 'buy'){
       if (p.money >= cell.price){
         p.money -= cell.price; cell.owner = pi; p.props.push(p.pos);
@@ -5088,7 +5768,8 @@ function gameMonopoly(area, extra, n, opts){
     phase = 'done';
     actionRow.innerHTML = '';
     renderBoard();
-    setTimeout(nextTurn, 450);
+    later(nextTurn, 450);
+    return true;
   }
   function pay(pi, amt, why){
     const p = players[pi];
@@ -5104,6 +5785,7 @@ function gameMonopoly(area, extra, n, opts){
         creditGame();
         renderBoard();
         setStatus('🏆 玩家' + (winner+1) + ' 获胜！', true);
+        notifyIdle();
         return;
       }
     }
@@ -5111,7 +5793,7 @@ function gameMonopoly(area, extra, n, opts){
     if (why) setStatus('玩家' + (pi+1) + ' ' + why);
   }
   function showChance(pi, depth){
-    if (depth >= 3){ setStatus('机会卡连续触发，停止结算'); setTimeout(nextTurn, 500); return; }
+    if (depth >= 3){ setStatus('机会卡连续触发，停止结算'); later(nextTurn, 500); return; }
     phase = 'chance';
     const idx = chanceDeck.shift();
     chanceDeck.push(idx);
@@ -5163,7 +5845,7 @@ function gameMonopoly(area, extra, n, opts){
           q.props = [];
           toast('💀 玩家' + (qi+1) + ' 破产出局！');
           const alive = aliveList();
-          if (alive.length === 1){ over = true; winner = alive[0]; ended = true; creditGame(); renderBoard(); setStatus('🏆 玩家' + (winner+1) + ' 获胜！', true); }
+          if (alive.length === 1){ over = true; winner = alive[0]; ended = true; creditGame(); renderBoard(); setStatus('🏆 玩家' + (winner+1) + ' 获胜！', true); notifyIdle(); }
         }
       });
       if (ended) return;
@@ -5179,7 +5861,7 @@ function gameMonopoly(area, extra, n, opts){
       p.pos = npos;
       renderBoard();
       setStatus('玩家' + (pi+1) + ' ' + (card.move > 0 ? '前进' : '后退') + Math.abs(card.move) + ' 格');
-      setTimeout(() => resolveCell(pi, depth+1), 450);
+      later(() => resolveCell(pi, depth+1), 450);
       return;
     }
     else if (card.go){
@@ -5188,7 +5870,7 @@ function gameMonopoly(area, extra, n, opts){
       renderBoard();
       setStatus('玩家' + (pi+1) + ' 直达起点，获得 2000');
     }
-    setTimeout(() => { if (!over) nextTurn(); }, 600);
+    later(() => { if (!over) nextTurn(); }, 600);
   }
   function nextTurn(){
     if (over) return;
@@ -5200,7 +5882,8 @@ function gameMonopoly(area, extra, n, opts){
     if (round > MAX_ROUND){ settle(); return; }
     renderBoard();
     setStatus('第 ' + Math.min(round, MAX_ROUND) + '/' + MAX_ROUND + ' 轮 · 轮到玩家' + (cur+1) + '，请掷骰子');
-    scheduleAI();
+    drainRemoteInputs();
+    if (phase === 'roll') { scheduleAI(); notifyIdle(); }
   }
   function settle(){
     if (over) return;
@@ -5214,6 +5897,7 @@ function gameMonopoly(area, extra, n, opts){
       (k+1) + '. 玩家' + (i+1) + ' — ¥' + players[i].money + (players[i].alive ? '' : '（破产）'));
     showModal('🏆 结算 · 玩家' + (winner+1) + ' 获胜', lines, '确定');
     setStatus('🏆 玩家' + (winner+1) + ' 是最终赢家！', true);
+    notifyIdle();
   }
   function creditGame(){
     const order = players.map((p, i) => i).sort((a, b) =>
@@ -5221,20 +5905,81 @@ function gameMonopoly(area, extra, n, opts){
     const res = order.map((i, k) => ({ slot: i, coins: k === 0 ? 1 : 0, rank: k + 1 }));
     if (opts.onEnd) opts.onEnd(res);
   }
-  opts.onMove = payload => {
+  function drainRemoteInputs(){
+    if (drainingRemoteInputs || over) return;
+    drainingRemoteInputs = true;
+    try {
+      while (remoteInputs.length && !over){
+        const event = remoteInputs[0] || {};
+        const payload = event.payload || {};
+        if (payload.decision === 'settle'){
+          // 提前结算也必须排在当前完整行动之后；buy 阶段尚未完成本回合。
+          if (phase === 'buy'){
+            // settle 可能先于当前玩家的购买决定到达；先完成该决定，再在下一 roll 边界结算。
+            const decisionIdx = remoteInputs.findIndex((item, idx) => idx > 0 && item && item.payload &&
+              item.payload.decision && item.payload.decision !== 'settle' && item.player === cur);
+            if (decisionIdx < 0) break;
+            const decision = remoteInputs.splice(decisionIdx, 1)[0].payload;
+            applyDecision(cur, decision.decision);
+            break;
+          }
+          if (phase !== 'roll') break;
+          remoteInputs.shift();
+          settle();
+        } else {
+          if (!Number.isInteger(event.player)){
+            remoteInputs.shift();
+            continue;
+          }
+          if (event.player !== cur){
+            // 当前行动仍在动画中时，保留已到达的下一位玩家输入。
+            if (phase !== 'roll' && phase !== 'buy') break;
+            remoteInputs.shift();
+            continue;
+          }
+          if (payload.roll){
+          if (phase !== 'roll'){
+            if (phase !== 'buy') break;
+            remoteInputs.shift();
+            continue;
+          }
+          remoteInputs.shift();
+          applyRoll(payload.roll[0], payload.roll[1]);
+          } else if (payload.decision){
+          if (phase !== 'buy'){
+            if (phase !== 'roll') break;
+            remoteInputs.shift();
+            continue;
+          }
+          remoteInputs.shift();
+          applyDecision(cur, payload.decision);
+          } else {
+          remoteInputs.shift();
+          }
+        }
+      }
+    } finally {
+      drainingRemoteInputs = false;
+    }
+  }
+  opts.onMove = (payload, player) => {
     if (!payload) return;
-    if (payload.roll) applyRoll(payload.roll[0], payload.roll[1]);
-    else if (payload.decision === 'settle') settle();
-    else if (payload.decision) applyDecision(cur, payload.decision);
+    if (!payload.roll && !payload.decision) return;
+    if (opts.online && !Number.isInteger(player)) return;
+    remoteInputs.push({ payload, player });
+    drainRemoteInputs();
   };
   function resetLocal(){
+    invalidateAsync();
     init();
+    remoteInputs = [];
     actionRow.innerHTML = '';
     rollBtn.disabled = false;
     diceFaces.forEach(f => f.reset());
     aiPending = false;
     renderBoard();
     setStatus('第 1/' + MAX_ROUND + ' 轮 · 玩家1 的回合，请掷骰子');
+    notifyIdle();
   }
   function reset(){
     if (opts.online && !opts.isHost){ toast('由房主开始新一局'); return; }
@@ -5248,6 +5993,13 @@ function gameMonopoly(area, extra, n, opts){
     reset,
     onMove: opts.onMove,
     onRestart: resetLocal,
+    destroy: () => {
+      invalidateAsync();
+      aiPending = false;
+      remoteInputs = [];
+      diceFaces.forEach(face => face.reset());
+    },
+    whenIdle,
     snapshot: () => ({
       players: players.map(p => ({ money: p.money, pos: p.pos, alive: p.alive, props: p.props.slice() })),
       cur, phase, round, over, winner,
@@ -5311,39 +6063,61 @@ function gameChecker(area, extra, n, opts){
   const cornerSel = n === 2 ? [0,3] : n === 3 ? [0,2,4] : n === 4 ? [0,2,3,5] : [0,1,2,3,4];
   const targetKey = c => arms[(c+3)%6].map(key);
   let marbles = [], cur = 0, over = false, winner = -1, selected = null, dests = null, history = [];
-  let aiPending = false;
+  let aiPending = false, aiEpoch = 0;
+  function aiState(){
+    return { marbles: marbles.map(list => list.map(key)), turn: cur };
+  }
   function scheduleAI(){
-    if (aiPending || over) return;
+    if (opts.destroyed || aiPending || over) return;
     if (!opts.ai || !opts.ai.has(cur)) return;
     aiPending = true;
+    const epoch = ++aiEpoch;
+    const turn = cur;
+    const state = aiState();
+    const stateKey = JSON.stringify(state);
     setStatus('🤖 AI 思考中…');
     setTimeout(async () => {
-      aiPending = false;
-      if (over) return;
+      if (opts.destroyed || epoch !== aiEpoch || over || cur !== turn || JSON.stringify(aiState()) !== stateKey){
+        if (epoch === aiEpoch) aiPending = false;
+        return;
+      }
       const occ = occupiedMap();
       const list = [];
       marbles[cur].forEach(m => {
         const d = checkerReachable(holeSet, occ, m);
         for (const dk of d){
           const [q, r] = dk.split(',').map(Number);
-          const isJump = Math.abs(q - m.q) + Math.abs(r - m.r) > 1;
-          list.push({ from: m, to: {q, r}, isJump });
+          const dq = q - m.q, dr = r - m.r;
+          const isJump = Math.max(Math.abs(dq), Math.abs(dr), Math.abs(dq + dr)) > 1;
+          list.push({ from: {q:m.q, r:m.r}, to: {q, r}, isJump });
         }
       });
-      if (!list.length){ toast('AI 无子可动'); return; }
+      if (!list.length){ aiPending = false; toast('AI 无子可动'); return; }
       // 启发式：优先跳吃，其次向对角营地推进
       const target = arms[(cornerSel[cur] + 3) % 6].map(key);
       const tSet = new Set(target);
       let best = list[0], bestS = -1e9;
+      const scored = [];
       list.forEach(mv => {
         let s = mv.isJump ? 12 : 0;
         s += tSet.has(key(mv.to)) ? 6 : 0;
         s -= Math.abs(mv.to.q - mv.from.q) + Math.abs(mv.to.r - mv.from.r);
+        scored.push({ mv, score: s });
         if (s > bestS){ bestS = s; best = mv; }
       });
       const ckPick = aiPersonaMove(list.length, list.indexOf(best), opts.aiPersona);
+      const fallback = list[ckPick];
+      const canonical = mv => key(mv.from) + '>' + key(mv.to);
+      const choices = scored.slice().sort((a, b) => b.score - a.score).slice(0, 200).map(item => canonical(item.mv));
+      const moveByChoice = new Map(list.map(mv => [canonical(mv), mv]));
+      const remoteChoice = await aiChoose('checker', state, choices, opts.aiPersona);
+      if (opts.destroyed || epoch !== aiEpoch || over || cur !== turn || JSON.stringify(aiState()) !== stateKey){
+        if (epoch === aiEpoch) aiPending = false;
+        return;
+      }
+      const ckMv = moveByChoice.has(remoteChoice) ? moveByChoice.get(remoteChoice) : fallback;
+      aiPending = false;
       aiSpeak(opts.aiPersona, 'think');
-      const ckMv = list[ckPick];
       applyCheckerMove(ckMv.from, ckMv.to);
     }, 700);
   }
@@ -5358,6 +6132,7 @@ function gameChecker(area, extra, n, opts){
     const undoBtn = el('button','btn','↩ 悔棋');
     undoBtn.addEventListener('click', () => {
       if (over || !history.length) return;
+      aiEpoch++; aiPending = false;
       const h = history.pop();
       marbles[h.pi][h.mi] = h.from;
       cur = h.pi;
@@ -5489,9 +6264,14 @@ function gameChecker(area, extra, n, opts){
     draw();
   });
   function applyCheckerMove(fromHole, toHole){
-    playFeedback('move');
+    if (over || !fromHole || !toHole) return false;
+    const coords = [fromHole.q, fromHole.r, toHole.q, toHole.r];
+    if (!coords.every(Number.isInteger)) return false;
     const occ = occupiedMap();
     const hit = occ.get(key(fromHole));
+    if (!hit || hit.pi !== cur || occ.has(key(toHole)) || !checkerReachable(holeSet, occ, fromHole).has(key(toHole))) return false;
+    aiEpoch++;
+    playFeedback('move');
     history.push({ pi: hit.pi, mi: hit.mi, from: {q:fromHole.q, r:fromHole.r}, to: {q:toHole.q, r:toHole.r} });
     marbles[hit.pi][hit.mi] = toHole;
     selected = null; dests = null;
@@ -5506,9 +6286,10 @@ function gameChecker(area, extra, n, opts){
       draw();
       setStatus('🏆 玩家' + (cur+1) + ' 获胜！', true);
       showCheckerOver();
-      return;
+      return true;
     }
     nextPlayer();
+    return true;
   }
   function nextPlayer(){
     cur = (cur + 1) % n;
@@ -5539,12 +6320,14 @@ function gameChecker(area, extra, n, opts){
       emoji: '🏆', subtitle: '10 颗弹珠全部到达对角营地', coins: 1, onRestart: resetLocal
     });
   }
-  opts.onMove = payload => {
-    if (payload && payload.from && payload.to){
+  opts.onMove = (payload, player) => {
+    if (opts.online && (!Number.isInteger(player) || player !== cur)) return;
+    if (payload && Array.isArray(payload.from) && payload.from.length === 2 && Array.isArray(payload.to) && payload.to.length === 2){
       applyCheckerMove({ q: payload.from[0], r: payload.from[1] }, { q: payload.to[0], r: payload.to[1] });
     }
   };
   function resetLocal(){
+    aiEpoch++;
     marbles = cornerSel.map(c => arms[c].map(h => ({q:h.q, r:h.r})));
     cur = 0; over = false; winner = -1; selected = null; dests = null; history = []; aiPending = false;
     const ov = area.querySelector('.overlay'); if (ov) ov.remove();
@@ -5580,7 +6363,7 @@ function gameTank(area, extra, n, opts){
   let t0 = { r:T0[0], c:T0[1], d:1, lives:3 };
   let t1 = { r:T1[0], c:T1[1], d:3, lives:3 };
   let cur = 0, over = false, winner = -1;
-  let aiPending = false;
+  let aiPending = false, aiEpoch = 0;
   function isWall(r,c){ return grid[r] && grid[r][c] === 2; }
   function isSteel(r,c){ return grid[r] && grid[r][c] === 3; }
   function occupied(r,c){
@@ -5589,49 +6372,59 @@ function gameTank(area, extra, n, opts){
     return -1;
   }
   function scheduleAI(){
-    if (aiPending || over) return;
+    if (opts.destroyed || aiPending || over) return;
     if (!opts.ai || !opts.ai.has(cur)) return;
     aiPending = true;
+    const gen = aiEpoch;
+    const turn = cur;
     setStatus('🤖 AI 思考中…');
     setTimeout(async () => {
-      aiPending = false;
-      if (over) return;
+      if (opts.destroyed || over || gen !== aiEpoch || cur !== turn || !opts.ai.has(cur)){
+        aiPending = false;
+        return;
+      }
       const me = cur === 0 ? t0 : t1;
       const foe = cur === 0 ? t1 : t0;
-      // 同排/同列且路径无障碍 → 射击
-      if (me.r === foe.r || me.c === foe.c){
-        const dr = Math.sign(foe.r - me.r), dc = Math.sign(foe.c - me.c);
-        let rr = me.r + dr, cc = me.c + dc, blocked = false;
-        while (rr >= 0 && rr < H && cc >= 0 && cc < W && !(rr === foe.r && cc === foe.c)){
-          if (grid[rr][cc] !== 0){ blocked = true; break; }
-          rr += dr; cc += dc;
+      const actions = [{ option: 'shoot', act: 'shoot', score: 0 }];
+      const shotDir = dirs[me.d];
+      let rr = me.r + shotDir[0], cc = me.c + shotDir[1];
+      while (rr >= 0 && rr < H && cc >= 0 && cc < W){
+        if (rr === foe.r && cc === foe.c){ actions[0].score = 1000; break; }
+        if (grid[rr][cc] === 3) break;
+        if (grid[rr][cc] === 2){ actions[0].score = 35; break; }
+        if (grid[rr][cc] === 4){
+          const enemyBase = cur === 0 ? BASE1 : BASE0;
+          if (rr === enemyBase[0] && cc === enemyBase[1]) actions[0].score = 900;
+          break;
         }
-        if (!blocked){
-          if (opts.online) opts.sendMove({ act: 'shoot' });
-          shoot();
-          return;
-        }
+        rr += shotDir[0]; cc += shotDir[1];
       }
-      // 朝对方靠近（贪心）
-      const optsMoves = [];
       dirs.forEach((d, di) => {
         const nr = me.r + d[0], nc = me.c + d[1];
         if (nr < 0 || nr >= H || nc < 0 || nc >= W) return;
         if (grid[nr][nc] !== 0) return;
         if (occupied(nr, nc) >= 0) return;
-        optsMoves.push(di);
+        const distance = Math.abs(nr - foe.r) + Math.abs(nc - foe.c);
+        actions.push({ option: 'move:' + di, act: 'move', d: di, score: 100 - distance * 4 });
       });
-      if (!optsMoves.length){ if (opts.online) opts.sendMove({ act: 'shoot' }); shoot(); return; }
-      let best = optsMoves[0], bestD = 1e9;
-      optsMoves.forEach(di => {
-        const d = dirs[di];
-        const nd = Math.abs(me.r + d[0] - foe.r) + Math.abs(me.c + d[1] - foe.c);
-        if (nd < bestD){ bestD = nd; best = di; }
-      });
-      const tankPick = aiPersonaMove(optsMoves.length, optsMoves.indexOf(best), opts.aiPersona);
+      let bestIdx = 0;
+      actions.forEach((action, i) => { if (action.score > actions[bestIdx].score) bestIdx = i; });
+      const choices = actions.map(action => action.option);
+      const remoteChoice = await aiChoose('tank', {
+        grid: grid.map(row => row.join('')),
+        tanks: [{...t0}, {...t1}], turn: cur,
+      }, choices, opts.aiPersona);
+      if (opts.destroyed || over || gen !== aiEpoch || cur !== turn){
+        aiPending = false;
+        return;
+      }
+      let tankPick = choices.indexOf(remoteChoice);
+      if (tankPick < 0) tankPick = aiPersonaMove(actions.length, bestIdx, opts.aiPersona);
+      const action = actions[tankPick];
+      aiPending = false;
       aiSpeak(opts.aiPersona, 'think');
-      if (opts.online) opts.sendMove({ act: 'move', d: optsMoves[tankPick] });
-      moveTank(cur, optsMoves[tankPick]);
+      if (action.act === 'shoot') shoot();
+      else moveTank(cur, action.d);
     }, 700);
   }
   function buildMap(){
@@ -5646,17 +6439,20 @@ function gameTank(area, extra, n, opts){
     grid[T1[0]][T1[1]] = 0;
   }
   function moveTank(pi, d){
+    if (over || pi !== cur || !Number.isInteger(d) || d < 0 || d >= dirs.length) return false;
     sfx('move');
     const me = pi === 0 ? t0 : t1;
-    me.d = d;
     const nr = me.r + dirs[d][0], nc = me.c + dirs[d][1];
-    if (nr < 0 || nr >= H || nc < 0 || nc >= W) return;
-    if (grid[nr][nc] !== 0) return;
-    if (occupied(nr, nc) >= 0) return;
+    if (nr < 0 || nr >= H || nc < 0 || nc >= W) return false;
+    if (grid[nr][nc] !== 0) return false;
+    if (occupied(nr, nc) >= 0) return false;
+    me.d = d;
     me.r = nr; me.c = nc;
     endTurn();
+    return true;
   }
   function shoot(){
+    if (over) return false;
     playFeedback('capture');
     const me = cur === 0 ? t0 : t1;
     const foe = cur === 0 ? t1 : t0;
@@ -5666,10 +6462,12 @@ function gameTank(area, extra, n, opts){
       if (grid[rr][cc] === 3){ break; }
       if (grid[rr][cc] === 2){ grid[rr][cc] = 0; break; }
       if (grid[rr][cc] === 4){
+        const enemyBase = cur === 0 ? BASE1 : BASE0;
+        if (rr !== enemyBase[0] || cc !== enemyBase[1]) break;
         over = true; winner = cur;
         if (opts.onEnd) opts.onEnd([{ slot: cur, coins: 1, rank: 1 }, { slot: cur ^ 1, coins: 0, rank: 2 }]);
         render();
-        return;
+        return true;
       }
       if (rr === foe.r && cc === foe.c){
         foe.lives--;
@@ -5683,12 +6481,13 @@ function gameTank(area, extra, n, opts){
         }
         render();
         endTurn();
-        return;
+        return true;
       }
       rr += d[0]; cc += d[1];
     }
     render();
     endTurn();
+    return true;
   }
   function endTurn(){
     if (over) return;
@@ -5738,33 +6537,42 @@ function gameTank(area, extra, n, opts){
   }
   extra.innerHTML = '';
   const actions = el('div','tank-actions');
-  if (!opts.online){
-    DIR_KEYS.forEach((k, di) => {
-      const b = el('button','btn',k);
-      b.addEventListener('click', () => {
-        if (over) return;
-        if (opts.ai && opts.ai.has(cur)) return;
-        if (opts.online) opts.sendMove({ act: 'move', d: di });
-        moveTank(cur, di);
-      });
-      actions.appendChild(b);
-    });
-    const shootBtn = el('button','btn btn-primary','💥 开炮');
-    shootBtn.addEventListener('click', () => {
-      if (over) return;
+  DIR_KEYS.forEach((k, di) => {
+    const b = el('button','btn',k);
+    b.addEventListener('click', () => {
+      if (over || (opts.isReplaying && opts.isReplaying())) return;
+      if (opts.online && cur !== opts.myIdx) return;
       if (opts.ai && opts.ai.has(cur)) return;
-      if (opts.online) opts.sendMove({ act: 'shoot' });
-      shoot();
+      const me = cur === 0 ? t0 : t1;
+      const nr = me.r + dirs[di][0], nc = me.c + dirs[di][1];
+      if (nr < 0 || nr >= H || nc < 0 || nc >= W || grid[nr][nc] !== 0 || occupied(nr, nc) >= 0) return;
+      if (opts.online) opts.sendMove({ act: 'move', d: di });
+      moveTank(cur, di);
     });
-    actions.appendChild(shootBtn);
-  }
+    actions.appendChild(b);
+  });
+  const shootBtn = el('button','btn btn-primary','💥 开炮');
+  shootBtn.addEventListener('click', () => {
+    if (over || (opts.isReplaying && opts.isReplaying())) return;
+    if (opts.online && cur !== opts.myIdx) return;
+    if (opts.ai && opts.ai.has(cur)) return;
+    if (opts.online) opts.sendMove({ act: 'shoot' });
+    shoot();
+  });
+  actions.appendChild(shootBtn);
   extra.appendChild(actions);
-  opts.onMove = payload => {
-    if (!payload) return;
+  opts.onMove = (payload, player) => {
+    if (opts.online && (!Number.isInteger(player) || player !== cur)) return;
+    if (!payload || over) return;
     if (payload.act === 'shoot') shoot();
-    else if (payload.act === 'move') moveTank(cur, payload.d);
+    else if (payload.act === 'move'){
+      const d = Number(payload.d);
+      if (!Number.isInteger(d) || d < 0 || d >= dirs.length) return;
+      moveTank(cur, d);
+    }
   };
   function resetLocal(){
+    aiEpoch++;
     buildMap();
     t0 = { r:T0[0], c:T0[1], d:1, lives:3 };
     t1 = { r:T1[0], c:T1[1], d:3, lives:3 };
@@ -5789,17 +6597,33 @@ function gameSnake(area, extra, n, opts){
   let snakes = [];
   let food = [7,7];
   let cur = 0, over = false, winner = -1, aliveCount = 0;
-  let aiPending = false;
+  let aiPending = false, aiEpoch = 0;
+  function isValidFood(pos){
+    return Array.isArray(pos) && pos.length === 2 && pos.every(Number.isInteger) &&
+      pos[0] >= 1 && pos[0] < H - 1 && pos[1] >= 1 && pos[1] < W - 1 &&
+      !snakes.some(s => s && s.alive && s.body.some(p => p[0] === pos[0] && p[1] === pos[1]));
+  }
+  function randomFood(){
+    const free = [];
+    for (let r = 1; r < H - 1; r++) for (let c = 1; c < W - 1; c++){
+      if (isValidFood([r, c]) && !(r === food[0] && c === food[1])) free.push([r, c]);
+    }
+    return free.length ? free[Math.floor(Math.random() * free.length)] : food.slice();
+  }
   function scheduleAI(){
-    if (aiPending || over) return;
+    if (opts.destroyed || aiPending || over) return;
     if (!opts.ai || !opts.ai.has(cur)) return;
     aiPending = true;
+    const gen = aiEpoch;
+    const turn = cur;
     setStatus('🤖 AI 思考中…');
     setTimeout(async () => {
-      aiPending = false;
-      if (over) return;
+      if (opts.destroyed || over || gen !== aiEpoch || cur !== turn || !opts.ai.has(cur)){
+        aiPending = false;
+        return;
+      }
       const s = snakes[cur];
-      if (!s || !s.alive) return;
+      if (!s || !s.alive){ aiPending = false; return; }
       const head = s.body[0];
       const legal = [];
       dirs.forEach((d, di) => {
@@ -5809,7 +6633,7 @@ function gameSnake(area, extra, n, opts){
         if (hitTest(nr, nc, cur, false)) return;
         legal.push(di);
       });
-      if (!legal.length){ die(cur); return; }
+      if (!legal.length){ aiPending = false; die(cur); return; }
       // 优先朝食物方向
       let best = legal[0], bestD = 1e9;
       legal.forEach(di => {
@@ -5817,9 +6641,24 @@ function gameSnake(area, extra, n, opts){
         const nd = Math.abs(head[0]+d[0]-food[0]) + Math.abs(head[1]+d[1]-food[1]);
         if (nd < bestD){ bestD = nd; best = di; }
       });
-      const snakePick = aiPersonaMove(legal.length, legal.indexOf(best), opts.aiPersona);
+      const choices = legal.map(di => 'dir:' + di);
+      const remoteChoice = await aiChoose('snake', {
+        snakes: snakes.map(item => ({ body: item.body, direction: item.d, score: item.score, alive: item.alive })),
+        food: food.slice(), turn: cur,
+      }, choices, opts.aiPersona);
+      if (opts.destroyed || over || gen !== aiEpoch || cur !== turn){
+        aiPending = false;
+        return;
+      }
+      let snakePick = choices.indexOf(remoteChoice);
+      if (snakePick < 0) snakePick = aiPersonaMove(legal.length, legal.indexOf(best), opts.aiPersona);
+      aiPending = false;
       aiSpeak(opts.aiPersona, 'think');
-      step(cur, legal[snakePick], null);
+      const di = legal[snakePick];
+      const nr = head[0] + dirs[di][0], nc = head[1] + dirs[di][1];
+      const nf = nr === food[0] && nc === food[1] ? randomFood() : null;
+      if (opts.online) opts.sendMove({ d: di, food: nf });
+      step(cur, di, nf);
     }, 650);
   }
   function hitTest(r, c, except, allowFood){
@@ -5865,8 +6704,8 @@ function gameSnake(area, extra, n, opts){
     s.body.unshift([nr, nc]);
     if (nr === food[0] && nc === food[1]){
       s.score++;
-      if (newFood) food = newFood;
-      else food = [1 + Math.floor(Math.random()*(H-2)), 1 + Math.floor(Math.random()*(W-2))];
+      if (newFood) food = newFood.slice();
+      else food = randomFood();
       toast('🍎 玩家' + (pi+1) + ' 吃豆 +1！');
     } else {
       s.body.pop();
@@ -5935,6 +6774,8 @@ function gameSnake(area, extra, n, opts){
     const b = el('button','btn',k);
     b.addEventListener('click', () => {
       if (over) return;
+      if (opts.isReplaying && opts.isReplaying()) return;
+      if (opts.online && cur !== opts.myIdx) return;
       if (opts.ai && opts.ai.has(cur)) return;
       const s = snakes[cur];
       if (!s || !s.alive) return;
@@ -5942,20 +6783,31 @@ function gameSnake(area, extra, n, opts){
       if (opts.online){
         const nr = s.body[0][0] + dirs[di][0], nc = s.body[0][1] + dirs[di][1];
         const eat = nr === food[0] && nc === food[1];
-        const nf = eat ? [1 + Math.floor(Math.random()*(H-2)), 1 + Math.floor(Math.random()*(W-2))] : null;
+        const nf = eat ? randomFood() : null;
         opts.sendMove({ d: di, food: nf });
+        step(cur, di, nf);
+        return;
       }
       step(cur, di, null);
     });
     actions.appendChild(b);
   });
   extra.appendChild(actions);
-  opts.onMove = payload => {
+  opts.onMove = (payload, player) => {
+    if (opts.online && (!Number.isInteger(player) || player !== cur)) return;
     if (!payload) return;
-    if (payload.food) food = payload.food;
-    step(cur, payload.d, payload.food || null);
+    const d = Number(payload.d);
+    if (!Number.isInteger(d) || d < 0 || d >= dirs.length) return;
+    const s = snakes[cur];
+    if (!s || !s.alive || (d + 2) % 4 === s.d) return;
+    const nr = s.body[0][0] + dirs[d][0], nc = s.body[0][1] + dirs[d][1];
+    const willEat = nr === food[0] && nc === food[1];
+    const nextFood = Array.isArray(payload.food) ? payload.food.slice(0, 2) : null;
+    if (willEat ? !isValidFood(nextFood) : nextFood !== null) return;
+    step(cur, d, nextFood);
   };
   function resetLocal(){
+    aiEpoch++;
     snakes = starts.slice(0, n).map(([r, c, d]) => ({ body: [[r,c],[r - dirs[d][0], c - dirs[d][1]]], d, score: 0, alive: true }));
     food = [7,7];
     cur = 0; over = false; winner = -1; aliveCount = n; aiPending = false;
@@ -5990,7 +6842,7 @@ function gameTetris(area, extra, n, opts){
   let piece = null; // {shape, x, y, rot}
   let pieceCount = 0;
   const MAX_PIECES = 8;
-  let aiPending = false;
+  let aiPending = false, aiEpoch = 0;
   function rotate(m){
     const rows = m.length, cols = m[0].length;
     const out = Array.from({length: cols}, () => Array(rows).fill(0));
@@ -6054,27 +6906,59 @@ function gameTetris(area, extra, n, opts){
         while (!collide(well, sh, x, y + 1)) y++;
         if (collide(well, sh, x, y)) continue;
         const v = evaluatePlacement(well, sh, x, y);
-        if (v > bestV){ bestV = v; best = { x, y, sh }; }
+        if (v > bestV){ bestV = v; best = { x, y, sh, rot }; }
       }
     }
     return best;
   }
   function scheduleAI(){
-    if (aiPending || over) return;
+    if (opts.destroyed || aiPending || over) return;
     if (!opts.ai || !opts.ai.has(cur)) return;
     aiPending = true;
+    const gen = aiEpoch;
+    const turn = cur;
+    const count = pieceCount;
     setStatus('🤖 AI 思考中…');
-    setTimeout(() => {
-      aiPending = false;
-      if (over) return;
-      if (!piece) return;
+    setTimeout(async () => {
+      if (opts.destroyed || over || gen !== aiEpoch || cur !== turn || !opts.ai.has(cur)){
+        aiPending = false;
+        return;
+      }
       const idx = 0 | Math.floor(Math.random() * SHAPES.length);
-      const best = aiBestPlacement(wells[cur], SHAPES[idx]);
-      if (!best){ topOut(cur); return; }
-      if (opts.aiPersona && Math.random() < opts.aiPersona.randomness) best.x = Math.max(0, Math.min(9, best.x + (Math.random() < 0.5 ? -1 : 1)));
+      const candidates = [];
+      const seenShapes = new Set();
+      for (let rot = 0; rot < 4; rot++){
+        let sh = SHAPES[idx];
+        for (let i = 0; i < rot; i++) sh = rotate(sh);
+        const shapeKey = JSON.stringify(sh);
+        if (seenShapes.has(shapeKey)) continue;
+        seenShapes.add(shapeKey);
+        for (let x = -3; x <= COLS; x++){
+          let y = 0;
+          while (!collide(wells[cur], sh, x, y + 1)) y++;
+          if (collide(wells[cur], sh, x, y)) continue;
+          candidates.push({ option: 'rot:' + rot + ',x:' + x + ',y:' + y, x, y, sh, rot,
+            score: evaluatePlacement(wells[cur], sh, x, y) });
+        }
+      }
+      if (!candidates.length){ aiPending = false; topOut(cur); return; }
+      let bestIdx = 0;
+      candidates.forEach((candidate, i) => { if (candidate.score > candidates[bestIdx].score) bestIdx = i; });
+      const choices = candidates.map(candidate => candidate.option);
+      const remoteChoice = await aiChoose('tetris', {
+        well: wells[cur].map(row => row.join('')), score: scores[cur],
+        piece: idx, turn: cur, pieceCount,
+      }, choices, opts.aiPersona);
+      if (opts.destroyed || over || gen !== aiEpoch || cur !== turn || pieceCount !== count){
+        aiPending = false;
+        return;
+      }
+      let chosenIdx = choices.indexOf(remoteChoice);
+      if (chosenIdx < 0) chosenIdx = bestIdx;
+      const chosen = candidates[chosenIdx];
+      aiPending = false;
       aiSpeak(opts.aiPersona, 'think');
-      if (opts.online) opts.sendMove({ piece: idx, x: best.x, y: best.y, rot: best.rot || 0, sh: best.sh });
-      applyPlacement(cur, idx, best.x, best.y, best.sh);
+      applyPlacement(cur, idx, chosen.x, chosen.y, chosen.sh);
     }, 700);
   }
   function applyPlacement(pi, idx, x, y, sh){
@@ -6165,12 +7049,19 @@ function gameTetris(area, extra, n, opts){
   }
   extra.innerHTML = '';
   // Human player controls: keyboard + buttons
-  let humanPiece = null, humanX = 0, humanY = 0, humanSh = null, humanIdx = 0;
-  const humanKeys = {};
+  let humanX = 0, humanY = 0, humanSh = null, humanIdx = 0, humanRot = 0;
+
+  function canControl(){
+    if (over || (opts.isReplaying && opts.isReplaying())) return false;
+    if (opts.online && cur !== opts.myIdx) return false;
+    if (opts.ai && opts.ai.has(cur)) return false;
+    return true;
+  }
   
   function spawnHumanPiece() {
     humanIdx = 0 | Math.floor(Math.random() * SHAPES.length);
     humanSh = SHAPES[humanIdx];
+    humanRot = 0;
     humanX = Math.floor((COLS - humanSh[0].length) / 2);
     humanY = 0;
     if (collide(wells[cur], humanSh, humanX, humanY)) { topOut(cur); return false; }
@@ -6190,6 +7081,7 @@ function gameTetris(area, extra, n, opts){
     const rotated = rotate(humanSh);
     if (!collide(wells[cur], rotated, humanX, humanY)) {
       humanSh = rotated;
+      humanRot = (humanRot + 1) % 4;
       render();
     }
   }
@@ -6213,15 +7105,14 @@ function gameTetris(area, extra, n, opts){
   function lockHuman() {
     if (!humanSh || over) return;
     if (opts.online) {
-      opts.sendMove({ pieceIdx: humanIdx, x: humanX, y: humanY, sh: humanSh });
+      opts.sendMove({ piece: humanIdx, x: humanX, y: humanY, rot: humanRot });
     }
     applyPlacement(cur, humanIdx, humanX, humanY, humanSh);
-    humanSh = null; humanPiece = null;
+    humanSh = null;
   }
   
   function handleTetrisKey(e) {
-    if (over) return;
-    if (opts.ai && opts.ai.has(cur)) return;
+    if (!canControl()) return;
     if (!humanSh && !spawnHumanPiece()) return;
     switch(e.key) {
       case 'ArrowLeft': e.preventDefault(); moveHuman(-1); break;
@@ -6233,16 +7124,23 @@ function gameTetris(area, extra, n, opts){
   }
   
   // Listen for keys globally when this game is active
-  document.addEventListener('keydown', handleTetrisKey);
-  const origReset = resetLocal;
-  resetLocal = function() {
-    document.removeEventListener('keydown', handleTetrisKey);
-    humanSh = null;
-    origReset();
+  if (document.addEventListener) document.addEventListener('keydown', handleTetrisKey);
+  const actions = el('div','tetris-actions');
+  const control = (label, fn) => {
+    const b = el('button','btn',label);
+    b.addEventListener('click', () => {
+      if (!canControl()) return;
+      if (!humanSh && !spawnHumanPiece()) return;
+      fn();
+    });
+    actions.appendChild(b);
   };
-  
+  control('⬅', () => moveHuman(-1));
+  control('➡', () => moveHuman(1));
+  control('↻', rotateHuman);
+  control('⬇', dropHuman);
+  control('⤓', hardDropHuman);
   if (!opts.online){
-    const actions = el('div','tetris-actions');
     const placeBtn = el('button','btn btn-primary','🧱 放一个');
     placeBtn.addEventListener('click', () => {
       if (over) return;
@@ -6253,16 +7151,24 @@ function gameTetris(area, extra, n, opts){
       applyPlacement(cur, idx, best.x, best.y, best.sh);
     });
     actions.appendChild(placeBtn);
-    extra.appendChild(actions);
   }
-  opts.onMove = payload => {
-    if (!payload) return;
-    applyPlacement(cur, payload.piece, payload.x, payload.y, payload.sh);
+  extra.appendChild(actions);
+  opts.onMove = (payload, player) => {
+    if (opts.online && (!Number.isInteger(player) || player !== cur)) return;
+    if (!payload || over) return;
+    const idx = Number(payload.piece), x = Number(payload.x), y = Number(payload.y), rot = Number(payload.rot || 0);
+    if (![idx, x, y, rot].every(Number.isInteger) || idx < 0 || idx >= SHAPES.length || rot < 0 || rot > 3) return;
+    let sh = SHAPES[idx];
+    for (let i = 0; i < rot; i++) sh = rotate(sh);
+    if (collide(wells[cur], sh, x, y) || !collide(wells[cur], sh, x, y + 1)) return;
+    applyPlacement(cur, idx, x, y, sh);
   };
   function resetLocal(){
+    aiEpoch++;
     wells = Array.from({length: n}, () => Array.from({length: ROWS}, () => Array(COLS).fill(0)));
     scores = Array(n).fill(0);
     cur = 0; over = false; winner = -1; piece = null; pieceCount = 0; aiPending = false;
+    humanSh = null; humanRot = 0;
     render();
     setStatus('玩家1 的回合，点「放一个」放置方块');
   }
@@ -6272,15 +7178,25 @@ function gameTetris(area, extra, n, opts){
     resetLocal();
   }
   resetLocal();
-  return { reset, onMove: opts.onMove, onRestart: resetLocal, snapshot: () => ({ wells: wells.map(w => w.map(r => r.slice())), scores: scores.slice(), cur, over, winner }) };
+  return { reset, onMove: opts.onMove, onRestart: resetLocal, destroy: () => {
+    aiEpoch++; aiPending = false;
+    if (document.removeEventListener) document.removeEventListener('keydown', handleTetrisKey);
+  }, snapshot: () => ({ wells: wells.map(w => w.map(r => r.slice())), scores: scores.slice(), cur, over, winner, pieceCount }) };
 }
 /* ================= 国际跳棋 ================= */
 function gameDraughts(area, extra, n, opts){
   opts = opts || {};
   const N = 8;
   let board = Array.from({length:N}, () => Array(N).fill(null)); // {p, king}
-  let cur = 0, over = false, winner = -1, mustCapture = null;
-  let aiPending = false;
+  let cur = 0, over = false, winner = -1, mustCapture = null, captureChain = false;
+  let aiPending = false, aiEpoch = 0;
+  function aiState(){
+    return {
+      board: board.map(row => row.map(piece => piece ? (String(piece.p) + (piece.king ? 'K' : 'M')) : '--')),
+      turn: cur,
+      forcedFrom: captureChain && mustCapture ? mustCapture.join(',') : null,
+    };
+  }
   const cv = document.createElement('canvas');
   cv.className = 'drg-canvas';
   const dpr = window.devicePixelRatio || 1;
@@ -6294,21 +7210,32 @@ function gameDraughts(area, extra, n, opts){
     handleClick(0 | Math.floor(y * N), 0 | Math.floor(x * N));
   });
   function handleClick(r, c){
-    if (mustCapture){
+    if (captureChain && mustCapture){
       const from = mustCapture;
-      if (board[r][c] && board[r][c].p === cur && capturesFor(cur, r, c).length){ mustCapture = [r,c]; render(); return; }
-      const caps = capturesFor(cur, from[0], from[1]);
-      const hit = caps.find(cap => cap[0] === r && cap[1] === c);
-      if (hit){
-        if (opts.online) opts.sendMove({ from, to: [r,c], via: [hit[2],hit[3]] });
-        applyMove(cur, from, [r,c], [hit[2],hit[3]]);
-        mustCapture = null;
-      }
+      const move = capturesFor(cur, from[0], from[1])
+        .map(cap => ({ from: from.slice(), to: [cap[0],cap[1]], via: [cap[2],cap[3]] }))
+        .find(m => m.to[0] === r && m.to[1] === c);
+      if (!move) return;
+      if (opts.online) opts.sendMove({ from, to: move.to, via: move.via });
+      applyMove(cur, from, move.to, move.via);
       return;
     }
     if (board[r][c] && board[r][c].p === cur){
-      mustCapture = [r,c];
+      const forced = allCaptures(cur);
+      const candidates = forced.length ? forced : simpleMoves(cur);
+      if (!candidates.some(m => m.from[0] === r && m.from[1] === c)) return;
+      mustCapture = [r, c];
       render();
+      return;
+    }
+    if (mustCapture){
+      const from = mustCapture;
+      const forced = allCaptures(cur);
+      const candidates = (forced.length ? forced : simpleMoves(cur)).filter(m => m.from[0] === from[0] && m.from[1] === from[1]);
+      const move = candidates.find(m => m.to[0] === r && m.to[1] === c);
+      if (!move) return;
+      if (opts.online) opts.sendMove({ from, to: move.to, via: move.via || null });
+      applyMove(cur, from, move.to, move.via || null);
     }
   }
   function initBoard(){
@@ -6369,20 +7296,35 @@ function gameDraughts(area, extra, n, opts){
     }
     return res;
   }
+  function legalTurnMoves(pi){
+    if (captureChain && mustCapture){
+      return capturesFor(pi, mustCapture[0], mustCapture[1]).map(cap => ({
+        from: mustCapture.slice(), to: [cap[0],cap[1]], via: [cap[2],cap[3]],
+      }));
+    }
+    const captures = allCaptures(pi);
+    return captures.length ? captures : simpleMoves(pi);
+  }
   function scheduleAI(){
-    if (aiPending || over) return;
+    if (opts.destroyed || aiPending || over) return;
     if (!opts.ai || !opts.ai.has(cur)) return;
     aiPending = true;
+    const epoch = ++aiEpoch;
+    const turn = cur;
+    const state = aiState();
+    const stateKey = JSON.stringify(state);
     setStatus('🤖 AI 思考中…');
-    setTimeout(() => {
-      aiPending = false;
-      if (over) return;
-      const caps = allCaptures(cur);
-      let moves = caps.length ? caps : simpleMoves(cur);
-      if (!moves.length){ lose(cur); return; }
+    setTimeout(async () => {
+      if (opts.destroyed || epoch !== aiEpoch || over || cur !== turn || JSON.stringify(aiState()) !== stateKey){
+        if (epoch === aiEpoch) aiPending = false;
+        return;
+      }
+      const moves = legalTurnMoves(cur);
+      if (!moves.length){ aiPending = false; lose(cur); return; }
+      const caps = moves.filter(move => move.via);
       let pick = moves[0];
       if (caps.length){
-        pick = caps.sort((a, b) => {
+        pick = caps.slice().sort((a, b) => {
           const ka = board[a.from[0]][a.from[1]].king ? 1 : 0, kb = board[b.from[0]][b.from[1]].king ? 1 : 0;
           return kb - ka;
         })[0];
@@ -6394,37 +7336,56 @@ function gameDraughts(area, extra, n, opts){
         });
       }
       const drgPick = aiPersonaMove(moves.length, moves.indexOf(pick), opts.aiPersona);
+      const fallback = moves[drgPick];
+      const canonical = move => move.from.join(',') + '>' + move.to.join(',');
+      const choices = moves.slice(0, 200).map(canonical);
+      const moveByChoice = new Map(moves.map(move => [canonical(move), move]));
+      const remoteChoice = await aiChoose('draughts', state, choices, opts.aiPersona);
+      if (opts.destroyed || epoch !== aiEpoch || over || cur !== turn || JSON.stringify(aiState()) !== stateKey){
+        if (epoch === aiEpoch) aiPending = false;
+        return;
+      }
+      const drgMv = moveByChoice.has(remoteChoice) ? moveByChoice.get(remoteChoice) : fallback;
+      aiPending = false;
       aiSpeak(opts.aiPersona, 'think');
-      const drgMv = moves[drgPick];
-      applyMove(cur, drgMv.from, drgMv.to);
+      applyMove(cur, drgMv.from, drgMv.to, drgMv.via || null);
     }, 600);
   }
   function applyMove(pi, from, to, via){
+    if (over || pi !== cur || !Array.isArray(from) || !Array.isArray(to) || from.length !== 2 || to.length !== 2) return false;
+    const coords = from.concat(to).map(Number);
+    if (!coords.every(Number.isInteger) || coords.some(v => v < 0 || v >= N)) return false;
+    from = coords.slice(0, 2); to = coords.slice(2, 4);
+    const legal = legalTurnMoves(pi);
+    const move = legal.find(m => m.from[0] === from[0] && m.from[1] === from[1] && m.to[0] === to[0] && m.to[1] === to[1]);
+    if (!move) return false;
+    via = move.via || null;
     const piece = board[from[0]][from[1]];
+    aiEpoch++;
     playFeedback(via ? 'capture' : 'move');
     board[from[0]][from[1]] = null;
     if (via) board[via[0]][via[1]] = null;
-    let king = piece.king;
+    const wasKing = piece.king;
+    let king = wasKing;
     if (!king && ((pi === 0 && to[0] === 7) || (pi === 1 && to[0] === 0))) king = true;
     board[to[0]][to[1]] = { p: pi, king };
     // 连跳
-    if (via && capturesFor(pi, to[0], to[1]).length && !king){
-      setTimeout(() => {
-        // 简化：连续跳时保持回合
-        const caps = capturesFor(pi, to[0], to[1]);
-        if (caps.length){
-          // 由玩家继续
-          render();
-          return;
-        }
-        endTurn();
-      }, 200);
+    const promoted = !wasKing && king;
+    if (via && capturesFor(pi, to[0], to[1]).length && !promoted){
+      mustCapture = to.slice();
+      captureChain = true;
       render();
-      return;
+      setStatus('玩家' + (cur+1) + ' 继续跳吃');
+      scheduleAI();
+      return true;
     }
+    mustCapture = null;
+    captureChain = false;
     endTurn();
+    return true;
   }
   function lose(pi){
+    aiEpoch++; aiPending = false; captureChain = false; mustCapture = null;
     over = true;
     winner = pi ^ 1;
     if (opts.onEnd) opts.onEnd([{ slot: winner, coins: 1, rank: 1 }, { slot: pi, coins: 0, rank: 2 }]);
@@ -6437,6 +7398,7 @@ function gameDraughts(area, extra, n, opts){
   }
   function endTurn(){
     if (over) return;
+    captureChain = false; mustCapture = null;
     cur ^= 1;
     if (!countPieces(cur) || !(allCaptures(cur).length || simpleMoves(cur).length)){
       lose(cur);
@@ -6510,13 +7472,15 @@ function gameDraughts(area, extra, n, opts){
     }
     renderPlayers(cur, null);
   }
-  opts.onMove = payload => {
-    if (!payload) return;
+  opts.onMove = (payload, player) => {
+    if (opts.online && (!Number.isInteger(player) || player !== cur)) return;
+    if (!payload || !Array.isArray(payload.from) || !Array.isArray(payload.to)) return;
     applyMove(cur, payload.from, payload.to, payload.via);
   };
   function resetLocal(){
+    aiEpoch++;
     initBoard();
-    cur = 0; over = false; winner = -1; mustCapture = null; aiPending = false;
+    cur = 0; over = false; winner = -1; mustCapture = null; captureChain = false; aiPending = false;
     render();
     setStatus('轮到玩家1，点击自己的棋子');
   }
@@ -6537,7 +7501,13 @@ function gameJungle(area, extra, n, opts){
   const EMOJI = { '象':'🐘','狮':'🦁','虎':'🐯','豹':'🐆','狼':'🐺','狗':'🐶','猫':'🐱','鼠':'🐭' };
   let board = Array.from({length:ROWS}, () => Array(COLS).fill(null)); // {p, type}
   let cur = 0, over = false, winner = -1, selected = null, legalMoves = [];
-  let aiPending = false;
+  let aiPending = false, aiEpoch = 0;
+  function aiState(){
+    return {
+      board: board.map(row => row.map(piece => piece ? (String(piece.p) + piece.type) : '--')),
+      turn: cur,
+    };
+  }
   function isWater(r,c){ return r >= 2 && r <= 4 && ((c >= 1 && c <= 3) || (c >= 5 && c <= 7)); }
   function denOf(p){ return p === 0 ? [3,0] : [3,8]; }
   function trapOf(p){
@@ -6609,40 +7579,76 @@ function gameJungle(area, extra, n, opts){
     }
     return res;
   }
+  function allMoves(p){
+    const all = [];
+    for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++){
+      const piece = board[r][c];
+      if (piece && piece.p === p) movesOf(p, r, c).forEach(to => all.push({ from: [r,c], to }));
+    }
+    return all;
+  }
+  function lose(pi){
+    if (over) return;
+    aiEpoch++; aiPending = false;
+    over = true; winner = pi ^ 1;
+    if (opts.onEnd) opts.onEnd([{ slot: winner, coins: 1, rank: 1 }, { slot: pi, coins: 0, rank: 2 }]);
+    render();
+    setStatus('🏆 玩家' + (winner+1) + ' 获胜！', true);
+  }
   function scheduleAI(){
-    if (aiPending || over) return;
+    if (opts.destroyed || aiPending || over) return;
     if (!opts.ai || !opts.ai.has(cur)) return;
     aiPending = true;
+    const epoch = ++aiEpoch;
+    const turn = cur;
+    const state = aiState();
+    const stateKey = JSON.stringify(state);
     setStatus('🤖 AI 思考中…');
-    setTimeout(() => {
-      aiPending = false;
-      if (over) return;
-      const all = [];
-      for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++){
-        const piece = board[r][c];
-        if (piece && piece.p === cur){
-          movesOf(cur, r, c).forEach(m => all.push({ from: [r,c], to: m }));
-        }
+    setTimeout(async () => {
+      if (opts.destroyed || epoch !== aiEpoch || over || cur !== turn || JSON.stringify(aiState()) !== stateKey){
+        if (epoch === aiEpoch) aiPending = false;
+        return;
       }
-      if (!all.length) return;
+      const all = allMoves(cur);
+      if (!all.length){ aiPending = false; lose(cur); return; }
       const d0 = denOf(cur);
       let best = all[0], bestV = -1e9;
+      const scored = [];
       all.forEach(mv => {
         const target = board[mv.to[0]][mv.to[1]];
         let v = target ? (RANK[target.type] * 10) : 0;
         if (target && target.type === '象' && board[mv.from[0]][mv.from[1]].type === '鼠') v = 80;
         v += (Math.abs(mv.to[0] - d0[0]) + Math.abs(mv.to[1] - d0[1])) * 2;
+        scored.push({ mv, score: v });
         if (v > bestV){ bestV = v; best = mv; }
       });
       const jPick = aiPersonaMove(all.length, all.indexOf(best), opts.aiPersona);
+      const fallback = all[jPick];
+      const canonical = move => move.from.join(',') + '>' + move.to.join(',');
+      const choices = scored.slice().sort((a, b) => b.score - a.score).slice(0, 200).map(item => canonical(item.mv));
+      const moveByChoice = new Map(all.map(move => [canonical(move), move]));
+      const remoteChoice = await aiChoose('jungle', state, choices, opts.aiPersona);
+      if (opts.destroyed || epoch !== aiEpoch || over || cur !== turn || JSON.stringify(aiState()) !== stateKey){
+        if (epoch === aiEpoch) aiPending = false;
+        return;
+      }
+      const jMv = moveByChoice.has(remoteChoice) ? moveByChoice.get(remoteChoice) : fallback;
+      aiPending = false;
       aiSpeak(opts.aiPersona, 'think');
-      const jMv = all[jPick];
       if (opts.online) opts.sendMove({ from: jMv.from, to: jMv.to });
       doMove(jMv.from, jMv.to);
     }, 650);
   }
   function doMove(from, to){
+    if (over || !Array.isArray(from) || !Array.isArray(to) || from.length !== 2 || to.length !== 2) return false;
+    const coords = from.concat(to).map(Number);
+    if (!coords.every(Number.isInteger)) return false;
+    from = coords.slice(0, 2); to = coords.slice(2, 4);
+    if (from[0] < 0 || from[0] >= ROWS || from[1] < 0 || from[1] >= COLS ||
+        to[0] < 0 || to[0] >= ROWS || to[1] < 0 || to[1] >= COLS) return false;
     const piece = board[from[0]][from[1]];
+    if (!piece || piece.p !== cur || !movesOf(cur, from[0], from[1]).some(m => m[0] === to[0] && m[1] === to[1])) return false;
+    aiEpoch++;
     playFeedback(board[to[0]][to[1]] ? 'capture' : 'move');
     board[from[0]][from[1]] = null;
     board[to[0]][to[1]] = piece;
@@ -6652,7 +7658,7 @@ function gameJungle(area, extra, n, opts){
       over = true; winner = cur;
       if (opts.onEnd) opts.onEnd([{ slot: cur, coins: 1, rank: 1 }, { slot: cur ^ 1, coins: 0, rank: 2 }]);
       render();
-      return;
+      return true;
     }
     const cnt0 = board.flat().filter(x => x && x.p === 0).length;
     const cnt1 = board.flat().filter(x => x && x.p === 1).length;
@@ -6661,12 +7667,14 @@ function gameJungle(area, extra, n, opts){
       winner = cnt1 === 0 ? 0 : 1;
       if (opts.onEnd) opts.onEnd([{ slot: winner, coins: 1, rank: 1 }, { slot: winner ^ 1, coins: 0, rank: 2 }]);
       render();
-      return;
+      return true;
     }
     cur ^= 1;
+    if (!allMoves(cur).length){ lose(cur); return true; }
     render();
     setStatus('轮到玩家' + (cur+1) + '，点击棋子');
     scheduleAI();
+    return true;
   }
   function render(){
   // Add hint button for local mode
@@ -6749,11 +7757,13 @@ function gameJungle(area, extra, n, opts){
     const cnt = [board.flat().filter(x => x && x.p === 0).length, board.flat().filter(x => x && x.p === 1).length];
     renderPlayers(cur, ['🐘x' + cnt[0], '🐘x' + cnt[1]]);
   }
-  opts.onMove = payload => {
-    if (!payload) return;
+  opts.onMove = (payload, player) => {
+    if (opts.online && (!Number.isInteger(player) || player !== cur)) return;
+    if (!payload || !Array.isArray(payload.from) || !Array.isArray(payload.to)) return;
     doMove(payload.from, payload.to);
   };
   function resetLocal(){
+    aiEpoch++;
     initBoard();
     cur = 0; over = false; winner = -1; selected = null; legalMoves = []; aiPending = false;
     render();
@@ -6776,7 +7786,7 @@ function gameXiangqi(area, extra, n, opts){
   const EMOJI = { '帅':'🤴','仕':'🧑‍⚖️','相':'🧓','马':'🐴','车':'🚗','炮':'💣','兵':'🪖','将':'👑','士':'🧑‍⚖️','象':'🐘','卒':'🪖' };
   let board = Array.from({length:ROWS}, () => Array(COLS).fill(null)); // {p, t}
   let cur = 0, over = false, winner = -1, selected = null, legalMoves = [], lastMove = null;
-  let aiPending = false;
+  let aiPending = false, aiEpoch = 0;
   function initBoard(){
     board = Array.from({length:ROWS}, () => Array(COLS).fill(null));
     const setup = [
@@ -6912,13 +7922,17 @@ function gameXiangqi(area, extra, n, opts){
     });
   }
   function scheduleAI(){
-    if (aiPending || over) return;
+    if (opts.destroyed || aiPending || over) return;
     if (!opts.ai || !opts.ai.has(cur)) return;
     aiPending = true;
+    const gen = aiEpoch;
+    const turn = cur;
     setStatus('🤖 AI 思考中…');
     setTimeout(async () => {
-      aiPending = false;
-      if (over) return;
+      if (opts.destroyed || over || gen !== aiEpoch || cur !== turn || !opts.ai.has(cur)){
+        aiPending = false;
+        return;
+      }
       const all = [];
       for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++){
         const piece = board[r][c];
@@ -6926,24 +7940,39 @@ function gameXiangqi(area, extra, n, opts){
           legalMovesOf(cur, r, c).forEach(m => all.push({ from: [r,c], to: m }));
         }
       }
-      if (!all.length){ lose(cur); return; }
+      if (!all.length){ aiPending = false; lose(cur); return; }
       const VAL = { 'p':1,'a':2,'e':2,'h':4,'c':4.5,'r':9,'k':100 };
-      let best = all[0], bestV = -1e9;
       all.forEach(mv => {
         const target = board[mv.to[0]][mv.to[1]];
-        let v = target ? (VAL[target.t] * 10) : 0;
-        const rnd = (Math.random() - 0.5) * 0.5;
-        if (v + rnd > bestV){ bestV = v + rnd; best = mv; }
+        mv.score = (target ? (VAL[target.t] * 10) : 0) + (Math.random() - 0.5) * 0.5;
       });
-      const xqPick = aiPersonaMove(all.length, all.indexOf(best), opts.aiPersona);
+      const ranked = all.slice().sort((a, b) => b.score - a.score).slice(0, 180);
+      const choices = ranked.map(mv => mv.from.join(',') + '>' + mv.to.join(','));
+      const remoteChoice = await aiChoose('xiangqi', {
+        board: board.map(row => row.map(item => item ? (item.p + item.t) : '--')),
+        turn: cur, inCheck: isCheck(cur), lastMove,
+      }, choices, opts.aiPersona);
+      if (opts.destroyed || over || gen !== aiEpoch || cur !== turn){
+        aiPending = false;
+        return;
+      }
+      let xqPick = choices.indexOf(remoteChoice);
+      if (xqPick < 0) xqPick = aiPersonaMove(ranked.length, 0, opts.aiPersona);
+      const xqMv = ranked[xqPick];
+      aiPending = false;
       aiSpeak(opts.aiPersona, 'think');
-      const xqMv = all[xqPick];
-      if (opts.online) opts.sendMove({ from: xqMv.from, to: xqMv.to });
       doMove(xqMv.from, xqMv.to);
     }, 750);
   }
   function doMove(from, to){
+    if (over || !Array.isArray(from) || !Array.isArray(to) || from.length !== 2 || to.length !== 2) return false;
+    const coords = from.concat(to).map(Number);
+    if (!coords.every(Number.isInteger)) return false;
+    from = coords.slice(0, 2); to = coords.slice(2, 4);
+    if (from[0] < 0 || from[0] >= ROWS || from[1] < 0 || from[1] >= COLS ||
+        to[0] < 0 || to[0] >= ROWS || to[1] < 0 || to[1] >= COLS) return false;
     const piece = board[from[0]][from[1]];
+    if (!piece || piece.p !== cur || !legalMovesOf(cur, from[0], from[1]).some(m => m[0] === to[0] && m[1] === to[1])) return false;
     playFeedback(board[to[0]][to[1]] ? 'capture' : 'move');
     board[from[0]][from[1]] = null;
     board[to[0]][to[1]] = piece;
@@ -6961,11 +7990,12 @@ function gameXiangqi(area, extra, n, opts){
       winner = cur ^ 1;
       if (opts.onEnd) opts.onEnd([{ slot: winner, coins: 1, rank: 1 }, { slot: cur, coins: 0, rank: 2 }]);
       render();
-      return;
+      return true;
     }
     render();
     setStatus(isCheck(cur) ? '⚠️ 玩家' + (cur+1) + ' 被将军！请应将' : '轮到玩家' + (cur+1));
     scheduleAI();
+    return true;
   }
   function lose(pi){
     over = true;
@@ -7073,11 +8103,13 @@ function gameXiangqi(area, extra, n, opts){
     area.appendChild(wrap);
     renderPlayers(cur, null);
   }
-  opts.onMove = payload => {
-    if (!payload) return;
+  opts.onMove = (payload, player) => {
+    if (opts.online && (!Number.isInteger(player) || player !== cur)) return;
+    if (!payload || !Array.isArray(payload.from) || !Array.isArray(payload.to)) return;
     doMove(payload.from, payload.to);
   };
   function resetLocal(){
+    aiEpoch++;
     initBoard();
     cur = 0; over = false; winner = -1; selected = null; legalMoves = []; lastMove = null; aiPending = false;
     render();

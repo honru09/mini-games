@@ -7,6 +7,7 @@ function gameLudo(area, extra, n, opts){
   const color = pid => PLAYER_COLORS[pid];
   let tokens = pids.map(() => Array(4).fill(-1));
   let curIdx = 0, phase = 'roll', dice = 0, over = false, winner = -1;
+  let remoteInputs = [], drainingRemoteInputs = false, epoch = 0;
   let S = 520;
   const board = el('div','ludo-board');
   area.appendChild(board);
@@ -17,17 +18,26 @@ function gameLudo(area, extra, n, opts){
   extra.appendChild(diceBtn);
   let aiPending = false;
   function scheduleAI(){
-    if (aiPending || over) return;
+    if (opts.destroyed || aiPending || over) return;
     if (!opts.ai || !opts.ai.has(curIdx)) return;
     aiPending = true;
+    const gen = epoch;
+    const turn = curIdx;
     setStatus('🤖 AI 思考中…');
     setTimeout(async () => {
-      aiPending = false;
-      if (over) return;
-      if (phase === 'roll'){ roll(); return; }
+      if (opts.destroyed || over || gen !== epoch || curIdx !== turn || !opts.ai.has(curIdx)){
+        aiPending = false;
+        return;
+      }
+      if (phase === 'roll'){
+        const d = 1 + Math.floor(Math.random() * 6);
+        aiPending = false;
+        applyDice(d);
+        return;
+      }
       if (phase === 'pick'){
         const mv = movable();
-        if (!mv.length){ nextTurn('无子可动'); return; }
+        if (!mv.length){ aiPending = false; nextTurn('无子可动'); return; }
         // 启发式：优先击落/回家，其次推进
         let bestT = mv[0], bestS = -1e9;
         mv.forEach(ti => {
@@ -49,10 +59,27 @@ function gameLudo(area, extra, n, opts){
           }
           if (s > bestS){ bestS = s; bestT = ti; }
         });
-        const ludoPick = aiPersonaMove(mv.length, mv.indexOf(bestT), opts.aiPersona);
+        const choices = mv.map(ti => 'token:' + ti);
+        const remoteChoice = await aiChoose('ludo', {
+          tokens: tokens.map(list => list.slice()), turn: curIdx, dice, home: HOME,
+        }, choices, opts.aiPersona);
+        if (opts.destroyed || over || gen !== epoch || curIdx !== turn || phase !== 'pick'){
+          aiPending = false;
+          return;
+        }
+        let ludoPick = choices.indexOf(remoteChoice);
+        if (ludoPick < 0) ludoPick = aiPersonaMove(mv.length, mv.indexOf(bestT), opts.aiPersona);
+        const chosen = mv[ludoPick];
+        if (!movable().includes(chosen)){
+          aiPending = false;
+          return;
+        }
+        aiPending = false;
         aiSpeak(opts.aiPersona, 'think');
-        pick(curPid(), mv[ludoPick]);
+        applyPick(curPid(), chosen);
+        return;
       }
+      aiPending = false;
     }, 700);
   }
 
@@ -215,6 +242,7 @@ function gameLudo(area, extra, n, opts){
   function roll(){
     sfx('pop');
     if (over || phase !== 'roll') return;
+    if (opts.isReplaying && opts.isReplaying()) return;
     if (opts.online && curIdx !== opts.myIdx) return;
     if (opts.ai && opts.ai.has(curIdx)) return;
     const d = 1 + Math.floor(Math.random()*6);
@@ -222,10 +250,15 @@ function gameLudo(area, extra, n, opts){
     applyDice(d);
   }
   function applyDice(d){
+    if (over || phase !== 'roll' || !Number.isInteger(d) || d < 1 || d > 6) return false;
+    const turn = curIdx;
+    const gen = epoch;
+    phase = 'rolling';
     dice = d;
     diceBtn.disabled = true;
     setStatus('玩家' + (curIdx+1) + ' 掷骰子…');
     dice3d.roll(dice, () => {
+      if (gen !== epoch || over || curIdx !== turn || phase !== 'rolling') return;
       const mv = movable();
       if (!mv.length){
         nextTurn('玩家' + (curIdx+1) + ' 掷出 ' + dice + '，无子可动');
@@ -234,12 +267,15 @@ function gameLudo(area, extra, n, opts){
       phase = 'pick';
       renderBoard();
       setStatus('玩家' + (curIdx+1) + ' 掷出 ' + dice + '，点击高亮棋子移动');
-      scheduleAI();
+      drainRemoteInputs();
+      if (phase === 'pick') scheduleAI();
     });
+    return true;
   }
   function pick(pid, ti){
     playFeedback('move');
     if (over || phase !== 'pick' || pid !== curPid()) return;
+    if (opts.isReplaying && opts.isReplaying()) return;
     if (opts.online && curIdx !== opts.myIdx) return;
     if (opts.ai && opts.ai.has(curIdx)) return;
     const pi = pids.indexOf(pid);
@@ -249,8 +285,10 @@ function gameLudo(area, extra, n, opts){
     applyPick(pid, ti);
   }
   function applyPick(pid, ti){
+    if (over || phase !== 'pick' || pid !== curPid() || !Number.isInteger(ti) || ti < 0 || ti >= 4) return false;
     const pi = pids.indexOf(pid);
     const arr = tokens[pi];
+    if (pi < 0 || !canMove(arr[ti])) return false;
     arr[ti] = arr[ti] === -1 ? 0 : arr[ti] + dice;
     if (arr[ti] <= 50){
       const cell = cellOf(pid, arr[ti]);
@@ -275,17 +313,19 @@ function gameLudo(area, extra, n, opts){
       })));
       renderBoard();
       setStatus('🏆 玩家' + (curIdx+1) + ' 获胜！', true);
-      return;
+      return true;
     }
     if (dice === 6){
       phase = 'roll';
       diceBtn.disabled = false;
       renderBoard();
       setStatus('玩家' + (curIdx+1) + ' 掷出 6，再掷一次！');
-      scheduleAI();
+      drainRemoteInputs();
+      if (phase === 'roll') scheduleAI();
     } else {
       nextTurn('玩家' + (curIdx+1) + ' 完成移动');
     }
+    return true;
   }
   function nextTurn(msg){
     phase = 'roll';
@@ -293,15 +333,62 @@ function gameLudo(area, extra, n, opts){
     diceBtn.disabled = false;
     renderBoard();
     setStatus((msg ? msg + '，' : '') + '轮到玩家' + (curIdx+1) + '，请掷骰子');
-    scheduleAI();
+    drainRemoteInputs();
+    if (phase === 'roll') scheduleAI();
   }
-  opts.onMove = payload => {
-    if (payload && payload.dice !== undefined) applyDice(payload.dice);
-    else if (payload && payload.ti !== undefined) applyPick(curPid(), payload.ti);
+  function drainRemoteInputs(){
+    if (drainingRemoteInputs || over) return;
+    drainingRemoteInputs = true;
+    try {
+      while (remoteInputs.length && !over){
+        const event = remoteInputs[0] || {};
+        const payload = event.payload || {};
+        if (!Number.isInteger(event.player)){
+          remoteInputs.shift();
+          continue;
+        }
+        if (event.player !== curIdx){
+          // 下一个玩家可能已在更快的客户端行动；当前骰子动画结束后再判断。
+          if (phase === 'rolling') break;
+          remoteInputs.shift();
+          continue;
+        }
+        if (payload.dice !== undefined){
+          if (phase === 'rolling') break;
+          if (phase !== 'roll'){
+            remoteInputs.shift();
+            continue;
+          }
+          remoteInputs.shift();
+          applyDice(Number(payload.dice));
+          if (phase === 'rolling') break;
+        } else if (payload.ti !== undefined){
+          if (phase === 'rolling') break;
+          if (phase !== 'pick'){
+            remoteInputs.shift();
+            continue;
+          }
+          remoteInputs.shift();
+          applyPick(curPid(), Number(payload.ti));
+        } else {
+          remoteInputs.shift();
+        }
+      }
+    } finally {
+      drainingRemoteInputs = false;
+    }
+  }
+  opts.onMove = (payload, player) => {
+    if (!payload || (payload.dice === undefined && payload.ti === undefined)) return;
+    if (opts.online && !Number.isInteger(player)) return;
+    remoteInputs.push({ payload, player });
+    drainRemoteInputs();
   };
   function resetLocal(){
+    epoch++;
     tokens = pids.map(() => Array(4).fill(-1));
     curIdx = 0; phase = 'roll'; dice = 0; over = false; winner = -1; aiPending = false;
+    remoteInputs = [];
     diceBtn.disabled = false;
     dice3d.reset();
     renderBoard();
@@ -314,5 +401,13 @@ function gameLudo(area, extra, n, opts){
   }
   renderBoard();
   setStatus('玩家1 的回合，请掷骰子');
-  return { reset, onMove: opts.onMove, onRestart: resetLocal, snapshot: () => ({ tokens: tokens.map(t => t.slice()), curIdx, phase, dice, over, winner }) };
+  return {
+    reset, onMove: opts.onMove, onRestart: resetLocal,
+    destroy: () => { epoch++; aiPending = false; remoteInputs = []; dice3d.reset(); },
+    whenIdle: () => new Promise(resolve => {
+      const wait = () => (phase !== 'rolling' && !drainingRemoteInputs) ? resolve() : setTimeout(wait, 20);
+      wait();
+    }),
+    snapshot: () => ({ tokens: tokens.map(t => t.slice()), curIdx, phase, dice, over, winner }),
+  };
 }

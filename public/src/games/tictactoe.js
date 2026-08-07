@@ -3,7 +3,10 @@ function gameTicTacToe(area, extra, n, opts){
   opts = opts || {};
   const LINES = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
   let board = Array(9).fill(null), cur = 0, over = false, winLine = null;
-  let aiPending = false;
+  let aiPending = false, aiEpoch = 0;
+  function aiState(){
+    return { board: board.map(v => v === null ? '-' : String(v)).join(''), turn: cur };
+  }
   function tttScore(bd, turn){
     for (const L of LINES){
       if (bd[L[0]] !== null && bd[L[0]] === bd[L[1]] && bd[L[1]] === bd[L[2]]){
@@ -25,28 +28,43 @@ function gameTicTacToe(area, extra, n, opts){
     return best;
   }
   function scheduleAI(){
-    if (aiPending || over) return;
+    if (opts.destroyed || aiPending || over) return;
     if (!opts.ai || !opts.ai.has(cur)) return;
     aiPending = true;
+    const epoch = ++aiEpoch;
+    const turn = cur;
+    const state = aiState();
+    const stateKey = JSON.stringify(state);
     setStatus('🤖 AI 思考中…');
-    setTimeout(() => {
-      aiPending = false;
-      if (over) return;
+    setTimeout(async () => {
+      if (opts.destroyed || epoch !== aiEpoch || over || cur !== turn || JSON.stringify(aiState()) !== stateKey){
+        if (epoch === aiEpoch) aiPending = false;
+        return;
+      }
       const legal = [];
       for (let i = 0; i < 9; i++) if (board[i] === null) legal.push(String(i));
-      if (!legal.length) return;
+      if (!legal.length){ aiPending = false; return; }
       // 完美走法：minimax（AI 永不输）
-      let bestI = -1, bestV = -Infinity;
+      let bestI = -1, bestV = cur === 0 ? -Infinity : Infinity;
       for (const s of legal){
         const i = Number(s);
         board[i] = cur;
         const v = tttScore(board, cur ^ 1);
         board[i] = null;
-        if (v > bestV){ bestV = v; bestI = i; }
+        if ((cur === 0 && v > bestV) || (cur === 1 && v < bestV)){ bestV = v; bestI = i; }
       }
       const tttPick = aiPersonaMove(legal.length, legal.indexOf(String(bestI)), opts.aiPersona);
+      const fallback = Number(legal[tttPick]);
+      const moveByChoice = new Map(legal.map(choice => [choice, Number(choice)]));
+      const remoteChoice = await aiChoose('tictactoe', state, legal, opts.aiPersona);
+      if (opts.destroyed || epoch !== aiEpoch || over || cur !== turn || JSON.stringify(aiState()) !== stateKey){
+        if (epoch === aiEpoch) aiPending = false;
+        return;
+      }
+      const chosen = moveByChoice.has(remoteChoice) ? moveByChoice.get(remoteChoice) : fallback;
+      aiPending = false;
       aiSpeak(opts.aiPersona, 'think');
-      applyMove(Number(legal[tttPick]));
+      applyMove(chosen);
     }, 500);
   }
   function render(){
@@ -85,6 +103,9 @@ function gameTicTacToe(area, extra, n, opts){
     }
   }
   function applyMove(i){
+    i = Number(i);
+    if (over || !Number.isInteger(i) || i < 0 || i >= board.length || board[i] !== null) return false;
+    aiEpoch++;
     playFeedback('place');
     board[i] = cur;
     for (const L of LINES){
@@ -94,7 +115,7 @@ function gameTicTacToe(area, extra, n, opts){
           { slot: cur, coins: 1, rank: 1 },
           { slot: cur ^ 1, coins: 0, rank: 2 },
         ]);
-        render(); return;
+        render(); return true;
       }
     }
     if (board.every(v => v !== null)){
@@ -108,15 +129,20 @@ function gameTicTacToe(area, extra, n, opts){
     }
     render();
     scheduleAI();
+    return true;
   }
-  opts.onMove = applyMove;
+  opts.onMove = (i, player) => {
+    if (opts.online && (!Number.isInteger(player) || player !== cur)) return;
+    applyMove(i);
+  };
   function move(i){
     if (opts.online && cur !== opts.myIdx) return;
     if (opts.ai && opts.ai.has(cur)) return;
+    if (over || !Number.isInteger(i) || board[i] !== null) return;
     if (opts.online) opts.sendMove(i);
     applyMove(i);
   }
-  function resetLocal(){ board = Array(9).fill(null); cur = 0; over = false; winLine = null; aiPending = false; render(); }
+  function resetLocal(){ aiEpoch++; board = Array(9).fill(null); cur = 0; over = false; winLine = null; aiPending = false; render(); }
   function reset(){
     if (opts.online && !opts.isHost){ toast('由房主开始新一局'); return; }
     if (opts.online) opts.sendRestart();

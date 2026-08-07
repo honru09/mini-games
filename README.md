@@ -41,7 +41,7 @@
 ## 三种玩法
 
 - **👥 本地热座**：2-5 人共用一台设备
-- **🤖 人机对战**：DeepSeek AI 对手，单人也能玩（可选 5 个 AI 角色：傲娇 / 赌狗 / 毒舌 / 萌妹 / 数学老师，性格影响走法随机性与对局发言）
+- **🤖 人机对战**：11 款游戏都以规范化合法选项接入 DeepSeek，并保留本地 AI 快速回退，单人且断网也能玩（可选 5 个 AI 角色：傲娇 / 赌狗 / 毒舌 / 萌妹 / 数学老师）
 - **🌐 联机对战**：房间中继 + 大厅 + 邀请 + 排行榜
 
 ## 快速上手
@@ -55,9 +55,15 @@ cd mini-games
 node server/index.js
 # → http://localhost:8080
 
-# 测试
+# 测试（Node 20 需要 --experimental-websocket）
+node scripts/build.js
 node qa/dom-smoke.js
+node qa/ai-games.js
+node --experimental-websocket qa/security-online.js
+node --experimental-websocket qa/reconnect-online.js
+node --experimental-websocket qa/supabase-adapter.js
 node --experimental-websocket qa/e2e-online.js
+node --experimental-websocket qa/ws-close-test.js
 ```
 
 ## 联机玩法
@@ -73,23 +79,30 @@ WebSocket 端点 `/ws`，所有消息为 JSON：
 
 | 方向 | 消息 | 说明 |
 |---|---|---|
-| C→S | `hello` | 声明当前档案 uid |
-| C→S | `register` | 创建 PIN 账号 |
-| C→S | `login` | PIN 登录 |
-| C→S | `profile` | 同步档案（含 lang 语言字段） |
-| C→S | `create` | 创建房间 |
-| C→S | `join` | 加入房间 |
-| C→S | `invite` | 邀请玩家 |
+| C→S | `hello` | 使用 uid + 服务端会话 token 鉴权；异常断线后尝试恢复房间 |
+| C→S | `register` / `login` / `logout` | 创建 PIN 账号、登录、撤销当前会话 token |
+| C→S | `profile_get` / `profile` | 查询档案；仅修改 name/lang 与本人已拥有的外观装备，不能写金币、owned、XP、局数等权威字段 |
+| C→S | `create` / `join` / `leave` | 创建、加入、主动离开房间 |
+| C→S | `invite` / `invite_accept` / `invite_decline` | 邀请及应答 |
 | C→S | `select_game` | 房主选游戏 |
 | C→S | `start` | 房主开始 |
-| C→S | `move` | 走子（服务端广播给另一方） |
-| C→S | `result` | 上报对局结果 |
-| C→S | `end_game` | 结束本局（切换游戏） |
+| C→S | `move` | 走子（服务端记录有限 moveLog，并附带可信发送者 `player` 广播给其他参与者） |
+| C→S | `restart` / `end_game` | 房主发起新一局或结束本局 |
+| C→S | `result` | 联机携带 `matchId` 与完整结果 claim，所有参与者一致后才结算；单机使用唯一 `resultId` 并受去重/频控保护 |
+| C→S | `purchase` | 服务端按商品目录和余额原子购买（requestId 幂等） |
+| S→C | `hello_ack` / `registered` / `logged_in` / `logged_out` / `auth_error` | 认证状态与服务端签发 token |
 | S→C | `lobby` | 等待中房间列表 |
-| S→C | `room_update` | 房间实时状态 |
+| S→C | `created` / `joined` / `room_update` / `started` | 加房结果、房间实时状态和开局信息（含 `matchId`） |
+| S→C | `player_reassigned` | 有成员离房并压紧席位后，通知仍在房间中的客户端更新玩家索引 |
+| S→C | `restart` / `end_game` | 房主操作广播：以新 `matchId` 重开，或结束本局回到选游戏状态 |
 | S→C | `leaderboard` | 全球排行榜 |
 | S→C | `invite` | 收到邀请 |
-| S→C | `peer_left` | 对方离开 |
+| S→C | `peer_left` | 成员主动离开；`payload.roomClosed=true` 表示房主已关闭房间，`false` 表示房间保留且当前对局结束 |
+| S→C | `peer_status` / `rejoined` / `reconnect_expired` / `resume_expired` / `host_changed` | 掉线等待、令牌重连、moveLog 恢复、超时释放与房主转移 |
+| S→C | `result_pending` / `result_ok` / `result_error` | 结算共识状态 |
+| S→C | `profile_data` / `profile_ok` / `purchase_ok` / `purchase_error` | 档案与购买结果 |
+
+服务端签发的会话 token 默认有效 30 天（可通过 `AUTH_TOKEN_TTL_MS` 调整）；每个账号最多保留最近 5 个有效 token，通常对应 5 台设备或浏览器。新会话超过上限时会淘汰最旧 token，`logout` 只撤销当前 token。
 
 ## 部署
 
@@ -102,8 +115,18 @@ $env:RENDER_KEY='rnd_xxx'
 node scripts/render-deploy.js
 ```
 
+后端也支持 `DATA_DIR`（测试或持久磁盘路径）和 `ALLOWED_ORIGINS`。`POST /api/ai` 要求已认证账号的 Bearer token，并带 Origin、请求体大小、并发和速率限制。11 款游戏只把合法选项交给模型，客户端约 2.2 秒超时且会再次精确校验返回值；无 Key、断网、限流或非法响应会立即使用本地算法。生产环境不要把 DeepSeek key 放到前端。
+
 ### 数据库（Supabase）
-`supabase/schema.sql` 建表，配置环境变量后 Render 自动连接。
+`supabase/schema.sql` 可重复执行建表/迁移，并为 `profiles`、`history` 启用 RLS；没有面向 `anon`/`authenticated` 的访问策略，浏览器不能直连这些表。
+
+1. 在 Supabase SQL Editor 执行 `supabase/schema.sql`。
+2. 将项目 URL 写入 `SUPABASE_URL`，将 **secret `service_role` key** 写入 Render 的 `SUPABASE_KEY`。不要使用 `anon`/publishable key；也绝不能把 service-role secret 放到前端、日志或仓库。
+3. 用同一组服务端凭证运行 `node scripts/supabase-status.js`，检查 REST 连通性及 `auth_tokens`、`recent_results`、`purchase_requests`、`solo_rate`、`daily_key`、history 审计字段。
+
+`history` 是结算流水：联机对局按每位参与者各写一行（同一 `match_id` 可有多行），单机对局写一行；`result_id` 用于幂等去重，并非“一局全房间只写一行”。
+
+`profiles.solo_rate` 保存服务端维护的单机/人机结算频控时间戳，不属于客户端可写档案字段。没有真实 Supabase 凭证时，可运行 `node --experimental-websocket qa/supabase-adapter.js`，用本地 fake PostgREST 验证字段映射、写入顺序和空库迁移行为；它不能替代真实项目的连通性与 RLS 验收。
 
 ## 开发原则
 

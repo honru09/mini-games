@@ -7,7 +7,7 @@ function gameXiangqi(area, extra, n, opts){
   const EMOJI = { '帅':'🤴','仕':'🧑‍⚖️','相':'🧓','马':'🐴','车':'🚗','炮':'💣','兵':'🪖','将':'👑','士':'🧑‍⚖️','象':'🐘','卒':'🪖' };
   let board = Array.from({length:ROWS}, () => Array(COLS).fill(null)); // {p, t}
   let cur = 0, over = false, winner = -1, selected = null, legalMoves = [], lastMove = null;
-  let aiPending = false;
+  let aiPending = false, aiEpoch = 0;
   function initBoard(){
     board = Array.from({length:ROWS}, () => Array(COLS).fill(null));
     const setup = [
@@ -143,13 +143,17 @@ function gameXiangqi(area, extra, n, opts){
     });
   }
   function scheduleAI(){
-    if (aiPending || over) return;
+    if (opts.destroyed || aiPending || over) return;
     if (!opts.ai || !opts.ai.has(cur)) return;
     aiPending = true;
+    const gen = aiEpoch;
+    const turn = cur;
     setStatus('🤖 AI 思考中…');
     setTimeout(async () => {
-      aiPending = false;
-      if (over) return;
+      if (opts.destroyed || over || gen !== aiEpoch || cur !== turn || !opts.ai.has(cur)){
+        aiPending = false;
+        return;
+      }
       const all = [];
       for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++){
         const piece = board[r][c];
@@ -157,24 +161,39 @@ function gameXiangqi(area, extra, n, opts){
           legalMovesOf(cur, r, c).forEach(m => all.push({ from: [r,c], to: m }));
         }
       }
-      if (!all.length){ lose(cur); return; }
+      if (!all.length){ aiPending = false; lose(cur); return; }
       const VAL = { 'p':1,'a':2,'e':2,'h':4,'c':4.5,'r':9,'k':100 };
-      let best = all[0], bestV = -1e9;
       all.forEach(mv => {
         const target = board[mv.to[0]][mv.to[1]];
-        let v = target ? (VAL[target.t] * 10) : 0;
-        const rnd = (Math.random() - 0.5) * 0.5;
-        if (v + rnd > bestV){ bestV = v + rnd; best = mv; }
+        mv.score = (target ? (VAL[target.t] * 10) : 0) + (Math.random() - 0.5) * 0.5;
       });
-      const xqPick = aiPersonaMove(all.length, all.indexOf(best), opts.aiPersona);
+      const ranked = all.slice().sort((a, b) => b.score - a.score).slice(0, 180);
+      const choices = ranked.map(mv => mv.from.join(',') + '>' + mv.to.join(','));
+      const remoteChoice = await aiChoose('xiangqi', {
+        board: board.map(row => row.map(item => item ? (item.p + item.t) : '--')),
+        turn: cur, inCheck: isCheck(cur), lastMove,
+      }, choices, opts.aiPersona);
+      if (opts.destroyed || over || gen !== aiEpoch || cur !== turn){
+        aiPending = false;
+        return;
+      }
+      let xqPick = choices.indexOf(remoteChoice);
+      if (xqPick < 0) xqPick = aiPersonaMove(ranked.length, 0, opts.aiPersona);
+      const xqMv = ranked[xqPick];
+      aiPending = false;
       aiSpeak(opts.aiPersona, 'think');
-      const xqMv = all[xqPick];
-      if (opts.online) opts.sendMove({ from: xqMv.from, to: xqMv.to });
       doMove(xqMv.from, xqMv.to);
     }, 750);
   }
   function doMove(from, to){
+    if (over || !Array.isArray(from) || !Array.isArray(to) || from.length !== 2 || to.length !== 2) return false;
+    const coords = from.concat(to).map(Number);
+    if (!coords.every(Number.isInteger)) return false;
+    from = coords.slice(0, 2); to = coords.slice(2, 4);
+    if (from[0] < 0 || from[0] >= ROWS || from[1] < 0 || from[1] >= COLS ||
+        to[0] < 0 || to[0] >= ROWS || to[1] < 0 || to[1] >= COLS) return false;
     const piece = board[from[0]][from[1]];
+    if (!piece || piece.p !== cur || !legalMovesOf(cur, from[0], from[1]).some(m => m[0] === to[0] && m[1] === to[1])) return false;
     playFeedback(board[to[0]][to[1]] ? 'capture' : 'move');
     board[from[0]][from[1]] = null;
     board[to[0]][to[1]] = piece;
@@ -192,11 +211,12 @@ function gameXiangqi(area, extra, n, opts){
       winner = cur ^ 1;
       if (opts.onEnd) opts.onEnd([{ slot: winner, coins: 1, rank: 1 }, { slot: cur, coins: 0, rank: 2 }]);
       render();
-      return;
+      return true;
     }
     render();
     setStatus(isCheck(cur) ? '⚠️ 玩家' + (cur+1) + ' 被将军！请应将' : '轮到玩家' + (cur+1));
     scheduleAI();
+    return true;
   }
   function lose(pi){
     over = true;
@@ -304,11 +324,13 @@ function gameXiangqi(area, extra, n, opts){
     area.appendChild(wrap);
     renderPlayers(cur, null);
   }
-  opts.onMove = payload => {
-    if (!payload) return;
+  opts.onMove = (payload, player) => {
+    if (opts.online && (!Number.isInteger(player) || player !== cur)) return;
+    if (!payload || !Array.isArray(payload.from) || !Array.isArray(payload.to)) return;
     doMove(payload.from, payload.to);
   };
   function resetLocal(){
+    aiEpoch++;
     initBoard();
     cur = 0; over = false; winner = -1; selected = null; legalMoves = []; lastMove = null; aiPending = false;
     render();

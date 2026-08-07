@@ -7,17 +7,33 @@ function gameSnake(area, extra, n, opts){
   let snakes = [];
   let food = [7,7];
   let cur = 0, over = false, winner = -1, aliveCount = 0;
-  let aiPending = false;
+  let aiPending = false, aiEpoch = 0;
+  function isValidFood(pos){
+    return Array.isArray(pos) && pos.length === 2 && pos.every(Number.isInteger) &&
+      pos[0] >= 1 && pos[0] < H - 1 && pos[1] >= 1 && pos[1] < W - 1 &&
+      !snakes.some(s => s && s.alive && s.body.some(p => p[0] === pos[0] && p[1] === pos[1]));
+  }
+  function randomFood(){
+    const free = [];
+    for (let r = 1; r < H - 1; r++) for (let c = 1; c < W - 1; c++){
+      if (isValidFood([r, c]) && !(r === food[0] && c === food[1])) free.push([r, c]);
+    }
+    return free.length ? free[Math.floor(Math.random() * free.length)] : food.slice();
+  }
   function scheduleAI(){
-    if (aiPending || over) return;
+    if (opts.destroyed || aiPending || over) return;
     if (!opts.ai || !opts.ai.has(cur)) return;
     aiPending = true;
+    const gen = aiEpoch;
+    const turn = cur;
     setStatus('🤖 AI 思考中…');
     setTimeout(async () => {
-      aiPending = false;
-      if (over) return;
+      if (opts.destroyed || over || gen !== aiEpoch || cur !== turn || !opts.ai.has(cur)){
+        aiPending = false;
+        return;
+      }
       const s = snakes[cur];
-      if (!s || !s.alive) return;
+      if (!s || !s.alive){ aiPending = false; return; }
       const head = s.body[0];
       const legal = [];
       dirs.forEach((d, di) => {
@@ -27,7 +43,7 @@ function gameSnake(area, extra, n, opts){
         if (hitTest(nr, nc, cur, false)) return;
         legal.push(di);
       });
-      if (!legal.length){ die(cur); return; }
+      if (!legal.length){ aiPending = false; die(cur); return; }
       // 优先朝食物方向
       let best = legal[0], bestD = 1e9;
       legal.forEach(di => {
@@ -35,9 +51,24 @@ function gameSnake(area, extra, n, opts){
         const nd = Math.abs(head[0]+d[0]-food[0]) + Math.abs(head[1]+d[1]-food[1]);
         if (nd < bestD){ bestD = nd; best = di; }
       });
-      const snakePick = aiPersonaMove(legal.length, legal.indexOf(best), opts.aiPersona);
+      const choices = legal.map(di => 'dir:' + di);
+      const remoteChoice = await aiChoose('snake', {
+        snakes: snakes.map(item => ({ body: item.body, direction: item.d, score: item.score, alive: item.alive })),
+        food: food.slice(), turn: cur,
+      }, choices, opts.aiPersona);
+      if (opts.destroyed || over || gen !== aiEpoch || cur !== turn){
+        aiPending = false;
+        return;
+      }
+      let snakePick = choices.indexOf(remoteChoice);
+      if (snakePick < 0) snakePick = aiPersonaMove(legal.length, legal.indexOf(best), opts.aiPersona);
+      aiPending = false;
       aiSpeak(opts.aiPersona, 'think');
-      step(cur, legal[snakePick], null);
+      const di = legal[snakePick];
+      const nr = head[0] + dirs[di][0], nc = head[1] + dirs[di][1];
+      const nf = nr === food[0] && nc === food[1] ? randomFood() : null;
+      if (opts.online) opts.sendMove({ d: di, food: nf });
+      step(cur, di, nf);
     }, 650);
   }
   function hitTest(r, c, except, allowFood){
@@ -83,8 +114,8 @@ function gameSnake(area, extra, n, opts){
     s.body.unshift([nr, nc]);
     if (nr === food[0] && nc === food[1]){
       s.score++;
-      if (newFood) food = newFood;
-      else food = [1 + Math.floor(Math.random()*(H-2)), 1 + Math.floor(Math.random()*(W-2))];
+      if (newFood) food = newFood.slice();
+      else food = randomFood();
       toast('🍎 玩家' + (pi+1) + ' 吃豆 +1！');
     } else {
       s.body.pop();
@@ -153,6 +184,8 @@ function gameSnake(area, extra, n, opts){
     const b = el('button','btn',k);
     b.addEventListener('click', () => {
       if (over) return;
+      if (opts.isReplaying && opts.isReplaying()) return;
+      if (opts.online && cur !== opts.myIdx) return;
       if (opts.ai && opts.ai.has(cur)) return;
       const s = snakes[cur];
       if (!s || !s.alive) return;
@@ -160,20 +193,31 @@ function gameSnake(area, extra, n, opts){
       if (opts.online){
         const nr = s.body[0][0] + dirs[di][0], nc = s.body[0][1] + dirs[di][1];
         const eat = nr === food[0] && nc === food[1];
-        const nf = eat ? [1 + Math.floor(Math.random()*(H-2)), 1 + Math.floor(Math.random()*(W-2))] : null;
+        const nf = eat ? randomFood() : null;
         opts.sendMove({ d: di, food: nf });
+        step(cur, di, nf);
+        return;
       }
       step(cur, di, null);
     });
     actions.appendChild(b);
   });
   extra.appendChild(actions);
-  opts.onMove = payload => {
+  opts.onMove = (payload, player) => {
+    if (opts.online && (!Number.isInteger(player) || player !== cur)) return;
     if (!payload) return;
-    if (payload.food) food = payload.food;
-    step(cur, payload.d, payload.food || null);
+    const d = Number(payload.d);
+    if (!Number.isInteger(d) || d < 0 || d >= dirs.length) return;
+    const s = snakes[cur];
+    if (!s || !s.alive || (d + 2) % 4 === s.d) return;
+    const nr = s.body[0][0] + dirs[d][0], nc = s.body[0][1] + dirs[d][1];
+    const willEat = nr === food[0] && nc === food[1];
+    const nextFood = Array.isArray(payload.food) ? payload.food.slice(0, 2) : null;
+    if (willEat ? !isValidFood(nextFood) : nextFood !== null) return;
+    step(cur, d, nextFood);
   };
   function resetLocal(){
+    aiEpoch++;
     snakes = starts.slice(0, n).map(([r, c, d]) => ({ body: [[r,c],[r - dirs[d][0], c - dirs[d][1]]], d, score: 0, alive: true }));
     food = [7,7];
     cur = 0; over = false; winner = -1; aliveCount = n; aiPending = false;

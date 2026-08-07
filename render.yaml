@@ -17,3 +17,7 @@ services:
         sync: false
       - key: SUPABASE_KEY
         sync: false
+      - key: DEEPSEEK_KEY
+        sync: false
+      - key: ALLOWED_ORIGINS
+        value: https://honru09.github.io

@@ -92,11 +92,11 @@ function openAuthModal(mode){
       });
       card.appendChild(bgGrid);
       const pinInput = el("input","nick-input");
-      pinInput.type = "text"; pinInput.maxLength = 20;
+      pinInput.type = "password"; pinInput.autocomplete = "new-password"; pinInput.setAttribute("autocomplete", "new-password"); pinInput.maxLength = 20;
       pinInput.placeholder = "设置 PIN 码（4-20 位，仅字母和数字）";
       card.appendChild(pinInput);
       const pin2 = el("input","nick-input");
-      pin2.type = "text"; pin2.maxLength = 20;
+      pin2.type = "password"; pin2.autocomplete = "new-password"; pin2.setAttribute("autocomplete", "new-password"); pin2.maxLength = 20;
       pin2.placeholder = "再次输入 PIN 码确认";
       card.appendChild(pin2);
       card.appendChild(el("p","pin-hint","PIN 是唯一识别你账号的代码，登录时使用，请务必牢记。"));
@@ -114,7 +114,7 @@ function openAuthModal(mode){
       card.appendChild(toLogin);
     } else {
       const pinInput = el("input","nick-input");
-      pinInput.type = "text"; pinInput.maxLength = 20;
+      pinInput.type = "password"; pinInput.autocomplete = "current-password"; pinInput.setAttribute("autocomplete", "current-password"); pinInput.maxLength = 20;
       pinInput.placeholder = "输入 PIN 码";
       card.appendChild(pinInput);
       const submit = el("button","btn btn-primary","登录");

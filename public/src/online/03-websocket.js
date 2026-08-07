@@ -1,10 +1,12 @@
 /* ================= 联机对战（WebSocket 中继） ================= */
 const online = {
   ws: null, room: null, player: 0, isHost: false, game: null, connected: false, pending: null, roomInfo: null, capacity: 2, _hb: null,
-  lobby: [], inviteTarget: null,
+  lobby: [], inviteTarget: null, matchId: null, reportedMatchIds: [], soloReportedIds: [], legacyResultSubmitted: false,
+  resume: null, _reconnectTimer: null, _reconnectAttempts: 0, _manualClose: false, _replaying: false, _liveMoveQueue: [],
+  pendingResultClaim: null, _resultRetryTimer: null, _authenticated: false,
   defaultServer: 'https://mini-games-online.onrender.com',
   connect(){
-    if (this.connected) return;
+    if (this.connected || (this.ws && (this.ws.readyState === 0 || this.ws.readyState === 1))) return;
     let wsUrl;
     try {
       const raw = resolveServer();
@@ -17,21 +19,44 @@ const online = {
     } catch {
       wsUrl = (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws';
     }
-    this.ws = new WebSocket(wsUrl);
-    this.ws.onopen = () => {
+    const ws = new WebSocket(wsUrl);
+    this.ws = ws;
+    ws.onopen = () => {
+      if (this.ws !== ws) return;
       this.connected = true;
+      this._authenticated = false;
       this.status('已连接服务器，可创建或加入房间');
-      this.send({ type: 'hello', payload: { uid: typeof deviceUid !== 'undefined' ? deviceUid : null, proto: typeof PROTOCOL_VERSION !== 'undefined' ? PROTOCOL_VERSION : 1 } });
+      const authAccount = typeof account !== 'undefined' ? account : null;
+      const authPin = typeof pendingAuthPin !== 'undefined' ? pendingAuthPin : null;
+      this.send({ type: 'hello', payload: {
+        uid: authAccount && authAccount.uid ? authAccount.uid : (typeof deviceUid !== 'undefined' ? deviceUid : null),
+        token: authAccount && authAccount.authToken ? authAccount.authToken : null,
+        proto: typeof PROTOCOL_VERSION !== 'undefined' ? PROTOCOL_VERSION : 1,
+      } });
       this.send({ type: 'lobby' });
-      if (typeof syncProfiles === 'function') syncProfiles();
-      if (account && account.uid && !account.registered){
+      const needsRegister = authAccount && authAccount.uid && authPin && authAccount.registered === false;
+      const needsLogin = authAccount && authAccount.uid && authPin && !authAccount.authToken && authAccount.registered !== false;
+      if (needsRegister){
         this.send({ type: 'register', payload: {
-          uid: account.uid, pin: account.pin, name: account.name, avatar: account.avatar,
-          background: account.background, frame: account.frame, effect: account.effect, owned: account.owned, nameFx: account.nameFx || 0,
+          uid: authAccount.uid, pin: authPin, name: authAccount.name, avatar: authAccount.avatar,
+          background: authAccount.background, frame: authAccount.frame, effect: authAccount.effect, owned: authAccount.owned, nameFx: authAccount.nameFx || 0,
         } });
+      } else if (needsLogin){
+        this.send({ type: 'login', payload: { pin: authPin } });
+      } else if (typeof syncProfiles === 'function') {
+        syncProfiles();
       }
       if (this._hb) clearInterval(this._hb);
       this._hb = setInterval(() => { if (this.connected) this.send({ type: 'ping' }); }, 10000);
+      if (this.resume){
+        const expectedRoom = this.resume.room;
+        setTimeout(() => {
+          if (this.connected && this.resume && this.resume.room === expectedRoom && !this.room){
+            this.clearResume();
+            this.status(t('room_resume_missing'));
+          }
+        }, 1500);
+      }
       if (this.pending){
         const p = this.pending;
         this.pending = null;
@@ -39,16 +64,161 @@ const online = {
         else if (p.type === 'join') this.join(p.room);
       }
     };
-    this.ws.onmessage = e => this.onMessage(JSON.parse(e.data));
-    this.ws.onclose = () => {
+    ws.onmessage = e => { if (this.ws === ws) this.onMessage(JSON.parse(e.data)); };
+    ws.onclose = () => {
+      if (this.ws !== ws) return;
+      const shouldResume = !this._manualClose && !!(account && account.authToken) && !!(this.room || this.resume);
+      if (this.room){
+        this.resume = {
+          room: this.room, player: this.player, isHost: this.isHost, game: this.game,
+          matchId: this.matchId, deadline: Date.now() + 60000,
+        };
+      }
       this.connected = false;
+      this._authenticated = false;
+      this.ws = null;
       if (this._hb){ clearInterval(this._hb); this._hb = null; }
-      this.status('连接已断开');
-      this.resetState();
+      this.status(shouldResume ? t('online_reconnecting') : '连接已断开');
+      this.resetState(shouldResume);
+      if (shouldResume) this.scheduleReconnect();
+      this._manualClose = false;
     };
-    this.ws.onerror = () => this.status('连接失败，请确认服务已启动');
+    ws.onerror = () => { if (this.ws === ws) this.status(this.resume ? t('online_reconnecting') : '连接失败，请确认服务已启动'); };
   },
-  status(text){ $('online-status').innerHTML = text; },
+  scheduleReconnect(){
+    if (!this.resume || !account || !account.authToken) return;
+    if (this.resume.deadline && Date.now() >= this.resume.deadline){
+      this.clearResume();
+      this.status(t('reconnect_timeout'));
+      return;
+    }
+    if (this._reconnectTimer || this.connected || (this.ws && this.ws.readyState === 0)) return;
+    const delay = Math.min(5000, 500 * Math.pow(2, Math.min(4, this._reconnectAttempts++)));
+    this._reconnectTimer = setTimeout(() => {
+      this._reconnectTimer = null;
+      this.connect();
+    }, delay);
+  },
+  clearResume(){
+    if (this._reconnectTimer) clearTimeout(this._reconnectTimer);
+    this._reconnectTimer = null;
+    this._reconnectAttempts = 0;
+    this.resume = null;
+  },
+  loadPendingResultClaim(){
+    if (this.pendingResultClaim || !account || !account.uid) return this.pendingResultClaim;
+    try {
+      const saved = JSON.parse(localStorage.getItem('mg_pending_result_claim') || 'null');
+      if (saved && saved.uid === account.uid && saved.matchId && saved.game && Array.isArray(saved.results)){
+        this.pendingResultClaim = saved;
+      } else if (saved) {
+        localStorage.removeItem('mg_pending_result_claim');
+      }
+    } catch {
+      try { localStorage.removeItem('mg_pending_result_claim'); } catch {}
+    }
+    return this.pendingResultClaim;
+  },
+  savePendingResultClaim(){
+    try {
+      if (this.pendingResultClaim) localStorage.setItem('mg_pending_result_claim', JSON.stringify(this.pendingResultClaim));
+      else localStorage.removeItem('mg_pending_result_claim');
+    } catch {}
+  },
+  clearPendingResultClaim(matchId){
+    if (matchId && this.pendingResultClaim && String(this.pendingResultClaim.matchId) !== String(matchId)) return;
+    if (this._resultRetryTimer) clearTimeout(this._resultRetryTimer);
+    this._resultRetryTimer = null;
+    this.pendingResultClaim = null;
+    this.savePendingResultClaim();
+  },
+  submitResultClaim(claim){
+    if (!claim || !claim.matchId || !claim.game || !Array.isArray(claim.results)) return;
+    if (this.pendingResultClaim && String(this.pendingResultClaim.matchId) === String(claim.matchId)){
+      this.flushPendingResultClaim();
+      return;
+    }
+    this.clearPendingResultClaim();
+    this.pendingResultClaim = {
+      uid: account && account.uid,
+      matchId: String(claim.matchId),
+      game: String(claim.game),
+      results: claim.results,
+      won: !!claim.won,
+      createdAt: Date.now(),
+    };
+    this.savePendingResultClaim();
+    this.flushPendingResultClaim();
+  },
+  scheduleResultRetry(){
+    if (!this.pendingResultClaim || this._resultRetryTimer) return;
+    this._resultRetryTimer = setTimeout(() => {
+      this._resultRetryTimer = null;
+      this.flushPendingResultClaim();
+    }, 3000);
+  },
+  flushPendingResultClaim(){
+    const claim = this.pendingResultClaim || this.loadPendingResultClaim();
+    if (!claim) return;
+    if (!account || claim.uid !== account.uid){ this.clearPendingResultClaim(); return; }
+    if (Date.now() - Number(claim.createdAt || 0) > 10 * 60 * 1000){ this.clearPendingResultClaim(); return; }
+    if (!this.connected || !this._authenticated || !this.room || String(this.matchId || '') !== String(claim.matchId)){
+      this.scheduleResultRetry();
+      return;
+    }
+    this.send({ type: 'result', payload: {
+      matchId: claim.matchId,
+      game: claim.game,
+      results: claim.results,
+    } });
+    this.scheduleResultRetry();
+  },
+  async replayMoveLog(log){
+    const replayGame = currentGame;
+    const gameScreen = $('screen-game');
+    const oldInert = gameScreen ? !!gameScreen.inert : false;
+    this._replaying = true;
+    this._liveMoveQueue = [];
+    if (gameScreen){ gameScreen.inert = true; gameScreen.setAttribute('aria-busy', 'true'); }
+    this.status(t('online_restoring'));
+    try {
+      const events = Array.isArray(log) ? log.slice().sort((a, b) => (a.seq || 0) - (b.seq || 0)) : [];
+      for (const event of events){
+        if (!this.game || currentGame !== replayGame || !replayGame || !replayGame.onMove) break;
+        replayGame.onMove(event && event.payload, event && event.player);
+        const raw = replayGame._raw || replayGame;
+        if (raw && typeof raw.whenIdle === 'function') await raw.whenIdle();
+        else {
+          const p = event && event.payload || {};
+          const delay = p.roll ? 1250 : (p.decision ? 650 : 90);
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
+      }
+    } finally {
+      try {
+        while (currentGame === replayGame && replayGame && replayGame.onMove && this._liveMoveQueue.length){
+          const event = this._liveMoveQueue.shift() || {};
+          const payload = event.payload;
+          replayGame.onMove(payload, event.player);
+          const raw = replayGame._raw || replayGame;
+          if (raw && typeof raw.whenIdle === 'function') await raw.whenIdle();
+        }
+      } finally {
+        this._replaying = false;
+        if (gameScreen){
+          gameScreen.inert = oldInert;
+          if (typeof gameScreen.removeAttribute === 'function') gameScreen.removeAttribute('aria-busy');
+          else gameScreen.setAttribute('aria-busy', 'false');
+        }
+        if (this.room && currentGame === replayGame) this.status(t('online_restored', this.room));
+      }
+    }
+  },
+  status(text, trustedHtml){
+    const node = $('online-status');
+    if (trustedHtml) node.innerHTML = text;
+    else { node.innerHTML = ''; node.textContent = String(text || ''); }
+  },
   send(msg){ if (this.ws && this.ws.readyState === 1) this.ws.send(JSON.stringify(msg)); },
   create(){
     if (!account){ toast('请先创建账号或登录后再联机'); openAuthModal(); return; }
@@ -80,10 +250,11 @@ const online = {
   onMessage(msg){
     switch (msg.type){
       case 'created':
+        msg.room = String(msg.room || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12);
         this.room = msg.room; this.player = msg.player; this.isHost = true;
         this.capacity = msg.capacity || 2;
         this.roomInfo = { room: msg.room, game: null, capacity: this.capacity, players: [{ uid: null, player: 0 }], size: 1, started: false };
-        this.status('房间已创建：<span class="room-code">' + msg.room + '</span>，等待对方加入…');
+        this.status('房间已创建：<span class="room-code">' + msg.room + '</span>，等待对方加入…', true);
         renderRoomPanel();
         if (this.inviteTarget){
           const toUid = this.inviteTarget;
@@ -93,9 +264,10 @@ const online = {
         }
         break;
       case 'joined':
+        msg.room = String(msg.room || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12);
         this.room = msg.room; this.player = msg.player; this.isHost = false;
         this.roomInfo = { room: msg.room, game: null, capacity: 2, players: [{ uid: null, player: 0 }], size: 1, started: false };
-        this.status('已加入房间 <span class="room-code">' + msg.room + '</span>，等待房主开始…');
+        this.status('已加入房间 <span class="room-code">' + msg.room + '</span>，等待房主开始…', true);
         renderRoomPanel();
         break;
       case 'room_update':
@@ -113,6 +285,77 @@ const online = {
         renderLobby();
         break;
       case 'hello_ack':
+        this._authenticated = !!msg.authenticated;
+        if (msg.authenticated){
+          if (!this.resume) this._reconnectAttempts = 0;
+          this.loadPendingResultClaim();
+          this.flushPendingResultClaim();
+        } else if (account && account.authToken){
+          toast('登录会话已失效，请使用 PIN 重新登录');
+          if (typeof completeLocalLogout === 'function') completeLocalLogout(true);
+        }
+        break;
+      case 'rejoined':
+        {
+          const p = msg.payload || {};
+          this.room = p.room;
+          this.player = Number.isInteger(p.player) ? p.player : 0;
+          this.isHost = !!p.isHost;
+          this.capacity = p.capacity || 2;
+          this.matchId = p.matchId || null;
+          this.roomInfo = {
+            room: p.room, game: p.game || null, capacity: this.capacity,
+            players: p.players || [], size: p.size || 1, onlineSize: p.onlineSize || 1,
+            started: !!p.started, matchId: p.matchId || null,
+          };
+          this.game = p.started ? (p.game || null) : null;
+          this.clearResume();
+          renderRoomPanel();
+          if (this.game){
+            startOnlineGame(this.game, p.size);
+            this.replayMoveLog(p.moveLog || []);
+          } else {
+            this.status(t('room_restored', this.room));
+          }
+          this.flushPendingResultClaim();
+        }
+        break;
+      case 'resume_expired':
+        this.clearResume();
+        this.resetState();
+        this.status(t('reconnect_timeout'));
+        toast(t('reconnect_seat_released'));
+        break;
+      case 'peer_status':
+        {
+          const p = msg.payload || {};
+          if (p.online) this.status(t('reconnect_peer_back', (p.player || 0) + 1));
+          else this.status(t('reconnect_peer_wait', (p.player || 0) + 1));
+        }
+        break;
+      case 'reconnect_expired':
+        this.clearPendingResultClaim(this.matchId);
+        this.game = null;
+        this.matchId = null;
+        if (currentGameId) showHub();
+        this.status(t('reconnect_match_ended'));
+        toast(t('reconnect_expired'));
+        renderRoomPanel();
+        break;
+      case 'host_changed':
+        {
+          const p = msg.payload || {};
+          this.isHost = Number(p.player) === Number(this.player);
+          if (this.isHost) toast(t('host_transferred'));
+          renderRoomPanel();
+        }
+        break;
+      case 'player_reassigned':
+        {
+          const p = msg.payload || {};
+          if (Number.isInteger(p.player)) this.player = p.player;
+          renderRoomPanel();
+        }
         break;
       case 'invite':
         showInviteModal(msg.payload);
@@ -121,13 +364,26 @@ const online = {
         toast(msg.payload && msg.payload.accepted ? '对方已接受邀请 🎉' : '对方拒绝了邀请');
         break;
       case 'started':
-        this.game = msg.game;
-        startOnlineGame(msg.game, msg.size);
+        {
+          const started = msg.payload || msg;
+          this.game = msg.game || started.game;
+          this.matchId = msg.matchId || started.matchId || null;
+          this.legacyResultSubmitted = false;
+          if (this.pendingResultClaim && String(this.pendingResultClaim.matchId) !== String(this.matchId || '')) this.clearPendingResultClaim();
+          startOnlineGame(this.game, msg.size || started.size);
+        }
         break;
       case 'move':
-        if (this.game && currentGame && currentGame.onMove) currentGame.onMove(msg.payload);
+        if (this._replaying) this._liveMoveQueue.push({ payload: msg.payload, player: msg.player });
+        else if (this.game && currentGame && currentGame.onMove) currentGame.onMove(msg.payload, msg.player);
         break;
       case 'restart':
+        {
+          const restarted = msg.payload || msg;
+          this.matchId = msg.matchId || restarted.matchId || null;
+          this.legacyResultSubmitted = false;
+          if (this.pendingResultClaim && String(this.pendingResultClaim.matchId) !== String(this.matchId || '')) this.clearPendingResultClaim();
+        }
         runCountdown();
         if (currentGame && currentGame.onRestart) currentGame.onRestart();
         else if (this.game) startOnlineGame(this.game);
@@ -136,16 +392,32 @@ const online = {
         finishRoomGame();
         break;
       case 'peer_left':
-        if (this.isHost){
+        if (msg.payload && msg.payload.roomClosed === false){
+          const departed = Number(msg.payload.player);
+          this.clearPendingResultClaim(this.matchId);
           this.game = null;
-          toast('对方已离开');
+          this.matchId = null;
+          toast(t('peer_left_match'));
           if (currentGameId) showHub();
-          this.status('对方已离开，房间仍保留，等待新对手加入…');
+          this.status(t('peer_left_waiting', Number.isInteger(departed) ? departed + 1 : '?'));
+          renderRoomPanel();
+        } else if (msg.payload && msg.payload.roomClosed === true){
+          toast(t('host_closed_room'));
+          this.resetState();
+          this.status(t('room_closed_rejoin'));
+        } else if (this.isHost){
+          // 兼容旧服务端：旧版只把非房主离开通知给房主。
+          this.clearPendingResultClaim(this.matchId);
+          this.game = null;
+          this.matchId = null;
+          toast(t('peer_left_match'));
+          if (currentGameId) showHub();
+          this.status(t('peer_left_waiting', '?'));
           renderRoomPanel();
         } else {
-          toast('房主已关闭房间');
+          toast(t('host_closed_room'));
           this.resetState();
-          this.status('房间已关闭，可重新创建或加入房间');
+          this.status(t('room_closed_rejoin'));
         }
         break;
       case 'error':
@@ -157,62 +429,133 @@ const online = {
         renderLeaderboard();
         break;
       case 'profile_ok':
-        if (msg.payload && account && msg.payload.uid === account.uid){
-          // profile_ok 只是档案同步回执：只更新展示字段，不覆盖本地金币/局数（以免回写 0）
-          account.name = msg.payload.name;
-          account.avatar = msg.payload.avatar;
-          account.background = msg.payload.background || account.background || 0;
-          account.frame = msg.payload.frame || account.frame || 0;
-          account.effect = msg.payload.effect || account.effect || 0;
-          account.lang = msg.payload.lang || account.lang || 'zh-CN';
-          account.xp = msg.payload.xp || account.xp || 0;
-          account.level = msg.payload.level || account.level || 1;
-          account.streak = msg.payload.streak || account.streak || 0;
-          account.bestStreak = msg.payload.bestStreak || account.bestStreak || 0;
-          const me = roster.find(x => x.uid === account.uid);
-          if (me){ me.name = account.name; me.avatar = account.avatar; }
-          saveRoster(); saveAccount();
-          renderMe(); renderSlots();
+        {
+          const profile = msg.payload && (msg.payload.profile || msg.payload);
+          if (profile && account && profile.uid === account.uid){
+            updateAccountProfile(profile);
+            renderMe(); renderSlots();
+          }
         }
         break;
       case 'registered':
-        if (msg.payload && msg.payload.uid){
-          account.pin = account.pin || '';
-          account.registered = true;
-          updateAccountProfile(msg.payload.profile);
-          renderMyCard();
-          toast('🎉 账号创建成功，欢迎 ' + account.name);
-          if (authModalEl){ authModalEl.remove(); authModalEl = null; }
+        {
+          const payload = msg.payload || {};
+          const profile = payload.profile || msg.profile || (payload.uid && (payload.name !== undefined || payload.avatar !== undefined) ? payload : null);
+          const uid = payload.uid || (profile && profile.uid);
+          if (account && uid){
+            const token = msg.token || payload.token;
+            if (token){ account.authToken = token; delete account.pin; }
+            account.uid = uid;
+            deviceUid = uid;
+            account.registered = true;
+            if (typeof pendingAuthPin !== 'undefined') pendingAuthPin = null;
+            this._authenticated = true;
+            if (profile) updateAccountProfile(profile);
+            else saveAccount();
+            this.loadPendingResultClaim();
+            this.flushPendingResultClaim();
+            if (typeof syncProfiles === 'function') syncProfiles();
+            renderMyCard();
+            toast('🎉 账号创建成功，欢迎 ' + account.name);
+            if (authModalEl){ authModalEl.remove(); authModalEl = null; }
+          }
         }
         break;
       case 'logged_in':
-        if (msg.payload && msg.payload.uid){
-          account = Object.assign({}, msg.payload.profile, { device: deviceFingerprint() });
-          updateAccountProfile(msg.payload.profile);
-          renderMyCard();
-          toast('✅ 登录成功：' + account.name);
-          if (authModalEl){ authModalEl.remove(); authModalEl = null; }
+        {
+          const payload = msg.payload || {};
+          const profile = payload.profile || msg.profile || (payload.uid && (payload.name !== undefined || payload.avatar !== undefined) ? payload : null);
+          const uid = payload.uid || (profile && profile.uid);
+          if (profile && uid){
+            const token = msg.token || payload.token;
+            account = Object.assign({}, profile, { device: deviceFingerprint(), registered: true });
+            if (token){ account.authToken = token; delete account.pin; }
+            this._authenticated = true;
+            updateAccountProfile(profile);
+            this.loadPendingResultClaim();
+            this.flushPendingResultClaim();
+            if (typeof syncProfiles === 'function') syncProfiles();
+            renderMyCard();
+            toast('✅ 登录成功：' + account.name);
+            if (authModalEl){ authModalEl.remove(); authModalEl = null; }
+          }
         }
         break;
       case 'auth_error':
         toast(msg.msg || '账号验证失败');
+        if (account && account.registered === false){
+          if (typeof completeLocalLogout === 'function') completeLocalLogout(false);
+          if (typeof openAuthModal === 'function' && !authModalEl) openAuthModal('register');
+        }
+        break;
+      case 'logged_out':
+        if (typeof completeLocalLogout === 'function') completeLocalLogout(true);
+        else this.resetState();
         break;
       case 'profile_data':
         if (msg.payload){
           renderProfilePopup(msg.payload, false);
         }
         break;
+      case 'purchase_ok':
+        {
+          const payload = msg.payload || {};
+          const profile = payload.profile || msg.profile || (payload.uid && (payload.name !== undefined || payload.avatar !== undefined || payload.coins !== undefined) ? payload : null);
+          if (profile && account && profile.uid === account.uid) updateAccountProfile(profile);
+          if (typeof refreshOpenShop === 'function') refreshOpenShop();
+          if (typeof renderMe === 'function') renderMe();
+          if (typeof renderSlots === 'function') renderSlots();
+          if (typeof renderMyCard === 'function') renderMyCard();
+          toast(payload.msg || msg.msg || t('purchase_success'));
+        }
+        break;
+      case 'purchase_error':
+        toast((msg.payload && msg.payload.msg) || msg.msg || t('purchase_failed'));
+        if (typeof refreshOpenShop === 'function') refreshOpenShop();
+        break;
+      case 'result_ok':
+        {
+          const payload = msg.payload || {};
+          const resultMatchId = msg.matchId || payload.matchId || null;
+          const pendingClaim = this.pendingResultClaim;
+          const profile = payload.profile || msg.profile || (payload.uid && (payload.name !== undefined || payload.avatar !== undefined || payload.coins !== undefined) ? payload : null);
+          if (profile && account && profile.uid === account.uid){
+            updateAccountProfile(profile);
+            if (typeof renderMe === 'function') renderMe();
+            if (typeof renderSlots === 'function') renderSlots();
+            if (typeof renderLeaderboard === 'function') renderLeaderboard();
+          }
+          if (pendingClaim && resultMatchId && String(pendingClaim.matchId) === String(resultMatchId)){
+            const resultName = account && account.name ? account.name : '玩家';
+            toast(t('toast_win_reward') + (pendingClaim.won ? resultName + ' 获得 $1' : resultName + ' 本局无奖励'));
+            this.clearPendingResultClaim(resultMatchId);
+          }
+        }
+        break;
+      case 'result_pending':
+        // 等待房间内其他客户端提交同一份完整结果。
+        this.scheduleResultRetry();
+        break;
+      case 'result_error':
+        {
+          const errorMatchId = msg.matchId || (msg.payload && msg.payload.matchId);
+          if (errorMatchId) this.clearPendingResultClaim(errorMatchId);
+          else if (this.pendingResultClaim && this.room && String(this.matchId || '') === String(this.pendingResultClaim.matchId)) this.clearPendingResultClaim();
+        }
+        toast(msg.msg || (msg.payload && msg.payload.msg) || t('result_failed'));
+        break;
     }
   },
-  resetState(){
+  resetState(preserveResume){
+    if (!preserveResume) this.clearResume();
+    if (!preserveResume) this.clearPendingResultClaim();
     this.room = null; this.game = null; this.isHost = false; this.pending = null; this.roomInfo = null; this.capacity = 2; this.inviteTarget = null;
+    this.matchId = null; this.legacyResultSubmitted = false;
     $('online-banner').classList.add('hidden');
     $('room-panel').classList.add('hidden');
     const endBtn = $('btn-end-game');
     if (endBtn) endBtn.classList.add('hidden');
-    if (currentGameId && $('screen-game') && !$('screen-game').classList.contains('hidden')){
-      showHub();
-    }
+    if (currentGameId) showHub();
   },
 };
 function resolveServer(){
@@ -225,7 +568,10 @@ function resolveServer(){
   return online.defaultServer;
 }
 function finishRoomGame(){
+  online.clearPendingResultClaim(online.matchId);
   online.game = null;
+  online.matchId = null;
+  online.legacyResultSubmitted = false;
   toast('本局已结束，可以在当前房间切换游戏');
   showHub();
   renderRoomPanel();
@@ -277,7 +623,7 @@ function renderRoomPanel(){
   if (online.game){
     if (currentGameId && $('screen-hub') && !$('screen-hub').classList.contains('hidden')){
       const backBtn = el('button','btn','🎮 返回对局');
-      backBtn.addEventListener('click', () => startOnlineGame(online.game));
+      backBtn.addEventListener('click', () => showGame(online.game));
       actions.appendChild(backBtn);
     }
   } else {
@@ -292,6 +638,7 @@ function renderRoomPanel(){
   }
   const leave = el('button','btn','离开房间');
   leave.addEventListener('click', () => {
+    online.clearResume();
     online.send({ type: 'leave' });
     online.resetState();
     online.status('已离开房间');

@@ -22,6 +22,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Build and verify generated frontend
+        run: |
+          node scripts/build.js
+          git diff --exit-code -- public/index.html
+      - name: Frontend smoke tests
+        run: node qa/dom-smoke.js
+      - name: Security and reconnect tests
+        run: |
+          node qa/security-online.js
+          node qa/reconnect-online.js
+          node qa/supabase-adapter.js
+      - name: Online E2E and close tests
+        run: |
+          node qa/e2e-online.js
+          node qa/ws-close-test.js
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

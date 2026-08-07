@@ -17,7 +17,14 @@ function gameGomoku(area, extra, n, opts){
   const N = 15, CELL = 34, PAD = 22, LOGICAL = PAD*2 + CELL*(N-1);
   let grid = Array.from({length:N}, () => Array(N).fill(-1));
   let cur = 0, over = false, hist = [], last = null;
-  let aiPending = false;
+  let aiPending = false, aiEpoch = 0;
+  function aiState(){
+    return {
+      board: grid.map(row => row.map(v => v === -1 ? '.' : String(v)).join('')).join('/'),
+      turn: cur,
+      last: last ? last.join(',') : null,
+    };
+  }
   function gomokuLineScore(r, c, p){
     let best = 0;
     for (const [dr,dc] of [[1,0],[0,1],[1,1],[1,-1]]){
@@ -33,26 +40,45 @@ function gameGomoku(area, extra, n, opts){
     return best;
   }
   function scheduleAI(){
-    if (aiPending || over) return;
+    if (opts.destroyed || aiPending || over) return;
     if (!opts.ai || !opts.ai.has(cur)) return;
     aiPending = true;
+    const epoch = ++aiEpoch;
+    const turn = cur;
+    const state = aiState();
+    const stateKey = JSON.stringify(state);
     setStatus('🤖 AI 思考中…');
-    setTimeout(() => {
-      aiPending = false;
-      if (over) return;
+    setTimeout(async () => {
+      if (opts.destroyed || epoch !== aiEpoch || over || cur !== turn || JSON.stringify(aiState()) !== stateKey){
+        if (epoch === aiEpoch) aiPending = false;
+        return;
+      }
       const empties = [];
       for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) if (grid[r][c] === -1) empties.push(r + ',' + c);
-      if (!empties.length) return;
+      if (!empties.length){ aiPending = false; return; }
       let bestR = -1, bestC = -1, bestV = -1;
+      const scored = [];
       for (const s of empties){
         const [r, c] = s.split(',').map(Number);
         const atk = gomokuLineScore(r, c, cur);
         const def = gomokuLineScore(r, c, cur ^ 1);
         const v = Math.max(atk, def * 1.1);
+        scored.push({ choice: s, value: v, center: Math.abs(r - 7) + Math.abs(c - 7) });
         if (v > bestV){ bestV = v; bestR = r; bestC = c; }
       }
       const gomokuPick = aiPersonaMove(empties.length, empties.indexOf(bestR + ',' + bestC), opts.aiPersona);
-      const gpArr = empties[gomokuPick].split(',').map(Number);
+      const fallback = empties[gomokuPick];
+      const choices = scored.slice().sort((a, b) => b.value - a.value || a.center - b.center)
+        .slice(0, 200).map(item => item.choice);
+      const moveByChoice = new Map(empties.map(choice => [choice, choice.split(',').map(Number)]));
+      const remoteChoice = await aiChoose('gomoku', state, choices, opts.aiPersona);
+      if (opts.destroyed || epoch !== aiEpoch || over || cur !== turn || JSON.stringify(aiState()) !== stateKey){
+        if (epoch === aiEpoch) aiPending = false;
+        return;
+      }
+      const chosen = moveByChoice.has(remoteChoice) ? remoteChoice : fallback;
+      const gpArr = moveByChoice.get(chosen);
+      aiPending = false;
       aiSpeak(opts.aiPersona, 'think');
       applyMove(gpArr[0], gpArr[1]);
     }, 550);
@@ -100,6 +126,9 @@ function gameGomoku(area, extra, n, opts){
   });
   function applyMove(r, c){
     if (Array.isArray(r)){ c = r[1]; r = r[0]; }
+    r = Number(r); c = Number(c);
+    if (over || !Number.isInteger(r) || !Number.isInteger(c) || r < 0 || r >= N || c < 0 || c >= N || grid[r][c] !== -1) return false;
+    aiEpoch++;
     playFeedback('place');
     grid[r][c] = cur; last = [r,c]; hist.push([r,c]);
     if (checkGomokuWin(grid, r, c)){
@@ -114,7 +143,7 @@ function gameGomoku(area, extra, n, opts){
         winner: cur, winnerName: '玩家' + (cur+1), emoji: '🎉',
         subtitle: '五子连线', coins: 1, onRestart: resetLocal, onShare: () => shareGameLink('gomoku'), onInvite: online.room && online.isHost ? () => openInvitePicker() : null
       });
-      return;
+      return true;
     }
     if (hist.length === N*N){
       over = true;
@@ -127,18 +156,23 @@ function gameGomoku(area, extra, n, opts){
       showVictoryOverlay(area, {
         winner: 0, emoji: '🤝', subtitle: '棋盘已满，平局', coins: 0, onRestart: resetLocal, onShare: () => shareGameLink('gomoku')
       });
-      return;
+      return true;
     }
     cur ^= 1;
     draw(); renderPlayers(cur, null);
     setStatus(opts.online ? (cur === opts.myIdx ? '你的回合，点击棋盘落子' : '等待对方落子…') : ('玩家' + (cur+1) + ' 的回合'));
     scheduleAI();
+    return true;
   }
-  opts.onMove = applyMove;
+  opts.onMove = (payload, player) => {
+    if (opts.online && (!Number.isInteger(player) || player !== cur)) return;
+    if (Array.isArray(payload) && payload.length === 2) applyMove(payload);
+  };
   if (!opts.online){
     const undoBtn = el('button','btn','↩ 悔棋');
     undoBtn.addEventListener('click', () => {
       if (over || !hist.length) return;
+      aiEpoch++; aiPending = false;
       const [r,c] = hist.pop();
       grid[r][c] = -1;
       cur ^= 1;
@@ -150,6 +184,7 @@ function gameGomoku(area, extra, n, opts){
     extra.appendChild(undoBtn);
   }
   function resetLocal(){
+    aiEpoch++;
     grid = Array.from({length:N}, () => Array(N).fill(-1));
     cur = 0; over = false; hist = []; last = null; aiPending = false;
     draw(); renderPlayers(0, null);

@@ -7,6 +7,7 @@ const SERVICE_ID = process.env.SERVICE_ID || 'srv-d9on79jl550s73f0roj0';
 const supabaseUrl = (process.env.SUPABASE_URL || '').trim();
 const supabaseKey = (process.env.SUPABASE_KEY || '').trim();
 const deepseekKey = (process.env.DEEPSEEK_KEY || '').trim();
+const REQUEST_TIMEOUT_MS = 15000;
 if (!key) {
   console.error('RENDER_KEY env missing');
   process.exit(1);
@@ -31,16 +32,11 @@ function req(method, path, body) {
       },
     };
     const r = https.request(options, (res) => {
-      const chunks = [];
-      res.on('data', (c) => chunks.push(c));
-      res.on('end', () =>
-        resolve({
-          status: res.statusCode,
-          body: Buffer.concat(chunks).toString('utf8'),
-        })
-      );
+      res.resume();
+      res.on('end', () => resolve({ status: res.statusCode || 0 }));
     });
     r.on('error', reject);
+    r.setTimeout(REQUEST_TIMEOUT_MS, () => r.destroy(new Error('Render API 请求超时')));
     if (data) r.write(data);
     r.end();
   });
@@ -55,9 +51,11 @@ function req(method, path, body) {
     ].filter(Boolean);
     for (const [k, v] of vars){
       const r = await req('PUT', '/v1/services/' + SERVICE_ID + '/env-vars/' + encodeURIComponent(k), { value: v });
-      console.log(k, '->', r.status, r.body.slice(0, 200));
+      if (r.status < 200 || r.status >= 300) throw new Error(k + ' 更新失败：HTTP ' + r.status + '（响应已隐藏）');
+      console.log(k + ' 更新成功（HTTP ' + r.status + '，响应已隐藏）');
     }
   } catch (e) {
     console.error('ERR:', e.message);
+    process.exitCode = 1;
   }
 })();

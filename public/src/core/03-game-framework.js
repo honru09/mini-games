@@ -14,7 +14,9 @@ function registerGame(id, factory) {
 function createGameInstance(id, area, extra, playerCount, opts) {
   const factory = GAME_REGISTRY[id] || (typeof games !== 'undefined' && games[id]);
   if (!factory) throw new Error('game not found: ' + id);
-  const raw = factory(area, extra, playerCount, opts || {});
+  opts = opts || {};
+  opts.destroyed = false;
+  const raw = factory(area, extra, playerCount, opts);
 
   const instance = {
     id: id,
@@ -29,8 +31,8 @@ function createGameInstance(id, area, extra, playerCount, opts) {
     render() {
       if (raw.render) raw.render();
     },
-    move(payload) {
-      if (raw.onMove) raw.onMove(payload);
+    move(payload, player) {
+      if (raw.onMove) raw.onMove(payload, player);
     },
     serialize() {
       if (raw.snapshot) return raw.snapshot();
@@ -47,6 +49,7 @@ function createGameInstance(id, area, extra, playerCount, opts) {
       else if (raw.restart) raw.restart();
     },
     destroy() {
+      opts.destroyed = true;
       if (raw.destroy) raw.destroy();
       // 清理 DOM（可选，由调用方决定是否清空 area/extra）
     },

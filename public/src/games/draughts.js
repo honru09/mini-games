@@ -3,8 +3,15 @@ function gameDraughts(area, extra, n, opts){
   opts = opts || {};
   const N = 8;
   let board = Array.from({length:N}, () => Array(N).fill(null)); // {p, king}
-  let cur = 0, over = false, winner = -1, mustCapture = null;
-  let aiPending = false;
+  let cur = 0, over = false, winner = -1, mustCapture = null, captureChain = false;
+  let aiPending = false, aiEpoch = 0;
+  function aiState(){
+    return {
+      board: board.map(row => row.map(piece => piece ? (String(piece.p) + (piece.king ? 'K' : 'M')) : '--')),
+      turn: cur,
+      forcedFrom: captureChain && mustCapture ? mustCapture.join(',') : null,
+    };
+  }
   const cv = document.createElement('canvas');
   cv.className = 'drg-canvas';
   const dpr = window.devicePixelRatio || 1;
@@ -18,21 +25,32 @@ function gameDraughts(area, extra, n, opts){
     handleClick(0 | Math.floor(y * N), 0 | Math.floor(x * N));
   });
   function handleClick(r, c){
-    if (mustCapture){
+    if (captureChain && mustCapture){
       const from = mustCapture;
-      if (board[r][c] && board[r][c].p === cur && capturesFor(cur, r, c).length){ mustCapture = [r,c]; render(); return; }
-      const caps = capturesFor(cur, from[0], from[1]);
-      const hit = caps.find(cap => cap[0] === r && cap[1] === c);
-      if (hit){
-        if (opts.online) opts.sendMove({ from, to: [r,c], via: [hit[2],hit[3]] });
-        applyMove(cur, from, [r,c], [hit[2],hit[3]]);
-        mustCapture = null;
-      }
+      const move = capturesFor(cur, from[0], from[1])
+        .map(cap => ({ from: from.slice(), to: [cap[0],cap[1]], via: [cap[2],cap[3]] }))
+        .find(m => m.to[0] === r && m.to[1] === c);
+      if (!move) return;
+      if (opts.online) opts.sendMove({ from, to: move.to, via: move.via });
+      applyMove(cur, from, move.to, move.via);
       return;
     }
     if (board[r][c] && board[r][c].p === cur){
-      mustCapture = [r,c];
+      const forced = allCaptures(cur);
+      const candidates = forced.length ? forced : simpleMoves(cur);
+      if (!candidates.some(m => m.from[0] === r && m.from[1] === c)) return;
+      mustCapture = [r, c];
       render();
+      return;
+    }
+    if (mustCapture){
+      const from = mustCapture;
+      const forced = allCaptures(cur);
+      const candidates = (forced.length ? forced : simpleMoves(cur)).filter(m => m.from[0] === from[0] && m.from[1] === from[1]);
+      const move = candidates.find(m => m.to[0] === r && m.to[1] === c);
+      if (!move) return;
+      if (opts.online) opts.sendMove({ from, to: move.to, via: move.via || null });
+      applyMove(cur, from, move.to, move.via || null);
     }
   }
   function initBoard(){
@@ -93,20 +111,35 @@ function gameDraughts(area, extra, n, opts){
     }
     return res;
   }
+  function legalTurnMoves(pi){
+    if (captureChain && mustCapture){
+      return capturesFor(pi, mustCapture[0], mustCapture[1]).map(cap => ({
+        from: mustCapture.slice(), to: [cap[0],cap[1]], via: [cap[2],cap[3]],
+      }));
+    }
+    const captures = allCaptures(pi);
+    return captures.length ? captures : simpleMoves(pi);
+  }
   function scheduleAI(){
-    if (aiPending || over) return;
+    if (opts.destroyed || aiPending || over) return;
     if (!opts.ai || !opts.ai.has(cur)) return;
     aiPending = true;
+    const epoch = ++aiEpoch;
+    const turn = cur;
+    const state = aiState();
+    const stateKey = JSON.stringify(state);
     setStatus('🤖 AI 思考中…');
-    setTimeout(() => {
-      aiPending = false;
-      if (over) return;
-      const caps = allCaptures(cur);
-      let moves = caps.length ? caps : simpleMoves(cur);
-      if (!moves.length){ lose(cur); return; }
+    setTimeout(async () => {
+      if (opts.destroyed || epoch !== aiEpoch || over || cur !== turn || JSON.stringify(aiState()) !== stateKey){
+        if (epoch === aiEpoch) aiPending = false;
+        return;
+      }
+      const moves = legalTurnMoves(cur);
+      if (!moves.length){ aiPending = false; lose(cur); return; }
+      const caps = moves.filter(move => move.via);
       let pick = moves[0];
       if (caps.length){
-        pick = caps.sort((a, b) => {
+        pick = caps.slice().sort((a, b) => {
           const ka = board[a.from[0]][a.from[1]].king ? 1 : 0, kb = board[b.from[0]][b.from[1]].king ? 1 : 0;
           return kb - ka;
         })[0];
@@ -118,37 +151,56 @@ function gameDraughts(area, extra, n, opts){
         });
       }
       const drgPick = aiPersonaMove(moves.length, moves.indexOf(pick), opts.aiPersona);
+      const fallback = moves[drgPick];
+      const canonical = move => move.from.join(',') + '>' + move.to.join(',');
+      const choices = moves.slice(0, 200).map(canonical);
+      const moveByChoice = new Map(moves.map(move => [canonical(move), move]));
+      const remoteChoice = await aiChoose('draughts', state, choices, opts.aiPersona);
+      if (opts.destroyed || epoch !== aiEpoch || over || cur !== turn || JSON.stringify(aiState()) !== stateKey){
+        if (epoch === aiEpoch) aiPending = false;
+        return;
+      }
+      const drgMv = moveByChoice.has(remoteChoice) ? moveByChoice.get(remoteChoice) : fallback;
+      aiPending = false;
       aiSpeak(opts.aiPersona, 'think');
-      const drgMv = moves[drgPick];
-      applyMove(cur, drgMv.from, drgMv.to);
+      applyMove(cur, drgMv.from, drgMv.to, drgMv.via || null);
     }, 600);
   }
   function applyMove(pi, from, to, via){
+    if (over || pi !== cur || !Array.isArray(from) || !Array.isArray(to) || from.length !== 2 || to.length !== 2) return false;
+    const coords = from.concat(to).map(Number);
+    if (!coords.every(Number.isInteger) || coords.some(v => v < 0 || v >= N)) return false;
+    from = coords.slice(0, 2); to = coords.slice(2, 4);
+    const legal = legalTurnMoves(pi);
+    const move = legal.find(m => m.from[0] === from[0] && m.from[1] === from[1] && m.to[0] === to[0] && m.to[1] === to[1]);
+    if (!move) return false;
+    via = move.via || null;
     const piece = board[from[0]][from[1]];
+    aiEpoch++;
     playFeedback(via ? 'capture' : 'move');
     board[from[0]][from[1]] = null;
     if (via) board[via[0]][via[1]] = null;
-    let king = piece.king;
+    const wasKing = piece.king;
+    let king = wasKing;
     if (!king && ((pi === 0 && to[0] === 7) || (pi === 1 && to[0] === 0))) king = true;
     board[to[0]][to[1]] = { p: pi, king };
     // 连跳
-    if (via && capturesFor(pi, to[0], to[1]).length && !king){
-      setTimeout(() => {
-        // 简化：连续跳时保持回合
-        const caps = capturesFor(pi, to[0], to[1]);
-        if (caps.length){
-          // 由玩家继续
-          render();
-          return;
-        }
-        endTurn();
-      }, 200);
+    const promoted = !wasKing && king;
+    if (via && capturesFor(pi, to[0], to[1]).length && !promoted){
+      mustCapture = to.slice();
+      captureChain = true;
       render();
-      return;
+      setStatus('玩家' + (cur+1) + ' 继续跳吃');
+      scheduleAI();
+      return true;
     }
+    mustCapture = null;
+    captureChain = false;
     endTurn();
+    return true;
   }
   function lose(pi){
+    aiEpoch++; aiPending = false; captureChain = false; mustCapture = null;
     over = true;
     winner = pi ^ 1;
     if (opts.onEnd) opts.onEnd([{ slot: winner, coins: 1, rank: 1 }, { slot: pi, coins: 0, rank: 2 }]);
@@ -161,6 +213,7 @@ function gameDraughts(area, extra, n, opts){
   }
   function endTurn(){
     if (over) return;
+    captureChain = false; mustCapture = null;
     cur ^= 1;
     if (!countPieces(cur) || !(allCaptures(cur).length || simpleMoves(cur).length)){
       lose(cur);
@@ -234,13 +287,15 @@ function gameDraughts(area, extra, n, opts){
     }
     renderPlayers(cur, null);
   }
-  opts.onMove = payload => {
-    if (!payload) return;
+  opts.onMove = (payload, player) => {
+    if (opts.online && (!Number.isInteger(player) || player !== cur)) return;
+    if (!payload || !Array.isArray(payload.from) || !Array.isArray(payload.to)) return;
     applyMove(cur, payload.from, payload.to, payload.via);
   };
   function resetLocal(){
+    aiEpoch++;
     initBoard();
-    cur = 0; over = false; winner = -1; mustCapture = null; aiPending = false;
+    cur = 0; over = false; winner = -1; mustCapture = null; captureChain = false; aiPending = false;
     render();
     setStatus('轮到玩家1，点击自己的棋子');
   }

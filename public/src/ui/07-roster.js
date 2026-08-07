@@ -249,6 +249,7 @@ const LS_ROSTER = 'mg_roster';
 const LS_ACCOUNT = 'mg_account';
 let roster = [];
 let account = null;
+let pendingAuthPin = null;
 let deviceUid = null;
 let slots = [];
 let lastServerLB = null;
@@ -291,7 +292,12 @@ function loadRoster(){
   try {
     const raw = localStorage.getItem(LS_ACCOUNT);
     account = raw ? JSON.parse(raw) : null;
-  if (account && !account.lang) account.lang = 'zh-CN';
+    if (account && !account.lang) account.lang = 'zh-CN';
+    if (account && Object.prototype.hasOwnProperty.call(account, 'pin')) delete account.pin;
+    if (account && account.registered === false && !account.authToken){
+      account = null;
+      try { localStorage.removeItem(LS_ACCOUNT); } catch {}
+    }
   } catch { account = null; }
   if (account && account.uid && account.device === deviceFingerprint()){
     deviceUid = account.uid;
@@ -303,7 +309,13 @@ function loadRoster(){
   try { localStorage.setItem('mg_uid', deviceUid || ''); } catch {}
 }
 function saveRoster(){ try { localStorage.setItem(LS_ROSTER, JSON.stringify(roster)); } catch {} }
-function saveAccount(){ try { localStorage.setItem(LS_ACCOUNT, JSON.stringify(account)); } catch {} }
+function saveAccount(){
+  try {
+    const safe = account && typeof account === 'object' ? { ...account } : account;
+    if (safe && Object.prototype.hasOwnProperty.call(safe, 'pin')) delete safe.pin;
+    localStorage.setItem(LS_ACCOUNT, JSON.stringify(safe));
+  } catch {}
+}
 function genUid(){
   if (typeof crypto !== 'undefined' && crypto.randomUUID) return 'u_' + crypto.randomUUID().slice(0, 8);
   return 'u_' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
@@ -319,10 +331,9 @@ function syncProfiles(){
   if (!online.connected) return;
   if (account && account.uid){
     online.send({ type: 'profile', payload: {
-      lang: account.lang || currentLang,
-      uid: account.uid, name: account.name, avatar: account.avatar, xp: account.xp || 0, level: account.level || 1, streak: account.streak || 0, bestStreak: account.bestStreak || 0,
+      uid: account.uid, name: account.name, avatar: account.avatar,
       background: account.background || 0, frame: account.frame || 0, effect: account.effect || 0,
-      owned: account.owned || defaultOwned(), nameFx: account.nameFx || 0,
+      nameFx: account.nameFx || 0, lang: account.lang || currentLang,
     } });
   }
 }
@@ -334,13 +345,15 @@ function registerAccount(name, pin, avatar, background, frame, effect){
     return null;
   }
   const uid = genUid();
+  pendingAuthPin = pin;
   account = {
-    uid, pin, name, lang: currentLang,
+    uid, name, lang: currentLang,
     avatar: Number.isInteger(avatar) ? Math.max(0, Math.min(AVATAR_COUNT - 1, avatar)) : 0,
     background: Number.isInteger(background) ? Math.max(0, background) : 0,
     frame: Number.isInteger(frame) ? Math.max(0, frame) : 0,
     effect: Number.isInteger(effect) ? Math.max(0, effect) : 0,
     owned: defaultOwned(), coins: 0, played: {}, total: 0, device: deviceFingerprint(), nameFx: 0,
+    registered: false,
   };
   const me = roster.find(p => p.uid === uid);
   if (me){ me.name = name; me.avatar = account.avatar; }
@@ -366,11 +379,22 @@ function loginAccount(pin){
   online.send({ type: 'login', payload: { pin } });
 }
 function logoutAccount(){
+  if (online && typeof online.clearResume === 'function') online.clearResume();
+  if (online.connected) online.send({ type: 'logout' });
+  completeLocalLogout(true);
+}
+function completeLocalLogout(showLogin){
+  pendingAuthPin = null;
+  if (online){
+    if (typeof online.clearPendingResultClaim === 'function') online.clearPendingResultClaim();
+    if (typeof online.resetState === 'function') online.resetState();
+    online._authenticated = false;
+  }
   account = null;
   deviceUid = null;
   try { localStorage.removeItem(LS_ACCOUNT); localStorage.setItem('mg_uid', ''); } catch {}
   renderMe(); renderSlots(); renderLeaderboard();
-  openAuthModal("login");
+  if (showLogin && !authModalEl) openAuthModal("login");
 }
 function updateAccountProfile(p){
   if (!account) return;
@@ -728,14 +752,32 @@ function recordPlaymatesFromResult(results, currentResult, gameId){
     });
   }
 }
-function applyGameResult(results){
+function applyGameResult(results, resultContext){
   if (!results || !results.length) return;
-  const gameId = currentGameId;
+  const gameId = (resultContext && resultContext.game) || currentGameId;
+  const isOnlineMatch = !!((resultContext && resultContext.online) || online.game);
+  const matchId = isOnlineMatch ? online.matchId : null;
+  if (isOnlineMatch){
+    // 已失去对局上下文时绝不能回退为本地结算；重连成功后由仍在房间的实例重新提交。
+    if (!matchId) return;
+    const normalized = results.map(r => ({
+      slot: Number(r.slot),
+      coins: r.coins === 1 ? 1 : 0,
+      rank: Number.isInteger(r.rank) ? r.rank : (r.coins === 1 ? 1 : 2),
+    }));
+    online.submitResultClaim({
+      matchId: String(matchId),
+      game: gameId || online.game,
+      results: normalized,
+      won: normalized.some(r => r.slot === online.player && r.coins === 1),
+    });
+    return;
+  }
   const entries = [];
   const parts = [];
   results.forEach(r => {
     let uid = null;
-    if (online.connected && online.game){
+    if (isOnlineMatch){
       if (r.slot !== online.player) return;
       uid = deviceUid;
     } else {
@@ -796,29 +838,49 @@ function applyGameResult(results){
     saveAccount();
   }
   saveRoster();
-  if (entries.length){
-    if (online.connected){
-      entries.forEach(e => online.send({ type:'profile', payload:{ uid:e.uid, name:e.name, avatar:e.avatar } }));
-      online.send({ type:'result', payload: entries.map(e => ({ uid:e.uid, game:e.game, coins:e.coins, played:1, xp:e.xp })) });
+  // 本地/人机模式也保留服务端排行榜同步，但只允许当前认证账号提交自己的结果。
+  // 服务端以 resultId 去重并设置单机结算频控；断网时仍保留本地热座体验。
+  if (!isOnlineMatch && online.connected && account){
+    const mine = entries.find(e => e.uid === account.uid);
+    if (mine){
+      const resultId = (typeof crypto !== 'undefined' && crypto.randomUUID)
+        ? 'solo_' + crypto.randomUUID()
+        : 'solo_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 12);
+      if (!online.soloReportedIds.includes(resultId)){
+        online.soloReportedIds.push(resultId);
+        if (online.soloReportedIds.length > 100) online.soloReportedIds.splice(0, online.soloReportedIds.length - 100);
+        online.send({ type: 'result', payload: { mode: 'solo', resultId, game: gameId, coins: mine.coins } });
+      }
     }
+  }
+  if (entries.length){
     toast(t('toast_win_reward') + parts.join('，'));
   }
   renderMe(); renderSlots(); renderLeaderboard();
 }
 
 function showHub(){
-  if (currentGame && typeof currentGame.destroy === 'function') currentGame.destroy();
+  const preserveOnlineGame = !!(online && online.game && currentGame && currentGameId === online.game);
+  if (!preserveOnlineGame && currentGame && typeof currentGame.destroy === 'function') currentGame.destroy();
   $('screen-hub').classList.remove('hidden');
   $('screen-game').classList.add('hidden');
-  currentGame = null;
-  currentGameId = null;
+  if (!preserveOnlineGame){
+    currentGame = null;
+    currentGameId = null;
+  }
   const endBtn = $('btn-end-game');
   if (endBtn) endBtn.classList.add('hidden');
   if (online.room) renderRoomPanel();
 }
 function showGame(id){
+  if (online && online.game === id && currentGame && currentGameId === id){
+    $('screen-hub').classList.add('hidden');
+    $('screen-game').classList.remove('hidden');
+    const endBtn = $('btn-end-game');
+    if (endBtn) endBtn.classList.remove('hidden');
+    return;
+  }
   if (currentGame && typeof currentGame.destroy === 'function') currentGame.destroy();
-  if (currentGame && currentGame._raw && typeof currentGame._raw.destroy === 'function') currentGame._raw.destroy();
   $('screen-hub').classList.add('hidden');
   $('screen-game').classList.remove('hidden');
   const meta = GAMES[id];
@@ -835,9 +897,10 @@ function showGame(id){
       isHost: online.isHost,
       sendMove: p => online.sendMove(p),
       sendRestart: () => online.sendRestart(),
+      isReplaying: () => !!online._replaying,
       onMove: null,
       onRestart: null,
-      onEnd: results => applyGameResult(results),
+      onEnd: results => applyGameResult(results, { online: true, game: id }),
     };
   } else {
     opts = { onEnd: results => applyGameResult(results) };
@@ -1001,5 +1064,3 @@ function parseHash(){
   renderHub();
   startGame(m[1]);
 }
-
-

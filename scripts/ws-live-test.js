@@ -30,6 +30,8 @@ function send(c, type, payload) {
 
 function waitFor(c, type, timeout = 15000) {
   return new Promise((resolve, reject) => {
+    const existing = [...c.log].reverse().find(msg => msg.type === type);
+    if (existing) { resolve(existing); return; }
     const t = setTimeout(() => reject(new Error(`${c.name} 未收到 ${type}`)), timeout);
     const check = (e) => {
       const msg = JSON.parse(e.data);
@@ -43,6 +45,17 @@ function waitFor(c, type, timeout = 15000) {
   });
 }
 const lastOf = (c, type) => [...c.log].reverse().find(m => m.type === type);
+async function registerLive(c, name, suffix){
+  const pending = waitFor(c, 'registered');
+  send(c, 'register', {
+    uid: 'u_live' + suffix,
+    pin: ('Live' + suffix).replace(/[^A-Za-z0-9]/g, '').slice(0, 20),
+    name,
+    avatar: 0,
+    ephemeral: true,
+  });
+  return pending;
+}
 
 (async () => {
   setTimeout(() => {
@@ -53,10 +66,8 @@ const lastOf = (c, type) => [...c.log].reverse().find(m => m.type === type);
   const b = client(uidB, 'B');
   await waitOpen(a);
   await waitOpen(b);
-  send(a, 'hello', { uid: uidA });
-  send(b, 'hello', { uid: uidB });
-  send(a, 'profile', { uid: uidA, name: '测试A', avatar: 1 });
-  send(b, 'profile', { uid: uidB, name: '测试B', avatar: 2 });
+  await registerLive(a, '测试A', Date.now().toString(36) + 'a');
+  await registerLive(b, '测试B', Date.now().toString(36) + 'b');
 
   send(a, 'create', { capacity: 2 });
   const created = await waitFor(a, 'created');
@@ -80,10 +91,8 @@ const lastOf = (c, type) => [...c.log].reverse().find(m => m.type === type);
   /* ---- 场景2：4 人房间 + 不满人数开局 + 结束切游戏 ---- */
   const clients = [client('H'), client('P2'), client('P3')];
   for (const c of clients) await waitOpen(c);
-  send(clients[0], 'hello', { uid: 'live_h_' + Date.now() });
-  send(clients[1], 'hello', { uid: 'live_p2_' + Date.now() });
-  send(clients[2], 'hello', { uid: 'live_p3_' + Date.now() });
-  send(clients[0], 'profile', { uid: 'live_h_' + Date.now(), name: '房主', avatar: 0 });
+  const liveSuffix = Date.now().toString(36);
+  await Promise.all(clients.map((c, i) => registerLive(c, i === 0 ? '房主' : ('玩家' + (i + 1)), liveSuffix + i)));
   send(clients[0], 'create', { capacity: 4 });
   const created2 = await waitFor(clients[0], 'created');
   const room2 = created2.room;

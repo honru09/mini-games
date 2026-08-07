@@ -53,39 +53,61 @@ function gameChecker(area, extra, n, opts){
   const cornerSel = n === 2 ? [0,3] : n === 3 ? [0,2,4] : n === 4 ? [0,2,3,5] : [0,1,2,3,4];
   const targetKey = c => arms[(c+3)%6].map(key);
   let marbles = [], cur = 0, over = false, winner = -1, selected = null, dests = null, history = [];
-  let aiPending = false;
+  let aiPending = false, aiEpoch = 0;
+  function aiState(){
+    return { marbles: marbles.map(list => list.map(key)), turn: cur };
+  }
   function scheduleAI(){
-    if (aiPending || over) return;
+    if (opts.destroyed || aiPending || over) return;
     if (!opts.ai || !opts.ai.has(cur)) return;
     aiPending = true;
+    const epoch = ++aiEpoch;
+    const turn = cur;
+    const state = aiState();
+    const stateKey = JSON.stringify(state);
     setStatus('🤖 AI 思考中…');
     setTimeout(async () => {
-      aiPending = false;
-      if (over) return;
+      if (opts.destroyed || epoch !== aiEpoch || over || cur !== turn || JSON.stringify(aiState()) !== stateKey){
+        if (epoch === aiEpoch) aiPending = false;
+        return;
+      }
       const occ = occupiedMap();
       const list = [];
       marbles[cur].forEach(m => {
         const d = checkerReachable(holeSet, occ, m);
         for (const dk of d){
           const [q, r] = dk.split(',').map(Number);
-          const isJump = Math.abs(q - m.q) + Math.abs(r - m.r) > 1;
-          list.push({ from: m, to: {q, r}, isJump });
+          const dq = q - m.q, dr = r - m.r;
+          const isJump = Math.max(Math.abs(dq), Math.abs(dr), Math.abs(dq + dr)) > 1;
+          list.push({ from: {q:m.q, r:m.r}, to: {q, r}, isJump });
         }
       });
-      if (!list.length){ toast('AI 无子可动'); return; }
+      if (!list.length){ aiPending = false; toast('AI 无子可动'); return; }
       // 启发式：优先跳吃，其次向对角营地推进
       const target = arms[(cornerSel[cur] + 3) % 6].map(key);
       const tSet = new Set(target);
       let best = list[0], bestS = -1e9;
+      const scored = [];
       list.forEach(mv => {
         let s = mv.isJump ? 12 : 0;
         s += tSet.has(key(mv.to)) ? 6 : 0;
         s -= Math.abs(mv.to.q - mv.from.q) + Math.abs(mv.to.r - mv.from.r);
+        scored.push({ mv, score: s });
         if (s > bestS){ bestS = s; best = mv; }
       });
       const ckPick = aiPersonaMove(list.length, list.indexOf(best), opts.aiPersona);
+      const fallback = list[ckPick];
+      const canonical = mv => key(mv.from) + '>' + key(mv.to);
+      const choices = scored.slice().sort((a, b) => b.score - a.score).slice(0, 200).map(item => canonical(item.mv));
+      const moveByChoice = new Map(list.map(mv => [canonical(mv), mv]));
+      const remoteChoice = await aiChoose('checker', state, choices, opts.aiPersona);
+      if (opts.destroyed || epoch !== aiEpoch || over || cur !== turn || JSON.stringify(aiState()) !== stateKey){
+        if (epoch === aiEpoch) aiPending = false;
+        return;
+      }
+      const ckMv = moveByChoice.has(remoteChoice) ? moveByChoice.get(remoteChoice) : fallback;
+      aiPending = false;
       aiSpeak(opts.aiPersona, 'think');
-      const ckMv = list[ckPick];
       applyCheckerMove(ckMv.from, ckMv.to);
     }, 700);
   }
@@ -100,6 +122,7 @@ function gameChecker(area, extra, n, opts){
     const undoBtn = el('button','btn','↩ 悔棋');
     undoBtn.addEventListener('click', () => {
       if (over || !history.length) return;
+      aiEpoch++; aiPending = false;
       const h = history.pop();
       marbles[h.pi][h.mi] = h.from;
       cur = h.pi;
@@ -231,9 +254,14 @@ function gameChecker(area, extra, n, opts){
     draw();
   });
   function applyCheckerMove(fromHole, toHole){
-    playFeedback('move');
+    if (over || !fromHole || !toHole) return false;
+    const coords = [fromHole.q, fromHole.r, toHole.q, toHole.r];
+    if (!coords.every(Number.isInteger)) return false;
     const occ = occupiedMap();
     const hit = occ.get(key(fromHole));
+    if (!hit || hit.pi !== cur || occ.has(key(toHole)) || !checkerReachable(holeSet, occ, fromHole).has(key(toHole))) return false;
+    aiEpoch++;
+    playFeedback('move');
     history.push({ pi: hit.pi, mi: hit.mi, from: {q:fromHole.q, r:fromHole.r}, to: {q:toHole.q, r:toHole.r} });
     marbles[hit.pi][hit.mi] = toHole;
     selected = null; dests = null;
@@ -248,9 +276,10 @@ function gameChecker(area, extra, n, opts){
       draw();
       setStatus('🏆 玩家' + (cur+1) + ' 获胜！', true);
       showCheckerOver();
-      return;
+      return true;
     }
     nextPlayer();
+    return true;
   }
   function nextPlayer(){
     cur = (cur + 1) % n;
@@ -281,12 +310,14 @@ function gameChecker(area, extra, n, opts){
       emoji: '🏆', subtitle: '10 颗弹珠全部到达对角营地', coins: 1, onRestart: resetLocal
     });
   }
-  opts.onMove = payload => {
-    if (payload && payload.from && payload.to){
+  opts.onMove = (payload, player) => {
+    if (opts.online && (!Number.isInteger(player) || player !== cur)) return;
+    if (payload && Array.isArray(payload.from) && payload.from.length === 2 && Array.isArray(payload.to) && payload.to.length === 2){
       applyCheckerMove({ q: payload.from[0], r: payload.from[1] }, { q: payload.to[0], r: payload.to[1] });
     }
   };
   function resetLocal(){
+    aiEpoch++;
     marbles = cornerSel.map(c => arms[c].map(h => ({q:h.q, r:h.r})));
     cur = 0; over = false; winner = -1; selected = null; dests = null; history = []; aiPending = false;
     const ov = area.querySelector('.overlay'); if (ov) ov.remove();

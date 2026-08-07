@@ -1,11 +1,25 @@
 // 最小复现：guest 断开后 host 是否收到 peer_left
 const http = require('http');
 const { spawn } = require('child_process');
+const fs = require('fs');
+const os = require('os');
 const path = require('path');
 const SERVER = path.join(__dirname, '..', 'server', 'index.js');
 const PORT = 8123;
+const DATA_DIR = fs.mkdtempSync(require('path').join(os.tmpdir(), 'mini-games-ws-close-'));
 
-const server = spawn(process.execPath, [SERVER], { env: { ...process.env, PORT: String(PORT) }, stdio: ['ignore', 'pipe', 'pipe'] });
+const server = spawn(process.execPath, [SERVER], {
+  env: {
+    ...process.env,
+    PORT: String(PORT),
+    DATA_DIR,
+    NODE_ENV: 'test',
+    SUPABASE_URL: '',
+    SUPABASE_KEY: '',
+    DEEPSEEK_KEY: '',
+  },
+  stdio: ['ignore', 'pipe', 'pipe'],
+});
 server.stdout.on('data', d => process.stdout.write('[SVR] ' + d));
 server.stderr.on('data', d => process.stderr.write(d));
 
@@ -46,8 +60,11 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   const a = client('A');
   const b = client('B');
   await sleep(400);
-  a.ws.send(JSON.stringify({ type: 'hello', payload: { uid: 'close_test_a' } }));
-  b.ws.send(JSON.stringify({ type: 'hello', payload: { uid: 'close_test_b' } }));
+  const suffix = Date.now().toString(36);
+  a.ws.send(JSON.stringify({ type: 'register', payload: { uid: 'u_closea' + suffix, pin: 'CloseA' + suffix, name: 'Close A' } }));
+  b.ws.send(JSON.stringify({ type: 'register', payload: { uid: 'u_closeb' + suffix, pin: 'CloseB' + suffix, name: 'Close B' } }));
+  await a.wait(m => m.type === 'registered');
+  await b.wait(m => m.type === 'registered');
   a.ws.send(JSON.stringify({ type: 'create', payload: { capacity: 2 } }));
   const created = await a.wait(m => m.type === 'created');
   const room = created.room;
@@ -63,10 +80,9 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   b.ws.close();
   await sleep(300);
   console.log('B readyState after close:', b.ws.readyState);
-  await a.wait(m => m.type === 'peer_left', 4000).then(
-    () => console.log('RESULT: A received peer_left ✅'),
-    () => console.log('RESULT: A did NOT receive peer_left ❌')
-  );
+  await a.wait(m => m.type === 'peer_left', 4000);
+  console.log('RESULT: A received peer_left ✅');
   server.kill();
+  try { fs.rmSync(DATA_DIR, { recursive: true, force: true }); } catch {}
   process.exit(0);
-})().catch(e => { console.error('ERR', e); server.kill(); process.exit(1); });
+})().catch(e => { console.error('ERR', e); server.kill(); try { fs.rmSync(DATA_DIR, { recursive: true, force: true }); } catch {} process.exit(1); });

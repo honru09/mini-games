@@ -7,7 +7,13 @@ function gameJungle(area, extra, n, opts){
   const EMOJI = { '象':'🐘','狮':'🦁','虎':'🐯','豹':'🐆','狼':'🐺','狗':'🐶','猫':'🐱','鼠':'🐭' };
   let board = Array.from({length:ROWS}, () => Array(COLS).fill(null)); // {p, type}
   let cur = 0, over = false, winner = -1, selected = null, legalMoves = [];
-  let aiPending = false;
+  let aiPending = false, aiEpoch = 0;
+  function aiState(){
+    return {
+      board: board.map(row => row.map(piece => piece ? (String(piece.p) + piece.type) : '--')),
+      turn: cur,
+    };
+  }
   function isWater(r,c){ return r >= 2 && r <= 4 && ((c >= 1 && c <= 3) || (c >= 5 && c <= 7)); }
   function denOf(p){ return p === 0 ? [3,0] : [3,8]; }
   function trapOf(p){
@@ -79,40 +85,76 @@ function gameJungle(area, extra, n, opts){
     }
     return res;
   }
+  function allMoves(p){
+    const all = [];
+    for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++){
+      const piece = board[r][c];
+      if (piece && piece.p === p) movesOf(p, r, c).forEach(to => all.push({ from: [r,c], to }));
+    }
+    return all;
+  }
+  function lose(pi){
+    if (over) return;
+    aiEpoch++; aiPending = false;
+    over = true; winner = pi ^ 1;
+    if (opts.onEnd) opts.onEnd([{ slot: winner, coins: 1, rank: 1 }, { slot: pi, coins: 0, rank: 2 }]);
+    render();
+    setStatus('🏆 玩家' + (winner+1) + ' 获胜！', true);
+  }
   function scheduleAI(){
-    if (aiPending || over) return;
+    if (opts.destroyed || aiPending || over) return;
     if (!opts.ai || !opts.ai.has(cur)) return;
     aiPending = true;
+    const epoch = ++aiEpoch;
+    const turn = cur;
+    const state = aiState();
+    const stateKey = JSON.stringify(state);
     setStatus('🤖 AI 思考中…');
-    setTimeout(() => {
-      aiPending = false;
-      if (over) return;
-      const all = [];
-      for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++){
-        const piece = board[r][c];
-        if (piece && piece.p === cur){
-          movesOf(cur, r, c).forEach(m => all.push({ from: [r,c], to: m }));
-        }
+    setTimeout(async () => {
+      if (opts.destroyed || epoch !== aiEpoch || over || cur !== turn || JSON.stringify(aiState()) !== stateKey){
+        if (epoch === aiEpoch) aiPending = false;
+        return;
       }
-      if (!all.length) return;
+      const all = allMoves(cur);
+      if (!all.length){ aiPending = false; lose(cur); return; }
       const d0 = denOf(cur);
       let best = all[0], bestV = -1e9;
+      const scored = [];
       all.forEach(mv => {
         const target = board[mv.to[0]][mv.to[1]];
         let v = target ? (RANK[target.type] * 10) : 0;
         if (target && target.type === '象' && board[mv.from[0]][mv.from[1]].type === '鼠') v = 80;
         v += (Math.abs(mv.to[0] - d0[0]) + Math.abs(mv.to[1] - d0[1])) * 2;
+        scored.push({ mv, score: v });
         if (v > bestV){ bestV = v; best = mv; }
       });
       const jPick = aiPersonaMove(all.length, all.indexOf(best), opts.aiPersona);
+      const fallback = all[jPick];
+      const canonical = move => move.from.join(',') + '>' + move.to.join(',');
+      const choices = scored.slice().sort((a, b) => b.score - a.score).slice(0, 200).map(item => canonical(item.mv));
+      const moveByChoice = new Map(all.map(move => [canonical(move), move]));
+      const remoteChoice = await aiChoose('jungle', state, choices, opts.aiPersona);
+      if (opts.destroyed || epoch !== aiEpoch || over || cur !== turn || JSON.stringify(aiState()) !== stateKey){
+        if (epoch === aiEpoch) aiPending = false;
+        return;
+      }
+      const jMv = moveByChoice.has(remoteChoice) ? moveByChoice.get(remoteChoice) : fallback;
+      aiPending = false;
       aiSpeak(opts.aiPersona, 'think');
-      const jMv = all[jPick];
       if (opts.online) opts.sendMove({ from: jMv.from, to: jMv.to });
       doMove(jMv.from, jMv.to);
     }, 650);
   }
   function doMove(from, to){
+    if (over || !Array.isArray(from) || !Array.isArray(to) || from.length !== 2 || to.length !== 2) return false;
+    const coords = from.concat(to).map(Number);
+    if (!coords.every(Number.isInteger)) return false;
+    from = coords.slice(0, 2); to = coords.slice(2, 4);
+    if (from[0] < 0 || from[0] >= ROWS || from[1] < 0 || from[1] >= COLS ||
+        to[0] < 0 || to[0] >= ROWS || to[1] < 0 || to[1] >= COLS) return false;
     const piece = board[from[0]][from[1]];
+    if (!piece || piece.p !== cur || !movesOf(cur, from[0], from[1]).some(m => m[0] === to[0] && m[1] === to[1])) return false;
+    aiEpoch++;
     playFeedback(board[to[0]][to[1]] ? 'capture' : 'move');
     board[from[0]][from[1]] = null;
     board[to[0]][to[1]] = piece;
@@ -122,7 +164,7 @@ function gameJungle(area, extra, n, opts){
       over = true; winner = cur;
       if (opts.onEnd) opts.onEnd([{ slot: cur, coins: 1, rank: 1 }, { slot: cur ^ 1, coins: 0, rank: 2 }]);
       render();
-      return;
+      return true;
     }
     const cnt0 = board.flat().filter(x => x && x.p === 0).length;
     const cnt1 = board.flat().filter(x => x && x.p === 1).length;
@@ -131,12 +173,14 @@ function gameJungle(area, extra, n, opts){
       winner = cnt1 === 0 ? 0 : 1;
       if (opts.onEnd) opts.onEnd([{ slot: winner, coins: 1, rank: 1 }, { slot: winner ^ 1, coins: 0, rank: 2 }]);
       render();
-      return;
+      return true;
     }
     cur ^= 1;
+    if (!allMoves(cur).length){ lose(cur); return true; }
     render();
     setStatus('轮到玩家' + (cur+1) + '，点击棋子');
     scheduleAI();
+    return true;
   }
   function render(){
   // Add hint button for local mode
@@ -219,11 +263,13 @@ function gameJungle(area, extra, n, opts){
     const cnt = [board.flat().filter(x => x && x.p === 0).length, board.flat().filter(x => x && x.p === 1).length];
     renderPlayers(cur, ['🐘x' + cnt[0], '🐘x' + cnt[1]]);
   }
-  opts.onMove = payload => {
-    if (!payload) return;
+  opts.onMove = (payload, player) => {
+    if (opts.online && (!Number.isInteger(player) || player !== cur)) return;
+    if (!payload || !Array.isArray(payload.from) || !Array.isArray(payload.to)) return;
     doMove(payload.from, payload.to);
   };
   function resetLocal(){
+    aiEpoch++;
     initBoard();
     cur = 0; over = false; winner = -1; selected = null; legalMoves = []; aiPending = false;
     render();

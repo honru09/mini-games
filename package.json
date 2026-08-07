@@ -2,12 +2,22 @@
   "name": "mini-games-online",
   "version": "1.0.0",
   "private": true,
-  "description": "本地多人小游戏合集（井字棋/五子棋/飞行棋/大富翁/弹珠跳棋），含联机对战模式，零依赖",
+  "description": "零依赖的 11 款插件化多人小游戏平台（本地/人机/联机）",
   "main": "server/index.js",
   "scripts": {
-    "start": "node server/index.js"
+    "start": "node server/index.js",
+    "build": "node scripts/build.js",
+    "test:dom": "node qa/dom-smoke.js",
+    "test:ai": "node qa/ai-games.js",
+    "test:e2e": "node --experimental-websocket qa/e2e-online.js",
+    "test:security": "node --experimental-websocket qa/security-online.js",
+    "test:reconnect": "node --experimental-websocket qa/reconnect-online.js",
+    "test:supabase": "node --experimental-websocket qa/supabase-adapter.js",
+    "test:close": "node --experimental-websocket qa/ws-close-test.js",
+    "supabase:status": "node scripts/supabase-status.js",
+    "test": "node scripts/build.js && node qa/dom-smoke.js && node qa/ai-games.js && node --experimental-websocket qa/security-online.js && node --experimental-websocket qa/reconnect-online.js && node --experimental-websocket qa/supabase-adapter.js && node --experimental-websocket qa/e2e-online.js && node --experimental-websocket qa/ws-close-test.js"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   }
 }

@@ -4,6 +4,7 @@ const https = require('https');
 
 const key = process.env.RENDER_KEY;
 const SERVICE_ID = process.env.SERVICE_ID || 'srv-d9on79jl550s73f0roj0';
+const REQUEST_TIMEOUT_MS = 15000;
 if (!key) {
   console.error('RENDER_KEY env missing');
   process.exit(1);
@@ -31,6 +32,7 @@ function req(method, path) {
       );
     });
     r.on('error', reject);
+    r.setTimeout(REQUEST_TIMEOUT_MS, () => r.destroy(new Error('Render API 请求超时')));
     r.end();
   });
 }
@@ -38,6 +40,7 @@ function req(method, path) {
 (async () => {
   try {
     const svc = await req('GET', '/v1/services/' + SERVICE_ID);
+    if (svc.status < 200 || svc.status >= 300) throw new Error('查询服务失败：HTTP ' + svc.status + '（响应已隐藏）');
     const s = JSON.parse(svc.body);
     console.log('== service ==');
     console.log(
@@ -60,9 +63,8 @@ function req(method, path) {
     );
 
     const deploys = await req('GET', '/v1/services/' + SERVICE_ID + '/deploys?limit=5');
+    if (deploys.status < 200 || deploys.status >= 300) throw new Error('查询部署失败：HTTP ' + deploys.status + '（响应已隐藏）');
     const d = JSON.parse(deploys.body);
-    console.log('\n== raw deploys body ==');
-    console.log(JSON.stringify(d).slice(0, 400));
     const list = Array.isArray(d) ? d.map((x) => x.deploy || x) : d.deploys || [];
     console.log('\n== deploys ==');
     for (const dep of list) {
@@ -80,5 +82,6 @@ function req(method, path) {
     }
   } catch (e) {
     console.error('ERR:', e.message);
+    process.exitCode = 1;
   }
 })();

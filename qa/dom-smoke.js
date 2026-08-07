@@ -1,7 +1,6 @@
 ﻿// 轻量 DOM 桩 + 游戏功能冒烟测试（Node 运行，无真实浏览器）
 'use strict';
 const fs = require('fs');
-const os = require('os');
 const path = require('path');
 
 const HTML_PATH = process.argv[2] || path.join(__dirname, '..', 'public', 'index.html');
@@ -134,7 +133,8 @@ global.fetch = async (url, init) => {
 global.AbortSignal = global.AbortSignal || { timeout: () => undefined };
 
 /* ---------- 载入游戏脚本 ---------- */
-const tmp = path.join(__dirname, '..', 'data', '.smoke-script.js');
+const tmp = path.join(__dirname, '..', 'data', '.smoke-script-' + process.pid + '.js');
+fs.mkdirSync(path.dirname(tmp), { recursive: true });
 fs.writeFileSync(tmp, script);
 require(tmp);
 const G = global.window.__gameInfo;
@@ -327,13 +327,18 @@ async function main(){
   // 注册账号（PIN 系统）：不再自动建档，需显式注册
   const acc = G.registerAccount('小明', 'abc123', 0, 0);
   check('注册账号成功且获得唯一 uid', !!acc && /^u_[a-z0-9]+$/.test(acc.uid));
-  check('账号持久化：mg_account 已保存', (() => {
+  check('账号注册待确认状态已保存且不含明文 PIN', (() => {
     const saved = JSON.parse(localStorage.getItem('mg_account'));
-    return saved && saved.uid === acc.uid && /^d/.test(saved.device || '');
+    return saved && saved.uid === acc.uid && /^d/.test(saved.device || '') && !Object.prototype.hasOwnProperty.call(saved, 'pin');
+  })());
+  G.online.onMessage({ type: 'registered', payload: { uid: acc.uid, token: 'qa-session-token-0123456789abcdef', profile: acc } });
+  check('服务端确认后只持久化 session token', (() => {
+    const saved = JSON.parse(localStorage.getItem('mg_account'));
+    return saved && saved.registered === true && saved.authToken === 'qa-session-token-0123456789abcdef' && !Object.prototype.hasOwnProperty.call(saved, 'pin');
   })());
   const savedUid = acc.uid;
   G.loadRoster(); // 模拟刷新
-  check('刷新后同一设备自动登录同一账号（不重建）', G.deviceUid === savedUid);
+  check('服务端确认后刷新可在同设备恢复同一账号', G.deviceUid === savedUid);
   const acc2 = G.registerAccount('小明2', 'abc124', 1, 0);
   check('账号唯一：再次注册生成不同 uid', !!acc2 && acc2.uid !== acc.uid);
   G.registerAccount('小明', 'abc123', 0, 0); // 恢复主账号
@@ -432,7 +437,8 @@ async function main(){
   check('未建房时房间面板隐藏', $('room-panel').classList.contains('hidden'));
 
   console.log(fails ? ('FAILURES=' + fails) : 'ALL_PASS');
+  try { fs.unlinkSync(tmp); } catch {}
   process.exit(fails ? 1 : 0);
 }
 
-main().catch(err => { console.log('TEST_CRASH: ' + err.stack); process.exit(2); });
+main().catch(err => { try { fs.unlinkSync(tmp); } catch {} console.log('TEST_CRASH: ' + err.stack); process.exit(2); });

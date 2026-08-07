@@ -41,6 +41,27 @@ function gameMonopoly(area, extra, n, opts){
   const MAX_ROUND = 30;
   let players = [], cur = 0, phase = 'roll', over = false, winner = -1, round = 1;
   let chanceDeck = [];
+  // WebSocket 保证消息顺序，但不同客户端的动画计时并不同步；远端输入必须等本地逻辑阶段就绪。
+  let remoteInputs = [];
+  let drainingRemoteInputs = false;
+  let epoch = 0;
+  let idleWaiters = [];
+  function isIdle(){ return over || ((phase === 'roll' || phase === 'buy') && !drainingRemoteInputs); }
+  function notifyIdle(){
+    if (!isIdle()) return;
+    const waiters = idleWaiters.splice(0);
+    waiters.forEach(resolve => resolve());
+  }
+  function whenIdle(){ return isIdle() ? Promise.resolve() : new Promise(resolve => idleWaiters.push(resolve)); }
+  function later(fn, delay){
+    const scheduledEpoch = epoch;
+    return setTimeout(() => { if (scheduledEpoch === epoch) fn(); }, delay);
+  }
+  function invalidateAsync(){
+    epoch++;
+    const waiters = idleWaiters.splice(0);
+    waiters.forEach(resolve => resolve());
+  }
   let S = 520;
   const board = el('div','m-board');
   area.appendChild(board);
@@ -55,23 +76,47 @@ function gameMonopoly(area, extra, n, opts){
   board.appendChild(center);
   let aiPending = false;
   function scheduleAI(){
-    if (aiPending || over) return;
+    if (opts.destroyed || aiPending || over) return;
     if (!opts.ai || !opts.ai.has(cur)) return;
     aiPending = true;
+    const gen = epoch;
+    const turn = cur;
     setStatus('🤖 AI 思考中…');
-    setTimeout(async () => {
-      aiPending = false;
-      if (over) return;
-      if (phase === 'roll'){ roll(); return; }
+    later(async () => {
+      if (opts.destroyed || over || gen !== epoch || cur !== turn || !opts.ai.has(cur)){
+        aiPending = false;
+        return;
+      }
+      if (phase === 'roll'){
+        const d1 = 1 + Math.floor(Math.random() * 6);
+        const d2 = 1 + Math.floor(Math.random() * 6);
+        aiPending = false;
+        applyRoll(d1, d2);
+        return;
+      }
       if (phase === 'buy'){
         const p = players[cur];
         const cell = CELLS[p.pos];
         // 启发式：买得起的便宜地就买，贵地保留现金
-        const buy = p.money >= cell.price && (p.money - cell.price >= 800 || cell.price <= 400);
+        let buy = p.money >= cell.price && (p.money - cell.price >= 800 || cell.price <= 400);
         if (opts.aiPersona && Math.random() < opts.aiPersona.randomness) buy = !buy;
+        const choices = p.money >= cell.price ? ['buy', 'pass'] : ['pass'];
+        const remoteChoice = await aiChoose('monopoly', {
+          turn: cur, round, money: p.money, position: p.pos,
+          property: { name: cell.name, price: cell.price, owner: cell.owner },
+          owned: p.props.slice(),
+        }, choices, opts.aiPersona);
+        if (opts.destroyed || over || gen !== epoch || cur !== turn || phase !== 'buy' || players[cur].pos !== p.pos){
+          aiPending = false;
+          return;
+        }
+        const decision = choices.includes(remoteChoice) ? remoteChoice : (buy && choices.includes('buy') ? 'buy' : 'pass');
+        aiPending = false;
         aiSpeak(opts.aiPersona, 'think');
-        applyDecision(cur, buy ? 'buy' : 'pass');
+        applyDecision(cur, decision);
+        return;
       }
+      aiPending = false;
     }, 750);
   }
   const moneyRow = el('div','money-row');
@@ -83,7 +128,8 @@ function gameMonopoly(area, extra, n, opts){
     if (over) return;
     if (opts.online && !opts.isHost){ toast('只有房主可以提前结算'); return; }
     if (opts.online) opts.sendMove({ decision: 'settle' });
-    settle();
+    remoteInputs.push({ payload: { decision: 'settle' }, trustedHost: true });
+    drainRemoteInputs();
   });
   extra.appendChild(settleBtn);
 
@@ -183,13 +229,19 @@ function gameMonopoly(area, extra, n, opts){
     applyRoll(d1, d2);
   }
   function applyRoll(d1, d2){
+    if (over || phase !== 'roll') return;
+    const pi = cur;
+    const actionEpoch = epoch;
+    phase = 'moving';
     rollBtn.disabled = true;
-    setStatus('玩家' + (cur+1) + ' 掷骰子…');
+    setStatus('玩家' + (pi+1) + ' 掷骰子…');
     diceFaces[0].roll(d1, () => {
+      if (actionEpoch !== epoch) return;
       diceFaces[1].roll(d2, () => {
-      movePlayer(cur, d1 + d2, () => {
-        rollBtn.disabled = false;
-        resolveCell(cur);
+      if (actionEpoch !== epoch) return;
+      movePlayer(pi, d1 + d2, () => {
+        if (actionEpoch !== epoch) return;
+        resolveCell(pi);
       });
       });
     });
@@ -205,7 +257,7 @@ function gameMonopoly(area, extra, n, opts){
     p.pos = npos;
     renderBoard();
     setStatus('玩家' + (pi+1) + ' 走到「' + CELLS[npos].name + '」');
-    setTimeout(cb, 350);
+    later(cb, 350);
   }
   function resolveCell(pi, depth){
     if (over) return;
@@ -216,10 +268,10 @@ function gameMonopoly(area, extra, n, opts){
       nextTurn();
     } else if (cell.type === 'rest'){
       setStatus('玩家' + (pi+1) + ' 在「休息」喝茶，无事发生');
-      setTimeout(nextTurn, 500);
+      later(nextTurn, 500);
     } else if (cell.type === 'tax'){
       pay(pi, cell.amt, '缴纳了 ' + cell.amt + ' 税款');
-      setTimeout(() => { if (!over) nextTurn(); }, 400);
+      later(() => { if (!over) nextTurn(); }, 400);
     } else if (cell.type === 'chance'){
       showChance(pi, depth || 0);
     } else if (cell.type === 'prop'){
@@ -243,21 +295,24 @@ function gameMonopoly(area, extra, n, opts){
           applyDecision(pi, 'pass');
         });
         actionRow.appendChild(buy); actionRow.appendChild(pass);
-        scheduleAI();
+        drainRemoteInputs();
+        if (phase === 'buy') { scheduleAI(); notifyIdle(); }
       } else if (cell.owner === pi){
         setStatus('玩家' + (pi+1) + ' 回到自己的地盘');
-        setTimeout(nextTurn, 500);
+        later(nextTurn, 500);
       } else {
         const rent = rentOf(cell);
         pay(pi, rent, '向玩家' + (cell.owner+1) + ' 支付租金 ' + rent);
-        setTimeout(() => { if (!over) nextTurn(); }, 450);
+        later(() => { if (!over) nextTurn(); }, 450);
       }
     }
   }
   function applyDecision(pi, decision){
-    playFeedback(decision === 'buy' ? 'score' : 'tap');
+    if (over || phase !== 'buy' || pi !== cur || (decision !== 'buy' && decision !== 'pass')) return false;
     const p = players[pi];
     const cell = CELLS[p.pos];
+    if (!cell || cell.type !== 'prop' || cell.owner !== -1) return false;
+    playFeedback(decision === 'buy' ? 'score' : 'tap');
     if (decision === 'buy'){
       if (p.money >= cell.price){
         p.money -= cell.price; cell.owner = pi; p.props.push(p.pos);
@@ -269,7 +324,8 @@ function gameMonopoly(area, extra, n, opts){
     phase = 'done';
     actionRow.innerHTML = '';
     renderBoard();
-    setTimeout(nextTurn, 450);
+    later(nextTurn, 450);
+    return true;
   }
   function pay(pi, amt, why){
     const p = players[pi];
@@ -285,6 +341,7 @@ function gameMonopoly(area, extra, n, opts){
         creditGame();
         renderBoard();
         setStatus('🏆 玩家' + (winner+1) + ' 获胜！', true);
+        notifyIdle();
         return;
       }
     }
@@ -292,7 +349,7 @@ function gameMonopoly(area, extra, n, opts){
     if (why) setStatus('玩家' + (pi+1) + ' ' + why);
   }
   function showChance(pi, depth){
-    if (depth >= 3){ setStatus('机会卡连续触发，停止结算'); setTimeout(nextTurn, 500); return; }
+    if (depth >= 3){ setStatus('机会卡连续触发，停止结算'); later(nextTurn, 500); return; }
     phase = 'chance';
     const idx = chanceDeck.shift();
     chanceDeck.push(idx);
@@ -344,7 +401,7 @@ function gameMonopoly(area, extra, n, opts){
           q.props = [];
           toast('💀 玩家' + (qi+1) + ' 破产出局！');
           const alive = aliveList();
-          if (alive.length === 1){ over = true; winner = alive[0]; ended = true; creditGame(); renderBoard(); setStatus('🏆 玩家' + (winner+1) + ' 获胜！', true); }
+          if (alive.length === 1){ over = true; winner = alive[0]; ended = true; creditGame(); renderBoard(); setStatus('🏆 玩家' + (winner+1) + ' 获胜！', true); notifyIdle(); }
         }
       });
       if (ended) return;
@@ -360,7 +417,7 @@ function gameMonopoly(area, extra, n, opts){
       p.pos = npos;
       renderBoard();
       setStatus('玩家' + (pi+1) + ' ' + (card.move > 0 ? '前进' : '后退') + Math.abs(card.move) + ' 格');
-      setTimeout(() => resolveCell(pi, depth+1), 450);
+      later(() => resolveCell(pi, depth+1), 450);
       return;
     }
     else if (card.go){
@@ -369,7 +426,7 @@ function gameMonopoly(area, extra, n, opts){
       renderBoard();
       setStatus('玩家' + (pi+1) + ' 直达起点，获得 2000');
     }
-    setTimeout(() => { if (!over) nextTurn(); }, 600);
+    later(() => { if (!over) nextTurn(); }, 600);
   }
   function nextTurn(){
     if (over) return;
@@ -381,7 +438,8 @@ function gameMonopoly(area, extra, n, opts){
     if (round > MAX_ROUND){ settle(); return; }
     renderBoard();
     setStatus('第 ' + Math.min(round, MAX_ROUND) + '/' + MAX_ROUND + ' 轮 · 轮到玩家' + (cur+1) + '，请掷骰子');
-    scheduleAI();
+    drainRemoteInputs();
+    if (phase === 'roll') { scheduleAI(); notifyIdle(); }
   }
   function settle(){
     if (over) return;
@@ -395,6 +453,7 @@ function gameMonopoly(area, extra, n, opts){
       (k+1) + '. 玩家' + (i+1) + ' — ¥' + players[i].money + (players[i].alive ? '' : '（破产）'));
     showModal('🏆 结算 · 玩家' + (winner+1) + ' 获胜', lines, '确定');
     setStatus('🏆 玩家' + (winner+1) + ' 是最终赢家！', true);
+    notifyIdle();
   }
   function creditGame(){
     const order = players.map((p, i) => i).sort((a, b) =>
@@ -402,20 +461,81 @@ function gameMonopoly(area, extra, n, opts){
     const res = order.map((i, k) => ({ slot: i, coins: k === 0 ? 1 : 0, rank: k + 1 }));
     if (opts.onEnd) opts.onEnd(res);
   }
-  opts.onMove = payload => {
+  function drainRemoteInputs(){
+    if (drainingRemoteInputs || over) return;
+    drainingRemoteInputs = true;
+    try {
+      while (remoteInputs.length && !over){
+        const event = remoteInputs[0] || {};
+        const payload = event.payload || {};
+        if (payload.decision === 'settle'){
+          // 提前结算也必须排在当前完整行动之后；buy 阶段尚未完成本回合。
+          if (phase === 'buy'){
+            // settle 可能先于当前玩家的购买决定到达；先完成该决定，再在下一 roll 边界结算。
+            const decisionIdx = remoteInputs.findIndex((item, idx) => idx > 0 && item && item.payload &&
+              item.payload.decision && item.payload.decision !== 'settle' && item.player === cur);
+            if (decisionIdx < 0) break;
+            const decision = remoteInputs.splice(decisionIdx, 1)[0].payload;
+            applyDecision(cur, decision.decision);
+            break;
+          }
+          if (phase !== 'roll') break;
+          remoteInputs.shift();
+          settle();
+        } else {
+          if (!Number.isInteger(event.player)){
+            remoteInputs.shift();
+            continue;
+          }
+          if (event.player !== cur){
+            // 当前行动仍在动画中时，保留已到达的下一位玩家输入。
+            if (phase !== 'roll' && phase !== 'buy') break;
+            remoteInputs.shift();
+            continue;
+          }
+          if (payload.roll){
+          if (phase !== 'roll'){
+            if (phase !== 'buy') break;
+            remoteInputs.shift();
+            continue;
+          }
+          remoteInputs.shift();
+          applyRoll(payload.roll[0], payload.roll[1]);
+          } else if (payload.decision){
+          if (phase !== 'buy'){
+            if (phase !== 'roll') break;
+            remoteInputs.shift();
+            continue;
+          }
+          remoteInputs.shift();
+          applyDecision(cur, payload.decision);
+          } else {
+          remoteInputs.shift();
+          }
+        }
+      }
+    } finally {
+      drainingRemoteInputs = false;
+    }
+  }
+  opts.onMove = (payload, player) => {
     if (!payload) return;
-    if (payload.roll) applyRoll(payload.roll[0], payload.roll[1]);
-    else if (payload.decision === 'settle') settle();
-    else if (payload.decision) applyDecision(cur, payload.decision);
+    if (!payload.roll && !payload.decision) return;
+    if (opts.online && !Number.isInteger(player)) return;
+    remoteInputs.push({ payload, player });
+    drainRemoteInputs();
   };
   function resetLocal(){
+    invalidateAsync();
     init();
+    remoteInputs = [];
     actionRow.innerHTML = '';
     rollBtn.disabled = false;
     diceFaces.forEach(f => f.reset());
     aiPending = false;
     renderBoard();
     setStatus('第 1/' + MAX_ROUND + ' 轮 · 玩家1 的回合，请掷骰子');
+    notifyIdle();
   }
   function reset(){
     if (opts.online && !opts.isHost){ toast('由房主开始新一局'); return; }
@@ -429,6 +549,13 @@ function gameMonopoly(area, extra, n, opts){
     reset,
     onMove: opts.onMove,
     onRestart: resetLocal,
+    destroy: () => {
+      invalidateAsync();
+      aiPending = false;
+      remoteInputs = [];
+      diceFaces.forEach(face => face.reset());
+    },
+    whenIdle,
     snapshot: () => ({
       players: players.map(p => ({ money: p.money, pos: p.pos, alive: p.alive, props: p.props.slice() })),
       cur, phase, round, over, winner,

@@ -1,4 +1,32 @@
 /* ================= 商城（头像 / 边框 / 特效 / 背景） ================= */
+let activeShopRefresh = null;
+let purchaseRequestSeq = 0;
+
+function refreshOpenShop(){
+  if (activeShopRefresh) activeShopRefresh();
+}
+
+function requestPurchase(category, id, button){
+  if (!online.connected){
+    toast(t('shop_connect_required'));
+    return;
+  }
+  const requestId = (typeof crypto !== 'undefined' && crypto.randomUUID)
+    ? 'buy_' + crypto.randomUUID()
+    : 'buy_' + Date.now().toString(36) + '_' + (++purchaseRequestSeq).toString(36);
+  online.send({ type: 'purchase', payload: { category, id, requestId } });
+  if (button){
+    button.disabled = true;
+    button.textContent = t('shop_processing');
+    setTimeout(() => {
+      if (button.isConnected){
+        button.disabled = false;
+        button.textContent = '购买';
+      }
+    }, 8000);
+  }
+}
+
 function openShop(){
   if (!account){ openAuthModal(); return; }
   const bd = el('div','modal-backdrop');
@@ -7,7 +35,8 @@ function openShop(){
   card.appendChild(el('h3', null, '🛍️ 个性商城'));
   const bal = el('div','stat-chip');
   bal.appendChild(el('span','coin','$'));
-  bal.appendChild(el('span', null, ' ' + (account.coins || 0) + ' 可用'));
+  const balValue = el('span', null, ' ' + (account.coins || 0) + ' 可用');
+  bal.appendChild(balValue);
   card.appendChild(bal);
   let tab = 'avatars';
   const tabs = el('div','shop-tabs');
@@ -31,7 +60,7 @@ function openShop(){
         it.appendChild(el('div','si-name','基础头像 ' + (i+1)));
         it.appendChild(el('div','si-price','免费'));
         const use = el('button','btn','使用');
-        use.addEventListener('click', () => { account.avatar = i; saveAccount(); syncProfiles(); bd.remove(); toast('头像已更换'); });
+        use.addEventListener('click', () => { account.avatar = i; saveAccount(); syncProfiles(); closeShop(); toast('头像已更换'); });
         it.appendChild(use);
         listEl.appendChild(it);
       }
@@ -47,17 +76,13 @@ function openShop(){
           it.appendChild(price);
           const buy = el('button','btn btn-primary','购买');
           buy.addEventListener('click', () => {
-            if ((account.coins || 0) < a.price){ toast('余额不足，先去赢几局吧'); return; }
-            account.coins -= a.price;
-            addOwned(account, 'avatars', a.id);
-            saveAccount(); syncProfiles(); render(); renderMe();
-            toast('✅ 已购买「' + a.name + '」');
+            requestPurchase('avatars', a.id, buy);
           });
           it.appendChild(buy);
         } else {
           it.appendChild(el('div','si-price','已拥有'));
           const use = el('button','btn','使用');
-          use.addEventListener('click', () => { account.avatar = a.id; saveAccount(); syncProfiles(); bd.remove(); toast('头像已更换'); });
+          use.addEventListener('click', () => { account.avatar = a.id; saveAccount(); syncProfiles(); closeShop(); toast('头像已更换'); });
           it.appendChild(use);
         }
         listEl.appendChild(it);
@@ -89,11 +114,7 @@ function openShop(){
           it.appendChild(price);
           const buy = el('button','btn btn-primary','购买');
           buy.addEventListener('click', () => {
-            if ((account.coins || 0) < item.price){ toast('余额不足，先去赢几局吧'); return; }
-            account.coins -= item.price;
-            addOwned(account, cat, item.id);
-            saveAccount(); syncProfiles(); render(); renderMe();
-            toast('✅ 已购买「' + item.name + '」');
+            requestPurchase(cat, item.id, buy);
           });
           it.appendChild(buy);
         } else {
@@ -112,14 +133,22 @@ function openShop(){
       });
     }
   }
+  function refresh(){
+    balValue.textContent = ' ' + (account.coins || 0) + ' 可用';
+    render();
+  }
+  function closeShop(){
+    if (activeShopRefresh === refresh) activeShopRefresh = null;
+    bd.remove();
+  }
+  activeShopRefresh = refresh;
   render();
   const close = el('button','btn','关闭');
-  close.addEventListener('click', () => bd.remove());
+  close.addEventListener('click', closeShop);
   card.appendChild(tabs);
   card.appendChild(listEl);
   card.appendChild(close);
   bd.appendChild(card);
-  bd.addEventListener('click', e => { if (e.target === bd) bd.remove(); });
+  bd.addEventListener('click', e => { if (e.target === bd) closeShop(); });
   document.body.appendChild(bd);
 }
-

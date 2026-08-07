@@ -195,23 +195,40 @@ function makeDice3D(size, sm){
     6: 'rotateX(0deg) rotateY(180deg)',
   };
   let rolling = false;
+  let rollInterval = null;
+  let settleTimer = null;
+  let generation = 0;
   function roll(final, cb){
-    if (rolling){ if (cb) setTimeout(cb, 60); return; }
+    if (rolling) return false;
+    const gen = ++generation;
     rolling = true;
     die.style.transition = 'transform .09s linear';
     let i = 0;
-    const iv = setInterval(() => {
+    rollInterval = setInterval(() => {
+      if (gen !== generation) return;
       i++;
       die.style.transform = 'rotateX(' + Math.floor(Math.random() * 720) + 'deg) rotateY(' + Math.floor(Math.random() * 720) + 'deg)';
       if (i >= 12){
-        clearInterval(iv);
+        clearInterval(rollInterval);
+        rollInterval = null;
         die.style.transition = 'transform .55s cubic-bezier(.2,.75,.3,1)';
         die.style.transform = ROT[final] || ROT[1];
-        setTimeout(() => { rolling = false; if (cb) cb(); }, 560);
+        settleTimer = setTimeout(() => {
+          settleTimer = null;
+          if (gen !== generation) return;
+          rolling = false;
+          if (cb) cb();
+        }, 560);
       }
     }, 65);
+    return true;
   }
   function reset(){
+    generation++;
+    if (rollInterval) clearInterval(rollInterval);
+    if (settleTimer) clearTimeout(settleTimer);
+    rollInterval = null;
+    settleTimer = null;
     rolling = false;
     die.style.transition = 'none';
     die.style.transform = ROT[1];
@@ -222,21 +239,33 @@ function makeDice3D(size, sm){
 
 /* ---------------- AI 助手（DeepSeek 代理） ---------------- */
 async function aiChoose(game, state, options, persona){
+  const token = (typeof account !== 'undefined' && account && typeof account.authToken === 'string')
+    ? account.authToken.trim() : '';
+  if (!token || !Array.isArray(options) || !options.length ||
+      options.some(option => typeof option !== 'string') ||
+      typeof fetch !== 'function' || typeof AbortController === 'undefined') return null;
+  const legalOptions = options.slice(0, 200);
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 2200);
   try {
-    if (typeof fetch !== 'function') return null;
     const server = resolveServer();
     const url = server ? server.replace(/\/+$/, '') + '/api/ai' : '/api/ai';
     const res = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ game, state, options, persona: persona || null }),
-      signal: (typeof AbortSignal !== 'undefined' && AbortSignal.timeout) ? AbortSignal.timeout(15000) : undefined,
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + token,
+      },
+      body: JSON.stringify({ game, state, options: legalOptions, persona: persona || null }),
+      signal: controller.signal,
     });
     if (!res.ok) return null;
     const data = await res.json();
-    return (data && data.choice) || null;
+    return data && legalOptions.includes(data.choice) ? data.choice : null;
   } catch {
     return null;
+  } finally {
+    clearTimeout(timer);
   }
 }
 function aiPick(options){
