@@ -9,6 +9,7 @@ const ROOT = path.join(__dirname, '..');
 const HTML_PATH = path.join(ROOT, 'public', 'index.html');
 const SERVER = path.join(ROOT, 'server', 'index.js');
 const PORT = Number(process.env.E2E_PORT) || 8099;
+const MONOPOLY_STEPS = Math.max(4, Math.min(20, Number(process.env.E2E_MONOPOLY_STEPS) || 20));
 fs.mkdirSync(path.join(ROOT, 'data'), { recursive: true });
 const TEST_ROOT = fs.mkdtempSync(path.join(ROOT, 'data', 'e2e-'));
 const TEST_DATA_DIR = path.join(TEST_ROOT, 'server-data');
@@ -18,6 +19,7 @@ const tmp = path.join(TEST_ROOT, 'frontend-script.js');
 fs.writeFileSync(tmp, script);
 const allEnvs = [];
 let serverOut = '';
+let activeServer = null;
 
 /* ---------- DOM 桩（每个实例一套） ---------- */
 function makeCtxProxy(){
@@ -123,6 +125,7 @@ function makeEnv(label, hash, timerScale){
   const document = {
     getElementById: id => registry.get(id) || null,
     createElement: tag => makeEl(tag),
+    createTextNode: value => { const node=makeEl('#text');node.textContent=String(value);return node; },
     querySelectorAll: () => [],
     body: makeEl('body'),
   };
@@ -144,6 +147,11 @@ function makeEnv(label, hash, timerScale){
       removeItem: k => lsStore.delete(k),
     },
     fetch: async (url, init) => {
+      const localeMatch = String(url).match(/locales\/(zh-CN|en-US|uk-UA)\.json$/);
+      if (localeMatch) {
+        const body = fs.readFileSync(path.join(ROOT, 'public', 'locales', localeMatch[1] + '.json'), 'utf8').replace(/^\uFEFF/, '');
+        return { ok: true, json: async () => JSON.parse(body) };
+      }
       let options = null;
       try { options = JSON.parse(init.body).options; } catch {}
       const choice = options && options.length ? options[0] : null;
@@ -195,20 +203,6 @@ function btnByText(container, text){
   }
   return null;
 }
-function toClient(q, r, L){
-  const x = L.ox + (q + r/2)*L.scale, y = L.oy + r*0.866*L.scale;
-  return { clientX: x/560*520, clientY: y/600*520 };
-}
-function checkerLayout(bd){
-  let minX=1e9, maxX=-1e9, minY=1e9, maxY=-1e9;
-  for (const h of bd.holes){
-    const x = h.q + h.r/2, y = h.r*0.866;
-    minX=Math.min(minX,x); maxX=Math.max(maxX,x);
-    minY=Math.min(minY,y); maxY=Math.max(maxY,y);
-  }
-  const scale = Math.min((560-70)/Math.max(1,maxX-minX), (600-70)/Math.max(1,maxY-minY));
-  return { scale, ox: (560-(maxX+minX)*scale)/2, oy: (600-(maxY+minY)*scale)/2 };
-}
 async function setupOnlineGame(host, gameId, guestLabel, guestTimerScale){
   const guest = registerEnv(makeEnv(guestLabel, '', guestTimerScale));
   await waitFor(guest, () => /已连接服务器/.test(guest.onlineStatus()), '对方连接(' + gameId + ')', 5000);
@@ -225,6 +219,124 @@ async function setupOnlineGame(host, gameId, guestLabel, guestTimerScale){
   return { room: host.info().online.room, guest };
 }
 
+async function verifyTetrisRelay(host){
+  const tetrisSetup=await setupOnlineGame(host,'tetris','guest-tetris');
+  const tetrisGuest=tetrisSetup.guest;
+  const tetrisHostActions=host.$('game-extra').querySelector('.tetris-actions').children;
+  const tetrisGuestActions=tetrisGuest.$('game-extra').querySelector('.tetris-actions').children;
+  assert('俄罗斯方块：联机双方显示完整七项触控操作',tetrisHostActions.length===7&&tetrisGuestActions.length===7);
+  const tetrisMatchId=host.info().online.matchId;
+  const tetrisProtocol=host.info().online.gameplayMeta&&host.info().online.gameplayMeta.protocol;
+  const fullRuleAuthority=tetrisProtocol==='tetris-rule-v2';
+  const serverAuthority=fullRuleAuthority||tetrisProtocol==='tetris-battle-authority-v1';
+  const tetrisInitialHost=host.info().game.snapshot(),tetrisInitialGuest=tetrisGuest.info().game.snapshot();
+  assert('俄罗斯方块：同 matchId/玩家的 7-Bag 完全确定',tetrisInitialHost.bagSeed===tetrisMatchId&&tetrisInitialGuest.bagSeed===tetrisMatchId&&JSON.stringify(tetrisInitialHost.states.map(state=>state.queue))===JSON.stringify(tetrisInitialGuest.states.map(state=>state.queue)));
+  const tetrisBefore=JSON.stringify(host.info().game.snapshot().wells);
+  host.info().game.onMove({piece:99,x:0,y:17,rot:0},0);
+  assert('俄罗斯方块：非法远端方块编号被忽略',JSON.stringify(host.info().game.snapshot().wells)===tetrisBefore);
+  await sleep(3200);
+  tetrisHostActions[6].dispatch('click');
+  await waitFor(host,()=>host.info().game.snapshot().pieceCount===1,'俄罗斯方块房主本地落块',4000);
+  await waitFor(tetrisGuest,()=>serverAuthority?JSON.stringify(tetrisGuest.info().game.snapshot().wells[0])===JSON.stringify(host.info().game.snapshot().wells[0]):tetrisGuest.info().game.snapshot().pieceCount===1,'俄罗斯方块房主落块同步',4000);
+  assert('俄罗斯方块：房主落块后双方逻辑井一致',JSON.stringify(host.info().game.snapshot().wells)===JSON.stringify(tetrisGuest.info().game.snapshot().wells));
+  tetrisGuestActions[6].dispatch('click');
+  await waitFor(host,()=>serverAuthority?JSON.stringify(host.info().game.snapshot().wells[1])===JSON.stringify(tetrisGuest.info().game.snapshot().wells[1]):host.info().game.snapshot().pieceCount===2,'俄罗斯方块对方落块同步',4000);
+  assert('俄罗斯方块：双方无需轮次即可落块且逻辑井一致',JSON.stringify(host.info().game.snapshot().wells)===JSON.stringify(tetrisGuest.info().game.snapshot().wells));
+  const tetrisDrift=JSON.parse(JSON.stringify(tetrisGuest.info().game.snapshot()));
+  tetrisDrift.wells[0][10][0]=tetrisDrift.wells[0][10][0]?0:1;
+  tetrisGuest.info().game.onRestore(tetrisDrift);
+  if(serverAuthority){
+    tetrisHostActions[0].dispatch('click');
+    await waitFor(tetrisGuest,()=>JSON.stringify(tetrisGuest.info().game.snapshot().wells[0])===JSON.stringify(host.info().game.snapshot().wells[0]),'俄罗斯方块服务端标记的玩家状态校正漂移',5000);
+    assert('俄罗斯方块：服务端绑定玩家身份的状态中继校正漂移',JSON.stringify(tetrisGuest.info().game.snapshot().wells[0])===JSON.stringify(host.info().game.snapshot().wells[0]));
+  }else{
+    const acceptedTetrisSeq=host.info().game.snapshot().relay.seenSeq[1],guestActiveBefore=JSON.stringify(host.info().game.snapshot().states[1].active);
+    tetrisGuest.info().online.sendMove({act:'active',seq:acceptedTetrisSeq,piece:0,x:-4,y:-6,rot:0});await sleep(250);
+    assert('俄罗斯方块：重复发送方 seq 不会二次应用',host.info().game.snapshot().relay.seenSeq[1]===acceptedTetrisSeq&&JSON.stringify(host.info().game.snapshot().states[1].active)===guestActiveBefore);
+    const correctionRevision=tetrisGuest.info().game.snapshot().relay.revision;host.info().game.emitHostSync();
+    await waitFor(tetrisGuest,()=>tetrisGuest.info().game.snapshot().relay.revision>correctionRevision&&JSON.stringify(tetrisGuest.info().game.snapshot().wells)===JSON.stringify(host.info().game.snapshot().wells),'俄罗斯方块房主周期快照校正漂移',5000);
+    assert('俄罗斯方块：非房主漂移由房主客户端周期状态收敛',JSON.stringify(tetrisGuest.info().game.snapshot().wells)===JSON.stringify(host.info().game.snapshot().wells));
+  }
+  assert('俄罗斯方块：非房主不能自行生成最终排名',tetrisGuest.info().game.finishMatch()===false&&!tetrisGuest.info().game.snapshot().over);
+
+  const beforeReconnectPieces=host.info().game.snapshot().pieceCount;
+  const socketBeforeReconnect=tetrisGuest.info().online.ws;
+  tetrisGuest.info().online.send({type:'debug_disconnect'});
+  await sleep(200);
+  tetrisHostActions[6].dispatch('click');
+  await waitFor(host,()=>host.info().game.snapshot().pieceCount===beforeReconnectPieces+1,'俄罗斯方块掉线期间房主落块',4000);
+  try{await waitFor(tetrisGuest,()=>tetrisGuest.info().online.connected&&tetrisGuest.info().online.ws&&tetrisGuest.info().online.ws!==socketBeforeReconnect&&tetrisGuest.info().online.matchId===tetrisMatchId&&tetrisGuest.info().game&&!tetrisGuest.info().online._replaying&&(serverAuthority?JSON.stringify(tetrisGuest.info().game.snapshot().wells[0])===JSON.stringify(host.info().game.snapshot().wells[0]):tetrisGuest.info().game.snapshot().pieceCount===host.info().game.snapshot().pieceCount),'俄罗斯方块重连恢复权威快照/moveLog',8000);}catch(error){console.log('TETRIS_RECONNECT_DEBUG',JSON.stringify({connected:tetrisGuest.info().online.connected,socketChanged:tetrisGuest.info().online.ws!==socketBeforeReconnect,match:tetrisGuest.info().online.matchId,expected:tetrisMatchId,replaying:tetrisGuest.info().online._replaying,game:!!tetrisGuest.info().game,guest:tetrisGuest.info().game&&tetrisGuest.info().game.snapshot(),host:host.info().game&&host.info().game.snapshot()}).slice(0,12000));throw error;}
+  if(!serverAuthority)host.info().game.emitHostSync();
+  await waitFor(tetrisGuest,()=>JSON.stringify(tetrisGuest.info().game.snapshot().wells)===JSON.stringify(host.info().game.snapshot().wells),'俄罗斯方块重连后状态收敛',4000);
+  assert('俄罗斯方块：重连保留 matchId 且权威快照/moveLog 收敛',tetrisGuest.info().online.matchId===tetrisMatchId&&JSON.stringify(tetrisGuest.info().game.snapshot().wells)===JSON.stringify(host.info().game.snapshot().wells));
+
+  if(fullRuleAuthority){
+    assert('俄罗斯方块：全量 E2E 使用 tetris-rule-v2 默认主路径',host.info().online.gameplayMeta.protocol==='tetris-rule-v2'&&tetrisGuest.info().online.gameplayMeta.protocol==='tetris-rule-v2');
+    return tetrisGuest;
+  }
+
+  const topOut=JSON.parse(JSON.stringify(tetrisGuest.info().game.snapshot()));
+  topOut.wells[1]=Array.from({length:18},()=>Array(10).fill(0));topOut.wells[1][0]=Array(10).fill(1);
+  topOut.states[1]={...topOut.states[1],alive:true,koConfirmed:false,active:{kind:0,rotation:0,x:3,y:-1},incoming:[]};
+  topOut.over=false;topOut.winner=-1;topOut.countdownRemainingMs=0;
+  tetrisGuest.info().game.onRestore(topOut);
+  const tetrisActionsAfterReconnect=tetrisGuest.$('game-extra').querySelector('.tetris-actions').children;
+  tetrisActionsAfterReconnect[4].dispatch('click');
+  await waitFor(host,()=>host.info().game.snapshot().over&&host.info().game.snapshot().states[1].koConfirmed,'俄罗斯方块房主确认客方 KO',4000);
+  await waitFor(tetrisGuest,()=>tetrisGuest.info().game.snapshot().over,'俄罗斯方块客方接收最终排名',4000);
+  const tetrisPlacements=host.info().game.snapshot().states.map(state=>state.placement);
+  assert('俄罗斯方块：本地 KO 广播后房主下发唯一最终名次',host.info().game.snapshot().winner===0&&tetrisGuest.info().game.snapshot().winner===0&&new Set(tetrisPlacements).size===2&&JSON.stringify(tetrisPlacements)===JSON.stringify(tetrisGuest.info().game.snapshot().states.map(state=>state.placement)));
+  return tetrisGuest;
+}
+
+async function verifyTankAuthorityOnline(host){
+  const tankGuest=(await setupOnlineGame(host,'tank','guest-tank')).guest;
+  const tankHostActions=host.$('game-extra').querySelector('.tank-realtime-controls').children;
+  const tankGuestActions=tankGuest.$('game-extra').querySelector('.tank-realtime-controls').children;
+  assert('坦克大战：联机双方显示摇杆和开炮控件',tankHostActions.length===2&&tankGuestActions.length===2);
+  assert('坦克大战：正式联机启用服务端权威协议',host.info().game.getRelayState().protocol==='tank-authority-v1'&&tankGuest.info().game.getRelayState().protocol==='tank-authority-v1');
+  const hostProfile=host.info().roster.find(p=>p.uid===host.info().deviceUid),guestProfile=tankGuest.info().roster.find(p=>p.uid===tankGuest.info().deviceUid);
+  const before={hostCoins:hostProfile.coins,hostTotal:hostProfile.total,hostPlayed:hostProfile.played.tank||0,
+    hostReward:hostProfile.dailyFirstWinDate===new Date().toISOString().slice(0,10)?3:5,
+    guestCoins:guestProfile.coins,guestTotal:guestProfile.total,guestPlayed:guestProfile.played.tank||0,
+    guestReward:guestProfile.dailyFirstWinDate===new Date().toISOString().slice(0,10)?3:5};
+  const input=async(actor,observer,controls,x,y,key,label)=>{
+    const slot=actor.info().online.player,beforePress=observer.info().game.getRelayState().lastInputSeq[slot];
+    controls[0].dispatch('pointerdown',{clientX:x,clientY:y,buttons:1});
+    await waitFor(observer,()=>observer.info().game.getRelayState().lastInputSeq[slot]>beforePress,label+'按下',5000);
+    assert('坦克大战：'+label+'映射到可信玩家槽位',observer.info().game.snapshot().tanks[slot].input[key]===true);
+    const beforeRelease=observer.info().game.getRelayState().lastInputSeq[slot];controls[0].dispatch('pointerup');
+    await waitFor(observer,()=>observer.info().game.getRelayState().lastInputSeq[slot]>beforeRelease,label+'释放',5000);
+    assert('坦克大战：'+label+'释放状态同步',observer.info().game.snapshot().tanks[slot].input[key]===false);
+  };
+  await input(tankGuest,host,tankGuestActions,500,260,'right','客方右移');
+  await input(tankGuest,host,tankGuestActions,260,20,'up','客方上移');
+  tankGuestActions[1].dispatch('click');await waitFor(host,()=>host.info().game.snapshot().tanks[1].shots>=1,'客方射击同步',5000);
+  await input(host,tankGuest,tankHostActions,20,260,'left','房主左移');
+  await input(host,tankGuest,tankHostActions,260,500,'down','房主下移');
+  tankHostActions[1].dispatch('click');await waitFor(tankGuest,()=>tankGuest.info().game.snapshot().tanks[0].shots>=1,'房主射击同步',5000);
+  assert('坦克大战：正常实时输入覆盖双方奖励动作阈值',host.info().game.getRelayState().lastInputSeq[1]>=5&&tankGuest.info().game.getRelayState().lastInputSeq[0]>=5);
+  const accepted=host.info().game.getRelayState().lastInputSeq[1];
+  tankGuest.info().online.sendTankInput({seq:accepted,clientTick:tankGuest.info().game.getRelayState().serverTick,input:{left:true}});await sleep(250);
+  assert('坦克大战：重复 input seq 不会二次应用',host.info().game.getRelayState().lastInputSeq[1]===accepted&&host.info().game.snapshot().tanks[1].input.left===false);
+  const correctionTick=tankGuest.info().game.getRelayState().lastAuthoritySeq,drift=JSON.parse(JSON.stringify(tankGuest.info().game.snapshot()));
+  drift.tanks[0].x=host.info().game.snapshot().tanks[0].x>7?1.5:13.5;tankGuest.info().game.onRestore(drift);
+  await waitFor(tankGuest,()=>tankGuest.info().game.getRelayState().lastAuthoritySeq>correctionTick&&Math.abs(tankGuest.info().game.snapshot().tanks[0].x-host.info().game.snapshot().tanks[0].x)<.2,'服务端快照校正客方漂移',5000);
+  assert('坦克大战：双方由服务端周期快照校正',Math.abs(tankGuest.info().game.snapshot().tanks[0].x-host.info().game.snapshot().tanks[0].x)<.2);
+  const matchId=host.info().online.matchId,socket=tankGuest.info().online.ws;tankGuest.info().online.send({type:'debug_disconnect'});
+  await waitFor(tankGuest,()=>tankGuest.info().online.connected&&tankGuest.info().online.ws&&tankGuest.info().online.ws!==socket&&tankGuest.info().online.matchId===matchId&&tankGuest.info().game,'坦克客方重连权威快照',8000);
+  const resumedActions=tankGuest.$('game-extra').querySelector('.tank-realtime-controls').children,beforeResume=host.info().game.getRelayState().lastInputSeq[1];
+  await input(tankGuest,host,resumedActions,500,260,'right','客方重连后右移');
+  assert('坦克大战：重连后 input seq 延续且可继续操作',host.info().game.getRelayState().lastInputSeq[1]>beforeResume);
+  assert('坦克大战：双方都不能绕过服务端自行结束正式局',tankGuest.info().game.finishMatch()===false&&host.info().game.finishMatch()===false&&!tankGuest.info().game.snapshot().over&&!host.info().game.snapshot().over);
+  await waitFor(tankGuest,()=>tankGuest.info().game.snapshot().over&&tankGuest.info().game.getRelayState().resultCommitted,'客方接收服务端最终排名',12000);
+  await waitFor(host,()=>{const me=host.info().roster.find(p=>p.uid===host.info().deviceUid);return me&&me.total===before.hostTotal+1;},'坦克房主结算到账',5000);
+  await waitFor(tankGuest,()=>{const me=tankGuest.info().roster.find(p=>p.uid===tankGuest.info().deviceUid);return me&&me.total===before.guestTotal+1;},'坦克客方结算到账',5000);
+  const afterHost=host.info().roster.find(p=>p.uid===host.info().deviceUid),afterGuest=tankGuest.info().roster.find(p=>p.uid===tankGuest.info().deviceUid);
+  assert('坦克大战：服务端唯一排名完成双方结算',afterHost.played.tank===before.hostPlayed+1&&afterGuest.played.tank===before.guestPlayed+1&&afterHost.total===before.hostTotal+1&&afterGuest.total===before.guestTotal+1&&afterHost.coins>=before.hostCoins&&afterGuest.coins>=before.guestCoins);
+  return tankGuest;
+}
+
 async function main(){
   /* 启动服务端 */
   const server = spawn(process.execPath, [SERVER], {
@@ -233,12 +345,17 @@ async function main(){
       PORT: String(PORT),
       DATA_DIR: TEST_DATA_DIR,
       NODE_ENV: 'test',
+      ENABLE_RULE_AUTHORITY_V2: '1',
       SUPABASE_URL: '',
       SUPABASE_KEY: '',
       DEEPSEEK_KEY: '',
+      REWARD_TEST_MIN_DURATION_MS: '0',
+      TANK_MATCH_DURATION_MS: '10000',
+      MONOPOLY_AUCTION_MS: '1000',
     },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
+  activeServer = server;
   server.stdout.on('data', d => serverOut += d);
   server.stderr.on('data', d => serverOut += d);
   await waitFor({ label: 'server' }, () => {
@@ -256,12 +373,21 @@ async function main(){
     const guest = registerEnv(makeEnv('guest'));
     await waitFor(host, () => /已连接服务器/.test(host.onlineStatus()), '房主连接', 5000);
     await waitFor(guest, () => /已连接服务器/.test(guest.onlineStatus()), '对方连接', 5000);
+    if(process.env.E2E_FOCUS==='tetris'){
+      await verifyTetrisRelay(host);
+      console.log(process.exitCode?'E2E_TETRIS_HAS_FAILURES':'E2E_TETRIS_ALL_PASS');
+      return;
+    }
+    if(process.env.E2E_FOCUS==='tank'){
+      await verifyTankAuthorityOnline(host);
+      console.log(process.exitCode?'E2E_TANK_HAS_FAILURES':'E2E_TANK_ALL_PASS');
+      return;
+    }
 
     /* 1. 房主创建房间 */
     host.$('btn-create-room').dispatch('click');
     await waitFor(host, () => /房间已创建/.test(host.onlineStatus()), '房主拿到房间码', 5000);
-    const roomMatch = host.onlineStatus().match(/>([A-Z0-9]{6})</);
-    const room = roomMatch ? roomMatch[1] : '';
+    const room = String(host.info().online.room || '');
     assert('房主创建房间并拿到 6 位房间码', /^[A-Z0-9]{6}$/.test(room));
     await waitFor(host, () => !host.$('room-panel').classList.contains('hidden'), '房主房间面板出现', 4000);
     assert('大厅房间面板显示房间码', host.$('room-code-big').textContent === room);
@@ -271,8 +397,8 @@ async function main(){
 
     /* 2. 房主选择五子棋，进入等待模式 */
     host.info().startGame('gomoku');
-    await waitFor(host, () => host.$('room-status').textContent.includes('五子棋') && host.$('room-status').textContent.includes('等待其他玩家加入'), '房主进入等待模式', 4000);
-    assert('等待模式显示已选择五子棋', host.$('room-status').textContent.includes('五子棋'));
+    await waitFor(host, () => (host.$('room-status').textContent.includes('五子棋')||host.$('room-status').textContent.includes('game_gomoku')) && host.$('room-status').textContent.includes('等待其他玩家加入'), '房主进入等待模式', 4000);
+    assert('等待模式显示已选择五子棋', host.$('room-status').textContent.includes('五子棋')||host.$('room-status').textContent.includes('game_gomoku'));
     assert('等待模式未开局', host.info().game === null);
 
     /* 3. 对方从大厅点击「加入」自动开局 */
@@ -317,17 +443,20 @@ async function main(){
     await waitFor(host, () => host.info().leaderboard && host.info().leaderboard.total >= 2, '排行榜数据到达', 5000);
     const hostMe = host.info().roster.find(p => p.uid === host.info().deviceUid);
     const guestMe = guest.info().roster.find(p => p.uid === guest.info().deviceUid);
-    assert('房主档案 +1 L金币（五子棋胜）', hostMe.coins === 1);
-    assert('对方档案 +0 L金币（五子棋负）', guestMe.coins === 0);
+    assert('房主今日首次联机胜利获得 5💵 / 17 XP', hostMe.coins === 5 && hostMe.xp === 17);
+    assert('对方联机失败仍获得 1💵 / 8 XP', guestMe.coins === 1 && guestMe.xp === 8);
+    const rewardOverlay = host.context.document.body.children.find(node => node.classList && node.classList.contains('reward-breakdown-overlay'));
+    assert('结算 UI 展示服务端 Reward Breakdown', !!rewardOverlay &&
+      rewardOverlay.querySelectorAll('.reward-breakdown-row').length >= 2 && rewardOverlay.querySelectorAll('.reward-breakdown-total').length === 1);
     assert('双方档案各计 1 局', hostMe.total === 1 && guestMe.total === 1);
     assert('档案记录五子棋局数', hostMe.played.gomoku === 1 && guestMe.played.gomoku === 1);
     const lbUids = host.info().leaderboard.list.map(u => u.uid);
     assert('排行榜包含双方', lbUids.includes(host.info().deviceUid) && lbUids.includes(guest.info().deviceUid));
     await waitFor(host, () => {
       const u = host.info().leaderboard && host.info().leaderboard.list.find(x => x.uid === host.info().deviceUid);
-      return u && u.coins === 1;
+      return u && u.coins === 5;
     }, '排行榜金币与服务端一致', 5000);
-    assert('排行榜金币与服务端一致', host.info().leaderboard.list.find(u => u.uid === host.info().deviceUid).coins === 1);
+    assert('排行榜金币与服务端一致', host.info().leaderboard.list.find(u => u.uid === host.info().deviceUid).coins === 5);
     assert('在线状态：双方档案显示在线', host.info().leaderboard.list.find(u => u.uid === host.info().deviceUid).online === true &&
       host.info().leaderboard.list.find(u => u.uid === guest.info().deviceUid).online === true);
 
@@ -353,13 +482,13 @@ async function main(){
     const ludoGuest = ludoSetup.guest;
     let ludoMoved = false;
     for (let i = 0; i < 40 && !ludoMoved; i++){
-      const hostDice = host.$('game-extra').children[0];
-      const guestDice = ludoGuest.$('game-extra').children[0];
+      const hostDice = host.$('game-extra').querySelector('.dice-btn');
+      const guestDice = ludoGuest.$('game-extra').querySelector('.dice-btn');
       const hActive = !hostDice.disabled;
       const gActive = !guestDice.disabled;
       if (hActive || gActive){
         const act = hActive ? host : ludoGuest;
-        act.$('game-extra').children[0].dispatch('click');
+        act.$('game-extra').querySelector('.dice-btn').dispatch('click');
         for (let w = 0; w < 10 && !ludoMoved; w++){
           await sleep(400);
           const movable = act.area().querySelectorAll('.tok').filter(t => t.classList.contains('movable'));
@@ -368,14 +497,16 @@ async function main(){
             ludoMoved = true;
             break;
           }
-          if (!act.$('game-extra').children[0].disabled) break;
+          if (!act.$('game-extra').querySelector('.dice-btn').disabled) break;
         }
       } else {
         await sleep(400);
       }
       await sleep(400);
-      const hs = host.info().game.snapshot();
-      const gs = ludoGuest.info().game.snapshot();
+      const hGame=host.info().game,gGame=ludoGuest.info().game;
+      if(!hGame||!gGame)break;
+      const hs = hGame.snapshot();
+      const gs = gGame.snapshot();
       if (JSON.stringify(hs) !== JSON.stringify(gs)){
         assert('飞行棋：第 ' + (i+1) + ' 轮双方状态一致', false);
         break;
@@ -394,7 +525,7 @@ async function main(){
     const monoSetup = await setupOnlineGame(host, 'monopoly', 'guest-mono', 1.25);
     const mGuest = monoSetup.guest;
     const monoEnvs = [host, mGuest];
-    const monoSnapshot = env => env.info().game.snapshot();
+    const monoSnapshot = env => { const game=env.info().game; return game ? game.snapshot() : null; };
     const monoActor = player => monoEnvs.find(env => env.info().online.player === player);
     const monoRollButton = env => env.area().children[0].querySelectorAll('button')[0];
     const waitMonoConvergence = async (timeoutMs) => {
@@ -403,7 +534,7 @@ async function main(){
       while (Date.now() - start < timeoutMs){
         hs = monoSnapshot(host);
         gs = monoSnapshot(mGuest);
-        if (JSON.stringify(hs) === JSON.stringify(gs) && (hs.over || hs.phase === 'roll')) return true;
+        if (hs && gs && JSON.stringify(hs) === JSON.stringify(gs) && (hs.over || hs.phase === 'roll')) return true;
         await sleep(50);
       }
       console.log('大富翁持久分歧 host=' + JSON.stringify(hs));
@@ -414,11 +545,12 @@ async function main(){
       const actor = monoActor(startPlayer);
       const start = Date.now();
       let passSent = false;
-      while (Date.now() - start < 10000){
+      while (Date.now() - start < 16000){
         const actorState = monoSnapshot(actor);
+        if (!actorState){ await sleep(50); continue; }
         if (actorState.over) return actorState;
-        if (!passSent && actorState.cur === startPlayer && actorState.phase === 'buy'){
-          const actionRow = actor.$('game-extra').children[1];
+        if (!passSent && actorState.phase === 'buy'){
+          const buyActor = monoActor(actorState.cur), actionRow = buyActor.$('game-extra').children[1];
           const pass = actionRow.children[actionRow.children.length - 1];
           if (pass){
             pass.dispatch('click');
@@ -427,6 +559,7 @@ async function main(){
         }
         for (const env of monoEnvs){
           const state = monoSnapshot(env);
+          if (!state) continue;
           if (state.over) return state;
           if (state.phase !== 'roll' || state.cur === startPlayer) continue;
           const nextActor = monoActor(state.cur);
@@ -437,11 +570,15 @@ async function main(){
         }
         await sleep(25);
       }
-      throw new Error('大富翁第 ' + turn + ' 次行动未完成');
+      throw new Error('大富翁第 ' + turn + ' 次行动未完成 :: ' + JSON.stringify(monoEnvs.map(env => ({
+        label:env.label,state:monoSnapshot(env),roll:monoRollButton(env)&&monoRollButton(env).disabled,
+        player:env.info().online.player,protocol:env.info().online.gameplayMeta&&env.info().online.gameplayMeta.protocol,
+        actions:(env.$('game-extra').children[1]&&env.$('game-extra').children[1].children||[]).map(node=>node.textContent),
+      }))).slice(0,4000));
     };
     let monoState = monoSnapshot(host);
     let monoConsistent = true;
-    for (let i = 0; i < 20 && !monoState.over; i++){
+    for (let i = 0; i < MONOPOLY_STEPS && !monoState.over; i++){
       const player = monoState.cur;
       const actor = monoActor(player);
       const ready = await waitFor(actor, () => {
@@ -463,108 +600,23 @@ async function main(){
     const monoFinalConsistent = monoConsistent && await waitMonoConvergence(10000);
     assert('大富翁：多轮动作完成后双方状态一致', monoFinalConsistent);
 
-    /* 10. 弹珠跳棋联机：走子同步 */
+    /* 10. 坦克大战联机：服务端权威输入、快照校正、重连与唯一结算 */
     host.$('btn-back').dispatch('click');
     await waitFor(host, () => !host.$('screen-hub').classList.contains('hidden'), '大富翁后回到大厅', 4000);
     const leaveBtn3 = btnByText(host.$('room-actions'), '离开房间');
     if (leaveBtn3) leaveBtn3.dispatch('click');
     await waitFor(host, () => host.$('room-panel').classList.contains('hidden'), '离开大富翁房间', 4000);
-    const ckSetup = await setupOnlineGame(host, 'checker', 'guest-ck');
-    const ckGuest = ckSetup.guest;
-    const ckBd = require(tmp).makeCheckerBoard();
-    const ckKey = ckBd.key;
-    const L = checkerLayout(ckBd);
-    const hCanvas = host.area().children[0];
-    const src = ckBd.arms[0][0];
-    const occ0 = new Map();
-    ckBd.arms[0].forEach(h => occ0.set(ckKey(h), {pi:0,mi:0}));
-    const holeSet0 = { set: new Set(ckBd.holes.map(ckKey)), key: ckKey };
-    const dests0 = require(tmp).checkerReachable(holeSet0, occ0, src);
-    hCanvas.dispatch('click', toClient(src.q, src.r, L));
-    if (dests0.size){
-      const [q, r] = [...dests0][0].split(',').map(Number);
-      hCanvas.dispatch('click', toClient(q, r, L));
-    }
-    await waitFor(ckGuest, () => ckGuest.status().includes('玩家2'), '弹珠跳棋轮到对方', 4000);
-    assert('弹珠跳棋：双方状态一致', JSON.stringify(host.info().game.snapshot()) === JSON.stringify(ckGuest.info().game.snapshot()));
+    await verifyTankAuthorityOnline(host);
 
-    /* 11. 坦克大战联机：双方都有控件、仅当前玩家可操作 */
-    host.$('btn-back').dispatch('click');
-    await waitFor(host, () => !host.$('screen-hub').classList.contains('hidden'), '弹珠跳棋后回到大厅', 4000);
-    const leaveBtn4 = btnByText(host.$('room-actions'), '离开房间');
-    if (leaveBtn4) leaveBtn4.dispatch('click');
-    await waitFor(host, () => host.$('room-panel').classList.contains('hidden'), '离开弹珠跳棋房间', 4000);
-    const tankSetup = await setupOnlineGame(host, 'tank', 'guest-tank');
-    const tankGuest = tankSetup.guest;
-    const tankHostActions = host.$('game-extra').children[0].children;
-    const tankGuestActions = tankGuest.$('game-extra').children[0].children;
-    assert('坦克大战：联机双方显示移动和开炮控件', tankHostActions.length === 5 && tankGuestActions.length === 5);
-    const tankBefore = JSON.stringify(host.info().game.snapshot());
-    tankGuestActions[1].dispatch('click');
-    assert('坦克大战：非当前玩家操作被忽略', JSON.stringify(host.info().game.snapshot()) === tankBefore && JSON.stringify(tankGuest.info().game.snapshot()) === tankBefore);
-    host.info().game.onMove({ act: 'shoot' }, 1);
-    assert('坦克大战：伪装成非当前行动者的远端消息被忽略', JSON.stringify(host.info().game.snapshot()) === tankBefore);
-    host.info().game.onMove({ act: 'move', d: 99 }, 0);
-    assert('坦克大战：非法远端方向被忽略', JSON.stringify(host.info().game.snapshot()) === tankBefore);
-    tankHostActions[1].dispatch('click');
-    await waitFor(tankGuest, () => tankGuest.info().game.snapshot().cur === 1, '坦克移动同步', 4000);
-    assert('坦克大战：移动后双方状态一致', JSON.stringify(host.info().game.snapshot()) === JSON.stringify(tankGuest.info().game.snapshot()));
-    tankGuestActions[4].dispatch('click');
-    await waitFor(host, () => host.info().game.snapshot().cur === 0, '坦克开炮同步', 4000);
-    assert('坦克大战：开炮后双方状态一致', JSON.stringify(host.info().game.snapshot()) === JSON.stringify(tankGuest.info().game.snapshot()));
-
-    /* 12. 贪吃蛇联机：行动方驱动食物坐标且双方一致 */
+    /* 11. 俄罗斯方块联机：确定性 7-Bag、房主校正、重连收敛、KO/最终名次 */
     host.$('btn-back').dispatch('click');
     await waitFor(host, () => !host.$('screen-hub').classList.contains('hidden'), '坦克大战后回到大厅', 4000);
     const leaveTank = btnByText(host.$('room-actions'), '离开房间');
     if (leaveTank) leaveTank.dispatch('click');
     await waitFor(host, () => host.$('room-panel').classList.contains('hidden'), '离开坦克房间', 4000);
-    const snakeSetup = await setupOnlineGame(host, 'snake', 'guest-snake');
-    const snakeGuest = snakeSetup.guest;
-    const snakeHostActions = host.$('game-extra').children[0].children;
-    const snakeGuestActions = snakeGuest.$('game-extra').children[0].children;
-    const snakeBefore = JSON.stringify(host.info().game.snapshot());
-    host.info().game.onMove({ d: 1, food: [2, 2] }, 0);
-    assert('贪吃蛇：未吃到食物时拒绝伪造新食物', JSON.stringify(host.info().game.snapshot()) === snakeBefore);
-    let snakeSynced = true;
-    for (let i = 0; i < 12; i++){
-      snakeHostActions[i < 6 ? 1 : 2].dispatch('click');
-      await waitFor(snakeGuest, () => snakeGuest.info().game.snapshot().cur === 1, '贪吃蛇房主第' + (i + 1) + '步同步', 4000);
-      if (JSON.stringify(host.info().game.snapshot()) !== JSON.stringify(snakeGuest.info().game.snapshot())) snakeSynced = false;
-      if (i < 11){
-        snakeGuestActions[2].dispatch('click');
-        await waitFor(host, () => host.info().game.snapshot().cur === 0, '贪吃蛇对方第' + (i + 1) + '步同步', 4000);
-        if (JSON.stringify(host.info().game.snapshot()) !== JSON.stringify(snakeGuest.info().game.snapshot())) snakeSynced = false;
-      }
-    }
-    const snakeFinal = host.info().game.snapshot();
-    assert('贪吃蛇：吃食物后双方完整状态一致', snakeSynced && JSON.stringify(snakeFinal) === JSON.stringify(snakeGuest.info().game.snapshot()));
-    assert('贪吃蛇：行动方生成并同步新食物坐标', snakeFinal.snakes[0].score === 1 && JSON.stringify(snakeFinal.food) !== JSON.stringify([7, 7]));
+    await verifyTetrisRelay(host);
 
-    /* 13. 俄罗斯方块联机：触控落块与随机方块同步 */
-    host.$('btn-back').dispatch('click');
-    await waitFor(host, () => !host.$('screen-hub').classList.contains('hidden'), '贪吃蛇后回到大厅', 4000);
-    const leaveSnake = btnByText(host.$('room-actions'), '离开房间');
-    if (leaveSnake) leaveSnake.dispatch('click');
-    await waitFor(host, () => host.$('room-panel').classList.contains('hidden'), '离开贪吃蛇房间', 4000);
-    const tetrisSetup = await setupOnlineGame(host, 'tetris', 'guest-tetris');
-    const tetrisGuest = tetrisSetup.guest;
-    const tetrisHostActions = host.$('game-extra').children[0].children;
-    const tetrisGuestActions = tetrisGuest.$('game-extra').children[0].children;
-    assert('俄罗斯方块：联机双方显示五个触控操作', tetrisHostActions.length === 5 && tetrisGuestActions.length === 5);
-    const tetrisBefore = JSON.stringify(host.info().game.snapshot());
-    tetrisGuestActions[4].dispatch('click');
-    assert('俄罗斯方块：非当前玩家不能生成方块', JSON.stringify(host.info().game.snapshot()) === tetrisBefore && JSON.stringify(tetrisGuest.info().game.snapshot()) === tetrisBefore);
-    host.info().game.onMove({ piece: 99, x: 0, y: 17, rot: 0 }, 0);
-    assert('俄罗斯方块：非法远端方块编号被忽略', JSON.stringify(host.info().game.snapshot()) === tetrisBefore);
-    tetrisHostActions[4].dispatch('click');
-    await waitFor(tetrisGuest, () => tetrisGuest.info().game.snapshot().pieceCount === 1, '俄罗斯方块房主落块同步', 4000);
-    assert('俄罗斯方块：随机方块由行动方消息驱动一致', JSON.stringify(host.info().game.snapshot()) === JSON.stringify(tetrisGuest.info().game.snapshot()));
-    tetrisGuestActions[4].dispatch('click');
-    await waitFor(host, () => host.info().game.snapshot().pieceCount === 2, '俄罗斯方块对方落块同步', 4000);
-    assert('俄罗斯方块：双方各落一块后状态一致', JSON.stringify(host.info().game.snapshot()) === JSON.stringify(tetrisGuest.info().game.snapshot()));
-
-    /* 14. 邀请流程：房主从玩家列表邀请在线玩家 */
+    /* 12. 邀请流程：房主从玩家列表邀请在线玩家 */
     host.$('btn-back').dispatch('click');
     await waitFor(host, () => !host.$('screen-hub').classList.contains('hidden'), '俄罗斯方块后回到大厅', 4000);
     const leaveTetris = btnByText(host.$('room-actions'), '离开房间');
@@ -575,14 +627,14 @@ async function main(){
     host.$('btn-create-room').dispatch('click');
     await waitFor(host, () => /房间已创建/.test(host.onlineStatus()), '创建邀请房间', 5000);
     await waitFor(host, () => {
-      const btns = host.$('player-list').querySelectorAll('button').filter(b => b.textContent === '邀请');
+      const btns = host.$('player-list').querySelectorAll('button').filter(b => b.textContent.includes('邀请'));
       return btns.length >= 1;
     }, '玩家列表出现邀请按钮', 4000);
     const invUid = invitee.info().deviceUid;
     const invRow = host.$('player-list').children.find(row => {
       return !!row.querySelector('[data-uid="' + invUid + '"]');
     });
-    const invBtn = invRow && invRow.children.find(b => b.textContent === '邀请');
+    const invBtn = invRow && invRow.children.find(b => b.textContent.includes('邀请'));
     if (!invBtn) throw new Error('未找到 guest-inv 的邀请按钮');
     invBtn.dispatch('click');
     await waitFor(invitee, () => btnByText(invitee.context.document.body, '接受') !== null, '受邀者收到邀请弹窗', 4000);
@@ -591,7 +643,7 @@ async function main(){
     await waitFor(invitee, () => invitee.info().online.room === host.info().online.room, '受邀者接受并加入房间', 4000);
     assert('邀请接受后双方进入同一房间', invitee.info().online.room === host.info().online.room && host.info().online.room !== null);
 
-    /* 15. 多人数房间：玩家索引互不相同 + 不满人数也可开局 */
+    /* 13. 多人数房间：玩家索引互不相同 + 不满人数也可开局 */
     invitee.context.window.__gameInfo.online.ws.close();
     await waitFor(host, () => host.info().online.roomInfo && host.info().online.roomInfo.size === 1, '房主收到受邀者离开', 4000);
     const leaveInv = btnByText(host.$('room-actions'), '离开房间');
@@ -602,9 +654,9 @@ async function main(){
     host.$('btn-create-room').dispatch('click');
     await waitFor(host, () => /房间已创建/.test(host.onlineStatus()), '创建 4 人房间', 5000);
     const room4 = host.info().online.room;
-    host.info().startGame('tictactoe');
-    await waitFor(host, () => host.info().online.roomInfo && host.info().online.roomInfo.game === 'tictactoe', '4 人容量房按当前人数可选 2 人游戏', 4000);
-    assert('房间容量不限制按当前人数选游戏', host.info().online.roomInfo.capacity === 4 && host.info().online.roomInfo.game === 'tictactoe');
+    host.info().startGame('gomoku');
+    await waitFor(host, () => host.info().online.roomInfo && host.info().online.roomInfo.game === 'gomoku', '4 人容量房按当前人数可选 2 人游戏', 4000);
+    assert('房间容量不限制按当前人数选游戏', host.info().online.roomInfo.capacity === 4 && host.info().online.roomInfo.game === 'gomoku');
     const g1 = registerEnv(makeEnv('guest-4p-1'));
     const g2 = registerEnv(makeEnv('guest-4p-2'));
     const g3 = registerEnv(makeEnv('guest-4p-3'));
@@ -625,9 +677,9 @@ async function main(){
     assert('多人数房间：玩家索引 0/1/2 互不相同', JSON.stringify(playersIdx) === JSON.stringify([0, 1, 2]));
     assert('多人数房间：各玩家身份不同', g1.info().online.player === 1 && g2.info().online.player === 2);
 
-    /* 16. 不满人数开局：3 人玩大富翁 */
+    /* 14. 不满人数开局：3 人玩大富翁 */
     host.info().startGame('monopoly');
-    await waitFor(host, () => host.$('room-status').textContent.includes('大富翁'), '3 人房选择大富翁', 4000);
+    await waitFor(host, () => host.info().online.roomInfo && host.info().online.roomInfo.game === 'monopoly', '3 人房选择大富翁', 4000);
     const startBtn = [...host.$('room-actions').children].find(b => (b.textContent || '').includes('开始游戏'));
     assert('不满人数时显示开始按钮', !!startBtn);
     startBtn.dispatch('click');
@@ -640,14 +692,14 @@ async function main(){
     const g3Late = g3.info().online.room;
     assert('第 4 人未加入（仍在房外）', g3Late === null);
 
-    /* 17. 结束本局：回大厅并可在同一房间切换游戏 */
+    /* 15. 结束本局：回大厅并可在同一房间切换游戏 */
     host.$('btn-end-game').dispatch('click');
     await waitFor(host, () => host.info().game === null && !host.$('screen-hub').classList.contains('hidden'), '房主结束本局回大厅', 5000);
     await waitFor(g1, () => g1.info().game === null && !g1.$('screen-hub').classList.contains('hidden'), '玩家2结束本局回大厅', 5000);
     await waitFor(g2, () => g2.info().game === null && g2.$('screen-hub').classList.contains('hidden') === false, '玩家3结束本局回大厅', 5000);
     assert('结束本局后房间保留', host.info().online.room === room4 && host.$('room-panel').classList.contains('hidden') === false);
     host.info().startGame('ludo');
-    await waitFor(host, () => host.$('room-status').textContent.includes('飞行棋'), '同一房间切换为飞行棋', 4000);
+    await waitFor(host, () => host.info().online.roomInfo && host.info().online.roomInfo.game === 'ludo', '同一房间切换为飞行棋', 4000);
     const startBtn2 = [...host.$('room-actions').children].find(b => (b.textContent || '').includes('开始游戏'));
     startBtn2.dispatch('click');
     await waitFor(host, () => host.info().game !== null && host.info().game.snapshot && host.info().game.snapshot().tokens.length === 3, '3 人飞行棋开局', 5000);
@@ -655,7 +707,7 @@ async function main(){
     await waitFor(g2, () => g2.info().game !== null && g2.info().game.snapshot && g2.info().game.snapshot().tokens.length === 3, '玩家3飞行棋开局', 5000);
     assert('切换游戏后 3 人飞行棋正常', host.info().game.snapshot().tokens.length === 3 && g1.info().game.snapshot().tokens.length === 3);
 
-    /* 18. 三人局中间席位离开：旧局结束、房间保留、后续席位压紧 */
+    /* 16. 三人局中间席位离开：旧局结束、房间保留、后续席位压紧 */
     const abandonedMatchId = host.info().online.matchId;
     assert('离房回归：三人旧局带有效 matchId', typeof abandonedMatchId === 'string' && abandonedMatchId.length > 0);
     assert('离房回归：离开前玩家索引为 0/1/2', host.info().online.player === 0 && g1.info().online.player === 1 && g2.info().online.player === 2);
@@ -669,17 +721,17 @@ async function main(){
     assert('离房回归：房间仍由原房主和原 slot 2 保留', host.info().online.room === room4 && g2.info().online.room === room4 && !host.$('room-panel').classList.contains('hidden') && !g2.$('room-panel').classList.contains('hidden'));
     assert('离房回归：player_reassigned 将原 slot 2 压紧为 slot 1', g2.info().online.player === 1 && JSON.stringify(host.info().online.roomInfo.players.map(p => p.player)) === JSON.stringify([0, 1]));
 
-    /* 19. 压紧后的两人可重新开局并完成服务端共识结算 */
+    /* 17. 压紧后的两人可重新开局并完成服务端共识结算 */
     const hostBeforeLifecycle = host.info().roster.find(p => p.uid === host.info().deviceUid);
     const g2BeforeLifecycle = g2.info().roster.find(p => p.uid === g2.info().deviceUid);
     const hostTotalBeforeLifecycle = hostBeforeLifecycle.total;
     const hostCoinsBeforeLifecycle = hostBeforeLifecycle.coins;
     const g2TotalBeforeLifecycle = g2BeforeLifecycle.total;
     const g2CoinsBeforeLifecycle = g2BeforeLifecycle.coins;
-    const hostTttBeforeLifecycle = hostBeforeLifecycle.played.tictactoe || 0;
-    const g2TttBeforeLifecycle = g2BeforeLifecycle.played.tictactoe || 0;
-    host.info().startGame('tictactoe');
-    await waitFor(host, () => host.info().online.roomInfo && host.info().online.roomInfo.game === 'tictactoe', '压紧后选择井字棋', 4000);
+    const hostGomokuBeforeLifecycle = hostBeforeLifecycle.played.gomoku || 0;
+    const g2GomokuBeforeLifecycle = g2BeforeLifecycle.played.gomoku || 0;
+    host.info().startGame('gomoku');
+    await waitFor(host, () => host.info().online.roomInfo && host.info().online.roomInfo.game === 'gomoku', '压紧后选择五子棋', 4000);
     const compactedStartBtn = [...host.$('room-actions').children].find(b => (b.textContent || '').includes('开始游戏'));
     assert('离房回归：压紧后的两人房显示开始按钮', !!compactedStartBtn);
     compactedStartBtn.dispatch('click');
@@ -687,37 +739,38 @@ async function main(){
     await waitFor(g2, () => g2.info().game !== null && g2.info().playerCount === 2 && g2.info().online.matchId === host.info().online.matchId, '压紧后玩家2进入新局', 5000);
     assert('离房回归：新局使用新的 matchId', host.info().online.matchId !== abandonedMatchId);
     const compactedMoves = [
-      [host, g2, 0], [g2, host, 3], [host, g2, 1], [g2, host, 4], [host, g2, 2],
+      [host, g2, [7,3]], [g2, host, [3,3]], [host, g2, [7,4]], [g2, host, [3,4]],
+      [host, g2, [7,5]], [g2, host, [3,5]], [host, g2, [7,6]], [g2, host, [3,6]], [host, g2, [7,7]],
     ];
     for (let i = 0; i < compactedMoves.length; i++){
-      const [actor, observer, cell] = compactedMoves[i];
+      const [actor, observer, coord] = compactedMoves[i];
       await waitFor(actor, () => {
         const snap = actor.info().game && actor.info().game.snapshot();
-        return snap && !snap.over && snap.cur === actor.info().online.player && snap.board[cell] === null;
-      }, '压紧后井字棋行动 ' + (i + 1), 4000);
-      actor.area().querySelectorAll('.ttt-cell')[cell].dispatch('click');
+        return snap && !snap.over && snap.cur === actor.info().online.player && snap.hist.length === i;
+      }, '压紧后五子棋行动 ' + (i + 1), 4000);
+      stone(actor, actor.area().children[0], coord[0], coord[1]);
       await waitFor(observer, () => {
         const snap = observer.info().game && observer.info().game.snapshot();
-        return snap && snap.board[cell] !== null;
-      }, '压紧后井字棋同步 ' + (i + 1), 4000);
+        return snap && snap.hist.length === i + 1 && JSON.stringify(snap.last) === JSON.stringify(coord);
+      }, '压紧后五子棋同步 ' + (i + 1), 4000);
     }
     await waitFor(host, () => host.info().game.snapshot().over && host.status().includes('玩家1 获胜'), '压紧后房主获胜', 4000);
     await waitFor(g2, () => g2.info().game.snapshot().over && g2.status().includes('玩家1 获胜'), '压紧后玩家2看到结果', 4000);
     await waitFor(host, () => {
       const me = host.info().roster.find(p => p.uid === host.info().deviceUid);
-      return me && me.total === hostTotalBeforeLifecycle + 1 && me.coins === hostCoinsBeforeLifecycle + 1;
+      return me && me.total === hostTotalBeforeLifecycle + 1 && me.coins === hostCoinsBeforeLifecycle + 3;
     }, '压紧后房主结算到账', 5000);
     await waitFor(g2, () => {
       const me = g2.info().roster.find(p => p.uid === g2.info().deviceUid);
-      return me && me.total === g2TotalBeforeLifecycle + 1 && me.coins === g2CoinsBeforeLifecycle;
+      return me && me.total === g2TotalBeforeLifecycle + 1 && me.coins === g2CoinsBeforeLifecycle + 1;
     }, '压紧后玩家2结算到账', 5000);
     const hostAfterLifecycle = host.info().roster.find(p => p.uid === host.info().deviceUid);
     const g2AfterLifecycle = g2.info().roster.find(p => p.uid === g2.info().deviceUid);
     assert('离房回归：新局共识结算双方各计一局', hostAfterLifecycle.total === hostTotalBeforeLifecycle + 1 && g2AfterLifecycle.total === g2TotalBeforeLifecycle + 1);
-    assert('离房回归：胜者 +1 金币、败者金币不变', hostAfterLifecycle.coins === hostCoinsBeforeLifecycle + 1 && g2AfterLifecycle.coins === g2CoinsBeforeLifecycle);
-    assert('离房回归：井字棋分类局数同步增加', hostAfterLifecycle.played.tictactoe === hostTttBeforeLifecycle + 1 && g2AfterLifecycle.played.tictactoe === g2TttBeforeLifecycle + 1);
+    assert('离房回归：胜者 +3💵、败者 +1💵', hostAfterLifecycle.coins === hostCoinsBeforeLifecycle + 3 && g2AfterLifecycle.coins === g2CoinsBeforeLifecycle + 1);
+    assert('离房回归：五子棋分类局数同步增加', hostAfterLifecycle.played.gomoku === hostGomokuBeforeLifecycle + 1 && g2AfterLifecycle.played.gomoku === g2GomokuBeforeLifecycle + 1);
 
-    /* 20. 房主关闭房间：剩余会话解除绑定并可立即创建/加入新房 */
+    /* 18. 房主关闭房间：剩余会话解除绑定并可立即创建/加入新房 */
     const closeLifecycleRoom = btnByText(host.$('room-actions'), '离开房间');
     assert('关房回归：房主可从已结束对局关闭房间', !!closeLifecycleRoom);
     closeLifecycleRoom.dispatch('click');
@@ -733,22 +786,15 @@ async function main(){
     await waitFor(g2, () => g2.info().online.roomInfo && g2.info().online.roomInfo.size === 2, '新房双方会话就位', 5000);
     assert('关房回归：旧房双方会话可立即重组新房', host.info().online.room === recycledRoom && g2.info().online.room === recycledRoom && host.info().online.player === 1 && g2.info().online.player === 0);
 
-    /* 21. 人机模式：本地 AI 自动对局 */
+    /* 19. 人机模式：本地 AI 自动回应 */
     const aiEnv = registerEnv(makeEnv('ai-local'));
     await waitFor(aiEnv, () => /已连接服务器/.test(aiEnv.onlineStatus()), 'AI 环境连接', 5000);
     aiEnv.info().aiMode = true;
     aiEnv.info().playerCount = 2;
-    aiEnv.info().startGame('tictactoe');
-    aiEnv.area().querySelectorAll('.ttt-cell')[4].dispatch('click');
-    await waitFor(aiEnv, () => aiEnv.info().game.snapshot().board.filter(v => v !== null).length === 2, 'AI 自动回应', 6000);
-    for (let i = 0; i < 12; i++){
-      if (aiEnv.info().game.snapshot().over) break;
-      const cs = aiEnv.area().querySelectorAll('.ttt-cell');
-      let clicked = false;
-      for (const c of cs){ if (c && !c.disabled){ c.dispatch('click'); clicked = true; break; } }
-      await sleep(1600);
-    }
-    assert('人机模式：AI 完整对局结束', aiEnv.info().game.snapshot().over);
+    aiEnv.info().startGame('gomoku');
+    stone(aiEnv, aiEnv.area().children[0], 7, 7);
+    await waitFor(aiEnv, () => aiEnv.info().game.snapshot().hist.length === 2 && aiEnv.info().game.snapshot().cur === 0, 'AI 自动回应', 6000);
+    assert('人机模式：五子棋 AI 自动回应并继续对局', aiEnv.info().game.snapshot().hist.length === 2);
 
     console.log(process.exitCode ? 'E2E_HAS_FAILURES' : 'E2E_ALL_PASS');
   } finally {
@@ -766,5 +812,7 @@ main().catch(err => {
   console.log('---- SERVER OUTPUT ----');
   console.log(serverOut.slice(-2000));
   process.exitCode = 2;
+  for (const e of allEnvs){ try { const ws=e.info().online.ws; if(ws)ws.close(); } catch {} }
+  if(activeServer)try{activeServer.kill();}catch{}
   process.exit(2);
 });

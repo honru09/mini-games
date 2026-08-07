@@ -1,283 +1,203 @@
-﻿# Mini Games Platform · 项目白皮书
-# 版本：v2.4（2026-08-06）
-# 状态：活文档 —— 每次代码变更后应同步更新本文件与 WHITEPAPER-SECRET.md
+# Mini Games Platform · 项目白皮书
 
-> 本文档是项目的**唯一权威总纲**。任何新 AI / 新协作者 / 新记忆窗口，先读本文件，
-> 再读 AGENTS.md 与 README.md。本文档回答三个问题：
-> **我们是什么 · 我们现在有什么 · 我们接下来要做什么。**
+**版本：v3.0（2026-08-07）**
+**状态：6 款精选游戏 + Economy & Progression v1.0 + Gameplay Rule Authority v2 + 自动赛事生命周期 + personal-linear-v2 + P0 双游戏美术纵切已落地**
+**发布成熟度：AUTOMATED_VERIFIED；真实设备与真实网络闸门未执行，Release Candidate 为 BLOCKED**
 
----
+> 本文件是仓库内的公开技术总纲。完整排版版位于 `deliverables/`；实现事实以当前源码、测试和本文件为准。
 
-## 0. 快速定位（30 秒版）
+## 0. 三十秒定位
 
-- **产品**：Mini Games Platform —— 网页版多人游戏平台（11 款插件化小游戏）
-- **核心哲学**：Fast Fun Loop —— 打开 3 秒开局 → 5 分钟一局 → 立刻再来；先看到「人」，再看到「游戏」
-- **技术栈**：零 npm 依赖。前端单文件 `public/index.html`（HTML+CSS+JS），后端零依赖 Node + 手写 WebSocket
-- **线上**：前端 GitHub Pages + 后端 Render + 数据库 Supabase（可选）
-- **当前版本**：v2.3 已完成，Phase 3（社交与留存）进行中
+- 产品：网页版多人游戏平台，保留 6 款可持续深化的插件化游戏。
+- 游戏：五子棋、飞行棋、迷你大富翁、坦克大战、俄罗斯方块、象棋。
+- 模式：本地热座、人机对战、WebSocket 联机对战。
+- 核心体验：打开约 3 秒开局，约 5 分钟一局，结算后立刻再来；先看到人，再看到游戏。
+- 技术：零 npm 运行依赖；前端模板 + JS 模块构建成单页；Node 静态服务、手写 WebSocket、DeepSeek 代理、可选 Supabase。
+- 线上：GitHub Pages 前端 + Render 后端。
 
----
+## 1. 产品基线
 
-## 1. 产品介绍
+| runtime_id | 游戏 | 人数 | 本地 | AI | 联机 |
+|---|---|---:|---:|---:|---:|
+| `gomoku` | 五子棋 | 2 | ✅ | ✅ | ✅ |
+| `ludo` | 飞行棋 | 2–4 | ✅ | ✅ | ✅ |
+| `monopoly` | 迷你大富翁 | 2–5 | ✅ | ✅ | ✅ |
+| `tank` | 坦克大战 | 2 | ✅ | ✅ | ✅ |
+| `tetris` | 俄罗斯方块 | 2–4 | ✅ | ✅ | ✅ |
+| `xiangqi` | 象棋 | 2 | ✅ | ✅ | ✅ |
 
-### 1.1 一句话
-网页版多人游戏平台：井字棋、五子棋、飞行棋、迷你大富翁、弹珠跳棋、坦克大战、贪吃蛇、俄罗斯方块、国际跳棋、斗兽棋、象棋，共 11 款插件化游戏。
+平台能力包括 PIN 账号、设备自动登录、换机登录、💵 虚拟现金商城、排行榜、XP/等级/连胜、个性化装扮、三语言、六主题、在线状态、房间大厅、邀请、掉线恢复、独立观众席、赛事编排和结算共识。
 
-### 1.2 三种玩法
-| 模式 | 说明 |
-|---|---|
-| 👥 本地热座 | 2-5 人共用一台设备轮流操作 |
-| 🤖 人机对战 | DeepSeek AI 对手，单人也能玩 |
-| 🌐 联机对战 | WebSocket 房间 + 游戏大厅 + 邀请 + 在线状态 + 全球排行榜 |
+## 2. 架构
 
-### 1.3 平台能力（已完成）
-- PIN 账号体系（唯一账号、设备识别、换机登录）
-- $ 货币商城（头像 / 头像框 / 动态特效 / 个人背景）
-- 三语言 i18n（zh-CN / en-US / uk-UA）+ Settings 设置页 + 语言旗帜
-- 全球排行榜 + 在线状态 + 房间大厅 + 邀请
-- 成长系统：XP / 等级 / 连胜（v2.3 新增）
-- 游戏插件化框架（v2.3 新增）
-
-### 1.4 平台愿景
-平台是主体（大厅/好友/房间/排行榜/金币/成长/社交），游戏是插件。最终目标是：
-- 打开 APP → 看到朋友在线 → 点击游戏 → 3 秒开始 → 5 分钟一局 → 立即再玩
-- 微信小程序 / Android·iOS / 桌面版（Electron/Tauri）可移植
-
----
-
-## 2. 架构总览
-
-```
-┌─────────────────────────────────────────────────┐
-│ 前端 public/index.html（单文件，约 7800 行）      │
-│  ├─ core/      通用工具 + i18n + 设置 + 游戏框架  │
-│  ├─ online/    WebSocket 客户端 + 大厅渲染       │
-│  ├─ shop/      账号 / 档案 / 商城               │
-│  ├─ ui/        排行榜 / 玩家列表 / 结果结算      │
-│  └─ games/     11 款游戏（每款独立模块）         │
-└─────────────────────────────────────────────────┘
-                    │ WebSocket (/ws)
-                    ▼
-┌─────────────────────────────────────────────────┐
-│ 后端 server/index.js（零依赖 Node，约 1300 行）  │
-│  ├─ 静态文件服务                                │
-│  ├─ 手写 WebSocket（RFC6455）房间中继           │
-│  ├─ POST /api/ai（DeepSeek 代理）               │
-│  └─ Supabase 可选持久化（环境变量启用）          │
-└─────────────────────────────────────────────────┘
-                    │ REST
-                    ▼
-┌─────────────────────────────────────────────────┐
-│ Supabase（PostgreSQL）：profiles / history       │
-│ （schema.sql 已备好，等待 URL + anon key 接入）  │
-└─────────────────────────────────────────────────┘
+```text
+public/index-template.html + public/src/*
+                 │ node scripts/build.js
+                 ▼
+          public/index.html
+                 │ HTTP + WebSocket /ws + POST /api/ai
+                 ▼
+          server/index.js
+             ┌───┴──────────────────────────────┐
+             │ 调用共享纯规则核心               │ 可选 REST（service_role，仅服务端）
+             ▼                                  ▼
+shared/rules/{tetris,xiangqi,monopoly}.js   Supabase profiles/history/reward_history/
+                                           economy_ledger/analytics_events/
+                                           ai_learning_models/ai_learning_experiences
 ```
 
-### 2.1 构建系统（v2.1 引入）
-- `public/src/*.js` 是源码（20+ 模块），`public/index-template.html` 是模板
-- `node scripts/build.js` 合并为 `public/index.html`
-- **改代码必须改 `src/` 再 build，不要直接改 index.html**
+关键约束：
 
-### 2.2 联机设计
-- 服务端是**房间中继**：客户端各自持有完整对局状态，`move` 只广播
-- 房主权限：选游戏 / 开始 / 结束本局 / 新一局
-- 人数规则：房间容量 2-5，**按当前已加入人数开局**（不满也能开始）
-- 新消息在 `server/index.js handleMessage` 和 `public/index.html online.onMessage` 两处成对添加
+- `public/index.html` 是生成物；改前端必须修改模板或 `public/src/` 后重新构建。
+- 服务端对 Tank 执行 `tank-authority-v1` 的 20Hz 位置/碰撞/炮弹/伤害/重生/排名权威模拟。
+- 默认新客户端协商 `tetris-rule-v2`、`xiangqi-rule-v2` 与 `monopoly-rule-v2`：客户端只提交单调 `seq` 动作，服务端调用无 DOM 的共享 Rule Core 验证、推进并广播完整状态/结果；`ENABLE_RULE_AUTHORITY_V2=0` 可紧急回退到 Tetris Battle Coordination、象棋棋钟与大富翁拍卖 v1。
+- 五子棋和飞行棋仍以客户端规则校验、服务端顺序/玩家身份和稳定点快照为主，不能描述为完整 Server Rule Authority。
+- `move` 由服务端记录顺序、发送者编号和有限 moveLog；客户端仍会验证当前行动者与具体走法。
+- 开局按当前已加入人数，不要求房间达到容量上限。
+- 非房主离房会结束当前局并压紧剩余席位；房主离房关闭房间。
+- 联机结果需要同一 `matchId` 下所有参与者提交一致 claim；AI 结果必须使用服务端签发的 `matchId/resultId` 票据、有效动作进度、去重和频控。
+- 独立 Spectator Seat 支持中途加入、快照、重进、人数上限和服务端只读隔离。
+- `tournament-orchestrator-v1` 支持 3–4 人循环赛及 5+ 人三轮瑞士制，并已接通参赛者锁定、真实房间自动创建、玩家席位分配、单盘服务端结果回传、自动下一轮、Bye 与重连状态；客户端手工结果被拒绝，`tournament_bind` 只保留为恢复入口。
+- Profile 只向比赛 presentation 暴露白名单 `gameCosmetics` 装备 ID 和 `cosmeticSchemaVersion=1`；owned、余额、价格与购买记录保持私有，未知 ID 回退默认。
 
-### 2.3 游戏插件化（v2.3）
-- 统一生命周期：`init() / render() / move() / serialize() / deserialize() / restart() / destroy()`
-- `registerGame(id, factory)` 注册表 + `createGameInstance()` 工厂
-- `GAME_REGISTRY` 自动注册旧游戏（`autoRegisterGames()`）
+## 3. 本地强 AI、DeepSeek 与持续学习
 
-### 2.4 成长系统（v2.3）
-- 等级 = 对局经验（XP），不是金币
-- 胜利 +10 XP，参与 +4 XP；1级=0，2级=30，3级=80，4级=160，5级=280，之后每级 +150
-- 连胜 streak / 最高连胜 bestStreak
+六款游戏各自的 `scheduleAI()` 先用本地强策略/搜索生成合法近优候选，再把候选和归一化特征交给 `aiChoose()`。模型返回值必须与某个选项完全匹配，游戏逻辑还会再次验证；无 token、无 Key、超时、限流、断网或非法返回时使用本地策略，不会随机送子。
 
----
+### AI 专项知识与持续学习
 
-## 3. 已完成功能清单（按版本）
+`server/ai-strategy-skills.js` 内嵌六款策略知识包：五子棋威胁空间、象棋限宽 Alpha-Beta、飞行棋终点/吃子/安全风险、大富翁净资产与现金储备、坦克影响图/避弹/火线/BFS 侧翼、俄罗斯方块 Dellacherie 井面与第二块前瞻。DeepSeek 只在本地近优带内裁决。
 
-### v1.0 → v1.5（基础）
-- 5 款游戏本地热座 → 11 款游戏
-- 联机（WS 房间/大厅/邀请）、L 金币、排行榜、像素头像
+`server/ai-learning.js` 的 `personal-linear-v2` 按账号 × 游戏隔离。对局中缓存局面哈希、候选特征、选择和局部排名；有效胜局强化选择特征，败局用同一近优带的反事实候选修正，平局做中性校正并保留经验。无效/争议/AFK/秒投只审计不调权。模型、经验、版本、resultId 和 revision 通过本地 JSON 及 Supabase `ai_learning_models`、`ai_learning_experiences`、`apply_ai_learning_v1` 原子持久化；不保存原始完整局面、PIN、对话或密钥。
 
-### v2.0（2026-08-05）
-- 三语言 i18n（zh-CN / en-US / uk-UA）
-- Settings 设置页（主题 + 语言 + 联机服务地址）
-- 语言旗帜显示（6 处 UI）
+DeepSeek Key 只存在于服务端环境变量。`qa/ai-games.js` 使用本地模型桩覆盖全部六款游戏，不依赖真实 Key。
 
-### v2.1（Phase 0）
-- AGENTS.md / README.md 文档同步（平台定位）
-- `scripts/build.js` 模块化构建系统
-- 触屏适配（touch-action / getEventPos / 响应式断点 480/768/1024px）
+## 4. 账号、经济与数据
 
-### v2.2（Phase 1）
-- 统一胜利叠加层 `showVictoryOverlay()`（11 款游戏）
-- 结算爽感：🏆 弹跳动画 + 金币 +1 + 再来一局/分享/邀请按钮
-- Tetris 键盘操控（← → ↑ ↓ 空格）
-- 国际跳棋 / 斗兽棋提示按钮
+- PIN 为 4–20 位字母数字；服务端保存版本化慢哈希。
+- 客户端只持久化服务端 session token，不保存 PIN。
+- 权威字段：💵 余额、owned、XP、等级、连胜、按游戏胜场 `wins`、总胜场 `totalWins`、局数、成就与结算历史；胜场与余额完全独立。
+- Economy & Progression v1.0 由统一服务端 Reward Resolver 驱动：联机 1v1 胜/平/负为 `3/2/1💵` 与 `12/10/8 XP`，多人按名次为 `4/3/2/1💵` 与 `14/12/10/8 XP`。
+- AI 通过服务端票据与有效动作进度结算，胜/平/负为 `1/0/0💵` 与 `8/6/5 XP`，每日 AI 货币上限为 `3💵`；本地热座不产生正式 💵/XP。
+- 每日首胜、连胜 XP、重复对手衰减、有效比赛/AFK/秒投判定和 `XPNext=min(200,30+5×Level)` 等级曲线均由服务端配置化执行。
+- `history` 保留兼容结算记录，`reward_history` 保存完整奖励明细与防刷依据，`economy_ledger` 审计每次 💵 增减，`analytics_events` 记录比赛和经济埋点。
+- Supabase 正式奖励通过 `apply_reward_v1` 按账号加锁并以 `result_id` 幂等，在单事务中更新档案、历史、奖励明细和可选经济流水；埋点仍独立写入。
+- Supabase schema、RLS、奖励/购买/AI 学习原子 RPC 和适配脚本已就绪；真实生产接入仍取决于 `SUPABASE_URL` 与仅服务端保存的 `service_role` secret，并需要真实迁移、并发、备份和回滚验收。
+- 未配置 Supabase 时回退到 JSON；当前 Render 未挂载持久磁盘，因此不能把 JSON 回退描述为生产持久化已完成。
+- 当前 Render 按单实例运行；扩容前必须把 Reward Resolver 与 AI 学习 outbox 改为数据库内版本冲突重算、单写者或等价的一致性方案，不能让多个进程各自覆盖模型/档案。
 
-### v2.3（Phase 2）
-- 游戏插件化框架（统一生命周期）
-- 成长系统（XP / 等级 / 连胜）
-- 协议版本号 PROTOCOL_VERSION + hello_ack
-- Supabase schema 新字段（xp/level/streak/best_streak）
+## 5. 白皮书 × 美术资源融合
 
----
+运行时根目录是 `public/assets/`，权威索引是 `public/assets/manifests/asset_manifest.json`。
 
-## 4. 未完成 / 进行中（Roadmap）
+首批已落地：
 
-### Phase 3：社交与留存（进行中 ~40%）
-- [ ] 称号系统（新手/常胜将军/老赌神/棋圣/传说）
-- [ ] 成就/勋章墙（首胜/十胜/五十胜/三连胜/五连胜/资深/全能/社交达人）
-- [ ] 每日任务（玩 1 局/玩 3 局/赢 1 局/连胜 2 局，奖励 XP）
-- [ ] 我的卡片（首屏玩家中心：等级/金币/在线好友/邀请/最近一起玩）
-- [ ] 最近一起玩（playmates 记录 + 服务端同步）
+- `P-001-MARK`：Header 与 Hero 使用的 Playroom 品牌 SVG。
+- `P-001-WORDMARK`：可用于分享卡和后续商店物料的字标 SVG。
+- `P-003`：平台虚拟现金 SVG，商城、排行榜、档案与结算统一显示 💵。
+- `public/src/core/06-assets.js`：稳定资源路径、现金组件和加载失败 fallback。
+- `G-02-COVER / G-02-BOARD-SURFACE`：五子棋响应式封面、木纹底材、Canvas 软 3D 棋子和最后落子状态。
+- `G-11-COVER / G-11-WELL-SURFACE`：俄罗斯方块响应式封面、玻璃井、七类纹理及 active/ghost/locked/clear 状态。
+- `art-source/`：保留四张高分辨率母图与可复现 ImageGen Prompt；`public/assets/` 只保存运行时 WebP。
 
-**已写好但未接入**：`public/src/core/04-social.js`（全部函数）
+融合规则：
 
-### Phase 4：AI 角色化（未开始）
-- 5 个 AI 角色（傲娇/赌狗/毒舌/萌妹/数学老师）
-- 每个角色独立说话风格 + 下棋倾向
-- 对局内 AI 发言（toast/气泡）
+1. 每项资产必须有稳定 `asset_id`、运行时路径、状态、fallback、a11y 与许可证字段。
+2. 游戏 runtime ID 只允许 `gomoku/ludo/monopoly/tank/tetris/xiangqi`。
+3. 首屏只加载品牌和公共 UI；游戏棋盘/棋子按选中游戏懒加载。
+4. 美术替换必须原子包含棋盘、棋子、状态、动效、音频与 fallback，不能只换一张不可交互大图。
+5. 资源加载失败必须回退到现有 CSS/Canvas/DOM Emoji/WebAudio，不阻塞大厅和开局。
+6. 三语言文字、规则网格、命中区域、焦点环和数值仍由代码生成，不烘焙进图片。
 
-### Phase 5：平台扩展（未开始）
-- 游戏逻辑解耦（纯逻辑层可移植）
-- PWA 完善（manifest/sw.js）
-- 适配层（微信小程序 / App / 桌面版）
+已完成的 P0 纵切：
 
----
+1. 五子棋 Canvas：木纹氛围层、软 3D 黑白棋、最后落子、胜线、既有落子 WebAudio 与 fallback。
+2. 俄罗斯方块 DOM/网格：玻璃井、七类方块纹理、active/ghost/locked/clear、既有 WebAudio 与 fallback。
+3. 两款大厅封面使用 640×360 / 320×180 `srcset` 懒加载；任一封面失败时保留 Emoji。
+4. `mg_art_gomoku_v1` 与 `mg_art_tetris_v1` 可独立关闭；规则、快照、AI 和联机消息不含美术状态。
 
-## 5. 目录结构
+下一批执行顺序：逐款原子覆盖飞行棋、迷你大富翁、坦克大战和象棋的正式美术/声音包；平台模式、房间、商城、成长 UI 资产继续按清单排期。资源制作不改变已完成的规则、AI 或权威协议。
 
-```
-mini-games/
-├── AGENTS.md              # AI 协作指南（活文档）
-├── README.md              # 用户向说明
-├── WHITEPAPER.md          # 本文件（项目总纲，公开版）
-├── WHITEPAPER-SECRET.md   # 私密版（凭证/部署密钥，gitignore 排除）
-├── public/
-│   ├── index.html         # 构建产物（不要手改！）
-│   ├── index-template.html# 模板
-│   ├── locales/           # i18n 翻译（zh-CN/en-US/uk-UA）
-│   └── src/               # 源码模块
-│       ├── core/          # i18n/工具/设置/游戏框架/social
-│       ├── online/        # WebSocket 客户端
-│       ├── shop/          # 账号/档案/商城
-│       ├── ui/            # 排行榜/玩家/结算
-│       └── games/         # 11 款游戏
-├── server/index.js        # 零依赖 Node 后端
-├── scripts/               # build/render 运维脚本
-├── qa/                    # 测试（dom-smoke/e2e/ws-close）
-├── supabase/schema.sql    # 数据库建表
-├── render.yaml            # Render Blueprint
-└── data/                  # 本地 JSON 存储（gitignore）
-```
+## 6. 质量与发布闸门
 
----
-
-## 6. 开发 / 测试 / 部署流程
-
-### 6.1 本地开发
 ```bash
-node server/index.js        # http://localhost:8080
+node scripts/build.js
+node qa/dom-smoke.js
+node qa/ai-games.js
+node qa/ai-strength.js
+node qa/ai-learning.js
+node --experimental-websocket qa/ai-learning-online.js
+node qa/gameplay-upgrade.js
+node qa/tank-authority.js
+node qa/tetris-battle-protocol.js
+node qa/tetris-rule-core.js
+node qa/xiangqi-rule-core.js
+node qa/monopoly-rule-core.js
+node qa/rule-authority.js
+node --experimental-websocket qa/rule-authority-online.js
+node qa/protocol-version.js
+node --experimental-websocket qa/game-cosmetic-profile.js
+node qa/gameplay-load.js
+node --expose-gc qa/gameplay-memory.js
+node qa/timer-audit.js
+node qa/network-chaos.js
+node qa/spectator-room.js
+node qa/tournament.js
+node qa/tournament-auto-room.js
+node --experimental-websocket qa/tournament-auto-online.js
+node qa/xiangqi-clock.js
+node qa/monopoly-auction.js
+node qa/reward-system.js
+node qa/supabase-schema.js
+node --experimental-websocket qa/security-online.js
+node --experimental-websocket qa/reconnect-online.js
+node --experimental-websocket qa/supabase-adapter.js
+node --experimental-websocket qa/e2e-online.js
+node --experimental-websocket qa/ws-close-test.js
 ```
 
-### 6.2 测试（每次改动必跑）
-```bash
-node qa/dom-smoke.js                                # 前端冒烟 → ALL_PASS
-node --experimental-websocket qa/e2e-online.js      # 联机 E2E → 全 PASS
-node --experimental-websocket qa/ws-close-test.js   # WS 断开
-```
-注意：沙箱环境跑 e2e 可能因系统 temp 权限 EPERM 中断（非代码问题），需无沙箱环境全量验证。
+发布前必须满足：
 
-### 6.3 构建
-```bash
-node scripts/build.js       # 合并 src/ → index.html
-```
+- 构建产物与模板/源码同步。
+- 六款游戏本地、人机和联机初始化与关键动作通过。
+- 安全、重连、结算、商城和 Supabase adapter 回归通过。
+- asset manifest 可解析，SVG/XML 合法，无孤儿路径，无旧货币显示。
+- 360px 与桌面、六主题、三语言、normal/reduced-motion 均可用。
+- 自动化 PASS 不替代 Desktop Chrome/第二浏览器、Android、iPhone、Tablet 实机矩阵，也不替代 `tc/netem` 或等价真实网络整形。
+- 实机矩阵、真实网络、30 分钟 Synthetic Session 与真实 Supabase 验收完成前，发布状态必须保持 `BLOCKED`。
 
-### 6.4 部署
-```powershell
-# 前端：推 main 自动触发 GitHub Pages
-git push origin main
+## 7. 路线图
 
-# 后端：Render 手动触发（API 创建的服务无 webhook）
-$env:RENDER_KEY='rnd_xxx'
-node scripts/render-deploy.js
+### P0：当前执行
 
-# 环境变量
-$env:RENDER_KEY='rnd_xxx'
-$env:DEEPSEEK_KEY='sk-...'
-$env:SUPABASE_URL='https://xxx.supabase.co'   # 可选
-$env:SUPABASE_KEY='eyJ...'                     # 可选
-node scripts/render-env.js
-```
+- [x] 聚焦为六款精选游戏并删除其余运行时模块、白名单和测试场景。
+- [x] 建立 `public/assets/`、asset manifest、品牌 SVG、现金 SVG 与 fallback。
+- [x] 💵 迁移到商城、档案、排行榜和结算 UI。
+- [x] 完成五子棋和俄罗斯方块两个美术纵切，并加入 manifest/flag/fallback/QA。
+- [x] 实施 Economy & Progression v1.0：权威结算、三模式隔离、有效局、防刷、独立胜场、`apply_reward_v1` 单事务落库、奖励流水与 Reward Breakdown UI。
+- [x] 实施 Gameplay Shared Protocol V1：Tank Authority、Tetris Battle Coordination、Spectator Room、Tournament Orchestrator、Xiangqi Clock、Monopoly Auction。
+- [x] 实施 Gameplay Rule Authority v2：Tetris/象棋/大富翁共享纯规则核心、服务端动作验证、完整快照、确定性哈希与 v1 兼容回退。
+- [x] 接通 Tournament 自动真实房间、席位分配、单盘服务端结果回传、自动下一轮、Bye 与重连状态。
+- [x] 接入 `game-cosmetic-presentation-v1`：Profile 白名单装备、公开 presentation、私有经济隔离与未知 ID fallback。
+- [x] 修复 Tank/Tetris 运行时持续重建 DOM 引发的闪屏，改为稳定渲染树和 keyed 增量更新，并增加节点身份回归。
+- [ ] 配置并验证真实 Supabase，完成 JSON 数据迁移、并发/RLS、备份和回滚演练。
+- [ ] 执行真实设备矩阵、真实网络整形和 30 分钟真实 Synthetic Session，解除 RC `BLOCKED`。
 
-### 6.5 上线地址
-- 前端：https://honru09.github.io/mini-games/
-- 后端：https://mini-games-online.onrender.com
-- 仓库：https://github.com/honru09/mini-games（默认分支 main）
+### P1
 
----
+- 六款游戏完整美术包与声音包。
+- 好友关系、聊天与举报/屏蔽。
+- 观战跟随与用户 Replay UI 产品化、Tetris T-Spin/B2B/Combo/Perfect Clear、赛事 Forfeit/Admin Recovery UI 和赛季系统。
 
-## 7. 消息协议（WebSocket）
+### P2
 
-| 方向 | 消息 | 说明 |
-|---|---|---|
-| C→S | hello | 声明 uid + proto（协议版本） |
-| S→C | hello_ack | 协议版本回执（v2.3+） |
-| C→S | register / login | PIN 账号 |
-| C→S | profile | 同步档案（含 lang/xp/level/streak） |
-| C→S | create / join / leave | 房间 |
-| C→S | invite / invite_accept / invite_decline | 邀请 |
-| C→S | select_game / start / end_game / restart | 游戏控制 |
-| C→S | move | 走子广播 |
-| C→S | result | 上报结果（含 xp） |
-| S→C | lobby / room_update / started | 大厅与房间 |
-| S→C | leaderboard / peer_left / error | 状态 |
+- PWA、微信小程序、App 与桌面发行适配。
+- 选择三款高复用游戏进行 GLB/Godot 试点，Web 继续保留 2D fallback。
 
----
+## 8. 凭证与部署
 
-## 8. 凭证与安全策略（重要）
-
-**完整密钥清单见 `WHITEPAPER-SECRET.md`（不在本公开版中，且已被 .gitignore 排除）。**
-
-- GitHub PAT / Render API Key / DeepSeek Key 都曾出现在对话里，**建议定期轮换**
-- 明文 token 绝不写入仓库（git 历史不可清除）
-- 凭证只存环境变量（Render Environment / 本机 .env / WHITEPAPER-SECRET.md 且 gitignore）
-- 本机 Node v20 需 `--experimental-websocket`；Node 22+ 可直接跑
-
----
-
-## 9. 活文档维护规则（给 AI 的更新指南）
-
-**每次代码变更后，按以下规则更新本文件：**
-
-1. 版本号：`## 版本` 处更新（如 v2.3 → v2.4）
-2. 已完成为清单：新功能移入「3. 已完成功能清单」
-3. Roadmap：勾选已完成项，新增待办项
-4. 消息协议：新增消息类型必须更新「7. 消息协议」表
-5. 目录结构：新增/删除模块更新「5. 目录结构」
-6. 测试命令：新增测试更新「6.2 测试」
-7. 密钥变化：只更新 WHITEPAPER-SECRET.md，**绝不更新公开版**
-
-**给新 AI 的首读顺序**：
-1. WHITEPAPER.md（本文件）—— 全局认知
-2. WHITEPAPER-SECRET.md —— 凭证（仅本机）
-3. AGENTS.md —— 协作纪律
-4. README.md —— 用户视角
-5. server/index.js handleMessage + public/src/online/03-websocket.js —— 协议实现
-6. 相关游戏模块 —— 具体功能
-
----
-
-## 10. 变更记录（Changelog）
-
-| 版本 | 日期 | 内容 |
-|---|---|---|
-| v2.0 | 2026-08-05 | i18n 三语言 + Settings + 语言旗帜 |
-| v2.1 | 2026-08-05 | Phase 0：文档/构建系统/触屏 |
-| v2.2 | 2026-08-05 | Phase 1：胜利动画 + Tetris 键盘 + 分享 |
-| v2.3 | 2026-08-05 | Phase 2：游戏插件化 + XP/等级/连胜 + 协议 v1 |
-| v2.4 | 2026-08-06 | Phase 3 进行中 + 本白皮书建立 |
+- 所有 Key/token 只放环境变量，不写入仓库或前端。
+- 前端推送 `main` 后由 GitHub Pages workflow 构建部署。
+- Render 服务通过 `node scripts/render-deploy.js` 手动触发部署。
+- Render 当前保持单实例；真实 Supabase 迁移/并发验收和多实例一致性改造完成前不应横向扩容。
+- 本机 Node 20 运行 WebSocket 测试需要 `--experimental-websocket`；Node 22+ 可直接运行。

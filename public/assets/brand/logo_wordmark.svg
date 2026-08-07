@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 96" role="img" aria-labelledby="title desc">
+  <title id="title">Playroom</title>
+  <desc id="desc">Mini Games Platform 英文品牌字标</desc>
+  <defs>
+    <linearGradient id="word" x1="24" y1="20" x2="380" y2="82" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#4f6ef7"/>
+      <stop offset="1" stop-color="#8b5cf6"/>
+    </linearGradient>
+  </defs>
+  <text x="16" y="65" fill="url(#word)" font-family="Segoe UI, Arial, sans-serif" font-size="58" font-weight="800" letter-spacing="1">Playroom</text>
+  <circle cx="374" cy="28" r="8" fill="#f5b83d"/>
+  <circle cx="397" cy="28" r="8" fill="#22a06b"/>
+</svg>
+

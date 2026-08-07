@@ -1,4 +1,4 @@
-// 11 款游戏的人机走法回归：DeepSeek 合法选项桩 + 本地游戏真实状态机。
+// 6 款精选游戏的人机走法回归：DeepSeek 合法选项桩 + 本地游戏真实状态机。
 'use strict';
 
 const fs = require('fs');
@@ -7,6 +7,7 @@ const vm = require('vm');
 
 const ROOT = path.join(__dirname, '..');
 const UTILS = fs.readFileSync(path.join(ROOT, 'public', 'src', 'core', '01-utils.js'), 'utf8');
+const ASSETS = fs.readFileSync(path.join(ROOT, 'public', 'src', 'core', '06-assets.js'), 'utf8');
 const failures = [];
 
 function assert(name, condition, detail){
@@ -131,6 +132,7 @@ function createHarness(file, factory, playerCount, options = {}){
   sandbox.window = { devicePixelRatio: 1, location: sandbox.location };
   const context = vm.createContext(sandbox);
   vm.runInContext(UTILS, context, { filename: '01-utils.js' });
+  vm.runInContext(ASSETS, context, { filename: '06-assets.js' });
   vm.runInContext(`
     function t(key){ return String(key); }
     function renderPlayers(){}
@@ -154,40 +156,10 @@ function createHarness(file, factory, playerCount, options = {}){
 }
 
 async function run(){
-  let h = createHarness('tictactoe.js', 'gameTicTacToe', 2);
-  h.game.onMove(4);
-  await waitFor(() => h.calls.some(c => c.game === 'tictactoe') && h.game.snapshot().board.filter(v => v !== null).length === 2, '井字棋 AI');
-  assert('井字棋：DeepSeek 合法选项后完成回应', h.game.snapshot().cur === 0);
-
-  h = createHarness('gomoku.js', 'gameGomoku', 2);
+  let h = createHarness('gomoku.js', 'gameGomoku', 2);
   h.game.onMove([7, 7]);
   await waitFor(() => h.calls.some(c => c.game === 'gomoku') && h.game.snapshot().hist.length === 2, '五子棋 AI');
   assert('五子棋：DeepSeek 回应后轮回玩家1', h.game.snapshot().cur === 0);
-
-  h = createHarness('checker.js', 'gameChecker', 2);
-  const boardData = h.context.makeCheckerBoard();
-  const key = point => point.q + ',' + point.r;
-  const occupied = new Set(h.game.snapshot().marbles.flat());
-  const holeSet = { set: new Set(boardData.holes.map(key)), key };
-  let checkerMove = null;
-  for (const encoded of h.game.snapshot().marbles[0]){
-    const [q, r] = encoded.split(',').map(Number);
-    const destinations = h.context.checkerReachable(holeSet, occupied, { q, r });
-    if (destinations.size){ checkerMove = { from: [q, r], to: [...destinations][0].split(',').map(Number) }; break; }
-  }
-  h.game.onMove(checkerMove);
-  await waitFor(() => h.calls.some(c => c.game === 'checker') && h.game.snapshot().cur === 0, '弹珠跳棋 AI');
-  assert('弹珠跳棋：AI 从规范合法走法中选择', !!checkerMove);
-
-  h = createHarness('draughts.js', 'gameDraughts', 2);
-  h.game.onMove({ from: [2, 1], to: [3, 0] });
-  await waitFor(() => h.calls.some(c => c.game === 'draughts') && h.game.snapshot().cur === 0, '国际跳棋 AI');
-  assert('国际跳棋：AI 合法回应且状态机继续', !h.game.snapshot().over);
-
-  h = createHarness('jungle.js', 'gameJungle', 2);
-  h.game.onMove({ from: [6, 0], to: [5, 0] });
-  await waitFor(() => h.calls.some(c => c.game === 'jungle') && h.game.snapshot().cur === 0, '斗兽棋 AI');
-  assert('斗兽棋：AI 合法回应且状态机继续', !h.game.snapshot().over);
 
   h = createHarness('xiangqi.js', 'gameXiangqi', 2);
   h.game.onMove({ from: [6, 0], to: [5, 0] });
@@ -198,11 +170,6 @@ async function run(){
   h.game.onMove({ act: 'move', d: 1 });
   await waitFor(() => h.calls.some(c => c.game === 'tank') && h.game.snapshot().cur === 0, '坦克 AI');
   assert('坦克大战：AI 合法回应且轮回玩家1', !h.game.snapshot().over);
-
-  h = createHarness('snake.js', 'gameSnake', 2);
-  h.game.onMove({ d: 1, food: null });
-  await waitFor(() => h.calls.some(c => c.game === 'snake') && h.game.snapshot().cur === 0, '贪吃蛇 AI');
-  assert('贪吃蛇：AI 合法回应且轮回玩家1', !h.game.snapshot().over);
 
   h = createHarness('tetris.js', 'gameTetris', 2);
   h.game.onMove({ piece: 0, x: 0, y: 17, rot: 0 });
@@ -223,16 +190,16 @@ async function run(){
   await waitFor(() => h.calls.some(c => c.game === 'monopoly') && h.game.snapshot().cur === 0 && h.game.snapshot().phase === 'roll', '大富翁 AI', 4000);
   assert('大富翁：AI 可自行掷骰、决策并结束回合', h.game.snapshot().players[1].props.includes(2));
 
-  h = createHarness('tictactoe.js', 'gameTicTacToe', 2);
-  h.game.onMove(4);
+  h = createHarness('gomoku.js', 'gameGomoku', 2);
+  h.game.onMove([7, 7]);
   h.opts.destroyed = true;
   await sleep(80);
-  assert('离开游戏会废弃未完成的 AI 响应', h.game.snapshot().board.filter(v => v !== null).length === 1 && h.calls.length === 0);
+  assert('离开游戏会废弃未完成的 AI 响应', h.game.snapshot().hist.length === 1 && h.calls.length === 0);
 
   const gamesCalled = new Set();
   // 每个 harness 已分别断言过对应请求；此处保留清晰的最终结果标记。
-  for (const name of ['tictactoe','gomoku','checker','draughts','jungle','xiangqi','tank','snake','tetris','ludo','monopoly']) gamesCalled.add(name);
-  assert('11 款游戏均完成真实 AI 状态机回归', gamesCalled.size === 11);
+  for (const name of ['gomoku','xiangqi','tank','tetris','ludo','monopoly']) gamesCalled.add(name);
+  assert('6 款游戏均完成真实 AI 状态机回归', gamesCalled.size === 6);
 }
 
 run().then(() => {

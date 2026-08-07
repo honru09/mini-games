@@ -236,8 +236,14 @@ function protectedState(profile){
     coins: Number(profile && profile.coins || 0),
     xp: Number(profile && profile.xp || 0),
     level: Number(profile && profile.level || 1),
+    streak: Number(profile && profile.streak || 0),
+    bestStreak: Number(profile && profile.bestStreak || 0),
+    dailyFirstWinDate: String(profile && profile.dailyFirstWinDate || ''),
+    dailyAICurrencyEarned: Number(profile && profile.dailyAICurrencyEarned || 0),
     total: Number(profile && profile.total || 0),
     played: JSON.stringify(profile && profile.played || {}),
+    totalWins: Number(profile && profile.totalWins || 0),
+    wins: JSON.stringify(profile && profile.wins || {}),
     owned: JSON.stringify(canonicalOwned(profile && profile.owned)),
   };
 }
@@ -330,7 +336,7 @@ function resultClaim(matchId, winnerSlot = 0){
     type: 'result',
     payload: {
       matchId,
-      game: 'tictactoe',
+      game: 'gomoku',
       results: [
         { slot: 0, coins: winnerSlot === 0 ? 1 : 0, rank: winnerSlot === 0 ? 1 : 2 },
         { slot: 1, coins: winnerSlot === 1 ? 1 : 0, rank: winnerSlot === 1 ? 1 : 2 },
@@ -361,10 +367,23 @@ async function startFirstMatch(host, guest){
 
 async function verifyMoveEnvelope(host, guest){
   const guestMark = guest.mark();
-  host.send({ type: 'move', payload: 0 });
-  const forwarded = await guest.waitAfter(guestMark, message => message.type === 'move', '井字棋数字落子被转发');
-  check('井字棋数字 payload 不被服务端误丢弃', forwarded.payload === 0, JSON.stringify(forwarded));
+  host.send({ type: 'move', payload: { r: 7, c: 7 } });
+  const forwarded = await guest.waitAfter(guestMark, message => message.type === 'move', '五子棋对象走子被转发');
+  check('五子棋对象 payload 不被服务端误丢弃', forwarded.payload && forwarded.payload.r === 7 && forwarded.payload.c === 7, JSON.stringify(forwarded));
   check('move 广播携带服务端认定的发送者编号', forwarded.player === 0, JSON.stringify(forwarded));
+}
+
+async function seedEligibleGomokuProgress(host, guest){
+  const moves = [[7,3],[3,3],[7,4],[3,4],[7,5],[3,5],[7,6],[3,6],[7,7]];
+  for (let i = 0; i < moves.length; i++){
+    const actor = i % 2 === 0 ? host : guest;
+    const observer = i % 2 === 0 ? guest : host;
+    const mark = observer.mark();
+    actor.send({ type: 'move', payload: moves[i] });
+    await observer.waitAfter(mark, message => message.type === 'move' &&
+      Array.isArray(message.payload) && Number(message.payload[0]) === moves[i][0] && Number(message.payload[1]) === moves[i][1],
+    '奖励资格五子棋进度 ' + (i + 1));
+  }
 }
 
 async function verifyMonopolyHostSettle(host, guest){
@@ -372,8 +391,8 @@ async function verifyMonopolyHostSettle(host, guest){
   const guestEndMark = guest.mark();
   host.send({ type: 'end_game' });
   await Promise.all([
-    host.waitAfter(hostEndMark, message => message.type === 'end_game', '权限测试前结束井字棋'),
-    guest.waitAfter(guestEndMark, message => message.type === 'end_game', '对手同步结束井字棋'),
+    host.waitAfter(hostEndMark, message => message.type === 'end_game', '权限测试前结束五子棋'),
+    guest.waitAfter(guestEndMark, message => message.type === 'end_game', '对手同步结束五子棋'),
   ]);
   const hostStartMark = host.mark();
   const guestStartMark = guest.mark();
@@ -390,6 +409,35 @@ async function verifyMonopolyHostSettle(host, guest){
   check('房主提前结算仍可正常广播', forwarded.player === 0, JSON.stringify(forwarded));
 }
 
+async function verifyTankAuthority(host, guest){
+  const endHostMark=host.mark(),endGuestMark=guest.mark();
+  host.send({type:'end_game'});
+  await Promise.all([
+    host.waitAfter(endHostMark,message=>message.type==='end_game','坦克中继测试前结束大富翁'),
+    guest.waitAfter(endGuestMark,message=>message.type==='end_game','对手结束大富翁'),
+  ]);
+  const hostStartMark=host.mark(),guestStartMark=guest.mark();
+  host.send({type:'select_game',payload:{game:'tank'}});
+  const [hostStarted,guestStarted]=await Promise.all([
+    host.waitAfter(hostStartMark,message=>message.type==='started'||isReject(message),'房主开始坦克中继测试'),
+    guest.waitAfter(guestStartMark,message=>message.type==='started'||isReject(message),'对手进入坦克中继测试'),
+  ]);
+  const matchId=matchIdOf(hostStarted);
+  check('坦克中继：双方收到同一 matchId',!!matchId&&matchId===matchIdOf(guestStarted));
+  const input={type:'tank_input',payload:{matchId,seq:1,clientTick:0,input:{right:true}}};
+  const hostInputMark=host.mark();guest.send(input);
+  const relayedInput=await host.waitAfter(hostInputMark,message=>message.type==='tank_snapshot'&&
+    Array.isArray(payloadOf(message).ack)&&payloadOf(message).ack[1]===1,'坦克输入进入服务端快照');
+  check('坦克权威：输入只作用于可信玩家槽位',payloadOf(relayedInput).players[1].input.right===true&&payloadOf(relayedInput).players[0].input.right===false,JSON.stringify(relayedInput));
+  const duplicate=await guest.request(input,message=>message.type==='gameplay_error','重复坦克 input seq 被拒绝');
+  check('坦克权威：重复 input seq 在服务端即被拒绝',payloadOf(duplicate).reason==='stale_seq',JSON.stringify(duplicate));
+  const legacy=await guest.request({type:'move',payload:{act:'move',d:1}},message=>message.type==='gameplay_error','坦克旧 move 被权威局拒绝');
+  check('坦克权威：正式局拒绝绕过模拟器的旧 move',payloadOf(legacy).reason==='legacy_move_rejected',JSON.stringify(legacy));
+  const forged=await guest.request({type:'result',payload:{matchId,game:'tank',results:[{slot:0,rank:2,coins:0},{slot:1,rank:1,coins:1}]}},message=>message.type==='result_error','坦克客户端伪造结算被拒绝');
+  check('坦克权威：客户端共识不能提前绕过服务端终局',forged.code==='authoritative_result_required'&&forged.protocol==='tank-authority-v1',JSON.stringify(forged));
+  check('坦克权威：快照明确来自服务端模拟协议',payloadOf(relayedInput).protocol==='tank-authority-v1'&&Number.isInteger(payloadOf(relayedInput).serverTick),JSON.stringify(relayedInput));
+}
+
 async function startSelectedMatch(host, guest, previousMatchId){
   if (previousMatchId){
     const hostEndMark = host.mark();
@@ -402,7 +450,7 @@ async function startSelectedMatch(host, guest, previousMatchId){
   }
   const hostMark = host.mark();
   const guestMark = guest.mark();
-  host.send({ type: 'select_game', payload: { game: 'tictactoe' } });
+  host.send({ type: 'select_game', payload: { game: 'gomoku' } });
   const [hostStarted, guestStarted] = await Promise.all([
     host.waitAfter(hostMark, message => message.type === 'started' || isReject(message), '房主收到 started'),
     guest.waitAfter(guestMark, message => message.type === 'started' || isReject(message), '对手收到 started'),
@@ -418,6 +466,7 @@ async function startSelectedMatch(host, guest, previousMatchId){
 }
 
 async function settleMatch(host, guest, accounts, matchId){
+  await seedEligibleGomokuProgress(host, guest);
   const beforeA = await getProfile(host, accounts.a.uid);
   const beforeB = await getProfile(guest, accounts.b.uid);
 
@@ -427,17 +476,28 @@ async function settleMatch(host, guest, accounts, matchId){
   const pendingB = await getProfile(guest, accounts.b.uid);
   check('只有一方 claim 时不结算', sameProtectedState(beforeA, pendingA) && sameProtectedState(beforeB, pendingB));
 
+  const resultMarkA = host.mark();
+  const resultMarkB = guest.mark();
   guest.send(resultClaim(matchId));
+  const [resultA, resultB] = await Promise.all([
+    host.waitAfter(resultMarkA, message => message.type === 'result_ok' && matchIdOf(message) === matchId, '胜方奖励明细'),
+    guest.waitAfter(resultMarkB, message => message.type === 'result_ok' && matchIdOf(message) === matchId, '负方奖励明细'),
+  ]);
+  const rewardA = payloadOf(resultA).reward || {};
+  const rewardB = payloadOf(resultB).reward || {};
   const settledA = await waitProfile(host, accounts.a.uid,
-    profile => Number(profile.coins || 0) === Number(beforeA.coins || 0) + 1 && Number(profile.total || 0) === Number(beforeA.total || 0) + 1,
+    profile => Number(profile.coins || 0) === Number(beforeA.coins || 0) + Number(rewardA.currency || 0) && Number(profile.total || 0) === Number(beforeA.total || 0) + 1,
     '双方一致 claim 后胜方结算');
   const settledB = await waitProfile(guest, accounts.b.uid,
-    profile => Number(profile.total || 0) === Number(beforeB.total || 0) + 1,
+    profile => Number(profile.coins || 0) === Number(beforeB.coins || 0) + Number(rewardB.currency || 0) && Number(profile.total || 0) === Number(beforeB.total || 0) + 1,
     '双方一致 claim 后负方结算');
-  check('一致 claim 后由服务端给胜方 +$1', Number(settledA.coins || 0) === Number(beforeA.coins || 0) + 1);
+  const firstWin = !beforeA.dailyFirstWinDate || beforeA.dailyFirstWinDate !== new Date().toISOString().slice(0, 10);
+  check('一致 claim 后服务端返回完整胜方 Reward Breakdown', rewardA.eligible === true &&
+    rewardA.currency === (firstWin ? 5 : 3) && rewardA.xp >= 12 && Array.isArray(rewardA.breakdown), JSON.stringify(rewardA));
   check('一致 claim 后双方各只增加一局', Number(settledA.total || 0) === Number(beforeA.total || 0) + 1 &&
     Number(settledB.total || 0) === Number(beforeB.total || 0) + 1);
-  check('负方不能凭 result 获得金币', Number(settledB.coins || 0) === Number(beforeB.coins || 0));
+  check('联机失败方仍获得 1💵 / 8 XP', rewardB.currency === 1 && rewardB.xp === 8 &&
+    Number(settledB.coins || 0) === Number(beforeB.coins || 0) + 1, JSON.stringify(rewardB));
 
   host.send(resultClaim(matchId));
   guest.send(resultClaim(matchId));
@@ -448,13 +508,175 @@ async function settleMatch(host, guest, accounts, matchId){
   return { a: replayA, b: replayB };
 }
 
+async function settleInvalidMatch(host, guest, accounts, matchId){
+  const beforeA = await getProfile(host, accounts.a.uid);
+  const beforeB = await getProfile(guest, accounts.b.uid);
+  const markA = host.mark();
+  const markB = guest.mark();
+  host.send(resultClaim(matchId));
+  await host.waitAfter(markA, message => message.type === 'result_pending', '无进度局第一方等待共识');
+  guest.send(resultClaim(matchId));
+  const [ackA, ackB] = await Promise.all([
+    host.waitAfter(markA, message => message.type === 'result_ok' && matchIdOf(message) === matchId, '无进度局胜方回执'),
+    guest.waitAfter(markB, message => message.type === 'result_ok' && matchIdOf(message) === matchId, '无进度局负方回执'),
+  ]);
+  const rewardA = payloadOf(ackA).reward || {};
+  const rewardB = payloadOf(ackB).reward || {};
+  const afterA = await getProfile(host, accounts.a.uid);
+  const afterB = await getProfile(guest, accounts.b.uid);
+  check('秒投/无进度局双方奖励与 XP 均为 0', rewardA.eligible === false && rewardB.eligible === false &&
+    rewardA.currency === 0 && rewardA.xp === 0 && rewardB.currency === 0 && rewardB.xp === 0,
+  JSON.stringify({ rewardA, rewardB }));
+  check('无效局不增加正式场次、金币、XP 或连胜', sameProtectedState(beforeA, afterA) && sameProtectedState(beforeB, afterB));
+}
+
+async function completeAiMatch(client, result, suffix){
+  const clientRunId = 'run_' + String(suffix || '') + '_' + crypto.randomUUID();
+  const started = await client.request(
+    { type: 'solo_start', payload: { game: 'gomoku', clientRunId } },
+    message => message.type === 'solo_started' || isReject(message),
+    '服务端签发人机对局票据',
+  );
+  if (started.type !== 'solo_started') throw new Error('人机票据签发失败：' + rejectReason(started));
+  const ticket = payloadOf(started);
+  [[7,7],[7,8],[8,7],[8,8]].forEach(action => client.send({
+    type: 'solo_progress', payload: { matchId: ticket.matchId, game: 'gomoku', action },
+  }));
+  const response = await client.request({
+    type: 'result',
+    payload: { mode: 'ai', game: 'gomoku', matchId: ticket.matchId, resultId: ticket.resultId, result },
+  }, message => message.type === 'result_ok' || isReject(message), '服务端人机结算');
+  return { ticket, response, reward: payloadOf(response).reward || {} };
+}
+
+async function verifyAiActionReplayDedup(client){
+  const started = await client.request(
+    { type: 'solo_start', payload: { game: 'gomoku', clientRunId: 'run_replay_' + crypto.randomUUID() } },
+    message => message.type === 'solo_started' || isReject(message),
+    'AI 重放幂等票据',
+  );
+  if (started.type !== 'solo_started') throw new Error('AI 重放测试票据签发失败：' + rejectReason(started));
+  const ticket = payloadOf(started);
+  const duplicate = { actionId: 'act_replay_0001', payload: [7, 7] };
+  for (let i = 0; i < 4; i++) client.send({
+    type: 'solo_progress', payload: { matchId: ticket.matchId, game: 'gomoku', action: duplicate },
+  });
+  const response = await client.request({
+    type: 'result',
+    payload: { mode: 'ai', game: 'gomoku', matchId: ticket.matchId, resultId: ticket.resultId, result: 'win' },
+  }, message => message.type === 'result_ok' || isReject(message), 'AI 重放结算');
+  const reward = payloadOf(response).reward || {};
+  check('AI 相同 actionId 重放不重复计入有效操作', reward.eligible === false &&
+    reward.currency === 0 && reward.xp === 0 && ['insufficient_actions', 'insufficient_progress'].includes(reward.blockedReason),
+  JSON.stringify(reward));
+}
+
+async function verifyThreePlayerSettlement(wsUrl){
+  const suffix = crypto.randomBytes(5).toString('hex');
+  const accounts = [0, 1, 2].map(slot => ({ uid: 'u_multi' + slot + suffix, pin: 'Multi' + slot + suffix, name: '多人' + slot }));
+  const bootstrap = await Promise.all(accounts.map((account, slot) => new WsClient('multi-register-' + slot, wsUrl).open()));
+  const registered = await Promise.all(bootstrap.map((client, slot) => register(client, accounts[slot])));
+  bootstrap.forEach(client => client.close());
+  await sleep(60);
+  const players = await Promise.all(registered.map((account, slot) => authenticate('multi-auth-' + slot, wsUrl, account)));
+  const [host, second, third] = players;
+  const created = await host.request({ type: 'create', payload: { capacity: 3 } },
+    message => message.type === 'created' || isReject(message), '创建三人奖励房间');
+  if (created.type !== 'created') throw new Error('三人房创建失败：' + rejectReason(created));
+  const room = String(created.room || payloadOf(created).room || '');
+  const hostRoomMark = host.mark();
+  await second.request({ type: 'join', payload: { room } }, message => message.type === 'joined' || isReject(message), '第二人加入三人房');
+  await host.waitAfter(hostRoomMark, message => message.type === 'room_update' && Number(payloadOf(message).size) === 2, '三人房第二人加入同步');
+  const hostFullMark = host.mark();
+  await third.request({ type: 'join', payload: { room } }, message => message.type === 'joined' || isReject(message), '第三人加入三人房');
+  await host.waitAfter(hostFullMark, message => message.type === 'room_update' && Number(payloadOf(message).size) === 3, '三人房满员同步');
+  const startedMarks = players.map(client => client.mark());
+  host.send({ type: 'select_game', payload: { game: 'monopoly' } });
+  const started = await Promise.all(players.map((client, index) => client.waitAfter(startedMarks[index],
+    message => message.type === 'started' || isReject(message), '三人局 started ' + index)));
+  const matchId = matchIdOf(started[0]);
+  check('三人局向全部玩家下发同一 matchId', started.every(message => message.type === 'started' && matchIdOf(message) === matchId),
+    JSON.stringify(started));
+  const actions = [
+    [host, { roll: [1, 2] }], [second, { roll: [2, 3] }], [third, { roll: [3, 4] }],
+    [host, { decision: 'buy' }], [second, { decision: 'pass' }], [third, { decision: 'buy' }],
+    [host, { roll: [4, 5] }], [second, { decision: 'buy' }],
+  ];
+  for (const [actor, payload] of actions) actor.send({ type: 'move', payload });
+  await sleep(120);
+  const before = await Promise.all(registered.map((account, index) => getProfile(players[index], account.uid)));
+  const results = [
+    { slot: 0, coins: 1, rank: 1 }, { slot: 1, coins: 0, rank: 2 }, { slot: 2, coins: 0, rank: 3 },
+  ];
+  const resultMarks = players.map(client => client.mark());
+  players.forEach(client => client.send({ type: 'result', payload: { matchId, game: 'monopoly', results } }));
+  const settled = await Promise.all(players.map((client, index) => client.waitAfter(resultMarks[index],
+    message => message.type === 'result_ok' && matchIdOf(message) === matchId, '三人局结果回执 ' + index)));
+  const rewards = settled.map(message => payloadOf(message).reward || {});
+  const after = await Promise.all(registered.map((account, index) => getProfile(players[index], account.uid)));
+  check('三人名次结算返回第 1/2/3 名独立奖励',
+    JSON.stringify(rewards.map(reward => [reward.placement, reward.currency, reward.xp])) === JSON.stringify([[1,6,19],[2,3,12],[3,2,10]]),
+  JSON.stringify(rewards));
+  check('三人名次结算分别写入金币、XP 与正式场次', after.every((profile, index) =>
+    Number(profile.coins || 0) === Number(before[index].coins || 0) + [6,3,2][index] &&
+    Number(profile.xp || 0) === Number(before[index].xp || 0) + [19,12,10][index] &&
+    Number(profile.total || 0) === Number(before[index].total || 0) + 1),
+  JSON.stringify({ before, after }));
+  players.forEach(client => client.send({ type: 'leave' }));
+  await sleep(60);
+}
+
+async function verifyNormalForfeit(host, guest, accounts, previousMatchId){
+  const matchId = await startSelectedMatch(host, guest, previousMatchId);
+  await seedEligibleGomokuProgress(host, guest);
+  const beforeA = await getProfile(host, accounts.a.uid);
+  const beforeB = await getProfile(host, accounts.b.uid);
+  const hostMark = host.mark();
+  const guestMark = guest.mark();
+  guest.send({ type: 'leave' });
+  const [hostRewardMessage, guestRewardMessage] = await Promise.all([
+    host.waitAfter(hostMark, message => message.type === 'result_ok' && matchIdOf(message) === matchId, '正常投降胜方奖励'),
+    guest.waitAfter(guestMark, message => message.type === 'result_ok' && matchIdOf(message) === matchId, '正常投降败方奖励'),
+  ]);
+  const hostReward = payloadOf(hostRewardMessage).reward || {};
+  const guestReward = payloadOf(guestRewardMessage).reward || {};
+  const afterA = await getProfile(host, accounts.a.uid);
+  const afterB = await getProfile(host, accounts.b.uid);
+  check('达到有效进度后的主动投降按正常胜负奖励', hostReward.currency === 3 && guestReward.currency === 1 &&
+    afterA.total === beforeA.total + 1 && afterB.total === beforeB.total + 1,
+  JSON.stringify({ hostReward, guestReward }));
+  host.send({ type: 'leave' });
+  await sleep(100);
+}
+
+async function verifyAfkForfeit(host, guest, accounts){
+  const matchId = await startFirstMatch(host, guest);
+  await seedEligibleGomokuProgress(host, guest);
+  const beforeA = await getProfile(host, accounts.a.uid);
+  const beforeB = await getProfile(host, accounts.b.uid);
+  const hostMark = host.mark();
+  guest.send({ type: 'debug_disconnect' });
+  const resultMessage = await host.waitAfter(hostMark,
+    message => message.type === 'result_ok' && matchIdOf(message) === matchId,
+    'AFK 重连超时后的胜方奖励', 6000);
+  await host.waitAfter(hostMark, message => message.type === 'reconnect_expired', 'AFK 席位释放', 6000);
+  const reward = payloadOf(resultMessage).reward || {};
+  const afterA = await getProfile(host, accounts.a.uid);
+  const afterB = await getProfile(host, accounts.b.uid);
+  check('有效进度后 AFK：其他玩家正常获胜，挂机方不获失败奖励', reward.eligible === true && reward.currency === 3 &&
+    afterA.total === beforeA.total + 1 && sameProtectedState(beforeB, afterB),
+  JSON.stringify({ reward, beforeB: protectedState(beforeB), afterB: protectedState(afterB) }));
+  host.send({ type: 'leave' });
+  await sleep(100);
+}
+
 async function disputeMatch(host, guest, accounts, matchId){
   const beforeA = await getProfile(host, accounts.a.uid);
   const beforeB = await getProfile(guest, accounts.b.uid);
   await expectRejected(host, {
     type: 'result',
     payload: {
-      game: 'tictactoe',
+      game: 'gomoku',
       results: [
         { slot: 0, coins: 1, rank: 1 },
         { slot: 1, coins: 0, rank: 2 },
@@ -555,7 +777,7 @@ async function runAccountAndProfileTests(wsUrl){
       xp: 999999,
       level: 99,
       total: 999999,
-      played: { tictactoe: 999999 },
+      played: { gomoku: 999999 },
       pin_hash: hackedPinHash,
       owned: { avatars: [55], frames: [8], effects: [4], backgrounds: [10] },
     },
@@ -600,15 +822,18 @@ async function runResultAndPurchaseTests(context){
   await verifyMoveEnvelope(authA, authB);
   await disputeMatch(authA, authB, context, matchId);
   matchId = await startSelectedMatch(authA, authB, matchId);
+  await settleInvalidMatch(authA, authB, context, matchId);
+  matchId = await startSelectedMatch(authA, authB, matchId);
   await settleMatch(authA, authB, context, matchId);
   for (let i = 0; i < 2; i++){
     const next = await startSelectedMatch(authA, authB, matchId);
     matchId = next;
     await settleMatch(authA, authB, context, matchId);
   }
+  await verifyNormalForfeit(authA, authB, context, matchId);
 
   const beforePurchase = await getProfile(authA, context.a.uid);
-  check('合法一致结算可获得商城最低价所需 $3', Number(beforePurchase.coins || 0) === 3,
+  check('合法一致结算可获得商城最低价所需余额', Number(beforePurchase.coins || 0) >= 10,
     'coins=' + Number(beforePurchase.coins || 0));
   const requestId = 'purchase-' + crypto.randomUUID();
   const purchase = {
@@ -622,8 +847,8 @@ async function runResultAndPurchaseTests(context){
   );
   check('合法商城购买成功', purchaseResponse.type === 'purchase_ok', JSON.stringify(purchaseResponse));
   const afterPurchase = await getProfile(authA, context.a.uid);
-  check('purchase 忽略伪造 price 并按服务端定价扣 $3',
-    Number(beforePurchase.coins || 0) - Number(afterPurchase.coins || 0) === 3,
+  check('purchase 忽略伪造 price 并按服务端定价扣 💵10',
+    Number(beforePurchase.coins || 0) - Number(afterPurchase.coins || 0) === 10,
     'before=' + beforePurchase.coins + ', after=' + afterPurchase.coins);
   check('purchase 只由服务端写入 owned', canonicalOwned(afterPurchase.owned).backgrounds.includes(1),
     JSON.stringify(afterPurchase.owned));
@@ -641,7 +866,9 @@ async function runResultAndPurchaseTests(context){
   const afterOwnedRetry = await getProfile(authA, context.a.uid);
   check('已拥有商品用新 requestId 重试也不重复扣款', sameProtectedState(afterPurchase, afterOwnedRetry));
 
+  await startFirstMatch(authA, authB);
   await verifyMonopolyHostSettle(authA, authB);
+  await verifyTankAuthority(authA, authB);
   const endMarkA = authA.mark();
   const endMarkB = authB.mark();
   authA.send({ type: 'end_game' });
@@ -652,24 +879,45 @@ async function runResultAndPurchaseTests(context){
   authA.send({ type: 'leave' });
   authB.send({ type: 'leave' });
   await sleep(120);
-  const soloBefore = await getProfile(authA, context.a.uid);
-  const soloId = 'solo_' + crypto.randomUUID();
-  const soloResult = { type: 'result', payload: { mode: 'solo', resultId: soloId, game: 'tictactoe', coins: 1 } };
-  const soloFirst = await authA.request(soloResult, message => message.type === 'result_ok' || isReject(message), '首次单机结算');
-  check('合法单机 resultId 可结算', soloFirst.type === 'result_ok', JSON.stringify(soloFirst));
-  const soloSettled = await getProfile(authA, context.a.uid);
-  authA.send(soloResult);
+  const aiBefore = await getProfile(authA, context.a.uid);
+  const aiFirst = await completeAiMatch(authA, 'win', 'first');
+  check('人机奖励必须绑定服务端票据并返回 1💵 / 8 XP', aiFirst.response.type === 'result_ok' &&
+    aiFirst.reward.currency === 1 && aiFirst.reward.xp === 8, JSON.stringify(aiFirst.response));
+  const aiSettled = await getProfile(authA, context.a.uid);
+  const replayPayload = {
+    type: 'result', payload: {
+      mode: 'ai', game: 'gomoku', matchId: aiFirst.ticket.matchId,
+      resultId: aiFirst.ticket.resultId, result: 'win',
+    },
+  };
+  authA.send(replayPayload);
   await sleep(160);
-  const soloReplay = await getProfile(authA, context.a.uid);
-  check('单机 resultId 重放不重复奖励',
-    Number(soloSettled.coins || 0) === Number(soloBefore.coins || 0) + 1 && sameProtectedState(soloSettled, soloReplay));
+  const aiReplay = await getProfile(authA, context.a.uid);
+  check('人机 resultId 重放不重复奖励',
+    Number(aiSettled.coins || 0) === Number(aiBefore.coins || 0) + 1 && sameProtectedState(aiSettled, aiReplay));
+
+  const aiSecond = await completeAiMatch(authA, 'win', 'second');
+  const aiThird = await completeAiMatch(authA, 'win', 'third');
+  const aiFourth = await completeAiMatch(authA, 'win', 'fourth');
+  check('AI 每日最多产生 3💵，达到上限后仍获得 XP',
+    aiSecond.reward.currency === 1 && aiThird.reward.currency === 1 && aiFourth.reward.currency === 0 && aiFourth.reward.xp === 8,
+  JSON.stringify([aiSecond.reward, aiThird.reward, aiFourth.reward]));
+
+  const beforeLegacy = await getProfile(authA, context.a.uid);
+  await expectRejected(authA, {
+    type: 'result', payload: { mode: 'solo', game: 'gomoku', resultId: 'solo_' + crypto.randomUUID(), coins: 1 },
+  }, '客户端自造旧版单机奖励');
+  const afterLegacy = await getProfile(authA, context.a.uid);
+  check('本地热座/旧版 solo payload 无法刷正式货币', sameProtectedState(beforeLegacy, afterLegacy));
+
+  await verifyAfkForfeit(authA, authB, context);
 }
 
 async function runAITests(port, token){
   const origin = 'http://127.0.0.1:' + port;
   const normalBody = JSON.stringify({
-    game: 'tictactoe',
-    state: { board: Array(9).fill(null) },
+    game: 'gomoku',
+    state: { grid: Array.from({ length: 15 }, () => Array(15).fill(-1)) },
     options: ['0,0'],
   });
   const noToken = await httpRequest(port, {
@@ -694,7 +942,7 @@ async function runAITests(port, token){
   check('恶意 Origin 响应不返回通配 CORS', evilOrigin.headers['access-control-allow-origin'] !== '*');
 
   const oversized = JSON.stringify({
-    game: 'tictactoe',
+    game: 'gomoku',
     state: 'x'.repeat(120000),
     options: ['0,0'],
   });
@@ -774,6 +1022,7 @@ async function main(){
       PORT: String(port),
       DATA_DIR: dataDir,
       NODE_ENV: 'test',
+      ENABLE_RULE_AUTHORITY_V2: '0',
       DEEPSEEK_KEY: '',
       SUPABASE_URL: '',
       SUPABASE_KEY: '',
@@ -782,6 +1031,8 @@ async function main(){
       SESSION_SECRET: 'qa-only-' + crypto.randomBytes(32).toString('hex'),
       ALLOWED_ORIGINS: allowedOrigin,
       CORS_ORIGINS: allowedOrigin,
+      REWARD_TEST_MIN_DURATION_MS: '0',
+      RECONNECT_GRACE_MS: '1000',
     },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
@@ -792,6 +1043,8 @@ async function main(){
   const wsUrl = 'ws://127.0.0.1:' + port + '/ws';
   const context = await runAccountAndProfileTests(wsUrl);
   await runResultAndPurchaseTests(context);
+  await verifyThreePlayerSettlement(wsUrl);
+  await verifyAiActionReplayDedup(context.authA);
   await runAITests(port, context.a.token);
   await runWebSocketAbuseTests(wsUrl, { uid: context.a.uid, token: context.a.token });
 }

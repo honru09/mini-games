@@ -1,0 +1,124 @@
+{
+  "schemaVersion": 1,
+  "productVersion": "3.0",
+  "productBaseline": {
+    "gameCount": 6,
+    "runtimeIds": ["gomoku", "ludo", "monopoly", "tank", "tetris", "xiangqi"]
+  },
+  "assets": [
+    {
+      "asset_id": "P-001-MARK",
+      "runtime_id": "platform",
+      "runtime_path": "public/assets/brand/logo_mark.svg",
+      "logical_size": "24/48/96 CSS px",
+      "pixel_size": "vector",
+      "status": "integrated",
+      "fallback": "🎮",
+      "load": "initial",
+      "a11y": "Playroom 品牌标志；调用方提供可读名称",
+      "license": "project-owned"
+    },
+    {
+      "asset_id": "P-001-WORDMARK",
+      "runtime_id": "platform",
+      "runtime_path": "public/assets/brand/logo_wordmark.svg",
+      "logical_size": "210x48 CSS px",
+      "pixel_size": "vector",
+      "status": "ready",
+      "fallback": "Playroom",
+      "load": "on demand",
+      "a11y": "Mini Games Platform 英文品牌字标",
+      "license": "project-owned"
+    },
+    {
+      "asset_id": "P-003",
+      "runtime_id": "platform",
+      "runtime_path": "public/assets/ui/currency_cash.svg",
+      "logical_size": "16/24/32 CSS px",
+      "pixel_size": "vector",
+      "status": "integrated",
+      "fallback": "💵",
+      "load": "initial",
+      "a11y": "平台虚拟现金；不代表真实法币或可提现余额",
+      "license": "project-owned"
+    },
+    {
+      "asset_id": "G-02-COVER",
+      "catalog_key": "GAME_ART.gomoku.cover",
+      "runtime_id": "gomoku",
+      "runtime_path": "public/assets/ui/game_covers/game_gomoku.webp",
+      "variants": {
+        "320w": "public/assets/ui/game_covers/game_gomoku_320.webp"
+      },
+      "logical_size": "responsive 16:9",
+      "pixel_size": "640x360 WebP; 320x180 WebP",
+      "status": "integrated",
+      "fallback": "⚫ lobby icon",
+      "load": "lobby lazy",
+      "a11y": "装饰性封面；游戏名称与说明由可读 HTML 提供",
+      "license": "project-owned-ai-generated",
+      "source": "art-source/games/gomoku/cover_master.png",
+      "integrity": "sha256:cf1e338650fbb1bfa3d6a34f37d4a6cfa7c52ed989616e8a571bf89fc1e21dd7",
+      "feature_flag": "mg_art_gomoku_v1"
+    },
+    {
+      "asset_id": "G-02-BOARD-SURFACE",
+      "catalog_key": "GAME_ART.gomoku.board",
+      "runtime_id": "gomoku",
+      "runtime_path": "public/assets/board/gomoku/mg_board_gomoku_surface_v01.webp",
+      "logical_size": "Canvas 520x520 CSS px",
+      "pixel_size": "1024x1024 WebP",
+      "status": "integrated",
+      "fallback": "Canvas gradient background",
+      "load": "selected game",
+      "a11y": "仅提供木纹和边框；15x15 网格、星位、棋子与状态仍由 Canvas 绘制",
+      "license": "project-owned-ai-generated",
+      "source": "art-source/games/gomoku/board_surface_master.png",
+      "integrity": "sha256:6aee61b0425b31551c0b5c83795a4937047ca95f6542b37d0879391a3d0b10f8",
+      "feature_flag": "mg_art_gomoku_v1"
+    },
+    {
+      "asset_id": "G-11-COVER",
+      "catalog_key": "GAME_ART.tetris.cover",
+      "runtime_id": "tetris",
+      "runtime_path": "public/assets/ui/game_covers/game_tetris.webp",
+      "variants": {
+        "320w": "public/assets/ui/game_covers/game_tetris_320.webp"
+      },
+      "logical_size": "responsive 16:9",
+      "pixel_size": "640x360 WebP; 320x180 WebP",
+      "status": "integrated",
+      "fallback": "🧱 lobby icon",
+      "load": "lobby lazy",
+      "a11y": "装饰性封面；游戏名称与说明由可读 HTML 提供",
+      "license": "project-owned-ai-generated",
+      "source": "art-source/games/tetris/cover_master.png",
+      "integrity": "sha256:88c00b4b6a741f9b854bc03ba51cd81086434b651e8acb031608f32c1e882dcf",
+      "feature_flag": "mg_art_tetris_v1"
+    },
+    {
+      "asset_id": "G-11-WELL-SURFACE",
+      "catalog_key": "GAME_ART.tetris.board",
+      "runtime_id": "tetris",
+      "runtime_path": "public/assets/board/tetris/mg_board_tetris_well_v01.webp",
+      "logical_size": "10x18 responsive DOM well",
+      "pixel_size": "640x1152 WebP",
+      "status": "integrated",
+      "fallback": "CSS dark well and exact grid",
+      "load": "selected game",
+      "a11y": "仅提供玻璃井氛围；10x18 网格、方块与状态由 DOM/CSS 绘制",
+      "license": "project-owned-ai-generated",
+      "source": "art-source/games/tetris/well_surface_master.png",
+      "integrity": "sha256:cb1a892ee06a777ff79553566974a9a51b17abd8deb3005efae38fe2a7a46469",
+      "feature_flag": "mg_art_tetris_v1"
+    }
+  ],
+  "games": [
+    { "runtime_id": "gomoku", "cover": "integrated-v1", "board": "bitmap-surface+canvas-grid-v1", "pieces": "canvas-soft3d-v1", "states": "last-move+win-line", "audio": "webaudio-fallback", "feature_flag": "mg_art_gomoku_v1" },
+    { "runtime_id": "ludo", "cover": "pending", "board": "css-dom-fallback" },
+    { "runtime_id": "monopoly", "cover": "pending", "board": "css-dom-fallback" },
+    { "runtime_id": "tank", "cover": "pending", "board": "css-dom-fallback" },
+    { "runtime_id": "tetris", "cover": "integrated-v1", "board": "bitmap-surface+css-grid-v1", "pieces": "css-glass-v1", "states": "active+ghost+locked+clear", "audio": "webaudio-fallback", "feature_flag": "mg_art_tetris_v1" },
+    { "runtime_id": "xiangqi", "cover": "pending", "board": "css-canvas-fallback" }
+  ]
+}

@@ -9,22 +9,21 @@ function openAuthModal(mode){
     card.innerHTML = "";
     const hero = el("div","auth-hero");
     hero.appendChild(el("div","big", m === "register" ? "✨" : "🔑"));
-    hero.appendChild(el("h2", null, m === "register" ? "创建你的账号" : "PIN 登录"));
-    hero.appendChild(el("p", null, m === "register" ? "设置昵称、头像、背景，并创建一个专属 PIN 码。以后在任何设备输入 PIN 即可登录，账号永不丢失。" : "输入注册时设置的 PIN 码即可登录（仅限字母和数字）。"));
+    hero.appendChild(el("h2", null, t(m === "register" ? 'register_title' : 'login_title')));
+    hero.appendChild(el("p", null, t(m === "register" ? 'register_intro' : 'login_intro')));
     card.appendChild(hero);
     if (m === "register"){
       let avatar = 0, bg = 0, catTab = "all";
       const nameInput = el("input","nick-input");
       nameInput.type = "text"; nameInput.maxLength = 12;
-      nameInput.placeholder = "昵称（12 字以内）";
+      nameInput.placeholder = t('profile_name_placeholder');
       card.appendChild(nameInput);
-      const avLabel = el("div","lb-note","选择头像（30 款免费，商城还有 26 款主题头像）");
+      const avLabel = el("div","lb-note",t('auth_avatar_note'));
       card.appendChild(avLabel);
       const catTabs = el("div","shop-tabs");
       const cats = [
-        {id:"all",name:"全部"},{id:"basic",name:"🎲 基础"},{id:"theme",name:"✨ 主题"},
-        {id:"fantasy",name:"👑 幻想"},{id:"animals",name:"🐾 动物"},
-        {id:"profession",name:"💼 职业"},{id:"creative",name:"🎨 创意"},
+        {id:"all"},{id:"basic"},{id:"theme"},{id:"fantasy"},{id:"animals"},
+        {id:"profession"},{id:"creative"},
       ];
       const grid = el("div","avatar-grid auth-avatar-grid");
       function renderAvatarGrid(){
@@ -35,12 +34,12 @@ function openAuthModal(mode){
           const opt = el("button","avatar-opt" + (i === avatar ? " selected" : "") + (locked ? " locked" : ""));
           opt.type = "button";
           opt.appendChild(avatarCanvas(i, 26));
-          opt.setAttribute("aria-label", "头像 " + (i+1));
+          opt.setAttribute("aria-label", t('profile_avatar_aria',i+1));
           if (locked){
             const meta = avatarMeta(i);
-            opt.appendChild(el("span","avatar-lock","🔒$" + (meta ? meta.price : 0)));
+            opt.appendChild(el("span","avatar-lock","🔒" + CURRENCY + (meta ? meta.price : 0)));
             opt.addEventListener("click", () => {
-              toast("「" + (meta ? meta.name : "头像") + "」需注册后在商城购买（$" + (meta ? meta.price : 0) + "）");
+              toast(t('auth_avatar_locked', meta ? shopItemName('avatars', meta) : t('shop_tab_avatars'), CURRENCY, meta ? meta.price : 0));
             });
           } else {
             opt.addEventListener("click", () => {
@@ -55,7 +54,7 @@ function openAuthModal(mode){
       }
       cats.forEach(c => {
         const tb = el("button","btn shop-tab" + (catTab === c.id ? " btn-primary" : ""));
-        tb.textContent = c.name;
+        tb.textContent = t('avatar_category_' + c.id);
         tb.addEventListener("click", () => {
           catTab = c.id;
           catTabs.querySelectorAll(".shop-tab").forEach(t => t.classList.remove("btn-primary"));
@@ -72,10 +71,10 @@ function openAuthModal(mode){
       card.appendChild(preview);
       card.appendChild(grid);
       renderAvatarGrid();
-      card.appendChild(el("div","lb-note","选择背景"));
+      card.appendChild(el("div","lb-note",t('profile_background')));
       const bgGrid = el("div","bg-grid");
       const defSw = el("div","bg-swatch" + (bg === 0 ? " selected" : "") + " bg-0");
-      defSw.title = "默认";
+      defSw.title = t('default_label');
       defSw.addEventListener("click", () => {
         bg = 0;
         bgGrid.querySelectorAll(".bg-swatch").forEach(x => x.classList.toggle("selected", x === defSw));
@@ -83,7 +82,7 @@ function openAuthModal(mode){
       bgGrid.appendChild(defSw);
       SHOP.backgrounds.forEach(b => {
         const sw = el("div","bg-swatch" + (b.id === bg ? " selected" : "") + " " + b.cls);
-        sw.title = b.name;
+        sw.title = shopItemName('backgrounds', b);
         sw.addEventListener("click", () => {
           bg = b.id;
           bgGrid.querySelectorAll(".bg-swatch").forEach(x => x.classList.toggle("selected", x === sw));
@@ -93,38 +92,38 @@ function openAuthModal(mode){
       card.appendChild(bgGrid);
       const pinInput = el("input","nick-input");
       pinInput.type = "password"; pinInput.autocomplete = "new-password"; pinInput.setAttribute("autocomplete", "new-password"); pinInput.maxLength = 20;
-      pinInput.placeholder = "设置 PIN 码（4-20 位，仅字母和数字）";
+      pinInput.placeholder = t('auth_pin_create_placeholder');
       card.appendChild(pinInput);
       const pin2 = el("input","nick-input");
       pin2.type = "password"; pin2.autocomplete = "new-password"; pin2.setAttribute("autocomplete", "new-password"); pin2.maxLength = 20;
-      pin2.placeholder = "再次输入 PIN 码确认";
+      pin2.placeholder = t('auth_pin_confirm_placeholder');
       card.appendChild(pin2);
-      card.appendChild(el("p","pin-hint","PIN 是唯一识别你账号的代码，登录时使用，请务必牢记。"));
-      const submit = el("button","btn btn-primary","创建账号");
+      card.appendChild(el("p","pin-hint",t('auth_pin_hint')));
+      const submit = el("button","btn btn-primary",t('register_btn'));
       submit.addEventListener("click", () => {
         const nm = nameInput.value.trim();
-        if (!nm){ toast("请输入昵称"); return; }
-        if (pinInput.value !== pin2.value){ toast("两次输入的 PIN 不一致"); return; }
-        if (!/^[A-Za-z0-9]{4,20}$/.test(pinInput.value)){ toast("PIN 只能包含字母和数字，长度 4-20 位"); return; }
+        if (!nm){ toast(t('name_required')); return; }
+        if (pinInput.value !== pin2.value){ toast(t('pin_mismatch')); return; }
+        if (!/^[A-Za-z0-9]{4,20}$/.test(pinInput.value)){ toast(t('pin_invalid')); return; }
         registerAccount(nm, pinInput.value, avatar, bg, 0, 0);
       });
       card.appendChild(submit);
-      const toLogin = el("button","btn btn-ghost","已有账号？输入 PIN 登录");
+      const toLogin = el("button","btn btn-ghost",t('register_switch_login'));
       toLogin.addEventListener("click", () => { m = "login"; render(); });
       card.appendChild(toLogin);
     } else {
       const pinInput = el("input","nick-input");
       pinInput.type = "password"; pinInput.autocomplete = "current-password"; pinInput.setAttribute("autocomplete", "current-password"); pinInput.maxLength = 20;
-      pinInput.placeholder = "输入 PIN 码";
+      pinInput.placeholder = t('auth_pin_login_placeholder');
       card.appendChild(pinInput);
-      const submit = el("button","btn btn-primary","登录");
+      const submit = el("button","btn btn-primary",t('login_btn'));
       submit.addEventListener("click", () => loginAccount(pinInput.value));
       card.appendChild(submit);
-      const toReg = el("button","btn btn-ghost","没有账号？去注册");
+      const toReg = el("button","btn btn-ghost",t('login_switch_register'));
       toReg.addEventListener("click", () => { m = "register"; render(); });
       card.appendChild(toReg);
     }
-    const cancel = el("button","btn","取消");
+    const cancel = el("button","btn",t('cancel'));
     cancel.addEventListener("click", () => bd.remove());
     card.appendChild(cancel);
   }

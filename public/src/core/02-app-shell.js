@@ -7,22 +7,33 @@ let currentGameId = null;
 
 /* ================= Settings 设置系统 ================= */
 function openSettingsPage() {
+  const localizedLabel = (tag, className, icon, key) => {
+    const node = el(tag, className || null);
+    if (icon) node.appendChild(el('span', null, icon + ' '));
+    const label = el('span', null, t(key));
+    label.setAttribute('data-i18n', key);
+    node.appendChild(label);
+    return node;
+  };
   const bd = el("div","modal-backdrop");
   const card = el("div","modal-card");
   card.style.width = "520px";
-  card.appendChild(el("h3", null, "⚙️ " + t("settings")));
+  card.appendChild(localizedLabel('h3', null, '⚙️', 'settings'));
 
   // Theme section
-  const themeLabel = el("div", null, "");
+  const themeLabel = localizedLabel('div', null, '🎨', 'theme');
   themeLabel.style.cssText = "font-weight:600; margin:10px 0 6px; font-size:14px";
-  themeLabel.textContent = "🎨 " + t("theme");
   card.appendChild(themeLabel);
   const themeRow = el("div");
   themeRow.style.cssText = "display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap";
   THEME_LIST.forEach(tv => {
     const btn = el("button","btn" + (getTheme() === tv.id ? " btn-primary" : ""));
-    btn.textContent = tv.icon + ' ' + tv.nameZh;
-    btn.title = tv.name;
+    btn.appendChild(el('span', null, tv.icon + ' '));
+    const themeText = el('span', null, themeName(tv));
+    themeText.setAttribute('data-i18n', tv.nameKey);
+    btn.appendChild(themeText);
+    btn.title = themeName(tv);
+    btn.setAttribute('data-i18n-title', tv.nameKey);
     btn.addEventListener("click", () => {
       applyTheme(tv.id);
       try { localStorage.setItem("mg_theme", tv.id); } catch {}
@@ -34,9 +45,8 @@ function openSettingsPage() {
   card.appendChild(themeRow);
 
   // Language section
-  const langLabel = el("div", null, "");
+  const langLabel = localizedLabel('div', null, '🌐', 'language');
   langLabel.style.cssText = "font-weight:600; margin:10px 0 6px; font-size:14px";
-  langLabel.textContent = "🌐 " + t("language");
   card.appendChild(langLabel);
   const langRow = el("div");
   langRow.style.cssText = "display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap";
@@ -47,43 +57,42 @@ function openSettingsPage() {
   ].forEach(l => {
     const btn = el("button","btn" + (currentLang === l.code ? " btn-primary" : ""));
     btn.textContent = l.label;
-    btn.addEventListener("click", () => {
-      setLanguage(l.code);
-      langRow.querySelectorAll("button").forEach(b => b.classList.remove("btn-primary"));
-      btn.classList.add("btn-primary");
-      if (account) {
-        account.lang = l.code;
-        saveAccount();
-        if (online.connected) {
-          online.send({ type:"profile", payload: { uid: account.uid, name: account.name, avatar: account.avatar, lang: l.code } });
-        }
-      }
+    btn.dataset.langCode = l.code;
+    btn.setAttribute('data-i18n-raw', '');
+    btn.addEventListener("click", async () => {
+      const committed = await setLanguage(l.code);
+      if (!committed) return;
+      langRow.querySelectorAll("button").forEach(b => b.classList.toggle("btn-primary", b.dataset.langCode === currentLang));
     });
     langRow.appendChild(btn);
   });
   card.appendChild(langRow);
 
   const langNote = el("p","lb-note");
-  langNote.textContent = "选择语言后即时生效，并同步到个人档案。其他玩家可以看到你的语言旗帜。";
+  langNote.textContent = t('language_note');
+  langNote.setAttribute('data-i18n', 'language_note');
   card.appendChild(langNote);
 
   // Server section (merged from openSettings)
-  const srvLabel = el("div", null, "");
+  const srvLabel = localizedLabel('div', null, '🔗', 'server_config');
   srvLabel.style.cssText = "font-weight:600; margin:10px 0 6px; font-size:14px";
-  srvLabel.textContent = "🔗 " + t("server_config");
   card.appendChild(srvLabel);
   const srvInput = el("input","nick-input");
   srvInput.type = "text";
-  srvInput.placeholder = "服务端地址（留空 = 自动）";
+  srvInput.placeholder = t('server_placeholder');
+  srvInput.setAttribute('data-i18n-placeholder', 'server_placeholder');
   try { srvInput.value = localStorage.getItem("mg_server") || online.defaultServer; } catch {}
   card.appendChild(srvInput);
-  card.appendChild(el("p","lb-note","前端与联机服务不在同一域名时，填写服务端地址，保存后重新连接生效。"));
+  const serverNote = el('p','lb-note',t('server_note'));
+  serverNote.setAttribute('data-i18n', 'server_note');
+  card.appendChild(serverNote);
 
   const close = el("button","btn btn-primary", t("close"));
+  close.setAttribute('data-i18n', 'close');
   close.addEventListener("click", () => {
     try { localStorage.setItem("mg_server", srvInput.value.trim()); } catch {}
     bd.remove();
-    toast("设置已保存");
+    toast(t('settings_saved'));
   });
   card.appendChild(close);
   bd.appendChild(card);

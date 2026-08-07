@@ -1,25 +1,21 @@
 /* ================= 游戏注册表 ================= */
 const games = {
-  tictactoe: gameTicTacToe,
   gomoku: gameGomoku,
   ludo: gameLudo,
   monopoly: gameMonopoly,
-  checker: gameChecker,
   tank: gameTank,
-  snake: gameSnake,
   tetris: gameTetris,
-  draughts: gameDraughts,
-  jungle: gameJungle,
   xiangqi: gameXiangqi,
 };
 
 autoRegisterGames();
 
 if (typeof module !== 'undefined' && module.exports){
-  module.exports = { makeCheckerBoard, checkerReachable, checkGomokuWin };
+  module.exports = { checkGomokuWin };
 }
 
 if (typeof document !== 'undefined'){
+  initAssetFallbacks();
   loadRoster();
   renderMe();
   renderSlots();

@@ -1,6 +1,5 @@
 /* ================= 用户档案与积分 ================= */
 const AVATAR_COUNT = 56; // 0-29 免费，30-55 商城（4 分类）
-const CURRENCY = '$';
 const AVATAR_CATEGORIES = [
   { id: 'fantasy', name: '👑 幻想', icon: '👑' },
   { id: 'animals', name: '🐾 动物', icon: '🐾' },
@@ -66,17 +65,27 @@ const SHOP = {
     { id: 10, name: '海洋波浪', price: 12, cls: 'bg-10' },
   ],
 };
+function shopItemName(category,item){
+  if(!item)return'';
+  const key='shop_item_'+category+'_'+item.id,localized=t(key);
+  return localized===key?item.name:localized;
+}
+function avatarCategoryName(category){
+  const key='avatar_category_'+category.id,localized=t(key);
+  return localized===key?category.name:localized;
+}
 function avatarMeta(idx){
   const p = SHOP.avatars.find(a => a.id === idx);
   return p ? p : null;
 }
 function nameFxNode(profile, name){
   const fx = profile && profile.nameFx ? Number(profile.nameFx) : 0;
-  const span = el('span', fx >= 1 && fx <= 4 ? 'name-fx-' + fx : null, name || '');
+  const span = elRaw('span', fx >= 1 && fx <= 4 ? 'name-fx-' + fx : null, name || '');
   return span;
 }
 function nameFxLabel(fx){
-  return ['无效果','渐变流光','辉光','彩虹','赛博渐变'][fx] || '无效果';
+  const key='name_fx_'+(Number.isInteger(Number(fx))?Number(fx):0),localized=t(key);
+  return localized===key?t('name_fx_0'):localized;
 }
 function avatarCategory(idx) {
   if (idx < 20) return 'basic';           // 0-19 基础生成头像（免费）
@@ -157,6 +166,7 @@ function makeAvatar(idx){
       shirt: SHIRT[(idx * 3) % 6], style: idx % 4, glasses: idx % 4 === 1,
       blush: idx % 3 === 0, hat: idx % 5 === 0,
     };
+    if (!P) return makeAvatar(0);
     return {
       bg: P.bg, skin: P.skin, hair: P.hair, shirt: P.shirt,
       style: (idx * 3) % 4, glasses: !!P.glasses, blush: idx % 2 === 0, hat: !!P.hat,
@@ -322,7 +332,7 @@ function genUid(){
 }
 function profileByUid(uid){ return roster.find(p => p.uid === uid); }
 function createProfile(name, avatar){
-  const p = { uid: genUid(), name: name || '玩家', avatar: (avatar === undefined ? Math.floor(Math.random() * AVATAR_COUNT) : avatar), coins: 0, played: {}, total: 0 };
+  const p = { uid: genUid(), name: name || t('default_player_name'), avatar: (avatar === undefined ? Math.floor(Math.random() * AVATAR_COUNT) : avatar), coins: 0, played: {}, total: 0 };
   roster.push(p);
   saveRoster();
   return p.uid;
@@ -333,15 +343,15 @@ function syncProfiles(){
     online.send({ type: 'profile', payload: {
       uid: account.uid, name: account.name, avatar: account.avatar,
       background: account.background || 0, frame: account.frame || 0, effect: account.effect || 0,
-      nameFx: account.nameFx || 0, lang: account.lang || currentLang,
+      nameFx: account.nameFx || 0, lang: account.lang || currentLang, gameCosmetics: account.gameCosmetics || {},
     } });
   }
 }
 function registerAccount(name, pin, avatar, background, frame, effect){
-  name = String(name || '').trim().slice(0, 12) || '玩家';
+  name = String(name || '').trim().slice(0, 12) || t('default_player_name');
   pin = String(pin || '').trim();
   if (!/^[A-Za-z0-9]{4,20}$/.test(pin)){
-    toast('PIN 只能包含字母和数字，长度 4-20 位');
+    toast(t('pin_invalid'));
     return null;
   }
   const uid = genUid();
@@ -352,7 +362,7 @@ function registerAccount(name, pin, avatar, background, frame, effect){
     background: Number.isInteger(background) ? Math.max(0, background) : 0,
     frame: Number.isInteger(frame) ? Math.max(0, frame) : 0,
     effect: Number.isInteger(effect) ? Math.max(0, effect) : 0,
-    owned: defaultOwned(), coins: 0, played: {}, total: 0, device: deviceFingerprint(), nameFx: 0,
+    owned: defaultOwned(), coins: 0, played: {}, total: 0, device: deviceFingerprint(), nameFx: 0, gameCosmetics: {}, cosmeticSchemaVersion: 1,
     registered: false,
   };
   const me = roster.find(p => p.uid === uid);
@@ -364,7 +374,7 @@ function registerAccount(name, pin, avatar, background, frame, effect){
     online.send({ type: 'register', payload: {
       uid, pin, name, avatar: account.avatar, background: account.background,
       lang: currentLang,
-      frame: account.frame, effect: account.effect, owned: account.owned,
+      frame: account.frame, effect: account.effect, owned: account.owned, gameCosmetics: account.gameCosmetics,
     } });
   }
   renderMe(); renderSlots(); renderLeaderboard();
@@ -374,8 +384,8 @@ function registerAccount(name, pin, avatar, background, frame, effect){
 }
 function loginAccount(pin){
   pin = String(pin || '').trim();
-  if (!/^[A-Za-z0-9]{4,20}$/.test(pin)){ toast('PIN 只能包含字母和数字，长度 4-20 位'); return; }
-  if (!online.connected){ toast('请先连接服务器后再登录'); return; }
+  if (!/^[A-Za-z0-9]{4,20}$/.test(pin)){ toast(t('pin_invalid')); return; }
+  if (!online.connected){ toast(t('need_server_login')); return; }
   online.send({ type: 'login', payload: { pin } });
 }
 function logoutAccount(){
@@ -387,12 +397,23 @@ function completeLocalLogout(showLogin){
   pendingAuthPin = null;
   if (online){
     if (typeof online.clearPendingResultClaim === 'function') online.clearPendingResultClaim();
+    if (typeof online.saveSoloClaims === 'function') online.saveSoloClaims();
+    online.soloMatch = null;
+    online.pendingSoloClaims = [];
+    online._soloClaimsLoaded = false;
+    online.displayedRewardIds = [];
+    online.rewardVersion = null;
     if (typeof online.resetState === 'function') online.resetState();
     online._authenticated = false;
   }
   account = null;
   deviceUid = null;
-  try { localStorage.removeItem(LS_ACCOUNT); localStorage.setItem('mg_uid', ''); } catch {}
+  try {
+    localStorage.removeItem(LS_ACCOUNT);
+    localStorage.removeItem('mg_pending_solo_claims');
+    localStorage.removeItem('mg_displayed_reward_ids');
+    localStorage.setItem('mg_uid', '');
+  } catch {}
   renderMe(); renderSlots(); renderLeaderboard();
   if (showLogin && !authModalEl) openAuthModal("login");
 }
@@ -402,10 +423,14 @@ function updateAccountProfile(p){
   account.background = p.background || 0; account.frame = p.frame || 0; account.effect = p.effect || 0;
   account.owned = p.owned || defaultOwned(); account.coins = p.coins || 0;
   account.xp = p.xp || 0; account.level = p.level || 1; account.streak = p.streak || 0; account.bestStreak = p.bestStreak || 0;
-  account.played = p.played || {}; account.total = p.total || 0; account.lang = p.lang || account.lang || 'zh-CN';
+  account.dailyFirstWinDate = p.dailyFirstWinDate || '';
+  account.dailyAICurrencyKey = p.dailyAICurrencyKey || '';
+  account.dailyAICurrencyEarned = p.dailyAICurrencyEarned || 0;
+  account.xpProgress = p.xpProgress || null;
+  account.played = p.played || {}; account.total = p.total || 0; account.wins = p.wins || {}; account.totalWins = p.totalWins || 0; account.lang = p.lang || account.lang || 'zh-CN';
   const me = roster.find(x => x.uid === p.uid);
-  if (me){ me.name = p.name; me.avatar = p.avatar; me.coins = p.coins || 0; me.xp = p.xp || 0; me.level = p.level || 1; me.streak = p.streak || 0; me.bestStreak = p.bestStreak || 0; me.played = p.played || {}; me.total = p.total || 0; }
-  else roster.unshift({ uid: p.uid, name: p.name, avatar: p.avatar, coins: p.coins || 0, played: p.played || {}, total: p.total || 0 });
+  if (me){ me.name = p.name; me.avatar = p.avatar; me.coins = p.coins || 0; me.xp = p.xp || 0; me.level = p.level || 1; me.streak = p.streak || 0; me.bestStreak = p.bestStreak || 0; me.played = p.played || {}; me.total = p.total || 0; me.wins = p.wins || {}; me.totalWins = p.totalWins || 0; }
+  else roster.unshift({ uid: p.uid, name: p.name, avatar: p.avatar, coins: p.coins || 0, played: p.played || {}, total: p.total || 0, wins: p.wins || {}, totalWins: p.totalWins || 0 });
   deviceUid = p.uid;
   account.nameFx = p.nameFx || 0;
   account.achievements = p.achievements || [];
@@ -420,7 +445,7 @@ function renderMe(){
     btn.innerHTML = '';
     btn.appendChild(el('span','me-av','🔑'));
     btn.appendChild(el('span', null, t('login_register')));
-    btn.title = '创建账号或使用 PIN 登录';
+    btn.title = t('account_button_title');
     return;
   }
   btn.classList.remove('logged-out');
@@ -433,18 +458,18 @@ function renderMe(){
   btn.appendChild(nameFxNode(account, account.name + ' ' + langFlag(account.lang || currentLang)));
   const lv = account.level || levelFromXp(account.xp || 0);
   const title = titleFor(lv);
-  btn.appendChild(el('span','me-title', title.icon + ' ' + title.name));
-  const lvBadge = el('span','level-badge', 'Lv.' + lv);
+  btn.appendChild(el('span','me-title', title.icon + ' ' + socialTitleName(title)));
+  const lvBadge = el('span','level-badge', t('level_short',lv));
   btn.appendChild(lvBadge);
   const coinLine = el('span','coin-line');
-  coinLine.appendChild(el('span','coin','$'));
-  coinLine.appendChild(el('span','me-pts', (account.coins || 0) + ' · ' + (account.total || 0) + '局'));
+  coinLine.appendChild(currencyIcon());
+  coinLine.appendChild(el('span','me-pts', t('compact_account_stats', account.coins || 0, account.total || 0)));
   btn.appendChild(coinLine);
   renderMyCard();
   if (online.connected){
     btn.appendChild(el('span','me-online','●'));
   }
-  btn.title = '查看我的档案';
+  btn.title = t('my_profile_button_title');
 }
 function renderSlots(){
   const row = $('slots-row');
@@ -454,8 +479,8 @@ function renderSlots(){
       const chip = el('button','slot-chip ai');
       chip.type = 'button';
       chip.appendChild(el('span','av','🤖'));
-      chip.appendChild(el('span','nm','AI 玩家' + i));
-      chip.appendChild(el('span','pts','电脑对手'));
+      chip.appendChild(el('span','nm',t('ai_player_number',i)));
+      chip.appendChild(el('span','pts',t('computer_opponent')));
       row.appendChild(chip);
       continue;
     }
@@ -468,15 +493,15 @@ function renderSlots(){
       const prof = p.uid === (account && account.uid) ? account : p;
       av.appendChild(avatarStageNode(prof, 30));
       chip.appendChild(av);
-      chip.appendChild(el('span','nm', p.name));
+      chip.appendChild(elRaw('span','nm', p.name));
       const coinLine = el('span','coin-line');
-      coinLine.appendChild(el('span','coin sm','$'));
-      coinLine.appendChild(el('span','pts', (p.coins || 0) + ' · ' + (p.total || 0) + '局'));
+      coinLine.appendChild(currencyIcon('sm'));
+      coinLine.appendChild(el('span','pts', t('compact_account_stats',p.coins || 0,p.total || 0)));
       chip.appendChild(coinLine);
     } else {
       chip.appendChild(el('span','av','➕'));
-      chip.appendChild(el('span','nm','玩家' + (i+1)));
-      chip.appendChild(el('span','pts','点击设置档案'));
+      chip.appendChild(el('span','nm',t('player_number',i+1)));
+      chip.appendChild(el('span','pts',t('select_profile_hint')));
     }
     chip.addEventListener('click', () => openSlotPicker(i));
     row.appendChild(chip);
@@ -491,13 +516,13 @@ function ensureSlots(){
     return;
   }
   for (let i = 0; i < playerCount; i++){
-    if (!slots[i]) slots[i] = createProfile('玩家' + (i+1));
+    if (!slots[i]) slots[i] = createProfile(t('player_number',i+1));
   }
 }
 function openSlotPicker(i){
   const bd = el('div','modal-backdrop');
   const card = el('div','modal-card');
-  card.appendChild(el('h3', null, '为 玩家' + (i+1) + ' 选择档案'));
+  card.appendChild(el('h3', null, t('select_profile_title',i+1)));
   const list = el('div','roster-list');
   roster.forEach(p => {
     const item = el('button','roster-item');
@@ -505,8 +530,8 @@ function openSlotPicker(i){
     const av = el('span','av');
     av.appendChild(avatarCanvas(p.avatar, 24));
     item.appendChild(av);
-    item.appendChild(el('span','nm', p.name));
-      item.appendChild(el('span','lb-game', '$' + (p.coins || 0) + ' · ' + (p.total || 0) + '局'));
+    item.appendChild(elRaw('span','nm', p.name));
+      item.appendChild(el('span','lb-game', t('profile_picker_stats',CURRENCY,p.coins || 0,p.total || 0)));
     item.addEventListener('click', () => {
       slots[i] = p.uid;
       bd.remove();
@@ -514,12 +539,12 @@ function openSlotPicker(i){
     });
     list.appendChild(item);
   });
-  const create = el('button','btn btn-primary','＋ 新建档案');
+  const create = el('button','btn btn-primary',t('profile_create'));
   create.addEventListener('click', () => {
     bd.remove();
     openProfileEditor(null, i);
   });
-  const cancel = el('button','btn','取消');
+  const cancel = el('button','btn',t('cancel'));
   cancel.addEventListener('click', () => bd.remove());
   card.appendChild(list);
   card.appendChild(create);
@@ -536,20 +561,19 @@ function openProfileEditor(uid, slotIndex){
   let background = editingMe ? (account.background || 0) : 0;
   const bd = el('div','modal-backdrop');
   const card = el('div','modal-card');
-  card.appendChild(el('h3', null, editing ? '编辑档案' : '新建档案'));
+  card.appendChild(el('h3', null, editing ? t('profile_edit_title') : t('profile_new_title')));
   const input = el('input','nick-input');
   input.type = 'text';
   input.maxLength = 12;
-  input.placeholder = '输入昵称（12 字以内）';
+  input.placeholder = t('profile_name_placeholder');
   input.value = name;
   card.appendChild(input);
-  const catLabel = el('div','lb-note','选择头像（0-29 免费，30+ 商城）');
+  const catLabel = el('div','lb-note',t('profile_avatar_note'));
   card.appendChild(catLabel);
   const editorCats = el('div','shop-tabs');
   const editorCatsDef = [
-    { id:'all', name:'全部' }, { id:'basic', name:'🎲 基础' }, { id:'theme', name:'✨ 主题' },
-    { id:'fantasy', name:'👑 幻想' }, { id:'animals', name:'🐾 动物' },
-    { id:'profession', name:'💼 职业' }, { id:'creative', name:'🎨 创意' },
+    { id:'all' }, { id:'basic' }, { id:'theme' }, { id:'fantasy' }, { id:'animals' },
+    { id:'profession' }, { id:'creative' },
   ];
   let editorCat = 'all';
   const grid = el('div','avatar-grid');
@@ -561,12 +585,12 @@ function openProfileEditor(uid, slotIndex){
       const opt = el('button','avatar-opt' + (i === avatar ? ' selected' : '') + (locked ? ' locked' : ''));
       opt.type = 'button';
       opt.appendChild(avatarCanvas(i, 26));
-      opt.setAttribute('aria-label', '头像 ' + (i+1));
+      opt.setAttribute('aria-label', t('profile_avatar_aria',i+1));
       if (locked){
-        opt.appendChild(el('span','avatar-lock','🔒' + (avatarPrice(i) ? '$' + avatarPrice(i) : '')));
+        opt.appendChild(el('span','avatar-lock','🔒' + (avatarPrice(i) ? CURRENCY + avatarPrice(i) : '')));
         opt.addEventListener('click', () => {
           const meta = avatarMeta(i);
-          toast('「' + (meta ? meta.name : '头像') + '」需在商城购买（$' + (meta ? meta.price : 0) + '）');
+          toast(t('auth_avatar_locked',meta ? shopItemName('avatars',meta) : t('shop_tab_avatars'),CURRENCY,meta ? meta.price : 0));
         });
       } else {
         opt.addEventListener('click', () => {
@@ -579,7 +603,7 @@ function openProfileEditor(uid, slotIndex){
   }
   editorCatsDef.forEach(c => {
     const tb = el('button','btn shop-tab' + (editorCat === c.id ? ' btn-primary' : ''));
-    tb.textContent = c.name;
+    tb.textContent = t('avatar_category_'+c.id);
     tb.addEventListener('click', () => {
       editorCat = c.id;
       editorCats.querySelectorAll('.shop-tab').forEach(t => t.classList.remove('btn-primary'));
@@ -592,20 +616,20 @@ function openProfileEditor(uid, slotIndex){
   card.appendChild(grid);
   renderEditorGrid();
   if (editingMe){
-    card.appendChild(el('div','lb-note','背景'));
+    card.appendChild(el('div','lb-note',t('profile_background')));
     const bgGrid = el('div','bg-grid');
     SHOP.backgrounds.forEach(b => {
       const sw = el('div','bg-swatch' + (b.id === background ? ' selected' : '') + ' ' + b.cls);
-      sw.title = b.name;
+      sw.title = shopItemName('backgrounds',b);
       sw.addEventListener('click', () => {
-        if (!ownItem(account, 'backgrounds', b.id)){ toast('背景「' + b.name + '」需在商城购买'); return; }
+        if (!ownItem(account, 'backgrounds', b.id)){ toast(t('shop_item_requires_purchase',shopItemName('backgrounds',b))); return; }
         background = b.id;
         bgGrid.querySelectorAll('.bg-swatch').forEach(x => x.classList.toggle('selected', x === sw));
       });
       bgGrid.appendChild(sw);
     });
     card.appendChild(bgGrid);
-    card.appendChild(el('div','lb-note','昵称效果'));
+    card.appendChild(el('div','lb-note',t('profile_name_effect')));
     const fxRow = el('div','bg-grid');
     for (let fx = 0; fx <= 4; fx++){
       const fxBtn = el('button','btn shop-tab' + (fx === (account.nameFx || 0) ? ' btn-primary' : ''));
@@ -624,24 +648,24 @@ function openProfileEditor(uid, slotIndex){
   const stats = el('div','profile-stats');
   if (editing){
     const c1 = el('div','stat-chip');
-    c1.appendChild(el('span','coin sm','$'));
-    c1.appendChild(el('span', null, (editing.coins || 0) + ' 余额'));
+    c1.appendChild(currencyIcon('sm'));
+    c1.appendChild(el('span', null, t('profile_balance',editing.coins || 0)));
     const c2 = el('div','stat-chip');
-    c2.textContent = '共 ' + (editing.total || 0) + ' 局';
+    c2.textContent = t('games_count',editing.total || 0);
     stats.appendChild(c1);
     stats.appendChild(c2);
     GAME_KEYS.forEach(k => {
       const s = el('div','stat-chip small');
-      s.textContent = GAMES[k].name + ' ' + ((editing.played && editing.played[k]) || 0) + ' 局';
+      s.textContent = t('game_count_line',GAMES[k].name,(editing.played && editing.played[k]) || 0);
       stats.appendChild(s);
     });
   } else {
-    stats.appendChild(el('div','stat-chip','新档案：完成首局后开始累积 ' + CURRENCY + ' 与统计'));
+    stats.appendChild(el('div','stat-chip',t('profile_new_stats',CURRENCY)));
   }
   card.appendChild(stats);
-  const save = el('button','btn btn-primary','保存');
+  const save = el('button','btn btn-primary',t('save'));
   save.addEventListener('click', () => {
-    const finalName = (input.value.trim() || (editing ? editing.name : '玩家')).slice(0, 12);
+    const finalName = (input.value.trim() || (editing ? editing.name : t('default_player_name'))).slice(0, 12);
     let targetUid = uid;
     if (editing){
       editing.name = finalName;
@@ -660,9 +684,9 @@ function openProfileEditor(uid, slotIndex){
     syncProfiles();
     bd.remove();
     renderMe(); renderSlots(); renderLeaderboard();
-    toast('档案已保存：' + finalName);
+    toast(t('profile_saved',finalName));
   });
-  const cancel = el('button','btn','取消');
+  const cancel = el('button','btn',t('cancel'));
   cancel.addEventListener('click', () => bd.remove());
   card.appendChild(save);
   card.appendChild(cancel);
@@ -682,9 +706,7 @@ function renderLeaderboard(){
   renderAccounts();
   const listEl = $('lb-list');
   listEl.innerHTML = '';
-  $('lb-note').textContent = online.connected
-    ? ('🌐 全球总榜 · 共 ' + data.total + ' 位玩家 · 积分实时更新')
-    : ('📱 本地排行榜 · 共 ' + data.total + ' 位玩家（联机服务在线时可查看全球总榜）');
+  $('lb-note').textContent = t(online.connected ? 'leaderboard_global' : 'leaderboard_local',data.total);
   const list = lbFilter === 'online' ? (data.list || []).filter(u => u.online) : (data.list || []);
   if (!list.length){
     listEl.appendChild(el('div','lb-empty', lbFilter === 'online' ? t('leaderboard_no_online') : t('leaderboard_empty')));
@@ -701,36 +723,40 @@ function renderLeaderboard(){
     const nameWrap = el('span','lb-name');
     const lv = u.level || (u.xp ? levelFromXp(u.xp) : 1);
     nameWrap.appendChild(nameFxNode(u, u.name));
-    nameWrap.appendChild(el('span', null, (lv > 1 ? ' [Lv.' + lv + ']' : '') + ' ' + (u.lang ? langFlag(u.lang) : '')));
+    nameWrap.appendChild(el('span', null, (lv > 1 ? t('level_bracket',lv) : '') + ' ' + (u.lang ? langFlag(u.lang) : '')));
     row.style.cursor = 'pointer';
     row.addEventListener('click', () => openProfileModal(u.uid));
     row.appendChild(nameWrap);
     if (u.online) row.appendChild(el('span','online-dot',''));
     const g = u.played || {};
-    const gameStr = GAME_KEYS.filter(k => g[k]).map(k => GAMES[k].name + ' ' + g[k] + '局').join(' · ');
+    const gameStr = GAME_KEYS.filter(k => g[k]).map(k => t('game_count_line',GAMES[k].name,g[k])).join(' · ');
     row.appendChild(el('span','lb-game', gameStr));
     const coinLine = el('span','coin-line');
-    coinLine.appendChild(el('span','coin','$'));
-    coinLine.appendChild(el('span','lb-pts', (u.coins || 0) + ' · ' + (u.total || 0) + '局'));
+    coinLine.appendChild(currencyIcon());
+    coinLine.appendChild(el('span','lb-pts', t('compact_account_stats',u.coins || 0,u.total || 0)));
     row.appendChild(coinLine);
     listEl.appendChild(row);
   });
 }
-// 等级 = 对局经验（XP），不是金币
-// 1 级 0 XP，2 级 30，3 级 80，4 级 160，5 级 280，之后每级 +150
-function levelFromXp(xp){
-  xp = Math.max(0, xp || 0);
-  if (xp < 30) return 1;
-  if (xp < 80) return 2;
-  if (xp < 160) return 3;
-  if (xp < 280) return 4;
-  return 5 + Math.floor((xp - 280) / 150);
+// 等级只由累计 XP 决定；升级需求：min(200, 30 + 5 × 当前等级)。
+function xpRequiredForNextLevel(level){
+  return Math.min(200, 30 + 5 * Math.max(1, Math.floor(Number(level) || 1)));
 }
 function xpForLevel(level){
-  if (level <= 1) return 0;
-  const thresholds = [0, 30, 80, 160, 280];
-  if (level <= 5) return thresholds[level - 1];
-  return 280 + (level - 5) * 150;
+  const target = Math.max(1, Math.floor(Number(level) || 1));
+  const steps = target - 1;
+  const uncapped = Math.min(steps, 33);
+  return uncapped * 30 + 5 * uncapped * (uncapped + 1) / 2 + Math.max(0, steps - uncapped) * 200;
+}
+function levelFromXp(xp){
+  const total = Math.max(0, Math.floor(Number(xp) || 0));
+  let low = 1, high = Math.max(2, Math.floor(total / 35) + 2);
+  while (low < high){
+    const mid = Math.ceil((low + high) / 2);
+    if (xpForLevel(mid) <= total) low = mid;
+    else high = mid - 1;
+  }
+  return low;
 }
 
 function recordPlaymatesFromResult(results, currentResult, gameId){
@@ -751,6 +777,78 @@ function recordPlaymatesFromResult(results, currentResult, gameId){
       }
     });
   }
+}
+function resultForSlot(results, slot){
+  const mine = (results || []).find(item => Number(item.slot) === Number(slot));
+  if (!mine) return 'loss';
+  const winners = (results || []).filter(item => item && item.coins === 1);
+  if ((results || []).length === 2 && winners.length === 0 && Number(results[0].rank) === Number(results[1].rank)) return 'draw';
+  return mine.coins === 1 || (Number(mine.rank) === 1 && winners.length === 0) ? 'win' : 'loss';
+}
+function rewardReasonLabel(item){
+  const code = item && item.code || 'base_reward';
+  if (code === 'win_streak') return t('reward_item_streak', item.streak || 0);
+  if (code === 'reward_blocked'){
+    const key = 'reward_reason_' + String(item.reason || 'ineligible_match');
+    const label = t(key);
+    return label === key ? t('reward_reason_ineligible_match') : label;
+  }
+  const key = {
+    base_reward: 'reward_item_base',
+    repeat_opponent_decay: 'reward_item_repeat_decay',
+    daily_first_win: 'reward_item_first_win',
+    level_milestone: 'reward_item_level_milestone',
+    ai_daily_cap: 'reward_item_ai_cap',
+  }[code] || 'reward_item_base';
+  return t(key);
+}
+function signedReward(value, suffix){
+  const amount = Number(value) || 0;
+  if (!amount) return '';
+  return (amount > 0 ? '+' : '') + amount + suffix;
+}
+function formatRewardSummary(reward){
+  if (!reward || reward.eligible === false) return t('reward_blocked_summary');
+  return t('reward_total_summary', signedReward(reward.currency, CURRENCY), signedReward(reward.xp, ' XP'));
+}
+function showRewardBreakdown(reward){
+  if (!reward || typeof document === 'undefined' || !document.body) return;
+  const old = document.querySelector && document.querySelector('.reward-breakdown-overlay');
+  if (old && old.remove) old.remove();
+  const overlay = el('div', 'overlay reward-breakdown-overlay');
+  const card = el('section', 'overlay-card reward-breakdown-card');
+  card.setAttribute('role', 'dialog');
+  card.setAttribute('aria-modal', 'true');
+  const multiplayerPlace = reward.eligible !== false && Number(reward.participantCount) > 2 && Number(reward.placement) > 1;
+  const titleKey = reward.eligible === false ? 'reward_title_no_contest' :
+    (multiplayerPlace ? 'reward_title_place' : (reward.result === 'win' ? 'reward_title_win' : (reward.result === 'draw' ? 'reward_title_draw' : 'reward_title_loss')));
+  card.appendChild(el('h3', 'reward-breakdown-title', multiplayerPlace ? t(titleKey, reward.placement) : t(titleKey)));
+  const list = el('div', 'reward-breakdown-list');
+  (Array.isArray(reward.breakdown) ? reward.breakdown : []).forEach(item => {
+    const row = el('div', 'reward-breakdown-row');
+    row.appendChild(el('span', 'reward-breakdown-label', rewardReasonLabel(item)));
+    const values = el('span', 'reward-breakdown-values');
+    const currency = signedReward(item.currency, CURRENCY);
+    const xp = signedReward(item.xp, ' XP');
+    values.textContent = [currency, xp].filter(Boolean).join(' · ') || '0';
+    row.appendChild(values);
+    list.appendChild(row);
+  });
+  card.appendChild(list);
+  const total = el('div', 'reward-breakdown-total');
+  total.appendChild(el('strong', null, t('reward_total')));
+  total.appendChild(el('span', null, [signedReward(reward.currency, CURRENCY) || '0' + CURRENCY, signedReward(reward.xp, ' XP') || '0 XP'].join(' · ')));
+  card.appendChild(total);
+  if (Number(reward.levelAfter) > Number(reward.levelBefore)){
+    card.appendChild(el('p', 'reward-level-up', t('reward_level_up', reward.levelBefore, reward.levelAfter)));
+  }
+  const close = el('button', 'btn btn-primary reward-breakdown-close', t('reward_close'));
+  close.addEventListener('click', () => overlay.remove());
+  card.appendChild(close);
+  overlay.appendChild(card);
+  overlay.addEventListener('click', event => { if (event.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+  if (close.focus) close.focus();
 }
 function applyGameResult(results, resultContext){
   if (!results || !results.length) return;
@@ -773,88 +871,26 @@ function applyGameResult(results, resultContext){
     });
     return;
   }
-  const entries = [];
-  const parts = [];
-  results.forEach(r => {
-    let uid = null;
-    if (isOnlineMatch){
-      if (r.slot !== online.player) return;
-      uid = deviceUid;
-    } else {
-      uid = slots[r.slot];
-    }
-    const p = uid ? profileByUid(uid) : null;
-    if (!p) return;
-    if (r.coins === 1) p.coins = (p.coins || 0) + 1;
-    // ---- 成长系统：XP / 等级 / 连胜 ----
-    const xpGain = r.coins === 1 ? 10 : 4; // 胜利 +10 XP，参与 +4 XP
-    p.xp = (p.xp || 0) + xpGain;
-    p.level = levelFromXp(p.xp);
-    if (r.coins === 1) {
-      p.streak = (p.streak || 0) + 1;
-      if (p.streak > (p.bestStreak || 0)) p.bestStreak = p.streak;
-    } else {
-      p.streak = 0;
-    }
-    p.played[gameId] = (p.played[gameId] || 0) + 1;
-    p.total = (p.total || 0) + 1;
-    if (account && p.uid === account.uid){
-      account.coins = p.coins;
-      updateDaily(account, 'play', 1);
-      if (r.coins === 1) updateDaily(account, 'win', 1);
-      if (account.streak >= 2) updateDaily(account, 'streak', 1);
-      const newAch = checkAchievements(account);
-      if (newAch.length) {
-        account.achievements = [...(account.achievements || []), ...newAch];
-        newAch.forEach(aid => {
-          const a = ACHIEVEMENTS.find(x => x.id === aid);
-          if (a) toast('Achievement unlocked: ' + a.icon + ' ' + a.name + ' - ' + a.desc);
-        });
-      }
-      // Record playmates
-      recordPlaymatesFromResult(results, r, gameId);
-      account.xp = p.xp;
-      account.level = p.level;
-      account.streak = p.streak;
-      account.bestStreak = p.bestStreak;
-      account.played = p.played;
-      account.total = p.total;
+  if (aiMode){
+    const outcome = resultForSlot(results, 0);
+    if (outcome === 'loss') aiSpeak(currentPersona, 'win');
+    else if (outcome === 'win') aiSpeak(currentPersona, 'lose');
+    if (account){
+      const mate = aiMateInfo(currentPersona);
+      recordPlaymate(account, mate.uid, mate.name, gameId);
       saveAccount();
     }
-    entries.push({ uid:p.uid, name:p.name, avatar:p.avatar, game:gameId, coins: r.coins === 1 ? 1 : 0, played: 1, xp: xpGain });
-    parts.push(p.name + (r.coins === 1 ? ' 获得 $1' : ' 本局无奖励'));
-  });
-  // AI 角色：胜负发言 + 计入「最近一起玩」
-  if (aiMode && account){
-    let aiWon = false, humanWon = false;
-    results.forEach(r => {
-      if (r.slot > 0 && r.coins === 1) aiWon = true;
-      if (r.slot === 0 && r.coins === 1) humanWon = true;
-    });
-    if (aiWon) aiSpeak(currentPersona, 'win');
-    else if (humanWon) aiSpeak(currentPersona, 'lose');
-    const mate = aiMateInfo(currentPersona);
-    recordPlaymate(account, mate.uid, mate.name, gameId);
-    saveAccount();
-  }
-  saveRoster();
-  // 本地/人机模式也保留服务端排行榜同步，但只允许当前认证账号提交自己的结果。
-  // 服务端以 resultId 去重并设置单机结算频控；断网时仍保留本地热座体验。
-  if (!isOnlineMatch && online.connected && account){
-    const mine = entries.find(e => e.uid === account.uid);
-    if (mine){
-      const resultId = (typeof crypto !== 'undefined' && crypto.randomUUID)
-        ? 'solo_' + crypto.randomUUID()
-        : 'solo_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 12);
-      if (!online.soloReportedIds.includes(resultId)){
-        online.soloReportedIds.push(resultId);
-        if (online.soloReportedIds.length > 100) online.soloReportedIds.splice(0, online.soloReportedIds.length - 100);
-        online.send({ type: 'result', payload: { mode: 'solo', resultId, game: gameId, coins: mine.coins } });
-      }
+    if (account && online.connected && online._authenticated && online.rewardVersion){
+      online.submitSoloResult(gameId, outcome);
+      toast(t('reward_verifying'));
+    } else if (account && online.connected && online._authenticated) {
+      toast(t('reward_server_unsupported'));
+    } else {
+      toast(t('reward_ai_requires_login'));
     }
-  }
-  if (entries.length){
-    toast(t('toast_win_reward') + parts.join('，'));
+  } else {
+    // 本地热座只保留聚会体验，不写入正式金币、XP、等级或连胜。
+    toast(t('reward_local_no_progress'));
   }
   renderMe(); renderSlots(); renderLeaderboard();
 }
@@ -895,7 +931,23 @@ function showGame(id){
       online: true,
       myIdx: online.player,
       isHost: online.isHost,
+      spectator: online.isSpectator,
+      gameplayMeta: online.gameplayMeta,
+      cosmetic: online.presentationMeta && online.presentationMeta.cosmetic,
+      matchId: online.matchId,
+      getMatchId: () => online.matchId,
       sendMove: p => online.sendMove(p),
+      sendTankInput: p => online.sendTankInput(p),
+      sendTetrisLockClaim: p => online.sendTetrisLockClaim(p),
+      sendTetrisKOClaim: p => online.sendTetrisKOClaim(p),
+      sendTetrisAction: p => online.sendTetrisAction(p),
+      sendTetrisState: p => online.sendTetrisState(p),
+      sendMonopolyAuctionOpen: p => online.sendMonopolyAuctionOpen(p),
+      sendMonopolyBid: p => online.sendMonopolyBid(p),
+      sendMonopolyTurnEnd: next => online.sendMonopolyTurnEnd(next),
+      sendMonopolyState: p => online.sendMonopolyState(p),
+      sendMonopolyAction: p => online.sendMonopolyAction(p),
+      sendXiangqiAction: p => online.sendXiangqiAction(p),
       sendRestart: () => online.sendRestart(),
       isReplaying: () => !!online._replaying,
       onMove: null,
@@ -907,6 +959,8 @@ function showGame(id){
     if (aiMode && playerCount >= 2){
       opts.ai = new Set(Array.from({ length: playerCount - 1 }, (_, i) => i + 1));
       opts.aiPersona = currentPersona;
+      opts.onProgress = action => online.reportSoloProgress(id, action);
+      if (account) online.beginSoloMatch(id);
     }
   }
   currentGame = createGameInstance(id, area, extra, playerCount, opts);
@@ -916,17 +970,17 @@ function showGame(id){
 function startGame(id){
   const meta = GAMES[id];
   if (online.connected && online.room){
-    if (!account){ toast('请先创建账号或登录后再联机'); openAuthModal(); return; }
-    if (online.game){ toast('本局已开始，点「结束本局」后可在房间内切换游戏'); return; }
+    if (!account){ toast(t('need_account_online')); openAuthModal(); return; }
+    if (online.game){ toast(t('game_switch_blocked')); return; }
     const size = (online.roomInfo && online.roomInfo.size) || online.capacity || 2;
-    if (size > meta.max){ toast(meta.name + ' 联机最多 ' + meta.max + ' 人，当前房间 ' + size + ' 人'); return; }
-    if (!online.isHost){ toast('请等待房主选择游戏'); return; }
+    if (size > meta.max){ toast(t('game_online_max',meta.name,meta.max,size)); return; }
+    if (!online.isHost){ toast(t('wait_host_select')); return; }
     playerCount = size;
     online.selectGame(id);
     return;
   }
   if (playerCount < meta.min || playerCount > meta.max){
-    toast(meta.name + ' 支持 ' + meta.min + '-' + meta.max + ' 人，当前选择 ' + playerCount + ' 人');
+    toast(t('game_players_supported',meta.name,meta.min,meta.max,playerCount));
     return;
   }
   ensureSlots();
@@ -941,14 +995,15 @@ function renderPlayers(activeIdx, infos, bankrupts, colors){
     const dot = el('span','dot');
     dot.style.background = colors ? colors[i] : PLAYER_COLORS[i];
     chip.appendChild(dot);
-    chip.appendChild(el('span', null, '玩家' + (i+1)));
+    chip.appendChild(el('span', null, t('player_number',i+1)));
     if (infos && infos[i]) chip.appendChild(el('span','extra', infos[i]));
     bar.appendChild(chip);
   }
 }
 function setStatus(text, win){
   const s = $('status-bar');
-  s.textContent = text;
+  if (typeof setLocalizedText === 'function') setLocalizedText(s, text);
+  else s.textContent = localizeRuntimeText(text);
   s.classList.toggle('win', !!win);
 }
 
@@ -965,12 +1020,19 @@ function renderHub(){
     const ok = playerCount >= g.min && playerCount <= g.max;
     if (!ok) card.classList.add('disabled');
     card.setAttribute('aria-label', g.name + '：' + g.desc);
-    card.appendChild(el('div','icon', g.icon));
+    card.dataset.gameId = id;
+    const cover = gameCoverNode(id, g);
+    if (cover){
+      card.classList.add('has-cover');
+      card.appendChild(cover);
+    } else {
+      card.appendChild(el('div','icon', g.icon));
+    }
     card.appendChild(el('div','name', g.name));
     card.appendChild(el('div','desc', g.desc));
     const badgeRow = el('div','badge-row');
-    badgeRow.appendChild(el('span','range', g.min === g.max ? g.min + ' 人' : g.min + '-' + g.max + ' 人'));
-    if (aiMode) badgeRow.appendChild(el('span','ai-badge','🤖 人机'));
+    badgeRow.appendChild(el('span','range', g.min === g.max ? t('players_exact',g.min) : t('players_range',g.min,g.max)));
+    if (aiMode) badgeRow.appendChild(el('span','ai-badge',t('ai_badge')));
     card.appendChild(badgeRow);
     card.addEventListener('click', () => startGame(id));
     grid.appendChild(card);
@@ -980,6 +1042,7 @@ function renderHub(){
 if (typeof document !== 'undefined'){
   window.__gameInfo = {
     GAMES, startGame, registerAccount, loginAccount, logoutAccount, loadRoster,
+    GAME_ART, gameArtEnabled, gameArtUrl, renderHub, setLanguage, checkAchievements, aiMateDisplayName,
     get playerCount(){ return playerCount; },
     set playerCount(v){ playerCount = v; },
     get aiMode(){ return aiMode; },
@@ -1018,24 +1081,24 @@ if (typeof document !== 'undefined'){
     const next = THEME_LIST[(idx + 1) % THEME_LIST.length].id;
     applyTheme(next);
     try { localStorage.setItem('mg_theme', next); } catch {}
-    toast('主题：' + themeMeta(next).icon + ' ' + themeMeta(next).nameZh);
+    toast(t('theme_changed',themeMeta(next).icon,themeName(themeMeta(next))));
   });
   const endBtn = $('btn-end-game');
   if (endBtn) endBtn.addEventListener('click', () => {
     if (!online.connected || !online.game) return;
-    if (!online.isHost){ toast('由房主结束本局'); return; }
+    if (!online.isHost){ toast(t('host_only_end_game')); return; }
     online.send({ type: 'end_game' });
     finishRoomGame();
   });
   $('btn-back').addEventListener('click', showHub);
   $('btn-restart').addEventListener('click', () => { if (currentGame) currentGame.reset(); });
   $('btn-rules').addEventListener('click', () => {
-    if (currentGameId && RULES[currentGameId]) showModal(GAMES[currentGameId].name + ' · 规则', RULES[currentGameId]);
+    if (currentGameId && RULES[currentGameId]) showModal(t('game_rules_title',GAMES[currentGameId].name), RULES[currentGameId]);
   });
   const heroQuick = $('btn-hero-quick');
   if (heroQuick) heroQuick.addEventListener('click', () => {
     const playable = Object.keys(GAMES).filter(id => playerCount >= GAMES[id].min && playerCount <= GAMES[id].max);
-    if (!playable.length){ toast('当前人数没有可玩的游戏'); return; }
+    if (!playable.length){ toast(t('no_game_for_player_count')); return; }
     startGame(playable[Math.floor(Math.random() * playable.length)]);
   });
   $('btn-create-room').addEventListener('click', () => online.create());

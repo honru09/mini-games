@@ -1,6 +1,12 @@
 ﻿node_modules/
 data/
 *.log
+.codex-tmp/
+
+# 工具生成物与 Office 临时锁文件不进入版本库
+__pycache__/
+*.py[cod]
+deliverables/~$*
 
 # 私密白皮书（凭证）绝不提交
 WHITEPAPER-SECRET.md

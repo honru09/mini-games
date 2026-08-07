@@ -60,12 +60,12 @@ if (typeof document !== 'undefined' && document.addEventListener){
   });
 }
 const THEME_LIST = [
-  { id: 'light',   icon: '☀️', name: 'Light',   nameZh: '日光' },
-  { id: 'midnight',icon: '🌙', name: 'Midnight',nameZh: '午夜' },
-  { id: 'ocean',   icon: '🌊', name: 'Ocean',   nameZh: '海洋' },
-  { id: 'forest',  icon: '🌲', name: 'Forest',  nameZh: '森林' },
-  { id: 'cyber',   icon: '🤖', name: 'Cyber',   nameZh: '赛博' },
-  { id: 'sakura',  icon: '🌸', name: 'Sakura',  nameZh: '樱花' },
+  { id: 'light',   icon: '☀️', name: 'Light',   nameZh: '日光', nameKey:'theme_light' },
+  { id: 'midnight',icon: '🌙', name: 'Midnight',nameZh: '午夜', nameKey:'theme_midnight' },
+  { id: 'ocean',   icon: '🌊', name: 'Ocean',   nameZh: '海洋', nameKey:'theme_ocean' },
+  { id: 'forest',  icon: '🌲', name: 'Forest',  nameZh: '森林', nameKey:'theme_forest' },
+  { id: 'cyber',   icon: '🤖', name: 'Cyber',   nameZh: '赛博', nameKey:'theme_cyber' },
+  { id: 'sakura',  icon: '🌸', name: 'Sakura',  nameZh: '樱花', nameKey:'theme_sakura' },
 ];
 function themeMeta(id){
   if (id === 'dark') id = 'midnight';
@@ -80,9 +80,10 @@ function applyTheme(theme){
   if (btn){
     const meta = themeMeta(theme);
     btn.textContent = meta.icon;
-    btn.title = '切换主题（当前：' + meta.nameZh + '）';
+    btn.title = t('theme_current', themeName(meta));
   }
 }
+function themeName(meta){ return meta && meta.nameKey ? t(meta.nameKey) : (meta ? meta.name : ''); }
 function initTheme(){
   let t = 'light';
   try { t = localStorage.getItem('mg_theme') || 'light'; } catch {}
@@ -92,36 +93,48 @@ function initTheme(){
 const PLAYER_COLORS = ['#e5484d','#3b82f6','#22a06b','#f59e0b','#8b5cf6'];
 const PLAYER_BG = ['#fdecec','#eaf1fe','#e6f6ef','#fef4e0','#f3eefe'];
 const GAMES = {
-  tictactoe:  { name:'井字棋',     icon:'⭕', desc:'3×3 棋盘，三子连线即获胜', min:2, max:2 },
-  gomoku:     { name:'五子棋',     icon:'⚫', desc:'15×15 棋盘，先连成五子获胜', min:2, max:2 },
-  ludo:       { name:'飞行棋',     icon:'✈️', desc:'掷骰起飞，四架飞机全部归位获胜', min:2, max:4 },
-  monopoly:   { name:'迷你大富翁', icon:'🏙️', desc:'买地收租，坚持到最后的玩家获胜', min:2, max:5 },
-  checker:    { name:'弹珠跳棋',   icon:'🔮', desc:'跳子搬家，占领对角营地获胜', min:2, max:5 },
-  tank:       { name:'坦克大战',   icon:'🛡️', desc:'双人对战：走位射击，击毁敌方基地或坦克', min:2, max:2 },
-  snake:      { name:'贪吃蛇',     icon:'🐍', desc:'每人一条蛇竞速吃豆，撞墙/撞己即出局', min:2, max:4 },
-  tetris:     { name:'俄罗斯方块', icon:'🧱', desc:'轮流行进消行，得分最高者获胜', min:2, max:4 },
-  draughts:   { name:'跳棋',       icon:'⚪', desc:'8×8 国际跳棋：斜走吃子、成王连跳', min:2, max:2 },
-  jungle:     { name:'斗兽棋',     icon:'🐘', desc:'8 兽互克过河，占领对方兽穴获胜', min:2, max:2 },
-  xiangqi:    { name:'象棋',       icon:'♞', desc:'经典中国象棋：将死或困毙对方即获胜', min:2, max:2 },
+  gomoku:     { name:'五子棋',     nameKey:'game_gomoku', icon:'⚫', desc:'15×15 棋盘，先连成五子获胜', descKey:'game_gomoku_desc', min:2, max:2 },
+  ludo:       { name:'飞行棋',     nameKey:'game_ludo', icon:'✈️', desc:'掷骰起飞，四架飞机全部归位获胜', descKey:'game_ludo_desc', min:2, max:4 },
+  monopoly:   { name:'迷你大富翁', nameKey:'game_monopoly', icon:'🏙️', desc:'买地收租，坚持到最后的玩家获胜', descKey:'game_monopoly_desc', min:2, max:5 },
+  tank:       { name:'坦克大战',   nameKey:'game_tank', icon:'🛡️', desc:'实时竞技场：走位射击，3 分钟决出胜者', descKey:'game_tank_desc', min:2, max:2 },
+  tetris:     { name:'俄罗斯方块', nameKey:'game_tetris', icon:'🧱', desc:'同步生存战：消行攻防，坚持到最后获胜', descKey:'game_tetris_desc', min:2, max:4 },
+  xiangqi:    { name:'象棋',       nameKey:'game_xiangqi', icon:'♞', desc:'经典中国象棋：将死或困毙对方即获胜', descKey:'game_xiangqi_desc', min:2, max:2 },
 };
 const RULES = {
-  tictactoe: ['3×3 棋盘，两名玩家轮流落子。','横、竖或斜向连成三子即获胜。','九格下满仍无人连成三子则为平局。'],
   gomoku: ['15×15 棋盘，两名玩家轮流落子。','先连成横向、竖向或斜向五子者获胜。','支持悔棋，可撤回上一步。'],
   ludo: ['支持 2-4 人，每人 4 架飞机，从基地起飞。','掷出 6 才能起飞，并额外再掷一次。','飞机沿轨道绕行一圈后进入自己的终点航线。','落在对方飞机所在格，可将其击回基地。','点数必须正好够到终点；四架全部归位即获胜。'],
   monopoly: ['支持 2-5 人，轮流掷两颗骰子前进。','走到未购买的地块可购买；他人地块需付租金。','机会卡包含随机事件；经过起点获得 2000。','资金不足即破产出局，地块回归银行。','第 30 轮结束时资产最多者获胜，也可随时提前结算。'],
-  checker: ['每名玩家 10 颗弹珠，各自占领棋盘一个角。','轮流移动：可走相邻空位，或跳过相邻棋子（可连续跳）。','把 10 颗弹珠全部移入对角营地即获胜。','支持悔棋和提示。'],
   tank: ['两名玩家各操控一辆坦克与一座基地。','每回合可移动 1 格（方向键）或开炮（射击键）。','炮弹直线飞行，命中敌方坦克或基地即得分/获胜。','砖墙可被炮弹摧毁，钢墙不可摧毁。','先击毁敌方基地，或先击毁敌方坦克 3 次者获胜。'],
-  snake: ['支持 2-4 人，每人一条蛇在同一棋盘上竞速吃豆。','每人每次操作时让蛇向一个方向前进一格。','吃到豆子蛇身加长、得分 +1，豆子会重新刷新。','撞墙、撞到自己或别人的蛇身即出局。','存活到最后者获胜；若同时出局，得分高者胜。'],
   tetris: ['支持 2-4 人，每人一个 10×18 的方块井。','轮到自己时操控方块：← → 移动、↑ 旋转、↓ 加速下落。','填满一整行即消行得分；方块堆到顶即出局。','每人限时或限固定方块数，结束后得分最高者获胜。','AI 难度适中，适合新手练习。'],
-  draughts: ['8×8 棋盘，双方各 12 枚棋子，只可在深色格斜走。','普通棋子只能向前斜走一格；能跳吃时必须跳吃。','到达对方底线即升王，王可前后斜走与跳吃。','吃光对方棋子，或对方无子可动即获胜。'],
-  jungle: ['每方 8 兽：象>狮>虎>豹>狼>狗>猫>鼠，鼠可吃象。','鼠可入水；在水中只能被鼠吃。','狮/虎可跳过河流（路径无鼠阻挡）。','进入对方兽穴即获胜；兽穴旁陷阱可弱化任意入陷阱的敌方棋子。','双方兽穴不能进入己方兽穴。'],
   xiangqi: ['9×10 棋盘，双方各 16 子：将/帅、士、象/相、马、车、炮、兵/卒。','将帅在九宫内走；士斜走九宫；象走田不可过河。','马走日受蹩马腿限制；车直行；炮隔山打；兵过河后可横走。','将帅不能照面；被将军必须应将。','将死对方或对方无子可动即获胜。'],
 };
+Object.assign(RULES, {
+  gomokuKeys:['rule_gomoku_1','rule_gomoku_2','rule_gomoku_3'],
+  ludoKeys:['rule_ludo_1','rule_ludo_2','rule_ludo_3','rule_ludo_4','rule_ludo_5'],
+  monopolyKeys:['rule_monopoly_1','rule_monopoly_2','rule_monopoly_3','rule_monopoly_4','rule_monopoly_5'],
+  tankKeys:['rule_tank_1','rule_tank_2','rule_tank_3','rule_tank_4','rule_tank_5'],
+  tetrisKeys:['rule_tetris_1','rule_tetris_2','rule_tetris_3','rule_tetris_4','rule_tetris_5'],
+  xiangqiKeys:['rule_xiangqi_1','rule_xiangqi_2','rule_xiangqi_3','rule_xiangqi_4','rule_xiangqi_5']
+});
 
+function localizeRuntimeText(value){
+  const text = String(value);
+  return typeof translateRuntime === 'function' ? translateRuntime(text) : text;
+}
 function el(tag, cls, text){
   const e = document.createElement(tag);
   if (cls) e.className = cls;
-  if (text !== undefined && text !== null) e.textContent = text;
+  if (text !== undefined && text !== null) {
+    if (typeof setLocalizedText === 'function') setLocalizedText(e, text);
+    else e.textContent = localizeRuntimeText(text);
+  }
+  return e;
+}
+function elRaw(tag, cls, text){
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  e.setAttribute('data-i18n-raw','');
+  if (text !== undefined && text !== null) e.textContent = String(text);
   return e;
 }
 function toast(msg){
@@ -139,7 +152,7 @@ function showModal(title, lines, btnText){
   const ul = el('ul','lines');
   lines.forEach(l => ul.appendChild(el('li', null, l)));
   card.appendChild(ul);
-  const ok = el('button','btn btn-primary', btnText || '知道了');
+  const ok = el('button','btn btn-primary', btnText || t('ok'));
   ok.addEventListener('click', () => bd.remove());
   card.appendChild(ok);
   bd.appendChild(card);
@@ -152,7 +165,20 @@ function pipsHTML(v){
   for (let i=0;i<9;i++) h += '<span class="pip' + (map[v].includes(i) ? ' on' : '') + '"></span>';
   return h;
 }
+function prefersReducedMotion(){
+  try {
+    return typeof window !== 'undefined' && typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  } catch {
+    return false;
+  }
+}
 function animateDice(faces, final, cb){
+  if (prefersReducedMotion()){
+    faces.forEach(f => { f.innerHTML = pipsHTML(final); f.classList.remove('rolling'); });
+    if (cb) cb();
+    return;
+  }
   faces.forEach(f => f.classList.add('rolling'));
   let tick = 0;
   const iv = setInterval(() => {
@@ -202,6 +228,13 @@ function makeDice3D(size, sm){
     if (rolling) return false;
     const gen = ++generation;
     rolling = true;
+    if (prefersReducedMotion()){
+      die.style.transition = 'none';
+      die.style.transform = ROT[final] || ROT[1];
+      rolling = false;
+      if (cb) cb();
+      return true;
+    }
     die.style.transition = 'transform .09s linear';
     let i = 0;
     rollInterval = setInterval(() => {
@@ -238,13 +271,147 @@ function makeDice3D(size, sm){
 }
 
 /* ---------------- AI 助手（DeepSeek 代理） ---------------- */
-async function aiChoose(game, state, options, persona){
+function normalizeAICandidateFeatures(options, candidates){
+  if (!Array.isArray(candidates) || !Array.isArray(options)) return [];
+  const allowed = new Set(options.map(String));
+  const result = [];
+  for (const item of candidates.slice(0, 40)){
+    const choice = String(item && item.choice || '').slice(0, 240);
+    if (!allowed.has(choice) || result.some(existing => existing.choice === choice)) continue;
+    const features = {};
+    if (item && item.features && typeof item.features === 'object' && !Array.isArray(item.features)){
+      for (const [key, raw] of Object.entries(item.features).slice(0, 24)){
+        const value = Number(raw);
+        if (/^[a-z][a-z0-9_]{0,31}$/i.test(key) && Number.isFinite(value)){
+          features[key] = Math.max(-1, Math.min(1, value));
+        }
+      }
+    }
+    result.push({ choice, features });
+  }
+  return result;
+}
+/* ---------------- AI 建议确认（防止慢响应产生幽灵动作） ----------------
+ * /api/ai 只返回“建议票据”，服务端不会在这里写入 match.aiDecisions。
+ * 游戏真正执行建议后，由下方两个轻量 hook（aiSpeak / reportSoloProgress）
+ * 在当前调用栈结束后通过已认证 WebSocket 发送确认。这样客户端超时后走本地
+ * fallback、重开或离开游戏的旧响应都不会进入持续学习缓存。
+ */
+const _pendingAIDecisions = [];
+const _confirmedAIDecisionIds = new Set();
+let _aiDecisionHooksInstalled = false;
+function aiDecisionContext(game){
+  try {
+    if (typeof online === 'undefined' || !online || !online.soloMatch || !online.soloMatch.started) return null;
+    const match = online.soloMatch;
+    if (String(match.game) !== String(game) || !match.matchId || !match.resultId) return null;
+    return { matchId: String(match.matchId), resultId: String(match.resultId) };
+  } catch { return null; }
+}
+function aiReadyDecision(game, actualChoice){
+  const now = Date.now();
+  for (let i = _pendingAIDecisions.length - 1; i >= 0; i--){
+    const row = _pendingAIDecisions[i];
+    if (!row || row.expiresAt <= now || row.confirmed || _confirmedAIDecisionIds.has(row.decisionId)){
+      _pendingAIDecisions.splice(i, 1);
+      continue;
+    }
+    if (game && String(row.game) !== String(game)) continue;
+    if (actualChoice !== undefined && actualChoice !== null &&
+        (!Array.isArray(row.options) || !row.options.includes(String(actualChoice)))) continue;
+    _pendingAIDecisions.splice(i, 1);
+    return row;
+  }
+  return null;
+}
+function aiChoiceFromProgress(game, action){
+  if (!action || typeof action !== 'object' || Array.isArray(action)) return null;
+  if (String(game) === 'tank'){
+    if (action.act === 'shoot') return 'shoot';
+    if (action.act === 'move' && Number.isInteger(Number(action.d))) return 'move:' + Number(action.d);
+  }
+  if (String(game) === 'tetris' && action.act === 'lock' &&
+      [action.piece, action.rot, action.x, action.y].every(value => Number.isInteger(Number(value)))){
+    return [Number(action.piece), Number(action.rot), Number(action.x), Number(action.y)].join(':');
+  }
+  return null;
+}
+function sendAIConfirmation(row, actualChoice){
+  if (!row || !row.decisionId || _confirmedAIDecisionIds.has(row.decisionId)) return false;
+  const choice = String(actualChoice === undefined || actualChoice === null ? row.choice : actualChoice);
+  if (!Array.isArray(row.options) || !row.options.includes(choice)) return false;
+  try {
+    if (typeof online === 'undefined' || !online || typeof online.send !== 'function') return false;
+    _confirmedAIDecisionIds.add(row.decisionId);
+    const sent = online.send({ type: 'ai_decision_confirm', payload: {
+      game: row.game, matchId: row.matchId, resultId: row.resultId,
+      decisionId: row.decisionId, choice,
+    } });
+    if (sent === false){
+      _confirmedAIDecisionIds.delete(row.decisionId);
+      return false;
+    }
+    return true;
+  } catch {
+    _confirmedAIDecisionIds.delete(row.decisionId);
+    return false;
+  }
+}
+function confirmAIReady(game, actualChoice){
+  const row = aiReadyDecision(game, actualChoice);
+  if (!row) return false;
+  // 推迟一个微任务，确保调用方已经完成 applyMove/applyPlacement 等实际变更。
+  const choice = actualChoice === undefined || actualChoice === null ? row.choice : actualChoice;
+  const defer = typeof queueMicrotask === 'function' ? queueMicrotask : (fn => Promise.resolve().then(fn));
+  const retryUntil = Date.now() + 5000;
+  const send = () => {
+    if (sendAIConfirmation(row, choice) || Date.now() >= retryUntil) return;
+    setTimeout(send, 500);
+  };
+  defer(send);
+  return true;
+}
+function installAIConfirmationHooks(){
+  if (_aiDecisionHooksInstalled) return;
+  _aiDecisionHooksInstalled = true;
+  // `aiSpeak(..., 'think')` is presentation only and happens before the
+  // move.  It must never acknowledge a learning sample. Turn-based games
+  // explicitly call confirmAIReady after their legal move succeeds; realtime
+  // games are confirmed by the actual-progress hook below.
+  try {
+    if (typeof online !== 'undefined' && online && typeof online.reportSoloProgress === 'function' && !online.reportSoloProgress.__mgConfirmHook){
+      const originalProgress = online.reportSoloProgress.bind(online);
+      const wrappedProgress = function(game, action){
+        const result = originalProgress(game, action);
+        const actual = aiChoiceFromProgress(game, action);
+        if (actual) confirmAIReady(game, actual);
+        return result;
+      };
+      wrappedProgress.__mgConfirmHook = true;
+      online.reportSoloProgress = wrappedProgress;
+    }
+  } catch {}
+}
+function armAIConfirmation(game, context, data, options){
+  if (!data || !data.decisionId || !context || !data.choice || !Array.isArray(options)) return;
+  _pendingAIDecisions.push({
+    game: String(game), matchId: String(context.matchId), resultId: String(context.resultId),
+    decisionId: String(data.decisionId), choice: String(data.choice), options: options.slice(0, 200).map(String),
+    expiresAt: Date.now() + 900,
+  });
+  while (_pendingAIDecisions.length > 32) _pendingAIDecisions.shift();
+  setTimeout(() => aiReadyDecision(String(game)), 1000);
+  installAIConfirmationHooks();
+}
+async function aiChoose(game, state, options, persona, candidates){
   const token = (typeof account !== 'undefined' && account && typeof account.authToken === 'string')
     ? account.authToken.trim() : '';
   if (!token || !Array.isArray(options) || !options.length ||
       options.some(option => typeof option !== 'string') ||
       typeof fetch !== 'function' || typeof AbortController === 'undefined') return null;
   const legalOptions = options.slice(0, 200);
+  const learningCandidates = normalizeAICandidateFeatures(legalOptions, candidates);
+  const context = aiDecisionContext(game);
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 2200);
   try {
@@ -256,12 +423,17 @@ async function aiChoose(game, state, options, persona){
         'Content-Type': 'application/json',
         Authorization: 'Bearer ' + token,
       },
-      body: JSON.stringify({ game, state, options: legalOptions, persona: persona || null }),
+      body: JSON.stringify({ game, state, options: legalOptions, persona: persona || null,
+        candidates: learningCandidates, context }),
       signal: controller.signal,
     });
     if (!res.ok) return null;
     const data = await res.json();
-    return data && legalOptions.includes(data.choice) ? data.choice : null;
+    if (data && legalOptions.includes(data.choice)){
+      armAIConfirmation(game, context, data, legalOptions);
+      return data.choice;
+    }
+    return null;
   } catch {
     return null;
   } finally {
@@ -327,7 +499,7 @@ function showVictoryOverlay(area, opts) {
   
   // 标题
   const title = el('h3', 'victory-title', opts.winnerName 
-    ? (opts.winnerName + ' ' + t('result_winner', opts.winner + 1).replace(/🏆 玩家\d+/, '🏆'))
+    ? t('result_named_winner',opts.winnerName)
     : t('result_winner', (opts.winner || 0) + 1));
   card.appendChild(title);
   
@@ -336,7 +508,7 @@ function showVictoryOverlay(area, opts) {
     card.appendChild(el('p', 'victory-subtitle', opts.subtitle));
   }
   
-  // 金币动画
+  // 胜利彩带；正式奖励异步由服务端 Reward Breakdown 展示。
   if (opts.coins) {
     // 彩带粒子（CSS 动画，零依赖）
     const CONF_COLORS = ['#f59e0b','#ef4444','#22d3ee','#a78bfa','#f472b6','#34d399','#fbbf24'];
@@ -351,12 +523,6 @@ function showVictoryOverlay(area, opts) {
       cf.style.animationDelay = (Math.random() * 0.35) + 's';
       ov.appendChild(cf);
     }
-    const coinRow = el('div', 'victory-coins');
-    const coinIcon = el('span', 'coin coin-lg');
-    coinIcon.textContent = '$';
-    coinRow.appendChild(coinIcon);
-    coinRow.appendChild(el('span', null, ' +' + opts.coins));
-    card.appendChild(coinRow);
   }
   
   // 按钮行
@@ -376,7 +542,7 @@ function showVictoryOverlay(area, opts) {
   }
   
   if (opts.onShare) {
-    const share = el('button', 'btn victory-btn', '📤 分享');
+    const share = el('button', 'btn victory-btn', t('share_button'));
     share.addEventListener('click', opts.onShare);
     btnRow.appendChild(share);
   }
@@ -402,13 +568,13 @@ function shareGameLink(gameId, roomCode) {
   } else if (gameId) {
     url += '#game=' + gameId + '&p=2';
   }
-  const text = '来 Playroom 一起玩' + (gameId && GAMES[gameId] ? GAMES[gameId].name : '小游戏') + '！';
+  const text = t('share_text',gameId && GAMES[gameId] ? GAMES[gameId].name : t('share_fallback_game'));
   if (navigator.share) {
     navigator.share({ title: 'Playroom', text: text, url: url }).catch(() => {});
   } else {
-    try { navigator.clipboard.writeText(url); toast('📋 链接已复制，发送给朋友即可加入'); } catch(e) {}
+    try { navigator.clipboard.writeText(url); toast(t('share_copied')); } catch(e) {}
   }
-  toast('📤 分享链接：' + url);
+  toast(t('share_link',url));
 }
 
 /* ====== 触屏归一化 ====== */

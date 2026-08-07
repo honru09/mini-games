@@ -15,7 +15,7 @@ function openProfileModal(uid){
   } else if (local){
     renderProfilePopup(local, false);
   } else {
-    toast('未找到该玩家档案');
+    toast(t('profile_not_found'));
   }
 }
 function renderProfilePopup(p, isMe){
@@ -35,12 +35,12 @@ function renderProfilePopup(p, isMe){
   const pTitle = titleFor(pLv);
   const pname = el('div','pname');
   pname.appendChild(nameFxNode(p, p.name));
-  pname.appendChild(el('span', null, ' [Lv.' + pLv + ']' + ' ' + (p.lang ? langFlag(p.lang) : '') + (isMe ? t('profile_mine') : '')));
+  pname.appendChild(el('span', null, t('level_bracket',pLv) + ' ' + (p.lang ? langFlag(p.lang) : '') + (isMe ? t('profile_mine') : '')));
   hero.appendChild(pname);
-  hero.appendChild(el('div','pmeta', pTitle.icon + ' ' + pTitle.name + ' · ' + (p.achievements ? p.achievements.length : 0) + ' achievements'));
+  hero.appendChild(el('div','pmeta', t('profile_title_achievements', pTitle.icon + ' ' + socialTitleName(pTitle), (p.achievements ? p.achievements.length : 0))));
   const coinLine = el('div','pmeta');
-  coinLine.appendChild(el('span','coin','$'));
-  coinLine.appendChild(el('span', null, ' ' + (p.coins || 0) + ' · 共 ' + (p.total || 0) + ' 局' + (p.online ? ' · 🟢在线' : ' · ⚪离线')));
+  coinLine.appendChild(currencyIcon());
+  coinLine.appendChild(el('span', null, t('profile_summary', p.coins || 0, p.total || 0, t(p.online ? 'online_label' : 'offline_label'))));
   hero.appendChild(coinLine);
   // 等级进度条
   const xpNow = p.xp || 0;
@@ -48,7 +48,7 @@ function renderProfilePopup(p, isMe){
   const needNext = xpForLevel(pLv + 1);
   const prog = needNext > needCur ? Math.max(0, Math.min(1, (xpNow - needCur) / (needNext - needCur))) : 1;
   const lvWrap = el('div','level-bar-wrap');
-  lvWrap.appendChild(el('div','level-bar-label','Lv.' + pLv + ' → ' + (pLv + 1) + ' · ' + (xpNow - needCur) + '/' + (needNext - needCur) + ' XP'));
+  lvWrap.appendChild(el('div','level-bar-label',t('level_progress',pLv,pLv+1,xpNow-needCur,needNext-needCur)));
   const lvBar = el('div','level-bar');
   const lvFill = el('div','level-bar-fill');
   lvFill.style.width = Math.round(prog * 100) + '%';
@@ -58,40 +58,40 @@ function renderProfilePopup(p, isMe){
   card.appendChild(hero);
   const stats = el('div','profile-stats');
   const achChip = el('div','stat-chip');
-  achChip.textContent = '🏆 成就 ' + ((p.achievements && p.achievements.length) || 0);
+  achChip.textContent = t('profile_achievement_count', (p.achievements && p.achievements.length) || 0);
   stats.appendChild(achChip);
   GAME_KEYS.forEach(k => {
     const s = el('div','stat-chip small');
-    s.textContent = GAMES[k].icon + ' ' + ((p.played && p.played[k]) || 0) + ' 局';
+    s.textContent = GAMES[k].icon + ' ' + t('games_count', (p.played && p.played[k]) || 0);
     stats.appendChild(s);
   });
   card.appendChild(stats);
   const links = el('div','profile-links');
   if (isMe && account){
-    const edit = el('button','btn btn-primary','✏️ 编辑档案');
+    const edit = el('button','btn btn-primary',t('edit_profile'));
     edit.addEventListener('click', () => { bd.remove(); openProfileEditor(account.uid); });
     links.appendChild(edit);
-    const achBtn = el('button','btn','🏆 成就');
+    const achBtn = el('button','btn',t('achievements_button'));
     achBtn.addEventListener('click', () => { bd.remove(); openAchievementsModal(); });
     links.appendChild(achBtn);
-    const shop = el('button','btn','🛍️ 商城');
+    const shop = el('button','btn',t('shop'));
     shop.addEventListener('click', () => { bd.remove(); openShop(); });
     links.appendChild(shop);
-    const logout = el('button','btn','退出登录');
+    const logout = el('button','btn',t('logout'));
     logout.addEventListener('click', () => { bd.remove(); logoutAccount(); });
     links.appendChild(logout);
   } else if (online.room && online.isHost && !online.game){
-    const inv = el('button','btn btn-primary','📨 邀请');
+    const inv = el('button','btn btn-primary',t('invite_short'));
     inv.addEventListener('click', () => {
       bd.remove();
-      if (online.room){ online.send({ type: 'invite', payload: { toUid: p.uid } }); toast('邀请已发送'); }
+      if (online.room){ online.send({ type: 'invite', payload: { toUid: p.uid } }); toast(t('invite_sent')); }
       else { online.inviteTarget = p.uid; online.create(); }
     });
     links.appendChild(inv);
   }
-  if (!links.children.length) card.appendChild(el('div','lb-note','这是其他玩家的公开档案'));
+  if (!links.children.length) card.appendChild(el('div','lb-note',t('profile_public')));
   card.appendChild(links);
-  const close = el('button','btn','关闭');
+  const close = el('button','btn',t('close'));
   close.addEventListener('click', () => bd.remove());
   card.appendChild(close);
   bd.appendChild(card);

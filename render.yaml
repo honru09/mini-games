@@ -5,6 +5,8 @@ services:
     name: mini-games-online
     runtime: node
     plan: free
+    # Reward Resolver 当前由单个 Node 写入者计算；扩容前必须先完成数据库版本冲突重算。
+    numInstances: 1
     rootDir: .
     buildCommand: npm install
     startCommand: node server/index.js
