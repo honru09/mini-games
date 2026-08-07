@@ -92,8 +92,12 @@ async function main(){
   const accB = await register(b, 'u_recb' + suffix, 'RecB' + suffix);
   const created = await a.request('create', { capacity: 2 }, m => m.type === 'created', 'created');
   await b.request('join', { room: created.room }, m => m.type === 'joined', 'joined');
-  const am = a.mark(), bm = b.mark();
+  const selectedMark = a.mark();
   a.send('select_game', { game: 'gomoku' });
+  await a.waitAfter(selectedMark, m => m.type === 'room_update' && m.payload && m.payload.game === 'gomoku', 'selected game');
+  const am = a.mark(), bm = b.mark();
+  b.send('ready', { ready: true });
+  a.send('start', {});
   const startedA = await a.waitAfter(am, m => m.type === 'started', 'started A');
   const startedB = await b.waitAfter(bm, m => m.type === 'started', 'started B');
   check('双方拿到相同 matchId', !!startedA.matchId && startedA.matchId === startedB.matchId);
@@ -137,6 +141,8 @@ async function main(){
   b3.send('join', { room: created.room });
   const joinedAgain = await b3.waitAfter(rejoinRoomMark, m => m.type === 'joined', 'join after expired resume');
   check('过期账号可作为新连接重新加入', joinedAgain.player === 1 && joinedAgain.room === created.room);
+  b3.send('ready', { ready: true });
+  a.send('start', {});
   await b3.waitAfter(rejoinRoomMark, m => m.type === 'started', 'match restarted after join');
 
   const hostExpiryMark = b3.mark();

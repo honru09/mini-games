@@ -14,7 +14,7 @@ class Client{
   constructor(name){this.name=name;this.messages=[];this.waiters=[];this.uid='';this.token='';}
   async connect(){this.ws=new WebSocket('ws://127.0.0.1:'+PORT+'/ws');this.ws.onmessage=event=>{const msg=JSON.parse(event.data);this.messages.push(msg);this.waiters.splice(0).forEach(resolve=>resolve());};await new Promise((resolve,reject)=>{this.ws.onopen=resolve;this.ws.onerror=reject;});}
   send(type,payload){this.ws.send(JSON.stringify({type,payload}));}
-  async wait(type,timeout=6000){const end=Date.now()+timeout;while(Date.now()<end){const index=this.messages.findIndex(item=>item.type===type);if(index>=0)return this.messages.splice(index,1)[0];await new Promise(resolve=>{this.waiters.push(resolve);setTimeout(resolve,25);});}throw new Error(this.name+' wait '+type+'; queued='+JSON.stringify(this.messages.slice(-8)));}
+  async wait(type,timeout=6000,predicate=null){const end=Date.now()+timeout;while(Date.now()<end){const index=this.messages.findIndex(item=>item.type===type&&(!predicate||predicate(item)));if(index>=0)return this.messages.splice(index,1)[0];await new Promise(resolve=>{this.waiters.push(resolve);setTimeout(resolve,25);});}throw new Error(this.name+' wait '+type+'; queued='+JSON.stringify(this.messages.slice(-8)));}
   async register(index){this.send('register',{uid:'u_cosmetic'+String(index).padStart(2,'0'),pin:'CosmeticPin'+index,name:this.name});const registered=await this.wait('registered');this.uid=registered.payload.uid;this.token=registered.payload.token;this.send('hello',{uid:this.uid,token:this.token,proto:1,capabilities:['game-cosmetic-presentation-v1']});await this.wait('hello_ack');}
   close(){try{this.ws&&this.ws.close();}catch{}}
 }
@@ -31,7 +31,15 @@ async function main(){
     check('Cosmetic Profile：合法装备保存且未知 ID 回退默认',hostProfile.cosmeticSchemaVersion===1&&hostProfile.gameCosmetics.tetris.blockSkin==='neon'&&hostProfile.gameCosmetics.tetris.backgroundSkin==='grid'&&hostProfile.gameCosmetics.gomoku.pieceSkin==='classic');
     guest.send('profile_get',{uid:host.uid});const publicProfile=(await guest.wait('profile_data')).payload;
     check('Cosmetic Profile：公开档案只暴露装备 ID，不暴露 owned',publicProfile.gameCosmetics.tank.tankSkin==='cyber'&&!Object.prototype.hasOwnProperty.call(publicProfile,'owned'));
-    host.send('create',{capacity:2});const created=await host.wait('created');host.send('select_game',{game:'tetris'});guest.send('join',{room:created.room});const hs=await host.wait('started'),gs=await guest.wait('started');
+    host.send('create',{capacity:2});const created=await host.wait('created');
+    host.send('select_game',{game:'tetris'});
+    await host.wait('room_update',6000,msg=>msg.payload&&msg.payload.game==='tetris');
+    guest.send('join',{room:created.room});await guest.wait('joined');
+    await host.wait('room_update',6000,msg=>msg.payload&&msg.payload.game==='tetris'&&msg.payload.size===2);
+    guest.send('ready',{ready:true});
+    await host.wait('room_update',6000,msg=>msg.payload&&msg.payload.game==='tetris'&&msg.payload.canStart===true);
+    host.send('start');
+    const hs=await host.wait('started'),gs=await guest.wait('started');
     const presentation=hs.presentation;
     check('Cosmetic Profile：装备经公开 Match Metadata 到双方 renderer',presentation.cosmeticSchemaVersion===1&&presentation.cosmetic.players[0].block==='neon'&&presentation.cosmetic.players[0].background==='grid'&&presentation.cosmetic.players[1].block==='classic'&&JSON.stringify(presentation)===JSON.stringify(gs.presentation));
     const serialized=JSON.stringify(presentation);

@@ -13,7 +13,7 @@ function openAuthModal(mode){
     hero.appendChild(el("p", null, t(m === "register" ? 'register_intro' : 'login_intro')));
     card.appendChild(hero);
     if (m === "register"){
-      let avatar = 0, bg = 0, catTab = "all";
+      let avatar = 100, bg = 0, catTab = "all";
       const nameInput = el("input","nick-input");
       nameInput.type = "text"; nameInput.maxLength = 12;
       nameInput.placeholder = t('profile_name_placeholder');
@@ -22,15 +22,14 @@ function openAuthModal(mode){
       card.appendChild(avLabel);
       const catTabs = el("div","shop-tabs");
       const cats = [
-        {id:"all"},{id:"basic"},{id:"theme"},{id:"fantasy"},{id:"animals"},
-        {id:"profession"},{id:"creative"},
+        {id:"all"},{id:"basic"},{id:"theme"},...AVATAR_CATEGORIES.map(item=>({id:item.id})),
       ];
       const grid = el("div","avatar-grid auth-avatar-grid");
       function renderAvatarGrid(){
         grid.innerHTML = "";
         for (let i = 0; i < AVATAR_COUNT; i++){
           if (catTab !== "all" && avatarCategory(i) !== catTab) continue;
-          const locked = i >= 30;
+          const locked = avatarLocked(i);
           const opt = el("button","avatar-opt" + (i === avatar ? " selected" : "") + (locked ? " locked" : ""));
           opt.type = "button";
           opt.appendChild(avatarCanvas(i, 26));

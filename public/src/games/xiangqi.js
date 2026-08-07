@@ -415,6 +415,7 @@ function gameXiangqi(area, extra, n, opts){
       const executedChoice = xqMoveKey(xqMv);
       aiPending = false;
       aiSpeak(opts.aiPersona, 'think');
+      if (opts.online && opts.ai && opts.ai.has(turn) && typeof opts.sendBotMove === 'function') opts.sendBotMove(turn, { from:xqMv.from, to:xqMv.to });
       if (doMove(xqMv.from, xqMv.to) && typeof confirmAIReady === 'function') {
         confirmAIReady('xiangqi', executedChoice);
       }

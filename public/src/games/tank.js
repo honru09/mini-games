@@ -570,9 +570,11 @@ function gameTank(area, extra, n, opts){
     aiPending.delete(pi);
     const actor=tanks[pi];
     if (choice === 'shoot'){
+      if (authorityMode && typeof opts.sendBotTankInput === 'function') { opts.sendBotTankInput(pi, { input:{ fire:true, direction:actor.d }, clientTick:authorityServerTick }); aiPending.delete(pi); return; }
       if(fireTank(actor)&&opts.onProgress)opts.onProgress({act:'shoot'});
     } else {
       const direction = Number(choice.slice(-1));
+      if (authorityMode && typeof opts.sendBotTankInput === 'function') { opts.sendBotTankInput(pi, { input:{ up:direction===0, right:direction===1, down:direction===2, left:direction===3 }, clientTick:authorityServerTick }); aiPending.delete(pi); return; }
       if (opts.onProgress) opts.onProgress({act:'move',d:direction});
       pulseMove(pi,direction,false);
     }

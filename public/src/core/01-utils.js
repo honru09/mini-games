@@ -79,8 +79,9 @@ function applyTheme(theme){
   const btn = $('btn-theme');
   if (btn){
     const meta = themeMeta(theme);
-    btn.textContent = meta.icon;
-    btn.title = t('theme_current', themeName(meta));
+    const label = t('theme_current', themeName(meta));
+    if (typeof setButtonIcon === 'function') setButtonIcon(btn, theme === 'light' ? 'moon' : 'sun', '', { ariaLabel:label, title:label, size:19 });
+    else { btn.textContent = meta.icon; btn.title = label; }
   }
 }
 function themeName(meta){ return meta && meta.nameKey ? t(meta.nameKey) : (meta ? meta.name : ''); }

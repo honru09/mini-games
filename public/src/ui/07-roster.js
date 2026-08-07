@@ -1,11 +1,13 @@
 /* ================= 用户档案与积分 ================= */
-const AVATAR_COUNT = 56; // 0-29 免费，30-55 商城（4 分类）
+const AVATAR_COUNT = 148; // 旧 0-55 兼容；新注册与商城使用 Avatar v2
 const AVATAR_CATEGORIES = [
-  { id: 'fantasy', name: '👑 幻想', icon: '👑' },
-  { id: 'animals', name: '🐾 动物', icon: '🐾' },
-  { id: 'profession', name: '💼 职业', icon: '💼' },
-  { id: 'creative', name: '🎨 创意', icon: '🎨' },
+  { id:'pixel', name:'像素', icon:'▦' }, { id:'anime', name:'动漫', icon:'✦' },
+  { id:'landscape', name:'风景', icon:'◒' }, { id:'animal', name:'动物', icon:'●' },
+  { id:'neon', name:'霓虹', icon:'⌁' }, { id:'technology', name:'科技', icon:'◇' },
 ];
+const PLAYROOM_AVATAR_NAMES={pixel:['像素冒险家','像素旅行者','赛博信使','未来战士','像素机器人','太空旅人','快乐工程师','科幻探索者'],anime:['沉着军师','晴野探险家','星际驾驶员','幻想学者','都市创作者','热血竞速者','星辉守护者','发明少年'],landscape:['雪峰','海浪灯塔','月岭','森径','未来城市','星云','荒漠公路','岛屿日落'],animal:['聪明猫','忠诚犬','冒险狐','温柔熊','活力兔','好奇水獭','自信小鸟','友好小恐龙'],neon:['夜城信使','霓虹狐','全息 DJ','赛博滑手','电光合成人','赤焰赛车手','霓虹猫守卫','光轨探索者'],technology:['洁白宇航员','精密服务机器人','合成人','轨道工程师','未来救援兵','机甲驾驶员','卫星科学家','导航仿生人']};
+const PLAYROOM_AVATARS=AVATAR_CATEGORIES.flatMap((theme,themeIndex)=>PLAYROOM_AVATAR_NAMES[theme.id].map((name,offset)=>({id:100+themeIndex*8+offset,name,theme:theme.id,themeName:theme.name,free:offset<2,animated:offset>=6,price:offset<2?0:[10,12,14,16,18,18][offset-2],collectionId:theme.id+'_origins'})));
+const PLAYROOM_AVATAR_BY_ID=new Map(PLAYROOM_AVATARS.map(item=>[item.id,item]));
 
 const SHOP = {
   avatars: [
@@ -35,6 +37,7 @@ const SHOP = {
     { id: 53, name: '暗影', price: 15, category: 'creative' },
     { id: 54, name: '金冠骑士', price: 8, category: 'fantasy' },
     { id: 55, name: '龙骑士', price: 20, category: 'fantasy' },
+    ...PLAYROOM_AVATARS.filter(item=>!item.free).map(item=>({...item,category:item.theme})),
   ],
   frames: [
     { id: 1, name: '金色边框', price: 5, cls: 'frame-1' },
@@ -63,6 +66,7 @@ const SHOP = {
     { id: 8, name: '樱花飘落', price: 10, cls: 'bg-8' },
     { id: 9, name: '赛博矩阵', price: 14, cls: 'bg-9' },
     { id: 10, name: '海洋波浪', price: 12, cls: 'bg-10' },
+    ...PREMIUM_BACKGROUNDS.map(item=>({...item,cls:'bg-'+item.id})),
   ],
 };
 function shopItemName(category,item){
@@ -75,7 +79,7 @@ function avatarCategoryName(category){
   return localized===key?category.name:localized;
 }
 function avatarMeta(idx){
-  const p = SHOP.avatars.find(a => a.id === idx);
+  const p = PLAYROOM_AVATAR_BY_ID.get(Number(idx)) || SHOP.avatars.find(a => a.id === idx);
   return p ? p : null;
 }
 function nameFxNode(profile, name){
@@ -88,12 +92,15 @@ function nameFxLabel(fx){
   return localized===key?t('name_fx_0'):localized;
 }
 function avatarCategory(idx) {
+  if (PLAYROOM_AVATAR_BY_ID.has(Number(idx))) return PLAYROOM_AVATAR_BY_ID.get(Number(idx)).theme;
   if (idx < 20) return 'basic';           // 0-19 基础生成头像（免费）
   if (idx < 30) return 'theme';           // 20-29 主题头像（免费）
   const meta = SHOP.avatars.find(a => a.id === idx);
   return meta ? meta.category : 'creative'; // 30-55 商城头像
 }
 function avatarLocked(idx){
+  const v=PLAYROOM_AVATAR_BY_ID.get(Number(idx));
+  if(v) return !v.free&&!ownItem(account,'avatars',Number(idx));
   return idx >= 30 && !ownItem(account, 'avatars', idx);
 }
 function avatarPrice(idx){
@@ -185,8 +192,15 @@ function makeAvatar(idx){
     hat: idx % 5 === 0,
   };
 }
-function avatarCanvas(idx, size){
+function avatarAssetPath(meta,variant){
+  if(!meta)return'';const suffix=variant==='animated'&&meta.animated?'animated':(variant||'256');return 'assets/avatars/v2/'+meta.theme+'/avatar_'+meta.id+'_'+suffix+'.webp';
+}
+function avatarCanvas(idx, size, options){
   size = size || 40;
+  const v2=PLAYROOM_AVATAR_BY_ID.get(Number(idx));
+  if(v2){
+    const img=document.createElement('img'),px=size<=64?'64':(size<=128?'128':'256');img.className='avatar-art-v2';img.width=size;img.height=size;img.alt=v2.name;img.loading='lazy';img.decoding='async';const animate=!!(options&&options.animate&&v2.animated);img.src=avatarAssetPath(v2,animate?'animated':px);if(!animate)img.srcset=avatarAssetPath(v2,'64')+' 64w, '+avatarAssetPath(v2,'128')+' 128w, '+avatarAssetPath(v2,'256')+' 256w';if(v2.animated&&!(options&&options.animate)){const poster=img.src,posterSrcset=img.srcset;img.dataset.animatedSrc=avatarAssetPath(v2,'animated');img.addEventListener('mouseenter',()=>{if(!matchMedia('(prefers-reduced-motion: reduce)').matches){img.removeAttribute('srcset');img.src=img.dataset.animatedSrc;}});img.addEventListener('mouseleave',()=>{img.src=poster;img.srcset=posterSrcset;});}img.addEventListener('error',()=>{img.replaceWith(avatarCanvas(Number(idx)%30,size));},{once:true});return img;
+  }
   const st = makeAvatar(idx);
   const off = document.createElement('canvas');
   off.width = 16; off.height = 16;
@@ -283,7 +297,7 @@ function deviceFingerprint(){
 }
 function defaultOwned(){
   return {
-    avatars: Array.from({ length: 30 }, (_, i) => i), // 0-19 free
+    avatars: Array.from({ length: 30 }, (_, i) => i).concat([100,101,108,109,116,117,124,125,132,133,140,141]),
     frames: [0], effects: [0], backgrounds: [0],
   };
 }
@@ -344,6 +358,9 @@ function syncProfiles(){
       uid: account.uid, name: account.name, avatar: account.avatar,
       background: account.background || 0, frame: account.frame || 0, effect: account.effect || 0,
       nameFx: account.nameFx || 0, lang: account.lang || currentLang, gameCosmetics: account.gameCosmetics || {},
+      signature: account.signature || '', countryRegion: account.countryRegion || '', genderTag: account.genderTag || 'hidden',
+      presencePreference: account.presencePreference || 'joinable', presenceVisibility: account.presenceVisibility || 'everyone',
+      showcase: account.showcase || null,
     } });
   }
 }
@@ -358,12 +375,13 @@ function registerAccount(name, pin, avatar, background, frame, effect){
   pendingAuthPin = pin;
   account = {
     uid, name, lang: currentLang,
-    avatar: Number.isInteger(avatar) ? Math.max(0, Math.min(AVATAR_COUNT - 1, avatar)) : 0,
+    avatar: Number.isInteger(avatar) ? Math.max(0, Math.min(AVATAR_COUNT - 1, avatar)) : 100,
     background: Number.isInteger(background) ? Math.max(0, background) : 0,
     frame: Number.isInteger(frame) ? Math.max(0, frame) : 0,
     effect: Number.isInteger(effect) ? Math.max(0, effect) : 0,
     owned: defaultOwned(), coins: 0, played: {}, total: 0, device: deviceFingerprint(), nameFx: 0, gameCosmetics: {}, cosmeticSchemaVersion: 1,
-    registered: false,
+    registered: false, signature: '', countryRegion: '', genderTag: 'hidden',
+    presencePreference: 'joinable', presenceVisibility: 'everyone', showcase: null,
   };
   const me = roster.find(p => p.uid === uid);
   if (me){ me.name = name; me.avatar = account.avatar; }
@@ -375,6 +393,8 @@ function registerAccount(name, pin, avatar, background, frame, effect){
       uid, pin, name, avatar: account.avatar, background: account.background,
       lang: currentLang,
       frame: account.frame, effect: account.effect, owned: account.owned, gameCosmetics: account.gameCosmetics,
+      signature: account.signature, countryRegion: account.countryRegion, genderTag: account.genderTag,
+      presencePreference: account.presencePreference, presenceVisibility: account.presenceVisibility, showcase: account.showcase,
     } });
   }
   renderMe(); renderSlots(); renderLeaderboard();
@@ -436,6 +456,12 @@ function updateAccountProfile(p){
   account.achievements = p.achievements || [];
   account.playmates = p.playmates || {};
   account.daily = p.daily || { play: 0, win: 0, streak: 0 };
+  account.signature = p.signature || '';
+  account.countryRegion = p.countryRegion || '';
+  account.genderTag = p.genderTag || 'hidden';
+  account.presencePreference = p.presencePreference || account.presencePreference || 'joinable';
+  account.presenceVisibility = p.presenceVisibility || account.presenceVisibility || 'everyone';
+  account.showcase = p.showcase || null;
   saveRoster(); saveAccount();
 }
 function renderMe(){
@@ -474,6 +500,10 @@ function renderMe(){
 function renderSlots(){
   const row = $('slots-row');
   row.innerHTML = '';
+  row.classList.add('hidden');
+  row.setAttribute('aria-hidden','true');
+  return;
+  /* Legacy local roster rendering retained below only for migration snapshots. */
   for (let i = 0; i < playerCount; i++){
     if (aiMode && i > 0){
       const chip = el('button','slot-chip ai');
@@ -508,6 +538,9 @@ function renderSlots(){
   }
 }
 function ensureSlots(){
+  if (aiMode) { slots = [deviceUid]; return; }
+  return;
+  /* Legacy local hot-seat slot migration path. */
   slots = slots.slice(0, playerCount);
   while (slots.length < playerCount) slots.push(null);
   if (deviceUid) slots[0] = deviceUid;
@@ -572,8 +605,8 @@ function openProfileEditor(uid, slotIndex){
   card.appendChild(catLabel);
   const editorCats = el('div','shop-tabs');
   const editorCatsDef = [
-    { id:'all' }, { id:'basic' }, { id:'theme' }, { id:'fantasy' }, { id:'animals' },
-    { id:'profession' }, { id:'creative' },
+    { id:'all' }, { id:'basic' }, { id:'theme' }, ...AVATAR_CATEGORIES.map(item => ({ id:item.id })),
+    { id:'fantasy' }, { id:'animals' }, { id:'profession' }, { id:'creative' },
   ];
   let editorCat = 'all';
   const grid = el('div','avatar-grid');
@@ -644,6 +677,55 @@ function openProfileEditor(uid, slotIndex){
       fxRow.appendChild(fxBtn);
     }
     card.appendChild(fxRow);
+
+    const signatureInput = el('textarea','nick-input');
+    signatureInput.maxLength = 80;
+    signatureInput.placeholder = t('profile_signature_placeholder');
+    signatureInput.value = account.signature || '';
+    card.appendChild(el('div','lb-note',t('profile_signature')));
+    card.appendChild(signatureInput);
+
+    const regionSelect = document.createElement('select');
+    regionSelect.className = 'nick-input';
+    regionSelect.setAttribute('aria-label', t('profile_region'));
+    [['',t('region_unset')],['CN',t('region_cn')],['JP',t('region_jp')],['UA',t('region_ua')],['US',t('region_us')],['GB',t('region_gb')],['DE',t('region_de')],['FR',t('region_fr')],['CA',t('region_ca')],['AU',t('region_au')]].forEach(([value,label]) => {
+      const option = document.createElement('option'); option.value = value; option.textContent = label; option.selected = (account.countryRegion || '') === value; regionSelect.appendChild(option);
+    });
+    card.appendChild(el('div','lb-note',t('profile_region'))); card.appendChild(regionSelect);
+
+    const genderSelect = document.createElement('select');
+    genderSelect.className = 'nick-input';
+    genderSelect.setAttribute('aria-label', t('profile_gender'));
+    [['hidden',t('gender_hidden')],['male',t('gender_male')],['female',t('gender_female')],['nonbinary',t('gender_nonbinary')]].forEach(([value,label]) => {
+      const option = document.createElement('option'); option.value = value; option.textContent = label; option.selected = (account.genderTag || 'hidden') === value; genderSelect.appendChild(option);
+    });
+    card.appendChild(el('div','lb-note',t('profile_gender'))); card.appendChild(genderSelect);
+
+    const presenceSelect = document.createElement('select');
+    presenceSelect.className = 'nick-input';
+    presenceSelect.setAttribute('aria-label', t('profile_presence'));
+    [['joinable',t('presence_joinable')],['online',t('presence_online')],['busy',t('presence_busy')],['invisible',t('presence_invisible')]].forEach(([value,label]) => {
+      const option = document.createElement('option'); option.value = value; option.textContent = label; option.selected = (account.presencePreference || 'joinable') === value; presenceSelect.appendChild(option);
+    });
+    card.appendChild(el('div','lb-note',t('profile_presence'))); card.appendChild(presenceSelect);
+
+    const visibilitySelect = document.createElement('select');
+    visibilitySelect.className = 'nick-input';
+    visibilitySelect.setAttribute('aria-label', t('profile_presence_visibility'));
+    [['everyone',t('presence_visibility_everyone')],['friends',t('presence_visibility_friends')],['nobody',t('presence_visibility_nobody')]].forEach(([value,label]) => {
+      const option = document.createElement('option'); option.value = value; option.textContent = label; option.selected = (account.presenceVisibility || 'everyone') === value; visibilitySelect.appendChild(option);
+    });
+    card.appendChild(el('div','lb-note',t('profile_presence_visibility'))); card.appendChild(visibilitySelect);
+
+    const showcaseSelect = document.createElement('select');
+    showcaseSelect.className = 'nick-input';
+    showcaseSelect.setAttribute('aria-label', t('profile_showcase'));
+    const currentShowcase = account.showcase && account.showcase.type && account.showcase.value ? account.showcase.type + ':' + account.showcase.value : '';
+    const showcaseOptions = [['',t('showcase_hidden')], ...GAME_KEYS.map(id => ['game:' + id, t('showcase_game', GAMES[id].name)]), ...ACHIEVEMENTS.filter(item => (account.achievements || []).includes(item.id)).map(item => ['achievement:' + item.id, t('showcase_achievement', t(item.nameKey))]), ...AVATAR_CATEGORIES.map(item => ['collection:' + item.id + '_origins', t('showcase_collection', avatarCategoryName(item))]), ['record:totalWins',t('showcase_record_total_wins')], ['record:bestStreak',t('showcase_record_best_streak')], ['record:total',t('showcase_record_total')], ['record:level',t('showcase_record_level')]];
+    showcaseOptions.forEach(([value,label]) => { const option = document.createElement('option'); option.value = value; option.textContent = label; option.selected = currentShowcase === value; showcaseSelect.appendChild(option); });
+    card.appendChild(el('div','lb-note',t('profile_showcase'))); card.appendChild(showcaseSelect);
+
+    var profileExtraFields = { signatureInput, regionSelect, genderSelect, presenceSelect, visibilitySelect, showcaseSelect };
   }
   const stats = el('div','profile-stats');
   if (editing){
@@ -674,6 +756,13 @@ function openProfileEditor(uid, slotIndex){
         account.name = finalName;
         account.avatar = avatar;
         account.background = background;
+        account.signature = profileExtraFields.signatureInput.value.trim().slice(0, 80);
+        account.countryRegion = profileExtraFields.regionSelect.value;
+        account.genderTag = profileExtraFields.genderSelect.value;
+        account.presencePreference = profileExtraFields.presenceSelect.value;
+        account.presenceVisibility = profileExtraFields.visibilitySelect.value;
+        const showcaseValue = profileExtraFields.showcaseSelect.value;
+        account.showcase = showcaseValue ? { type: showcaseValue.split(':')[0], value: showcaseValue.slice(showcaseValue.indexOf(':') + 1) } : null;
         saveAccount();
       }
     } else {
@@ -871,6 +960,7 @@ function applyGameResult(results, resultContext){
     });
     return;
   }
+  if (!aiMode) return;
   if (aiMode){
     const outcome = resultForSlot(results, 0);
     if (outcome === 'loss') aiSpeak(currentPersona, 'win');
@@ -888,9 +978,6 @@ function applyGameResult(results, resultContext){
     } else {
       toast(t('reward_ai_requires_login'));
     }
-  } else {
-    // 本地热座只保留聚会体验，不写入正式金币、XP、等级或连胜。
-    toast(t('reward_local_no_progress'));
   }
   renderMe(); renderSlots(); renderLeaderboard();
 }
@@ -906,7 +993,7 @@ function showHub(){
   }
   const endBtn = $('btn-end-game');
   if (endBtn) endBtn.classList.add('hidden');
-  if (online.room) renderRoomPanel();
+  if (online.room || online.spectatorRoom) renderRoomPanel();
 }
 function showGame(id){
   if (online && online.game === id && currentGame && currentGameId === id){
@@ -929,18 +1016,20 @@ function showGame(id){
   if (inOnline){
     opts = {
       online: true,
-      myIdx: online.player,
+      myIdx: online.isSpectator ? 0 : online.player,
       isHost: online.isHost,
-      spectator: online.isSpectator,
+      spectator: online.isSpectator || !!online.spectatorRoom,
       gameplayMeta: online.gameplayMeta,
       cosmetic: online.presentationMeta && online.presentationMeta.cosmetic,
       matchId: online.matchId,
       getMatchId: () => online.matchId,
       sendMove: p => online.sendMove(p),
+      sendBotMove: (seatId,p) => online.sendBotMove(seatId,p),
       sendTankInput: p => online.sendTankInput(p),
       sendTetrisLockClaim: p => online.sendTetrisLockClaim(p),
       sendTetrisKOClaim: p => online.sendTetrisKOClaim(p),
       sendTetrisAction: p => online.sendTetrisAction(p),
+      sendBotTetrisAction: (seatId, action) => online.sendBotTetrisAction(seatId, action),
       sendTetrisState: p => online.sendTetrisState(p),
       sendMonopolyAuctionOpen: p => online.sendMonopolyAuctionOpen(p),
       sendMonopolyBid: p => online.sendMonopolyBid(p),
@@ -954,6 +1043,14 @@ function showGame(id){
       onRestart: null,
       onEnd: results => applyGameResult(results, { online: true, game: id }),
     };
+    const roomSeats = online.roomInfo && Array.isArray(online.roomInfo.seats) ? online.roomInfo.seats : [];
+    const controllerUid = account && account.uid;
+    const controlledAI = roomSeats.filter(seat => seat && seat.type === 'ai' && seat.controllerUid === controllerUid);
+    if (controlledAI.length){
+      opts.ai = new Set(controlledAI.map(seat => Number(seat.seatId)).filter(Number.isInteger));
+      const persona = controlledAI[0].aiPersona;
+      if (persona && typeof personaById === 'function') opts.aiPersona = personaById(persona) || currentPersona;
+    }
   } else {
     opts = { onEnd: results => applyGameResult(results) };
     if (aiMode && playerCount >= 2){
@@ -979,12 +1076,23 @@ function startGame(id){
     online.selectGame(id);
     return;
   }
-  if (playerCount < meta.min || playerCount > meta.max){
-    toast(t('game_players_supported',meta.name,meta.min,meta.max,playerCount));
-    return;
-  }
-  ensureSlots();
-  showGame(id);
+  if (aiMode){ openAISetup(id); return; }
+  openRoomSetup(id);
+}
+
+function openAISetup(id){
+  const meta=GAMES[id];if(!meta)return;
+  const bd=el('div','modal-backdrop'),card=el('div','modal-card');card.appendChild(el('h3',null,t('ai_setup_title',meta.name)));card.appendChild(el('p','lb-note',t('ai_setup_hint')));
+  const row=el('div','count-group');for(let total=Math.max(2,meta.min);total<=meta.max;total++){const btn=el('button','btn'+(total===Math.max(2,meta.min)?' btn-primary':''),t('ai_count',total-1));btn.addEventListener('click',()=>{playerCount=total;aiMode=true;bd.remove();showGame(id);});row.appendChild(btn);}card.appendChild(row);
+  const cancel=el('button','btn',t('cancel'));cancel.addEventListener('click',()=>bd.remove());card.appendChild(cancel);bd.appendChild(card);bd.addEventListener('click',e=>{if(e.target===bd)bd.remove();});document.body.appendChild(bd);
+}
+function openRoomSetup(selectedGame){
+  if(!account){openAuthModal();return;}
+  const meta=selectedGame&&GAMES[selectedGame],bd=el('div','modal-backdrop'),card=el('div','modal-card');card.appendChild(el('h3',null,t('room_setup_title')));card.appendChild(el('p','lb-note',meta?t('room_setup_game',meta.name):t('room_setup_hint')));
+  let capacity=Math.max(2,meta?meta.min:2),visibility='public',allowSpectators=true;const caps=el('div','count-group');for(let n=2;n<=(meta?meta.max:5);n++){const b=el('button','btn'+(n===capacity?' btn-primary':''),t('seat_count',n));b.addEventListener('click',()=>{capacity=n;caps.querySelectorAll('.btn').forEach(x=>x.classList.toggle('btn-primary',x===b));});caps.appendChild(b);}card.appendChild(caps);
+  const vis=document.createElement('select');vis.className='nick-input';[['public',t('room_public')],['private',t('room_private')]].forEach(([v,label])=>{const o=document.createElement('option');o.value=v;o.textContent=label;vis.appendChild(o);});vis.addEventListener('change',()=>visibility=vis.value);card.appendChild(vis);
+  const label=el('label','lb-note');const check=document.createElement('input');check.type='checkbox';check.checked=true;check.addEventListener('change',()=>allowSpectators=check.checked);label.appendChild(check);label.appendChild(document.createTextNode(' '+t('allow_spectators')));card.appendChild(label);
+  const create=el('button','btn btn-primary',t('create_room'));create.addEventListener('click',()=>{online.pendingGame=selectedGame||null;bd.remove();online.create({capacity,visibility,allowSpectators});});card.appendChild(create);const cancel=el('button','btn',t('cancel'));cancel.addEventListener('click',()=>bd.remove());card.appendChild(cancel);bd.appendChild(card);bd.addEventListener('click',e=>{if(e.target===bd)bd.remove();});document.body.appendChild(bd);
 }
 
 function renderPlayers(activeIdx, infos, bankrupts, colors){
@@ -1041,7 +1149,7 @@ function renderHub(){
 
 if (typeof document !== 'undefined'){
   window.__gameInfo = {
-    GAMES, startGame, registerAccount, loginAccount, logoutAccount, loadRoster,
+    GAMES, startGame, showGame, registerAccount, loginAccount, logoutAccount, loadRoster,
     GAME_ART, gameArtEnabled, gameArtUrl, renderHub, setLanguage, checkAchievements, aiMateDisplayName,
     get playerCount(){ return playerCount; },
     set playerCount(v){ playerCount = v; },
@@ -1059,14 +1167,6 @@ if (typeof document !== 'undefined'){
   };
   initI18n().then(() => {
   initTheme();
-  $('count-group').addEventListener('click', e => {
-    const btn = e.target.closest('.count-btn');
-    if (!btn) return;
-    playerCount = Number(btn.dataset.n);
-    document.querySelectorAll('#count-group .count-btn').forEach(b => b.setAttribute('aria-pressed', String(b === btn)));
-    renderHub();
-    renderSlots();
-  });
   const modeBtns = document.querySelectorAll('#mode-group .count-btn');
   modeBtns.forEach(b => b.addEventListener('click', () => {
     aiMode = b.dataset.mode === 'ai';
@@ -1097,11 +1197,14 @@ if (typeof document !== 'undefined'){
   });
   const heroQuick = $('btn-hero-quick');
   if (heroQuick) heroQuick.addEventListener('click', () => {
-    const playable = Object.keys(GAMES).filter(id => playerCount >= GAMES[id].min && playerCount <= GAMES[id].max);
-    if (!playable.length){ toast(t('no_game_for_player_count')); return; }
-    startGame(playable[Math.floor(Math.random() * playable.length)]);
+    if (!account){ openAuthModal(); return; }
+    if (aiMode){ const playable=Object.keys(GAMES); openAISetup(playable[Math.floor(Math.random()*playable.length)]); }
+    else online.quickJoin(null);
   });
-  $('btn-create-room').addEventListener('click', () => online.create());
+  const quickJoin=$('btn-quick-join'); if(quickJoin)quickJoin.addEventListener('click',()=>online.quickJoin(null));
+  const createRoom=$('btn-create-room'); if(createRoom)createRoom.addEventListener('click',()=>openRoomSetup());
+  const browseRooms=$('btn-browse-rooms'); if(browseRooms)browseRooms.addEventListener('click',()=>{ const node=$('lobby-panel'); if(node&&node.scrollIntoView)node.scrollIntoView({behavior:'smooth',block:'center'}); });
+  const joinCode=$('btn-join-code'); if(joinCode)joinCode.addEventListener('click',()=>online.join(($('join-room-code')||{}).value||''));
   const settingsBtn = $('btn-settings-page');
   if (settingsBtn) settingsBtn.addEventListener('click', openSettingsPage);
   $('btn-me').addEventListener('click', () => openProfileModal(deviceUid));

@@ -16,12 +16,15 @@ if (typeof module !== 'undefined' && module.exports){
 
 if (typeof document !== 'undefined'){
   initAssetFallbacks();
+  initStaticPlatformIcons();
   loadRoster();
   renderMe();
   renderSlots();
   renderLeaderboard();
   renderLobby();
   renderAccounts();
+  if (typeof initSocialRail === 'function') initSocialRail();
+  if (typeof renderSocialRail === 'function') renderSocialRail();
   renderHub();
   if (typeof parseHash === 'function') parseHash();
   online.connect();

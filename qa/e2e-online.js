@@ -206,14 +206,16 @@ function btnByText(container, text){
 async function setupOnlineGame(host, gameId, guestLabel, guestTimerScale){
   const guest = registerEnv(makeEnv(guestLabel, '', guestTimerScale));
   await waitFor(guest, () => /已连接服务器/.test(guest.onlineStatus()), '对方连接(' + gameId + ')', 5000);
-  host.$('btn-create-room').dispatch('click');
+  host.info().online.create({ capacity:2, visibility:'public', allowSpectators:true });
   await waitFor(host, () => /房间已创建/.test(host.onlineStatus()), '创建房间(' + gameId + ')', 5000);
   host.info().startGame(gameId);
-  await waitFor(host, () => host.$('room-status').textContent.includes('等待'), '等待模式(' + gameId + ')', 4000);
-  await waitFor(guest, () => btnByText(guest.$('lobby-list'), '加入') !== null, '大厅出现等待房间(' + gameId + ')', 4000);
-  const joinBtn = btnByText(guest.$('lobby-list'), '加入');
-  joinBtn.dispatch('click');
+  await waitFor(host, () => host.info().online.roomInfo && host.info().online.roomInfo.game === gameId, '已选择游戏(' + gameId + ')', 4000);
+  guest.info().online.join(host.info().online.room);
   await waitFor(guest, () => /已加入房间/.test(guest.onlineStatus()), '大厅一键加入(' + gameId + ')', 5000);
+  await waitFor(guest, () => btnByText(guest.$('room-actions'), '准备') !== null, '准备按钮(' + gameId + ')', 4000);
+  btnByText(guest.$('room-actions'), '准备').dispatch('click');
+  await waitFor(guest, () => { const info=guest.info().online.roomInfo||{},seat=(info.seats||[]).find(item=>Number(item.seatId)===Number(guest.info().online.player));return !!(seat&&seat.ready); }, '对方 READY(' + gameId + ')', 4000);
+  host.info().online.send({ type:'start' });
   await waitFor(host, () => host.info().game !== null, '自动开局(' + gameId + ')', 5000);
   await waitFor(guest, () => guest.info().game !== null, '对方开局(' + gameId + ')', 5000);
   return { room: host.info().online.room, guest };
@@ -385,26 +387,31 @@ async function main(){
     }
 
     /* 1. 房主创建房间 */
-    host.$('btn-create-room').dispatch('click');
+    host.info().online.create({ capacity:2, visibility:'public', allowSpectators:true });
     await waitFor(host, () => /房间已创建/.test(host.onlineStatus()), '房主拿到房间码', 5000);
     const room = String(host.info().online.room || '');
     assert('房主创建房间并拿到 6 位房间码', /^[A-Z0-9]{6}$/.test(room));
     await waitFor(host, () => !host.$('room-panel').classList.contains('hidden'), '房主房间面板出现', 4000);
     assert('大厅房间面板显示房间码', host.$('room-code-big').textContent === room);
-    assert('房间面板显示人数 1/2 与等待状态', host.$('room-info').textContent.includes('1/2') && host.$('room-status').textContent.includes('等待玩家加入'));
+    assert('房间面板显示人数 1/2 与等待状态', host.$('room-info').textContent.includes('1/2') && host.$('room-status').textContent.includes('等待'));
     await waitFor(guest, () => btnByText(guest.$('lobby-list'), '加入') !== null, '大厅出现房主房间', 4000);
     assert('游戏大厅显示等待中的房间', guest.$('lobby-list').children.length >= 1);
 
     /* 2. 房主选择五子棋，进入等待模式 */
     host.info().startGame('gomoku');
-    await waitFor(host, () => (host.$('room-status').textContent.includes('五子棋')||host.$('room-status').textContent.includes('game_gomoku')) && host.$('room-status').textContent.includes('等待其他玩家加入'), '房主进入等待模式', 4000);
-    assert('等待模式显示已选择五子棋', host.$('room-status').textContent.includes('五子棋')||host.$('room-status').textContent.includes('game_gomoku'));
+    await waitFor(host, () => host.info().online.roomInfo && host.info().online.roomInfo.game === 'gomoku', '房主选择五子棋', 4000);
+    assert('等待模式显示已选择五子棋', host.info().online.roomInfo && (host.info().online.roomInfo.game === 'gomoku' || host.info().online.pendingGame === 'gomoku'));
     assert('等待模式未开局', host.info().game === null);
 
     /* 3. 对方从大厅点击「加入」自动开局 */
     const joinBtn = btnByText(guest.$('lobby-list'), '加入');
     joinBtn.dispatch('click');
     await waitFor(guest, () => /已加入房间/.test(guest.onlineStatus()), '大厅加入房间', 5000);
+    await waitFor(guest, () => btnByText(guest.$('room-actions'), '准备') !== null, '对方准备按钮出现', 4000);
+    btnByText(guest.$('room-actions'), '准备').dispatch('click');
+    await waitFor(guest, () => { const info=guest.info().online.roomInfo||{},seat=(info.seats||[]).find(item=>Number(item.seatId)===Number(guest.info().online.player));return !!(seat&&seat.ready); }, '对方 READY', 4000);
+    await waitFor(host, () => btnByText(host.$('room-actions'), '▶ 开始游戏') !== null, '房主开始按钮出现', 4000);
+    btnByText(host.$('room-actions'), '▶ 开始游戏').dispatch('click');
     await waitFor(host, () => host.status().includes('你的回合'), '双方自动开局（房主）', 5000);
     await waitFor(guest, () => guest.status().includes('等待对方落子'), '双方自动开局（对方）', 5000);
     assert('大厅加入后自动开局', host.info().game !== null && guest.info().game !== null && guest.info().online.room === room);
@@ -470,7 +477,7 @@ async function main(){
     guest.context.window.__gameInfo.online.ws.close();
     await waitFor(host, () => host.info().game === null && host.info().online.roomInfo && host.info().online.roomInfo.size === 1, '房主收到离开通知', 4000);
     assert('房主回到大厅且房间面板保留等待', host.$('screen-game').classList.contains('hidden') && !host.$('screen-hub').classList.contains('hidden') &&
-      !host.$('room-panel').classList.contains('hidden') && host.$('room-status').textContent.includes('等待'));
+      !host.$('room-panel').classList.contains('hidden') && (host.$('room-status').textContent.includes('等待') || host.$('room-status').textContent.includes('已选择')));
 
     /* 7. 离开旧房间，准备多游戏联机测试 */
     const leaveBtn = btnByText(host.$('room-actions'), '离开房间');
@@ -624,7 +631,7 @@ async function main(){
     await waitFor(host, () => host.$('room-panel').classList.contains('hidden'), '离开俄罗斯方块房间', 4000);
     const invitee = registerEnv(makeEnv('guest-inv'));
     await waitFor(invitee, () => /已连接服务器/.test(invitee.onlineStatus()), '受邀者连接', 5000);
-    host.$('btn-create-room').dispatch('click');
+    host.info().online.create({ capacity:2, visibility:'public', allowSpectators:true });
     await waitFor(host, () => /房间已创建/.test(host.onlineStatus()), '创建邀请房间', 5000);
     await waitFor(host, () => {
       const btns = host.$('player-list').querySelectorAll('button').filter(b => b.textContent.includes('邀请'));
@@ -651,7 +658,7 @@ async function main(){
     await waitFor(host, () => host.$('room-panel').classList.contains('hidden'), '离开邀请房间', 4000);
 
     host.info().playerCount = 4;
-    host.$('btn-create-room').dispatch('click');
+    host.info().online.create({ capacity:4, visibility:'public', allowSpectators:true });
     await waitFor(host, () => /房间已创建/.test(host.onlineStatus()), '创建 4 人房间', 5000);
     const room4 = host.info().online.room;
     host.info().startGame('gomoku');
@@ -680,6 +687,9 @@ async function main(){
     /* 14. 不满人数开局：3 人玩大富翁 */
     host.info().startGame('monopoly');
     await waitFor(host, () => host.info().online.roomInfo && host.info().online.roomInfo.game === 'monopoly', '3 人房选择大富翁', 4000);
+    g1.info().online.setReady(true);
+    g2.info().online.setReady(true);
+    await waitFor(host, () => host.info().online.roomInfo && host.info().online.roomInfo.canStart === true, '3 人房全部 READY', 4000);
     const startBtn = [...host.$('room-actions').children].find(b => (b.textContent || '').includes('开始游戏'));
     assert('不满人数时显示开始按钮', !!startBtn);
     startBtn.dispatch('click');
@@ -700,6 +710,9 @@ async function main(){
     assert('结束本局后房间保留', host.info().online.room === room4 && host.$('room-panel').classList.contains('hidden') === false);
     host.info().startGame('ludo');
     await waitFor(host, () => host.info().online.roomInfo && host.info().online.roomInfo.game === 'ludo', '同一房间切换为飞行棋', 4000);
+    g1.info().online.setReady(true);
+    g2.info().online.setReady(true);
+    await waitFor(host, () => host.info().online.roomInfo && host.info().online.roomInfo.canStart === true, '飞行棋全部 READY', 4000);
     const startBtn2 = [...host.$('room-actions').children].find(b => (b.textContent || '').includes('开始游戏'));
     startBtn2.dispatch('click');
     await waitFor(host, () => host.info().game !== null && host.info().game.snapshot && host.info().game.snapshot().tokens.length === 3, '3 人飞行棋开局', 5000);
@@ -732,6 +745,8 @@ async function main(){
     const g2GomokuBeforeLifecycle = g2BeforeLifecycle.played.gomoku || 0;
     host.info().startGame('gomoku');
     await waitFor(host, () => host.info().online.roomInfo && host.info().online.roomInfo.game === 'gomoku', '压紧后选择五子棋', 4000);
+    g2.info().online.setReady(true);
+    await waitFor(host, () => host.info().online.roomInfo && host.info().online.roomInfo.canStart === true, '压紧后双方 READY', 4000);
     const compactedStartBtn = [...host.$('room-actions').children].find(b => (b.textContent || '').includes('开始游戏'));
     assert('离房回归：压紧后的两人房显示开始按钮', !!compactedStartBtn);
     compactedStartBtn.dispatch('click');
@@ -770,21 +785,17 @@ async function main(){
     assert('离房回归：胜者 +3💵、败者 +1💵', hostAfterLifecycle.coins === hostCoinsBeforeLifecycle + 3 && g2AfterLifecycle.coins === g2CoinsBeforeLifecycle + 1);
     assert('离房回归：五子棋分类局数同步增加', hostAfterLifecycle.played.gomoku === hostGomokuBeforeLifecycle + 1 && g2AfterLifecycle.played.gomoku === g2GomokuBeforeLifecycle + 1);
 
-    /* 18. 房主关闭房间：剩余会话解除绑定并可立即创建/加入新房 */
+    /* 18. 房主离开：房间转移给下一真人，并允许原房主重新加入 */
     const closeLifecycleRoom = btnByText(host.$('room-actions'), '离开房间');
-    assert('关房回归：房主可从已结束对局关闭房间', !!closeLifecycleRoom);
+    assert('房主转移回归：房主可从已结束对局离开', !!closeLifecycleRoom);
     closeLifecycleRoom.dispatch('click');
-    await waitFor(host, () => host.info().online.room === null && host.$('room-panel').classList.contains('hidden'), '房主关闭旧房间', 4000);
-    await waitFor(g2, () => g2.info().online.room === null && g2.info().game === null && g2.$('room-panel').classList.contains('hidden'), '剩余会话收到 roomClosed 并解除绑定', 5000);
-    assert('关房回归：剩余会话回到大厅且清空房间状态', !g2.$('screen-hub').classList.contains('hidden') && g2.info().online.roomInfo === null && g2.info().online.matchId === null);
-    g2.$('btn-create-room').dispatch('click');
-    await waitFor(g2, () => /房间已创建/.test(g2.onlineStatus()) && g2.info().online.room, '原剩余会话立即创建新房', 5000);
-    const recycledRoom = g2.info().online.room;
-    assert('关房回归：新房与已关闭房间不同', /^[A-Z0-9]{6}$/.test(recycledRoom) && recycledRoom !== room4);
-    host.info().online.join(recycledRoom);
-    await waitFor(host, () => host.info().online.room === recycledRoom, '原房主会话立即加入新房', 5000);
-    await waitFor(g2, () => g2.info().online.roomInfo && g2.info().online.roomInfo.size === 2, '新房双方会话就位', 5000);
-    assert('关房回归：旧房双方会话可立即重组新房', host.info().online.room === recycledRoom && g2.info().online.room === recycledRoom && host.info().online.player === 1 && g2.info().online.player === 0);
+    await waitFor(host, () => host.info().online.room === null && host.$('room-panel').classList.contains('hidden'), '原房主离开旧房间', 4000);
+    await waitFor(g2, () => g2.info().online.room === room4 && g2.info().online.isHost && g2.info().online.player === 0 && g2.info().online.roomInfo && g2.info().online.roomInfo.size === 1, '剩余真人接管房主', 5000);
+    assert('房主转移回归：剩余会话保留房间并清空旧对局', !g2.$('screen-hub').classList.contains('hidden') && g2.info().online.matchId === null && g2.info().online.room === room4);
+    host.info().online.join(room4);
+    await waitFor(host, () => host.info().online.room === room4, '原房主重新加入保留房间', 5000);
+    await waitFor(g2, () => g2.info().online.roomInfo && g2.info().online.roomInfo.size === 2, '保留房间双方会话就位', 5000);
+    assert('房主转移回归：旧房双方会话可立即重组', host.info().online.room === room4 && g2.info().online.room === room4 && host.info().online.player === 1 && g2.info().online.player === 0);
 
     /* 19. 人机模式：本地 AI 自动回应 */
     const aiEnv = registerEnv(makeEnv('ai-local'));
@@ -792,6 +803,8 @@ async function main(){
     aiEnv.info().aiMode = true;
     aiEnv.info().playerCount = 2;
     aiEnv.info().startGame('gomoku');
+    await waitFor(aiEnv, () => btnByText(aiEnv.context.document.body, '1 个 AI') !== null, 'AI 对手数量选择', 4000);
+    btnByText(aiEnv.context.document.body, '1 个 AI').dispatch('click');
     stone(aiEnv, aiEnv.area().children[0], 7, 7);
     await waitFor(aiEnv, () => aiEnv.info().game.snapshot().hist.length === 2 && aiEnv.info().game.snapshot().cur === 0, 'AI 自动回应', 6000);
     assert('人机模式：五子棋 AI 自动回应并继续对局', aiEnv.info().game.snapshot().hist.length === 2);

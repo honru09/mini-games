@@ -156,6 +156,10 @@ button{font-family:inherit; cursor:pointer}
 .asset-failed .asset-fallback{display:inline}
 .brand .brand-tag{font-size:12px; color:var(--muted); font-weight:500; letter-spacing:.6px}
 .theme-btn{font-size:19px; padding:6px 11px; border-radius:99px; background:var(--card); border:1px solid var(--border)}
+.ui-icon{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;line-height:0;color:currentColor}
+.ui-icon img{display:block;width:100%;height:100%;filter:none}
+:is(html[data-theme="dark"],html[data-theme="midnight"],html[data-theme="cyber"]) .ui-icon img{filter:brightness(0) invert(1)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px}.ui-icon-label{min-width:0}
 
 /* 大厅双栏布局 */
 .hub-grid{display:grid; grid-template-columns:minmax(0,1fr) 330px; gap:16px; align-items:start}
@@ -288,6 +292,7 @@ button{font-family:inherit; cursor:pointer}
 .lb-pts{font-weight:600; font-variant-numeric:tabular-nums; flex:none}
 .lb-empty{color:var(--muted); font-size:13px; padding:8px 0}
 .lb-note{font-size:11.5px; color:var(--muted); margin-top:8px}
+.social-panel .lb-head{align-items:center}.social-count{display:inline-flex;min-width:20px;height:20px;padding:0 6px;align-items:center;justify-content:center;border-radius:99px;background:var(--primary);color:#fff;font-size:11px;font-weight:700}.social-tabs{display:flex;gap:5px;flex-wrap:wrap;margin:8px 0}.social-tab{font-size:11px;padding:5px 8px}.social-row{display:flex;align-items:center;gap:7px;padding:7px 0;border-bottom:1px solid var(--border);min-width:0}.social-row:last-child{border-bottom:0}.social-row .social-copy{flex:1;min-width:0}.social-name{font-size:12px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.social-meta{font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.social-actions{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}.social-actions .btn{padding:4px 7px;font-size:10px;min-height:30px}.social-empty{padding:12px 4px;color:var(--muted);font-size:11px;text-align:center}.social-danger{color:var(--danger,#ef4444)}
 .avatar-grid{display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin:10px 0 14px}
 .avatar-opt{
   font-size:25px; border:2px solid var(--border); border-radius:12px; background:var(--card);
@@ -346,6 +351,17 @@ button{font-family:inherit; cursor:pointer}
 .room-info{font-size:13px; margin-bottom:6px}
 .room-status{font-size:13px; font-weight:500; margin-bottom:10px; min-height:18px}
 .room-actions{display:flex; gap:8px; flex-wrap:wrap}
+.seat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(132px,1fr));gap:8px;margin:10px 0}
+.seat-card{min-height:92px;padding:10px;border:1px solid var(--border);border-radius:12px;background:var(--card);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center;position:relative}
+.seat-card.is-host{border-color:var(--primary);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--primary) 35%,transparent)}
+.seat-card.is-empty{border-style:dashed;color:var(--muted)}.seat-card.is-offline{opacity:.65}
+.seat-name{font-size:13px;font-weight:700}.seat-meta{font-size:11px;color:var(--muted)}
+.seat-badges{display:flex;gap:4px;flex-wrap:wrap;justify-content:center}.seat-badge{font-size:10px;padding:2px 6px;border-radius:999px;background:var(--soft);color:var(--text-secondary)}
+.seat-badge.ready{background:rgba(34,197,94,.14);color:#15803d}.seat-badge.bot{background:rgba(139,92,246,.14);color:#7c3aed}
+.play-panel{align-items:flex-start;flex-direction:column}.play-actions{width:100%}.play-actions input{min-width:130px;flex:1}
+.avatar-art-v2{display:block;object-fit:cover;border-radius:4px;image-rendering:auto}
+.mini-profile-card{position:fixed;z-index:10000;width:min(300px,calc(100vw - 16px));padding:10px;border:1px solid rgba(255,255,255,.28);border-radius:14px;box-shadow:var(--shadow-lg);background:linear-gradient(135deg,#334155,#111827);color:#fff}
+.mini-profile-scrim{display:flex;gap:10px;align-items:center;padding:9px;border-radius:11px;background:rgba(15,23,42,.6);backdrop-filter:blur(12px)}.mini-profile-copy{min-width:0;flex:1}.mini-profile-card .seat-meta{color:rgba(255,255,255,.82)}
 
 /* 游戏大厅 */
 .lobby-panel{
@@ -624,9 +640,15 @@ canvas.board-canvas{width:100%; max-width:560px; display:block; border-radius:12
 .profile-hero.bg-4{background:linear-gradient(135deg,#dcfce7,#86efac)}
 .profile-hero.bg-5{background:linear-gradient(135deg,#fce7f3,#f9a8d4)}
 .profile-hero.bg-6{background:linear-gradient(135deg,#1e293b,#334155); color:#e2e8f0}
+.profile-hero.premium-background{background-position:center;background-size:cover;background-repeat:no-repeat;color:#fff;border-color:rgba(255,255,255,.22);isolation:isolate}
+.profile-hero.premium-background::after{content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,rgba(2,6,23,.04),rgba(2,6,23,.18));pointer-events:none}
+.profile-hero.premium-background>*{position:relative;z-index:1}.profile-hero.premium-background .pmeta{color:rgba(255,255,255,.92)}
 .profile-hero .hero-avatar{display:flex; justify-content:center; margin-bottom:8px}
 .profile-hero .pname{font-size:18px; font-weight:700}
 .profile-hero .pmeta{font-size:12.5px; color:var(--muted); margin-top:3px}
+.profile-identity-scrim{margin:8px auto 0;padding:8px 10px;max-width:340px;border-radius:12px;background:rgba(15,23,42,.46);backdrop-filter:blur(12px);color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.45)}
+.profile-showcase{margin:10px 0;padding:10px 12px;border:1px solid var(--border);border-radius:12px;background:linear-gradient(135deg,var(--accent-soft),transparent);font-size:12px;font-weight:650;color:var(--text)}
+.profile-identity-scrim .pmeta{color:rgba(255,255,255,.9)}.profile-signature{font-size:13px;margin-top:5px;line-height:1.45;overflow-wrap:anywhere}
 :is(html[data-theme="dark"], html[data-theme="midnight"], html[data-theme="ocean"], html[data-theme="forest"], html[data-theme="cyber"], html[data-theme="sakura"]) .profile-hero.bg-0{background:linear-gradient(135deg,#1a1f2e,#1e2744)}
 :is(html[data-theme="dark"], html[data-theme="midnight"], html[data-theme="ocean"], html[data-theme="forest"], html[data-theme="cyber"], html[data-theme="sakura"]) .profile-hero.bg-1{background:linear-gradient(135deg,#1e1b3a,#2d1b69)}
 :is(html[data-theme="dark"], html[data-theme="midnight"], html[data-theme="ocean"], html[data-theme="forest"], html[data-theme="cyber"], html[data-theme="sakura"]) .profile-hero.bg-2{background:linear-gradient(135deg,#172033,#1e3a5f)}
@@ -658,6 +680,12 @@ canvas.board-canvas{width:100%; max-width:560px; display:block; border-radius:12
 .bg-swatch.bg-4{background:linear-gradient(135deg,#dcfce7,#86efac)}
 .bg-swatch.bg-5{background:linear-gradient(135deg,#fce7f3,#f9a8d4)}
 .bg-swatch.bg-6{background:linear-gradient(135deg,#1e293b,#334155)}
+.background-shop-item{position:relative;min-width:150px}
+.background-poster{position:relative;width:100%;aspect-ratio:16/9;overflow:hidden;border-radius:10px;border:1px solid var(--border);background:linear-gradient(135deg,var(--accent-soft),var(--card))}
+.background-poster img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity var(--dur-base),transform var(--dur-slow)}
+.background-poster.asset-ready img{opacity:1}.background-shop-item:hover .background-poster img{transform:scale(1.04)}
+.background-poster-fallback{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:11px}.background-poster.asset-ready .background-poster-fallback{display:none}
+.background-tier{position:absolute;top:15px;right:10px;padding:2px 6px;border-radius:99px;background:rgba(2,6,23,.68);color:#fff;font-size:10px;font-weight:700;backdrop-filter:blur(6px)}
 .bg-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(44px,1fr)); gap:8px; margin:8px 0 12px}
 .pin-hint{font-size:11.5px; color:var(--muted); margin-top:2px}
 .profile-links{display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin-top:10px}
@@ -1265,8 +1293,8 @@ body.entered #screen-hub, body.entered #screen-game{animation:none}
   <header class="app-header">
     <div class="brand"><span class="brand-icon" data-asset-fallback><img src="assets/brand/logo_mark.svg" alt=""><span class="asset-fallback">🎮</span></span><span data-i18n="brand">Playroom</span><span class="brand-tag" data-i18n="brand_tag">6 款精选游戏 · 联机对战</span></div>
         <div class="header-actions">
-      <button type="button" class="btn" id="btn-settings-page" data-i18n-title="settings">⚙️</button>
-      <button type="button" class="btn theme-btn" id="btn-theme" data-i18n-title="theme">🌙</button>
+      <button type="button" class="btn" id="btn-settings-page" data-i18n-title="settings" data-i18n-aria-label="settings"></button>
+      <button type="button" class="btn theme-btn" id="btn-theme" data-i18n-title="theme" data-i18n-aria-label="theme"></button>
     </div>
   </header>
 
@@ -1275,7 +1303,7 @@ body.entered #screen-hub, body.entered #screen-game{animation:none}
       <div class="hero-icon" data-asset-fallback><img src="assets/brand/logo_mark.svg" alt="Playroom" data-i18n-alt="brand"><span class="asset-fallback">🎮</span></div>
       <h1 data-i18n="brand">Playroom</h1>
       <p class="hero-tag" data-i18n="brand_tag">6 款精选游戏 · 联机对战</p>
-      <button type="button" class="btn btn-primary hero-cta" id="btn-hero-quick" data-i18n="quick_start">⚡ 快速开局</button>
+      <button type="button" class="btn btn-primary hero-cta" id="btn-hero-quick"></button>
     </section>
     <div class="hub-grid">
       <div class="hub-main">
@@ -1283,35 +1311,33 @@ body.entered #screen-hub, body.entered #screen-game{animation:none}
           <button type="button" class="me-chip" id="btn-me" title="创建账号或使用 PIN 登录" data-i18n-title="account_button_title"></button>
         </div>
         <div id="my-card"></div>
-        <div class="slots-row" id="slots-row"></div>
+        <div class="slots-row hidden" id="slots-row" aria-hidden="true"></div>
         <div class="room-panel hidden" id="room-panel">
           <div class="room-head">
             <h3 data-i18n="my_room">🚪 我的房间</h3>
             <span class="room-code-big" id="room-code-big"></span>
           </div>
           <div class="room-info" id="room-info"></div>
+          <div class="seat-grid" id="seat-grid" data-i18n-aria-label="room_seats_aria"></div>
           <div class="room-status" id="room-status"></div>
           <div class="room-actions" id="room-actions"></div>
         </div>
-        <div class="hub-count">
+        <div class="hub-count play-panel">
           <div class="mode-group" id="mode-group" role="group" aria-label="游戏模式" data-i18n-aria-label="mode_group_aria">
-            <button type="button" class="btn count-btn" data-mode="local" aria-pressed="true" data-i18n="mode_local">👥 本地热座</button>
-            <button type="button" class="btn count-btn" data-mode="ai" aria-pressed="false" data-i18n="mode_ai">🤖 人机对战</button>
+            <button type="button" class="btn count-btn" data-mode="online" aria-pressed="true" data-i18n="mode_online">联机</button>
+            <button type="button" class="btn count-btn" data-mode="ai" aria-pressed="false" data-i18n="mode_ai">人机对战</button>
           </div>
-          <span class="hub-label" id="count-label" data-i18n="player_count">玩家人数</span>
-          <div class="count-group" id="count-group" role="group" aria-label="选择玩家人数" data-i18n-aria-label="player_count_aria">
-            <button type="button" class="btn count-btn" data-n="2" aria-pressed="true" data-i18n="players_2">2 人</button>
-            <button type="button" class="btn count-btn" data-n="3" aria-pressed="false" data-i18n="players_3">3 人</button>
-            <button type="button" class="btn count-btn" data-n="4" aria-pressed="false" data-i18n="players_4">4 人</button>
-            <button type="button" class="btn count-btn" data-n="5" aria-pressed="false" data-i18n="players_5">5 人</button>
+          <div class="online-row play-actions" id="online-play-actions">
+            <button type="button" class="btn btn-primary" id="btn-quick-join" data-i18n="quick_join">快速加入</button>
+            <button type="button" class="btn" id="btn-create-room" data-i18n="create_room">创建房间</button>
+            <button type="button" class="btn" id="btn-browse-rooms" data-i18n="browse_rooms">浏览房间</button>
+            <input id="join-room-code" maxlength="12" data-i18n-placeholder="private_room_code" data-i18n-aria-label="private_room_code">
+            <button type="button" class="btn" id="btn-join-code" data-i18n="join_room">加入</button>
           </div>
         </div>
         <div id="persona-row" class="persona-row hidden"></div>
 <div class="online-panel">
-          <h3 data-i18n="online_title">🌐 联机对战（2-5 人 · 全部游戏）</h3>
-          <div class="online-row">
-            <button type="button" class="btn btn-primary" id="btn-create-room" data-i18n="create_room">🎮 创建房间</button>
-          </div>
+          <h3 id="mode-context-title" data-i18n="online_title">房间与连接状态</h3>
           <div class="online-status" id="online-status" data-i18n="online_status_disconnected">未连接</div>
         </div>
         <div class="game-grid" id="game-grid"></div>
@@ -1338,18 +1364,27 @@ body.entered #screen-hub, body.entered #screen-game{animation:none}
           </div>
           <div class="player-list" id="player-list"></div>
         </div>
+        <div class="lb-panel social-panel" id="social-panel">
+          <div class="lb-head"><h3 data-i18n="social_title">社交</h3><span class="social-count hidden" id="social-requests-badge">0</span></div>
+          <div class="social-tabs" role="tablist" data-i18n-aria-label="social_tabs_aria">
+            <button type="button" class="count-btn social-tab" id="social-tab-friends" aria-pressed="true" data-i18n="social_friends">好友</button>
+            <button type="button" class="count-btn social-tab" id="social-tab-online" aria-pressed="false" data-i18n="social_online">在线</button>
+            <button type="button" class="count-btn social-tab" id="social-tab-recent" aria-pressed="false" data-i18n="social_recent">最近一起玩</button>
+          </div>
+          <div id="social-list" class="social-list"></div>
+        </div>
       </aside>
     </div>
   </section>
 
   <section id="screen-game" class="hidden">
     <div class="game-top">
-      <button type="button" class="btn btn-ghost" id="btn-back" data-i18n="back">← 返回</button>
+      <button type="button" class="btn btn-ghost" id="btn-back"></button>
       <h2 id="game-title"></h2>
       <div class="top-actions">
-        <button type="button" class="btn hidden" id="btn-end-game" data-i18n-title="end_game" data-i18n="end_game">⏹ 结束本局</button>
-        <button type="button" class="btn" id="btn-rules" data-i18n="rules">📖 规则</button>
-        <button type="button" class="btn" id="btn-restart" data-i18n="restart">🔄 新一局</button>
+        <button type="button" class="btn hidden" id="btn-end-game" data-i18n-title="end_game"></button>
+        <button type="button" class="btn" id="btn-rules"></button>
+        <button type="button" class="btn" id="btn-restart"></button>
       </div>
     </div>
     <div id="player-bar" class="player-bar"></div>

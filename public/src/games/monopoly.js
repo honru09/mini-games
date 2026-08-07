@@ -201,6 +201,7 @@ function gameMonopoly(area, extra, n, opts){
         const d1 = 1 + Math.floor(Math.random() * 6);
         const d2 = 1 + Math.floor(Math.random() * 6);
         aiPending = false;
+        if (opts.online && typeof opts.sendBotMove === 'function') opts.sendBotMove(turn, { roll:[d1,d2] });
         applyRoll(d1, d2);
         return;
       }
@@ -248,6 +249,7 @@ function gameMonopoly(area, extra, n, opts){
         const decision = choices.includes(remoteChoice) ? remoteChoice : best.choice;
         aiPending = false;
         aiSpeak(opts.aiPersona, 'think');
+        if (opts.online && typeof opts.sendBotMove === 'function') opts.sendBotMove(cur, { decision });
         if (applyDecision(cur, decision) && typeof confirmAIReady === 'function') {
           confirmAIReady('monopoly', decision);
         }

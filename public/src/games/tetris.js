@@ -404,6 +404,7 @@ function gameTetris(area, extra, n, opts){
     const remote=await aiChoose('tetris',{player:pi,well:state.well.map(row=>row.join('')),incoming,target:targetFor(pi),next:state.queue[0],localRanking:near.map(item=>({choice:item.kind+':'+item.rotation+':'+item.x+':'+item.y,score:+item.lookaheadScore.toFixed(2),holes:item.holes,height:item.maxHeight,lines:item.cleared}))},choices,opts.aiPersona,learningCandidates);
     if (destroyed||over||epoch!==aiEpoch){ aiPending.delete(pi); return; }
     const index=choices.indexOf(remote),pick=near[index>=0?index:0];aiPending.delete(pi);
+    if (fullRuleAuthority && opts.online && typeof opts.sendBotTetrisAction === 'function') { opts.sendBotTetrisAction(pi, { type:'hard_drop' }); return; }
     state.active={kind:pick.kind,rotation:pick.rotation,x:pick.x,y:pick.y}; applyPlacement(pi,{piece:pick.kind,x:pick.x,y:pick.y,rot:pick.rotation},true,!!opts.online);
     if(state.alive&&!over)queueAI(pi,2500);
   }

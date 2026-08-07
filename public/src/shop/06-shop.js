@@ -49,6 +49,27 @@ function openShop(){
     tabs.appendChild(tabButton);
   });
   const listEl = el('div','shop-grid');
+  function collectionParts(item){
+    const index=AVATAR_CATEGORIES.findIndex(theme=>theme.id===item.theme);if(index<0)return null;
+    const frames=[5,4,1,6,7,8],effects=[3,1,2,1,4,2],themed=PLAYROOM_AVATARS.filter(avatar=>avatar.theme===item.theme);
+    const avatar=themed.find(candidate=>candidate.animated===!!item.animated&&!candidate.free)||themed.find(candidate=>!candidate.free)||themed[0];
+    return {avatarId:avatar&&avatar.id,frameId:frames[index],effectId:effects[index],name:t('premium_theme_'+item.theme)};
+  }
+  function collectionProgress(item){
+    const parts=collectionParts(item);if(!parts)return null;
+    const avatarOwned=PLAYROOM_AVATARS.some(avatar=>avatar.theme===item.theme&&(avatar.free||ownItem(account,'avatars',avatar.id)));
+    const owned=[avatarOwned,ownItem(account,'frames',parts.frameId),ownItem(account,'backgrounds',item.id),ownItem(account,'effects',parts.effectId)].filter(Boolean).length;
+    return {...parts,owned,total:4};
+  }
+  function previewCollection(item){
+    const parts=collectionParts(item);if(!parts)return;
+    const pbd=el('div','modal-backdrop'),pc=el('div','modal-card');pc.appendChild(el('h3',null,t('premium_collection_preview_title',parts.name)));
+    const hero=el('div','profile-hero bg-'+item.id);applyPremiumBackground(hero,item.id,'profile');
+    const st=el('div','avatar-stage effect-'+parts.effectId),frame=SHOP.frames.find(candidate=>candidate.id===parts.frameId);if(frame)st.appendChild(el('span','frame-ring '+(frame.cls||''),''));st.appendChild(avatarCanvas(parts.avatarId,96,{animate:true}));hero.appendChild(st);
+    const previewAccount={...account,effect:parts.effectId,nameFx:parts.effectId};const nm=el('div','pname');nm.appendChild(nameFxNode(previewAccount,account.name));hero.appendChild(nm);hero.appendChild(el('div','profile-identity-scrim',t('premium_collection_preview_note')));pc.appendChild(hero);
+    const progress=collectionProgress(item);if(progress)pc.appendChild(el('div','profile-showcase',t('premium_collection_progress',progress.name,progress.owned,progress.total)));
+    const closePreview=()=>{releasePremiumBackground(hero);pbd.remove();};const close=el('button','btn',t('premium_back_to_shop'));close.addEventListener('click',closePreview);pc.appendChild(close);pbd.appendChild(pc);pbd.addEventListener('click',event=>{if(event.target===pbd)closePreview();});document.body.appendChild(pbd);
+  }
   function render(){
     listEl.innerHTML = '';
     tabs.children.forEach((t, i) => t.classList.toggle('btn-primary', defs[i][0] === tab));
@@ -96,9 +117,9 @@ function openShop(){
           (tab === 'backgrounds' && account.background === item.id);
         const it = el('div','shop-item' + (active ? ' selected' : '') + (owned ? ' owned' : ''));
         if (tab === 'backgrounds'){
-          const sw = el('div','bg-swatch ' + item.cls);
-          sw.style.width = '38px'; sw.style.height = '38px';
-          it.appendChild(sw);
+          const premium=premiumBackgroundMeta(item.id);
+          if(premium)it.appendChild(backgroundPosterNode(premium,{hoverPreview:true}));
+          else { const sw = el('div','bg-swatch ' + item.cls); sw.style.width='38px';sw.style.height='38px';it.appendChild(sw); }
         } else {
           const st = el('div','mini-avatar-stage' + (tab === 'effects' ? ' ' + item.cls : ''));
           const ring = el('span','frame-ring ' + (tab === 'frames' ? item.cls : ''), '');
@@ -107,6 +128,10 @@ function openShop(){
           it.appendChild(st);
         }
         it.appendChild(el('div','si-name', shopItemName(cat,item)));
+        if(tab==='backgrounds'&&item.collectionId){
+          const progress=collectionProgress(item);if(progress)it.appendChild(el('div','seat-meta',t('premium_collection_progress',progress.name,progress.owned,progress.total)));
+          const preview=el('button','btn',t('premium_collection_preview'));preview.addEventListener('click',()=>previewCollection(item));it.appendChild(preview);
+        }
         if (!owned){
           const price = el('div','si-price');
           price.appendChild(currencyIcon('sm'));

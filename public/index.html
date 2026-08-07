@@ -156,6 +156,10 @@ button{font-family:inherit; cursor:pointer}
 .asset-failed .asset-fallback{display:inline}
 .brand .brand-tag{font-size:12px; color:var(--muted); font-weight:500; letter-spacing:.6px}
 .theme-btn{font-size:19px; padding:6px 11px; border-radius:99px; background:var(--card); border:1px solid var(--border)}
+.ui-icon{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;line-height:0;color:currentColor}
+.ui-icon img{display:block;width:100%;height:100%;filter:none}
+:is(html[data-theme="dark"],html[data-theme="midnight"],html[data-theme="cyber"]) .ui-icon img{filter:brightness(0) invert(1)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px}.ui-icon-label{min-width:0}
 
 /* 大厅双栏布局 */
 .hub-grid{display:grid; grid-template-columns:minmax(0,1fr) 330px; gap:16px; align-items:start}
@@ -288,6 +292,7 @@ button{font-family:inherit; cursor:pointer}
 .lb-pts{font-weight:600; font-variant-numeric:tabular-nums; flex:none}
 .lb-empty{color:var(--muted); font-size:13px; padding:8px 0}
 .lb-note{font-size:11.5px; color:var(--muted); margin-top:8px}
+.social-panel .lb-head{align-items:center}.social-count{display:inline-flex;min-width:20px;height:20px;padding:0 6px;align-items:center;justify-content:center;border-radius:99px;background:var(--primary);color:#fff;font-size:11px;font-weight:700}.social-tabs{display:flex;gap:5px;flex-wrap:wrap;margin:8px 0}.social-tab{font-size:11px;padding:5px 8px}.social-row{display:flex;align-items:center;gap:7px;padding:7px 0;border-bottom:1px solid var(--border);min-width:0}.social-row:last-child{border-bottom:0}.social-row .social-copy{flex:1;min-width:0}.social-name{font-size:12px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.social-meta{font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.social-actions{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}.social-actions .btn{padding:4px 7px;font-size:10px;min-height:30px}.social-empty{padding:12px 4px;color:var(--muted);font-size:11px;text-align:center}.social-danger{color:var(--danger,#ef4444)}
 .avatar-grid{display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin:10px 0 14px}
 .avatar-opt{
   font-size:25px; border:2px solid var(--border); border-radius:12px; background:var(--card);
@@ -346,6 +351,17 @@ button{font-family:inherit; cursor:pointer}
 .room-info{font-size:13px; margin-bottom:6px}
 .room-status{font-size:13px; font-weight:500; margin-bottom:10px; min-height:18px}
 .room-actions{display:flex; gap:8px; flex-wrap:wrap}
+.seat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(132px,1fr));gap:8px;margin:10px 0}
+.seat-card{min-height:92px;padding:10px;border:1px solid var(--border);border-radius:12px;background:var(--card);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center;position:relative}
+.seat-card.is-host{border-color:var(--primary);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--primary) 35%,transparent)}
+.seat-card.is-empty{border-style:dashed;color:var(--muted)}.seat-card.is-offline{opacity:.65}
+.seat-name{font-size:13px;font-weight:700}.seat-meta{font-size:11px;color:var(--muted)}
+.seat-badges{display:flex;gap:4px;flex-wrap:wrap;justify-content:center}.seat-badge{font-size:10px;padding:2px 6px;border-radius:999px;background:var(--soft);color:var(--text-secondary)}
+.seat-badge.ready{background:rgba(34,197,94,.14);color:#15803d}.seat-badge.bot{background:rgba(139,92,246,.14);color:#7c3aed}
+.play-panel{align-items:flex-start;flex-direction:column}.play-actions{width:100%}.play-actions input{min-width:130px;flex:1}
+.avatar-art-v2{display:block;object-fit:cover;border-radius:4px;image-rendering:auto}
+.mini-profile-card{position:fixed;z-index:10000;width:min(300px,calc(100vw - 16px));padding:10px;border:1px solid rgba(255,255,255,.28);border-radius:14px;box-shadow:var(--shadow-lg);background:linear-gradient(135deg,#334155,#111827);color:#fff}
+.mini-profile-scrim{display:flex;gap:10px;align-items:center;padding:9px;border-radius:11px;background:rgba(15,23,42,.6);backdrop-filter:blur(12px)}.mini-profile-copy{min-width:0;flex:1}.mini-profile-card .seat-meta{color:rgba(255,255,255,.82)}
 
 /* 游戏大厅 */
 .lobby-panel{
@@ -624,9 +640,15 @@ canvas.board-canvas{width:100%; max-width:560px; display:block; border-radius:12
 .profile-hero.bg-4{background:linear-gradient(135deg,#dcfce7,#86efac)}
 .profile-hero.bg-5{background:linear-gradient(135deg,#fce7f3,#f9a8d4)}
 .profile-hero.bg-6{background:linear-gradient(135deg,#1e293b,#334155); color:#e2e8f0}
+.profile-hero.premium-background{background-position:center;background-size:cover;background-repeat:no-repeat;color:#fff;border-color:rgba(255,255,255,.22);isolation:isolate}
+.profile-hero.premium-background::after{content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,rgba(2,6,23,.04),rgba(2,6,23,.18));pointer-events:none}
+.profile-hero.premium-background>*{position:relative;z-index:1}.profile-hero.premium-background .pmeta{color:rgba(255,255,255,.92)}
 .profile-hero .hero-avatar{display:flex; justify-content:center; margin-bottom:8px}
 .profile-hero .pname{font-size:18px; font-weight:700}
 .profile-hero .pmeta{font-size:12.5px; color:var(--muted); margin-top:3px}
+.profile-identity-scrim{margin:8px auto 0;padding:8px 10px;max-width:340px;border-radius:12px;background:rgba(15,23,42,.46);backdrop-filter:blur(12px);color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.45)}
+.profile-showcase{margin:10px 0;padding:10px 12px;border:1px solid var(--border);border-radius:12px;background:linear-gradient(135deg,var(--accent-soft),transparent);font-size:12px;font-weight:650;color:var(--text)}
+.profile-identity-scrim .pmeta{color:rgba(255,255,255,.9)}.profile-signature{font-size:13px;margin-top:5px;line-height:1.45;overflow-wrap:anywhere}
 :is(html[data-theme="dark"], html[data-theme="midnight"], html[data-theme="ocean"], html[data-theme="forest"], html[data-theme="cyber"], html[data-theme="sakura"]) .profile-hero.bg-0{background:linear-gradient(135deg,#1a1f2e,#1e2744)}
 :is(html[data-theme="dark"], html[data-theme="midnight"], html[data-theme="ocean"], html[data-theme="forest"], html[data-theme="cyber"], html[data-theme="sakura"]) .profile-hero.bg-1{background:linear-gradient(135deg,#1e1b3a,#2d1b69)}
 :is(html[data-theme="dark"], html[data-theme="midnight"], html[data-theme="ocean"], html[data-theme="forest"], html[data-theme="cyber"], html[data-theme="sakura"]) .profile-hero.bg-2{background:linear-gradient(135deg,#172033,#1e3a5f)}
@@ -658,6 +680,12 @@ canvas.board-canvas{width:100%; max-width:560px; display:block; border-radius:12
 .bg-swatch.bg-4{background:linear-gradient(135deg,#dcfce7,#86efac)}
 .bg-swatch.bg-5{background:linear-gradient(135deg,#fce7f3,#f9a8d4)}
 .bg-swatch.bg-6{background:linear-gradient(135deg,#1e293b,#334155)}
+.background-shop-item{position:relative;min-width:150px}
+.background-poster{position:relative;width:100%;aspect-ratio:16/9;overflow:hidden;border-radius:10px;border:1px solid var(--border);background:linear-gradient(135deg,var(--accent-soft),var(--card))}
+.background-poster img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity var(--dur-base),transform var(--dur-slow)}
+.background-poster.asset-ready img{opacity:1}.background-shop-item:hover .background-poster img{transform:scale(1.04)}
+.background-poster-fallback{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:11px}.background-poster.asset-ready .background-poster-fallback{display:none}
+.background-tier{position:absolute;top:15px;right:10px;padding:2px 6px;border-radius:99px;background:rgba(2,6,23,.68);color:#fff;font-size:10px;font-weight:700;backdrop-filter:blur(6px)}
 .bg-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(44px,1fr)); gap:8px; margin:8px 0 12px}
 .pin-hint{font-size:11.5px; color:var(--muted); margin-top:2px}
 .profile-links{display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin-top:10px}
@@ -1265,8 +1293,8 @@ body.entered #screen-hub, body.entered #screen-game{animation:none}
   <header class="app-header">
     <div class="brand"><span class="brand-icon" data-asset-fallback><img src="assets/brand/logo_mark.svg" alt=""><span class="asset-fallback">🎮</span></span><span data-i18n="brand">Playroom</span><span class="brand-tag" data-i18n="brand_tag">6 款精选游戏 · 联机对战</span></div>
         <div class="header-actions">
-      <button type="button" class="btn" id="btn-settings-page" data-i18n-title="settings">⚙️</button>
-      <button type="button" class="btn theme-btn" id="btn-theme" data-i18n-title="theme">🌙</button>
+      <button type="button" class="btn" id="btn-settings-page" data-i18n-title="settings" data-i18n-aria-label="settings"></button>
+      <button type="button" class="btn theme-btn" id="btn-theme" data-i18n-title="theme" data-i18n-aria-label="theme"></button>
     </div>
   </header>
 
@@ -1275,7 +1303,7 @@ body.entered #screen-hub, body.entered #screen-game{animation:none}
       <div class="hero-icon" data-asset-fallback><img src="assets/brand/logo_mark.svg" alt="Playroom" data-i18n-alt="brand"><span class="asset-fallback">🎮</span></div>
       <h1 data-i18n="brand">Playroom</h1>
       <p class="hero-tag" data-i18n="brand_tag">6 款精选游戏 · 联机对战</p>
-      <button type="button" class="btn btn-primary hero-cta" id="btn-hero-quick" data-i18n="quick_start">⚡ 快速开局</button>
+      <button type="button" class="btn btn-primary hero-cta" id="btn-hero-quick"></button>
     </section>
     <div class="hub-grid">
       <div class="hub-main">
@@ -1283,35 +1311,33 @@ body.entered #screen-hub, body.entered #screen-game{animation:none}
           <button type="button" class="me-chip" id="btn-me" title="创建账号或使用 PIN 登录" data-i18n-title="account_button_title"></button>
         </div>
         <div id="my-card"></div>
-        <div class="slots-row" id="slots-row"></div>
+        <div class="slots-row hidden" id="slots-row" aria-hidden="true"></div>
         <div class="room-panel hidden" id="room-panel">
           <div class="room-head">
             <h3 data-i18n="my_room">🚪 我的房间</h3>
             <span class="room-code-big" id="room-code-big"></span>
           </div>
           <div class="room-info" id="room-info"></div>
+          <div class="seat-grid" id="seat-grid" data-i18n-aria-label="room_seats_aria"></div>
           <div class="room-status" id="room-status"></div>
           <div class="room-actions" id="room-actions"></div>
         </div>
-        <div class="hub-count">
+        <div class="hub-count play-panel">
           <div class="mode-group" id="mode-group" role="group" aria-label="游戏模式" data-i18n-aria-label="mode_group_aria">
-            <button type="button" class="btn count-btn" data-mode="local" aria-pressed="true" data-i18n="mode_local">👥 本地热座</button>
-            <button type="button" class="btn count-btn" data-mode="ai" aria-pressed="false" data-i18n="mode_ai">🤖 人机对战</button>
+            <button type="button" class="btn count-btn" data-mode="online" aria-pressed="true" data-i18n="mode_online">联机</button>
+            <button type="button" class="btn count-btn" data-mode="ai" aria-pressed="false" data-i18n="mode_ai">人机对战</button>
           </div>
-          <span class="hub-label" id="count-label" data-i18n="player_count">玩家人数</span>
-          <div class="count-group" id="count-group" role="group" aria-label="选择玩家人数" data-i18n-aria-label="player_count_aria">
-            <button type="button" class="btn count-btn" data-n="2" aria-pressed="true" data-i18n="players_2">2 人</button>
-            <button type="button" class="btn count-btn" data-n="3" aria-pressed="false" data-i18n="players_3">3 人</button>
-            <button type="button" class="btn count-btn" data-n="4" aria-pressed="false" data-i18n="players_4">4 人</button>
-            <button type="button" class="btn count-btn" data-n="5" aria-pressed="false" data-i18n="players_5">5 人</button>
+          <div class="online-row play-actions" id="online-play-actions">
+            <button type="button" class="btn btn-primary" id="btn-quick-join" data-i18n="quick_join">快速加入</button>
+            <button type="button" class="btn" id="btn-create-room" data-i18n="create_room">创建房间</button>
+            <button type="button" class="btn" id="btn-browse-rooms" data-i18n="browse_rooms">浏览房间</button>
+            <input id="join-room-code" maxlength="12" data-i18n-placeholder="private_room_code" data-i18n-aria-label="private_room_code">
+            <button type="button" class="btn" id="btn-join-code" data-i18n="join_room">加入</button>
           </div>
         </div>
         <div id="persona-row" class="persona-row hidden"></div>
 <div class="online-panel">
-          <h3 data-i18n="online_title">🌐 联机对战（2-5 人 · 全部游戏）</h3>
-          <div class="online-row">
-            <button type="button" class="btn btn-primary" id="btn-create-room" data-i18n="create_room">🎮 创建房间</button>
-          </div>
+          <h3 id="mode-context-title" data-i18n="online_title">房间与连接状态</h3>
           <div class="online-status" id="online-status" data-i18n="online_status_disconnected">未连接</div>
         </div>
         <div class="game-grid" id="game-grid"></div>
@@ -1338,18 +1364,27 @@ body.entered #screen-hub, body.entered #screen-game{animation:none}
           </div>
           <div class="player-list" id="player-list"></div>
         </div>
+        <div class="lb-panel social-panel" id="social-panel">
+          <div class="lb-head"><h3 data-i18n="social_title">社交</h3><span class="social-count hidden" id="social-requests-badge">0</span></div>
+          <div class="social-tabs" role="tablist" data-i18n-aria-label="social_tabs_aria">
+            <button type="button" class="count-btn social-tab" id="social-tab-friends" aria-pressed="true" data-i18n="social_friends">好友</button>
+            <button type="button" class="count-btn social-tab" id="social-tab-online" aria-pressed="false" data-i18n="social_online">在线</button>
+            <button type="button" class="count-btn social-tab" id="social-tab-recent" aria-pressed="false" data-i18n="social_recent">最近一起玩</button>
+          </div>
+          <div id="social-list" class="social-list"></div>
+        </div>
       </aside>
     </div>
   </section>
 
   <section id="screen-game" class="hidden">
     <div class="game-top">
-      <button type="button" class="btn btn-ghost" id="btn-back" data-i18n="back">← 返回</button>
+      <button type="button" class="btn btn-ghost" id="btn-back"></button>
       <h2 id="game-title"></h2>
       <div class="top-actions">
-        <button type="button" class="btn hidden" id="btn-end-game" data-i18n-title="end_game" data-i18n="end_game">⏹ 结束本局</button>
-        <button type="button" class="btn" id="btn-rules" data-i18n="rules">📖 规则</button>
-        <button type="button" class="btn" id="btn-restart" data-i18n="restart">🔄 新一局</button>
+        <button type="button" class="btn hidden" id="btn-end-game" data-i18n-title="end_game"></button>
+        <button type="button" class="btn" id="btn-rules"></button>
+        <button type="button" class="btn" id="btn-restart"></button>
       </div>
     </div>
     <div id="player-bar" class="player-bar"></div>
@@ -1862,8 +1897,9 @@ function applyTheme(theme){
   const btn = $('btn-theme');
   if (btn){
     const meta = themeMeta(theme);
-    btn.textContent = meta.icon;
-    btn.title = t('theme_current', themeName(meta));
+    const label = t('theme_current', themeName(meta));
+    if (typeof setButtonIcon === 'function') setButtonIcon(btn, theme === 'light' ? 'moon' : 'sun', '', { ariaLabel:label, title:label, size:19 });
+    else { btn.textContent = meta.icon; btn.title = label; }
   }
 }
 function themeName(meta){ return meta && meta.nameKey ? t(meta.nameKey) : (meta ? meta.name : ''); }
@@ -2399,7 +2435,24 @@ const ASSET_CATALOG = Object.freeze({
   brandWordmark: 'brand/logo_wordmark.svg',
   currencyCash: 'ui/currency_cash.svg',
   manifest: 'manifests/asset_manifest.json',
+  backgroundCatalog: 'backgrounds/v1/background_catalog_v1.json',
 });
+const PREMIUM_BACKGROUNDS = Object.freeze([
+  {id:20,name:'像素夜城',theme:'pixel',collectionId:'pixel_origins',tier:'premium-static',price:24,animated:false,poster:'backgrounds/v1/pixel/pixel_poster.webp',asset:'backgrounds/v1/pixel/pixel_desktop.webp',desktop:'backgrounds/v1/pixel/pixel_desktop.webp',mobileCrop:'backgrounds/v1/pixel/pixel_mobile.webp',miniCrop:'backgrounds/v1/pixel/pixel_mini.webp',staticFallback:'backgrounds/v1/pixel/pixel_desktop.webp',overlay:'rgba(5,13,34,.42)',textTone:'light'},
+  {id:21,name:'像素星火·动态',theme:'pixel',collectionId:'pixel_origins',tier:'premium-animated',price:32,animated:true,poster:'backgrounds/v1/pixel/pixel_poster.webp',asset:'backgrounds/v1/pixel/pixel_animated.webp',desktop:'backgrounds/v1/pixel/pixel_desktop.webp',mobileCrop:'backgrounds/v1/pixel/pixel_mobile.webp',miniCrop:'backgrounds/v1/pixel/pixel_mini.webp',staticFallback:'backgrounds/v1/pixel/pixel_desktop.webp',overlay:'rgba(5,13,34,.42)',textTone:'light'},
+  {id:22,name:'晴空回廊',theme:'anime',collectionId:'anime_origins',tier:'premium-static',price:24,animated:false,poster:'backgrounds/v1/anime/anime_poster.webp',asset:'backgrounds/v1/anime/anime_desktop.webp',desktop:'backgrounds/v1/anime/anime_desktop.webp',mobileCrop:'backgrounds/v1/anime/anime_mobile.webp',miniCrop:'backgrounds/v1/anime/anime_mini.webp',staticFallback:'backgrounds/v1/anime/anime_desktop.webp',overlay:'rgba(17,34,92,.30)',textTone:'light'},
+  {id:23,name:'云海微光·动态',theme:'anime',collectionId:'anime_origins',tier:'premium-animated',price:32,animated:true,poster:'backgrounds/v1/anime/anime_poster.webp',asset:'backgrounds/v1/anime/anime_animated.webp',desktop:'backgrounds/v1/anime/anime_desktop.webp',mobileCrop:'backgrounds/v1/anime/anime_mobile.webp',miniCrop:'backgrounds/v1/anime/anime_mini.webp',staticFallback:'backgrounds/v1/anime/anime_desktop.webp',overlay:'rgba(17,34,92,.30)',textTone:'light'},
+  {id:24,name:'月海群峰',theme:'landscape',collectionId:'landscape_origins',tier:'premium-static',price:24,animated:false,poster:'backgrounds/v1/landscape/landscape_poster.webp',asset:'backgrounds/v1/landscape/landscape_desktop.webp',desktop:'backgrounds/v1/landscape/landscape_desktop.webp',mobileCrop:'backgrounds/v1/landscape/landscape_mobile.webp',miniCrop:'backgrounds/v1/landscape/landscape_mini.webp',staticFallback:'backgrounds/v1/landscape/landscape_desktop.webp',overlay:'rgba(3,22,43,.38)',textTone:'light'},
+  {id:25,name:'潮汐月影·动态',theme:'landscape',collectionId:'landscape_origins',tier:'premium-animated',price:32,animated:true,poster:'backgrounds/v1/landscape/landscape_poster.webp',asset:'backgrounds/v1/landscape/landscape_animated.webp',desktop:'backgrounds/v1/landscape/landscape_desktop.webp',mobileCrop:'backgrounds/v1/landscape/landscape_mobile.webp',miniCrop:'backgrounds/v1/landscape/landscape_mini.webp',staticFallback:'backgrounds/v1/landscape/landscape_desktop.webp',overlay:'rgba(3,22,43,.38)',textTone:'light'},
+  {id:26,name:'月下伙伴',theme:'animal',collectionId:'animal_origins',tier:'premium-static',price:24,animated:false,poster:'backgrounds/v1/animal/animal_poster.webp',asset:'backgrounds/v1/animal/animal_desktop.webp',desktop:'backgrounds/v1/animal/animal_desktop.webp',mobileCrop:'backgrounds/v1/animal/animal_mobile.webp',miniCrop:'backgrounds/v1/animal/animal_mini.webp',staticFallback:'backgrounds/v1/animal/animal_desktop.webp',overlay:'rgba(8,25,44,.40)',textTone:'light'},
+  {id:27,name:'灯火呼吸·动态',theme:'animal',collectionId:'animal_origins',tier:'premium-animated',price:32,animated:true,poster:'backgrounds/v1/animal/animal_poster.webp',asset:'backgrounds/v1/animal/animal_animated.webp',desktop:'backgrounds/v1/animal/animal_desktop.webp',mobileCrop:'backgrounds/v1/animal/animal_mobile.webp',miniCrop:'backgrounds/v1/animal/animal_mini.webp',staticFallback:'backgrounds/v1/animal/animal_desktop.webp',overlay:'rgba(8,25,44,.40)',textTone:'light'},
+  {id:28,name:'霓虹穹庭',theme:'neon',collectionId:'neon_origins',tier:'premium-static',price:24,animated:false,poster:'backgrounds/v1/neon/neon_poster.webp',asset:'backgrounds/v1/neon/neon_desktop.webp',desktop:'backgrounds/v1/neon/neon_desktop.webp',mobileCrop:'backgrounds/v1/neon/neon_mobile.webp',miniCrop:'backgrounds/v1/neon/neon_mini.webp',staticFallback:'backgrounds/v1/neon/neon_desktop.webp',overlay:'rgba(4,5,25,.34)',textTone:'light'},
+  {id:29,name:'光轨脉冲·动态',theme:'neon',collectionId:'neon_origins',tier:'premium-animated',price:32,animated:true,poster:'backgrounds/v1/neon/neon_poster.webp',asset:'backgrounds/v1/neon/neon_animated.webp',desktop:'backgrounds/v1/neon/neon_desktop.webp',mobileCrop:'backgrounds/v1/neon/neon_mobile.webp',miniCrop:'backgrounds/v1/neon/neon_mini.webp',staticFallback:'backgrounds/v1/neon/neon_desktop.webp',overlay:'rgba(4,5,25,.34)',textTone:'light'},
+  {id:30,name:'轨道船坞',theme:'technology',collectionId:'technology_origins',tier:'premium-static',price:24,animated:false,poster:'backgrounds/v1/technology/technology_poster.webp',asset:'backgrounds/v1/technology/technology_desktop.webp',desktop:'backgrounds/v1/technology/technology_desktop.webp',mobileCrop:'backgrounds/v1/technology/technology_mobile.webp',miniCrop:'backgrounds/v1/technology/technology_mini.webp',staticFallback:'backgrounds/v1/technology/technology_desktop.webp',overlay:'rgba(2,13,27,.36)',textTone:'light'},
+  {id:31,name:'深空巡航·动态',theme:'technology',collectionId:'technology_origins',tier:'premium-animated',price:32,animated:true,poster:'backgrounds/v1/technology/technology_poster.webp',asset:'backgrounds/v1/technology/technology_animated.webp',desktop:'backgrounds/v1/technology/technology_desktop.webp',mobileCrop:'backgrounds/v1/technology/technology_mobile.webp',miniCrop:'backgrounds/v1/technology/technology_mini.webp',staticFallback:'backgrounds/v1/technology/technology_desktop.webp',overlay:'rgba(2,13,27,.36)',textTone:'light'},
+].map(Object.freeze));
+const PREMIUM_BACKGROUND_BY_ID = new Map(PREMIUM_BACKGROUNDS.map(item => [item.id, item]));
+const UI_ICON_NAMES = new Set(['settings','user','users','store','gamepad-2','plus','lock','unlock','eye','eye-off','play','search','chevron-right','chevron-down','ellipsis','flag','shield','shield-alert','user-plus','user-minus','bot','moon','sun','zap','door-open','refresh-cw','book-open','square','arrow-left','trophy','log-out','more-horizontal']);
 const GAME_ART = Object.freeze({
   gomoku: Object.freeze({
     flag: 'mg_art_gomoku_v1',
@@ -2420,6 +2473,54 @@ function assetUrl(key){
   return ASSET_ROOT + String(path).replace(/^\/+/, '');
 }
 
+function icon(name, size, label){
+  const safeName = UI_ICON_NAMES.has(name) ? name : 'square';
+  const px = Number(size) > 0 ? Number(size) : 18;
+  const wrap = el('span', 'ui-icon');
+  wrap.style.width = px + 'px';
+  wrap.style.height = px + 'px';
+  if (label){ wrap.setAttribute('role','img'); wrap.setAttribute('aria-label',label); }
+  else wrap.setAttribute('aria-hidden','true');
+  const img = document.createElement('img');
+  img.src = assetUrl('icons/ui/' + safeName + '.svg');
+  img.alt = '';
+  img.width = px;
+  img.height = px;
+  img.addEventListener('error', () => { img.style.display='none'; wrap.classList.add('asset-failed'); });
+  wrap.appendChild(img);
+  return wrap;
+}
+
+function setButtonIcon(button, name, label, options){
+  if (!button) return;
+  const opts = options || {};
+  button.innerHTML = '';
+  button.appendChild(icon(name, opts.size || 18));
+  if (label) button.appendChild(el('span','ui-icon-label',label));
+  if (opts.ariaLabel) button.setAttribute('aria-label',opts.ariaLabel);
+  if (opts.title) button.title = opts.title;
+}
+
+function initStaticPlatformIcons(){
+  setButtonIcon($('btn-settings-page'),'settings','',{ariaLabel:t('settings'),title:t('settings')});
+  const root = document.documentElement;
+  const theme = root && typeof root.getAttribute === 'function' ? (root.getAttribute('data-theme') || 'light') : 'light';
+  setButtonIcon($('btn-theme'),theme==='light'?'moon':'sun','',{ariaLabel:t('theme'),title:t('theme'),size:19});
+  setButtonIcon($('btn-hero-quick'),'zap',t('quick_join'));
+  setButtonIcon($('btn-quick-join'),'zap',t('quick_join'));
+  setButtonIcon($('btn-create-room'),'plus',t('create_room'));
+  setButtonIcon($('btn-browse-rooms'),'search',t('browse_rooms'));
+  setButtonIcon($('btn-join-code'),'door-open',t('join_room'));
+  setButtonIcon($('btn-back'),'arrow-left','返回');
+  setButtonIcon($('btn-end-game'),'square','结束本局');
+  setButtonIcon($('btn-rules'),'book-open','规则');
+  setButtonIcon($('btn-restart'),'refresh-cw','新一局');
+  const onlineMode=typeof document.querySelector==='function'?document.querySelector('[data-mode="online"]'):null;
+  const aiMode=typeof document.querySelector==='function'?document.querySelector('[data-mode="ai"]'):null;
+  setButtonIcon(onlineMode,'users',t('mode_online'));
+  setButtonIcon(aiMode,'bot',t('mode_ai'));
+}
+
 function gameArtEnabled(id){
   const art = GAME_ART[id];
   if (!art) return false;
@@ -2436,6 +2537,103 @@ function setAssetCssUrl(element, property, url){
   const value = 'url("' + url + '")';
   if (element.style && typeof element.style.setProperty === 'function') element.style.setProperty(property, value);
   else if (element.style) element.style[property] = value;
+}
+
+function premiumBackgroundMeta(id){
+  return PREMIUM_BACKGROUND_BY_ID.get(Number(id)) || null;
+}
+
+function prefersReducedMotion(){
+  return typeof window !== 'undefined' && typeof window.matchMedia === 'function' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
+function premiumStaticAsset(item, context){
+  if (context === 'mini') return item.miniCrop;
+  if (typeof window !== 'undefined' && Number(window.innerWidth || 0) <= 600) return item.mobileCrop;
+  return item.desktop || item.staticFallback;
+}
+
+function setPremiumBackgroundImage(element, item, path){
+  element.style.backgroundImage = 'linear-gradient(' + item.overlay + ',' + item.overlay + '),url("' + assetUrl(path) + '")';
+}
+
+function releasePremiumBackground(element){
+  if (!element || typeof element._premiumBackgroundCleanup !== 'function') return;
+  element._premiumBackgroundCleanup();
+  element._premiumBackgroundCleanup = null;
+}
+
+function applyPremiumBackground(element, id, context){
+  releasePremiumBackground(element);
+  const item = premiumBackgroundMeta(id);
+  if (!item) return false;
+  const useContext = context || 'profile';
+  const fallback = premiumStaticAsset(item, useContext);
+  element.classList.add('premium-background', 'premium-bg-' + item.textTone);
+  element.dataset.backgroundId = String(item.id);
+  element.dataset.backgroundAnimated = item.animated ? 'true' : 'false';
+  setPremiumBackgroundImage(element, item, item.animated ? item.poster : fallback);
+  let visible = true;
+  let active = false;
+  let observer = null;
+  const mayAnimate = item.animated && !prefersReducedMotion() && useContext !== 'shop-grid';
+  const sync = () => {
+    const pageVisible = typeof document === 'undefined' || !document.hidden;
+    const next = !!(mayAnimate && visible && pageVisible);
+    if (next === active) return;
+    active = next;
+    setPremiumBackgroundImage(element, item, active ? item.asset : fallback);
+    element.dataset.animationActive = active ? 'true' : 'false';
+  };
+  const onVisibility = () => sync();
+  if (mayAnimate && typeof IntersectionObserver !== 'undefined'){
+    visible = false;
+    observer = new IntersectionObserver(entries => {
+      const entry = entries[0];
+      visible = !!(entry && entry.isIntersecting);
+      sync();
+    }, { threshold:.05 });
+    observer.observe(element);
+  }
+  if (mayAnimate && typeof document !== 'undefined' && document.addEventListener){
+    document.addEventListener('visibilitychange', onVisibility);
+  }
+  sync();
+  element._premiumBackgroundCleanup = () => {
+    if (observer) observer.disconnect();
+    if (mayAnimate && typeof document !== 'undefined' && document.removeEventListener){
+      document.removeEventListener('visibilitychange', onVisibility);
+    }
+    active = false;
+    setPremiumBackgroundImage(element, item, fallback);
+    element.dataset.animationActive = 'false';
+  };
+  return true;
+}
+
+function backgroundPosterNode(item, options){
+  const opts = options || {};
+  const wrap = el('div', 'background-poster' + (item.animated ? ' is-animated' : ''));
+  const img = document.createElement('img');
+  img.src = assetUrl(item.poster);
+  img.alt = '';
+  img.loading = 'lazy';
+  img.decoding = 'async';
+  const fallback = el('span', 'background-poster-fallback', 'BG');
+  wrap.appendChild(img);
+  wrap.appendChild(fallback);
+  img.addEventListener('load', () => wrap.classList.add('asset-ready'));
+  img.addEventListener('error', () => { img.style.display = 'none'; wrap.classList.add('asset-failed'); });
+  if (opts.hoverPreview && item.animated){
+    const start = () => { if (!prefersReducedMotion()) img.src = assetUrl(item.asset); };
+    const stop = () => { img.src = assetUrl(item.poster); };
+    wrap.addEventListener('mouseenter', start);
+    wrap.addEventListener('focusin', start);
+    wrap.addEventListener('mouseleave', stop);
+    wrap.addEventListener('focusout', stop);
+  }
+  return wrap;
 }
 
 function gameCoverNode(id, game){
@@ -3073,11 +3271,13 @@ if (typeof document !== 'undefined') {
 }
 /* ================= 联机对战（WebSocket 中继） ================= */
 const online = {
-  ws: null, room: null, player: 0, isHost: false, isSpectator: false, game: null, gameplayMeta: null, presentationMeta:null, connected: false, pending: null, roomInfo: null, capacity: 2, _hb: null,
-  lobby: [], inviteTarget: null, matchId: null, reportedMatchIds: [], soloReportedIds: [], legacyResultSubmitted: false,
+  ws: null, room: null, spectatorRoom:null, player: 0, isHost: false, isSpectator: false, game: null, gameplayMeta: null, presentationMeta:null, connected: false, pending: null, roomInfo: null, capacity: 2, _hb: null,
+  lobby: [], inviteTarget: null, pendingGame:null, matchId: null, reportedMatchIds: [], soloReportedIds: [], legacyResultSubmitted: false,
   resume: null, _reconnectTimer: null, _reconnectAttempts: 0, _manualClose: false, _replaying: false, _liveMoveQueue: [],
   pendingResultClaim: null, _resultRetryTimer: null, _authenticated: false,
   soloMatch: null, pendingSoloClaims: [], _soloClaimsLoaded: false, displayedRewardIds: [], rewardVersion: null,
+  socialState: { version:'1.0', friends:[], incoming:[], outgoing:[], blocked:[], counts:{ friends:0, incoming:0, outgoing:0, blocked:0 } },
+  socialTab:'friends',
   defaultServer: 'https://mini-games-online.onrender.com',
   connect(){
     if (this.connected || (this.ws && (this.ws.readyState === 0 || this.ws.readyState === 1))) return;
@@ -3105,7 +3305,7 @@ const online = {
       this.send({ type: 'hello', payload: {
         uid: authAccount && authAccount.uid ? authAccount.uid : (typeof deviceUid !== 'undefined' ? deviceUid : null),
         token: authAccount && authAccount.authToken ? authAccount.authToken : null,
-        proto: typeof PROTOCOL_VERSION !== 'undefined' ? PROTOCOL_VERSION : 1,
+        proto: typeof PROTOCOL_VERSION !== 'undefined' ? PROTOCOL_VERSION : 2,
         capabilities: ['tank-authority-v1','tetris-battle-authority-v1','tetris-rule-v2','spectator-room-v1','tournament-orchestrator-v1','xiangqi-clock-v1','xiangqi-rule-v2','monopoly-auction-v1','monopoly-rule-v2','game-cosmetic-presentation-v1'],
       } });
       this.send({ type: 'lobby' });
@@ -3135,8 +3335,9 @@ const online = {
       if (this.pending){
         const p = this.pending;
         this.pending = null;
-        if (p.type === 'create') this.create();
+        if (p.type === 'create') this.create(p.settings);
         else if (p.type === 'join') this.join(p.room);
+        else if (p.type === 'quick_join') this.quickJoin(p.game);
       }
     };
     ws.onmessage = e => { if (this.ws === ws) this.onMessage(JSON.parse(e.data)); };
@@ -3304,13 +3505,14 @@ const online = {
     this.ws.send(JSON.stringify(msg));
     return true;
   },
-  create(){
+  create(settings){
     if (!account){ toast(t('need_account_online')); openAuthModal(); return; }
+    settings = settings || {};
     if (this.connected){
-      this.send({type:'create', payload:{ capacity: playerCount }});
+      this.send({ type:'create', payload:{ capacity:Math.max(2,Math.min(5,Number(settings.capacity)||playerCount||2)), visibility:settings.visibility || 'public', allowSpectators:settings.allowSpectators !== false } });
       this.status(t('room_creating'));
     } else {
-      this.pending = { type:'create' };
+      this.pending = { type:'create', settings };
       this.connect();
       this.status(t('online_connecting'));
     }
@@ -3329,6 +3531,25 @@ const online = {
     }
   },
   selectGame(id){ this.send({ type:'select_game', payload:{ game:id } }); },
+  quickJoin(game){
+    if (!account){ toast(t('need_account_online')); openAuthModal(); return; }
+    if (this.connected) this.send({ type:'quick_join', payload:{ game:game || null } });
+    else { this.pending={type:'quick_join',game:game||null}; this.connect(); this.status(t('online_connecting')); }
+  },
+  spectateRoom(room){ this.send({ type:'spectate', payload:{ room } }); },
+  setReady(ready){ this.send({ type:'ready', payload:{ ready:ready !== false } }); },
+  requestSocial(){ if (this.connected && this._authenticated) this.send({ type:'social_get' }); },
+  friendRequest(uid){ this.send({ type:'friend_request', payload:{ toUid:String(uid || '') } }); },
+  friendRequestAction(action, requestId){ this.send({ type:'friend_request_action', payload:{ action, requestId:String(requestId || '') } }); },
+  removeFriend(uid){ this.send({ type:'friend_remove', payload:{ uid:String(uid || '') } }); },
+  blockUser(uid){ this.send({ type:'block', payload:{ uid:String(uid || '') } }); },
+  unblockUser(uid){ this.send({ type:'unblock', payload:{ uid:String(uid || '') } }); },
+  reportUser(payload){ this.send({ type:'report', payload:payload || {} }); },
+  addAI(difficulty, persona){ this.send({ type:'add_ai', payload:{ difficulty:difficulty || 'normal', persona:persona || 'teacher' } }); },
+  removeAI(seatId){ this.send({ type:'remove_ai', payload:{ seatId } }); },
+  sendBotMove(seatId, payload){ this.send({ type:'bot_move', payload:{ seatId, payload } }); },
+  sendBotTankInput(seatId, payload){ this.send({ type:'bot_tank_input', payload:{ ...(payload || {}), seatId, matchId:this.matchId } }); },
+  sendBotTetrisAction(seatId, action){ this.send({ type:'bot_tetris_action', payload:{ seatId, action, matchId:this.matchId } }); },
   sendMove(payload){ this.send({type:'move', payload}); setTimeout(() => this.publishGameState(), 0); },
   sendTankInput(payload){ this.send({type:'tank_input', payload:{...(payload||{}),matchId:this.matchId}}); },
   sendTetrisLockClaim(payload){ this.send({type:'tetris_lock_claim', payload:{...(payload||{}),matchId:this.matchId}}); },
@@ -3354,7 +3575,7 @@ const online = {
         msg.room = String(msg.room || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12);
         this.room = msg.room; this.player = msg.player; this.isHost = true;
         this.capacity = msg.capacity || 2;
-        this.roomInfo = { room: msg.room, game: null, capacity: this.capacity, players: [{ uid: null, player: 0 }], size: 1, started: false };
+        this.roomInfo = msg.payload || { room:msg.room, game:null, capacity:this.capacity, players:[{uid:null,player:0}], seats:[], size:1, started:false };
         this.status(t('room_created_status',msg.room));
         renderRoomPanel();
         if (this.inviteTarget){
@@ -3367,19 +3588,30 @@ const online = {
       case 'joined':
         msg.room = String(msg.room || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12);
         this.room = msg.room; this.player = msg.player; this.isHost = false;
-        this.roomInfo = { room: msg.room, game: null, capacity: 2, players: [{ uid: null, player: 0 }], size: 1, started: false };
+        this.roomInfo = msg.payload || { room:msg.room, game:null, capacity:2, players:[{uid:null,player:0}], seats:[], size:1, started:false };
         this.status(t('room_joined_status',msg.room));
         renderRoomPanel();
         break;
       case 'room_update':
         this.roomInfo = msg.payload;
         this.capacity = msg.payload.capacity || this.capacity;
-        if (!this.isHost && !this.room) this.room = msg.payload.room;
+        if (this.room) this.isHost = !!(msg.payload.host && Number(msg.payload.host.seatId) === Number(this.player));
+        if (!this.isHost && !this.room && !this.isSpectator) this.room = msg.payload.room;
         if (this.game && !msg.payload.game && !msg.payload.started){
           finishRoomGame();
           return;
         }
         renderRoomPanel();
+        if (this.pendingGame){ const game=this.pendingGame; this.pendingGame=null; this.selectGame(game); }
+        break;
+      case 'spectating':
+        {
+          const p=msg.payload || {};
+          this.spectatorRoom=p.room || null;this.room=null;this.player=null;this.isHost=false;this.isSpectator=true;this.roomInfo=p;
+          this.game=p.started?p.game:null;this.matchId=p.matchId||null;this.gameplayMeta=p.gameplay||null;this.presentationMeta=p.presentation||null;
+          this.status(t('spectating_room',p.room || ''));renderRoomPanel();
+          if (this.game){ startOnlineGame(this.game,p.size); this.replayMoveLog(p.moveLog || []); }
+        }
         break;
       case 'spectate_joined':
         {
@@ -3414,10 +3646,25 @@ const online = {
           this.loadPendingResultClaim();
           this.flushPendingResultClaim();
           this.flushSoloMatch();
+          this.requestSocial();
         } else if (account && account.authToken){
           toast(t('session_expired'));
           if (typeof completeLocalLogout === 'function') completeLocalLogout(true);
         }
+        break;
+      case 'quick_join_empty':
+        toast(t('quick_join_empty'));
+        break;
+      case 'social_state':
+        this.socialState = msg.payload || this.socialState;
+        if (typeof renderSocialRail === 'function') renderSocialRail();
+        break;
+      case 'social_ok':
+        if (msg.msg) toast(translateServerMessage(msg.msg,msg.reason||(msg.payload&&msg.payload.reason),'operation_success'));
+        this.requestSocial();
+        break;
+      case 'social_error':
+        toast(translateServerMessage(msg.msg,msg.reason||(msg.payload&&msg.payload.reason),'operation_failed'));
         break;
       case 'rejoined':
         {
@@ -3433,6 +3680,8 @@ const online = {
           this.roomInfo = {
             room: p.room, game: p.game || null, capacity: this.capacity,
             players: p.players || [], size: p.size || 1, onlineSize: p.onlineSize || 1,
+            seats: p.seats || [], humanCount:p.humanCount || 0, aiCount:p.aiCount || 0,
+            visibility:p.visibility || 'public', allowSpectators:p.allowSpectators !== false,
             started: !!p.started, settled:!!p.settled, matchId: p.matchId || null,
           };
           this.game = p.started ? (p.game || null) : null;
@@ -3644,6 +3893,7 @@ const online = {
           if (profile && account && profile.uid === account.uid){
             updateAccountProfile(profile);
             renderMe(); renderSlots();
+            if (typeof renderSocialRail === 'function') renderSocialRail();
           }
         }
         break;
@@ -3665,6 +3915,7 @@ const online = {
             this.loadPendingResultClaim();
             this.flushPendingResultClaim();
             this.flushSoloMatch();
+            this.requestSocial();
             if (typeof syncProfiles === 'function') syncProfiles();
             renderMyCard();
             toast(t('account_created_success',account.name));
@@ -3686,6 +3937,7 @@ const online = {
             this.loadPendingResultClaim();
             this.flushPendingResultClaim();
             this.flushSoloMatch();
+            this.requestSocial();
             if (typeof syncProfiles === 'function') syncProfiles();
             renderMyCard();
             toast(t('login_success',account.name));
@@ -3922,7 +4174,7 @@ const online = {
     const wasRoomGame = !!(this.room || this.game);
     if (!preserveResume) this.clearResume();
     if (!preserveResume) this.clearPendingResultClaim();
-    this.room = null; this.game = null; this.isHost = false; this.isSpectator = false; this.gameplayMeta = null; this.presentationMeta=null; this.pending = null; this.roomInfo = null; this.capacity = 2; this.inviteTarget = null;
+    this.room = null; this.spectatorRoom=null; this.game = null; this.isHost = false; this.isSpectator = false; this.gameplayMeta = null; this.presentationMeta=null; this.pending = null; this.roomInfo = null; this.capacity = 2; this.inviteTarget = null; this.pendingGame=null;
     this.matchId = null; this.legacyResultSubmitted = false;
     $('online-banner').classList.add('hidden');
     $('room-panel').classList.add('hidden');
@@ -3960,39 +4212,50 @@ function startOnlineGame(id, sizeOverride){
 }
 function renderRoomPanel(){
   const panel = $('room-panel');
-  if (!online.room){
+  const roomId = online.room || online.spectatorRoom;
+  const watching = !!(online.isSpectator || online.spectatorRoom);
+  if (!roomId){
     panel.classList.add('hidden');
     return;
   }
   panel.classList.remove('hidden');
-  $('room-code-big').textContent = online.room;
-  const info = online.roomInfo || { size: 1, capacity: 2, players: [], game: null, started: false };
+  $('room-code-big').textContent = roomId;
+  const info = online.roomInfo || { size:1, capacity:2, players:[], seats:[], game:null, started:false };
   const cap = info.capacity || 2;
-  const names = (info.players || []).map(p => {
-    const prof = p.uid ? profileByUid(p.uid) : null;
-    return (prof ? prof.name : t('player_number',p.player+1)) + (p.uid && p.uid === deviceUid ? t('profile_mine') : '');
-  });
-  $('room-info').textContent = t('room_info_line',info.size || 1,cap,names.length ? ' · ' + names.join(t('versus_separator')) : '',info.game ? GAMES[info.game].name : t('not_selected'));
-  let status;
-  if (online.game){
-    status = t('match_in_progress');
-  } else if (online.isHost){
-    if (info.game){
-      if (info.started) status = t('match_in_progress');
-      else if (info.size >= cap) status = t('room_full_starting');
-      else if (info.size >= 2) status = t('room_selected_ready',GAMES[info.game].name);
-      else status = t('room_selected_waiting',GAMES[info.game].name);
-    } else {
-      status = t(info.size >= 2 ? 'room_players_ready' : 'room_waiting_players');
-    }
-  } else {
-    status = info.game
-      ? (info.started ? t('match_in_progress') : t(info.size >= cap ? 'room_host_selected_starting' : 'room_host_selected_waiting',GAMES[info.game].name))
-      : t('room_wait_host_select');
+  $('room-info').textContent = t('room_summary',
+    info.visibility === 'private' ? t('room_private') : t('room_public'), info.size || 0, cap,
+    info.humanCount || 0, info.aiCount || 0,
+    info.allowSpectators ? t('room_spectators_on',info.spectatorCount || 0) : t('room_spectators_off'),
+    info.game && GAMES[info.game] ? t(GAMES[info.game].nameKey) : t('not_selected'));
+  const seatGrid=$('seat-grid');
+  if (seatGrid){
+    seatGrid.innerHTML='';
+    (info.seats || []).forEach(seat => {
+      const card=el('div','seat-card '+(seat.type==='empty'?'is-empty ':'')+(seat.host?'is-host ':'')+(seat.online===false&&seat.type==='human'?'is-offline':''));
+      if(seat.type==='human'){
+        const profile={...(profileByUid(seat.userId)||{}),uid:seat.userId,name:seat.nickname,avatar:seat.avatar};
+        const av=avatarStageNode(profile,38);av.style.cursor='pointer';av.addEventListener('click',()=>seat.userId&&openProfileModal(seat.userId));card.appendChild(av);
+        card.appendChild(elRaw('div','seat-name',seat.nickname+(seat.userId===deviceUid?t('profile_mine'):'')));
+        const badges=el('div','seat-badges');if(seat.host)badges.appendChild(el('span','seat-badge','HOST'));badges.appendChild(el('span','seat-badge '+(seat.ready?'ready':''),seat.ready?'READY':t('not_ready')));if(!seat.online)badges.appendChild(el('span','seat-badge',t('offline')));card.appendChild(badges);
+      }else if(seat.type==='ai'){
+        card.appendChild(avatarStageNode({avatar:seat.avatar||141,frame:0,effect:0},38));card.appendChild(elRaw('div','seat-name',(seat.nickname||'AI')+' AI'));
+        const badges=el('div','seat-badges');badges.appendChild(el('span','seat-badge bot','BOT / AI'));badges.appendChild(el('span','seat-badge ready','READY'));card.appendChild(badges);
+        card.appendChild(el('div','seat-meta',(seat.aiDifficulty||'normal').toUpperCase()+' · '+(seat.aiPersona||'teacher')));
+        if(online.isHost&&!info.started){const remove=el('button','btn btn-ghost',t('remove_ai'));remove.addEventListener('click',()=>online.removeAI(seat.seatId));card.appendChild(remove);}
+      }else{
+        card.appendChild(el('div',null,'＋'));card.appendChild(el('div','seat-name',t('empty_seat')));
+        if(online.isHost&&!info.started){const add=el('button','btn',t('add_ai'));add.addEventListener('click',()=>online.addAI('normal',currentPersona&&currentPersona.id||'teacher'));card.appendChild(add);}
+      }
+      seatGrid.appendChild(card);
+    });
   }
-  $('room-status').textContent = status;
+  const selectedGameName = info.game && GAMES[info.game] ? t(GAMES[info.game].nameKey) : '';
+  $('room-status').textContent = watching ? t('spectator_readonly') : (info.started ? t('match_in_progress') : (info.canStart ? t('all_ready_start') : (info.game ? t('room_selected_ready', selectedGameName) : t('room_wait_host_select'))));
   const actions = $('room-actions');
   actions.innerHTML = '';
+  if(watching){
+    const leaveWatch=el('button','btn',t('leave_spectating'));leaveWatch.addEventListener('click',()=>online.send({type:'spectate_leave'}));actions.appendChild(leaveWatch);return;
+  }
   if (online.game){
     if (currentGameId && $('screen-hub') && !$('screen-hub').classList.contains('hidden')){
       const backBtn = el('button','btn',t('room_return_game'));
@@ -4000,17 +4263,21 @@ function renderRoomPanel(){
       actions.appendChild(backBtn);
     }
   } else {
-    if (online.isHost && info.game && info.size >= 2 && !info.started){
+    const mine=(info.seats||[]).find(seat=>seat.type==='human'&&Number(seat.seatId)===Number(online.player));
+    if(!online.isHost&&mine&&!info.started){const ready=el('button','btn '+(mine.ready?'btn-primary':''),mine.ready?'READY':t('ready'));ready.addEventListener('click',()=>online.setReady(!mine.ready));actions.appendChild(ready);}
+    if (online.isHost && info.game && info.canStart && !info.started){
       const startBtn = el('button','btn btn-primary',t('room_start'));
       startBtn.addEventListener('click', () => online.send({ type: 'start' }));
       actions.appendChild(startBtn);
     }
-    if(online.isHost&&info.size>=3&&!info.started){
+    if(online.isHost&&(info.humanCount||0)>=3&&!(info.aiCount||0)&&!info.started){
       const tournament=el('button','btn',t('tournament_create'));tournament.addEventListener('click',()=>openTournamentCreate(info));actions.appendChild(tournament);
     }
-    const invite = el('button','btn btn-primary',t('invite_player'));
-    invite.addEventListener('click', openInvitePicker);
-    actions.appendChild(invite);
+    if(online.isHost){
+      const invite=el('button','btn',t('invite_player'));invite.addEventListener('click',openInvitePicker);actions.appendChild(invite);
+      const visibility=el('button','btn',info.visibility==='private'?t('make_public'):t('make_private'));visibility.addEventListener('click',()=>online.send({type:'room_settings',payload:{visibility:info.visibility==='private'?'public':'private'}}));actions.appendChild(visibility);
+      const watch=el('button','btn',info.allowSpectators?t('disable_spectators'):t('enable_spectators'));watch.addEventListener('click',()=>online.send({type:'room_settings',payload:{allowSpectators:!info.allowSpectators}}));actions.appendChild(watch);
+    }
   }
   if(online.tournamentState&&Array.isArray(online.tournamentState.standings)&&online.tournamentState.standings.some(item=>item.id===deviceUid)){
     const tournament=el('button','btn',t('tournament_open'));
@@ -4105,6 +4372,50 @@ function openInvitePicker(){
   bd.addEventListener('click', e => { if (e.target === bd) bd.remove(); });
   document.body.appendChild(bd);
 }
+function presenceLabel(value){
+  const key='presence_'+String(value||'offline');const localized=t(key);return localized===key?String(value||'offline'):localized;
+}
+function socialRelationshipFor(uid){
+  const state=online.socialState||{};
+  if((state.blocked||[]).some(item=>item.uid===uid))return'blocked';
+  if((state.friends||[]).some(item=>item.uid===uid))return'friends';
+  if((state.incoming||[]).some(item=>item.user&&item.user.uid===uid))return'incoming';
+  if((state.outgoing||[]).some(item=>item.user&&item.user.uid===uid))return'outgoing';
+  return'none';
+}
+function openReportUserModal(profile,context){
+  if(!profile||!profile.uid||profile.uid===deviceUid)return;
+  const bd=el('div','modal-backdrop'),card=el('div','modal-card');card.appendChild(el('h3',null,t('social_report')+' · '+(profile.name||t('social_player'))));
+  const select=el('select','nick-input');[['harassment','social_reason_harassment'],['inappropriate_name','social_reason_inappropriate_name'],['cheating','social_reason_cheating'],['spam','social_reason_spam'],['other','social_reason_other']].forEach(([value,key])=>{const option=document.createElement('option');option.value=value;option.textContent=t(key);select.appendChild(option);});card.appendChild(select);card.appendChild(el('p','lb-note',t('social_report_note')));
+  const send=el('button','btn btn-primary');setButtonIcon(send,'flag',t('social_report'));send.addEventListener('click',()=>{online.reportUser({targetUid:profile.uid,reason:select.value,contextType:context&&context.type||'profile',contextId:context&&context.id||profile.uid,matchId:online.matchId||null});bd.remove();});card.appendChild(send);const cancel=el('button','btn',t('cancel'));cancel.addEventListener('click',()=>bd.remove());card.appendChild(cancel);bd.appendChild(card);bd.addEventListener('click',event=>{if(event.target===bd)bd.remove();});document.body.appendChild(bd);
+}
+function openSocialActions(profile,context){
+  if(!profile||!profile.uid||profile.uid===deviceUid)return;const relation=socialRelationshipFor(profile.uid),bd=el('div','modal-backdrop'),card=el('div','modal-card');card.appendChild(el('h3',null,(profile.name||t('social_player'))+' · '+presenceLabel(profile.presence||(profile.online?'online':'offline'))));
+  const add=(label,cls,iconName,handler)=>{const button=el('button','btn'+(cls?' '+cls:''));setButtonIcon(button,iconName,label);button.addEventListener('click',()=>{handler();bd.remove();});card.appendChild(button);};
+  if(relation==='none')add(t('social_add_friend'),'btn-primary','user-plus',()=>online.friendRequest(profile.uid));
+  if(relation==='outgoing'){const req=(online.socialState.outgoing||[]).find(item=>item.user&&item.user.uid===profile.uid);if(req)add(t('social_cancel'),'','user-minus',()=>online.friendRequestAction('cancel',req.id));}
+  if(relation==='incoming'){const req=(online.socialState.incoming||[]).find(item=>item.user&&item.user.uid===profile.uid);if(req){add(t('social_accept'),'btn-primary','user-plus',()=>online.friendRequestAction('accept',req.id));add(t('social_decline'),'','user-minus',()=>online.friendRequestAction('decline',req.id));}}
+  if(relation==='friends'){if(profile.online)add(t('social_invite_room'),'btn-primary','door-open',()=>inviteUser(profile.uid));add(t('social_remove'),'','user-minus',()=>online.removeFriend(profile.uid));}
+  if(relation!=='blocked')add(t('social_block'),'social-danger','shield-alert',()=>online.blockUser(profile.uid));else add(t('social_unblock'),'','shield',()=>online.unblockUser(profile.uid));
+  add(t('social_report'),'social-danger','flag',()=>openReportUserModal(profile,context));const close=el('button','btn',t('close'));close.addEventListener('click',()=>bd.remove());card.appendChild(close);bd.appendChild(card);bd.addEventListener('click',event=>{if(event.target===bd)bd.remove();});document.body.appendChild(bd);
+}
+function socialRow(profile,relationship,request){
+  const row=el('div','social-row'),avatar=el('span','lb-av');avatar.appendChild(avatarStageNode(profile,24));avatar.addEventListener('click',()=>openProfileModal(profile.uid));row.appendChild(avatar);const copy=el('div','social-copy');copy.appendChild(el('div','social-name',profile.name||t('social_player')));copy.appendChild(el('div','social-meta',presenceLabel(profile.presence||(profile.online?'online':'offline'))+(relationship==='friends'?' · '+t('social_friend'):'')));row.appendChild(copy);const actions=el('div','social-actions');
+  if(request&&relationship==='incoming'){const accept=el('button','btn btn-primary');setButtonIcon(accept,'user-plus',t('social_accept'));accept.addEventListener('click',()=>online.friendRequestAction('accept',request.id));actions.appendChild(accept);const decline=el('button','btn');setButtonIcon(decline,'user-minus',t('social_decline'));decline.addEventListener('click',()=>online.friendRequestAction('decline',request.id));actions.appendChild(decline);}
+  else if(relationship==='none'){const add=el('button','btn');setButtonIcon(add,'user-plus',t('social_add_friend'));add.addEventListener('click',()=>online.friendRequest(profile.uid));actions.appendChild(add);}else if(relationship==='outgoing')actions.appendChild(el('span','social-meta',t('social_pending')));else if(relationship==='friends'&&profile.online){const invite=el('button','btn');setButtonIcon(invite,'door-open',t('social_invite_room'));invite.addEventListener('click',()=>inviteUser(profile.uid));actions.appendChild(invite);}
+  const more=el('button','btn');setButtonIcon(more,'ellipsis','',{ariaLabel:t('social_more_actions',profile.name||t('social_player'))});more.addEventListener('click',()=>openSocialActions(profile,{type:'social',id:profile.uid}));actions.appendChild(more);row.appendChild(actions);return row;
+}
+function openBlockedUsers(){
+  const bd=el('div','modal-backdrop'),card=el('div','modal-card');card.appendChild(el('h3',null,t('social_block_manage')));const blocked=(online.socialState&&online.socialState.blocked)||[];if(!blocked.length)card.appendChild(el('div','social-empty',t('social_empty')));blocked.forEach(item=>{const row=el('div','social-row');row.appendChild(el('div','social-copy',item.name||t('social_player')));const button=el('button','btn',t('social_unblock'));button.addEventListener('click',()=>{online.unblockUser(item.uid);bd.remove();});row.appendChild(button);card.appendChild(row);});const close=el('button','btn',t('close'));close.addEventListener('click',()=>bd.remove());card.appendChild(close);bd.appendChild(card);document.body.appendChild(bd);
+}
+function renderSocialRail(){
+  const listEl=$('social-list');if(!listEl)return;listEl.innerHTML='';const state=online.socialState||{friends:[],incoming:[],outgoing:[],blocked:[],counts:{}};const badge=$('social-requests-badge');const incomingCount=(state.incoming||[]).length;if(badge){badge.textContent=String(incomingCount);badge.classList.toggle('hidden',!incomingCount);}['friends','online','recent'].forEach(name=>{const button=$('social-tab-'+name);if(button)button.setAttribute('aria-pressed',String(online.socialTab===name));});if(!account){listEl.appendChild(el('div','social-empty',t('social_login_required')));return;}
+  if(online.socialTab==='friends'){(state.incoming||[]).forEach(request=>listEl.appendChild(socialRow(request.user,'incoming',request)));(state.friends||[]).forEach(profile=>listEl.appendChild(socialRow(profile,'friends')));if(!(state.incoming||[]).length&&!(state.friends||[]).length)listEl.appendChild(el('div','social-empty',t('social_empty')));if((state.blocked||[]).length){const manage=el('button','btn social-tab',t('social_block_manage_count',state.blocked.length));manage.addEventListener('click',openBlockedUsers);listEl.appendChild(manage);}}
+  else if(online.socialTab==='online'){const blocked=new Set((state.blocked||[]).map(item=>item.uid));const users=((lastServerLB&&lastServerLB.list)||[]).filter(profile=>profile.uid!==deviceUid&&profile.online&&!blocked.has(profile.uid));users.forEach(profile=>listEl.appendChild(socialRow(profile,socialRelationshipFor(profile.uid))));if(!users.length)listEl.appendChild(el('div','social-empty',t('leaderboard_no_online')));}
+  else{const blocked=new Set((state.blocked||[]).map(item=>item.uid));const recent=recentPlaymates(account,8).filter(item=>!blocked.has(item.uid));recent.forEach(item=>{const remote=(lastServerLB&&lastServerLB.list||[]).find(profile=>profile.uid===item.uid)||{uid:item.uid,name:item.name,avatar:100,presence:'offline'};listEl.appendChild(socialRow(remote,socialRelationshipFor(remote.uid)));});if(!recent.length)listEl.appendChild(el('div','social-empty',t('social_empty')));}
+  applyI18n(listEl);
+}
+function initSocialRail(){['friends','online','recent'].forEach(name=>{const button=$('social-tab-'+name);if(button)button.addEventListener('click',()=>{online.socialTab=name;renderSocialRail();});});}
 function renderLobby(){
   const listEl = $('lobby-list');
   listEl.innerHTML = '';
@@ -4127,15 +4438,17 @@ function renderLobby(){
     row.appendChild(av);
     const info = el('div','info');
     const roomName=el('div','nm');roomName.appendChild(elRaw('span',null,r.hostName+' '+(r.hostLang?langFlag(r.hostLang):'')));roomName.appendChild(document.createTextNode(t('host_room_suffix')));info.appendChild(roomName);
-    info.appendChild(el('div','meta',t('lobby_room_meta',r.size,r.capacity,r.game ? GAMES[r.game].name : t('not_selected'))));
+    info.appendChild(el('div','meta',t('lobby_room_meta',r.size,r.capacity,r.game && GAMES[r.game] ? t(GAMES[r.game].nameKey) : t('not_selected'))));
     row.appendChild(info);
-    const joinBtn = el('button','btn btn-primary invite-btn',t(r.spectatable&&!r.joinable?'spectate':'join'));
+    const canJoin = r.canJoin !== undefined ? r.canJoin : r.joinable;
+    const canSpectate = r.canSpectate !== undefined ? r.canSpectate : r.spectatable;
+    const joinBtn = el('button','btn btn-primary invite-btn',t(canSpectate&&!canJoin?'spectate':'join'));
     joinBtn.addEventListener('click', () => {
       if (online.game&&!online.isSpectator){ toast(t('game_in_progress_leave_first')); return; }
-      if(r.spectatable&&!r.joinable){
-        if(online.isSpectator&&online.room===r.room)return;
+      if(canSpectate&&!canJoin){
+        if(online.spectatorRoom===r.room)return;
         if(online.isSpectator)online.send({type:'spectate_leave'});
-        online.spectate(r.room,r.matchId);
+        if(r.started&&r.matchId) online.spectate(r.room,r.matchId); else online.spectateRoom(r.room);
       }else online.send({ type: 'join', payload: { room: r.room } });
     });
     row.appendChild(joinBtn);
@@ -4253,7 +4566,7 @@ function openAuthModal(mode){
     hero.appendChild(el("p", null, t(m === "register" ? 'register_intro' : 'login_intro')));
     card.appendChild(hero);
     if (m === "register"){
-      let avatar = 0, bg = 0, catTab = "all";
+      let avatar = 100, bg = 0, catTab = "all";
       const nameInput = el("input","nick-input");
       nameInput.type = "text"; nameInput.maxLength = 12;
       nameInput.placeholder = t('profile_name_placeholder');
@@ -4262,15 +4575,14 @@ function openAuthModal(mode){
       card.appendChild(avLabel);
       const catTabs = el("div","shop-tabs");
       const cats = [
-        {id:"all"},{id:"basic"},{id:"theme"},{id:"fantasy"},{id:"animals"},
-        {id:"profession"},{id:"creative"},
+        {id:"all"},{id:"basic"},{id:"theme"},...AVATAR_CATEGORIES.map(item=>({id:item.id})),
       ];
       const grid = el("div","avatar-grid auth-avatar-grid");
       function renderAvatarGrid(){
         grid.innerHTML = "";
         for (let i = 0; i < AVATAR_COUNT; i++){
           if (catTab !== "all" && avatarCategory(i) !== catTab) continue;
-          const locked = i >= 30;
+          const locked = avatarLocked(i);
           const opt = el("button","avatar-opt" + (i === avatar ? " selected" : "") + (locked ? " locked" : ""));
           opt.type = "button";
           opt.appendChild(avatarCanvas(i, 26));
@@ -4392,17 +4704,51 @@ function openProfileModal(uid){
     toast(t('profile_not_found'));
   }
 }
+function profilePresenceLabel(value){
+  const key = ({ joinable:'presence_joinable', online:'presence_online', busy:'presence_busy', playing:'presence_playing', offline:'presence_offline', invisible:'presence_invisible' })[value] || 'presence_offline';
+  return t(key);
+}
+function profileRegionLabel(value){
+  const key = ({ CN:'region_cn', JP:'region_jp', UA:'region_ua', US:'region_us', GB:'region_gb', DE:'region_de', FR:'region_fr', CA:'region_ca', AU:'region_au' })[String(value || '').toUpperCase()] || 'region_unset';
+  return t(key);
+}
+function profileGenderLabel(value){
+  const key = ({ hidden:'gender_hidden', male:'gender_male', female:'gender_female', nonbinary:'gender_nonbinary' })[value];
+  return key ? t(key) : (value ? String(value).replace(/^custom:/, '') : '');
+}
+function profileShowcaseText(p){
+  const showcase = p && p.showcase;
+  if (!showcase || !showcase.type || !showcase.value) return '';
+  if (showcase.type === 'game' && GAMES[showcase.value]) return t('showcase_game', GAMES[showcase.value].name) + ' · ' + ((p.played && p.played[showcase.value]) || 0);
+  if (showcase.type === 'achievement'){
+    const achievement = ACHIEVEMENTS.find(item => item.id === showcase.value);
+    return achievement ? t('showcase_achievement', t(achievement.nameKey)) : '';
+  }
+  if (showcase.type === 'collection'){
+    const theme = AVATAR_CATEGORIES.find(item => showcase.value === item.id + '_origins');
+    return theme ? t('showcase_collection', avatarCategoryName(theme)) : '';
+  }
+  if (showcase.type === 'record'){
+    const labels = { totalWins:'showcase_record_total_wins', bestStreak:'showcase_record_best_streak', total:'showcase_record_total', level:'showcase_record_level' };
+    const value = labels[showcase.value];
+    if (!value) return '';
+    const amount = showcase.value === 'totalWins' ? p.totalWins || 0 : showcase.value === 'bestStreak' ? p.bestStreak || 0 : showcase.value === 'total' ? p.total || 0 : p.level || 1;
+    return t(value) + ' · ' + amount;
+  }
+  return '';
+}
 function renderProfilePopup(p, isMe){
   if (!p) return;
   const bd = el('div','modal-backdrop');
   const card = el('div','modal-card');
   card.style.width = '420px';
   const hero = el('div','profile-hero bg-' + (p.background || 0));
+  applyPremiumBackground(hero, p.background || 0, 'profile');
   const avWrap = el('div','hero-avatar');
   const stage = el('div','avatar-stage effect-' + (p.effect || 0));
   const fr = p.frame || 0;
   if (fr) stage.appendChild(el('span','frame-ring ' + (SHOP.frames.find(f => f.id === fr) ? SHOP.frames.find(f => f.id === fr).cls : ''), ''));
-  stage.appendChild(avatarCanvas(p.avatar, 74));
+  stage.appendChild(avatarCanvas(p.avatar, 74, { animate:true }));
   avWrap.appendChild(stage);
   hero.appendChild(avWrap);
   const pLv = p.level || levelFromXp(p.xp || 0);
@@ -4411,7 +4757,11 @@ function renderProfilePopup(p, isMe){
   pname.appendChild(nameFxNode(p, p.name));
   pname.appendChild(el('span', null, t('level_bracket',pLv) + ' ' + (p.lang ? langFlag(p.lang) : '') + (isMe ? t('profile_mine') : '')));
   hero.appendChild(pname);
-  hero.appendChild(el('div','pmeta', t('profile_title_achievements', pTitle.icon + ' ' + socialTitleName(pTitle), (p.achievements ? p.achievements.length : 0))));
+  const identity = el('div','profile-identity-scrim');
+  identity.appendChild(el('div','pmeta', pTitle.icon + ' ' + socialTitleName(pTitle) + ' · ' + profileRegionLabel(p.countryRegion) + (profileGenderLabel(p.genderTag) ? ' · ' + profileGenderLabel(p.genderTag) : '')));
+  identity.appendChild(el('div','pmeta', profilePresenceLabel(p.presence || (p.online ? 'online' : 'offline'))));
+  if (p.signature) identity.appendChild(el('div','profile-signature', '“' + String(p.signature).slice(0, 80) + '”'));
+  hero.appendChild(identity);
   const coinLine = el('div','pmeta');
   coinLine.appendChild(currencyIcon());
   coinLine.appendChild(el('span', null, t('profile_summary', p.coins || 0, p.total || 0, t(p.online ? 'online_label' : 'offline_label'))));
@@ -4434,42 +4784,47 @@ function renderProfilePopup(p, isMe){
   const achChip = el('div','stat-chip');
   achChip.textContent = t('profile_achievement_count', (p.achievements && p.achievements.length) || 0);
   stats.appendChild(achChip);
-  GAME_KEYS.forEach(k => {
+  GAME_KEYS.filter(k => ((p.played && p.played[k]) || 0) > 0).forEach(k => {
     const s = el('div','stat-chip small');
     s.textContent = GAMES[k].icon + ' ' + t('games_count', (p.played && p.played[k]) || 0);
     stats.appendChild(s);
   });
   card.appendChild(stats);
+  const showcase = profileShowcaseText(p);
+  if (showcase) card.appendChild(el('div','profile-showcase',showcase));
   const links = el('div','profile-links');
+  const closeProfile = () => { releasePremiumBackground(hero); bd.remove(); };
   if (isMe && account){
     const edit = el('button','btn btn-primary',t('edit_profile'));
-    edit.addEventListener('click', () => { bd.remove(); openProfileEditor(account.uid); });
+    edit.addEventListener('click', () => { closeProfile(); openProfileEditor(account.uid); });
     links.appendChild(edit);
     const achBtn = el('button','btn',t('achievements_button'));
-    achBtn.addEventListener('click', () => { bd.remove(); openAchievementsModal(); });
+    achBtn.addEventListener('click', () => { closeProfile(); openAchievementsModal(); });
     links.appendChild(achBtn);
     const shop = el('button','btn',t('shop'));
-    shop.addEventListener('click', () => { bd.remove(); openShop(); });
+    shop.addEventListener('click', () => { closeProfile(); openShop(); });
     links.appendChild(shop);
     const logout = el('button','btn',t('logout'));
-    logout.addEventListener('click', () => { bd.remove(); logoutAccount(); });
+    logout.addEventListener('click', () => { closeProfile(); logoutAccount(); });
     links.appendChild(logout);
-  } else if (online.room && online.isHost && !online.game){
-    const inv = el('button','btn btn-primary',t('invite_short'));
-    inv.addEventListener('click', () => {
-      bd.remove();
-      if (online.room){ online.send({ type: 'invite', payload: { toUid: p.uid } }); toast(t('invite_sent')); }
-      else { online.inviteTarget = p.uid; online.create(); }
-    });
-    links.appendChild(inv);
+  } else {
+    const relation = typeof socialRelationshipFor === 'function' ? socialRelationshipFor(p.uid) : 'none';
+    const label = relation === 'friends' ? t('social_friend') : relation === 'outgoing' ? t('social_pending') : relation === 'incoming' ? t('social_requests') : t('social_add_friend');
+    const social = el('button','btn' + ((relation === 'none' || relation === 'incoming') ? ' btn-primary' : ''));
+    setButtonIcon(social, relation === 'friends' ? 'users' : 'user-plus', label);
+    social.addEventListener('click', () => { closeProfile(); if (typeof openSocialActions === 'function') openSocialActions(p, { type:'profile', id:p.uid }); });
+    links.appendChild(social);
+    const more = el('button','btn'); setButtonIcon(more, 'shield', t('social_security_more'));
+    more.addEventListener('click', () => { closeProfile(); if (typeof openSocialActions === 'function') openSocialActions(p, { type:'profile', id:p.uid }); });
+    links.appendChild(more);
   }
   if (!links.children.length) card.appendChild(el('div','lb-note',t('profile_public')));
   card.appendChild(links);
   const close = el('button','btn',t('close'));
-  close.addEventListener('click', () => bd.remove());
+  close.addEventListener('click', closeProfile);
   card.appendChild(close);
   bd.appendChild(card);
-  bd.addEventListener('click', e => { if (e.target === bd) bd.remove(); });
+  bd.addEventListener('click', e => { if (e.target === bd) closeProfile(); });
   document.body.appendChild(bd);
 }
 /* ================= 商城（头像 / 边框 / 特效 / 背景） ================= */
@@ -4523,6 +4878,27 @@ function openShop(){
     tabs.appendChild(tabButton);
   });
   const listEl = el('div','shop-grid');
+  function collectionParts(item){
+    const index=AVATAR_CATEGORIES.findIndex(theme=>theme.id===item.theme);if(index<0)return null;
+    const frames=[5,4,1,6,7,8],effects=[3,1,2,1,4,2],themed=PLAYROOM_AVATARS.filter(avatar=>avatar.theme===item.theme);
+    const avatar=themed.find(candidate=>candidate.animated===!!item.animated&&!candidate.free)||themed.find(candidate=>!candidate.free)||themed[0];
+    return {avatarId:avatar&&avatar.id,frameId:frames[index],effectId:effects[index],name:t('premium_theme_'+item.theme)};
+  }
+  function collectionProgress(item){
+    const parts=collectionParts(item);if(!parts)return null;
+    const avatarOwned=PLAYROOM_AVATARS.some(avatar=>avatar.theme===item.theme&&(avatar.free||ownItem(account,'avatars',avatar.id)));
+    const owned=[avatarOwned,ownItem(account,'frames',parts.frameId),ownItem(account,'backgrounds',item.id),ownItem(account,'effects',parts.effectId)].filter(Boolean).length;
+    return {...parts,owned,total:4};
+  }
+  function previewCollection(item){
+    const parts=collectionParts(item);if(!parts)return;
+    const pbd=el('div','modal-backdrop'),pc=el('div','modal-card');pc.appendChild(el('h3',null,t('premium_collection_preview_title',parts.name)));
+    const hero=el('div','profile-hero bg-'+item.id);applyPremiumBackground(hero,item.id,'profile');
+    const st=el('div','avatar-stage effect-'+parts.effectId),frame=SHOP.frames.find(candidate=>candidate.id===parts.frameId);if(frame)st.appendChild(el('span','frame-ring '+(frame.cls||''),''));st.appendChild(avatarCanvas(parts.avatarId,96,{animate:true}));hero.appendChild(st);
+    const previewAccount={...account,effect:parts.effectId,nameFx:parts.effectId};const nm=el('div','pname');nm.appendChild(nameFxNode(previewAccount,account.name));hero.appendChild(nm);hero.appendChild(el('div','profile-identity-scrim',t('premium_collection_preview_note')));pc.appendChild(hero);
+    const progress=collectionProgress(item);if(progress)pc.appendChild(el('div','profile-showcase',t('premium_collection_progress',progress.name,progress.owned,progress.total)));
+    const closePreview=()=>{releasePremiumBackground(hero);pbd.remove();};const close=el('button','btn',t('premium_back_to_shop'));close.addEventListener('click',closePreview);pc.appendChild(close);pbd.appendChild(pc);pbd.addEventListener('click',event=>{if(event.target===pbd)closePreview();});document.body.appendChild(pbd);
+  }
   function render(){
     listEl.innerHTML = '';
     tabs.children.forEach((t, i) => t.classList.toggle('btn-primary', defs[i][0] === tab));
@@ -4570,9 +4946,9 @@ function openShop(){
           (tab === 'backgrounds' && account.background === item.id);
         const it = el('div','shop-item' + (active ? ' selected' : '') + (owned ? ' owned' : ''));
         if (tab === 'backgrounds'){
-          const sw = el('div','bg-swatch ' + item.cls);
-          sw.style.width = '38px'; sw.style.height = '38px';
-          it.appendChild(sw);
+          const premium=premiumBackgroundMeta(item.id);
+          if(premium)it.appendChild(backgroundPosterNode(premium,{hoverPreview:true}));
+          else { const sw = el('div','bg-swatch ' + item.cls); sw.style.width='38px';sw.style.height='38px';it.appendChild(sw); }
         } else {
           const st = el('div','mini-avatar-stage' + (tab === 'effects' ? ' ' + item.cls : ''));
           const ring = el('span','frame-ring ' + (tab === 'frames' ? item.cls : ''), '');
@@ -4581,6 +4957,10 @@ function openShop(){
           it.appendChild(st);
         }
         it.appendChild(el('div','si-name', shopItemName(cat,item)));
+        if(tab==='backgrounds'&&item.collectionId){
+          const progress=collectionProgress(item);if(progress)it.appendChild(el('div','seat-meta',t('premium_collection_progress',progress.name,progress.owned,progress.total)));
+          const preview=el('button','btn',t('premium_collection_preview'));preview.addEventListener('click',()=>previewCollection(item));it.appendChild(preview);
+        }
         if (!owned){
           const price = el('div','si-price');
           price.appendChild(currencyIcon('sm'));
@@ -4627,13 +5007,15 @@ function openShop(){
   document.body.appendChild(bd);
 }
 /* ================= 用户档案与积分 ================= */
-const AVATAR_COUNT = 56; // 0-29 免费，30-55 商城（4 分类）
+const AVATAR_COUNT = 148; // 旧 0-55 兼容；新注册与商城使用 Avatar v2
 const AVATAR_CATEGORIES = [
-  { id: 'fantasy', name: '👑 幻想', icon: '👑' },
-  { id: 'animals', name: '🐾 动物', icon: '🐾' },
-  { id: 'profession', name: '💼 职业', icon: '💼' },
-  { id: 'creative', name: '🎨 创意', icon: '🎨' },
+  { id:'pixel', name:'像素', icon:'▦' }, { id:'anime', name:'动漫', icon:'✦' },
+  { id:'landscape', name:'风景', icon:'◒' }, { id:'animal', name:'动物', icon:'●' },
+  { id:'neon', name:'霓虹', icon:'⌁' }, { id:'technology', name:'科技', icon:'◇' },
 ];
+const PLAYROOM_AVATAR_NAMES={pixel:['像素冒险家','像素旅行者','赛博信使','未来战士','像素机器人','太空旅人','快乐工程师','科幻探索者'],anime:['沉着军师','晴野探险家','星际驾驶员','幻想学者','都市创作者','热血竞速者','星辉守护者','发明少年'],landscape:['雪峰','海浪灯塔','月岭','森径','未来城市','星云','荒漠公路','岛屿日落'],animal:['聪明猫','忠诚犬','冒险狐','温柔熊','活力兔','好奇水獭','自信小鸟','友好小恐龙'],neon:['夜城信使','霓虹狐','全息 DJ','赛博滑手','电光合成人','赤焰赛车手','霓虹猫守卫','光轨探索者'],technology:['洁白宇航员','精密服务机器人','合成人','轨道工程师','未来救援兵','机甲驾驶员','卫星科学家','导航仿生人']};
+const PLAYROOM_AVATARS=AVATAR_CATEGORIES.flatMap((theme,themeIndex)=>PLAYROOM_AVATAR_NAMES[theme.id].map((name,offset)=>({id:100+themeIndex*8+offset,name,theme:theme.id,themeName:theme.name,free:offset<2,animated:offset>=6,price:offset<2?0:[10,12,14,16,18,18][offset-2],collectionId:theme.id+'_origins'})));
+const PLAYROOM_AVATAR_BY_ID=new Map(PLAYROOM_AVATARS.map(item=>[item.id,item]));
 
 const SHOP = {
   avatars: [
@@ -4663,6 +5045,7 @@ const SHOP = {
     { id: 53, name: '暗影', price: 15, category: 'creative' },
     { id: 54, name: '金冠骑士', price: 8, category: 'fantasy' },
     { id: 55, name: '龙骑士', price: 20, category: 'fantasy' },
+    ...PLAYROOM_AVATARS.filter(item=>!item.free).map(item=>({...item,category:item.theme})),
   ],
   frames: [
     { id: 1, name: '金色边框', price: 5, cls: 'frame-1' },
@@ -4691,6 +5074,7 @@ const SHOP = {
     { id: 8, name: '樱花飘落', price: 10, cls: 'bg-8' },
     { id: 9, name: '赛博矩阵', price: 14, cls: 'bg-9' },
     { id: 10, name: '海洋波浪', price: 12, cls: 'bg-10' },
+    ...PREMIUM_BACKGROUNDS.map(item=>({...item,cls:'bg-'+item.id})),
   ],
 };
 function shopItemName(category,item){
@@ -4703,7 +5087,7 @@ function avatarCategoryName(category){
   return localized===key?category.name:localized;
 }
 function avatarMeta(idx){
-  const p = SHOP.avatars.find(a => a.id === idx);
+  const p = PLAYROOM_AVATAR_BY_ID.get(Number(idx)) || SHOP.avatars.find(a => a.id === idx);
   return p ? p : null;
 }
 function nameFxNode(profile, name){
@@ -4716,12 +5100,15 @@ function nameFxLabel(fx){
   return localized===key?t('name_fx_0'):localized;
 }
 function avatarCategory(idx) {
+  if (PLAYROOM_AVATAR_BY_ID.has(Number(idx))) return PLAYROOM_AVATAR_BY_ID.get(Number(idx)).theme;
   if (idx < 20) return 'basic';           // 0-19 基础生成头像（免费）
   if (idx < 30) return 'theme';           // 20-29 主题头像（免费）
   const meta = SHOP.avatars.find(a => a.id === idx);
   return meta ? meta.category : 'creative'; // 30-55 商城头像
 }
 function avatarLocked(idx){
+  const v=PLAYROOM_AVATAR_BY_ID.get(Number(idx));
+  if(v) return !v.free&&!ownItem(account,'avatars',Number(idx));
   return idx >= 30 && !ownItem(account, 'avatars', idx);
 }
 function avatarPrice(idx){
@@ -4813,8 +5200,15 @@ function makeAvatar(idx){
     hat: idx % 5 === 0,
   };
 }
-function avatarCanvas(idx, size){
+function avatarAssetPath(meta,variant){
+  if(!meta)return'';const suffix=variant==='animated'&&meta.animated?'animated':(variant||'256');return 'assets/avatars/v2/'+meta.theme+'/avatar_'+meta.id+'_'+suffix+'.webp';
+}
+function avatarCanvas(idx, size, options){
   size = size || 40;
+  const v2=PLAYROOM_AVATAR_BY_ID.get(Number(idx));
+  if(v2){
+    const img=document.createElement('img'),px=size<=64?'64':(size<=128?'128':'256');img.className='avatar-art-v2';img.width=size;img.height=size;img.alt=v2.name;img.loading='lazy';img.decoding='async';const animate=!!(options&&options.animate&&v2.animated);img.src=avatarAssetPath(v2,animate?'animated':px);if(!animate)img.srcset=avatarAssetPath(v2,'64')+' 64w, '+avatarAssetPath(v2,'128')+' 128w, '+avatarAssetPath(v2,'256')+' 256w';if(v2.animated&&!(options&&options.animate)){const poster=img.src,posterSrcset=img.srcset;img.dataset.animatedSrc=avatarAssetPath(v2,'animated');img.addEventListener('mouseenter',()=>{if(!matchMedia('(prefers-reduced-motion: reduce)').matches){img.removeAttribute('srcset');img.src=img.dataset.animatedSrc;}});img.addEventListener('mouseleave',()=>{img.src=poster;img.srcset=posterSrcset;});}img.addEventListener('error',()=>{img.replaceWith(avatarCanvas(Number(idx)%30,size));},{once:true});return img;
+  }
   const st = makeAvatar(idx);
   const off = document.createElement('canvas');
   off.width = 16; off.height = 16;
@@ -4911,7 +5305,7 @@ function deviceFingerprint(){
 }
 function defaultOwned(){
   return {
-    avatars: Array.from({ length: 30 }, (_, i) => i), // 0-19 free
+    avatars: Array.from({ length: 30 }, (_, i) => i).concat([100,101,108,109,116,117,124,125,132,133,140,141]),
     frames: [0], effects: [0], backgrounds: [0],
   };
 }
@@ -4972,6 +5366,9 @@ function syncProfiles(){
       uid: account.uid, name: account.name, avatar: account.avatar,
       background: account.background || 0, frame: account.frame || 0, effect: account.effect || 0,
       nameFx: account.nameFx || 0, lang: account.lang || currentLang, gameCosmetics: account.gameCosmetics || {},
+      signature: account.signature || '', countryRegion: account.countryRegion || '', genderTag: account.genderTag || 'hidden',
+      presencePreference: account.presencePreference || 'joinable', presenceVisibility: account.presenceVisibility || 'everyone',
+      showcase: account.showcase || null,
     } });
   }
 }
@@ -4986,12 +5383,13 @@ function registerAccount(name, pin, avatar, background, frame, effect){
   pendingAuthPin = pin;
   account = {
     uid, name, lang: currentLang,
-    avatar: Number.isInteger(avatar) ? Math.max(0, Math.min(AVATAR_COUNT - 1, avatar)) : 0,
+    avatar: Number.isInteger(avatar) ? Math.max(0, Math.min(AVATAR_COUNT - 1, avatar)) : 100,
     background: Number.isInteger(background) ? Math.max(0, background) : 0,
     frame: Number.isInteger(frame) ? Math.max(0, frame) : 0,
     effect: Number.isInteger(effect) ? Math.max(0, effect) : 0,
     owned: defaultOwned(), coins: 0, played: {}, total: 0, device: deviceFingerprint(), nameFx: 0, gameCosmetics: {}, cosmeticSchemaVersion: 1,
-    registered: false,
+    registered: false, signature: '', countryRegion: '', genderTag: 'hidden',
+    presencePreference: 'joinable', presenceVisibility: 'everyone', showcase: null,
   };
   const me = roster.find(p => p.uid === uid);
   if (me){ me.name = name; me.avatar = account.avatar; }
@@ -5003,6 +5401,8 @@ function registerAccount(name, pin, avatar, background, frame, effect){
       uid, pin, name, avatar: account.avatar, background: account.background,
       lang: currentLang,
       frame: account.frame, effect: account.effect, owned: account.owned, gameCosmetics: account.gameCosmetics,
+      signature: account.signature, countryRegion: account.countryRegion, genderTag: account.genderTag,
+      presencePreference: account.presencePreference, presenceVisibility: account.presenceVisibility, showcase: account.showcase,
     } });
   }
   renderMe(); renderSlots(); renderLeaderboard();
@@ -5064,6 +5464,12 @@ function updateAccountProfile(p){
   account.achievements = p.achievements || [];
   account.playmates = p.playmates || {};
   account.daily = p.daily || { play: 0, win: 0, streak: 0 };
+  account.signature = p.signature || '';
+  account.countryRegion = p.countryRegion || '';
+  account.genderTag = p.genderTag || 'hidden';
+  account.presencePreference = p.presencePreference || account.presencePreference || 'joinable';
+  account.presenceVisibility = p.presenceVisibility || account.presenceVisibility || 'everyone';
+  account.showcase = p.showcase || null;
   saveRoster(); saveAccount();
 }
 function renderMe(){
@@ -5102,6 +5508,10 @@ function renderMe(){
 function renderSlots(){
   const row = $('slots-row');
   row.innerHTML = '';
+  row.classList.add('hidden');
+  row.setAttribute('aria-hidden','true');
+  return;
+  /* Legacy local roster rendering retained below only for migration snapshots. */
   for (let i = 0; i < playerCount; i++){
     if (aiMode && i > 0){
       const chip = el('button','slot-chip ai');
@@ -5136,6 +5546,9 @@ function renderSlots(){
   }
 }
 function ensureSlots(){
+  if (aiMode) { slots = [deviceUid]; return; }
+  return;
+  /* Legacy local hot-seat slot migration path. */
   slots = slots.slice(0, playerCount);
   while (slots.length < playerCount) slots.push(null);
   if (deviceUid) slots[0] = deviceUid;
@@ -5200,8 +5613,8 @@ function openProfileEditor(uid, slotIndex){
   card.appendChild(catLabel);
   const editorCats = el('div','shop-tabs');
   const editorCatsDef = [
-    { id:'all' }, { id:'basic' }, { id:'theme' }, { id:'fantasy' }, { id:'animals' },
-    { id:'profession' }, { id:'creative' },
+    { id:'all' }, { id:'basic' }, { id:'theme' }, ...AVATAR_CATEGORIES.map(item => ({ id:item.id })),
+    { id:'fantasy' }, { id:'animals' }, { id:'profession' }, { id:'creative' },
   ];
   let editorCat = 'all';
   const grid = el('div','avatar-grid');
@@ -5272,6 +5685,55 @@ function openProfileEditor(uid, slotIndex){
       fxRow.appendChild(fxBtn);
     }
     card.appendChild(fxRow);
+
+    const signatureInput = el('textarea','nick-input');
+    signatureInput.maxLength = 80;
+    signatureInput.placeholder = t('profile_signature_placeholder');
+    signatureInput.value = account.signature || '';
+    card.appendChild(el('div','lb-note',t('profile_signature')));
+    card.appendChild(signatureInput);
+
+    const regionSelect = document.createElement('select');
+    regionSelect.className = 'nick-input';
+    regionSelect.setAttribute('aria-label', t('profile_region'));
+    [['',t('region_unset')],['CN',t('region_cn')],['JP',t('region_jp')],['UA',t('region_ua')],['US',t('region_us')],['GB',t('region_gb')],['DE',t('region_de')],['FR',t('region_fr')],['CA',t('region_ca')],['AU',t('region_au')]].forEach(([value,label]) => {
+      const option = document.createElement('option'); option.value = value; option.textContent = label; option.selected = (account.countryRegion || '') === value; regionSelect.appendChild(option);
+    });
+    card.appendChild(el('div','lb-note',t('profile_region'))); card.appendChild(regionSelect);
+
+    const genderSelect = document.createElement('select');
+    genderSelect.className = 'nick-input';
+    genderSelect.setAttribute('aria-label', t('profile_gender'));
+    [['hidden',t('gender_hidden')],['male',t('gender_male')],['female',t('gender_female')],['nonbinary',t('gender_nonbinary')]].forEach(([value,label]) => {
+      const option = document.createElement('option'); option.value = value; option.textContent = label; option.selected = (account.genderTag || 'hidden') === value; genderSelect.appendChild(option);
+    });
+    card.appendChild(el('div','lb-note',t('profile_gender'))); card.appendChild(genderSelect);
+
+    const presenceSelect = document.createElement('select');
+    presenceSelect.className = 'nick-input';
+    presenceSelect.setAttribute('aria-label', t('profile_presence'));
+    [['joinable',t('presence_joinable')],['online',t('presence_online')],['busy',t('presence_busy')],['invisible',t('presence_invisible')]].forEach(([value,label]) => {
+      const option = document.createElement('option'); option.value = value; option.textContent = label; option.selected = (account.presencePreference || 'joinable') === value; presenceSelect.appendChild(option);
+    });
+    card.appendChild(el('div','lb-note',t('profile_presence'))); card.appendChild(presenceSelect);
+
+    const visibilitySelect = document.createElement('select');
+    visibilitySelect.className = 'nick-input';
+    visibilitySelect.setAttribute('aria-label', t('profile_presence_visibility'));
+    [['everyone',t('presence_visibility_everyone')],['friends',t('presence_visibility_friends')],['nobody',t('presence_visibility_nobody')]].forEach(([value,label]) => {
+      const option = document.createElement('option'); option.value = value; option.textContent = label; option.selected = (account.presenceVisibility || 'everyone') === value; visibilitySelect.appendChild(option);
+    });
+    card.appendChild(el('div','lb-note',t('profile_presence_visibility'))); card.appendChild(visibilitySelect);
+
+    const showcaseSelect = document.createElement('select');
+    showcaseSelect.className = 'nick-input';
+    showcaseSelect.setAttribute('aria-label', t('profile_showcase'));
+    const currentShowcase = account.showcase && account.showcase.type && account.showcase.value ? account.showcase.type + ':' + account.showcase.value : '';
+    const showcaseOptions = [['',t('showcase_hidden')], ...GAME_KEYS.map(id => ['game:' + id, t('showcase_game', GAMES[id].name)]), ...ACHIEVEMENTS.filter(item => (account.achievements || []).includes(item.id)).map(item => ['achievement:' + item.id, t('showcase_achievement', t(item.nameKey))]), ...AVATAR_CATEGORIES.map(item => ['collection:' + item.id + '_origins', t('showcase_collection', avatarCategoryName(item))]), ['record:totalWins',t('showcase_record_total_wins')], ['record:bestStreak',t('showcase_record_best_streak')], ['record:total',t('showcase_record_total')], ['record:level',t('showcase_record_level')]];
+    showcaseOptions.forEach(([value,label]) => { const option = document.createElement('option'); option.value = value; option.textContent = label; option.selected = currentShowcase === value; showcaseSelect.appendChild(option); });
+    card.appendChild(el('div','lb-note',t('profile_showcase'))); card.appendChild(showcaseSelect);
+
+    var profileExtraFields = { signatureInput, regionSelect, genderSelect, presenceSelect, visibilitySelect, showcaseSelect };
   }
   const stats = el('div','profile-stats');
   if (editing){
@@ -5302,6 +5764,13 @@ function openProfileEditor(uid, slotIndex){
         account.name = finalName;
         account.avatar = avatar;
         account.background = background;
+        account.signature = profileExtraFields.signatureInput.value.trim().slice(0, 80);
+        account.countryRegion = profileExtraFields.regionSelect.value;
+        account.genderTag = profileExtraFields.genderSelect.value;
+        account.presencePreference = profileExtraFields.presenceSelect.value;
+        account.presenceVisibility = profileExtraFields.visibilitySelect.value;
+        const showcaseValue = profileExtraFields.showcaseSelect.value;
+        account.showcase = showcaseValue ? { type: showcaseValue.split(':')[0], value: showcaseValue.slice(showcaseValue.indexOf(':') + 1) } : null;
         saveAccount();
       }
     } else {
@@ -5499,6 +5968,7 @@ function applyGameResult(results, resultContext){
     });
     return;
   }
+  if (!aiMode) return;
   if (aiMode){
     const outcome = resultForSlot(results, 0);
     if (outcome === 'loss') aiSpeak(currentPersona, 'win');
@@ -5516,9 +5986,6 @@ function applyGameResult(results, resultContext){
     } else {
       toast(t('reward_ai_requires_login'));
     }
-  } else {
-    // 本地热座只保留聚会体验，不写入正式金币、XP、等级或连胜。
-    toast(t('reward_local_no_progress'));
   }
   renderMe(); renderSlots(); renderLeaderboard();
 }
@@ -5534,7 +6001,7 @@ function showHub(){
   }
   const endBtn = $('btn-end-game');
   if (endBtn) endBtn.classList.add('hidden');
-  if (online.room) renderRoomPanel();
+  if (online.room || online.spectatorRoom) renderRoomPanel();
 }
 function showGame(id){
   if (online && online.game === id && currentGame && currentGameId === id){
@@ -5557,18 +6024,20 @@ function showGame(id){
   if (inOnline){
     opts = {
       online: true,
-      myIdx: online.player,
+      myIdx: online.isSpectator ? 0 : online.player,
       isHost: online.isHost,
-      spectator: online.isSpectator,
+      spectator: online.isSpectator || !!online.spectatorRoom,
       gameplayMeta: online.gameplayMeta,
       cosmetic: online.presentationMeta && online.presentationMeta.cosmetic,
       matchId: online.matchId,
       getMatchId: () => online.matchId,
       sendMove: p => online.sendMove(p),
+      sendBotMove: (seatId,p) => online.sendBotMove(seatId,p),
       sendTankInput: p => online.sendTankInput(p),
       sendTetrisLockClaim: p => online.sendTetrisLockClaim(p),
       sendTetrisKOClaim: p => online.sendTetrisKOClaim(p),
       sendTetrisAction: p => online.sendTetrisAction(p),
+      sendBotTetrisAction: (seatId, action) => online.sendBotTetrisAction(seatId, action),
       sendTetrisState: p => online.sendTetrisState(p),
       sendMonopolyAuctionOpen: p => online.sendMonopolyAuctionOpen(p),
       sendMonopolyBid: p => online.sendMonopolyBid(p),
@@ -5582,6 +6051,14 @@ function showGame(id){
       onRestart: null,
       onEnd: results => applyGameResult(results, { online: true, game: id }),
     };
+    const roomSeats = online.roomInfo && Array.isArray(online.roomInfo.seats) ? online.roomInfo.seats : [];
+    const controllerUid = account && account.uid;
+    const controlledAI = roomSeats.filter(seat => seat && seat.type === 'ai' && seat.controllerUid === controllerUid);
+    if (controlledAI.length){
+      opts.ai = new Set(controlledAI.map(seat => Number(seat.seatId)).filter(Number.isInteger));
+      const persona = controlledAI[0].aiPersona;
+      if (persona && typeof personaById === 'function') opts.aiPersona = personaById(persona) || currentPersona;
+    }
   } else {
     opts = { onEnd: results => applyGameResult(results) };
     if (aiMode && playerCount >= 2){
@@ -5607,12 +6084,23 @@ function startGame(id){
     online.selectGame(id);
     return;
   }
-  if (playerCount < meta.min || playerCount > meta.max){
-    toast(t('game_players_supported',meta.name,meta.min,meta.max,playerCount));
-    return;
-  }
-  ensureSlots();
-  showGame(id);
+  if (aiMode){ openAISetup(id); return; }
+  openRoomSetup(id);
+}
+
+function openAISetup(id){
+  const meta=GAMES[id];if(!meta)return;
+  const bd=el('div','modal-backdrop'),card=el('div','modal-card');card.appendChild(el('h3',null,t('ai_setup_title',meta.name)));card.appendChild(el('p','lb-note',t('ai_setup_hint')));
+  const row=el('div','count-group');for(let total=Math.max(2,meta.min);total<=meta.max;total++){const btn=el('button','btn'+(total===Math.max(2,meta.min)?' btn-primary':''),t('ai_count',total-1));btn.addEventListener('click',()=>{playerCount=total;aiMode=true;bd.remove();showGame(id);});row.appendChild(btn);}card.appendChild(row);
+  const cancel=el('button','btn',t('cancel'));cancel.addEventListener('click',()=>bd.remove());card.appendChild(cancel);bd.appendChild(card);bd.addEventListener('click',e=>{if(e.target===bd)bd.remove();});document.body.appendChild(bd);
+}
+function openRoomSetup(selectedGame){
+  if(!account){openAuthModal();return;}
+  const meta=selectedGame&&GAMES[selectedGame],bd=el('div','modal-backdrop'),card=el('div','modal-card');card.appendChild(el('h3',null,t('room_setup_title')));card.appendChild(el('p','lb-note',meta?t('room_setup_game',meta.name):t('room_setup_hint')));
+  let capacity=Math.max(2,meta?meta.min:2),visibility='public',allowSpectators=true;const caps=el('div','count-group');for(let n=2;n<=(meta?meta.max:5);n++){const b=el('button','btn'+(n===capacity?' btn-primary':''),t('seat_count',n));b.addEventListener('click',()=>{capacity=n;caps.querySelectorAll('.btn').forEach(x=>x.classList.toggle('btn-primary',x===b));});caps.appendChild(b);}card.appendChild(caps);
+  const vis=document.createElement('select');vis.className='nick-input';[['public',t('room_public')],['private',t('room_private')]].forEach(([v,label])=>{const o=document.createElement('option');o.value=v;o.textContent=label;vis.appendChild(o);});vis.addEventListener('change',()=>visibility=vis.value);card.appendChild(vis);
+  const label=el('label','lb-note');const check=document.createElement('input');check.type='checkbox';check.checked=true;check.addEventListener('change',()=>allowSpectators=check.checked);label.appendChild(check);label.appendChild(document.createTextNode(' '+t('allow_spectators')));card.appendChild(label);
+  const create=el('button','btn btn-primary',t('create_room'));create.addEventListener('click',()=>{online.pendingGame=selectedGame||null;bd.remove();online.create({capacity,visibility,allowSpectators});});card.appendChild(create);const cancel=el('button','btn',t('cancel'));cancel.addEventListener('click',()=>bd.remove());card.appendChild(cancel);bd.appendChild(card);bd.addEventListener('click',e=>{if(e.target===bd)bd.remove();});document.body.appendChild(bd);
 }
 
 function renderPlayers(activeIdx, infos, bankrupts, colors){
@@ -5669,7 +6157,7 @@ function renderHub(){
 
 if (typeof document !== 'undefined'){
   window.__gameInfo = {
-    GAMES, startGame, registerAccount, loginAccount, logoutAccount, loadRoster,
+    GAMES, startGame, showGame, registerAccount, loginAccount, logoutAccount, loadRoster,
     GAME_ART, gameArtEnabled, gameArtUrl, renderHub, setLanguage, checkAchievements, aiMateDisplayName,
     get playerCount(){ return playerCount; },
     set playerCount(v){ playerCount = v; },
@@ -5687,14 +6175,6 @@ if (typeof document !== 'undefined'){
   };
   initI18n().then(() => {
   initTheme();
-  $('count-group').addEventListener('click', e => {
-    const btn = e.target.closest('.count-btn');
-    if (!btn) return;
-    playerCount = Number(btn.dataset.n);
-    document.querySelectorAll('#count-group .count-btn').forEach(b => b.setAttribute('aria-pressed', String(b === btn)));
-    renderHub();
-    renderSlots();
-  });
   const modeBtns = document.querySelectorAll('#mode-group .count-btn');
   modeBtns.forEach(b => b.addEventListener('click', () => {
     aiMode = b.dataset.mode === 'ai';
@@ -5725,11 +6205,14 @@ if (typeof document !== 'undefined'){
   });
   const heroQuick = $('btn-hero-quick');
   if (heroQuick) heroQuick.addEventListener('click', () => {
-    const playable = Object.keys(GAMES).filter(id => playerCount >= GAMES[id].min && playerCount <= GAMES[id].max);
-    if (!playable.length){ toast(t('no_game_for_player_count')); return; }
-    startGame(playable[Math.floor(Math.random() * playable.length)]);
+    if (!account){ openAuthModal(); return; }
+    if (aiMode){ const playable=Object.keys(GAMES); openAISetup(playable[Math.floor(Math.random()*playable.length)]); }
+    else online.quickJoin(null);
   });
-  $('btn-create-room').addEventListener('click', () => online.create());
+  const quickJoin=$('btn-quick-join'); if(quickJoin)quickJoin.addEventListener('click',()=>online.quickJoin(null));
+  const createRoom=$('btn-create-room'); if(createRoom)createRoom.addEventListener('click',()=>openRoomSetup());
+  const browseRooms=$('btn-browse-rooms'); if(browseRooms)browseRooms.addEventListener('click',()=>{ const node=$('lobby-panel'); if(node&&node.scrollIntoView)node.scrollIntoView({behavior:'smooth',block:'center'}); });
+  const joinCode=$('btn-join-code'); if(joinCode)joinCode.addEventListener('click',()=>online.join(($('join-room-code')||{}).value||''));
   const settingsBtn = $('btn-settings-page');
   if (settingsBtn) settingsBtn.addEventListener('click', openSettingsPage);
   $('btn-me').addEventListener('click', () => openProfileModal(deviceUid));
@@ -6262,6 +6745,7 @@ function gameGomoku(area, extra, n, opts){
       const gpArr = moveByChoice.get(chosen);
       aiPending = false;
       aiSpeak(opts.aiPersona, 'think');
+      if (opts.online && opts.ai && opts.ai.has(turn) && typeof opts.sendBotMove === 'function') opts.sendBotMove(turn, gpArr);
       if (applyMove(gpArr[0], gpArr[1]) && typeof confirmAIReady === 'function') {
         confirmAIReady('gomoku', chosen);
       }
@@ -6616,6 +7100,7 @@ function gameLudo(area, extra, n, opts){
       if (phase === 'roll'){
         const d = 1 + Math.floor(Math.random() * 6);
         aiPending = false;
+        if (opts.online && typeof opts.sendBotMove === 'function') opts.sendBotMove(turn, { dice:d });
         applyDice(d);
         return;
       }
@@ -6657,6 +7142,7 @@ function gameLudo(area, extra, n, opts){
         }
         aiPending = false;
         aiSpeak(opts.aiPersona, 'think');
+        if (opts.online && typeof opts.sendBotMove === 'function') opts.sendBotMove(turn, { ti:chosen });
         if (applyPick(curPid(), chosen) && typeof confirmAIReady === 'function') {
           confirmAIReady('ludo', 'token:' + chosen);
         }
@@ -7322,6 +7808,7 @@ function gameMonopoly(area, extra, n, opts){
         const d1 = 1 + Math.floor(Math.random() * 6);
         const d2 = 1 + Math.floor(Math.random() * 6);
         aiPending = false;
+        if (opts.online && typeof opts.sendBotMove === 'function') opts.sendBotMove(turn, { roll:[d1,d2] });
         applyRoll(d1, d2);
         return;
       }
@@ -7369,6 +7856,7 @@ function gameMonopoly(area, extra, n, opts){
         const decision = choices.includes(remoteChoice) ? remoteChoice : best.choice;
         aiPending = false;
         aiSpeak(opts.aiPersona, 'think');
+        if (opts.online && typeof opts.sendBotMove === 'function') opts.sendBotMove(cur, { decision });
         if (applyDecision(cur, decision) && typeof confirmAIReady === 'function') {
           confirmAIReady('monopoly', decision);
         }
@@ -8546,9 +9034,11 @@ function gameTank(area, extra, n, opts){
     aiPending.delete(pi);
     const actor=tanks[pi];
     if (choice === 'shoot'){
+      if (authorityMode && typeof opts.sendBotTankInput === 'function') { opts.sendBotTankInput(pi, { input:{ fire:true, direction:actor.d }, clientTick:authorityServerTick }); aiPending.delete(pi); return; }
       if(fireTank(actor)&&opts.onProgress)opts.onProgress({act:'shoot'});
     } else {
       const direction = Number(choice.slice(-1));
+      if (authorityMode && typeof opts.sendBotTankInput === 'function') { opts.sendBotTankInput(pi, { input:{ up:direction===0, right:direction===1, down:direction===2, left:direction===3 }, clientTick:authorityServerTick }); aiPending.delete(pi); return; }
       if (opts.onProgress) opts.onProgress({act:'move',d:direction});
       pulseMove(pi,direction,false);
     }
@@ -9201,6 +9691,7 @@ function gameTetris(area, extra, n, opts){
     const remote=await aiChoose('tetris',{player:pi,well:state.well.map(row=>row.join('')),incoming,target:targetFor(pi),next:state.queue[0],localRanking:near.map(item=>({choice:item.kind+':'+item.rotation+':'+item.x+':'+item.y,score:+item.lookaheadScore.toFixed(2),holes:item.holes,height:item.maxHeight,lines:item.cleared}))},choices,opts.aiPersona,learningCandidates);
     if (destroyed||over||epoch!==aiEpoch){ aiPending.delete(pi); return; }
     const index=choices.indexOf(remote),pick=near[index>=0?index:0];aiPending.delete(pi);
+    if (fullRuleAuthority && opts.online && typeof opts.sendBotTetrisAction === 'function') { opts.sendBotTetrisAction(pi, { type:'hard_drop' }); return; }
     state.active={kind:pick.kind,rotation:pick.rotation,x:pick.x,y:pick.y}; applyPlacement(pi,{piece:pick.kind,x:pick.x,y:pick.y,rot:pick.rotation},true,!!opts.online);
     if(state.alive&&!over)queueAI(pi,2500);
   }
@@ -9931,6 +10422,7 @@ function gameXiangqi(area, extra, n, opts){
       const executedChoice = xqMoveKey(xqMv);
       aiPending = false;
       aiSpeak(opts.aiPersona, 'think');
+      if (opts.online && opts.ai && opts.ai.has(turn) && typeof opts.sendBotMove === 'function') opts.sendBotMove(turn, { from:xqMv.from, to:xqMv.to });
       if (doMove(xqMv.from, xqMv.to) && typeof confirmAIReady === 'function') {
         confirmAIReady('xiangqi', executedChoice);
       }
@@ -10242,12 +10734,15 @@ if (typeof module !== 'undefined' && module.exports){
 
 if (typeof document !== 'undefined'){
   initAssetFallbacks();
+  initStaticPlatformIcons();
   loadRoster();
   renderMe();
   renderSlots();
   renderLeaderboard();
   renderLobby();
   renderAccounts();
+  if (typeof initSocialRail === 'function') initSocialRail();
+  if (typeof renderSocialRail === 'function') renderSocialRail();
   renderHub();
   if (typeof parseHash === 'function') parseHash();
   online.connect();

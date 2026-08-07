@@ -248,6 +248,7 @@ function gameGomoku(area, extra, n, opts){
       const gpArr = moveByChoice.get(chosen);
       aiPending = false;
       aiSpeak(opts.aiPersona, 'think');
+      if (opts.online && opts.ai && opts.ai.has(turn) && typeof opts.sendBotMove === 'function') opts.sendBotMove(turn, gpArr);
       if (applyMove(gpArr[0], gpArr[1]) && typeof confirmAIReady === 'function') {
         confirmAIReady('gomoku', chosen);
       }

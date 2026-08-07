@@ -200,7 +200,7 @@ async function main(){
   check('英文覆盖 AI 角色选择与大厅动态文字', untranslatedUi([$('game-grid'),$('persona-row'),$('my-card')]).length === 0);
   G.aiMode = false;
   for (const id of ['gomoku','ludo','monopoly','tank','tetris','xiangqi']){
-    G.playerCount = 2; G.startGame(id);
+    G.playerCount = 2; G.showGame(id);
     const leaks = untranslatedUi([area(),$('game-extra'),$('status-bar'),$('player-bar')]);
     check(`英文覆盖 ${id} 初始对局文字`, leaks.length === 0);
   }
@@ -213,7 +213,7 @@ async function main(){
   check('乌克兰语覆盖 AI 角色选择与大厅动态文字', untranslatedUi([$('game-grid'),$('persona-row'),$('my-card')]).length === 0);
   G.aiMode = false;
   for (const id of ['gomoku','ludo','monopoly','tank','tetris','xiangqi']){
-    G.playerCount = 2; G.startGame(id);
+    G.playerCount = 2; G.showGame(id);
     const leaks = untranslatedUi([area(),$('game-extra'),$('status-bar'),$('player-bar')]);
     check(`乌克兰语覆盖 ${id} 初始对局文字`, leaks.length === 0);
   }
@@ -241,7 +241,7 @@ async function main(){
   localStorage.setItem('mg_art_gomoku_v1', '0');
   G.renderHub();
   const rollbackGomokuCard = $('game-grid').children.find(card => card.dataset.gameId === 'gomoku');
-  G.playerCount = 2; G.startGame('gomoku');
+  G.playerCount = 2; G.showGame('gomoku');
   check('五子棋 feature flag 关闭后回退 Emoji 大厅卡', rollbackGomokuCard && !rollbackGomokuCard.classList.contains('has-cover'));
   check('五子棋 feature flag 关闭后仍可开局', area().children[0] && !area().children[0].classList.contains('game-art-v1'));
   localStorage.removeItem('mg_art_gomoku_v1');
@@ -259,7 +259,7 @@ async function main(){
   for (const [id, n] of combos){
     G.playerCount = n;
     try{
-      G.startGame(id);
+      G.showGame(id);
       const ok = area().children.length > 0;
       check(id + ' p' + n + ' 初始化成功', ok);
     }catch(err){
@@ -268,10 +268,10 @@ async function main(){
     }
   }
 
-  G.playerCount = 2; G.startGame('gomoku');
+  G.playerCount = 2; G.showGame('gomoku');
   check('五子棋 Canvas 接入木纹底材且规则层仍由 Canvas 绘制', area().children[0].classList.contains('game-art-v1'));
 
-  G.playerCount = 2; G.startGame('tetris');
+  G.playerCount = 2; G.showGame('tetris');
   let tetrisWell = area().querySelector('.tetris-well');
   check('俄罗斯方块 DOM 井接入玻璃底材与 CSS 精确网格', tetrisWell && tetrisWell.classList.contains('game-art-v1'));
   G.game.onMove({ piece: 0, x: 0, y: 17, rot: 0 }, 0);
@@ -282,7 +282,7 @@ async function main(){
   check('俄罗斯方块快照不写入美术状态', !/(cosmetic|blockSkin|backgroundSkin|presentation)/i.test(tetrisSnapshotText));
 
   localStorage.setItem('mg_art_tetris_v1', '0');
-  G.startGame('tetris');
+  G.showGame('tetris');
   tetrisWell = area().querySelector('.tetris-well');
   check('俄罗斯方块 feature flag 关闭后仍可开局并使用 CSS fallback', tetrisWell && !tetrisWell.classList.contains('game-art-v1'));
   localStorage.removeItem('mg_art_tetris_v1');
@@ -296,7 +296,7 @@ async function main(){
     $('game-title').textContent === titleBefore && area().children.length === areaCountBefore);
 
   /* 五子棋：模拟横排五连 */
-  G.playerCount = 2; G.startGame('gomoku');
+  G.playerCount = 2; G.showGame('gomoku');
   const gomokuCanvas = area().children[0];
   const placeStone = (r, c) => {
     const LOGICAL = 520, CELL = 34, PAD = 22;
@@ -307,7 +307,7 @@ async function main(){
   check('五子棋：玩家1 五连获胜', $('status-bar').textContent.includes('获胜'));
 
   /* 飞行棋：掷骰直到出现可移动棋子并移动一次 */
-  G.playerCount = 4; G.startGame('ludo');
+  G.playerCount = 4; G.showGame('ludo');
   const ludoBoard = area().children[0];
   const diceBtn = $('game-extra').querySelector('.dice-btn');
   let moved = false;
@@ -327,7 +327,7 @@ async function main(){
     chipDots[0] === '#e5484d' && chipDots[1] === '#3b82f6' && chipDots[2] === '#22a06b' && chipDots[3] === '#f59e0b');
 
   /* 迷你大富翁：走 5 回合不报错 */
-  G.playerCount = 3; G.startGame('monopoly');
+  G.playerCount = 3; G.showGame('monopoly');
   const mBoard = area().children[0];
   const mRollBtn = mBoard.querySelectorAll('button')[0];
   for (let i = 0; i < 5; i++){
@@ -341,14 +341,14 @@ async function main(){
   check('大富翁：5 回合后仍有玩家存活', !$('status-bar').textContent.includes('获胜') || $('status-bar').textContent.includes('最终赢家'));
 
   /* 规则弹层 */
-  G.playerCount = 2; G.startGame('ludo');
+  G.playerCount = 2; G.showGame('ludo');
   $('btn-rules').dispatch('click');
   const backdrops = document.body.children.filter(c => c.classList.contains('modal-backdrop') && !c.classList.contains('auth-backdrop'));
   check('规则弹层可打开', backdrops.length === 1);
   backdrops.forEach(b => b.remove());
 
   /* 大富翁：轮次显示 + 提前结算 */
-  G.playerCount = 3; G.startGame('monopoly');
+  G.playerCount = 3; G.showGame('monopoly');
   check('大富翁：显示轮次', $('status-bar').textContent.includes('第 1/30 轮'));
   $('game-extra').children[2].dispatch('click'); // 提前结算
   check('大富翁：提前结算出结果', $('status-bar').textContent.includes('最终赢家'));
@@ -377,7 +377,7 @@ async function main(){
   G.registerAccount('小明', 'abc123', 0, 0); // 恢复主账号
   const roster0 = JSON.parse(localStorage.getItem('mg_roster'));
   check('档案已持久化', Array.isArray(roster0) && roster0.length >= 1);
-  check('大厅渲染档案按钮与玩家槽位', $('btn-me').children.length >= 2 && $('slots-row').children.length === G.playerCount);
+  check('大厅渲染档案按钮且热座槽位已移除', $('btn-me').children.length >= 2 && $('slots-row').children.length === 0 && $('slots-row').classList.contains('hidden'));
 
   // 编辑我的档案（昵称 + 头像）
   $('btn-me').dispatch('click');
@@ -403,7 +403,7 @@ async function main(){
   const authorityBefore = new Map(roster1.map(p => [p.uid, { coins: p.coins || 0, total: p.total || 0 }]));
 
   // 本地五子棋结算：热座模式不进入正式经济与成长。
-  G.playerCount = 2; G.startGame('gomoku');
+  G.playerCount = 2; G.showGame('gomoku');
   const settlementBoard = area().children[0];
   const placeSettlement = (r, c) => {
     const LOGICAL = 520, CELL = 34, PAD = 22;
@@ -424,7 +424,7 @@ async function main(){
   /* 人机模式：AI 自动回应落子 */
   G.aiMode = true;
   G.playerCount = 2;
-  G.startGame('gomoku');
+  G.showGame('gomoku');
   const aiCanvas = area().children[0];
   const LOGICAL_AI = 520, CELL_AI = 34, PAD_AI = 22;
   aiCanvas.dispatch('click', { clientX: (PAD_AI + 7*CELL_AI)/LOGICAL_AI*520, clientY: (PAD_AI + 7*CELL_AI)/LOGICAL_AI*520 });
@@ -491,7 +491,7 @@ async function main(){
 
   // 设置弹层与房间面板初始状态
   $('btn-settings-page').dispatch('click');
-  const stBd = document.body.children.find(c => c.classList.contains('modal-backdrop'));
+  const stBd = document.body.children.find(c => c.classList.contains('modal-backdrop') && !c.classList.contains('auth-backdrop'));
   check('设置弹层可打开', !!stBd);
   if (stBd){
     const englishButton = stBd.querySelectorAll('button').find(button => button.dataset.langCode === 'en-US');

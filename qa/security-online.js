@@ -396,7 +396,11 @@ async function verifyMonopolyHostSettle(host, guest){
   ]);
   const hostStartMark = host.mark();
   const guestStartMark = guest.mark();
+  const selectedMark = host.mark();
   host.send({ type: 'select_game', payload: { game: 'monopoly' } });
+  await host.waitAfter(selectedMark, message => message.type === 'room_update' && payloadOf(message).game === 'monopoly', '房主确认大富翁已选择');
+  guest.send({ type: 'ready', payload: { ready: true } });
+  host.send({ type: 'start' });
   await Promise.all([
     host.waitAfter(hostStartMark, message => message.type === 'started' || isReject(message), '房主开始大富翁权限测试'),
     guest.waitAfter(guestStartMark, message => message.type === 'started' || isReject(message), '对手进入大富翁权限测试'),
@@ -417,7 +421,11 @@ async function verifyTankAuthority(host, guest){
     guest.waitAfter(endGuestMark,message=>message.type==='end_game','对手结束大富翁'),
   ]);
   const hostStartMark=host.mark(),guestStartMark=guest.mark();
+  const selectedMark = host.mark();
   host.send({type:'select_game',payload:{game:'tank'}});
+  await host.waitAfter(selectedMark,message=>message.type==='room_update'&&payloadOf(message).game==='tank','房主确认坦克已选择');
+  guest.send({type:'ready',payload:{ready:true}});
+  host.send({type:'start'});
   const [hostStarted,guestStarted]=await Promise.all([
     host.waitAfter(hostStartMark,message=>message.type==='started'||isReject(message),'房主开始坦克中继测试'),
     guest.waitAfter(guestStartMark,message=>message.type==='started'||isReject(message),'对手进入坦克中继测试'),
@@ -448,9 +456,13 @@ async function startSelectedMatch(host, guest, previousMatchId){
       guest.waitAfter(guestEndMark, message => message.type === 'end_game', '对手结束上一局'),
     ]);
   }
+  const selectedMark = host.mark();
+  host.send({ type: 'select_game', payload: { game: 'gomoku' } });
+  await host.waitAfter(selectedMark, message => message.type === 'room_update' && payloadOf(message).game === 'gomoku', '房主确认五子棋已选择');
   const hostMark = host.mark();
   const guestMark = guest.mark();
-  host.send({ type: 'select_game', payload: { game: 'gomoku' } });
+  guest.send({ type: 'ready', payload: { ready: true } });
+  host.send({ type: 'start' });
   const [hostStarted, guestStarted] = await Promise.all([
     host.waitAfter(hostMark, message => message.type === 'started' || isReject(message), '房主收到 started'),
     guest.waitAfter(guestMark, message => message.type === 'started' || isReject(message), '对手收到 started'),
@@ -590,8 +602,13 @@ async function verifyThreePlayerSettlement(wsUrl){
   const hostFullMark = host.mark();
   await third.request({ type: 'join', payload: { room } }, message => message.type === 'joined' || isReject(message), '第三人加入三人房');
   await host.waitAfter(hostFullMark, message => message.type === 'room_update' && Number(payloadOf(message).size) === 3, '三人房满员同步');
-  const startedMarks = players.map(client => client.mark());
+  const selectedMark = host.mark();
   host.send({ type: 'select_game', payload: { game: 'monopoly' } });
+  await host.waitAfter(selectedMark, message => message.type === 'room_update' && payloadOf(message).game === 'monopoly', '三人房确认大富翁已选择');
+  const startedMarks = players.map(client => client.mark());
+  second.send({ type:'ready', payload:{ ready:true } });
+  third.send({ type:'ready', payload:{ ready:true } });
+  host.send({ type:'start' });
   const started = await Promise.all(players.map((client, index) => client.waitAfter(startedMarks[index],
     message => message.type === 'started' || isReject(message), '三人局 started ' + index)));
   const matchId = matchIdOf(started[0]);
@@ -713,7 +730,8 @@ async function runAccountAndProfileTests(wsUrl){
   check('注册签发不可猜测的会话 token', registeredA.token.length >= 24 && registeredB.token.length >= 24 && registeredA.token !== registeredB.token);
   const ownedA = canonicalOwned(registeredA.profile.owned);
   const ownedB = canonicalOwned(registeredB.profile.owned);
-  const forgedOwnedAbsent = owned => !owned.avatars.some(id => id >= 30) &&
+  const freeAvatarV2 = new Set([100,101,108,109,116,117,124,125,132,133,140,141]);
+  const forgedOwnedAbsent = owned => !owned.avatars.some(id => id >= 30 && !freeAvatarV2.has(id)) &&
     !owned.frames.some(id => id > 0) && !owned.effects.some(id => id > 0) && !owned.backgrounds.some(id => id > 0);
   check('注册忽略客户端伪造的付费 owned', forgedOwnedAbsent(ownedA) && forgedOwnedAbsent(ownedB),
     JSON.stringify({ a: ownedA, b: ownedB }));
@@ -838,19 +856,19 @@ async function runResultAndPurchaseTests(context){
   const requestId = 'purchase-' + crypto.randomUUID();
   const purchase = {
     type: 'purchase',
-    payload: { category: 'backgrounds', id: 1, price: 0, requestId },
+    payload: { category: 'avatars', id: 30, price: 0, requestId },
   };
   const purchaseResponse = await authA.request(
     purchase,
     message => message.type === 'purchase_ok' || message.type === 'purchase_error' || isReject(message),
-    '服务端购买背景 1',
+    '服务端购买头像 30',
   );
   check('合法商城购买成功', purchaseResponse.type === 'purchase_ok', JSON.stringify(purchaseResponse));
   const afterPurchase = await getProfile(authA, context.a.uid);
   check('purchase 忽略伪造 price 并按服务端定价扣 💵10',
     Number(beforePurchase.coins || 0) - Number(afterPurchase.coins || 0) === 10,
     'before=' + beforePurchase.coins + ', after=' + afterPurchase.coins);
-  check('purchase 只由服务端写入 owned', canonicalOwned(afterPurchase.owned).backgrounds.includes(1),
+  check('purchase 只由服务端写入 owned', canonicalOwned(afterPurchase.owned).avatars.includes(30),
     JSON.stringify(afterPurchase.owned));
 
   authA.send(purchase);
@@ -860,7 +878,7 @@ async function runResultAndPurchaseTests(context){
 
   authA.send({
     type: 'purchase',
-    payload: { category: 'backgrounds', id: 1, price: -999999, requestId: 'purchase-' + crypto.randomUUID() },
+    payload: { category: 'avatars', id: 30, price: -999999, requestId: 'purchase-' + crypto.randomUUID() },
   });
   await sleep(160);
   const afterOwnedRetry = await getProfile(authA, context.a.uid);

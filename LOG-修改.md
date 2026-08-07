@@ -23,3 +23,4 @@
 - 2026-08-08 00:50｜将三份 Gameplay 简易报告迁移到 `简易报告/`，按最后核对时间追加 `202608072006`/`202608072323` 后缀并修正交叉引用。
 - 2026-08-08 00:56｜将 `PROJECT_STATUS.json`、任务 execution/plan/acceptance 同步到 `3e72c311` 的验证状态，保留真实设备、Supabase 和网络闸门的 BLOCKED 事实。
 - 2026-08-08 01:02｜将 Project Execution OS 任务状态收口为 `ACCEPTED`，补充最后发布提交、线上证据和 Release Candidate 阻塞边界。
+- 2026-08-08 03:03｜修改 READY 开局、观战与房主转移回归流程；同步 Profile/Presence/i18n、六款 AI Seat 控制回调、六款成就条件及联机测试，修正设置弹层和热座移除断言。

@@ -558,8 +558,102 @@ const expiredResumes = new Map(); // uid|tokenHash -> { room, player, expiresAt 
 const soloMatches = new Map(); // uid -> 服务端签发的人机对局票据与进度
 const GAME_MAX = { gomoku: 2, ludo: 4, monopoly: 5, tank: 2, tetris: 4, xiangqi: 2 };
 const GAME_MIN = { gomoku: 2, ludo: 2, monopoly: 2, tank: 2, tetris: 2, xiangqi: 2 };
+const AI_DIFFICULTIES = new Set(['easy', 'normal', 'hard']);
+const AI_PERSONA_IDS = new Set(Object.keys(AI_PERSONAS));
 
-const PROTOCOL_VERSION = 1;
+function normalizeRoomVisibility(value){ return value === 'private' ? 'private' : 'public'; }
+function normalizeAIDifficulty(value){ return AI_DIFFICULTIES.has(value) ? value : 'normal'; }
+function normalizeAIPersona(value){ return AI_PERSONA_IDS.has(value) ? value : 'teacher'; }
+function emptySeat(seatId){
+  return { seatId, type:'empty', userId:null, nickname:'', avatar:0, ready:false, host:false, online:false, aiDifficulty:null, aiPersona:null, controllerUid:null };
+}
+function humanSeatFromSession(session, seatId, host){
+  const user = session && session.uid && db.users[session.uid];
+  return {
+    seatId, type:'human', userId:session && session.uid || null,
+    nickname:user && user.name || '玩家' + (seatId + 1), avatar:user && user.avatar || 0,
+    ready:!!host, host:!!host, online:!!(session && session.alive),
+    aiDifficulty:null, aiPersona:null, controllerUid:null,
+  };
+}
+function ensureRoomSeats(room){
+  if (!room) return [];
+  if (!Array.isArray(room.seats) || room.seats.length !== room.capacity){
+    room.seats = Array.from({length:room.capacity}, (_, seatId) => emptySeat(seatId));
+    for (const [session, seatId] of room.clients || []){
+      if (seatId >= 0 && seatId < room.capacity) room.seats[seatId] = humanSeatFromSession(session, seatId, session === room.host);
+    }
+  }
+  for (const [session, seatId] of room.clients || []){
+    const seat = room.seats[seatId];
+    if (!seat || seat.type !== 'human' || seat.userId !== session.uid){
+      room.seats[seatId] = humanSeatFromSession(session, seatId, session === room.host);
+    } else {
+      const user = session.uid && db.users[session.uid];
+      seat.nickname = user && user.name || seat.nickname;
+      seat.avatar = user && user.avatar || seat.avatar || 0;
+      seat.host = session === room.host;
+      seat.online = !!session.alive;
+    }
+  }
+  return room.seats;
+}
+function activeRoomSeats(room){ return ensureRoomSeats(room).filter(seat => seat.type !== 'empty'); }
+function humanRoomSeats(room){ return activeRoomSeats(room).filter(seat => seat.type === 'human'); }
+function aiRoomSeats(room){ return activeRoomSeats(room).filter(seat => seat.type === 'ai'); }
+function activeSeatCount(room){ return activeRoomSeats(room).length; }
+function firstEmptySeat(room){ return ensureRoomSeats(room).find(seat => seat.type === 'empty') || null; }
+function seatForSession(room, session){
+  const seatId = room && room.clients && room.clients.get(session);
+  return Number.isInteger(seatId) ? ensureRoomSeats(room)[seatId] : null;
+}
+function publicSeat(seat){
+  return {
+    seatId:seat.seatId, type:seat.type, userId:seat.userId || null, nickname:seat.nickname || '', avatar:Number(seat.avatar)||0,
+    ready:seat.type === 'ai' ? true : !!seat.ready, host:!!seat.host, online:seat.type === 'ai' ? true : !!seat.online,
+    aiDifficulty:seat.type === 'ai' ? normalizeAIDifficulty(seat.aiDifficulty) : null,
+    aiPersona:seat.type === 'ai' ? normalizeAIPersona(seat.aiPersona) : null,
+    controllerUid:seat.type === 'ai' ? seat.controllerUid || null : null,
+  };
+}
+function roomHostPayload(room){
+  const seat = room && room.host ? seatForSession(room, room.host) : null;
+  return { uid:room && room.host && room.host.uid || null, seatId:seat ? seat.seatId : null };
+}
+function updateAIControllers(room){
+  const controllerUid = room && room.host && room.host.uid || null;
+  for (const seat of aiRoomSeats(room)) seat.controllerUid = controllerUid;
+}
+function compactRoomSeats(room){
+  if (!room) return;
+  const oldSeats = activeRoomSeats(room).sort((a, b) => a.seatId - b.seatId);
+  const sessionByUid = new Map([...(room.clients || new Map()).keys()].map(session => [session.uid, session]));
+  room.clients = new Map();
+  room.seats = Array.from({length:room.capacity}, (_, seatId) => emptySeat(seatId));
+  oldSeats.forEach((oldSeat, seatId) => {
+    const seat = { ...oldSeat, seatId, host:false };
+    if (seat.type === 'human'){
+      const session = sessionByUid.get(seat.userId);
+      if (!session) return;
+      const previous = session.player;
+      session.player = seatId;
+      room.clients.set(session, seatId);
+      seat.host = session === room.host;
+      seat.online = !!session.alive;
+      if (previous !== seatId) session.sendText(JSON.stringify({ type:'player_reassigned', payload:{ player:seatId } }));
+    }
+    room.seats[seatId] = seat;
+  });
+  updateAIControllers(room);
+}
+function roomCanStart(room){
+  if (!room || !room.game || room.started) return false;
+  const count = activeSeatCount(room);
+  if (count < GAME_MIN[room.game] || count > GAME_MAX[room.game]) return false;
+  return humanRoomSeats(room).length > 0 && humanRoomSeats(room).every(seat => seat.online && seat.ready);
+}
+
+const PROTOCOL_VERSION = 2;
 function rewardThresholdOverrides(){
   if (process.env.NODE_ENV !== 'test') return null;
   const envMap = {
@@ -685,7 +779,7 @@ function normalizeUserRewardState(u){
 
 /* ---------------- Supabase 数据库（可选，配置环境变量后启用） ---------------- */
 const SUPABASE_URL = (process.env.SUPABASE_URL || '').replace(/\/+$/, '');
-const SUPABASE_KEY = process.env.SUPABASE_KEY || '';
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY || '';
 const useSupabase = !!(SUPABASE_URL && SUPABASE_KEY);
 const sbProfileQueues = new Map();
 const sbAILearningQueues = new Map();
@@ -717,6 +811,8 @@ async function sbLoadProfiles(){
       users[r.uid] = normalizeUserRewardState({
         uid: r.uid, name: r.name, avatar: r.avatar, coins: r.coins || 0, xp: r.xp || 0, level: r.level || 1, streak: r.streak || 0, bestStreak: r.best_streak || 0, played: r.played || {}, total: r.total || 0, wins: r.wins || {}, totalWins: r.total_wins || 0,
         background: r.background || 0, frame: r.frame || 0, effect: r.effect || 0,
+        signature: r.signature || '', countryRegion: r.country_region || '', genderTag: r.gender_tag || 'hidden',
+        presencePreference: r.presence_preference || 'joinable', presenceVisibility: r.presence_visibility || 'everyone', showcase: r.showcase || null,
         owned: normalizeOwned(r.owned), gameCosmetics: normalizeGameCosmetics(r.game_cosmetics),
         pin_hash: r.pin_hash || null, lang: r.lang || 'zh-CN',
         achievements: r.achievements || [], playmates: r.playmates || {}, daily: r.daily || { play: 0, win: 0, streak: 0 }, dailyKey: r.daily_key || '', nameFx: r.name_fx || 0,
@@ -842,6 +938,8 @@ function profileDbRow(u){
     background: u.background || 0, frame: u.frame || 0, effect: u.effect || 0,
     owned: normalizeOwned(u.owned), game_cosmetics: normalizeGameCosmetics(u.gameCosmetics), pin_hash: u.pin_hash || null, lang: u.lang || 'zh-CN',
     achievements: u.achievements || [], playmates: u.playmates || {},
+    signature: u.signature || '', country_region: u.countryRegion || '', gender_tag: u.genderTag || 'hidden',
+    presence_preference: u.presencePreference || 'joinable', presence_visibility: u.presenceVisibility || 'everyone', showcase: u.showcase || null,
     daily: u.daily || { play: 0, win: 0, streak: 0 }, daily_key: u.dailyKey || '', name_fx: u.nameFx || 0,
     auth_tokens: Array.isArray(u.authTokens) ? u.authTokens.slice(-5) : [],
     recent_results: Array.isArray(u.recentResults) ? u.recentResults.slice(-500) : [],
@@ -865,6 +963,12 @@ function editableProfileDbRow(u){
     game_cosmetics: normalizeGameCosmetics(u && u.gameCosmetics),
     lang: ['zh-CN', 'en-US', 'uk-UA'].includes(u && u.lang) ? u.lang : 'zh-CN',
     name_fx: Number.isInteger(u && u.nameFx) ? u.nameFx : 0,
+    signature: sanitizePlainText(u && u.signature, 80),
+    country_region: /^[A-Z]{2}$/.test(String(u && u.countryRegion || '').toUpperCase()) ? String(u.countryRegion).toUpperCase() : '',
+    gender_tag: ['hidden','male','female','nonbinary'].includes(u && u.genderTag) || /^custom:[^<>]{1,16}$/.test(String(u && u.genderTag || '')) ? u.genderTag : 'hidden',
+    presence_preference: ['joinable','online','busy','invisible'].includes(u && u.presencePreference) ? u.presencePreference : 'joinable',
+    presence_visibility: ['everyone','friends','nobody'].includes(u && u.presenceVisibility) ? u.presenceVisibility : 'everyone',
+    showcase: u && u.showcase && typeof u.showcase === 'object' ? u.showcase : null,
     updated_at: new Date().toISOString(),
   };
 }
@@ -1083,6 +1187,7 @@ function emptyDB(){
   return {
     users: {}, history: [], rewardHistory: [], economyLedger: [], events: [],
     pendingRewardSync: [], aiLearning: normalizeAILearningStore(), pendingAILearningSync: [],
+    friendRequests: [], friendships: [], blocks: [], reports: [],
   };
 }
 let db = emptyDB();
@@ -1100,11 +1205,19 @@ function loadDB(){
       pendingRewardSync: Array.isArray(parsed.pendingRewardSync) ? parsed.pendingRewardSync : [],
       aiLearning: normalizeAILearningStore(parsed.aiLearning),
       pendingAILearningSync: Array.isArray(parsed.pendingAILearningSync) ? parsed.pendingAILearningSync : [],
+      friendRequests: Array.isArray(parsed.friendRequests) ? parsed.friendRequests : [],
+      friendships: Array.isArray(parsed.friendships) ? parsed.friendships : [],
+      blocks: Array.isArray(parsed.blocks) ? parsed.blocks : [],
+      reports: Array.isArray(parsed.reports) ? parsed.reports : [],
     };
   } catch { db = emptyDB(); }
   db.pendingRewardSync = db.pendingRewardSync.filter(item => item && item.uid && item.row && item.row.resultId).slice(-10000);
   db.pendingAILearningSync = db.pendingAILearningSync.filter(item => item && item.uid && item.resultId && item.model &&
     Array.isArray(item.experiences) && item.experiences.length).slice(-5000);
+  db.friendRequests = db.friendRequests.filter(row => row && row.id && row.fromUid && row.toUid && row.status === 'pending').slice(-50000);
+  db.friendships = db.friendships.filter(row => row && row.id && row.aUid && row.bUid && row.aUid !== row.bUid).slice(-50000);
+  db.blocks = db.blocks.filter(row => row && row.id && row.blockerUid && row.blockedUid && row.blockerUid !== row.blockedUid).slice(-50000);
+  db.reports = db.reports.filter(row => row && row.id && row.reporterUid && row.targetUid && row.reason).slice(-50000);
   for (const [uid, u] of Object.entries(db.users)){
     u.uid = u.uid || uid;
     if (u.coins === undefined) u.coins = u.points || 0;
@@ -1115,6 +1228,12 @@ function loadDB(){
     u.gameCosmetics = normalizeGameCosmetics(u.gameCosmetics);
     if (!Array.isArray(u.achievements)) u.achievements = [];
     if (!u.playmates || typeof u.playmates !== 'object') u.playmates = {};
+    if (typeof u.signature !== 'string') u.signature = '';
+    if (typeof u.countryRegion !== 'string') u.countryRegion = '';
+    if (typeof u.genderTag !== 'string') u.genderTag = 'hidden';
+    if (!['joinable','online','busy','invisible'].includes(u.presencePreference)) u.presencePreference = 'joinable';
+    if (!['everyone','friends','nobody'].includes(u.presenceVisibility)) u.presenceVisibility = 'everyone';
+    if (!u.showcase || typeof u.showcase !== 'object') u.showcase = null;
     if (!u.daily || typeof u.daily !== 'object') u.daily = { play: 0, win: 0, streak: 0 };
     u.authTokens = normalizeAuthTokenRecords(u.authTokens);
     if (!Array.isArray(u.recentResults)) u.recentResults = [];
@@ -1151,7 +1270,9 @@ function saveDB(){
   const pendingAILearningSync = (db.pendingAILearningSync || []).filter(item => item && !item.ephemeral &&
     (!db.users[item.uid] || !db.users[item.uid].ephemeral));
   fs.writeFileSync(tmp, JSON.stringify({ users, history, rewardHistory, economyLedger, events,
-    pendingRewardSync, aiLearning: db.aiLearning, pendingAILearningSync }, null, 2));
+    pendingRewardSync, aiLearning: db.aiLearning, pendingAILearningSync,
+    friendRequests: db.friendRequests || [], friendships: db.friendships || [], blocks: db.blocks || [], reports: db.reports || [],
+  }, null, 2));
   fs.renameSync(tmp, DB_FILE);
 }
 function trimAuditData(){
@@ -1161,6 +1282,10 @@ function trimAuditData(){
   if (db.events.length > 20000) db.events = db.events.slice(-10000);
   db.aiLearning.experiences = db.aiLearning.experiences.slice(-20000);
   db.aiLearning.appliedResults = db.aiLearning.appliedResults.slice(-50000);
+  if (db.friendRequests.length > 50000) db.friendRequests = db.friendRequests.slice(-25000);
+  if (db.friendships.length > 50000) db.friendships = db.friendships.slice(-25000);
+  if (db.blocks.length > 50000) db.blocks = db.blocks.slice(-25000);
+  if (db.reports.length > 50000) db.reports = db.reports.slice(-25000);
 }
 function recordAnalytics(event, meta = {}){
   const row = {
@@ -1204,10 +1329,30 @@ function recordEconomyChange(u, kind, amount, refId, metadata, syncRemote = true
   });
   return row;
 }
+function sanitizePlainText(value, maxLength){
+  return String(value == null ? '' : value).replace(/<[^>]*>/g, '').replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, maxLength);
+}
+function publicPresence(uid, user, viewerUid){
+  const visibility = user && user.presenceVisibility || 'everyone';
+  if (viewerUid && viewerUid !== uid){
+    if (visibility === 'nobody') return 'offline';
+    if (visibility === 'friends' && !socialFriendship(viewerUid, uid)) return 'offline';
+  } else if (!viewerUid && visibility !== 'everyone') return 'offline';
+  const preference = user && user.presencePreference || 'joinable';
+  if (preference === 'invisible') return 'offline';
+  const active = [...sessions].some(session => session.uid === uid && session.alive && Date.now() - session.lastSeen < HEARTBEAT_TIMEOUT_MS);
+  if (!active) return 'offline';
+  const playing = [...rooms.values()].some(room => room.started && [...room.clients.keys()].some(session => session.uid === uid));
+  if (playing) return 'playing';
+  return preference;
+}
 function leaderboardPayload(){
   const onlineUids = new Set();
   const now = Date.now();
-  for (const s of sessions) if (s.uid && s.alive && now - s.lastSeen < HEARTBEAT_TIMEOUT_MS) onlineUids.add(s.uid);
+  for (const s of sessions){
+    const user = s.uid && db.users[s.uid];
+    if (s.uid && s.alive && now - s.lastSeen < HEARTBEAT_TIMEOUT_MS && (!user || user.presencePreference !== 'invisible')) onlineUids.add(s.uid);
+  }
   const list = Object.keys(db.users).filter(uid => !db.users[uid].ephemeral)
     .map(uid => {
       const u = db.users[uid];
@@ -1216,6 +1361,7 @@ function leaderboardPayload(){
         background: u.background || 0, frame: u.frame || 0, effect: u.effect || 0,
         coins: u.coins || 0, xp: u.xp || 0, level: u.level || 1, streak: u.streak || 0, bestStreak: u.bestStreak || 0, played: u.played || {}, total: u.total || 0, wins: u.wins || {}, totalWins: u.totalWins || 0, lang: u.lang || 'zh-CN', online: onlineUids.has(uid),
         achievements: u.achievements || [], nameFx: u.nameFx || 0,
+        signature:u.signature || '', countryRegion:u.countryRegion || '', genderTag:u.genderTag || 'hidden', presence:publicPresence(uid, u),
       };
     })
     .sort((a, b) => (b.coins - a.coins) || (b.total - a.total) || String(a.name).localeCompare(String(b.name)))
@@ -1226,15 +1372,19 @@ function broadcastLeaderboard(){
   const payload = leaderboardPayload();
   for (const s of sessions) s.sendText(JSON.stringify({ type: 'leaderboard', payload }));
 }
-function lobbyPayload(){
+function lobbyPayload(viewerUid){
   const list = [];
   for (const r of rooms.values()){
     if ([...r.clients.keys()].some(c => !c.alive || Date.now() - c.lastSeen >= HEARTBEAT_TIMEOUT_MS)) continue;
+    if (normalizeRoomVisibility(r.visibility) !== 'public') continue;
+    const size = activeSeatCount(r);
     const joinLimit = r.game && GAME_MAX[r.game] ? Math.min(r.capacity, GAME_MAX[r.game]) : r.capacity;
-    const joinable = !r.started && r.clients.size < joinLimit;
-    const spectatable = !!r.started && (r.spectators ? r.spectators.size : 0) < (r.maxSpectators || 0);
+    const joinable = !r.started && size < joinLimit && !!firstEmptySeat(r);
+    const spectatable = !!r.allowSpectators && (r.spectators ? r.spectators.size : 0) < (r.maxSpectators || 20);
     if (!joinable && !spectatable) continue;
     const hu = r.host.uid ? db.users[r.host.uid] : null;
+    if (hu && hu.presencePreference === 'invisible') continue;
+    if (viewerUid && [...r.clients.keys()].some(c => c.uid && c.uid !== viewerUid && !socialAllowedBetween(viewerUid, c.uid))) continue;
     list.push({
       room: r.id,
       hostUid: r.host.uid || null,
@@ -1242,7 +1392,9 @@ function lobbyPayload(){
       hostAvatar: hu ? hu.avatar : 0,
       hostLang: hu ? (hu.lang || 'zh-CN') : 'zh-CN',
       capacity: r.capacity,
-      size: r.clients.size,
+      size,
+      humanCount:humanRoomSeats(r).length,
+      aiCount:aiRoomSeats(r).length,
       game: r.game || null,
       started: !!r.started,
       joinable,
@@ -1250,20 +1402,29 @@ function lobbyPayload(){
       spectatorCount: r.spectators ? r.spectators.size : 0,
       maxSpectators: r.maxSpectators || 0,
       matchId:r.matchId || null,
+      status:r.started ? 'playing' : 'waiting',
+      visibility:'public', allowSpectators:!!r.allowSpectators, canJoin:joinable, canSpectate:spectatable,
+      seats:ensureRoomSeats(r).map(publicSeat),
     });
   }
   return list;
 }
 function broadcastLobby(){
-  const text = JSON.stringify({ type: 'lobby', payload: lobbyPayload() });
-  for (const s of sessions) s.sendText(text);
+  for (const s of sessions) s.sendText(JSON.stringify({ type: 'lobby', payload: lobbyPayload(s.uid) }));
 }
 function roomPayload(r){
   const now = Date.now();
+  ensureRoomSeats(r);
   const players = [...r.clients.entries()]
     .map(([c, p]) => ({ uid: c.uid || null, player: p, online: c.alive !== false && now - c.lastSeen < HEARTBEAT_TIMEOUT_MS }))
     .sort((a, b) => a.player - b.player);
-  return { room: r.id, game: r.game || null, capacity: r.capacity, players, size: r.clients.size, onlineSize: players.filter(p => p.online).length, started: !!r.started, settled:!!r.settled, matchId: r.matchId || null, gameplay: gameplayMetadata(r), spectatorCount:r.spectators ? r.spectators.size : 0, maxSpectators:r.maxSpectators || 0 };
+  return {
+    room:r.id, game:r.game || null, capacity:r.capacity, players, seats:r.seats.map(publicSeat),
+    size:activeSeatCount(r), activePlayerCount:activeSeatCount(r), humanCount:humanRoomSeats(r).length, aiCount:aiRoomSeats(r).length,
+    onlineSize:players.filter(p => p.online).length, spectatorCount:r.spectators ? r.spectators.size : 0, maxSpectators:r.maxSpectators || 20,
+    started:!!r.started, settled:!!r.settled, matchId:r.matchId || null, visibility:normalizeRoomVisibility(r.visibility),
+    allowSpectators:!!r.allowSpectators, canStart:roomCanStart(r), host:roomHostPayload(r), gameplay:gameplayMetadata(r),
+  };
 }
 function tetrisPresentationPayload(r){
   if(!(r&&r.tetrisPresentation instanceof Map))return[];
@@ -1289,7 +1450,8 @@ function cleanupEphemeralUser(uid){
   const u = uid && db.users[uid];
   if (!u || !u.ephemeral) return;
   const active = [...sessions].some(s => s.uid === uid && s.alive);
-  const reserved = [...rooms.values()].some(r => [...r.clients.keys()].some(s => s.uid === uid));
+  const reserved = [...rooms.values()].some(r => [...r.clients.keys()].some(s => s.uid === uid) ||
+    [...(r.spectators instanceof Map ? r.spectators.keys() : r.spectators instanceof Set ? r.spectators : [])].some(s => s.uid === uid));
   if (active || reserved) return;
   delete db.users[uid];
   db.history = db.history.filter(h => h.uid !== uid);
@@ -1327,15 +1489,10 @@ function resetRoomMatch(r){
   r.tetrisRuleAuthority = null;
   r.xiangqiRuleAuthority = null;
   r.monopolyRuleAuthority = null;
+  for (const seat of humanRoomSeats(r)) seat.ready = !!seat.host;
 }
 function compactRoomPlayers(r){
-  if (!r || !r.clients) return;
-  const entries = [...r.clients.entries()].sort((a, b) => a[1] - b[1]);
-  entries.forEach(([session, oldPlayer], player) => {
-    r.clients.set(session, player);
-    session.player = player;
-    if (oldPlayer !== player) session.sendText(JSON.stringify({ type: 'player_reassigned', payload: { player } }));
-  });
+  compactRoomSeats(r);
 }
 function allRoomClientsOnline(r){
   const now = Date.now();
@@ -1351,6 +1508,7 @@ function expireDetachedSession(r, oldSession){
   const wasHost = r.host === oldSession;
   if (r.started && !r.settled) settleRoomForfeit(r, oldSession, 'afk');
   r.clients.delete(oldSession);
+  if (Number.isInteger(player) && ensureRoomSeats(r)[player]) r.seats[player] = emptySeat(player);
   oldSession.room = null;
   oldSession.player = null;
   oldSession.resumeUntil = 0;
@@ -1374,6 +1532,7 @@ function expireDetachedSession(r, oldSession){
   }
   resetRoomMatch(r);
   compactRoomPlayers(r);
+  updateAIControllers(r);
   broadcast(r, { type: 'reconnect_expired', payload: { uid, player, hostPlayer: r.clients.get(r.host), hostChanged } });
   if (hostChanged) broadcast(r, { type: 'host_changed', payload: { uid: r.host.uid, player: r.clients.get(r.host) } });
   broadcastRoom(r);
@@ -1394,6 +1553,8 @@ function detachForReconnect(session){
   }
   session.reconnectTimer = setTimeout(() => expireDetachedSession(r, session), RECONNECT_GRACE_MS);
   if (session.reconnectTimer && session.reconnectTimer.unref) session.reconnectTimer.unref();
+  const seat = seatForSession(r, session);
+  if (seat) seat.online = false;
   broadcast(r, { type: 'peer_status', payload: { uid: session.uid, player: session.player, online: false, resumeUntil: session.resumeUntil } }, session);
   broadcastRoom(r);
   return true;
@@ -1413,6 +1574,8 @@ function tryResumeSession(session){
       if (r.host === oldSession) r.host = session;
       session.room = r.id;
       session.player = player;
+      const seat = ensureRoomSeats(r)[player];
+      if (seat){ seat.online = true; seat.userId = session.uid; seat.host = r.host === session; }
       session.resumeUntil = 0;
       const hasAuthoritySnapshot = !!(r.tankAuthority || r.tetrisAuthority || r.tetrisRuleAuthority || r.xiangqiRuleAuthority || r.monopolyRuleAuthority);
       const replayUnavailable = !!(r.started && r.moveLogTruncated && !hasAuthoritySnapshot);
@@ -1451,9 +1614,8 @@ function tryResumeSession(session){
   return false;
 }
 function maybeAutoStart(r){
-  if (r.game && !r.started && r.clients.size === r.capacity && allRoomClientsOnline(r)){
-    startRoomMatch(r);
-  }
+  // Seat v1 使用显式 READY + 房主开始；不再因房间填满而突然自动开局。
+  return roomCanStart(r);
 }
 function genCode(){
   const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
@@ -1547,23 +1709,30 @@ function authenticateHttp(req){
 
 const SHOP_PRICES = {
   // 入门装扮从 10💵 起，避免一场首胜立刻清空商城消耗；价格仅由服务端决定。
-  avatars: { 30:10,31:12,32:12,33:15,34:18,35:18,36:10,37:10,38:12,39:12,40:15,41:18,42:12,43:12,44:15,45:15,46:18,47:18,48:12,49:15,50:15,51:18,52:22,53:22,54:12,55:30 },
+  avatars: Object.fromEntries([
+    [30,10],[31,12],[32,12],[33,15],[34,18],[35,18],[36,10],[37,10],[38,12],[39,12],[40,15],[41,18],[42,12],[43,12],[44,15],[45,15],[46,18],[47,18],[48,12],[49,15],[50,15],[51,18],[52,22],[53,22],[54,12],[55,30],
+    ...Array.from({length:6}, (_, theme) => Array.from({length:6}, (_, offset) => [100 + theme * 8 + offset + 2, [10,12,14,16,18,18][offset]])).flat(),
+  ]),
   frames: { 1:10,2:12,3:16,4:20,5:24,6:28,7:32,8:36 },
   effects: { 1:10,2:12,3:12,4:20 },
-  backgrounds: { 1:10,2:10,3:10,4:12,5:12,6:15,7:18,8:18,9:22,10:20 },
+  backgrounds: { 7:18,8:18,9:22,10:20,20:24,21:32,22:24,23:32,24:24,25:32,26:24,27:32,28:24,29:32,30:24,31:32 },
 };
 function validOwnedId(kind, id){
   if (!Number.isInteger(id)) return false;
   if (kind === 'avatars' && id >= 0 && id < 30) return true;
+  if (kind === 'avatars' && id >= 100 && id <= 147 && (id - 100) % 8 < 2) return true;
+  if (kind === 'backgrounds' && id >= 0 && id <= 6) return true;
   if (id === 0 && kind !== 'avatars') return true;
   return !!(SHOP_PRICES[kind] && Object.prototype.hasOwnProperty.call(SHOP_PRICES[kind], id));
 }
 function ownsItem(u, kind, id){
   if (kind === 'avatars' && id >= 0 && id < 30) return true;
+  if (kind === 'avatars' && id >= 100 && id <= 147 && (id - 100) % 8 < 2) return true;
+  if (kind === 'backgrounds' && id >= 0 && id <= 6) return true;
   if (id === 0 && kind !== 'avatars') return true;
   return !!(u && u.owned && Array.isArray(u.owned[kind]) && u.owned[kind].includes(id));
 }
-function profileObj(u){
+function profileObj(u, viewerUid){
   normalizeUserRewardState(u);
   return {
     uid: u.uid, name: u.name, avatar: u.avatar,
@@ -1577,20 +1746,191 @@ function profileObj(u){
     dailyAICurrencyKey: u.dailyAICurrencyKey || '',
     dailyAICurrencyEarned: u.dailyAICurrencyEarned || 0,
     xpProgress: levelProgress(u.xp || 0),
+    signature:u.signature || '', countryRegion:u.countryRegion || '', genderTag:u.genderTag || 'hidden', showcase:u.showcase || null,
+    presencePreference:u.presencePreference || 'joinable', presenceVisibility:u.presenceVisibility || 'everyone', presence:publicPresence(u.uid, u, viewerUid || u.uid),
   };
 }
-function publicProfileObj(u){
-  const p = profileObj(u);
+function publicProfileObj(u, viewerUid){
+  const p = profileObj(u, viewerUid);
   delete p.owned;
   delete p.playmates;
   delete p.daily;
   delete p.dailyFirstWinDate;
   delete p.dailyAICurrencyKey;
   delete p.dailyAICurrencyEarned;
+  delete p.presencePreference;
+  delete p.presenceVisibility;
   return p;
 }
+
+/* ---------------- Social Graph v1（好友 / 屏蔽 / 举报） ---------------- */
+const SOCIAL_REQUEST_MAX_PER_DAY = 100;
+const SOCIAL_REPORT_MAX_PER_DAY = 30;
+const SOCIAL_REASONS = new Set(['harassment', 'inappropriate_name', 'cheating', 'spam', 'other']);
+function socialId(prefix){ return prefix + '_' + crypto.randomBytes(10).toString('base64url'); }
+function socialPair(aUid, bUid){
+  const pair = [String(aUid || ''), String(bUid || '')].sort();
+  return { aUid: pair[0], bUid: pair[1], id: pair[0] + '|' + pair[1] };
+}
+function socialBlockedBetween(aUid, bUid){
+  return (db.blocks || []).some(row => row && ((row.blockerUid === aUid && row.blockedUid === bUid) || (row.blockerUid === bUid && row.blockedUid === aUid)));
+}
+function socialFriendship(aUid, bUid){
+  const pair = socialPair(aUid, bUid);
+  return (db.friendships || []).find(row => row && row.id === pair.id) || null;
+}
+function socialPendingRequest(fromUid, toUid){
+  return (db.friendRequests || []).find(row => row && row.status === 'pending' && row.fromUid === fromUid && row.toUid === toUid) || null;
+}
+function socialRelationship(viewerUid, targetUid){
+  if (!viewerUid || !targetUid || viewerUid === targetUid) return 'self';
+  if (socialBlockedBetween(viewerUid, targetUid)) return 'blocked';
+  if (socialFriendship(viewerUid, targetUid)) return 'friends';
+  if (socialPendingRequest(viewerUid, targetUid)) return 'outgoing';
+  if (socialPendingRequest(targetUid, viewerUid)) return 'incoming';
+  return 'none';
+}
+function socialPublicEntry(viewerUid, targetUid){
+  const target = db.users[targetUid];
+  if (!target || target.ephemeral) return null;
+  const profile = publicProfileObj(target, viewerUid);
+  return { ...profile, relationship: socialRelationship(viewerUid, targetUid), blocked: socialBlockedBetween(viewerUid, targetUid) };
+}
+function socialState(uid){
+  const friends = (db.friendships || []).filter(row => row && (row.aUid === uid || row.bUid === uid))
+    .map(row => socialPublicEntry(uid, row.aUid === uid ? row.bUid : row.aUid)).filter(Boolean);
+  const incoming = (db.friendRequests || []).filter(row => row && row.status === 'pending' && row.toUid === uid)
+    .map(row => ({ id: row.id, createdAt: row.createdAt, user: socialPublicEntry(uid, row.fromUid) })).filter(row => row.user);
+  const outgoing = (db.friendRequests || []).filter(row => row && row.status === 'pending' && row.fromUid === uid)
+    .map(row => ({ id: row.id, createdAt: row.createdAt, user: socialPublicEntry(uid, row.toUid) })).filter(row => row.user);
+  const blocked = (db.blocks || []).filter(row => row && row.blockerUid === uid)
+    .map(row => ({ uid: row.blockedUid, name: row.targetSnapshot && row.targetSnapshot.name || (db.users[row.blockedUid] && db.users[row.blockedUid].name) || '玩家', createdAt: row.createdAt }));
+  return { version:'1.0', friends, incoming, outgoing, blocked,
+    counts:{ friends:friends.length, incoming:incoming.length, outgoing:outgoing.length, blocked:blocked.length } };
+}
+function socialSessions(uid, fn){
+  for (const session of sessions) if (session.uid === uid && session.alive) fn(session);
+}
+function sendSocialState(uid){
+  const payload = socialState(uid);
+  socialSessions(uid, session => session.sendText(JSON.stringify({ type:'social_state', payload })));
+}
+function socialOk(session, msg, extra){
+  session.sendText(JSON.stringify({ type:'social_ok', msg:msg || '操作成功', ...(extra || {}) }));
+  if (session.uid) sendSocialState(session.uid);
+}
+function socialError(session, msg, reason){
+  session.sendText(JSON.stringify({ type:'social_error', msg:msg || '社交操作失败', payload:{ reason:reason || 'invalid_request' } }));
+}
+function socialTarget(fromUid, targetUid){
+  const target = String(targetUid || '').trim();
+  if (!target || target === fromUid || !db.users[target] || db.users[target].ephemeral) return null;
+  return db.users[target];
+}
+function socialDailyCount(rows, uid, field){
+  const cutoff = Date.now() - 86400000;
+  return rows.filter(row => row && row[field] === uid && Number(row.createdAt || 0) >= cutoff).length;
+}
+function syncSocialRows(kind, rows){
+  if (!useSupabase || !Array.isArray(rows) || !rows.length) return;
+  const table = { friendRequests:'friend_requests', friendships:'friendships', blocks:'blocks', reports:'reports' }[kind];
+  if (!table) return;
+  const mapped = rows.map(row => kind === 'friendRequests' ? {
+    id:row.id, from_uid:row.fromUid, to_uid:row.toUid, status:row.status, created_at:isoTimestamp(row.createdAt), updated_at:isoTimestamp(row.updatedAt || row.createdAt),
+  } : kind === 'friendships' ? {
+    id:row.id, a_uid:row.aUid, b_uid:row.bUid, created_at:isoTimestamp(row.createdAt),
+  } : kind === 'blocks' ? {
+    id:row.id, blocker_uid:row.blockerUid, blocked_uid:row.blockedUid, target_snapshot:row.targetSnapshot || {}, created_at:isoTimestamp(row.createdAt),
+  } : {
+    id:row.id, reporter_uid:row.reporterUid, target_uid:row.targetUid, reason:row.reason, context_type:row.contextType || 'profile', context_id:row.contextId || '', match_id:row.matchId || '', recent_event_ids:row.recentEventIds || [], target_snapshot:row.targetSnapshot || {}, status:row.status || 'open', created_at:isoTimestamp(row.createdAt),
+  });
+  sbFetch(table + '?on_conflict=id', { method:'POST', headers:{ Prefer:'resolution=merge-duplicates' }, body:JSON.stringify(mapped) })
+    .catch(error => console.error('Supabase 社交关系同步失败:', error.message));
+}
+function deleteSocialRemote(table, id){
+  if (!useSupabase || !table || !id) return;
+  sbFetch(table + '?id=eq.' + encodeURIComponent(id), { method:'DELETE' }).catch(error => console.error('Supabase 社交关系删除失败:', error.message));
+}
+function socialSendRequest(session, targetUid){
+  const target = socialTarget(session.uid, targetUid);
+  if (!target) return socialError(session, '目标玩家不存在', 'target_not_found');
+  if (socialBlockedBetween(session.uid, target.uid)) return socialError(session, '该玩家已被屏蔽，不能建立关系', 'blocked');
+  if (socialFriendship(session.uid, target.uid)) return socialOk(session, '你们已经是好友', { action:'already_friends' });
+  if (socialDailyCount(db.friendRequests || [], session.uid, 'fromUid') >= SOCIAL_REQUEST_MAX_PER_DAY) return socialError(session, '今日好友请求已达上限', 'rate_limited');
+  const existing = socialPendingRequest(session.uid, target.uid);
+  if (existing) return socialOk(session, '好友请求已发送', { action:'idempotent', requestId:existing.id });
+  if (socialPendingRequest(target.uid, session.uid)) return socialError(session, '对方已向你发送好友请求，请在请求列表中接受', 'incoming_exists');
+  const row = { id:socialId('fr'), fromUid:session.uid, toUid:target.uid, status:'pending', createdAt:Date.now(), updatedAt:Date.now() };
+  db.friendRequests.push(row); syncSocialRows('friendRequests', [row]); saveDB();
+  socialOk(session, '好友请求已发送', { action:'sent', requestId:row.id }); sendSocialState(target.uid);
+}
+function socialFriendRequestAction(session, payload){
+  const action = String(payload && payload.action || '');
+  const requestId = String(payload && payload.requestId || '');
+  const row = db.friendRequests.find(item => item && item.id === requestId && item.status === 'pending');
+  if (!row) return socialError(session, '好友请求不存在或已处理', 'request_not_found');
+  const isIncoming = row.toUid === session.uid;
+  const isOutgoing = row.fromUid === session.uid;
+  if (action === 'accept' && isIncoming){
+    if (socialBlockedBetween(row.fromUid, row.toUid)) return socialError(session, '该请求已被屏蔽', 'blocked');
+    row.status = 'accepted'; row.updatedAt = Date.now();
+    const pair = socialPair(row.fromUid, row.toUid);
+    if (!socialFriendship(row.fromUid, row.toUid)) db.friendships.push({ id:pair.id, ...pair, createdAt:Date.now() });
+    saveDB(); syncSocialRows('friendRequests', [row]); syncSocialRows('friendships', db.friendships.filter(item => item.id === pair.id));
+    socialOk(session, '已添加好友', { action:'accepted' }); sendSocialState(row.fromUid); return;
+  }
+  if (action === 'decline' && isIncoming){ row.status='declined'; row.updatedAt=Date.now(); saveDB(); syncSocialRows('friendRequests',[row]); socialOk(session,'已忽略好友请求',{action:'declined'}); sendSocialState(row.fromUid); return; }
+  if (action === 'cancel' && isOutgoing){ row.status='cancelled'; row.updatedAt=Date.now(); saveDB(); syncSocialRows('friendRequests',[row]); socialOk(session,'已取消好友请求',{action:'cancelled'}); sendSocialState(row.toUid); return; }
+  socialError(session, '无权处理该好友请求', 'forbidden');
+}
+function socialRemoveFriend(session, targetUid){
+  const target = socialTarget(session.uid, targetUid);
+  if (!target) return socialError(session, '目标玩家不存在', 'target_not_found');
+  const pair = socialPair(session.uid, target.uid);
+  const before = db.friendships.length;
+  db.friendships = db.friendships.filter(row => row.id !== pair.id);
+  if (db.friendships.length === before) return socialError(session, '你们还不是好友', 'not_friends');
+  saveDB(); deleteSocialRemote('friendships', pair.id); socialOk(session, '已移除好友', { action:'removed' }); sendSocialState(target.uid);
+}
+function socialBlock(session, targetUid){
+  const target = socialTarget(session.uid, targetUid);
+  if (!target) return socialError(session, '目标玩家不存在', 'target_not_found');
+  if (db.blocks.some(row => row.blockerUid === session.uid && row.blockedUid === target.uid)) return socialOk(session, '该玩家已被屏蔽', { action:'idempotent' });
+  const pair = socialPair(session.uid, target.uid);
+  db.friendships = db.friendships.filter(row => row.id !== pair.id);
+  const removedRequests = db.friendRequests.filter(row => (row.fromUid === session.uid && row.toUid === target.uid) || (row.fromUid === target.uid && row.toUid === session.uid));
+  db.friendRequests = db.friendRequests.filter(row => !removedRequests.includes(row));
+  const row = { id:socialId('blk'), blockerUid:session.uid, blockedUid:target.uid, targetSnapshot:{ uid:target.uid, name:target.name, avatar:target.avatar }, createdAt:Date.now() };
+  db.blocks.push(row); syncSocialRows('blocks',[row]); deleteSocialRemote('friendships',pair.id); removedRequests.forEach(request => deleteSocialRemote('friend_requests',request.id)); saveDB();
+  socialOk(session, '已屏蔽该玩家', { action:'blocked' }); sendSocialState(target.uid);
+}
+function socialUnblock(session, targetUid){
+  const target = String(targetUid || '').trim();
+  const removed = db.blocks.filter(row => row.blockerUid === session.uid && row.blockedUid === target);
+  db.blocks = db.blocks.filter(row => !(row.blockerUid === session.uid && row.blockedUid === target));
+  if (!removed.length) return socialError(session, '该玩家不在屏蔽列表', 'not_blocked');
+  saveDB(); removed.forEach(row => deleteSocialRemote('blocks',row.id)); socialOk(session, '已取消屏蔽', { action:'unblocked' });
+}
+function socialReport(session, payload){
+  const target = socialTarget(session.uid, payload && payload.targetUid);
+  if (!target) return socialError(session, '目标玩家不存在', 'target_not_found');
+  const reason = String(payload && payload.reason || '');
+  if (!SOCIAL_REASONS.has(reason)) return socialError(session, '举报原因无效', 'invalid_reason');
+  if (socialDailyCount(db.reports || [], session.uid, 'reporterUid') >= SOCIAL_REPORT_MAX_PER_DAY) return socialError(session, '今日举报次数已达上限', 'rate_limited');
+  const contextType = sanitizePlainText(payload && payload.contextType, 24) || 'profile';
+  const contextId = sanitizePlainText(payload && payload.contextId, 80);
+  const recentEventIds = Array.isArray(payload && payload.recentEventIds) ? payload.recentEventIds.map(v => sanitizePlainText(v,80)).filter(Boolean).slice(0,20) : [];
+  const duplicate = db.reports.find(row => row && row.reporterUid === session.uid && row.targetUid === target.uid && row.reason === reason && row.contextId === contextId && Date.now() - Number(row.createdAt || 0) < 600000);
+  if (duplicate) return socialOk(session, '举报已记录', { action:'idempotent', reportId:duplicate.id });
+  const row = { id:socialId('rpt'), reporterUid:session.uid, targetUid:target.uid, reason, contextType, contextId, matchId:sanitizePlainText(payload && payload.matchId,80), recentEventIds, targetSnapshot:{ uid:target.uid, name:target.name, avatar:target.avatar, signature:sanitizePlainText(target.signature,80) }, status:'open', createdAt:Date.now() };
+  db.reports.push(row); syncSocialRows('reports',[row]); saveDB();
+  recordAnalytics('social_report_created', { uid:session.uid, metadata:{ reportId:row.id, targetUid:target.uid, reason, contextType } });
+  socialOk(session, '举报已记录，我们会核查相关信息', { action:'reported', reportId:row.id });
+}
+function socialAllowedBetween(aUid, bUid){ return !!aUid && !!bUid && aUid !== bUid && !socialBlockedBetween(aUid, bUid); }
+
 function normalizeOwned(o){
-  const base = { avatars: Array.from({ length: 30 }, (_, i) => i), frames: [0], effects: [0], backgrounds: [0] };
+  const base = { avatars: Array.from({ length: 30 }, (_, i) => i).concat([100,101,108,109,116,117,124,125,132,133,140,141]), frames: [0], effects: [0], backgrounds: [0] };
   if (o && typeof o === 'object'){
     for (const k of Object.keys(base)){
       if (Array.isArray(o[k])){
@@ -1661,6 +2001,27 @@ function updateEditableProfile(u, payload){
   if (Number.isInteger(payload.effect) && validOwnedId('effects', payload.effect) && ownsItem(u, 'effects', payload.effect)) u.effect = payload.effect;
   if (Number.isInteger(payload.nameFx) && payload.nameFx >= 0 && payload.nameFx <= 4) u.nameFx = payload.nameFx;
   if (payload.gameCosmetics !== undefined) u.gameCosmetics = normalizeGameCosmetics(payload.gameCosmetics);
+  if (payload.signature !== undefined) u.signature = sanitizePlainText(payload.signature, 80);
+  if (payload.countryRegion !== undefined){
+    const region = String(payload.countryRegion || '').trim().toUpperCase();
+    if (!region || /^[A-Z]{2}$/.test(region)) u.countryRegion = region;
+  }
+  if (payload.genderTag !== undefined){
+    const gender = sanitizePlainText(payload.genderTag, 24);
+    if (['hidden','male','female','nonbinary'].includes(gender) || /^custom:[^<>]{1,16}$/.test(gender)) u.genderTag = gender;
+  }
+  if (['joinable','online','busy','invisible'].includes(payload.presencePreference)) u.presencePreference = payload.presencePreference;
+  if (['everyone','friends','nobody'].includes(payload.presenceVisibility)) u.presenceVisibility = payload.presenceVisibility;
+  if (payload.showcase === null) u.showcase = null;
+  else if (payload.showcase && typeof payload.showcase === 'object'){
+    const type = String(payload.showcase.type || '');
+    const value = sanitizePlainText(payload.showcase.value, 48);
+    const valid = (type === 'game' && VALID_GAMES.includes(value)) ||
+      (type === 'achievement' && Array.isArray(u.achievements) && u.achievements.includes(value)) ||
+      (type === 'collection' && /^(pixel|anime|landscape|animal|neon|technology)_origins$/.test(value)) ||
+      (type === 'record' && ['totalWins','bestStreak','total','level'].includes(value));
+    if (valid) u.showcase = { type, value };
+  }
 }
 function addServerAchievement(u, id){
   if (!Array.isArray(u.achievements)) u.achievements = [];
@@ -1673,7 +2034,7 @@ function updateServerAchievements(u){
   if ((u.bestStreak || 0) >= 3) addServerAchievement(u, 'streak_3');
   if ((u.bestStreak || 0) >= 5) addServerAchievement(u, 'streak_5');
   if ((u.level || 1) >= 5) addServerAchievement(u, 'level_5');
-  if (Object.keys(u.played || {}).filter(k => u.played[k] > 0).length >= 5) addServerAchievement(u, 'all_games');
+  if (VALID_GAMES.every(game => Number((u.played || {})[game] || 0) > 0)) addServerAchievement(u, 'all_games');
   if (Object.keys(u.playmates || {}).length >= 3) addServerAchievement(u, 'social');
 }
 function updateServerDaily(u, won){
@@ -1727,9 +2088,10 @@ function recordRoomAction(r, player, payload){
 }
 function roomRewardEligibility(r, now){
   const progress = roomProgress(r);
+  const mode = humanRoomSeats(r).length >= 2 ? 'online' : 'ai';
   return evaluateEligibility({
     gameId: r.game,
-    mode: 'online',
+    mode,
     matchId: r.matchId,
     resultId: r.matchId + ':room',
     identitiesValid: [...r.clients.keys()].every(session => !!(session.uid && db.users[session.uid])),
@@ -2055,7 +2417,7 @@ function gameplayPresentation(r){
   return{protocol:'game-cosmetic-presentation-v1',cosmeticSchemaVersion:1,gameId:r.game,cosmetic,players};
 }
 function settleAuthoritativeRoom(r, order, cause){
-  if (!r || r.settled || !Array.isArray(order) || order.length !== r.clients.size) return;
+  if (!r || r.settled || !Array.isArray(order) || order.length !== activeSeatCount(r)) return;
   const results = authoritativeResults(order);
   settleRoomResult(r, results, { cause:cause || 'authoritative_gameplay' });
 }
@@ -2064,7 +2426,7 @@ function startRoomAuthorities(r){
   if (!r || !r.started || !r.matchId) return;
   if (r.game === 'tank'){
     r.tankAuthority = new TankAuthority({
-      matchId:r.matchId, playerCount:r.clients.size, startedAt:r.startedAt,
+      matchId:r.matchId, playerCount:activeSeatCount(r), startedAt:r.startedAt,
       durationMs:Math.max(10000, Number(process.env.TANK_MATCH_DURATION_MS) || 180000),
     });
     r.gameplayTimer = setInterval(() => {
@@ -2082,14 +2444,14 @@ function startRoomAuthorities(r){
     const startAt = Date.now() + 3000;
     const matchEndAt=startAt+Math.max(15000,Number(process.env.TETRIS_MATCH_DURATION_MS)||300000);
     if(roomSupports(r,PROTOCOL_VERSIONS.tetrisRules)){
-      r.tetrisRuleAuthority=new TetrisRuleAuthority({matchId:r.matchId,playerCount:r.clients.size,startAt,matchEndAt,matchSeed:r.matchId});
+      r.tetrisRuleAuthority=new TetrisRuleAuthority({matchId:r.matchId,playerCount:activeSeatCount(r),startAt,matchEndAt,matchSeed:r.matchId});
       r.gameplayTimer=setInterval(()=>{
         if(!r.started||!r.tetrisRuleAuthority)return;const advanced=r.tetrisRuleAuthority.advance(Date.now());
         if(advanced.changed){incrementGameplayMetric('tetrisSnapshots');broadcast(r,advanced.stateEvent||r.tetrisRuleAuthority.stateEvent());}
         if(advanced.result&&!r.gameplayResultSent){r.gameplayResultSent=true;broadcast(r,advanced.result);settleAuthoritativeRoom(r,advanced.result.order,'tetris_rule_authority');stopRoomGameplayTimer(r);}
       },50);
     }else{
-      r.tetrisAuthority = new TetrisBattleAuthority({matchId:r.matchId,playerCount:r.clients.size,startAt,matchEndAt,matchSeed:r.matchId});
+      r.tetrisAuthority = new TetrisBattleAuthority({matchId:r.matchId,playerCount:activeSeatCount(r),startAt,matchEndAt,matchSeed:r.matchId});
       r.gameplayTimer=setInterval(()=>{if(!r.started||!r.tetrisAuthority)return;const due=r.tetrisAuthority.advance(Date.now());due.forEach(item=>broadcast(r,{type:'tetris_garbage_due',payload:{matchId:r.matchId,revision:r.tetrisAuthority.revision,...item}}));if(r.tetrisAuthority.finished&&!r.gameplayResultSent){r.gameplayResultSent=true;const result=r.tetrisAuthority.result();broadcast(r,result);settleAuthoritativeRoom(r,result.order,'tetris_authority');stopRoomGameplayTimer(r);}},100);
     }
   } else if (r.game === 'xiangqi'){
@@ -2103,10 +2465,10 @@ function startRoomAuthorities(r){
     }
   } else if (r.game === 'monopoly'){
     if(roomSupports(r,PROTOCOL_VERSIONS.monopolyRules)){
-      r.monopolyRuleAuthority=new MonopolyRuleAuthority({matchId:r.matchId,playerCount:r.clients.size,matchSeed:r.matchId,auctionDurationMs:Math.max(1000,Number(process.env.MONOPOLY_AUCTION_MS)||5000)});
+      r.monopolyRuleAuthority=new MonopolyRuleAuthority({matchId:r.matchId,playerCount:activeSeatCount(r),matchSeed:r.matchId,auctionDurationMs:Math.max(1000,Number(process.env.MONOPOLY_AUCTION_MS)||5000)});
       r.gameplayTimer=setInterval(()=>{if(!r.started||!r.monopolyRuleAuthority)return;const advanced=r.monopolyRuleAuthority.advance(Date.now());if(advanced.event)broadcast(r,advanced.event);if(advanced.result&&!r.gameplayResultSent){r.gameplayResultSent=true;broadcast(r,advanced.result);settleAuthoritativeRoom(r,advanced.result.order,'monopoly_rule_authority');stopRoomGameplayTimer(r);}},100);
     }else{
-      r.monopolyAuction=new MonopolyAuctionAuthority({matchId:r.matchId,playerCount:r.clients.size,durationMs:Math.max(1000,Number(process.env.MONOPOLY_AUCTION_MS)||5000)});r.monopolyTurn=0;
+      r.monopolyAuction=new MonopolyAuctionAuthority({matchId:r.matchId,playerCount:activeSeatCount(r),durationMs:Math.max(1000,Number(process.env.MONOPOLY_AUCTION_MS)||5000)});r.monopolyTurn=0;
       r.gameplayTimer=setInterval(()=>{if(!r.started||!r.monopolyAuction)return;const closed=r.monopolyAuction.close(Date.now());if(closed)broadcast(r,closed);},100);
     }
   }
@@ -2114,6 +2476,7 @@ function startRoomAuthorities(r){
 }
 function startRoomMatch(r){
   compactRoomPlayers(r);
+  const playerCount = activeSeatCount(r);
   r.started = true;
   r.matchId = crypto.randomBytes(12).toString('base64url');
   r.resultClaims = new Map();
@@ -2126,6 +2489,7 @@ function startRoomMatch(r){
   r.tankInputSeq = {};
   r.tankAuthoritySeq = 0;
   r.tankFinalSent = false;
+  r.aiInputSeq = {};
   r.startedAt = Date.now();
   r.rewardProgress = { startedAt: r.startedAt, lastActionAt: r.startedAt, meaningfulActions: 0, byPlayer: {}, uniqueActions: new Set() };
   r.resultRewards = new Map();
@@ -2139,9 +2503,9 @@ function startRoomMatch(r){
     matchId: r.matchId,
     game: r.game,
     mode: 'online',
-    metadata: { participantCount: r.clients.size },
+    metadata: { participantCount:playerCount, humanCount:humanRoomSeats(r).length, aiCount:aiRoomSeats(r).length },
   });
-  broadcast(r, { type: 'started', game: r.game, size: r.clients.size, players: [...r.clients.values()].sort((a, b) => a - b), matchId: r.matchId, gameplay:gameplayMetadata(r), presentation:gameplayPresentation(r) });
+  broadcast(r, { type:'started', game:r.game, size:playerCount, players:activeRoomSeats(r).map(seat => seat.seatId), seats:ensureRoomSeats(r).map(publicSeat), matchId:r.matchId, gameplay:gameplayMetadata(r), presentation:gameplayPresentation(r) });
   broadcastLobby();
 }
 function roomResultError(r, msg, reason){
@@ -2156,7 +2520,9 @@ function settleRoomResult(r, results, options = {}){
   const globalEligibility = options.eligibility || roomRewardEligibility(r, now);
   const participants = [...r.clients.entries()].map(([session, slot]) => ({ session, slot, user: session.uid && db.users[session.uid] })).filter(x => x.user);
   const participantUids = participants.map(p => p.user.uid);
-  const opponentKey = opponentGroupKey(participantUids);
+  const aiIdentities = aiRoomSeats(r).map(seat => 'ai:' + seat.aiPersona + ':' + seat.aiDifficulty);
+  const settlementMode = participants.length >= 2 ? 'online' : 'ai';
+  const opponentKey = opponentGroupKey(participantUids.concat(aiIdentities));
   const durationMs = Math.max(0, now - Number(progress.startedAt || r.startedAt || now));
   r.resultRewards = r.resultRewards instanceof Map ? r.resultRewards : new Map();
   for (const p of participants){
@@ -2164,7 +2530,7 @@ function settleRoomResult(r, results, options = {}){
     const others = participants.filter(x => x !== p).map(x => x.user);
     let eligibility = { eligible: globalEligibility.eligible === true, blockedReason: globalEligibility.blockedReason || null };
     const forcedReason = options.blockedSlots && options.blockedSlots.get(p.slot);
-    const threshold = eligibilityThreshold(r.game, 'online', rewardThresholdOverrides());
+    const threshold = eligibilityThreshold(r.game, settlementMode, rewardThresholdOverrides());
     if (eligibility.eligible && threshold && (progress.byPlayer[p.slot] || 0) < (threshold.minPlayerActions || 0)){
       eligibility = { eligible: false, blockedReason: 'afk' };
     }
@@ -2172,21 +2538,28 @@ function settleRoomResult(r, results, options = {}){
     if (globalEligibility.eligible){
       for (const other of others) recordServerPlaymate(p.user, other, r.game);
     }
-    const resultMeta = { matchId: r.matchId, resultId: r.matchId + ':' + p.slot, mode: 'online' };
-    const result = options.forceResult || playerResult(results, mine, participants.length);
+    const resultMeta = { matchId:r.matchId, resultId:r.matchId + ':' + p.slot, mode:settlementMode };
+    const result = options.forceResult || playerResult(results, mine, activeSeatCount(r));
     const repeatCount24h = repeatOpponentCount(p.user.uid, opponentKey, now);
+    const humanOrder = participants.slice().sort((a, b) => {
+      const ar = results.find(item => item.slot === a.slot);
+      const br = results.find(item => item.slot === b.slot);
+      return Number(ar && ar.rank || 999) - Number(br && br.rank || 999) || a.slot - b.slot;
+    });
+    const placement = settlementMode === 'ai' ? (result === 'win' ? 1 : 2) : humanOrder.indexOf(p) + 1;
+    const opponentIds = participants.filter(x => x !== p).map(x => x.user.uid).concat(aiIdentities);
     const reward = resolveMatchReward({
       userId: p.user.uid,
       matchId: r.matchId,
       resultId: resultMeta.resultId,
       gameId: r.game,
-      mode: 'online',
-      placement: mine && mine.rank || (result === 'win' ? 1 : participants.length),
+      mode:settlementMode,
+      placement,
       result,
-      participantCount: participants.length,
+      participantCount:settlementMode === 'ai' ? 2 : participants.length,
       durationMs,
       meaningfulActions: progress.meaningfulActions || 0,
-      opponentIds: others.map(user => user.uid),
+      opponentIds,
       repeatCount24h,
       eligibility,
       now,
@@ -2194,7 +2567,7 @@ function settleRoomResult(r, results, options = {}){
     const row = applyResolvedProgress(p.user, reward, {
       ...resultMeta,
       at: now,
-      opponentIds: others.map(user => user.uid),
+      opponentIds,
       opponentKey,
       durationMs,
       meaningfulActions: progress.meaningfulActions || 0,
@@ -2207,7 +2580,7 @@ function settleRoomResult(r, results, options = {}){
   recordAnalytics(globalEligibility.eligible ? 'match_completed' : 'match_invalidated', {
     matchId: r.matchId,
     game: r.game,
-    mode: 'online',
+    mode:settlementMode,
     metadata: {
       reason: globalEligibility.blockedReason || null,
       cause: options.cause || 'completed',
@@ -2235,7 +2608,7 @@ function settleRoomResult(r, results, options = {}){
 }
 function settleRoomNoContest(r, reason){
   if (!r || !r.started || r.settled || !r.matchId) return;
-  const results = [...r.clients.values()].sort((a, b) => a - b).map((slot, index) => ({ slot, coins: 0, rank: index + 1 }));
+  const results = activeRoomSeats(r).map((seat, index) => ({ slot:seat.seatId, coins:0, rank:index + 1 }));
   settleRoomResult(r, results, {
     cause: 'invalidated',
     forceResult: 'draw',
@@ -2245,7 +2618,7 @@ function settleRoomNoContest(r, reason){
 function settleRoomForfeit(r, offenderSession, cause){
   if (!r || !r.started || r.settled || !r.matchId || !r.clients.has(offenderSession)) return;
   const offenderSlot = r.clients.get(offenderSession);
-  const size = r.clients.size;
+  const size = activeSeatCount(r);
   if (size > 2){
     settleRoomNoContest(r, 'multiplayer_forfeit_unranked');
     recordAnalytics(cause === 'afk' ? 'match_afk' : 'match_forfeit', {
@@ -2253,10 +2626,10 @@ function settleRoomForfeit(r, offenderSession, cause){
     });
     return;
   }
-  const results = [...r.clients.values()].map(slot => ({
-    slot,
-    coins: slot === offenderSlot ? 0 : 1,
-    rank: slot === offenderSlot ? size : 1,
+  const results = activeRoomSeats(r).map(seat => ({
+    slot:seat.seatId,
+    coins:seat.seatId === offenderSlot ? 0 : 1,
+    rank:seat.seatId === offenderSlot ? size : 1,
   }));
   const blockedSlots = new Map();
   if (cause === 'afk') blockedSlots.set(offenderSlot, 'afk');
@@ -2290,7 +2663,7 @@ function submitRoomResult(session, payload, r){
   if (matchId !== r.matchId){ session.sendText(JSON.stringify({ type: 'result_error', msg: '对局标识已失效', reason: 'match_id_expired' })); return; }
   const game = String(payload && payload.game || '');
   if (game !== r.game){ session.sendText(JSON.stringify({ type: 'result_error', msg: '游戏标识不匹配', reason: 'game_mismatch' })); return; }
-  const normalized = normalizeRoomResults(payload && payload.results, r.clients.size);
+  const normalized = normalizeRoomResults(payload && payload.results, activeSeatCount(r));
   if (!normalized){ session.sendText(JSON.stringify({ type: 'result_error', msg: '结算数据无效', reason: 'invalid_result' })); return; }
   const digest = JSON.stringify(normalized.map(x => ({ slot: x.slot, coins: x.coins, rank: x.rank })));
   const previous = r.resultClaims.get(session.player);
@@ -2304,7 +2677,7 @@ function submitRoomResult(session, payload, r){
     return;
   }
   r.resultClaims.set(session.player, { digest, results: normalized });
-  if (r.resultClaims.size < r.clients.size){ session.sendText(JSON.stringify({ type: 'result_pending', matchId: r.matchId })); return; }
+  if (r.resultClaims.size < humanRoomSeats(r).length){ session.sendText(JSON.stringify({ type: 'result_pending', matchId: r.matchId })); return; }
   const claims = [...r.resultClaims.values()];
   if (new Set(claims.map(c => c.digest)).size !== 1){
     r.disputed = true;
@@ -2596,6 +2969,32 @@ function broadcast(room, msg, except){
   }
 }
 
+function controlledAISeat(room, session, value){
+  const seatId = Number(value);
+  const seat = Number.isInteger(seatId) && ensureRoomSeats(room)[seatId];
+  return seat && seat.type === 'ai' && room.host === session && seat.controllerUid === session.uid ? seat : null;
+}
+function relayRoomMove(room, player, payload, except, record){
+  if (!room.started || !payload || typeof payload !== 'object') return false;
+  let payloadBytes = 0;
+  try { payloadBytes = Buffer.byteLength(JSON.stringify(payload)); } catch { return false; }
+  if (payloadBytes > 16384) return false;
+  compactTankRelayLog(room, payload);
+  room.moveSeq = (room.moveSeq || 0) + 1;
+  const event = { seq:room.moveSeq, player, payload };
+  if (!Array.isArray(room.moveLog)) room.moveLog = [];
+  room.moveLog.push(event);
+  room.moveLogBytes = (room.moveLogBytes || 0) + payloadBytes;
+  while (room.moveLog.length > MOVE_LOG_MAX_EVENTS || room.moveLogBytes > MOVE_LOG_MAX_BYTES){
+    const removed = room.moveLog.shift();
+    try { room.moveLogBytes -= Buffer.byteLength(JSON.stringify(removed && removed.payload)); } catch {}
+    room.moveLogTruncated = true;
+  }
+  if (record !== false) recordRoomAction(room, player, payload);
+  broadcast(room, { type:'move', payload, seq:event.seq, player:event.player }, except);
+  return true;
+}
+
 function spectatorSnapshot(r){
   const cosmetics = [...r.clients.entries()].map(([session, player]) => {
     const user = session.uid && db.users[session.uid];
@@ -2722,7 +3121,7 @@ class Session {
         rewardVersion: REWARD_CONFIG.version,
         capabilities: ['reward_breakdown','ai_reward_ticket','local_no_economy',...gameplayCapabilities(),
           'tank_authority_v1','tetris_battle_authority_v1','spectator_room_v1','tournament_orchestrator_v1','xiangqi_clock_v1','monopoly_auction_v1','game_cosmetic_presentation_v1',
-          'ai_decision_confirm_v1'],
+          'ai_decision_confirm_v1','seat_protocol_v2','ready_v1','ai_seat_v1','room_visibility_v1','social_graph_v1'],
       }));
       if (this.uid) tryResumeSession(this);
       broadcastLeaderboard();
@@ -2763,8 +3162,10 @@ class Session {
       const proposed = String((payload && payload.uid) || '');
       const uid = /^u_[a-z0-9]{6,32}$/.test(proposed) && !db.users[proposed] ? proposed : genUid();
       const name = String((payload && payload.name) || '').trim().slice(0, 12) || '玩家';
-      const avatar = Number.isInteger(payload && payload.avatar) ? Math.max(0, Math.min(29, payload.avatar)) : 0;
-      const starterBackground = Number.isInteger(payload && payload.background) && payload.background >= 0 && payload.background <= 10 ? payload.background : 0;
+      const requestedAvatar = Number(payload && payload.avatar);
+      const avatar = Number.isInteger(requestedAvatar) && validOwnedId('avatars', requestedAvatar) &&
+        (requestedAvatar < 30 || (requestedAvatar >= 100 && (requestedAvatar - 100) % 8 < 2)) ? requestedAvatar : 100;
+      const starterBackground = Number.isInteger(payload && payload.background) && payload.background >= 0 && payload.background <= 6 ? payload.background : 0;
       const starterOwned = normalizeOwned({ backgrounds: [starterBackground] });
       const u = {
         uid, name, avatar,
@@ -2778,6 +3179,7 @@ class Session {
         recentResults: [], purchaseRequests: [], soloRate: [], pin_hash: ph,
         dailyFirstWinDate: '', dailyAICurrencyKey: '', dailyAICurrencyEarned: 0,
         xpCurveVersion: REWARD_CONFIG.level.curveVersion,
+        signature:'', countryRegion:'', genderTag:'hidden', presencePreference:'joinable', presenceVisibility:'everyone', showcase:null,
         lang: (payload && ['zh-CN','en-US','uk-UA'].includes(payload.lang) ? payload.lang : 'zh-CN'), created_at: Date.now(),
       };
       const auth = issueAuthToken(u);
@@ -2828,7 +3230,7 @@ class Session {
       const uid = String((payload && payload.uid) || '');
       const u = uid && db.users[uid];
       const canReadPrivate = !!(u && uid === this.uid && userHasTokenHash(u, this.tokenHash));
-      this.sendText(JSON.stringify({ type: 'profile_data', payload: u ? (canReadPrivate ? profileObj(u) : publicProfileObj(u)) : null }));
+      this.sendText(JSON.stringify({ type: 'profile_data', payload: u ? (canReadPrivate ? profileObj(u, this.uid) : publicProfileObj(u, this.uid)) : null }));
       return;
     }
     if (type === 'profile'){
@@ -2969,6 +3371,41 @@ class Session {
       if (!this.room) recordSoloProgress(this, user, payload);
       return;
     }
+    if (type === 'social_get'){
+      if (!this.requireUser()) return;
+      this.sendText(JSON.stringify({ type:'social_state', payload:socialState(this.uid) }));
+      return;
+    }
+    if (type === 'friend_request'){
+      if (!this.requireUser()) return;
+      socialSendRequest(this, payload && payload.toUid);
+      return;
+    }
+    if (type === 'friend_request_action'){
+      if (!this.requireUser()) return;
+      socialFriendRequestAction(this, payload || {});
+      return;
+    }
+    if (type === 'friend_remove'){
+      if (!this.requireUser()) return;
+      socialRemoveFriend(this, payload && payload.uid);
+      return;
+    }
+    if (type === 'block'){
+      if (!this.requireUser()) return;
+      socialBlock(this, payload && payload.uid);
+      return;
+    }
+    if (type === 'unblock'){
+      if (!this.requireUser()) return;
+      socialUnblock(this, payload && payload.uid);
+      return;
+    }
+    if (type === 'report'){
+      if (!this.requireUser()) return;
+      socialReport(this, payload || {});
+      return;
+    }
     if (type === 'result'){
       const user = this.requireUser();
       if (!user) return;
@@ -2986,7 +3423,7 @@ class Session {
       return;
     }
     if (type === 'lobby'){
-      this.sendText(JSON.stringify({ type: 'lobby', payload: lobbyPayload() }));
+      this.sendText(JSON.stringify({ type: 'lobby', payload: lobbyPayload(this.uid) }));
       return;
     }
     if (type === 'invite_accept'){
@@ -3002,14 +3439,27 @@ class Session {
       if (r) r.host.sendText(JSON.stringify({ type: 'invite_result', payload: { accepted: false } }));
       return;
     }
+    if (type === 'quick_join'){
+      if (!this.requireUser()) return;
+      if (this.room || this.spectatorRoom){ this.sendText(JSON.stringify({ type:'error', msg:'请先离开当前房间或观战', reason:'already_in_room' })); return; }
+      const wantedGame = String(payload && payload.game || '');
+      const candidate = lobbyPayload(this.uid).filter(item => item.canJoin && (!wantedGame || item.game === wantedGame))
+        .sort((a, b) => (b.humanCount - a.humanCount) || (a.aiCount - b.aiCount) || String(a.room).localeCompare(String(b.room)))[0];
+      if (!candidate){ this.sendText(JSON.stringify({ type:'quick_join_empty', payload:{ game:wantedGame || null } })); return; }
+      this.joinRoom(candidate.room, false);
+      return;
+    }
     if (type === 'create'){
       if (!this.requireUser()) return;
-      if (this.room || this.spectatorRoom) return;
+      if (this.room) return;
+      if (this.spectatorRoom) this.leaveSpectator();
       let roomId = genCode();
       while (rooms.has(roomId)) roomId = genCode();
       const cap = Math.min(5, Math.max(2, parseInt(payload && payload.capacity, 10) || 2));
       const r = {
         id: roomId, host: this, clients: new Map([[this, 0]]), game: null, capacity: cap,
+        seats:Array.from({length:cap}, (_, seatId) => seatId === 0 ? humanSeatFromSession(this, 0, true) : emptySeat(seatId)),
+        visibility:normalizeRoomVisibility(payload && payload.visibility), allowSpectators:payload && payload.allowSpectators !== false,
         started: false, matchId: null, resultClaims: new Map(), settled: false, disputed: false,
         moveSeq: 0, moveLog: [], moveLogBytes: 0, moveLogTruncated: false,
         tankInputSeq: {}, tankAuthoritySeq: 0, tankFinalSent: false,
@@ -3021,7 +3471,7 @@ class Session {
       rooms.set(roomId, r);
       this.room = roomId;
       this.player = 0;
-      this.sendText(JSON.stringify({ type: 'created', room: roomId, player: 0, capacity: cap }));
+      this.sendText(JSON.stringify({ type:'created', room:roomId, player:0, capacity:cap, payload:roomPayload(r) }));
       broadcastRoom(r);
       broadcastLobby();
       return;
@@ -3031,6 +3481,23 @@ class Session {
       this.joinRoom(String((payload && payload.room) || '').trim().toUpperCase(), false);
       return;
     }
+    if (type === 'spectate'){
+      if (!this.requireUser()) return;
+      if (this.room){ this.sendText(JSON.stringify({ type:'spectator_error', msg:'请先离开当前玩家席位', reason:'account_is_player' })); return; }
+      const roomId = String(payload && payload.room || '').trim().toUpperCase();
+      const target = rooms.get(roomId);
+      if (!target || !target.allowSpectators){ this.sendText(JSON.stringify({ type:'spectator_error', msg:'该房间不存在或未开放观战', reason:'spectating_disabled' })); return; }
+      if (this.uid && [...target.clients.keys()].some(c => c.uid && !socialAllowedBetween(this.uid, c.uid))){ this.sendText(JSON.stringify({ type:'social_error', msg:'你与房间内成员存在屏蔽关系，无法观战', payload:{ reason:'blocked' } })); return; }
+      if (this.spectatorRoom) this.leaveSpectator();
+      target.spectators = target.spectators instanceof Map ? target.spectators : new Map();
+      if (target.spectators.size >= (target.maxSpectators || 20)){ this.sendText(JSON.stringify({ type:'spectator_error', msg:'观众席已满', reason:'spectator_capacity' })); return; }
+      target.spectators.set(this, { uid:this.uid, joinedAt:Date.now() });
+      this.spectatorRoom = target.id;
+      this.player = null;
+      this.sendText(JSON.stringify({ type:'spectating', payload:{ ...spectatorSnapshot(target), spectator:true, player:null } }));
+      broadcastRoom(target); broadcastLobby();
+      return;
+    }
     if (type === 'spectate_join'){
       if (!this.requireUser()) return;
       if (this.room){ this.sendText(JSON.stringify({ type:'spectator_error', msg:'已占用玩家席位，不能同时观战', reason:'account_is_player' })); return; }
@@ -3038,6 +3505,7 @@ class Session {
       const roomId = String(payload && (payload.roomId || payload.room) || '').trim().toUpperCase();
       const target = rooms.get(roomId);
       if (!target){ this.sendText(JSON.stringify({ type:'spectator_error', msg:'房间不存在', reason:'room_not_found' })); return; }
+      if (!target.allowSpectators){ this.sendText(JSON.stringify({ type:'spectator_error', msg:'该房间未开放观战', reason:'spectating_disabled' })); return; }
       if (!target.started || !target.matchId){ this.sendText(JSON.stringify({ type:'spectator_error', msg:'对局尚未开始', reason:'match_not_started' })); return; }
       const requestedMatchId=String(payload && payload.matchId || '');
       if (!requestedMatchId || requestedMatchId !== String(target.matchId || '')){
@@ -3155,7 +3623,7 @@ class Session {
     }
     if (!this.requireUser()) return;
     if (this.spectatorRoom){
-      if (['move','tank_input','tetris_lock_claim','tetris_attack_claim','tetris_ko_claim','tetris_action','xiangqi_action','monopoly_action','monopoly_auction_open','monopoly_bid','game_state','start','restart','end_game','select_game'].includes(type)){
+      if (['move','bot_move','tank_input','bot_tank_input','tetris_lock_claim','tetris_attack_claim','tetris_ko_claim','tetris_action','xiangqi_action','monopoly_action','monopoly_auction_open','monopoly_bid','game_state','start','restart','end_game','select_game','ready','room_settings','add_ai','remove_ai'].includes(type)){
         this.sendText(JSON.stringify({ type:'spectator_error', msg:'观战模式为只读，不能发送游戏输入', reason:'spectator_readonly' }));
       }
       return;
@@ -3163,6 +3631,55 @@ class Session {
     if (!this.room) return;
     const r = rooms.get(this.room);
     if (!r) return;
+    if (type === 'ready'){
+      if (r.started) return;
+      const seat = seatForSession(r, this);
+      if (!seat || seat.type !== 'human') return;
+      seat.ready = seat.host ? true : payload && payload.ready !== false;
+      broadcastRoom(r); broadcastLobby();
+      return;
+    }
+    if (type === 'room_settings'){
+      if (this !== r.host || r.started) return;
+      if (payload && payload.visibility !== undefined) r.visibility = normalizeRoomVisibility(payload.visibility);
+      if (payload && payload.allowSpectators !== undefined) r.allowSpectators = payload.allowSpectators === true;
+      if (!r.allowSpectators && r.spectators instanceof Map){
+        for (const spectator of r.spectators.keys()){
+          spectatorAccessGuard.leave(spectator.sessionId);
+          spectator.spectatorRoom = null;
+          spectator.sendText(JSON.stringify({ type:'spectator_left', payload:{ room:r.id, reason:'disabled' } }));
+        }
+        r.spectators.clear();
+      }
+      broadcastRoom(r); broadcastLobby();
+      return;
+    }
+    if (type === 'add_ai'){
+      if (this !== r.host || r.started) return;
+      const seat = firstEmptySeat(r);
+      const max = r.game && GAME_MAX[r.game] || r.capacity;
+      if (!seat || activeSeatCount(r) >= Math.min(r.capacity, max)){
+        this.sendText(JSON.stringify({ type:'error', msg:'没有可用的 AI 席位', reason:'no_ai_seat' })); return;
+      }
+      const difficulty = normalizeAIDifficulty(payload && payload.difficulty);
+      const persona = normalizeAIPersona(payload && payload.persona);
+      r.seats[seat.seatId] = {
+        seatId:seat.seatId, type:'ai', userId:null, nickname:AI_PERSONAS[persona].name || 'AI', avatar:141,
+        ready:true, host:false, online:true, aiDifficulty:difficulty, aiPersona:persona, controllerUid:this.uid,
+      };
+      broadcastRoom(r); broadcastLobby();
+      return;
+    }
+    if (type === 'remove_ai'){
+      if (this !== r.host || r.started) return;
+      const seatId = Number(payload && payload.seatId);
+      const seat = ensureRoomSeats(r)[seatId];
+      if (!Number.isInteger(seatId) || !seat || seat.type !== 'ai') return;
+      r.seats[seatId] = emptySeat(seatId);
+      compactRoomPlayers(r);
+      broadcastRoom(r); broadcastLobby();
+      return;
+    }
     if (type === 'tetris_action'){
       const authority=r.tetrisRuleAuthority;
       if(!authority){incrementGameplayMetric('protocolErrors');this.sendText(JSON.stringify({type:'gameplay_error',payload:protocolError(PROTOCOL_VERSIONS.tetrisRules,'ERR_PROTOCOL_VERSION')}));return;}
@@ -3200,8 +3717,12 @@ class Session {
         return;
       }
       const joinLimit = r.game && GAME_MAX[r.game] ? Math.min(r.capacity, GAME_MAX[r.game]) : r.capacity;
-      if (r.started || r.clients.size >= joinLimit) return;
+      if (r.started || activeSeatCount(r) >= joinLimit || !firstEmptySeat(r)) return;
       if ([...r.clients.keys()].some(c => c.uid === toUid)) return;
+      if (!socialAllowedBetween(this.uid, toUid)){
+        this.sendText(JSON.stringify({ type:'social_error', msg:'该玩家已被屏蔽或屏蔽了你，不能邀请', payload:{ reason:'blocked' } }));
+        return;
+      }
       const fromU = this.uid ? db.users[this.uid] : null;
       const inv = { fromUid: this.uid, fromName: fromU ? fromU.name : '玩家', room: r.id, game: r.game || null, expiresAt: Date.now() + 10 * 60000 };
       let target = null;
@@ -3220,12 +3741,13 @@ class Session {
       if (this !== r.host) return;
       const g = payload && payload.game;
       if (!g) return;
-      const curSize = r.clients.size;
+      const curSize = activeSeatCount(r);
       if (!GAME_MAX[g] || curSize > GAME_MAX[g]){
         this.sendText(JSON.stringify({ type: 'error', msg: '该游戏最多支持 ' + (GAME_MAX[g] || 0) + ' 人，当前已加入 ' + curSize + ' 人', reason: 'game_capacity' }));
         return;
       }
       r.game = g;
+      for (const seat of humanRoomSeats(r)) seat.ready = !!seat.host;
       broadcastRoom(r);
       broadcastLobby();
       maybeAutoStart(r);
@@ -3234,7 +3756,7 @@ class Session {
     if (type === 'end_game'){
       if (this !== r.host) return;
       if (r.started && !r.settled){
-        if (r.clients.size === 2) settleRoomForfeit(r, this, 'forfeit');
+        if (activeSeatCount(r) === 2) settleRoomForfeit(r, this, 'forfeit');
         else settleRoomNoContest(r, 'host_cancelled');
       }
       resetRoomMatch(r);
@@ -3247,12 +3769,69 @@ class Session {
     if (type === 'start'){
       if (this !== r.host) return;
       if (!r.game || r.started) return;
-      if (r.clients.size < GAME_MIN[r.game] || r.clients.size > GAME_MAX[r.game]) return;
-      if (!allRoomClientsOnline(r)){
-        this.sendText(JSON.stringify({ type: 'error', msg: '请等待掉线玩家恢复连接后再开始', reason: 'wait_reconnect_start' }));
+      if (!roomCanStart(r)){
+        this.sendText(JSON.stringify({ type:'error', msg:'请确认人数符合游戏规则且所有真人玩家都已 READY', reason:'room_not_ready' }));
         return;
       }
       startRoomMatch(r);
+      return;
+    }
+    if (type === 'bot_move'){
+      const seat = controlledAISeat(r, this, payload && payload.seatId);
+      const move = payload && payload.payload;
+      if (!seat || !r.started || ['tank','tetris'].includes(r.game) || !move || typeof move !== 'object'){
+        this.sendText(JSON.stringify({ type:'gameplay_error', payload:{ protocol:'bot-controller-v1', reason:'unauthorized_or_inactive' } }));
+        return;
+      }
+      r.aiInputSeq = r.aiInputSeq || {};
+      const seq = (Number(r.aiInputSeq[seat.seatId]) || 0) + 1;
+      if (r.xiangqiRuleAuthority){
+        const accepted = r.xiangqiRuleAuthority.acceptMove(seat.seatId, { matchId:r.matchId, seq, from:move.from, to:move.to }, Date.now());
+        if (!accepted.ok){ this.sendText(JSON.stringify({ type:'gameplay_error', payload:{ protocol:PROTOCOL_VERSIONS.xiangqiRules, reason:accepted.reason } })); return; }
+        r.aiInputSeq[seat.seatId] = seq;
+        recordRoomAction(r,seat.seatId,{protocol:PROTOCOL_VERSIONS.xiangqiRules,from:move.from,to:move.to}); broadcast(r,accepted.event);
+        if (accepted.result && !r.gameplayResultSent){ r.gameplayResultSent=true; broadcast(r,accepted.result); settleAuthoritativeRoom(r,accepted.result.order,'xiangqi_rule_authority'); stopRoomGameplayTimer(r); }
+        return;
+      }
+      if (r.monopolyRuleAuthority){
+        const action = Array.isArray(move.roll) ? { type:'roll' } : (['buy','pass','settle'].includes(move.decision) ? { type:move.decision } : null);
+        if (!action){ this.sendText(JSON.stringify({ type:'gameplay_error', payload:{ protocol:PROTOCOL_VERSIONS.monopolyRules, reason:'ERR_INVALID_MOVE' } })); return; }
+        const accepted = r.monopolyRuleAuthority.acceptAction(seat.seatId, { matchId:r.matchId, seq, action }, Date.now());
+        if (!accepted.ok){ this.sendText(JSON.stringify({ type:'gameplay_error', payload:{ protocol:PROTOCOL_VERSIONS.monopolyRules, reason:accepted.reason } })); return; }
+        r.aiInputSeq[seat.seatId] = seq;
+        recordRoomAction(r,seat.seatId,{protocol:PROTOCOL_VERSIONS.monopolyRules,action}); broadcast(r,accepted.event);
+        if (accepted.result && !r.gameplayResultSent){ r.gameplayResultSent=true; broadcast(r,accepted.result); settleAuthoritativeRoom(r,accepted.result.order,'monopoly_rule_authority'); stopRoomGameplayTimer(r); }
+        return;
+      }
+      if (r.game === 'monopoly' && move.decision === 'settle') return;
+      if (!relayRoomMove(r, seat.seatId, move, null)) this.sendText(JSON.stringify({ type:'error', msg:'AI 走子数据无效', reason:'invalid_bot_move' }));
+      return;
+    }
+    if (type === 'bot_tank_input'){
+      const seat = controlledAISeat(r, this, payload && payload.seatId);
+      if (!seat || !r.started || r.game !== 'tank' || !r.tankAuthority){
+        this.sendText(JSON.stringify({ type:'gameplay_error', payload:{ protocol:'tank-authority-v1', reason:'unauthorized_bot' } })); return;
+      }
+      const accepted = r.tankAuthority.acceptInput(seat.seatId, payload, Date.now());
+      if (!accepted.ok){ this.sendText(JSON.stringify({ type:'gameplay_error', payload:{ protocol:'tank-authority-v1', reason:accepted.reason } })); return; }
+      recordRoomAction(r, seat.seatId, { act:'input', input:payload && payload.input });
+      return;
+    }
+    if (type === 'bot_tetris_action'){
+      const seat = controlledAISeat(r, this, payload && payload.seatId);
+      const authority = r.tetrisRuleAuthority;
+      if (!seat || !r.started || r.game !== 'tetris' || !authority){
+        this.sendText(JSON.stringify({ type:'gameplay_error', payload:{ protocol:PROTOCOL_VERSIONS.tetrisRules, reason:'unauthorized_bot' } })); return;
+      }
+      r.aiInputSeq = r.aiInputSeq || {};
+      const seq = (Number(r.aiInputSeq[seat.seatId]) || 0) + 1;
+      const accepted = authority.acceptAction(seat.seatId, { matchId:r.matchId, seq, action:payload && payload.action }, Date.now());
+      if (!accepted.ok){ this.sendText(JSON.stringify({ type:'gameplay_error', payload:{ protocol:PROTOCOL_VERSIONS.tetrisRules, reason:accepted.reason } })); return; }
+      r.aiInputSeq[seat.seatId] = seq;
+      recordRoomAction(r,seat.seatId,{protocol:PROTOCOL_VERSIONS.tetrisRules,action:payload && payload.action});
+      if (accepted.battle) broadcast(r,{type:'tetris_rule_battle',payload:{matchId:r.matchId,revision:authority.revision,...accepted.battle}});
+      broadcast(r,accepted.stateEvent || authority.stateEvent());
+      if (accepted.result && !r.gameplayResultSent){ r.gameplayResultSent=true; broadcast(r,accepted.result); settleAuthoritativeRoom(r,accepted.result.order,'tetris_rule_authority'); stopRoomGameplayTimer(r); }
       return;
     }
     if (type === 'tank_input'){
@@ -3286,7 +3865,7 @@ class Session {
             return;
           }
           r.monopolyTurn=r.monopolyAuction.currentPlayer;
-        }else if(Number.isInteger(next)&&next>=0&&next<r.clients.size)r.monopolyTurn=next;
+        }else if(Number.isInteger(next)&&next>=0&&next<activeSeatCount(r))r.monopolyTurn=next;
       }
       r.gameSnapshot={matchId:r.matchId,revision:(r.gameSnapshot&&r.gameSnapshot.revision||0)+1,updatedAt:Date.now(),snapshot:payload.snapshot};
       broadcast(r,{type:'game_state',payload:r.gameSnapshot},this);
@@ -3337,7 +3916,7 @@ class Session {
       if(r.monopolyAuction&&((r.monopolyAuction.phase&&r.monopolyAuction.phase!=='turn_complete')||r.monopolyAuction.lastCompletedPlayer!==this.player))return;
       const accepted=typeof r.monopolyAuction.confirmTurn==='function'?r.monopolyAuction.confirmTurn(this.player,{...(payload||{}),matchId:r.matchId}):{ok:true};
       if(!accepted.ok){this.sendText(JSON.stringify({type:'gameplay_error',payload:{protocol:'monopoly-auction-v1',reason:accepted.reason}}));return;}
-      r.monopolyTurn=Number.isInteger(next)&&next>=0&&next<r.clients.size&&next!==this.player?next:(r.monopolyTurn+1)%r.clients.size;
+      r.monopolyTurn=Number.isInteger(next)&&next>=0&&next<activeSeatCount(r)&&next!==this.player?next:(r.monopolyTurn+1)%activeSeatCount(r);
       return;
     }
     if (type === 'tetris_lock_claim' || type === 'tetris_attack_claim'){
@@ -3428,7 +4007,7 @@ class Session {
       if (this !== r.host) return;
       if (!r.game || !r.started) return;
       if (!r.settled){
-        if (r.clients.size === 2) settleRoomForfeit(r, this, 'forfeit');
+        if (activeSeatCount(r) === 2) settleRoomForfeit(r, this, 'forfeit');
         else settleRoomNoContest(r, 'host_restarted_early');
       }
       stopRoomAuthorities(r);
@@ -3454,7 +4033,7 @@ class Session {
       startRoomAuthorities(r);
       recordAnalytics('match_started', {
         matchId: r.matchId, game: r.game, mode: 'online',
-        metadata: { participantCount: r.clients.size, restarted: true },
+        metadata: { participantCount:activeSeatCount(r), humanCount:humanRoomSeats(r).length, aiCount:aiRoomSeats(r).length, restarted:true },
       });
       broadcast(r, { type: 'restart', matchId: r.matchId, gameplay:gameplayMetadata(r), presentation:gameplayPresentation(r) });
     }
@@ -3469,11 +4048,11 @@ class Session {
       this.sendText(JSON.stringify({ type: 'error', msg: '对局已开始', reason: 'match_started' }));
       return;
     }
-    if (r.clients.size >= r.capacity){
+    if (activeSeatCount(r) >= r.capacity || !firstEmptySeat(r)){
       this.sendText(JSON.stringify({ type: 'error', msg: '房间已满', reason: 'room_full' }));
       return;
     }
-    if (r.game && GAME_MAX[r.game] && r.clients.size + 1 > GAME_MAX[r.game]){
+    if (r.game && GAME_MAX[r.game] && activeSeatCount(r) + 1 > GAME_MAX[r.game]){
       this.sendText(JSON.stringify({ type: 'error', msg: '当前已选择的游戏最多支持 ' + GAME_MAX[r.game] + ' 人', reason: 'selected_game_capacity' }));
       return;
     }
@@ -3481,17 +4060,21 @@ class Session {
       this.sendText(JSON.stringify({ type: 'error', msg: '同一账号不能重复加入同一房间', reason: 'duplicate_room_account' }));
       return;
     }
+    if (this.uid && [...r.clients.keys()].some(c => c.uid && !socialAllowedBetween(this.uid, c.uid))){
+      this.sendText(JSON.stringify({ type:'social_error', msg:'你与房间内成员存在屏蔽关系，无法加入该房间', payload:{ reason:'blocked' } }));
+      return;
+    }
     if (this.room){
       this.sendText(JSON.stringify({ type: 'error', msg: '你已在房间中', reason: 'already_in_room' }));
       return;
     }
-    let idx = 0;
-    const taken = new Set(r.clients.values());
-    while (taken.has(idx)) idx++;
+    if (this.spectatorRoom) this.leaveSpectator();
+    const idx = firstEmptySeat(r).seatId;
     r.clients.set(this, idx);
+    r.seats[idx] = humanSeatFromSession(this, idx, false);
     this.room = roomId;
     this.player = idx;
-    this.sendText(JSON.stringify({ type: 'joined', room: roomId, player: idx }));
+    this.sendText(JSON.stringify({ type:'joined', room:roomId, player:idx, payload:roomPayload(r) }));
     broadcastRoom(r);
     if (fromInvite) r.host.sendText(JSON.stringify({ type: 'invite_result', payload: { accepted: true } }));
     broadcastLobby();
@@ -3505,36 +4088,31 @@ class Session {
     const departedPlayer = r.clients.get(this);
     if (r.started && !r.settled) settleRoomForfeit(r, this, 'forfeit');
     r.clients.delete(this);
+    if (Number.isInteger(departedPlayer)) ensureRoomSeats(r)[departedPlayer] = emptySeat(departedPlayer);
     this.room = null;
     this.player = null;
-    if (wasHost){
-      const remaining = [...r.clients.keys()];
+    if (!r.clients.size){
       const spectators = r.spectators ? [...r.spectators.keys()] : [];
-      for (const c of remaining){
-        if (c.reconnectTimer) clearTimeout(c.reconnectTimer);
-        c.reconnectTimer = null;
-        c.room = null;
-        c.player = null;
-        c.resumeUntil = 0;
-        c.sendText(JSON.stringify({ type: 'peer_left', payload: { roomClosed: true, player: departedPlayer } }));
-      }
-      for(const spectator of spectators){
+      for (const spectator of spectators){
         spectatorAccessGuard.leave(spectator.sessionId);
-        spectator.spectatorRoom=null;
-        spectator.sendText(JSON.stringify({type:'peer_left',payload:{roomClosed:true,player:departedPlayer}}));
+        spectator.spectatorRoom = null;
+        spectator.sendText(JSON.stringify({ type:'peer_left', payload:{ roomClosed:true, player:departedPlayer } }));
       }
       stopRoomAuthorities(r);
       rooms.delete(r.id);
       broadcastLobby();
-      for (const c of remaining) cleanupEphemeralUser(c.uid);
-    } else {
-      if (r.clients.size === 0){ rooms.delete(r.id); return; }
-      resetRoomMatch(r);
-      compactRoomPlayers(r);
-      broadcast(r, { type: 'peer_left', payload: { roomClosed: false, player: departedPlayer } });
-      broadcastRoom(r);
-      broadcastLobby();
+      cleanupEphemeralUser(this.uid);
+      return;
     }
+    let hostChanged = false;
+    if (wasHost){ r.host = [...r.clients.entries()].sort((a,b) => a[1] - b[1])[0][0]; hostChanged = true; }
+    resetRoomMatch(r);
+    compactRoomPlayers(r);
+    updateAIControllers(r);
+    broadcast(r, { type:'peer_left', payload:{ roomClosed:false, player:departedPlayer } });
+    if (hostChanged) broadcast(r, { type:'host_changed', payload:{ uid:r.host.uid, player:r.clients.get(r.host) } });
+    broadcastRoom(r);
+    broadcastLobby();
   }
   leaveSpectator(){
     if(!this.spectatorRoom)return;

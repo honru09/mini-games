@@ -18,17 +18,51 @@ function openProfileModal(uid){
     toast(t('profile_not_found'));
   }
 }
+function profilePresenceLabel(value){
+  const key = ({ joinable:'presence_joinable', online:'presence_online', busy:'presence_busy', playing:'presence_playing', offline:'presence_offline', invisible:'presence_invisible' })[value] || 'presence_offline';
+  return t(key);
+}
+function profileRegionLabel(value){
+  const key = ({ CN:'region_cn', JP:'region_jp', UA:'region_ua', US:'region_us', GB:'region_gb', DE:'region_de', FR:'region_fr', CA:'region_ca', AU:'region_au' })[String(value || '').toUpperCase()] || 'region_unset';
+  return t(key);
+}
+function profileGenderLabel(value){
+  const key = ({ hidden:'gender_hidden', male:'gender_male', female:'gender_female', nonbinary:'gender_nonbinary' })[value];
+  return key ? t(key) : (value ? String(value).replace(/^custom:/, '') : '');
+}
+function profileShowcaseText(p){
+  const showcase = p && p.showcase;
+  if (!showcase || !showcase.type || !showcase.value) return '';
+  if (showcase.type === 'game' && GAMES[showcase.value]) return t('showcase_game', GAMES[showcase.value].name) + ' · ' + ((p.played && p.played[showcase.value]) || 0);
+  if (showcase.type === 'achievement'){
+    const achievement = ACHIEVEMENTS.find(item => item.id === showcase.value);
+    return achievement ? t('showcase_achievement', t(achievement.nameKey)) : '';
+  }
+  if (showcase.type === 'collection'){
+    const theme = AVATAR_CATEGORIES.find(item => showcase.value === item.id + '_origins');
+    return theme ? t('showcase_collection', avatarCategoryName(theme)) : '';
+  }
+  if (showcase.type === 'record'){
+    const labels = { totalWins:'showcase_record_total_wins', bestStreak:'showcase_record_best_streak', total:'showcase_record_total', level:'showcase_record_level' };
+    const value = labels[showcase.value];
+    if (!value) return '';
+    const amount = showcase.value === 'totalWins' ? p.totalWins || 0 : showcase.value === 'bestStreak' ? p.bestStreak || 0 : showcase.value === 'total' ? p.total || 0 : p.level || 1;
+    return t(value) + ' · ' + amount;
+  }
+  return '';
+}
 function renderProfilePopup(p, isMe){
   if (!p) return;
   const bd = el('div','modal-backdrop');
   const card = el('div','modal-card');
   card.style.width = '420px';
   const hero = el('div','profile-hero bg-' + (p.background || 0));
+  applyPremiumBackground(hero, p.background || 0, 'profile');
   const avWrap = el('div','hero-avatar');
   const stage = el('div','avatar-stage effect-' + (p.effect || 0));
   const fr = p.frame || 0;
   if (fr) stage.appendChild(el('span','frame-ring ' + (SHOP.frames.find(f => f.id === fr) ? SHOP.frames.find(f => f.id === fr).cls : ''), ''));
-  stage.appendChild(avatarCanvas(p.avatar, 74));
+  stage.appendChild(avatarCanvas(p.avatar, 74, { animate:true }));
   avWrap.appendChild(stage);
   hero.appendChild(avWrap);
   const pLv = p.level || levelFromXp(p.xp || 0);
@@ -37,7 +71,11 @@ function renderProfilePopup(p, isMe){
   pname.appendChild(nameFxNode(p, p.name));
   pname.appendChild(el('span', null, t('level_bracket',pLv) + ' ' + (p.lang ? langFlag(p.lang) : '') + (isMe ? t('profile_mine') : '')));
   hero.appendChild(pname);
-  hero.appendChild(el('div','pmeta', t('profile_title_achievements', pTitle.icon + ' ' + socialTitleName(pTitle), (p.achievements ? p.achievements.length : 0))));
+  const identity = el('div','profile-identity-scrim');
+  identity.appendChild(el('div','pmeta', pTitle.icon + ' ' + socialTitleName(pTitle) + ' · ' + profileRegionLabel(p.countryRegion) + (profileGenderLabel(p.genderTag) ? ' · ' + profileGenderLabel(p.genderTag) : '')));
+  identity.appendChild(el('div','pmeta', profilePresenceLabel(p.presence || (p.online ? 'online' : 'offline'))));
+  if (p.signature) identity.appendChild(el('div','profile-signature', '“' + String(p.signature).slice(0, 80) + '”'));
+  hero.appendChild(identity);
   const coinLine = el('div','pmeta');
   coinLine.appendChild(currencyIcon());
   coinLine.appendChild(el('span', null, t('profile_summary', p.coins || 0, p.total || 0, t(p.online ? 'online_label' : 'offline_label'))));
@@ -60,41 +98,46 @@ function renderProfilePopup(p, isMe){
   const achChip = el('div','stat-chip');
   achChip.textContent = t('profile_achievement_count', (p.achievements && p.achievements.length) || 0);
   stats.appendChild(achChip);
-  GAME_KEYS.forEach(k => {
+  GAME_KEYS.filter(k => ((p.played && p.played[k]) || 0) > 0).forEach(k => {
     const s = el('div','stat-chip small');
     s.textContent = GAMES[k].icon + ' ' + t('games_count', (p.played && p.played[k]) || 0);
     stats.appendChild(s);
   });
   card.appendChild(stats);
+  const showcase = profileShowcaseText(p);
+  if (showcase) card.appendChild(el('div','profile-showcase',showcase));
   const links = el('div','profile-links');
+  const closeProfile = () => { releasePremiumBackground(hero); bd.remove(); };
   if (isMe && account){
     const edit = el('button','btn btn-primary',t('edit_profile'));
-    edit.addEventListener('click', () => { bd.remove(); openProfileEditor(account.uid); });
+    edit.addEventListener('click', () => { closeProfile(); openProfileEditor(account.uid); });
     links.appendChild(edit);
     const achBtn = el('button','btn',t('achievements_button'));
-    achBtn.addEventListener('click', () => { bd.remove(); openAchievementsModal(); });
+    achBtn.addEventListener('click', () => { closeProfile(); openAchievementsModal(); });
     links.appendChild(achBtn);
     const shop = el('button','btn',t('shop'));
-    shop.addEventListener('click', () => { bd.remove(); openShop(); });
+    shop.addEventListener('click', () => { closeProfile(); openShop(); });
     links.appendChild(shop);
     const logout = el('button','btn',t('logout'));
-    logout.addEventListener('click', () => { bd.remove(); logoutAccount(); });
+    logout.addEventListener('click', () => { closeProfile(); logoutAccount(); });
     links.appendChild(logout);
-  } else if (online.room && online.isHost && !online.game){
-    const inv = el('button','btn btn-primary',t('invite_short'));
-    inv.addEventListener('click', () => {
-      bd.remove();
-      if (online.room){ online.send({ type: 'invite', payload: { toUid: p.uid } }); toast(t('invite_sent')); }
-      else { online.inviteTarget = p.uid; online.create(); }
-    });
-    links.appendChild(inv);
+  } else {
+    const relation = typeof socialRelationshipFor === 'function' ? socialRelationshipFor(p.uid) : 'none';
+    const label = relation === 'friends' ? t('social_friend') : relation === 'outgoing' ? t('social_pending') : relation === 'incoming' ? t('social_requests') : t('social_add_friend');
+    const social = el('button','btn' + ((relation === 'none' || relation === 'incoming') ? ' btn-primary' : ''));
+    setButtonIcon(social, relation === 'friends' ? 'users' : 'user-plus', label);
+    social.addEventListener('click', () => { closeProfile(); if (typeof openSocialActions === 'function') openSocialActions(p, { type:'profile', id:p.uid }); });
+    links.appendChild(social);
+    const more = el('button','btn'); setButtonIcon(more, 'shield', t('social_security_more'));
+    more.addEventListener('click', () => { closeProfile(); if (typeof openSocialActions === 'function') openSocialActions(p, { type:'profile', id:p.uid }); });
+    links.appendChild(more);
   }
   if (!links.children.length) card.appendChild(el('div','lb-note',t('profile_public')));
   card.appendChild(links);
   const close = el('button','btn',t('close'));
-  close.addEventListener('click', () => bd.remove());
+  close.addEventListener('click', closeProfile);
   card.appendChild(close);
   bd.appendChild(card);
-  bd.addEventListener('click', e => { if (e.target === bd) bd.remove(); });
+  bd.addEventListener('click', e => { if (e.target === bd) closeProfile(); });
   document.body.appendChild(bd);
 }

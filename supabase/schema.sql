@@ -20,6 +20,12 @@ create table if not exists profiles (
   wins jsonb not null default '{}'::jsonb,
   total_wins integer not null default 0,
   name_fx integer not null default 0,
+  signature text not null default '',
+  country_region varchar(2) not null default '',
+  gender_tag varchar(24) not null default 'hidden',
+  presence_preference varchar(16) not null default 'joinable',
+  presence_visibility varchar(16) not null default 'everyone',
+  showcase jsonb,
   achievements jsonb not null default '[]'::jsonb,
   playmates jsonb not null default '{}'::jsonb,
   daily jsonb not null default '{"play":0,"win":0,"streak":0}'::jsonb,
@@ -114,6 +120,54 @@ create table if not exists analytics_events (
   created_at timestamptz not null default now()
 );
 
+-- 正式社交图谱：关系和审核入口由服务端维护，浏览器只通过 WebSocket 读取脱敏结果。
+create table if not exists friend_requests (
+  id text primary key,
+  from_uid text not null references profiles(uid) on delete cascade,
+  to_uid text not null references profiles(uid) on delete cascade,
+  status text not null check (status in ('pending','accepted','declined','cancelled')),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  check (from_uid <> to_uid)
+);
+create unique index if not exists idx_friend_requests_pending_pair
+  on friend_requests (from_uid, to_uid) where status = 'pending';
+
+create table if not exists friendships (
+  id text primary key,
+  a_uid text not null references profiles(uid) on delete cascade,
+  b_uid text not null references profiles(uid) on delete cascade,
+  created_at timestamptz not null default now(),
+  check (a_uid < b_uid)
+);
+create unique index if not exists idx_friendships_pair on friendships (a_uid, b_uid);
+
+create table if not exists blocks (
+  id text primary key,
+  blocker_uid text not null references profiles(uid) on delete cascade,
+  blocked_uid text not null references profiles(uid) on delete cascade,
+  target_snapshot jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now(),
+  check (blocker_uid <> blocked_uid)
+);
+create unique index if not exists idx_blocks_pair on blocks (blocker_uid, blocked_uid);
+
+create table if not exists reports (
+  id text primary key,
+  reporter_uid text not null references profiles(uid) on delete cascade,
+  target_uid text not null references profiles(uid) on delete cascade,
+  reason text not null check (reason in ('harassment','inappropriate_name','cheating','spam','other')),
+  context_type text not null default 'profile',
+  context_id text not null default '',
+  match_id text not null default '',
+  recent_event_ids jsonb not null default '[]'::jsonb,
+  target_snapshot jsonb not null default '{}'::jsonb,
+  status text not null default 'open',
+  created_at timestamptz not null default now(),
+  check (reporter_uid <> target_uid)
+);
+create index if not exists idx_reports_target_created on reports (target_uid, created_at desc);
+
 -- 个性化 AI 持续学习模型：每位玩家、每款游戏独立，避免一个客户端污染全局 AI。
 -- weights/stats/mistakes 使用 JSONB，允许在不改表结构的前提下增加游戏特征、技能版本和训练统计。
 create table if not exists ai_learning_models (
@@ -169,6 +223,12 @@ alter table profiles add column if not exists best_streak integer not null defau
 alter table profiles add column if not exists wins jsonb not null default '{}'::jsonb;
 alter table profiles add column if not exists total_wins integer not null default 0;
 alter table profiles add column if not exists name_fx integer not null default 0;
+alter table profiles add column if not exists signature text not null default '';
+alter table profiles add column if not exists country_region varchar(2) not null default '';
+alter table profiles add column if not exists gender_tag varchar(24) not null default 'hidden';
+alter table profiles add column if not exists presence_preference varchar(16) not null default 'joinable';
+alter table profiles add column if not exists presence_visibility varchar(16) not null default 'everyone';
+alter table profiles add column if not exists showcase jsonb;
 alter table profiles add column if not exists achievements jsonb not null default '[]'::jsonb;
 alter table profiles add column if not exists playmates jsonb not null default '{}'::jsonb;
 alter table profiles add column if not exists daily jsonb not null default '{"play":0,"win":0,"streak":0}'::jsonb;
@@ -583,6 +643,10 @@ alter table economy_ledger enable row level security;
 alter table analytics_events enable row level security;
 alter table ai_learning_models enable row level security;
 alter table ai_learning_experiences enable row level security;
+alter table friend_requests enable row level security;
+alter table friendships enable row level security;
+alter table blocks enable row level security;
+alter table reports enable row level security;
 revoke all on table profiles from anon, authenticated;
 revoke all on table history from anon, authenticated;
 revoke all on table reward_history from anon, authenticated;
@@ -590,6 +654,10 @@ revoke all on table economy_ledger from anon, authenticated;
 revoke all on table analytics_events from anon, authenticated;
 revoke all on table ai_learning_models from anon, authenticated;
 revoke all on table ai_learning_experiences from anon, authenticated;
+revoke all on table friend_requests from public, anon, authenticated;
+revoke all on table friendships from public, anon, authenticated;
+revoke all on table blocks from public, anon, authenticated;
+revoke all on table reports from public, anon, authenticated;
 revoke all on sequence history_id_seq from anon, authenticated;
 revoke all on sequence reward_history_id_seq from anon, authenticated;
 revoke all on sequence economy_ledger_id_seq from anon, authenticated;

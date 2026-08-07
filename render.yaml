@@ -17,7 +17,7 @@ services:
       # 以下两个变量在部署后在 Render Dashboard 的 Environment 里填写（值来自 Supabase）
       - key: SUPABASE_URL
         sync: false
-      - key: SUPABASE_KEY
+      - key: SUPABASE_SERVICE_ROLE_KEY
         sync: false
       - key: DEEPSEEK_KEY
         sync: false

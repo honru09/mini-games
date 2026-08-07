@@ -153,6 +153,7 @@ function gameLudo(area, extra, n, opts){
       if (phase === 'roll'){
         const d = 1 + Math.floor(Math.random() * 6);
         aiPending = false;
+        if (opts.online && typeof opts.sendBotMove === 'function') opts.sendBotMove(turn, { dice:d });
         applyDice(d);
         return;
       }
@@ -194,6 +195,7 @@ function gameLudo(area, extra, n, opts){
         }
         aiPending = false;
         aiSpeak(opts.aiPersona, 'think');
+        if (opts.online && typeof opts.sendBotMove === 'function') opts.sendBotMove(turn, { ti:chosen });
         if (applyPick(curPid(), chosen) && typeof confirmAIReady === 'function') {
           confirmAIReady('ludo', 'token:' + chosen);
         }

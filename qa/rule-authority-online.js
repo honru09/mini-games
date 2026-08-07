@@ -15,12 +15,22 @@ class Client{
   constructor(name){this.name=name;this.messages=[];this.waiters=[];this.uid='';this.token='';}
   async connect(){this.ws=new WebSocket('ws://127.0.0.1:'+PORT+'/ws');this.ws.onmessage=event=>{const msg=JSON.parse(event.data);this.messages.push(msg);this.waiters.splice(0).forEach(resolve=>resolve());};await new Promise((resolve,reject)=>{this.ws.onopen=resolve;this.ws.onerror=reject;});}
   send(type,payload){this.ws.send(JSON.stringify({type,payload}));}
-  async wait(type,timeout=6000){const end=Date.now()+timeout;while(Date.now()<end){const index=this.messages.findIndex(item=>item.type===type);if(index>=0)return this.messages.splice(index,1)[0];await new Promise(resolve=>{this.waiters.push(resolve);setTimeout(resolve,25);});}throw new Error(this.name+' wait '+type+'; queued='+JSON.stringify(this.messages.slice(-8)));}
+  async wait(type,timeout=6000,predicate=null){const end=Date.now()+timeout;while(Date.now()<end){const index=this.messages.findIndex(item=>item.type===type&&(!predicate||predicate(item)));if(index>=0)return this.messages.splice(index,1)[0];await new Promise(resolve=>{this.waiters.push(resolve);setTimeout(resolve,25);});}throw new Error(this.name+' wait '+type+'; queued='+JSON.stringify(this.messages.slice(-8)));}
   async register(index){this.send('register',{uid:'u_rulev2'+String(index).padStart(2,'0'),pin:'RuleV2Pin'+index,name:this.name});const msg=await this.wait('registered');this.uid=msg.payload.uid;this.token=msg.payload.token;this.send('hello',{uid:this.uid,token:this.token,proto:1,capabilities:CAPS});const hello=await this.wait('hello_ack');if(!hello.authenticated)throw new Error(this.name+' auth failed');}
   close(){try{this.ws&&this.ws.close();}catch{}}
 }
 
-async function selectAndStart(host,guest,game){host.send('select_game',{game});const hs=await host.wait('started'),gs=await guest.wait('started');check(game+' v2：双方协商同一规则协议与 matchId',hs.matchId===gs.matchId&&hs.gameplay&&hs.gameplay.protocol===game+'-rule-v2'&&gs.gameplay&&gs.gameplay.protocol===game+'-rule-v2');return hs;}
+async function selectAndStart(host,guest,game){
+  host.send('select_game',{game});
+  await host.wait('room_update',6000,msg=>msg.payload&&msg.payload.game===game);
+  await guest.wait('room_update',6000,msg=>msg.payload&&msg.payload.game===game);
+  guest.send('ready',{ready:true});
+  await host.wait('room_update',6000,msg=>msg.payload&&msg.payload.game===game&&msg.payload.canStart===true);
+  host.send('start');
+  const hs=await host.wait('started'),gs=await guest.wait('started');
+  check(game+' v2：双方协商同一规则协议与 matchId',hs.matchId===gs.matchId&&hs.gameplay&&hs.gameplay.protocol===game+'-rule-v2'&&gs.gameplay&&gs.gameplay.protocol===game+'-rule-v2');
+  return hs;
+}
 
 async function main(){
   const server=spawn(process.execPath,[path.join(ROOT,'server','index.js')],{env:{...process.env,PORT:String(PORT),DATA_DIR:DATA,NODE_ENV:'test',ENABLE_RULE_AUTHORITY_V2:'1',SUPABASE_URL:'',SUPABASE_KEY:'',DEEPSEEK_KEY:'',REWARD_TEST_MIN_DURATION_MS:'0'},stdio:['ignore','pipe','pipe']});let output='';server.stdout.on('data',data=>output+=data);server.stderr.on('data',data=>output+=data);

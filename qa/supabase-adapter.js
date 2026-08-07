@@ -395,7 +395,7 @@ async function main(){
   fakeProfile.coins = 0;
   mark = client.mark();
   client.send({ type: 'purchase', payload: {
-    category: 'backgrounds', id: 1, requestId: 'purchase_adapter_insufficient_20260807',
+    category: 'backgrounds', id: 10, requestId: 'purchase_adapter_insufficient_20260807',
   } });
   const insufficientPurchase = await client.waitAfter(mark, 'purchase_error');
   check('余额不足由购买 RPC 拒绝且不写入 requestId', insufficientPurchase && /余额不足/.test(insufficientPurchase.msg || '') &&
