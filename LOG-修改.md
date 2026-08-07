@@ -25,3 +25,4 @@
 - 2026-08-08 01:02｜将 Project Execution OS 任务状态收口为 `ACCEPTED`，补充最后发布提交、线上证据和 Release Candidate 阻塞边界。
 - 2026-08-08 01:58｜审查并整理主线、线上页面、Seat/Social 独立分支及未完成合并状态；同步交接报告中的当前事实、冲突约束和执行优先级。
 - 2026-08-08 03:03｜修改 READY 开局、观战与房主转移回归流程；同步 Profile/Presence/i18n、六款 AI Seat 控制回调、六款成就条件及联机测试，修正设置弹层和热座移除断言。
+- 2026-08-08 03:36｜修改服务端 owned/装备权限、每日任务日期与 claimId 幂等、回放隐私/过期、Metrics Bearer/限频/审计、商城与赛事 UI；同步三语言、Supabase schema、README/AGENTS/项目状态。
