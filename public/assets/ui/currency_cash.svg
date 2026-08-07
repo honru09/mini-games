@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" role="img" aria-labelledby="title desc">
+  <title id="title">平台虚拟现金</title>
+  <desc id="desc">带星形印记的绿色纸钞图标</desc>
+  <defs>
+    <linearGradient id="note" x1="7" y1="9" x2="41" y2="39" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#9be8b8"/>
+      <stop offset="1" stop-color="#2fb67d"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-30%" width="140%" height="170%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#123b2b" flood-opacity=".28"/>
+    </filter>
+  </defs>
+  <path d="M8 13.5 35 9c2.3-.4 4.5 1.2 4.9 3.5l3 18c.4 2.3-1.2 4.5-3.5 4.9l-27 4.5c-2.3.4-4.5-1.2-4.9-3.5l-3-18C4.1 16.1 5.7 13.9 8 13.5Z" fill="#d5f7e1" opacity=".55"/>
+  <rect x="5" y="11" width="38" height="27" rx="6" fill="url(#note)" stroke="#167252" stroke-width="2" filter="url(#shadow)"/>
+  <path d="M10 18c3.5 0 6-2 6-4h16c0 2 2.5 4 6 4v13c-3.5 0-6 2-6 4H16c0-2-2.5-4-6-4V18Z" fill="none" stroke="#e9fff1" stroke-opacity=".78" stroke-width="1.5"/>
+  <circle cx="24" cy="24.5" r="7.5" fill="#f5d76e" stroke="#a67518" stroke-width="1.5"/>
+  <path d="m24 18.8 1.8 3.6 4 .6-2.9 2.8.7 4-3.6-1.9-3.6 1.9.7-4-2.9-2.8 4-.6 1.8-3.6Z" fill="#fff5b8" stroke="#9a6a12" stroke-width=".7" stroke-linejoin="round"/>
+</svg>
+

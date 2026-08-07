@@ -14,6 +14,7 @@ const OUT = path.join(ROOT, 'public', 'index.html');
 const MODULES = [
   'core/00-i18n.js',
   'core/01-utils.js',
+  'core/06-assets.js',
   'core/02-app-shell.js',
   'core/03-game-framework.js',
   'core/04-social.js',
@@ -23,16 +24,11 @@ const MODULES = [
   'shop/05-profile.js',
   'shop/06-shop.js',
   'ui/07-roster.js',
-  'games/tictactoe.js',
   'games/gomoku.js',
   'games/ludo.js',
   'games/monopoly.js',
-  'games/checker.js',
   'games/tank.js',
-  'games/snake.js',
   'games/tetris.js',
-  'games/draughts.js',
-  'games/jungle.js',
   'games/xiangqi.js',
   '08-registry.js',
 ];
@@ -73,7 +69,7 @@ function build() {
   console.log('Build complete: ' + OUT + ' (' + output.length + ' bytes)');
   console.log('Script tags: ' + scriptTags + ' open / ' + closeTags + ' close');
 
-  const checks = ['function initI18n', 'function openSettingsPage', 'function gameTicTacToe',
+  const checks = ['function initI18n', 'function currencyIcon', 'function openSettingsPage', 'function gameGomoku',
     'function gameXiangqi', 'online.connect', 'function openAuthModal', 'function openShop',
     'function applyGameResult', 'if (typeof module'];
   for (const c of checks) {

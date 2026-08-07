@@ -13,45 +13,36 @@ function openAuthModal(mode){
     hero.appendChild(el("p", null, m === "register" ? "设置昵称、头像、背景，并创建一个专属 PIN 码。以后在任何设备输入 PIN 即可登录，账号永不丢失。" : "输入注册时设置的 PIN 码即可登录（仅限字母和数字）。"));
     card.appendChild(hero);
     if (m === "register"){
-      let avatar = 0, bg = 0, catTab = "all";
+      let avatar = FREE_AVATAR_IDS[0], bg = 0, catTab = "all";
       const nameInput = el("input","nick-input");
       nameInput.type = "text"; nameInput.maxLength = 12;
       nameInput.placeholder = "昵称（12 字以内）";
       card.appendChild(nameInput);
-      const avLabel = el("div","lb-note","选择头像（30 款免费，商城还有 26 款主题头像）");
+      const avLabel = el("div","lb-note","选择免费头像 · 六个原创主题，每个主题 2 款");
       card.appendChild(avLabel);
       const catTabs = el("div","shop-tabs");
       const cats = [
-        {id:"all",name:"全部"},{id:"basic",name:"🎲 基础"},{id:"theme",name:"✨ 主题"},
-        {id:"fantasy",name:"👑 幻想"},{id:"animals",name:"🐾 动物"},
-        {id:"profession",name:"💼 职业"},{id:"creative",name:"🎨 创意"},
+        {id:"all",name:"全部"}, ...AVATAR_CATEGORIES.map(item => ({ id:item.id, name:item.icon + ' ' + item.name })),
       ];
       const grid = el("div","avatar-grid auth-avatar-grid");
       function renderAvatarGrid(){
         grid.innerHTML = "";
-        for (let i = 0; i < AVATAR_COUNT; i++){
-          if (catTab !== "all" && avatarCategory(i) !== catTab) continue;
-          const locked = i >= 30;
-          const opt = el("button","avatar-opt" + (i === avatar ? " selected" : "") + (locked ? " locked" : ""));
+        FREE_AVATAR_IDS.forEach(i => {
+          if (catTab !== "all" && avatarCategory(i) !== catTab) return;
+          const opt = el("button","avatar-opt" + (i === avatar ? " selected" : ""));
           opt.type = "button";
           opt.appendChild(avatarCanvas(i, 26));
-          opt.setAttribute("aria-label", "头像 " + (i+1));
-          if (locked){
-            const meta = avatarMeta(i);
-            opt.appendChild(el("span","avatar-lock","🔒$" + (meta ? meta.price : 0)));
-            opt.addEventListener("click", () => {
-              toast("「" + (meta ? meta.name : "头像") + "」需注册后在商城购买（$" + (meta ? meta.price : 0) + "）");
-            });
-          } else {
-            opt.addEventListener("click", () => {
-              avatar = i;
-              grid.querySelectorAll(".avatar-opt").forEach(o => o.classList.toggle("selected", o === opt));
-              stage.innerHTML = "";
-              stage.appendChild(avatarCanvas(i, 56));
-            });
-          }
+          const meta = avatarMeta(i);
+          opt.setAttribute("aria-label", meta ? meta.name : ("头像 " + i));
+          opt.title = meta ? meta.name : '';
+          opt.addEventListener("click", () => {
+            avatar = i;
+            grid.querySelectorAll(".avatar-opt").forEach(o => o.classList.toggle("selected", o === opt));
+            stage.innerHTML = "";
+            stage.appendChild(avatarCanvas(i, 56));
+          });
           grid.appendChild(opt);
-        }
+        });
       }
       cats.forEach(c => {
         const tb = el("button","btn shop-tab" + (catTab === c.id ? " btn-primary" : ""));
@@ -81,7 +72,7 @@ function openAuthModal(mode){
         bgGrid.querySelectorAll(".bg-swatch").forEach(x => x.classList.toggle("selected", x === defSw));
       });
       bgGrid.appendChild(defSw);
-      SHOP.backgrounds.forEach(b => {
+      SHOP.backgrounds.filter(b => b.id <= 6).forEach(b => {
         const sw = el("div","bg-swatch" + (b.id === bg ? " selected" : "") + " " + b.cls);
         sw.title = b.name;
         sw.addEventListener("click", () => {

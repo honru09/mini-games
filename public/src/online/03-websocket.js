@@ -1,9 +1,12 @@
 /* ================= 联机对战（WebSocket 中继） ================= */
 const online = {
-  ws: null, room: null, player: 0, isHost: false, game: null, connected: false, pending: null, roomInfo: null, capacity: 2, _hb: null,
-  lobby: [], inviteTarget: null, matchId: null, reportedMatchIds: [], soloReportedIds: [], legacyResultSubmitted: false,
+  ws: null, room: null, spectatorRoom:null, player: 0, isHost: false, game: null, connected: false, pending: null, roomInfo: null, capacity: 2, _hb: null,
+  lobby: [], inviteTarget: null, pendingGame:null, matchId: null, reportedMatchIds: [], soloReportedIds: [], legacyResultSubmitted: false,
   resume: null, _reconnectTimer: null, _reconnectAttempts: 0, _manualClose: false, _replaying: false, _liveMoveQueue: [],
   pendingResultClaim: null, _resultRetryTimer: null, _authenticated: false,
+  soloMatch: null, pendingSoloClaims: [], _soloClaimsLoaded: false, displayedRewardIds: [], rewardVersion: null,
+  socialState: { version:'1.0', friends:[], incoming:[], outgoing:[], blocked:[], counts:{ friends:0, incoming:0, outgoing:0, blocked:0 } },
+  socialTab: 'friends',
   defaultServer: 'https://mini-games-online.onrender.com',
   connect(){
     if (this.connected || (this.ws && (this.ws.readyState === 0 || this.ws.readyState === 1))) return;
@@ -31,7 +34,7 @@ const online = {
       this.send({ type: 'hello', payload: {
         uid: authAccount && authAccount.uid ? authAccount.uid : (typeof deviceUid !== 'undefined' ? deviceUid : null),
         token: authAccount && authAccount.authToken ? authAccount.authToken : null,
-        proto: typeof PROTOCOL_VERSION !== 'undefined' ? PROTOCOL_VERSION : 1,
+        proto: typeof PROTOCOL_VERSION !== 'undefined' ? PROTOCOL_VERSION : 2,
       } });
       this.send({ type: 'lobby' });
       const needsRegister = authAccount && authAccount.uid && authPin && authAccount.registered === false;
@@ -60,8 +63,9 @@ const online = {
       if (this.pending){
         const p = this.pending;
         this.pending = null;
-        if (p.type === 'create') this.create();
+        if (p.type === 'create') this.create(p.settings);
         else if (p.type === 'join') this.join(p.room);
+        else if (p.type === 'quick_join') this.quickJoin(p.game);
       }
     };
     ws.onmessage = e => { if (this.ws === ws) this.onMessage(JSON.parse(e.data)); };
@@ -220,13 +224,14 @@ const online = {
     else { node.innerHTML = ''; node.textContent = String(text || ''); }
   },
   send(msg){ if (this.ws && this.ws.readyState === 1) this.ws.send(JSON.stringify(msg)); },
-  create(){
+  create(settings){
     if (!account){ toast('请先创建账号或登录后再联机'); openAuthModal(); return; }
+    settings = settings || {};
     if (this.connected){
-      this.send({type:'create', payload:{ capacity: playerCount }});
+      this.send({type:'create', payload:{ capacity:Math.max(2,Math.min(5,Number(settings.capacity)||2)), visibility:settings.visibility || 'public', allowSpectators:settings.allowSpectators !== false }});
       this.status('正在创建房间…');
     } else {
-      this.pending = { type:'create' };
+      this.pending = { type:'create', settings };
       this.connect();
       this.status('正在连接服务器…');
     }
@@ -245,7 +250,46 @@ const online = {
     }
   },
   selectGame(id){ this.send({ type:'select_game', payload:{ game:id } }); },
-  sendMove(payload){ this.send({type:'move', payload}); },
+  quickJoin(game){
+    if (!account){ openAuthModal(); return; }
+    if (this.connected) this.send({ type:'quick_join', payload:{ game:game || null } });
+    else { this.pending={type:'quick_join',game:game||null}; this.connect(); this.status('正在连接服务器…'); }
+  },
+  spectate(room){ this.send({ type:'spectate', payload:{ room } }); },
+  setReady(ready){ this.send({ type:'ready', payload:{ ready:ready !== false } }); },
+  requestSocial(){ if (this.connected && this._authenticated) this.send({ type:'social_get' }); },
+  friendRequest(uid){ this.send({ type:'friend_request', payload:{ toUid:String(uid || '') } }); },
+  friendRequestAction(action, requestId){ this.send({ type:'friend_request_action', payload:{ action, requestId:String(requestId || '') } }); },
+  removeFriend(uid){ this.send({ type:'friend_remove', payload:{ uid:String(uid || '') } }); },
+  blockUser(uid){ this.send({ type:'block', payload:{ uid:String(uid || '') } }); },
+  unblockUser(uid){ this.send({ type:'unblock', payload:{ uid:String(uid || '') } }); },
+  reportUser(payload){ this.send({ type:'report', payload:payload || {} }); },
+  addAI(difficulty, persona){ this.send({ type:'add_ai', payload:{ difficulty:difficulty || 'normal', persona:persona || 'teacher' } }); },
+  removeAI(seatId){ this.send({ type:'remove_ai', payload:{ seatId } }); },
+  sendBotMove(seatId, payload){ this.send({ type:'bot_move', payload:{ seatId, payload } }); },
+  sendMove(payload){
+    if (this.game === 'tank' && payload && payload.act === 'input'){
+      this.send({ type:'tank_input', payload:{ matchId:this.matchId, seq:payload.seq, clientTick:Number(this.serverTick)||0, input:payload.input } }); return;
+    }
+    if (this.game === 'tank' && payload && payload.act === 'shoot'){
+      this.send({ type:'tank_input', payload:{ matchId:this.matchId, seq:payload.seq, clientTick:Number(this.serverTick)||0, input:{ fire:true } } }); return;
+    }
+    if (this.game === 'tank' && payload && payload.act === 'move'){
+      const input={up:false,right:false,down:false,left:false}; input[['up','right','down','left'][Number(payload.d)]] = true;
+      this.send({ type:'tank_input', payload:{ matchId:this.matchId, seq:payload.seq, clientTick:Number(this.serverTick)||0, input } }); return;
+    }
+    if (this.game === 'tetris' && payload){
+      if (payload.act === 'lock'){
+        this.send({ type:'tetris_lock_claim', payload:{ ...payload, matchId:this.matchId, linesCleared:Number(payload.linesCleared)||0, attack:Number(payload.attack)||0 } }); return;
+      }
+      if (payload.act === 'ko'){
+        this.send({ type:'tetris_ko_claim', payload:{ ...payload, matchId:this.matchId } }); return;
+      }
+      if (payload.act === 'active') this.send({ type:'tetris_sync', payload:{ matchId:this.matchId, payload } });
+      return;
+    }
+    this.send({type:'move', payload});
+  },
   sendRestart(){ this.send({type:'restart'}); },
   onMessage(msg){
     switch (msg.type){
@@ -253,7 +297,7 @@ const online = {
         msg.room = String(msg.room || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12);
         this.room = msg.room; this.player = msg.player; this.isHost = true;
         this.capacity = msg.capacity || 2;
-        this.roomInfo = { room: msg.room, game: null, capacity: this.capacity, players: [{ uid: null, player: 0 }], size: 1, started: false };
+        this.roomInfo = msg.payload || { room: msg.room, game: null, capacity: this.capacity, players: [{ uid: null, player: 0 }], seats:[], size: 1, started: false };
         this.status('房间已创建：<span class="room-code">' + msg.room + '</span>，等待对方加入…', true);
         renderRoomPanel();
         if (this.inviteTarget){
@@ -266,19 +310,42 @@ const online = {
       case 'joined':
         msg.room = String(msg.room || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12);
         this.room = msg.room; this.player = msg.player; this.isHost = false;
-        this.roomInfo = { room: msg.room, game: null, capacity: 2, players: [{ uid: null, player: 0 }], size: 1, started: false };
+        this.roomInfo = msg.payload || { room: msg.room, game: null, capacity: 2, players: [{ uid: null, player: 0 }], seats:[], size: 1, started: false };
         this.status('已加入房间 <span class="room-code">' + msg.room + '</span>，等待房主开始…', true);
         renderRoomPanel();
         break;
       case 'room_update':
         this.roomInfo = msg.payload;
         this.capacity = msg.payload.capacity || this.capacity;
-        if (!this.isHost && !this.room) this.room = msg.payload.room;
+        if (this.room) this.isHost = !!(msg.payload.host && Number(msg.payload.host.seatId) === Number(this.player));
         if (this.game && !msg.payload.game && !msg.payload.started){
           finishRoomGame();
           return;
         }
         renderRoomPanel();
+        if (this.pendingGame){ const game=this.pendingGame; this.pendingGame=null; this.selectGame(game); }
+        break;
+      case 'spectating':
+        this.spectatorRoom = msg.payload && msg.payload.room;
+        this.roomInfo = msg.payload || null; this.player = null; this.isHost = false;
+        this.game = msg.payload && msg.payload.started ? msg.payload.game : null;
+        this.matchId = msg.payload && msg.payload.matchId || null;
+        this.status('正在观战房间 ' + this.spectatorRoom);
+        renderRoomPanel();
+        if (this.game){
+          startOnlineGame(this.game, msg.payload.size);
+          if (msg.payload.tankSnapshot && currentGame && typeof currentGame.applyServerSnapshot === 'function'){
+            this.serverTick=Number(msg.payload.tankSnapshot.serverTick)||0;currentGame.applyServerSnapshot(msg.payload.tankSnapshot);
+          }
+          this.replayMoveLog(msg.payload.moveLog || []);
+        }
+        break;
+      case 'spectator_left':
+        this.spectatorRoom = null; this.roomInfo = null; this.game = null; this.matchId = null;
+        if (currentGameId) showHub(); renderRoomPanel(); this.status('已离开观战');
+        break;
+      case 'quick_join_empty':
+        toast('当前没有可快速加入的公开房间');
         break;
       case 'lobby':
         this.lobby = msg.payload || [];
@@ -286,14 +353,28 @@ const online = {
         break;
       case 'hello_ack':
         this._authenticated = !!msg.authenticated;
+        this.rewardVersion = msg.rewardVersion || null;
         if (msg.authenticated){
           if (!this.resume) this._reconnectAttempts = 0;
           this.loadPendingResultClaim();
           this.flushPendingResultClaim();
+          this.flushSoloMatch();
+          this.requestSocial();
         } else if (account && account.authToken){
           toast('登录会话已失效，请使用 PIN 重新登录');
           if (typeof completeLocalLogout === 'function') completeLocalLogout(true);
         }
+        break;
+      case 'social_state':
+        this.socialState = msg.payload || { version:'1.0', friends:[], incoming:[], outgoing:[], blocked:[], counts:{ friends:0, incoming:0, outgoing:0, blocked:0 } };
+        if (typeof renderSocialRail === 'function') renderSocialRail();
+        break;
+      case 'social_ok':
+        this.requestSocial();
+        toast(msg.action === 'reported' ? t('social_report_sent') : t('social_action_ok'));
+        break;
+      case 'social_error':
+        toast(t('social_action_error'));
         break;
       case 'rejoined':
         {
@@ -313,6 +394,9 @@ const online = {
           renderRoomPanel();
           if (this.game){
             startOnlineGame(this.game, p.size);
+            if (p.tankSnapshot && currentGame && typeof currentGame.applyServerSnapshot === 'function'){
+              this.serverTick=Number(p.tankSnapshot.serverTick)||0; currentGame.applyServerSnapshot(p.tankSnapshot);
+            }
             this.replayMoveLog(p.moveLog || []);
           } else {
             this.status(t('room_restored', this.room));
@@ -369,6 +453,7 @@ const online = {
           this.game = msg.game || started.game;
           this.matchId = msg.matchId || started.matchId || null;
           this.legacyResultSubmitted = false;
+          if (started.seats && this.roomInfo) this.roomInfo.seats = started.seats;
           if (this.pendingResultClaim && String(this.pendingResultClaim.matchId) !== String(this.matchId || '')) this.clearPendingResultClaim();
           startOnlineGame(this.game, msg.size || started.size);
         }
@@ -376,6 +461,24 @@ const online = {
       case 'move':
         if (this._replaying) this._liveMoveQueue.push({ payload: msg.payload, player: msg.player });
         else if (this.game && currentGame && currentGame.onMove) currentGame.onMove(msg.payload, msg.player);
+        break;
+      case 'tank_snapshot':
+        this.serverTick = Number(msg.payload && msg.payload.serverTick) || 0;
+        if (this.game === 'tank' && currentGame && typeof currentGame.applyServerSnapshot === 'function') currentGame.applyServerSnapshot(msg.payload);
+        break;
+      case 'tank_result':
+        if (this.game === 'tank' && currentGame && typeof currentGame.applyServerResult === 'function') currentGame.applyServerResult(msg.payload);
+        break;
+      case 'tetris_garbage_due':
+        if (this.game === 'tetris' && currentGame && typeof currentGame.queueGarbage === 'function'){
+          const p = msg.payload || {}; currentGame.queueGarbage(Number(p.target), Number(p.amount), Number(p.source), p.attackId);
+        }
+        break;
+      case 'tetris_ko':
+        if (this.game === 'tetris' && currentGame && currentGame.onMove) currentGame.onMove({ act:'ko', reason:'TOP OUT', seq:Number(msg.revision)||0 }, Number(msg.player));
+        break;
+      case 'tetris_result':
+        if (this.game === 'tetris' && currentGame && currentGame.onMove) currentGame.onMove({ act:'final', order:msg.order, state:null }, 0);
         break;
       case 'restart':
         {
@@ -454,6 +557,8 @@ const online = {
             else saveAccount();
             this.loadPendingResultClaim();
             this.flushPendingResultClaim();
+            this.flushSoloMatch();
+            this.requestSocial();
             if (typeof syncProfiles === 'function') syncProfiles();
             renderMyCard();
             toast('🎉 账号创建成功，欢迎 ' + account.name);
@@ -474,6 +579,8 @@ const online = {
             updateAccountProfile(profile);
             this.loadPendingResultClaim();
             this.flushPendingResultClaim();
+            this.flushSoloMatch();
+            this.requestSocial();
             if (typeof syncProfiles === 'function') syncProfiles();
             renderMyCard();
             toast('✅ 登录成功：' + account.name);
@@ -489,6 +596,8 @@ const online = {
         }
         break;
       case 'logged_out':
+        this.socialState = { version:'1.0', friends:[], incoming:[], outgoing:[], blocked:[], counts:{ friends:0, incoming:0, outgoing:0, blocked:0 } };
+        if (typeof renderSocialRail === 'function') renderSocialRail();
         if (typeof completeLocalLogout === 'function') completeLocalLogout(true);
         else this.resetState();
         break;
@@ -513,6 +622,18 @@ const online = {
         toast((msg.payload && msg.payload.msg) || msg.msg || t('purchase_failed'));
         if (typeof refreshOpenShop === 'function') refreshOpenShop();
         break;
+      case 'solo_started':
+        {
+          const payload = msg.payload || {};
+          const match = this.soloMatch;
+          if (match && String(payload.clientRunId || '') === String(match.clientRunId) && String(payload.game || '') === String(match.game)){
+            match.matchId = payload.matchId;
+            match.resultId = payload.resultId;
+            match.started = !!(match.matchId && match.resultId);
+            this.flushSoloMatch();
+          }
+        }
+        break;
       case 'result_ok':
         {
           const payload = msg.payload || {};
@@ -525,9 +646,24 @@ const online = {
             if (typeof renderSlots === 'function') renderSlots();
             if (typeof renderLeaderboard === 'function') renderLeaderboard();
           }
+          const rewardId = String(payload.resultId || (resultMatchId ? resultMatchId + ':' + this.player : ''));
+          if (payload.reward && (!rewardId || !this.displayedRewardIds.includes(rewardId))){
+            if (rewardId){
+              this.displayedRewardIds.push(rewardId);
+              if (this.displayedRewardIds.length > 100) this.displayedRewardIds.splice(0, this.displayedRewardIds.length - 100);
+              this.saveSoloClaims();
+            }
+            if (typeof showRewardBreakdown === 'function') showRewardBreakdown(payload.reward);
+          } else if (!payload.reward && (pendingClaim || this.pendingSoloClaims.some(claim => String(claim.resultId || '') === rewardId))){
+            toast(t('reward_settled_refresh'));
+          }
+          if (payload.resultId) this.removeSoloClaim(payload.resultId, resultMatchId);
+          if (this.soloMatch && payload.resultId && String(payload.resultId) === String(this.soloMatch.resultId || '')){
+            this.soloMatch.completed = true;
+            this.soloMatch = null;
+          }
           if (pendingClaim && resultMatchId && String(pendingClaim.matchId) === String(resultMatchId)){
-            const resultName = account && account.name ? account.name : '玩家';
-            toast(t('toast_win_reward') + (pendingClaim.won ? resultName + ' 获得 $1' : resultName + ' 本局无奖励'));
+            if (payload.reward) toast(formatRewardSummary(payload.reward));
             this.clearPendingResultClaim(resultMatchId);
           }
         }
@@ -539,23 +675,157 @@ const online = {
       case 'result_error':
         {
           const errorMatchId = msg.matchId || (msg.payload && msg.payload.matchId);
+          const errorResultId = msg.resultId || (msg.payload && msg.payload.resultId);
           if (errorMatchId) this.clearPendingResultClaim(errorMatchId);
           else if (this.pendingResultClaim && this.room && String(this.matchId || '') === String(this.pendingResultClaim.matchId)) this.clearPendingResultClaim();
+          if (errorResultId || errorMatchId) this.removeSoloClaim(errorResultId, errorMatchId);
+          if (this.soloMatch && errorMatchId && String(this.soloMatch.matchId || '') === String(errorMatchId)) this.soloMatch = null;
         }
         toast(msg.msg || (msg.payload && msg.payload.msg) || t('result_failed'));
         break;
     }
   },
+  newSoloRunId(){
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) return 'run_' + crypto.randomUUID();
+    return 'run_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 14);
+  },
+  newSoloActionId(match){
+    match.actionSeq = (Number(match.actionSeq) || 0) + 1;
+    return 'act_' + Date.now().toString(36) + '_' + match.actionSeq.toString(36) + '_' + Math.random().toString(36).slice(2, 10);
+  },
+  loadSoloClaims(){
+    if (this._soloClaimsLoaded) return;
+    this._soloClaimsLoaded = true;
+    try {
+      const saved = JSON.parse(localStorage.getItem('mg_pending_solo_claims') || 'null');
+      if (saved && account && saved.uid === account.uid && Array.isArray(saved.claims)){
+        this.pendingSoloClaims = saved.claims.filter(claim => claim && claim.matchId && claim.resultId && claim.game && claim.result).slice(-20);
+      }
+      const shown = JSON.parse(localStorage.getItem('mg_displayed_reward_ids') || '[]');
+      if (Array.isArray(shown)) this.displayedRewardIds = shown.map(String).slice(-100);
+    } catch {
+      this.pendingSoloClaims = [];
+    }
+  },
+  saveSoloClaims(){
+    try {
+      if (account && account.uid) localStorage.setItem('mg_pending_solo_claims', JSON.stringify({ uid: account.uid, claims: this.pendingSoloClaims.slice(-20) }));
+      else localStorage.removeItem('mg_pending_solo_claims');
+      localStorage.setItem('mg_displayed_reward_ids', JSON.stringify(this.displayedRewardIds.slice(-100)));
+    } catch {}
+  },
+  queueSoloClaim(match){
+    if (!match || !match.matchId || !match.resultId || !match.pendingResult) return false;
+    this.loadSoloClaims();
+    if (!this.pendingSoloClaims.some(claim => String(claim.resultId) === String(match.resultId))){
+      this.pendingSoloClaims.push({
+        game: match.game, matchId: match.matchId, resultId: match.resultId, result: match.pendingResult,
+        pendingActions: Array.isArray(match.actionHistory) ? match.actionHistory.slice(0, 500) : [],
+        resultSentAt: 0, createdAt: Date.now(),
+      });
+      if (this.pendingSoloClaims.length > 20) this.pendingSoloClaims.splice(0, this.pendingSoloClaims.length - 20);
+    }
+    this.saveSoloClaims();
+    this.flushSoloClaims();
+    return true;
+  },
+  removeSoloClaim(resultId, matchId){
+    const before = this.pendingSoloClaims.length;
+    this.pendingSoloClaims = this.pendingSoloClaims.filter(claim =>
+      !(resultId && String(claim.resultId) === String(resultId)) && !(matchId && String(claim.matchId) === String(matchId)));
+    if (this.pendingSoloClaims.length !== before) this.saveSoloClaims();
+    this.flushSoloClaims();
+  },
+  flushSoloClaims(){
+    this.loadSoloClaims();
+    const claim = this.pendingSoloClaims[0];
+    if (!claim || !account || !account.uid || !this.connected || !this._authenticated || !this.rewardVersion) return;
+    while (claim.pendingActions && claim.pendingActions.length){
+      const action = claim.pendingActions.shift();
+      this.send({ type: 'solo_progress', payload: { matchId: claim.matchId, game: claim.game, action } });
+    }
+    if (!claim.resultSentAt || Date.now() - claim.resultSentAt > 3000){
+      claim.resultSentAt = Date.now();
+      this.saveSoloClaims();
+      this.send({ type: 'result', payload: {
+        mode: 'ai', game: claim.game, matchId: claim.matchId, resultId: claim.resultId, result: claim.result,
+      } });
+      setTimeout(() => this.flushSoloClaims(), 3100);
+    }
+  },
+  beginSoloMatch(game){
+    if (!game) return null;
+    this.soloMatch = {
+      game: String(game),
+      clientRunId: this.newSoloRunId(),
+      matchId: null,
+      resultId: null,
+      started: false,
+      startSentAt: 0,
+      pendingActions: [],
+      actionHistory: [],
+      actionSeq: 0,
+      pendingResult: null,
+      completed: false,
+      submitted: false,
+      resultSentAt: 0,
+    };
+    this.flushSoloMatch();
+    return this.soloMatch;
+  },
+  reportSoloProgress(game, action){
+    if (!this.soloMatch || this.soloMatch.completed || this.soloMatch.pendingResult || this.soloMatch.game !== String(game)) this.beginSoloMatch(game);
+    const match = this.soloMatch;
+    if (!match) return;
+    const event = { actionId: this.newSoloActionId(match), payload: action };
+    if (match.actionHistory.length < 500) match.actionHistory.push(event);
+    if (!match.started || !this.connected || !this._authenticated){
+      if (match.pendingActions.length < 500) match.pendingActions.push(event);
+    } else {
+      this.send({ type: 'solo_progress', payload: { matchId: match.matchId, game: match.game, action: event } });
+    }
+    this.flushSoloMatch();
+  },
+  submitSoloResult(game, result){
+    if (!this.soloMatch || this.soloMatch.completed || this.soloMatch.game !== String(game)) this.beginSoloMatch(game);
+    if (!this.soloMatch) return false;
+    this.soloMatch.pendingResult = String(result || 'loss');
+    this.flushSoloMatch();
+    return true;
+  },
+  flushSoloMatch(){
+    const match = this.soloMatch;
+    this.flushSoloClaims();
+    if (!match || match.completed || !account || !account.uid || !this.connected || !this._authenticated || !this.rewardVersion) return;
+    if (!match.started){
+      const now = Date.now();
+      if (!match.startSentAt || now - match.startSentAt > 1500){
+        match.startSentAt = now;
+        this.send({ type: 'solo_start', payload: { game: match.game, clientRunId: match.clientRunId } });
+        setTimeout(() => { if (this.soloMatch === match && !match.started) this.flushSoloMatch(); }, 1600);
+      }
+      return;
+    }
+    while (match.pendingActions.length){
+      const action = match.pendingActions.shift();
+      this.send({ type: 'solo_progress', payload: { matchId: match.matchId, game: match.game, action } });
+    }
+    if (match.pendingResult){
+      this.queueSoloClaim(match);
+      if (this.soloMatch === match) this.soloMatch = null;
+    }
+  },
   resetState(preserveResume){
+    const wasRoomGame = !!(this.room || this.game);
     if (!preserveResume) this.clearResume();
     if (!preserveResume) this.clearPendingResultClaim();
-    this.room = null; this.game = null; this.isHost = false; this.pending = null; this.roomInfo = null; this.capacity = 2; this.inviteTarget = null;
+    this.room = null; this.spectatorRoom = null; this.game = null; this.isHost = false; this.pending = null; this.roomInfo = null; this.capacity = 2; this.inviteTarget = null;
     this.matchId = null; this.legacyResultSubmitted = false;
     $('online-banner').classList.add('hidden');
     $('room-panel').classList.add('hidden');
     const endBtn = $('btn-end-game');
     if (endBtn) endBtn.classList.add('hidden');
-    if (currentGameId) showHub();
+    if (currentGameId && wasRoomGame) showHub();
   },
 };
 function resolveServer(){
@@ -582,44 +852,46 @@ function startOnlineGame(id, sizeOverride){
   showGame(id);
   const banner = $('online-banner');
   banner.classList.remove('hidden');
-  banner.textContent = '房间 ' + online.room + ' · ' + size + ' 人局 · 你是玩家' + (online.player+1) + (online.isHost ? '（房主）' : '');
+  banner.textContent = '房间 ' + (online.room || online.spectatorRoom) + ' · ' + size + ' 席 · ' + (online.spectatorRoom ? '观战（只读）' : ('你是席位 ' + (online.player+1) + (online.isHost ? '（房主）' : '')));
   runCountdown();
 }
 function renderRoomPanel(){
   const panel = $('room-panel');
-  if (!online.room){
+  const roomId = online.room || online.spectatorRoom;
+  if (!roomId){
     panel.classList.add('hidden');
     return;
   }
   panel.classList.remove('hidden');
-  $('room-code-big').textContent = online.room;
-  const info = online.roomInfo || { size: 1, capacity: 2, players: [], game: null, started: false };
+  $('room-code-big').textContent = roomId;
+  const info = online.roomInfo || { size:1, capacity:2, players:[], seats:[], game:null, started:false };
   const cap = info.capacity || 2;
-  const names = (info.players || []).map(p => {
-    const prof = p.uid ? profileByUid(p.uid) : null;
-    return (prof ? prof.name : '玩家' + (p.player + 1)) + (p.uid && p.uid === deviceUid ? '（你）' : '');
-  });
-  $('room-info').textContent = '人数 ' + (info.size || 1) + '/' + cap + (names.length ? ' · ' + names.join(' vs ') : '') + ' · 游戏：' + (info.game ? GAMES[info.game].name : '未选择');
-  let status;
-  if (online.game){
-    status = '对局进行中…';
-  } else if (online.isHost){
-    if (info.game){
-      if (info.started) status = '对局进行中…';
-      else if (info.size >= cap) status = '房间已满，对局即将开始…';
-      else if (info.size >= 2) status = '已选择 ' + GAMES[info.game].name + '，可点击「开始游戏」或等人到齐';
-      else status = '已选择 ' + GAMES[info.game].name + '，等待其他玩家加入…';
-    } else {
-      status = info.size >= 2 ? '玩家已就位！请选择游戏' : '等待玩家加入…（选择游戏后开始）';
+  $('room-info').textContent = (info.visibility === 'private' ? '🔒 私密' : '🌐 公开') + ' · ' + (info.size || 0) + '/' + cap + ' 席 · ' + (info.humanCount || 0) + ' 真人 · ' + (info.aiCount || 0) + ' AI · ' + (info.allowSpectators ? ('可观战 ' + (info.spectatorCount || 0)) : '禁止观战') + ' · ' + (info.game && GAMES[info.game] ? GAMES[info.game].name : '未选游戏');
+  const seatGrid=$('seat-grid'); seatGrid.innerHTML='';
+  (info.seats || []).forEach(seat => {
+    const card=el('div','seat-card '+(seat.type==='empty'?'is-empty ':'')+(seat.host?'is-host ':'')+(seat.online===false&&seat.type==='human'?'is-offline':''));
+    if(seat.type==='human'){
+      const profile={...(profileByUid(seat.userId)||{}),uid:seat.userId,name:seat.nickname,avatar:seat.avatar};
+      const av=avatarStageNode(profile,38); av.style.cursor='pointer'; av.addEventListener('click',()=>seat.userId&&openProfileModal(seat.userId)); card.appendChild(av);
+      card.appendChild(el('div','seat-name',seat.nickname+(seat.userId===deviceUid?'（你）':'')));
+      const badges=el('div','seat-badges'); if(seat.host)badges.appendChild(el('span','seat-badge','HOST')); badges.appendChild(el('span','seat-badge '+(seat.ready?'ready':''),seat.ready?'READY':'未准备')); if(!seat.online)badges.appendChild(el('span','seat-badge','离线')); card.appendChild(badges);
+    }else if(seat.type==='ai'){
+      card.appendChild(avatarCanvas(seat.avatar||141,38)); card.appendChild(el('div','seat-name',(seat.nickname||'AI')+' 🤖'));
+      const badges=el('div','seat-badges'); badges.appendChild(el('span','seat-badge bot','BOT / AI')); badges.appendChild(el('span','seat-badge ready','READY')); card.appendChild(badges);
+      card.appendChild(el('div','seat-meta',(seat.aiDifficulty||'normal').toUpperCase()+' · '+(seat.aiPersona||'teacher')));
+      if(online.isHost&&!info.started){const remove=el('button','btn btn-ghost','移除 AI');remove.addEventListener('click',()=>online.removeAI(seat.seatId));card.appendChild(remove);}
+    }else{
+      card.appendChild(el('div',null,'＋')); card.appendChild(el('div','seat-name','空席位'));
+      if(online.isHost&&!info.started){const add=el('button','btn','添加 AI');add.addEventListener('click',()=>online.addAI('normal',currentPersona&&currentPersona.id||'teacher'));card.appendChild(add);}
     }
-  } else {
-    status = info.game
-      ? (info.started ? '对局进行中…' : ('房主已选择 ' + GAMES[info.game].name + (info.size >= cap ? '，即将开始…' : '，等待更多玩家…')))
-      : '等待房主选择游戏…';
-  }
-  $('room-status').textContent = status;
+    seatGrid.appendChild(card);
+  });
+  $('room-status').textContent = online.spectatorRoom ? '观战模式 · 只读，不可走子或提交结算' : (info.started ? '对局进行中…' : (info.canStart ? '所有真人玩家已 READY，房主可以开始' : (info.game ? '等待真人玩家 READY' : '房主请选择游戏')));
   const actions = $('room-actions');
   actions.innerHTML = '';
+  if(online.spectatorRoom){
+    const leaveWatch=el('button','btn','离开观战');leaveWatch.addEventListener('click',()=>online.send({type:'leave_spectator'}));actions.appendChild(leaveWatch);return;
+  }
   if (online.game){
     if (currentGameId && $('screen-hub') && !$('screen-hub').classList.contains('hidden')){
       const backBtn = el('button','btn','🎮 返回对局');
@@ -627,14 +899,18 @@ function renderRoomPanel(){
       actions.appendChild(backBtn);
     }
   } else {
-    if (online.isHost && info.game && info.size >= 2 && !info.started){
+    const mine=(info.seats||[]).find(seat=>seat.type==='human'&&Number(seat.seatId)===Number(online.player));
+    if(!online.isHost&&mine&&!info.started){const ready=el('button','btn '+(mine.ready?'btn-primary':''),mine.ready?'✓ READY':'准备');ready.addEventListener('click',()=>online.setReady(!mine.ready));actions.appendChild(ready);}
+    if (online.isHost && info.game && info.canStart && !info.started){
       const startBtn = el('button','btn btn-primary','▶ 开始游戏');
       startBtn.addEventListener('click', () => online.send({ type: 'start' }));
       actions.appendChild(startBtn);
     }
-    const invite = el('button','btn btn-primary','📨 邀请玩家');
-    invite.addEventListener('click', openInvitePicker);
-    actions.appendChild(invite);
+    if(online.isHost){
+      const invite=el('button','btn','邀请真人');invite.addEventListener('click',openInvitePicker);actions.appendChild(invite);
+      const visibility=el('button','btn',info.visibility==='private'?'改为公开房':'改为私密房');visibility.addEventListener('click',()=>online.send({type:'room_settings',payload:{visibility:info.visibility==='private'?'public':'private'}}));actions.appendChild(visibility);
+      const watch=el('button','btn',info.allowSpectators?'关闭观战':'开放观战');watch.addEventListener('click',()=>online.send({type:'room_settings',payload:{allowSpectators:!info.allowSpectators}}));actions.appendChild(watch);
+    }
   }
   const leave = el('button','btn','离开房间');
   leave.addEventListener('click', () => {
@@ -662,7 +938,7 @@ function openInvitePicker(){
       av.appendChild(avatarStageNode(u, 24));
       item.appendChild(av);
       item.appendChild(el('span','nm', u.name + ' [Lv.' + (u.level || levelFromXp(u.xp || 0)) + ']'));
-      item.appendChild(el('span','lb-game', '$' + (u.coins || 0)));
+      item.appendChild(el('span','lb-game', CURRENCY + (u.coins || 0)));
       item.addEventListener('click', () => {
         bd.remove();
         inviteUser(u.uid);
@@ -692,6 +968,7 @@ function renderLobby(){
   online.lobby.forEach(r => {
     if (r.room === online.room) return;
     const row = el('div','lobby-row');
+    row.dataset.room = r.room;
     const av = el('span','av');
     const hostProf = { uid: r.hostUid, avatar: r.hostAvatar, name: r.hostName, frame: 0, effect: 0 };
     av.appendChild(avatarStageNode(hostProf, 30));
@@ -699,15 +976,17 @@ function renderLobby(){
   av.addEventListener('click', e => { if (e && e.stopPropagation) e.stopPropagation(); if (r.hostUid) openProfileModal(r.hostUid); });
     row.appendChild(av);
     const info = el('div','info');
-    info.appendChild(el('div','nm', r.hostName + ' ' + (r.hostLang ? langFlag(r.hostLang) : '') + ' 的房间'));
-    info.appendChild(el('div','meta', '人数 ' + r.size + '/' + r.capacity + ' · 游戏：' + (r.game ? GAMES[r.game].name : '未选择')));
+    info.appendChild(el('div','nm', (r.game && GAMES[r.game] ? GAMES[r.game].name : '待选游戏') + ' · ' + (r.status==='playing'?'游戏中':'等待中')));
+    info.appendChild(el('div','meta', r.hostName + ' HOST · ' + r.humanCount + ' 真人 / ' + r.aiCount + ' AI · ' + r.size + '/' + r.capacity + ' · ' + (r.allowSpectators?'可观战':'不可观战')));
+    const strip=el('div','lobby-seat-strip');(r.seats||[]).forEach(seat=>strip.appendChild(el('span','lobby-seat-dot',seat.type==='ai'?'🤖 AI':seat.type==='human'?(seat.ready?'✓ '+seat.nickname:seat.nickname):'＋ 空席')));info.appendChild(strip);
     row.appendChild(info);
-    const joinBtn = el('button','btn btn-primary invite-btn','加入');
+    const joinBtn = el('button','btn btn-primary invite-btn','加入'); joinBtn.disabled=!r.canJoin;
     joinBtn.addEventListener('click', () => {
       if (online.game){ toast('对局进行中，请先返回大厅离开房间'); return; }
       online.send({ type: 'join', payload: { room: r.room } });
     });
     row.appendChild(joinBtn);
+    if(r.canSpectate){const watch=el('button','btn invite-btn','观战');watch.addEventListener('click',()=>online.spectate(r.room));row.appendChild(watch);}
     listEl.appendChild(row);
   });
 }
@@ -730,11 +1009,11 @@ function renderAccounts(){
         row.appendChild(el('span','nm', u.name + ' [Lv.' + (u.level || levelFromXp(u.xp || 0)) + ']' + (u.uid === deviceUid ? t('profile_mine') : '') + ' ' + (u.lang ? langFlag(u.lang) : '')));
     if (u.online) row.appendChild(el('span','online-dot',''));
     const coinLine = el('span','coin-line');
-    coinLine.appendChild(el('span','coin sm','$'));
+    coinLine.appendChild(currencyIcon('sm'));
     coinLine.appendChild(el('span','pts', (u.coins || 0)));
     row.appendChild(coinLine);
     if (u.uid !== deviceUid){
-      const inv = el('button','btn invite-btn','邀请');
+      const inv = el('button','btn invite-btn');setButtonIcon(inv,'user-plus','邀请');
       inv.disabled = !u.online || (online.room && !online.isHost);
   inv.addEventListener('click', e => { if (e && e.stopPropagation) e.stopPropagation(); inviteUser(u.uid); });
       row.appendChild(inv);
@@ -744,6 +1023,97 @@ function renderAccounts(){
     listEl.appendChild(row);
   });
   applyI18n(listEl);
+}
+function socialRelationshipFor(uid){
+  const state = online.socialState || {};
+  if ((state.blocked || []).some(item => item.uid === uid)) return 'blocked';
+  if ((state.friends || []).some(item => item.uid === uid)) return 'friends';
+  if ((state.incoming || []).some(item => item.user && item.user.uid === uid)) return 'incoming';
+  if ((state.outgoing || []).some(item => item.user && item.user.uid === uid)) return 'outgoing';
+  return 'none';
+}
+function openReportUserModal(profile, context){
+  if (!profile || !profile.uid || profile.uid === deviceUid) return;
+  const bd=el('div','modal-backdrop'), card=el('div','modal-card');
+  card.appendChild(el('h3',null,t('social_report')+' · '+(profile.name||t('social_player'))));
+  const select=el('select','nick-input');
+  [['harassment','social_reason_harassment'],['inappropriate_name','social_reason_inappropriate_name'],['cheating','social_reason_cheating'],['spam','social_reason_spam'],['other','social_reason_other']].forEach(([value,key])=>{const option=document.createElement('option');option.value=value;option.textContent=t(key);select.appendChild(option);});
+  card.appendChild(select);
+  card.appendChild(el('p','lb-note',t('social_report_note')));
+  const send=el('button','btn btn-primary');setButtonIcon(send,'flag',t('social_report'));send.addEventListener('click',()=>{
+    online.reportUser({ targetUid:profile.uid, reason:select.value, contextType:context&&context.type||'profile', contextId:context&&context.id||profile.uid, matchId:online.matchId||null });bd.remove();
+  });card.appendChild(send);
+  const cancel=el('button','btn',t('cancel'));cancel.addEventListener('click',()=>bd.remove());card.appendChild(cancel);
+  bd.appendChild(card);bd.addEventListener('click',event=>{if(event.target===bd)bd.remove();});document.body.appendChild(bd);
+}
+function openSocialActions(profile, context){
+  if (!profile || !profile.uid || profile.uid === deviceUid) return;
+  const relation=socialRelationshipFor(profile.uid), bd=el('div','modal-backdrop'), card=el('div','modal-card');
+  card.appendChild(el('h3',null,(profile.name||t('social_player'))+' · '+presenceLabel(profile.presence||(profile.online?'online':'offline'))));
+  const add=(label,cls,iconName,handler)=>{const button=el('button','btn'+(cls?' '+cls:''));setButtonIcon(button,iconName,label);button.addEventListener('click',()=>{handler();bd.remove();});card.appendChild(button);};
+  if(relation==='none') add(t('social_add_friend'),'btn-primary','user-plus',()=>online.friendRequest(profile.uid));
+  if(relation==='outgoing'){
+    const req=(online.socialState.outgoing||[]).find(item=>item.user&&item.user.uid===profile.uid);if(req)add(t('social_cancel'),'','user-minus',()=>online.friendRequestAction('cancel',req.id));
+  }
+  if(relation==='incoming'){
+    const req=(online.socialState.incoming||[]).find(item=>item.user&&item.user.uid===profile.uid);if(req){add(t('social_accept'),'btn-primary','user-plus',()=>online.friendRequestAction('accept',req.id));add(t('social_decline'),'','user-minus',()=>online.friendRequestAction('decline',req.id));}
+  }
+  if(relation==='friends'){
+    if(profile.online) add(t('social_invite_room'),'btn-primary','door-open',()=>inviteUser(profile.uid));
+    add(t('social_remove'),'','user-minus',()=>online.removeFriend(profile.uid));
+  }
+  if(relation!=='blocked') add(t('social_block'),'social-danger','shield-alert',()=>online.blockUser(profile.uid));
+  else add(t('social_unblock'),'','shield',()=>online.unblockUser(profile.uid));
+  add(t('social_report'),'social-danger','flag',()=>openReportUserModal(profile,context));
+  const close=el('button','btn',t('close'));close.addEventListener('click',()=>bd.remove());card.appendChild(close);
+  bd.appendChild(card);bd.addEventListener('click',event=>{if(event.target===bd)bd.remove();});document.body.appendChild(bd);
+}
+function socialRow(profile, relationship, request){
+  const row=el('div','social-row');
+  const avatar=el('span','lb-av');avatar.appendChild(avatarStageNode(profile,24));avatar.addEventListener('click',()=>openProfileModal(profile.uid));row.appendChild(avatar);
+  const copy=el('div','social-copy');copy.appendChild(el('div','social-name',profile.name||t('social_player')));copy.appendChild(el('div','social-meta',presenceLabel(profile.presence||(profile.online?'online':'offline'))+(relationship==='friends'?' · '+t('social_friend'):'')));row.appendChild(copy);
+  const actions=el('div','social-actions');
+  if(request&&relationship==='incoming'){
+    const accept=el('button','btn btn-primary');setButtonIcon(accept,'user-plus',t('social_accept'));accept.addEventListener('click',()=>online.friendRequestAction('accept',request.id));actions.appendChild(accept);
+    const decline=el('button','btn');setButtonIcon(decline,'user-minus',t('social_decline'));decline.addEventListener('click',()=>online.friendRequestAction('decline',request.id));actions.appendChild(decline);
+  }else if(relationship==='none'){
+    const add=el('button','btn');setButtonIcon(add,'user-plus',t('social_add_friend'));add.addEventListener('click',()=>online.friendRequest(profile.uid));actions.appendChild(add);
+  }else if(relationship==='outgoing'){
+    actions.appendChild(el('span','social-meta',t('social_pending')));
+  }else if(relationship==='friends'&&profile.online){
+    const invite=el('button','btn');setButtonIcon(invite,'door-open',t('social_invite_room'));invite.addEventListener('click',()=>inviteUser(profile.uid));actions.appendChild(invite);
+  }
+  const more=el('button','btn');setButtonIcon(more,'ellipsis','',{ariaLabel:t('social_more_actions',profile.name||t('social_player'))});more.addEventListener('click',()=>openSocialActions(profile,{type:'social',id:profile.uid}));actions.appendChild(more);row.appendChild(actions);return row;
+}
+function openBlockedUsers(){
+  const bd=el('div','modal-backdrop'),card=el('div','modal-card');card.appendChild(el('h3',null,t('social_block_manage')));
+  const blocked=(online.socialState&&online.socialState.blocked)||[];
+  if(!blocked.length)card.appendChild(el('div','social-empty',t('social_empty')));
+  blocked.forEach(item=>{const row=el('div','social-row');row.appendChild(el('div','social-copy',item.name||t('social_player')));const button=el('button','btn',t('social_unblock'));button.addEventListener('click',()=>{online.unblockUser(item.uid);bd.remove();});row.appendChild(button);card.appendChild(row);});
+  const close=el('button','btn',t('close'));close.addEventListener('click',()=>bd.remove());card.appendChild(close);bd.appendChild(card);document.body.appendChild(bd);
+}
+function renderSocialRail(){
+  const listEl=$('social-list');if(!listEl)return;listEl.innerHTML='';
+  const state=online.socialState||{friends:[],incoming:[],outgoing:[],blocked:[],counts:{}};
+  const badge=$('social-requests-badge');const incomingCount=(state.incoming||[]).length;if(badge){badge.textContent=String(incomingCount);badge.classList.toggle('hidden',!incomingCount);}
+  ['friends','online','recent'].forEach(name=>{const button=$('social-tab-'+name);if(button)button.setAttribute('aria-pressed',String(online.socialTab===name));});
+  if(!account){listEl.appendChild(el('div','social-empty',t('social_login_required')));return;}
+  if(online.socialTab==='friends'){
+    (state.incoming||[]).forEach(request=>listEl.appendChild(socialRow(request.user,'incoming',request)));
+    (state.friends||[]).forEach(profile=>listEl.appendChild(socialRow(profile,'friends')));
+    if(!(state.incoming||[]).length&&!(state.friends||[]).length)listEl.appendChild(el('div','social-empty',t('social_empty')));
+    if((state.blocked||[]).length){const manage=el('button','btn social-tab',t('social_block_manage_count',state.blocked.length));manage.addEventListener('click',openBlockedUsers);listEl.appendChild(manage);}
+  }else if(online.socialTab==='online'){
+    const blocked=new Set((state.blocked||[]).map(item=>item.uid));const users=((lastServerLB&&lastServerLB.list)||[]).filter(profile=>profile.uid!==deviceUid&&profile.online&&!blocked.has(profile.uid));
+    users.forEach(profile=>listEl.appendChild(socialRow(profile,socialRelationshipFor(profile.uid))));if(!users.length)listEl.appendChild(el('div','social-empty',t('leaderboard_no_online')));
+  }else{
+    const blocked=new Set((state.blocked||[]).map(item=>item.uid));const recent=recentPlaymates(account,8).filter(item=>!blocked.has(item.uid));
+    recent.forEach(item=>{const remote=(lastServerLB&&lastServerLB.list||[]).find(profile=>profile.uid===item.uid)||{uid:item.uid,name:item.name,avatar:100,presence:'offline'};listEl.appendChild(socialRow(remote,socialRelationshipFor(remote.uid)));});if(!recent.length)listEl.appendChild(el('div','social-empty',t('social_empty')));
+  }
+  applyI18n(listEl);
+}
+function initSocialRail(){
+  ['friends','online','recent'].forEach(name=>{const button=$('social-tab-'+name);if(button)button.addEventListener('click',()=>{online.socialTab=name;renderSocialRail();});});
 }
 function inviteUser(uid){
   if (online.room){

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title data-i18n="app_title">小游戏合集 · 本地多人</title>
+<title data-i18n="app_title">Playroom · 联机与人机游戏平台</title>
 <style>
 :root{
   /* ================= Design Tokens ================= */
@@ -150,9 +150,16 @@ button{font-family:inherit; cursor:pointer}
 #app{max-width:1080px; margin:0 auto; padding:18px 16px 40px}
 .app-header{display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--sp-lg)}
 .brand{display:flex; align-items:center; gap:var(--sp-sm); font-size:var(--fs-subtitle); font-weight:var(--fw-bold); letter-spacing:var(--ls-wide); text-shadow:0 1px 2px rgba(15,23,42,.06)}
-.brand .brand-icon{font-size:24px}
+.brand .brand-icon{width:28px; height:28px; display:inline-flex; align-items:center; justify-content:center}
+.brand .brand-icon img{width:100%; height:100%; display:block}
+.asset-fallback{display:none}
+.asset-failed .asset-fallback{display:inline}
 .brand .brand-tag{font-size:12px; color:var(--muted); font-weight:500; letter-spacing:.6px}
 .theme-btn{font-size:19px; padding:6px 11px; border-radius:99px; background:var(--card); border:1px solid var(--border)}
+.ui-icon{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;line-height:0;color:currentColor}
+.ui-icon img{display:block;width:100%;height:100%;filter:none}
+:is(html[data-theme="dark"],html[data-theme="midnight"],html[data-theme="cyber"]) .ui-icon img{filter:brightness(0) invert(1)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px}.ui-icon-label{min-width:0}
 
 /* 大厅双栏布局 */
 .hub-grid{display:grid; grid-template-columns:minmax(0,1fr) 330px; gap:16px; align-items:start}
@@ -203,6 +210,13 @@ button{font-family:inherit; cursor:pointer}
   transition:transform var(--dur-fast) var(--ease-out);
 }
 .game-card:hover .icon{transform:scale(1.08) rotate(-4deg)}
+.game-card.has-cover{padding:10px 10px 14px; overflow:hidden}
+.game-cover{position:relative; width:100%; aspect-ratio:16/9; border-radius:12px; overflow:hidden; background:linear-gradient(145deg,var(--accent-soft),var(--bg-card-solid)); border:1px solid var(--border-color)}
+.game-cover img{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:0; transform:scale(1.015); transition:opacity var(--dur-base),transform var(--dur-slow)}
+.game-cover.asset-ready img{opacity:1}
+.game-card:hover .game-cover.asset-ready img{transform:scale(1.055)}
+.game-cover-fallback{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:34px; color:var(--text-primary)}
+.game-cover.asset-ready .game-cover-fallback{opacity:0}
 .game-card .name{font-size:17px; font-weight:600}
 .game-card .desc{font-size:12.5px; color:var(--muted); line-height:1.5; min-height:36px}
 .game-card .range{font-size:12px; color:var(--primary); background:var(--p1bg); padding:3px 9px; border-radius:99px; align-self:flex-start}
@@ -278,6 +292,7 @@ button{font-family:inherit; cursor:pointer}
 .lb-pts{font-weight:600; font-variant-numeric:tabular-nums; flex:none}
 .lb-empty{color:var(--muted); font-size:13px; padding:8px 0}
 .lb-note{font-size:11.5px; color:var(--muted); margin-top:8px}
+.social-panel .lb-head{align-items:center}.social-count{display:inline-flex;min-width:20px;height:20px;padding:0 6px;align-items:center;justify-content:center;border-radius:99px;background:var(--primary);color:#fff;font-size:11px;font-weight:700}.social-tabs{display:flex;gap:5px;flex-wrap:wrap;margin:8px 0}.social-tab{font-size:11px;padding:5px 8px}.social-row{display:flex;align-items:center;gap:7px;padding:7px 0;border-bottom:1px solid var(--border);min-width:0}.social-row:last-child{border-bottom:0}.social-row .social-copy{flex:1;min-width:0}.social-name{font-size:12px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.social-meta{font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.social-actions{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}.social-actions .btn{padding:4px 7px;font-size:10px;min-height:30px}.social-empty{padding:12px 4px;color:var(--muted);font-size:11px;text-align:center}.social-danger{color:var(--danger,#ef4444)}
 .avatar-grid{display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin:10px 0 14px}
 .avatar-opt{
   font-size:25px; border:2px solid var(--border); border-radius:12px; background:var(--card);
@@ -310,15 +325,15 @@ button{font-family:inherit; cursor:pointer}
 .roster-item .av{font-size:22px}
 .roster-item .nm{flex:1; font-weight:500}
 
-/* L 金币 */
+/* 平台虚拟现金 */
 .coin{
   display:inline-flex; align-items:center; justify-content:center;
-  width:16px; height:16px; border-radius:50%; flex:none;
-  background:radial-gradient(circle at 35% 30%, #ffe28a, #f5b400 55%, #c98a00);
-  border:1.5px solid #a06a00; color:#7a4d00; font-size:10px; font-weight:700;
-  box-shadow:0 1px 2px rgba(0,0,0,.2);
+  width:18px; height:18px; flex:none;
 }
-.coin.sm{width:13px; height:13px; font-size:8px; border-width:1px}
+.coin.sm{width:14px; height:14px}
+.coin .coin-asset{width:100%; height:100%; display:block; object-fit:contain; filter:drop-shadow(0 1px 1px rgba(0,0,0,.18))}
+.coin .coin-fallback{display:none; line-height:1}
+.coin.asset-failed .coin-fallback{display:inline}
 .coin-line{display:inline-flex; align-items:center; gap:3px}
 .online-dot{display:inline-block; width:8px; height:8px; border-radius:50%; background:#22c55e; box-shadow:0 0 0 2px #fff; flex:none}
 .online-dot.off{background:#cbd5e1}
@@ -336,6 +351,17 @@ button{font-family:inherit; cursor:pointer}
 .room-info{font-size:13px; margin-bottom:6px}
 .room-status{font-size:13px; font-weight:500; margin-bottom:10px; min-height:18px}
 .room-actions{display:flex; gap:8px; flex-wrap:wrap}
+.seat-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(132px,1fr)); gap:8px; margin:10px 0}
+.seat-card{min-height:92px; padding:10px; border:1px solid var(--border); border-radius:12px; background:var(--card); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; text-align:center; position:relative}
+.seat-card.is-host{border-color:var(--primary); box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--primary) 35%,transparent)}
+.seat-card.is-empty{border-style:dashed; color:var(--muted)}
+.seat-card.is-offline{opacity:.65}.seat-name{font-size:13px;font-weight:700}.seat-meta{font-size:11px;color:var(--muted)}
+.seat-badges{display:flex;gap:4px;flex-wrap:wrap;justify-content:center}.seat-badge{font-size:10px;padding:2px 6px;border-radius:999px;background:var(--soft);color:var(--text-secondary)}
+.seat-badge.ready{background:rgba(34,197,94,.14);color:#15803d}.seat-badge.bot{background:rgba(139,92,246,.14);color:#7c3aed}
+.play-panel{align-items:flex-start;flex-direction:column}.play-actions{width:100%}.play-actions input{min-width:130px;flex:1}
+.avatar-art-v2{display:block;object-fit:cover;border-radius:4px;image-rendering:auto}
+.mini-profile-card{position:fixed;z-index:10000;width:min(300px,calc(100vw - 16px));padding:10px;border:1px solid rgba(255,255,255,.28);border-radius:14px;box-shadow:var(--shadow-lg);background:linear-gradient(135deg,#334155,#111827);color:#fff}
+.mini-profile-scrim{display:flex;gap:10px;align-items:center;padding:9px;border-radius:11px;background:rgba(15,23,42,.6);backdrop-filter:blur(12px)}.mini-profile-copy{min-width:0;flex:1}.mini-profile-card .seat-meta{color:rgba(255,255,255,.82)}
 
 /* 游戏大厅 */
 .lobby-panel{
@@ -352,6 +378,7 @@ button{font-family:inherit; cursor:pointer}
 .lobby-row .info{flex:1; min-width:0}
 .lobby-row .nm{font-weight:600; font-size:14px}
 .lobby-row .meta{font-size:12px; color:var(--muted)}
+.lobby-seat-strip{display:flex;gap:3px;margin-top:4px}.lobby-seat-dot{font-size:10px;padding:2px 5px;border-radius:999px;background:var(--soft)}
 .lobby-row{transition:transform var(--dur-base) var(--ease-out), border-color var(--dur-base), box-shadow var(--dur-base)}
 .lobby-row:hover{transform:translateY(-1px); border-color:var(--primary); box-shadow:var(--shadow-sm)}
 .lobby-empty{color:var(--muted); font-size:13px; padding:8px 0}
@@ -408,16 +435,7 @@ button{font-family:inherit; cursor:pointer}
 .board-area{display:flex; justify-content:center; position:relative}
 .game-extra{display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-top:14px}
 
-/* ============ 井字棋 ============ */
-.ttt-grid{display:grid; grid-template-columns:repeat(3, min(88px, 25vw)); gap:8px}
-.ttt-cell{
-  aspect-ratio:1; border:1px solid var(--border); border-radius:12px; background:var(--card);
-  font-size:44px; font-weight:600; display:flex; align-items:center; justify-content:center;
-}
-.ttt-cell:hover:not(:disabled){border-color:var(--primary)}
-.ttt-cell.win{background:rgba(34,160,107,.12); border-color:rgba(34,160,107,.5)}
-
-/* ============ 五子棋 / 弹珠跳棋 画布 ============ */
+/* ============ 五子棋画布 ============ */
 canvas.board-canvas{width:100%; max-width:560px; display:block; border-radius:12px; background:var(--card); border:1px solid var(--border)}
 
 /* ============ 飞行棋 ============ */
@@ -434,9 +452,24 @@ canvas.board-canvas{width:100%; max-width:560px; display:block; border-radius:12
 }
 .ludo-base{
   position:absolute; border-radius:12px; display:grid; grid-template-columns:1fr 1fr;
-  place-items:center; border:2px solid; background:#fff;
+  place-items:center; border:2px solid; isolation:isolate; overflow:hidden;
 }
-.ludo-base .slot{width:46%; aspect-ratio:1; border-radius:50%; background:rgba(255,255,255,.5); position:relative}
+.ludo-base[data-base-skin="classic"]{
+  background:radial-gradient(circle at 28% 22%,rgba(255,255,255,.95),transparent 34%),linear-gradient(145deg,var(--ludo-player-soft),#fff);
+  box-shadow:inset 0 0 0 4px rgba(255,255,255,.45),0 7px 16px rgba(15,23,42,.12);
+}
+.ludo-base[data-base-skin="cyber"]{
+  background:linear-gradient(145deg,#071426,#172554 58%,var(--ludo-player));
+  background:radial-gradient(circle at 50% 38%,color-mix(in srgb,var(--ludo-player) 58%,#fff),transparent 30%),repeating-linear-gradient(90deg,rgba(125,211,252,.11) 0 1px,transparent 1px 8px),linear-gradient(145deg,#071426,#172554 58%,var(--ludo-player));
+  border-color:#67e8f9!important;
+  border-color:color-mix(in srgb,var(--ludo-player) 75%,#e0f2fe)!important;
+  box-shadow:inset 0 0 16px rgba(125,211,252,.32),0 0 14px rgba(34,211,238,.3);
+  box-shadow:inset 0 0 16px rgba(125,211,252,.32),0 0 14px color-mix(in srgb,var(--ludo-player) 42%,transparent);
+}
+.ludo-base-emblem{position:absolute;inset:50% auto auto 50%;transform:translate(-50%,-50%);font-size:clamp(22px,5vw,38px);font-weight:900;color:var(--ludo-player);opacity:.18;pointer-events:none;z-index:0}
+.ludo-base[data-base-skin="cyber"] .ludo-base-emblem{color:#e0f2fe;opacity:.42;text-shadow:0 0 9px var(--ludo-player)}
+.ludo-base .slot{width:46%; aspect-ratio:1; border-radius:50%; background:rgba(255,255,255,.5); border:1px solid rgba(255,255,255,.7); box-shadow:inset 0 2px 5px rgba(15,23,42,.12); position:relative; z-index:1}
+.ludo-base[data-base-skin="cyber"] .slot{background:rgba(3,12,28,.45);border-color:rgba(186,230,253,.5);box-shadow:inset 0 0 8px rgba(125,211,252,.26)}
 .ludo-base .slot .tok{position:absolute; inset:0}
 .tok{
   border-radius:50%; border:2px solid #fff; box-shadow:0 1px 3px rgba(0,0,0,.25);
@@ -444,6 +477,7 @@ canvas.board-canvas{width:100%; max-width:560px; display:block; border-radius:12
 }
 .tok.movable{cursor:pointer; animation:pulse 1s ease-in-out infinite}
 .tok.movable:hover{transform:translate(-50%,-50%) scale(1.18)}
+.tok[data-piece-skin="jet"]::after{content:'✈';position:absolute;inset:50% auto auto 50%;transform:translate(-50%,-52%);font-size:.82em;line-height:1;color:#fff;text-shadow:0 1px 2px rgba(15,23,42,.7);pointer-events:none}
 @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(79,110,247,.55)}50%{box-shadow:0 0 0 7px rgba(79,110,247,0)}}
 
 /* 骰子 */
@@ -461,6 +495,11 @@ canvas.board-canvas{width:100%; max-width:560px; display:block; border-radius:12
 }
 .dice-btn:disabled{cursor:not-allowed}
 .dice-btn:hover .dice{border-color:var(--primary)}
+.dice-btn[data-dice-skin="classic"] .dice3d .face{background:linear-gradient(145deg,#fffdf7,#efe7d4);border-color:#c8b99c;box-shadow:inset 0 0 10px rgba(120,87,45,.10),0 6px 14px rgba(69,49,28,.18)}
+.dice-btn[data-dice-skin="classic"] .dice3d .pip::before{background:#3f3428}
+.dice-btn[data-dice-skin="cyber"] .dice3d{filter:drop-shadow(0 0 9px rgba(34,211,238,.62))}
+.dice-btn[data-dice-skin="cyber"] .dice3d .face{background:linear-gradient(145deg,rgba(8,25,50,.97),rgba(30,58,138,.94));border-color:#67e8f9;box-shadow:inset 0 0 14px rgba(34,211,238,.34),0 0 10px rgba(59,130,246,.28)}
+.dice-btn[data-dice-skin="cyber"] .dice3d .pip::before{background:#a5f3fc;box-shadow:0 0 6px #22d3ee}
 
 /* 3D 骰子 */
 .dice3d-wrap{width:66px; height:66px; perspective:280px; display:inline-flex; align-items:center; justify-content:center}
@@ -602,9 +641,16 @@ canvas.board-canvas{width:100%; max-width:560px; display:block; border-radius:12
 .profile-hero.bg-4{background:linear-gradient(135deg,#dcfce7,#86efac)}
 .profile-hero.bg-5{background:linear-gradient(135deg,#fce7f3,#f9a8d4)}
 .profile-hero.bg-6{background:linear-gradient(135deg,#1e293b,#334155); color:#e2e8f0}
+.profile-hero.premium-background{background-position:center;background-size:cover;background-repeat:no-repeat;color:#fff;border-color:rgba(255,255,255,.22);isolation:isolate}
+.profile-hero.premium-background::after{content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,rgba(2,6,23,.04),rgba(2,6,23,.18));pointer-events:none}
+.profile-hero.premium-background>*{position:relative;z-index:1}
+.profile-hero.premium-background .pmeta{color:rgba(255,255,255,.92)}
 .profile-hero .hero-avatar{display:flex; justify-content:center; margin-bottom:8px}
 .profile-hero .pname{font-size:18px; font-weight:700}
 .profile-hero .pmeta{font-size:12.5px; color:var(--muted); margin-top:3px}
+.profile-identity-scrim{margin:8px auto 0;padding:8px 10px;max-width:340px;border-radius:12px;background:rgba(15,23,42,.46);backdrop-filter:blur(12px);color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.45)}
+.profile-showcase{margin:10px 0;padding:10px 12px;border:1px solid var(--border);border-radius:12px;background:linear-gradient(135deg,var(--accent-soft),transparent);font-size:12px;font-weight:650;color:var(--text)}
+.profile-identity-scrim .pmeta{color:rgba(255,255,255,.9)}.profile-signature{font-size:13px;margin-top:5px;line-height:1.45;overflow-wrap:anywhere}
 :is(html[data-theme="dark"], html[data-theme="midnight"], html[data-theme="ocean"], html[data-theme="forest"], html[data-theme="cyber"], html[data-theme="sakura"]) .profile-hero.bg-0{background:linear-gradient(135deg,#1a1f2e,#1e2744)}
 :is(html[data-theme="dark"], html[data-theme="midnight"], html[data-theme="ocean"], html[data-theme="forest"], html[data-theme="cyber"], html[data-theme="sakura"]) .profile-hero.bg-1{background:linear-gradient(135deg,#1e1b3a,#2d1b69)}
 :is(html[data-theme="dark"], html[data-theme="midnight"], html[data-theme="ocean"], html[data-theme="forest"], html[data-theme="cyber"], html[data-theme="sakura"]) .profile-hero.bg-2{background:linear-gradient(135deg,#172033,#1e3a5f)}
@@ -636,6 +682,14 @@ canvas.board-canvas{width:100%; max-width:560px; display:block; border-radius:12
 .bg-swatch.bg-4{background:linear-gradient(135deg,#dcfce7,#86efac)}
 .bg-swatch.bg-5{background:linear-gradient(135deg,#fce7f3,#f9a8d4)}
 .bg-swatch.bg-6{background:linear-gradient(135deg,#1e293b,#334155)}
+.background-shop-item{position:relative;min-width:150px}
+.background-poster{position:relative;width:100%;aspect-ratio:16/9;overflow:hidden;border-radius:10px;border:1px solid var(--border);background:linear-gradient(135deg,var(--accent-soft),var(--card))}
+.background-poster img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity var(--dur-base),transform var(--dur-slow)}
+.background-poster.asset-ready img{opacity:1}.background-shop-item:hover .background-poster img{transform:scale(1.04)}
+.background-poster-fallback{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:11px}
+.background-poster.asset-ready .background-poster-fallback{display:none}
+.background-tier{position:absolute;top:15px;right:10px;padding:2px 6px;border-radius:99px;background:rgba(2,6,23,.68);color:#fff;font-size:10px;font-weight:700;backdrop-filter:blur(6px)}
+@media (prefers-reduced-motion:reduce){.background-poster img{transition:none}.background-shop-item:hover .background-poster img{transform:none}}
 .bg-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(44px,1fr)); gap:8px; margin:8px 0 12px}
 .pin-hint{font-size:11.5px; color:var(--muted); margin-top:2px}
 .profile-links{display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin-top:10px}
@@ -652,34 +706,22 @@ canvas.board-canvas{width:100%; max-width:560px; display:block; border-radius:12
 .tank-actions{display:flex; gap:6px; justify-content:center; flex-wrap:wrap; margin-top:8px}
 .tank-actions button{min-width:42px}
 
-/* ============ 贪吃蛇 ============ */
-.snake-board{position:relative; background:var(--card); border:1px solid var(--border); border-radius:14px; box-shadow:var(--shadow)}
-.snake-cell{position:absolute; border-radius:3px}
-.snake-cell.head0,.snake-cell.head1,.snake-cell.head2,.snake-cell.head3{border-radius:5px}
-.snake-actions{display:flex; gap:6px; justify-content:center; flex-wrap:wrap; margin-top:8px}
-
 /* ============ 俄罗斯方块 ============ */
 .tetris-wrap{display:flex; gap:14px; justify-content:center; flex-wrap:wrap}
 .tetris-well{position:relative; background:#0f172a; border:2px solid var(--border); border-radius:8px; overflow:hidden}
-.tetris-cell{position:absolute; border-radius:2px}
-.tetris-cell.ghost{opacity:.28}
+.tetris-cell{position:absolute; border-radius:3px; border:1px solid rgba(255,255,255,.22); background-image:linear-gradient(145deg,rgba(255,255,255,.42),rgba(255,255,255,.04) 45%,rgba(0,0,0,.18)),var(--cell-pattern,repeating-linear-gradient(45deg,rgba(255,255,255,.10) 0 2px,transparent 2px 6px)); box-shadow:inset 0 1px 2px rgba(255,255,255,.38),inset 0 -2px 3px rgba(0,0,0,.18),0 2px 5px rgba(0,0,0,.24)}
+.tetris-cell.kind-0{--cell-pattern:repeating-linear-gradient(0deg,rgba(255,255,255,.13) 0 1px,transparent 1px 5px)}
+.tetris-cell.kind-1{--cell-pattern:radial-gradient(circle at 35% 35%,rgba(255,255,255,.24) 0 13%,transparent 14%)}
+.tetris-cell.kind-2{--cell-pattern:repeating-linear-gradient(45deg,rgba(255,255,255,.13) 0 2px,transparent 2px 6px)}
+.tetris-cell.kind-3{--cell-pattern:repeating-linear-gradient(-45deg,rgba(255,255,255,.13) 0 2px,transparent 2px 6px)}
+.tetris-cell.kind-4{--cell-pattern:linear-gradient(90deg,transparent 42%,rgba(255,255,255,.16) 43% 57%,transparent 58%)}
+.tetris-cell.kind-5{--cell-pattern:linear-gradient(transparent 42%,rgba(255,255,255,.16) 43% 57%,transparent 58%)}
+.tetris-cell.kind-6{--cell-pattern:radial-gradient(circle at 50% 50%,transparent 0 30%,rgba(255,255,255,.15) 31% 43%,transparent 44%)}
+.tetris-cell.is-active{filter:saturate(1.16) brightness(1.12); z-index:2}
+.tetris-cell.is-locked{filter:saturate(.88) brightness(.9)}
+.tetris-cell.ghost{opacity:.22; background-image:none; border:1px dashed currentColor; box-shadow:inset 0 0 0 1px rgba(255,255,255,.35)}
 .tetris-score{text-align:center; margin-bottom:6px; font-size:13px; color:var(--muted)}
 .tetris-actions{display:flex; gap:6px; justify-content:center; flex-wrap:wrap; margin-top:8px}
-
-/* ============ 国际跳棋 ============ */
-.drg-canvas{width:100%; max-width:560px; display:block; border-radius:12px; background:var(--card); border:1px solid var(--border)}
-
-/* ============ 斗兽棋 ============ */
-.jungle-board{position:relative; background:var(--card); border:1px solid var(--border); border-radius:14px; box-shadow:var(--shadow)}
-.j-cell{position:absolute; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:19px; cursor:pointer; transition:transform .08s ease}
-.j-cell:hover{transform:scale(1.08)}
-.j-cell.water{background:linear-gradient(180deg,#a5d8ff,#5cb0f0); box-shadow:inset 0 2px 6px rgba(0,0,0,.18)}
-.j-cell.trap{background:rgba(244,63,94,.18); box-shadow:inset 0 0 0 2px rgba(244,63,94,.5)}
-.j-cell.den{background:rgba(139,92,246,.22); box-shadow:inset 0 0 0 2px rgba(139,92,246,.55); font-size:22px}
-.j-cell.sel{outline:3px solid var(--primary); outline-offset:1px}
-.j-cell.king0{outline:2px solid #e5484d; outline-offset:1px}
-.j-cell.king1{outline:2px solid #3b82f6; outline-offset:1px}
-.j-cell .j-sub{position:absolute; bottom:1px; font-size:8px; color:var(--muted)}
 
 /* ============ 象棋 ============ */
 .xiangqi-wrap{display:flex; gap:14px; justify-content:center; flex-wrap:wrap}
@@ -694,7 +736,7 @@ canvas.board-canvas{width:100%; max-width:560px; display:block; border-radius:12
 :is(html[data-theme="dark"], html[data-theme="midnight"], html[data-theme="ocean"], html[data-theme="forest"], html[data-theme="cyber"], html[data-theme="sakura"]) .roster-item,
 :is(html[data-theme="dark"], html[data-theme="midnight"], html[data-theme="ocean"], html[data-theme="forest"], html[data-theme="cyber"], html[data-theme="sakura"]) .m-cell,
 :is(html[data-theme="dark"], html[data-theme="midnight"], html[data-theme="ocean"], html[data-theme="forest"], html[data-theme="cyber"], html[data-theme="sakura"]) .tcell,
-:is(html[data-theme="dark"], html[data-theme="midnight"], html[data-theme="ocean"], html[data-theme="forest"], html[data-theme="cyber"], html[data-theme="sakura"]) .ludo-base,
+:is(html[data-theme="dark"], html[data-theme="midnight"], html[data-theme="ocean"], html[data-theme="forest"], html[data-theme="cyber"], html[data-theme="sakura"]) .ludo-base:not([data-base-skin]),
 :is(html[data-theme="dark"], html[data-theme="midnight"], html[data-theme="ocean"], html[data-theme="forest"], html[data-theme="cyber"], html[data-theme="sakura"]) .ludo-center,
 :is(html[data-theme="dark"], html[data-theme="midnight"], html[data-theme="ocean"], html[data-theme="forest"], html[data-theme="cyber"], html[data-theme="sakura"]) .dice3d .face{background:rgba(31,39,63,.92); color:var(--text)}
 :is(html[data-theme="dark"], html[data-theme="midnight"], html[data-theme="ocean"], html[data-theme="forest"], html[data-theme="cyber"], html[data-theme="sakura"]) .m-cell .stripe{filter:brightness(.82)}
@@ -810,6 +852,25 @@ button, canvas, .game-card, .ttt-cell, .j-cell, .xq-cell,
   display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;
 }
 .victory-btn { padding: 10px 20px; font-size: 14px; }
+.reward-breakdown-overlay {
+  z-index: 80; background: rgba(8,12,24,.72); backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px); animation: vicFadeIn .25s ease;
+}
+.reward-breakdown-card {
+  width: min(420px, calc(100vw - 28px)); max-height: min(620px, calc(100vh - 32px));
+  overflow: auto; padding: 24px; border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--border));
+}
+.reward-breakdown-title { margin: 0 0 16px; text-align: center; font-size: 22px; }
+.reward-breakdown-list { display: grid; gap: 8px; }
+.reward-breakdown-row, .reward-breakdown-total {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  min-height: 38px; padding: 8px 10px; border-radius: 10px; background: color-mix(in srgb, var(--card) 82%, transparent);
+}
+.reward-breakdown-label { color: var(--muted); }
+.reward-breakdown-values { font-weight: 750; color: var(--accent); text-align: right; }
+.reward-breakdown-total { margin-top: 12px; border-top: 1px solid var(--border); font-size: 16px; }
+.reward-level-up { text-align: center; color: var(--accent); font-weight: 750; }
+.reward-breakdown-close { width: 100%; margin-top: 14px; min-height: 44px; }
 @keyframes vicFadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes vicBounce {
   0% { transform: scale(.2); opacity: 0; }
@@ -956,7 +1017,8 @@ button, canvas, .game-card, .ttt-cell, .j-cell, .xq-cell,
 .hero-banner::before{width:220px; height:220px; background:var(--hero-grad-a); top:-70px; left:-40px; animation:heroBlob 9s ease-in-out infinite alternate}
 .hero-banner::after{width:260px; height:260px; background:var(--hero-grad-b); bottom:-90px; right:-50px; animation:heroBlob 11s ease-in-out infinite alternate-reverse}
 @keyframes heroBlob{0%{transform:translate(0,0) scale(1)}100%{transform:translate(28px,-22px) scale(1.12)}}
-.hero-banner .hero-icon{font-size:44px; line-height:1; position:relative; z-index:1; animation:heroFloat 3.2s ease-in-out infinite}
+.hero-banner .hero-icon{width:72px; height:72px; position:relative; z-index:1; animation:heroFloat 3.2s ease-in-out infinite}
+.hero-banner .hero-icon img{width:100%; height:100%; display:block; filter:drop-shadow(0 10px 20px rgba(42,54,126,.22))}
 @keyframes heroFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
 .hero-banner h1{
   margin:8px 0 4px; position:relative; z-index:1; font-size:var(--fs-display); font-weight:var(--fw-black);
@@ -1095,21 +1157,25 @@ html[data-theme="dark"], html[data-theme="midnight"], html[data-theme="cyber"]{c
   .btn, .count-btn, .shop-tab, .persona-card, .my-card-mate, .slot-chip{
     min-height:44px; min-width:44px; display:inline-flex; align-items:center; justify-content:center;
   }
-  .ttt-cell, .j-cell, .xq-cell{min-width:44px; min-height:44px}
+  .xq-cell{min-width:44px; min-height:44px}
 }
 
 /* 最小字号 ≥11px */
 .lb-game, .my-card-stat-label, .my-card-task, .my-card-mate-info, .persona-card .persona-desc{font-size:11px}
 /* ================= Visual Polish（v2） ================= */
 /* --- 棋盘质感：渐变底 + 细纹理 --- */
-canvas.board-canvas, .ttt-grid, .ludo-board, .m-board, .tank-board, .snake-board, .tetris-well, .jungle-board, .xiangqi-board, .drg-canvas{
+canvas.board-canvas, .ludo-board, .m-board, .tank-board, .tetris-well, .xiangqi-board{
   background:var(--bg-card-solid);
   background:linear-gradient(160deg, var(--bg-card-solid), var(--accent-soft));
 }
-canvas.board-canvas, .drg-canvas{border-radius:var(--radius-lg); box-shadow:var(--elev-2)}
+canvas.board-canvas{border-radius:var(--radius-lg); box-shadow:var(--elev-2)}
+canvas.board-canvas.gomoku-board.game-art-v1{background-color:#d7a153; background-image:linear-gradient(rgba(250,216,151,.08),rgba(92,50,18,.08)),var(--game-board-art); background-size:cover; background-position:center}
+.tetris-well.game-art-v1{background-color:#07152b; background-image:linear-gradient(rgba(139,207,255,.12) 1px,transparent 1px),linear-gradient(90deg,rgba(139,207,255,.12) 1px,transparent 1px),linear-gradient(rgba(3,10,24,.22),rgba(3,10,24,.44)),var(--game-board-art); background-size:var(--tetris-cell-size) var(--tetris-cell-size),var(--tetris-cell-size) var(--tetris-cell-size),100% 100%,100% 100%; background-position:0 0,0 0,center,center; border-color:rgba(102,184,255,.48); box-shadow:inset 0 0 22px rgba(37,99,235,.26),0 12px 30px rgba(3,10,30,.34)}
+.tetris-well.clear-pulse{animation:tetrisClearPulse .36s var(--ease-out)}
+@keyframes tetrisClearPulse{0%{filter:brightness(1)}45%{filter:brightness(1.55); box-shadow:inset 0 0 30px rgba(255,255,255,.48),0 0 22px rgba(56,189,248,.55)}100%{filter:brightness(1)}}
 
 /* --- 棋子质感：立体阴影 --- */
-.tok, .tcell, .m-cell, .tank-cell.tank0, .tank-cell.tank1, .snake-cell, .tetris-cell, .j-cell, .xq-cell{
+.tok, .tcell, .m-cell, .tank-cell.tank0, .tank-cell.tank1, .tetris-cell, .xq-cell{
   box-shadow:var(--elev-2), inset 0 1px 0 rgba(255,255,255,.35);
 }
 .tok.movable:hover{box-shadow:var(--elev-3), 0 0 0 3px var(--accent-soft)}
@@ -1229,19 +1295,19 @@ body.entered #screen-hub, body.entered #screen-game{animation:none}
 <body>
 <div id="app">
   <header class="app-header">
-    <div class="brand"><span class="brand-icon">🎮</span><span>Playroom</span><span class="brand-tag" data-i18n="brand_tag">11 款小游戏 · 联机对战</span></div>
+    <div class="brand"><span class="brand-icon" data-asset-fallback><img src="assets/brand/logo_mark.svg" alt=""><span class="asset-fallback">🎮</span></span><span>Playroom</span><span class="brand-tag" data-i18n="brand_tag">6 款精选游戏 · 联机对战</span></div>
         <div class="header-actions">
-      <button type="button" class="btn" id="btn-settings-page" title="设置">⚙️</button>
-      <button type="button" class="btn theme-btn" id="btn-theme" title="切换主题">🌙</button>
+      <button type="button" class="btn" id="btn-settings-page" title="设置" aria-label="设置"></button>
+      <button type="button" class="btn theme-btn" id="btn-theme" title="切换主题" aria-label="切换主题"></button>
     </div>
   </header>
 
   <section id="screen-hub">
     <section class="hero-banner" id="hero-banner">
-      <div class="hero-icon">🎮</div>
+      <div class="hero-icon" data-asset-fallback><img src="assets/brand/logo_mark.svg" alt="Playroom"><span class="asset-fallback">🎮</span></div>
       <h1 data-i18n="brand">Playroom</h1>
-      <p class="hero-tag" data-i18n="brand_tag">11 款小游戏 · 联机对战</p>
-      <button type="button" class="btn btn-primary hero-cta" id="btn-hero-quick">⚡ 快速开局</button>
+      <p class="hero-tag" data-i18n="brand_tag">6 款精选游戏 · 联机对战</p>
+      <button type="button" class="btn btn-primary hero-cta" id="btn-hero-quick"></button>
     </section>
     <div class="hub-grid">
       <div class="hub-main">
@@ -1249,35 +1315,33 @@ body.entered #screen-hub, body.entered #screen-game{animation:none}
           <button type="button" class="me-chip" id="btn-me" title="我的档案 / 登录"></button>
         </div>
         <div id="my-card"></div>
-        <div class="slots-row" id="slots-row"></div>
+        <div class="slots-row hidden" id="slots-row" aria-hidden="true"></div>
         <div class="room-panel hidden" id="room-panel">
           <div class="room-head">
             <h3 data-i18n="my_room">🚪 我的房间</h3>
             <span class="room-code-big" id="room-code-big"></span>
           </div>
           <div class="room-info" id="room-info"></div>
+          <div class="seat-grid" id="seat-grid" aria-label="房间席位"></div>
           <div class="room-status" id="room-status"></div>
           <div class="room-actions" id="room-actions"></div>
         </div>
-        <div class="hub-count">
+        <div class="hub-count play-panel">
           <div class="mode-group" id="mode-group" role="group" aria-label="游戏模式">
-            <button type="button" class="btn count-btn" data-mode="local" aria-pressed="true" data-i18n="mode_local">👥 本地热座</button>
-            <button type="button" class="btn count-btn" data-mode="ai" aria-pressed="false" data-i18n="mode_ai">🤖 人机对战</button>
+            <button type="button" class="btn count-btn" data-mode="online" aria-pressed="true" data-i18n="mode_online">联机</button>
+            <button type="button" class="btn count-btn" data-mode="ai" aria-pressed="false" data-i18n="mode_ai">人机对战</button>
           </div>
-          <span class="hub-label" id="count-label" data-i18n="player_count">玩家人数</span>
-          <div class="count-group" id="count-group" role="group" aria-label="选择玩家人数">
-            <button type="button" class="btn count-btn" data-n="2" aria-pressed="true">2 人</button>
-            <button type="button" class="btn count-btn" data-n="3" aria-pressed="false">3 人</button>
-            <button type="button" class="btn count-btn" data-n="4" aria-pressed="false">4 人</button>
-            <button type="button" class="btn count-btn" data-n="5" aria-pressed="false">5 人</button>
+          <div class="online-row play-actions" id="online-play-actions">
+            <button type="button" class="btn btn-primary" id="btn-quick-join" data-i18n="quick_join">快速加入</button>
+            <button type="button" class="btn" id="btn-create-room" data-i18n="create_room">创建房间</button>
+            <button type="button" class="btn" id="btn-browse-rooms" data-i18n="browse_rooms">浏览房间</button>
+            <input id="join-room-code" maxlength="12" placeholder="私密房间码" data-i18n-placeholder="private_room_code" aria-label="私密房间码">
+            <button type="button" class="btn" id="btn-join-code" data-i18n="join_room">加入</button>
           </div>
         </div>
         <div id="persona-row" class="persona-row hidden"></div>
 <div class="online-panel">
-          <h3 data-i18n="online_title">🌐 联机对战（2-5 人 · 全部游戏）</h3>
-          <div class="online-row">
-            <button type="button" class="btn btn-primary" id="btn-create-room" data-i18n="create_room">🎮 创建房间</button>
-          </div>
+          <h3 id="mode-context-title" data-i18n="online_title">房间与连接状态</h3>
           <div class="online-status" id="online-status">未连接</div>
         </div>
         <div class="game-grid" id="game-grid"></div>
@@ -1304,18 +1368,27 @@ body.entered #screen-hub, body.entered #screen-game{animation:none}
           </div>
           <div class="player-list" id="player-list"></div>
         </div>
+        <div class="lb-panel social-panel" id="social-panel">
+          <div class="lb-head"><h3 data-i18n="social_title">🤝 社交</h3><span class="social-count hidden" id="social-requests-badge">0</span></div>
+          <div class="social-tabs" role="tablist" aria-label="社交分类">
+            <button type="button" class="count-btn social-tab" id="social-tab-friends" aria-pressed="true" data-i18n="social_friends">好友</button>
+            <button type="button" class="count-btn social-tab" id="social-tab-online" aria-pressed="false" data-i18n="social_online">在线</button>
+            <button type="button" class="count-btn social-tab" id="social-tab-recent" aria-pressed="false" data-i18n="social_recent">最近一起玩</button>
+          </div>
+          <div id="social-list" class="social-list"></div>
+        </div>
       </aside>
     </div>
   </section>
 
   <section id="screen-game" class="hidden">
     <div class="game-top">
-      <button type="button" class="btn btn-ghost" id="btn-back">← 返回</button>
+      <button type="button" class="btn btn-ghost" id="btn-back">返回</button>
       <h2 id="game-title"></h2>
       <div class="top-actions">
-        <button type="button" class="btn hidden" id="btn-end-game" title="结束本局，可在当前房间切换游戏">⏹ 结束本局</button>
-        <button type="button" class="btn" id="btn-rules">📖 规则</button>
-        <button type="button" class="btn" id="btn-restart">🔄 新一局</button>
+        <button type="button" class="btn hidden" id="btn-end-game" title="结束本局，可在当前房间切换游戏">结束本局</button>
+        <button type="button" class="btn" id="btn-rules">规则</button>
+        <button type="button" class="btn" id="btn-restart">新一局</button>
       </div>
     </div>
     <div id="player-bar" class="player-bar"></div>

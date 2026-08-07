@@ -93,14 +93,18 @@ async function main(){
   const created = await a.request('create', { capacity: 2 }, m => m.type === 'created', 'created');
   await b.request('join', { room: created.room }, m => m.type === 'joined', 'joined');
   const am = a.mark(), bm = b.mark();
-  a.send('select_game', { game: 'tictactoe' });
+  a.send('select_game', { game: 'gomoku' });
+  await b.waitAfter(bm, m => m.type === 'room_update' && m.payload && m.payload.game === 'gomoku', 'selected game');
+  b.send('ready', { ready:true });
+  await a.waitAfter(am, m => m.type === 'room_update' && m.payload && m.payload.canStart === true, 'guest ready');
+  a.send('start');
   const startedA = await a.waitAfter(am, m => m.type === 'started', 'started A');
   const startedB = await b.waitAfter(bm, m => m.type === 'started', 'started B');
   check('双方拿到相同 matchId', !!startedA.matchId && startedA.matchId === startedB.matchId);
-  const move = 4;
+  const move = { r: 7, c: 7 };
   const moveMark = b.mark();
   a.send('move', move);
-  await b.waitAfter(moveMark, m => m.type === 'move' && m.payload === 4 && m.player === 0, 'move log seed');
+  await b.waitAfter(moveMark, m => m.type === 'move' && m.payload && m.payload.r === 7 && m.payload.c === 7 && m.player === 0, 'move log seed');
   const offlineMark = a.mark();
   b.send('debug_disconnect');
   const offline = await a.waitAfter(offlineMark, m => m.type === 'peer_status' && m.payload && m.payload.online === false, 'peer offline');
@@ -112,11 +116,11 @@ async function main(){
   const state = rejoined.payload || {};
   check('重连复用原玩家席位', state.player === 1 && state.room === created.room, JSON.stringify(state));
   check('重连保持原 matchId', state.matchId === startedA.matchId);
-  check('重连下发完整 moveLog', Array.isArray(state.moveLog) && state.moveLog.some(e => e.payload === 4 && e.player === 0), JSON.stringify(state.moveLog));
+  check('重连下发完整 moveLog', Array.isArray(state.moveLog) && state.moveLog.some(e => e.payload && e.payload.r === 7 && e.payload.c === 7 && e.player === 0), JSON.stringify(state.moveLog));
   const onlineAgain = await a.waitAfter(offlineMark, m => m.type === 'peer_status' && m.payload && m.payload.online === true, 'peer online');
   check('其他玩家收到恢复在线通知', onlineAgain.payload.player === 1);
-  const nextMoveMark = a.mark(); b2.send('move', 0);
-  const nextMove = await a.waitAfter(nextMoveMark, m => m.type === 'move' && m.payload === 0, 'post-rejoin move');
+  const nextMoveMark = a.mark(); b2.send('move', { r: 6, c: 6 });
+  const nextMove = await a.waitAfter(nextMoveMark, m => m.type === 'move' && m.payload && m.payload.r === 6 && m.payload.c === 6, 'post-rejoin move');
   check('恢复后仍可继续转发走子', nextMove.player === 1);
 
   const secondOfflineMark = a.mark();
@@ -137,6 +141,9 @@ async function main(){
   b3.send('join', { room: created.room });
   const joinedAgain = await b3.waitAfter(rejoinRoomMark, m => m.type === 'joined', 'join after expired resume');
   check('过期账号可作为新连接重新加入', joinedAgain.player === 1 && joinedAgain.room === created.room);
+  b3.send('ready', {ready:true});
+  await b3.waitAfter(rejoinRoomMark, m => m.type === 'room_update' && m.payload && m.payload.canStart === true, 'ready after rejoin');
+  a.send('start');
   await b3.waitAfter(rejoinRoomMark, m => m.type === 'started', 'match restarted after join');
 
   const hostExpiryMark = b3.mark();

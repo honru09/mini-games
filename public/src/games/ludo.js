@@ -7,16 +7,32 @@ function gameLudo(area, extra, n, opts){
   const color = pid => PLAYER_COLORS[pid];
   let tokens = pids.map(() => Array(4).fill(-1));
   let curIdx = 0, phase = 'roll', dice = 0, over = false, winner = -1;
+  let boardTheme = opts.boardTheme === 'grass' ? 'grass' : 'classic';
+  let cosmetic = normalizeCosmetic(opts.cosmetic);
+  let spectator = !!opts.spectator, startedAt = Date.now(), finishedAt = 0;
+  let captures = 0, takeoffs = 0;
+  let movingToken = null;
   let remoteInputs = [], drainingRemoteInputs = false, epoch = 0;
   let S = 520;
   const board = el('div','ludo-board');
+  const previousTouchAction = area.style.touchAction || '';
+  const previousOverscroll = area.style.overscrollBehavior || '';
+  area.style.touchAction = spectator ? 'auto' : 'none';
+  area.style.overscrollBehavior = 'contain';
   area.appendChild(board);
+  const turnHud = el('div', 'game-turn-hud ludo-turn-hud');
+  extra.appendChild(turnHud);
   const diceBtn = el('button','dice-btn');
   const dice3d = makeDice3D(58);
   diceBtn.appendChild(dice3d.wrap);
   diceBtn.addEventListener('click', roll);
   extra.appendChild(diceBtn);
   let aiPending = false;
+  function normalizeCosmetic(value){
+    const source = value || {};
+    return { base:'classic',piece:'classic',dice:'classic',...source,players:{...(source.players||{})} };
+  }
+  function playerCosmetic(pi){ return { base:cosmetic.base,piece:cosmetic.piece,dice:cosmetic.dice,...(cosmetic.players&&cosmetic.players[pi]||{}) }; }
   function scheduleAI(){
     if (opts.destroyed || aiPending || over) return;
     if (!opts.ai || !opts.ai.has(curIdx)) return;
@@ -32,6 +48,7 @@ function gameLudo(area, extra, n, opts){
       if (phase === 'roll'){
         const d = 1 + Math.floor(Math.random() * 6);
         aiPending = false;
+        if (opts.online && typeof opts.sendBotMove === 'function'){ opts.sendBotMove(turn, { dice:d }); return; }
         applyDice(d);
         return;
       }
@@ -43,7 +60,7 @@ function gameLudo(area, extra, n, opts){
         mv.forEach(ti => {
           const arr = tokens[curIdx];
           const curPos = arr[ti];
-          const newPos = curPos === -1 ? 0 : Math.min(HOME, curPos + dice);
+          const newPos = advanceToken(curPos, dice);
           let s = curPos === -1 ? 6 : (newPos === HOME ? 120 : newPos);
           if (newPos <= 50){
             const cell = cellOf(curPid(), newPos);
@@ -76,6 +93,7 @@ function gameLudo(area, extra, n, opts){
         }
         aiPending = false;
         aiSpeak(opts.aiPersona, 'think');
+        if (opts.online && typeof opts.sendBotMove === 'function'){ opts.sendBotMove(turn, { ti:chosen }); return; }
         applyPick(curPid(), chosen);
         return;
       }
@@ -84,7 +102,21 @@ function gameLudo(area, extra, n, opts){
   }
 
   function curPid(){ return pids[curIdx]; }
-  function canMove(t){ if (t === -1) return dice === 6; if (t >= HOME) return false; return t + dice <= HOME; }
+  function canMove(t){ if (t === -1) return dice === 6; return t >= 0 && t < HOME; }
+  function advanceToken(t, steps){
+    if (t === -1) return 0;
+    const next = t + steps;
+    return next <= HOME ? next : Math.max(0, HOME - (next - HOME));
+  }
+  function movementPath(from, steps){
+    if (from === -1) return [0];
+    const path = [];
+    for (let i = 1; i <= steps; i++){
+      const raw = from + i;
+      path.push(raw <= HOME ? raw : Math.max(0, HOME - (raw - HOME)));
+    }
+    return path;
+  }
   function movable(){
     const arr = [];
     for (let i=0;i<4;i++) if (canMove(tokens[curIdx][i])) arr.push(i);
@@ -111,6 +143,12 @@ function gameLudo(area, extra, n, opts){
     const w = area.clientWidth || 520;
     S = Math.min(w, 540);
     board.style.width = S + 'px'; board.style.height = S + 'px';
+    board.dataset.boardTheme = boardTheme;
+    board.dataset.baseSkin = cosmetic.base;
+    board.dataset.pieceSkin = cosmetic.piece;
+    board.style.background = boardTheme === 'grass'
+      ? 'radial-gradient(circle at 50% 45%,rgba(255,255,255,.30),transparent 36%),repeating-linear-gradient(110deg,rgba(40,99,48,.12) 0 2px,transparent 2px 8px),linear-gradient(#a7c985,#668f58)'
+      : 'var(--card)';
     board.innerHTML = '';
     const g = geometry();
     const cellSize = Math.max(20, Math.min(30, S*0.056));
@@ -157,7 +195,18 @@ function gameLudo(area, extra, n, opts){
       base.style.left = bx + 'px'; base.style.top = by + 'px';
       base.style.width = base.style.height = b + 'px';
       base.style.borderColor = color(pid);
-      base.style.background = PLAYER_BG[pid];
+      const baseSkin = playerCosmetic(pids.indexOf(pid)).base;
+      base.dataset.baseSkin = baseSkin === 'cyber' ? 'cyber' : 'classic';
+      if (base.style.setProperty){
+        base.style.setProperty('--ludo-player', color(pid));
+        base.style.setProperty('--ludo-player-soft', PLAYER_BG[pid]);
+      } else {
+        base.style['--ludo-player'] = color(pid);
+        base.style['--ludo-player-soft'] = PLAYER_BG[pid];
+      }
+      const emblem = el('span','ludo-base-emblem',base.dataset.baseSkin === 'cyber' ? '⌁' : '✦');
+      emblem.setAttribute('aria-hidden','true');
+      base.appendChild(emblem);
       for (let j=0;j<4;j++) base.appendChild(el('div','slot'));
       board.appendChild(base);
     }
@@ -166,19 +215,24 @@ function gameLudo(area, extra, n, opts){
     const place = (parent, x, y, pid, ti) => {
       const tok = el('div','tok');
       tok.style.width = tok.style.height = tokSize + 'px';
-      tok.style.background = color(pid);
+      const skin = playerCosmetic(pids.indexOf(pid)).piece;
+      tok.dataset.pieceSkin = skin === 'jet' ? 'jet' : 'classic';
+      tok.style.background = skin === 'jet'
+        ? 'linear-gradient(145deg,#f8fafc 0 20%,' + color(pid) + ' 45%,#111827 100%)'
+        : color(pid);
       tok.style.left = x + 'px'; tok.style.top = y + 'px';
       tok.dataset.pid = pid; tok.dataset.ti = ti;
       if (phase === 'pick' && pid === curPid() && canMove(tokens[pids.indexOf(pid)][ti])){
         tok.classList.add('movable');
       }
-      tok.addEventListener('click', () => pick(pid, ti));
+      tok.addEventListener('click', () => { if (!spectator) pick(pid, ti); });
       parent.appendChild(tok);
     };
     // 收集每个格子的棋子
     const trackMap = new Map(), colMap = new Map(), baseMap = new Map();
     pids.forEach((pid, pi) => {
       tokens[pi].forEach((t, ti) => {
+        if (movingToken && movingToken.pi === pi && movingToken.ti === ti) return;
         if (t === -1){
           const k = pid;
           if (!baseMap.has(k)) baseMap.set(k, []);
@@ -228,7 +282,7 @@ function gameLudo(area, extra, n, opts){
       const winnerName = '玩家' + (pids.indexOf(winner)+1);
       showVictoryOverlay(area, {
         winner: pids.indexOf(winner), winnerName: winnerName,
-        emoji: '🏆', subtitle: '四架飞机全部归位', coins: 1, onRestart: resetLocal
+        emoji: '🏆', subtitle: '四架飞机全部归位', coins: 1, onRestart: reset
       });
     }
     const infos = pids.map(pid => {
@@ -236,16 +290,23 @@ function gameLudo(area, extra, n, opts){
       const cnt = tokens[pi].filter(t => t === HOME).length;
       return '归位 ' + cnt + '/4';
     });
-    diceBtn.disabled = over || phase !== 'roll' || (opts.online && curIdx !== opts.myIdx) || (opts.ai && opts.ai.has(curIdx));
+    diceBtn.disabled = spectator || over || phase !== 'roll' || (opts.online && curIdx !== opts.myIdx) || (opts.ai && opts.ai.has(curIdx));
+    const diceSkin = playerCosmetic(curIdx).dice === 'cyber' ? 'cyber' : 'classic';
+    diceBtn.dataset.diceSkin = diceSkin;
+    dice3d.wrap.dataset.diceSkin = diceSkin;
+    dice3d.wrap.setAttribute('aria-label', diceSkin === 'cyber' ? '赛博骰子' : '经典骰子');
+    diceBtn.style.transition = 'filter .22s ease,transform .22s ease';
+    turnHud.textContent = over ? '比赛结束' : (spectator ? '观战 · 玩家' + (curIdx + 1) + ' 行动' : '玩家' + (curIdx + 1) + ' · ' + (phase === 'roll' ? '掷骰子' : '选择飞机'));
     renderPlayers(curIdx, infos, null, pids.map(pid => PLAYER_COLORS[pid]));
   }
   function roll(){
     sfx('pop');
-    if (over || phase !== 'roll') return;
+    if (spectator || over || phase !== 'roll') return;
     if (opts.isReplaying && opts.isReplaying()) return;
     if (opts.online && curIdx !== opts.myIdx) return;
     if (opts.ai && opts.ai.has(curIdx)) return;
     const d = 1 + Math.floor(Math.random()*6);
+    if (opts.onProgress) opts.onProgress({ dice: d });
     if (opts.online) opts.sendMove({ dice: d });
     applyDice(d);
   }
@@ -274,13 +335,14 @@ function gameLudo(area, extra, n, opts){
   }
   function pick(pid, ti){
     playFeedback('move');
-    if (over || phase !== 'pick' || pid !== curPid()) return;
+    if (spectator || over || phase !== 'pick' || pid !== curPid()) return;
     if (opts.isReplaying && opts.isReplaying()) return;
     if (opts.online && curIdx !== opts.myIdx) return;
     if (opts.ai && opts.ai.has(curIdx)) return;
     const pi = pids.indexOf(pid);
     const arr = tokens[pi];
     if (!canMove(arr[ti])) return;
+    if (opts.onProgress) opts.onProgress({ ti });
     if (opts.online) opts.sendMove({ ti });
     applyPick(pid, ti);
   }
@@ -289,7 +351,12 @@ function gameLudo(area, extra, n, opts){
     const pi = pids.indexOf(pid);
     const arr = tokens[pi];
     if (pi < 0 || !canMove(arr[ti])) return false;
-    arr[ti] = arr[ti] === -1 ? 0 : arr[ti] + dice;
+    const wasBase = arr[ti] === -1;
+    const from = arr[ti], path = movementPath(from, dice), destination = advanceToken(from, dice);
+    const capturedTokens = [];
+    movingToken = { pi, ti, pid, from, path: path.slice(), destination };
+    arr[ti] = destination;
+    if (wasBase) takeoffs++;
     if (arr[ti] <= 50){
       const cell = cellOf(pid, arr[ti]);
       let captured = 0;
@@ -298,21 +365,28 @@ function gameLudo(area, extra, n, opts){
         for (let j=0;j<4;j++){
           const t2 = tokens[p2i][j];
           if (t2 >= 0 && t2 <= 50 && cellOf(p2,t2) === cell){
+            capturedTokens.push({ pid:p2, pi:p2i, ti:j, position:t2 });
             tokens[p2i][j] = -1; captured++;
           }
         }
       });
-      if (captured) toast('💥 击落对方 ' + captured + ' 个棋子！');
+      if (captured){ captures += captured; toast('💥 击落对方 ' + captured + ' 个棋子！'); }
     }
     if (arr.every(v => v === HOME)){
-      over = true; winner = pid;
-      if (opts.onEnd) opts.onEnd(pids.map((p2, i) => ({
-        slot: i,
-        coins: i === curIdx ? 1 : 0,
-        rank: i === curIdx ? 1 : 2,
-      })));
+      over = true; winner = pid; finishedAt = Date.now(); area.style.touchAction = 'auto';
+      const order = pids.map((p2, i) => i).sort((a, b) => {
+        if (a === curIdx) return -1;
+        if (b === curIdx) return 1;
+        const homeDiff = tokens[b].filter(v => v === HOME).length - tokens[a].filter(v => v === HOME).length;
+        if (homeDiff) return homeDiff;
+        const progress = list => list.reduce((sum, value) => sum + (value === HOME ? HOME : Math.max(0, value)), 0);
+        return progress(tokens[b]) - progress(tokens[a]);
+      });
+      const ranks = new Map(order.map((slot, index) => [slot, index + 1]));
+      if (opts.onEnd) opts.onEnd(pids.map((p2, i) => ({ slot: i, coins: i === curIdx ? 1 : 0, rank: ranks.get(i) })));
       renderBoard();
       setStatus('🏆 玩家' + (curIdx+1) + ' 获胜！', true);
+      animateTokenMove(movingToken, wasBase, capturedTokens, true);
       return true;
     }
     if (dice === 6){
@@ -325,7 +399,51 @@ function gameLudo(area, extra, n, opts){
     } else {
       nextTurn('玩家' + (curIdx+1) + ' 完成移动');
     }
+    animateTokenMove(movingToken, wasBase, capturedTokens, destination === HOME);
     return true;
+  }
+  function tokenPoint(pid, position){
+    const g = geometry();
+    if (position === -1){ const [bx,by] = g.basePos(pid); return [bx + S*.095, by + S*.095]; }
+    if (position <= 50) return g.tpos(cellOf(pid, position));
+    if (position < HOME) return g.colPos(pid, position - 51);
+    return [S/2, S/2];
+  }
+  function animateTokenMove(animation, wasBase, capturedTokens, finished){
+    if (!animation) return;
+    const animationEpoch = epoch;
+    const reduced = prefersReducedMotion();
+    const steps = animation.path.length ? animation.path.slice() : [animation.destination];
+    if (reduced){ movingToken = null; renderBoard(); return; }
+    const flyer = el('div','ludo-flight-token ' + (wasBase ? 'takeoff' : 'moving'), playerCosmetic(animation.pi).piece === 'jet' ? '✈' : '●');
+    const start = tokenPoint(animation.pid, animation.from);
+    flyer.style.cssText = 'position:absolute;z-index:12;width:26px;height:26px;line-height:26px;text-align:center;border-radius:50%;font-weight:900;color:#fff;background:' + color(animation.pid) + ';box-shadow:0 7px 14px rgba(15,23,42,.3);pointer-events:none;transition:left .12s linear,top .12s linear,transform .12s ease;';
+    flyer.style.left = (start[0]-13) + 'px'; flyer.style.top = (start[1]-13) + 'px';
+    board.appendChild(flyer);
+    let index = 0;
+    const stepDelay = Math.max(75, Math.min(150, Math.floor(760 / Math.max(1, steps.length))));
+    const advance = () => {
+      if (animationEpoch !== epoch){ flyer.remove(); return; }
+      if (index >= steps.length){
+        if (capturedTokens.length){
+          const impact = el('div','ludo-impact','💥'); const point = tokenPoint(animation.pid, animation.destination);
+          impact.style.cssText = 'position:absolute;z-index:13;left:' + (point[0]-18) + 'px;top:' + (point[1]-18) + 'px;font-size:32px;pointer-events:none;'; board.appendChild(impact);
+          setTimeout(() => impact.remove(), 320);
+        }
+        if (finished) flyer.textContent = '🏁';
+        flyer.style.transform = finished ? 'scale(1.35)' : 'scale(.92)';
+        setTimeout(() => {
+          flyer.remove();
+          if (animationEpoch === epoch && movingToken === animation){ movingToken = null; renderBoard(); }
+        }, finished ? 220 : 100);
+        return;
+      }
+      const point = tokenPoint(animation.pid, steps[index++]);
+      flyer.style.left = (point[0]-13) + 'px'; flyer.style.top = (point[1]-13) + 'px';
+      flyer.style.transform = wasBase && index === 1 ? 'scale(1.22) rotate(-12deg)' : 'scale(1)';
+      setTimeout(advance, stepDelay);
+    };
+    setTimeout(advance, 20);
   }
   function nextTurn(msg){
     phase = 'roll';
@@ -388,6 +506,8 @@ function gameLudo(area, extra, n, opts){
     epoch++;
     tokens = pids.map(() => Array(4).fill(-1));
     curIdx = 0; phase = 'roll'; dice = 0; over = false; winner = -1; aiPending = false;
+    startedAt = Date.now(); finishedAt = 0; captures = 0; takeoffs = 0; movingToken = null;
+    area.style.touchAction = spectator ? 'auto' : 'none';
     remoteInputs = [];
     diceBtn.disabled = false;
     dice3d.reset();
@@ -396,18 +516,41 @@ function gameLudo(area, extra, n, opts){
   }
   function reset(){
     if (opts.online && !opts.isHost){ toast('由房主开始新一局'); return; }
-    if (opts.online) opts.sendRestart();
+    if (opts.online){ opts.sendRestart(); return; }
     resetLocal();
+  }
+  function setBoardTheme(theme){ boardTheme = theme === 'grass' ? 'grass' : 'classic'; renderBoard(); return boardTheme; }
+  function setCosmetic(value){ cosmetic = normalizeCosmetic(value); renderBoard(); return { ...cosmetic, players:{...cosmetic.players} }; }
+  function setSpectators(value){ spectator = Array.isArray(value) ? value.includes(opts.viewerId) : !!value; area.style.touchAction = spectator || over ? 'auto' : 'none'; renderBoard(); return spectator; }
+  function getMatchStats(){
+    const order = pids.map((pid, index) => ({ index, finished: tokens[index].filter(v => v === HOME).length, progress: tokens[index].reduce((sum, v) => sum + Math.max(0, v), 0) }))
+      .sort((a, b) => b.finished - a.finished || b.progress - a.progress || a.index - b.index);
+    const rank = new Map(order.map((item, index) => [item.index, index + 1]));
+    return { duration: Math.max(0, (finishedAt || Date.now()) - startedAt), piecesFinished: tokens.map(list => list.filter(v => v === HOME).length), captures, takeoffs, placement: pids.map((_, index) => rank.get(index)) };
+  }
+  function snapshot(){ return { tokens: tokens.map(t => t.slice()), curIdx, phase, dice, over, winner }; }
+  function onRestore(value){
+    const state = value && value.state ? value.state : value;
+    if (!state || !Array.isArray(state.tokens) || state.tokens.length !== pids.length) return false;
+    epoch++; movingToken = null;
+    tokens = state.tokens.map(list => Array.isArray(list) ? list.slice(0, 4).map(v => Math.max(-1, Math.min(HOME, Number(v) || 0))) : Array(4).fill(-1));
+    curIdx = Math.max(0, Math.min(pids.length - 1, Number(state.curIdx) || 0)); phase = ['roll','rolling','pick'].includes(state.phase) ? state.phase : 'roll';
+    dice = Math.max(0, Math.min(6, Number(state.dice) || 0)); over = !!state.over; winner = Number.isInteger(state.winner) ? state.winner : -1;
+    if (value && value.presentation){ boardTheme = value.presentation.boardTheme === 'grass' ? 'grass' : 'classic'; cosmetic = normalizeCosmetic(value.presentation.cosmetic); }
+    renderBoard(); return true;
   }
   renderBoard();
   setStatus('玩家1 的回合，请掷骰子');
   return {
     reset, onMove: opts.onMove, onRestart: resetLocal,
-    destroy: () => { epoch++; aiPending = false; remoteInputs = []; dice3d.reset(); },
+    destroy: () => { epoch++; aiPending = false; remoteInputs = []; dice3d.reset(); area.style.touchAction = previousTouchAction; area.style.overscrollBehavior = previousOverscroll; },
     whenIdle: () => new Promise(resolve => {
       const wait = () => (phase !== 'rolling' && !drainingRemoteInputs) ? resolve() : setTimeout(wait, 20);
       wait();
     }),
-    snapshot: () => ({ tokens: tokens.map(t => t.slice()), curIdx, phase, dice, over, winner }),
+    snapshot, onRestore,
+    serialize: () => ({ state: snapshot(), presentation: { boardTheme, cosmetic: { ...cosmetic, players:{...cosmetic.players} } }, stats: getMatchStats() }),
+    setBoardTheme, setCosmetic, renderCosmetic: setCosmetic, setSpectators, getMatchStats,
+    getMultiplayerRequirement: () => n > 4 ? 'MULTI_TABLE_REQUIRED' : null,
   };
 }

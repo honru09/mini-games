@@ -13,9 +13,9 @@ function titleFor(level){
 }
 
 const ACHIEVEMENTS = [
-  { id: 'first_win', name: '首胜', icon: '🥇', desc: '赢下第一局', check: p => (p.total || 0) >= 1 && (p.coins || 0) >= 1 },
-  { id: 'win_10', name: '十胜', icon: '💎', desc: '累计赢 10 局', check: p => (p.coins || 0) >= 10 },
-  { id: 'win_50', name: '五十胜', icon: '🏆', desc: '累计赢 50 局', check: p => (p.coins || 0) >= 50 },
+  { id: 'first_win', name: '首胜', icon: '🥇', desc: '赢下第一局', check: p => (p.totalWins || 0) >= 1 },
+  { id: 'win_10', name: '十胜', icon: '💎', desc: '累计赢 10 局', check: p => (p.totalWins || 0) >= 10 },
+  { id: 'win_50', name: '五十胜', icon: '🏆', desc: '累计赢 50 局', check: p => (p.totalWins || 0) >= 50 },
   { id: 'streak_3', name: '三连胜', icon: '🔥', desc: '连胜 3 局', check: p => (p.bestStreak || 0) >= 3 },
   { id: 'streak_5', name: '五连胜', icon: '⚡', desc: '连胜 5 局', check: p => (p.bestStreak || 0) >= 5 },
   { id: 'level_5', name: '资深玩家', icon: '🎖️', desc: '达到 5 级', check: p => (p.level || levelFromXp(p.xp || 0)) >= 5 },
@@ -124,7 +124,8 @@ function renderMyCard(){
     empty.appendChild(el('div', 'my-card-empty-icon', '🎮'));
     empty.appendChild(el('div', 'my-card-empty-title', '登录后开启玩家档案'));
     empty.appendChild(el('div', 'my-card-empty-desc', '记录称号 · 成就 · 每日任务 · 最近一起玩'));
-    const goBtn = el('button', 'btn btn-primary my-card-empty-btn', '🔑 登录 / 注册');
+    const goBtn = el('button', 'btn btn-primary my-card-empty-btn');
+    setButtonIcon(goBtn,'user','登录 / 注册');
     goBtn.type = 'button';
     goBtn.addEventListener('click', e => { e.stopPropagation(); openAuthModal(); });
     empty.appendChild(goBtn);
@@ -159,12 +160,12 @@ function renderMyCard(){
     s.appendChild(el('span', 'my-card-stat-label', label));
     stats.appendChild(s);
   };
-  stat('💵', '$', p.coins || 0);
+  stat('💵', '虚拟现金', p.coins || 0);
   stat('⭐', 'XP', p.xp || 0);
   const earnedCount = achievementsEarned(p).length;
   stat('🏆', '成就', earnedCount);
   stat('🔥', '连胜', p.streak || 0);
-  stat('🎮', '胜场', p.coins || 0);
+  stat('🏆', '胜场', p.totalWins || 0);
   card.appendChild(stats);
   // 每日任务进度
   const tasks = dailyProgress(p);
@@ -198,13 +199,16 @@ function renderMyCard(){
   }
   // 按钮
   const btns = el('div', 'my-card-btns');
-  const shopBtn = el('button', 'btn btn-primary', '🛍️ 商城');
+  const shopBtn = el('button', 'btn btn-primary');
+  setButtonIcon(shopBtn,'store','商城');
   shopBtn.addEventListener('click', openShop);
   btns.appendChild(shopBtn);
-  const achBtn = el('button', 'btn', '🏆 成就');
+  const achBtn = el('button', 'btn');
+  setButtonIcon(achBtn,'trophy','成就');
   achBtn.addEventListener('click', () => openAchievementsModal());
   btns.appendChild(achBtn);
-  const profileBtn = el('button', 'btn', '👤 我的档案');
+  const profileBtn = el('button', 'btn');
+  setButtonIcon(profileBtn,'user','我的档案');
   profileBtn.addEventListener('click', () => openProfileModal(deviceUid));
   btns.appendChild(profileBtn);
   card.appendChild(btns);

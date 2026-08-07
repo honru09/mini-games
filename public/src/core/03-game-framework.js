@@ -32,16 +32,19 @@ function createGameInstance(id, area, extra, playerCount, opts) {
       if (raw.render) raw.render();
     },
     move(payload, player) {
-      if (raw.onMove) raw.onMove(payload, player);
+      if (raw.move) return raw.move(payload, player);
+      if (raw.onMove) return raw.onMove(payload, player);
     },
     serialize() {
-      if (raw.snapshot) return raw.snapshot();
+      // serialize() 可包含表现层、统计等扩展数据；snapshot() 仅是旧协议回退。
       if (raw.serialize) return raw.serialize();
+      if (raw.snapshot) return raw.snapshot();
       return null;
     },
     deserialize(state) {
-      if (raw.onRestore) raw.onRestore(state);
-      if (raw.deserialize) raw.deserialize(state);
+      if (raw.deserialize) return raw.deserialize(state);
+      if (raw.onRestore) return raw.onRestore(state);
+      return false;
     },
     restart() {
       if (raw.reset) raw.reset();
@@ -60,6 +63,13 @@ function createGameInstance(id, area, extra, playerCount, opts) {
     onRestart: raw.onRestart || raw.resetLocal || raw.reset || (() => {}),
     snapshot: raw.snapshot || raw.serialize || (() => null),
   };
+
+  // 游戏可按需声明观战、皮肤、棋钟、统计、实时帧等能力。框架不解释这些
+  // 接口，只保持 this 指向原始游戏对象并向平台透传，避免每新增能力都改框架。
+  Object.keys(raw).forEach(key => {
+    if (typeof raw[key] !== 'function' || key in instance) return;
+    instance[key] = (...args) => raw[key].apply(raw, args);
+  });
   return instance;
 }
 

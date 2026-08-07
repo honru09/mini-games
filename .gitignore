@@ -1,6 +1,8 @@
 ﻿node_modules/
 data/
 *.log
+.codex-tmp/
+~$*
 
 # 私密白皮书（凭证）绝不提交
 WHITEPAPER-SECRET.md

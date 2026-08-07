@@ -78,7 +78,8 @@ function setLanguage(lang) {
     renderMe();
     renderSlots();
     renderLobby();
-    if (online.room) renderRoomPanel();
+    if (online.room || online.spectatorRoom) renderRoomPanel();
+    if (typeof initStaticPlatformIcons === 'function') initStaticPlatformIcons();
     if (online.connected && account && account.uid) {
       online.send({ type:'profile', payload: { uid: account.uid, name: account.name, avatar: account.avatar, lang: lang } });
     }
