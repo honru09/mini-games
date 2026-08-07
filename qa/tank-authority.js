@@ -29,5 +29,14 @@ check('Tank Authority：客户端伪造 Kill/Order 不改变权威状态',forged
 
 sim.finish();
 check('Tank Authority：服务器生成唯一最终排名',sim.order.length===2&&new Set(sim.players.map(player=>player.placement)).size===2);
+check('Tank Authority：finished 后状态明确且输入拒绝',sim.snapshot(5000).status==='finished'&&sim.snapshot(5000).running===false&&sim.acceptInput(0,{matchId:'tank-authority-test',seq:4,clientTick:sim.serverTick,input:{fire:true}},5000).reason==='finished');
+const finishedTick=sim.serverTick;sim.advance(6000);check('Tank Authority：finished 后 advance 不再推进计时/状态',sim.serverTick===finishedTick&&sim.snapshot(6000).finishedAt!==null);
+
+const disconnectSim=new TankAuthority({matchId:'tank-disconnect-test',playerCount:2,startedAt:1000,durationMs:10000});
+disconnectSim.acceptInput(0,{matchId:'tank-disconnect-test',seq:1,clientTick:0,input:{right:true,fire:true}},1050);
+check('Tank Authority：断线输入清零 API',disconnectSim.players[0].input.right===true&&disconnectSim.clearPlayerInput(0)===true&&Object.values(disconnectSim.players[0].input).every(value=>value===false));
+check('Tank Authority：兼容清零别名安全可用',disconnectSim.clearInput(0)===true&&disconnectSim.clearDisconnectedInput(0)===true&&disconnectSim.clearPlayerInput(99)===false);
+disconnectSim.acceptInput(0,{matchId:'tank-disconnect-test',seq:2,clientTick:0,input:{left:true}},1100);disconnectSim.stop(1150,'room_closed');
+check('Tank Authority：stop API 停机并清空弹道/输入',disconnectSim.snapshot(1200).status==='stopped'&&disconnectSim.snapshot(1200).running===false&&disconnectSim.acceptInput(0,{matchId:'tank-disconnect-test',seq:3,clientTick:0,input:{fire:true}},1200).reason==='stopped'&&Object.values(disconnectSim.players[0].input).every(value=>value===false));
 
 if(failures.length){console.error('TANK_AUTHORITY_FAILED:',failures.join('、'));process.exitCode=1;}else console.log('TANK_AUTHORITY_ALL_PASS');

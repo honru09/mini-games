@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "policy": "External skills are reference material until repository, license, scripts, network access, destructive commands and secrets behavior are audited.",
+  "entries": [
+    {"name": "awesome-codex-skills", "source": "https://github.com/composio-community/awesome-codex-skills", "status": "REFERENCE"},
+    {"name": "codebase-recon", "source": "https://github.com/yujiachen-y/codebase-recon-skill", "status": "REFERENCE"},
+    {"name": "motionsites-promptcapture", "source": "https://github.com/bingo33-gif/motionsites-promptcapture", "status": "REFERENCE"},
+    {"name": "bernstein", "source": "https://github.com/sipyourdrink-ltd/bernstein", "status": "REFERENCE"},
+    {"name": "polywave-codex", "source": "https://github.com/blackwell-systems/polywave-codex", "status": "REFERENCE"},
+    {"name": "vibe-skills", "source": "https://github.com/foryourhealth111-pixel/Vibe-Skills", "status": "REFERENCE"},
+    {"name": "brooks-lint", "source": "https://github.com/hyhmrright/brooks-lint", "status": "REFERENCE"}
+  ]
+}

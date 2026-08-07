@@ -9,6 +9,8 @@ const ROOT = path.join(__dirname, '..');
 const UTILS = fs.readFileSync(path.join(ROOT, 'public', 'src', 'core', '01-utils.js'), 'utf8');
 const ASSETS = fs.readFileSync(path.join(ROOT, 'public', 'src', 'core', '06-assets.js'), 'utf8');
 const FRAMEWORK = fs.readFileSync(path.join(ROOT, 'public', 'src', 'core', '03-game-framework.js'), 'utf8');
+const TETRIS_RULES = fs.readFileSync(path.join(ROOT, 'shared', 'rules', 'tetris.js'), 'utf8');
+const ONLINE_SOURCE = fs.readFileSync(path.join(ROOT, 'public', 'src', 'online', '03-websocket.js'), 'utf8');
 const TEMPLATE = fs.readFileSync(path.join(ROOT, 'public', 'index-template.html'), 'utf8');
 const failures = [];
 
@@ -68,11 +70,12 @@ function harness(file,factory,count,settings){
   const context=vm.createContext(sandbox);
   vm.runInContext(UTILS,context,{filename:'01-utils.js'});vm.runInContext(ASSETS,context,{filename:'06-assets.js'});
   vm.runInContext(`
-    function t(key){return String(key);} function renderPlayers(){} function setStatus(){}
+    function t(key,...args){return String(key)+(args.length?'('+args.join(',')+')':'');} function renderPlayers(){} function setStatus(){}
     const account={authToken:'qa'}; const online={room:null,isHost:false};
     function resolveServer(){return '';} function aiPersonaMove(length,best){return Math.max(0,Math.min(length-1,best));}
     function aiSpeak(){} function shareGameLink(){} function openInvitePicker(){}
   `,context);
+  if(file==='tetris.js')vm.runInContext(TETRIS_RULES,context,{filename:'shared/rules/tetris.js'});
   vm.runInContext(fs.readFileSync(path.join(ROOT,'public','src','games',file),'utf8'),context,{filename:file});
   const results=[],sent=[];
   const opts={ai:new Set(),onEnd(value){results.push(value);},sendMove(value){sent.push(value);},sendRestart(){},isReplaying(){return false;},online:false,myIdx:0,isHost:true,destroyed:false,...(settings.opts||{})};
@@ -91,13 +94,15 @@ function run(){
       deserialize(){return'deserialize';},onRestore(){return'onRestore';},
       setSpectators(value){this.spectator=!!value;return this.spectator;},setCosmetic(value){return value;},renderCosmetic(){return true;},
       startMatch(){return true;},reportGameResult(){return true;},getMatchStats(){return{spectator:this.spectator};},
-      getMultiplayerRequirement(){return null;},setBoardTheme(value){return value;},setClockMode(value){return value;},getClockState(){return{mode:'casual'};}
+      getMultiplayerRequirement(){return null;},setBoardTheme(value){return value;},setClockMode(value){return value;},getClockState(){return{mode:'casual'};},
+      onLanguageChange(){this.languageRefreshes=(this.languageRefreshes||0)+1;return true;}
     }));
     createGameInstance('contract',{}, {},2,{});
   `,frameworkContext);
-  const passthrough=['setSpectators','setCosmetic','renderCosmetic','startMatch','reportGameResult','getMatchStats','getMultiplayerRequirement','setBoardTheme','setClockMode','getClockState'];
+  const passthrough=['setSpectators','setCosmetic','renderCosmetic','startMatch','reportGameResult','getMatchStats','getMultiplayerRequirement','setBoardTheme','setClockMode','getClockState','onLanguageChange'];
   assert('插件框架：优先完整 serialize 且 deserialize 不重复恢复',frameworkGame.serialize().source==='serialize'&&frameworkGame.deserialize({})==='deserialize');
   assert('插件框架：透传 Gameplay 可选接口并保持原对象上下文',passthrough.every(key=>typeof frameworkGame[key]==='function')&&frameworkGame.setSpectators(true)===true&&frameworkGame.getMatchStats().spectator===true);
+  assert('观众结算：玩家与名次均经本地化模板格式化',/t\('spectator_result_entry',t\('player_number',item\.slot\+1\),item\.rank\)/.test(ONLINE_SOURCE)&&!/'P'\+\(item\.slot\+1\)/.test(ONLINE_SOURCE));
 
   let h=harness('gomoku.js','gameGomoku',2);
   assert('五子棋：统一主题/皮肤/赛事/统计接口',typeof h.game.setBoardTheme==='function'&&typeof h.game.setCosmetic==='function'&&typeof h.game.startMatch==='function'&&typeof h.game.getMatchStats==='function');
@@ -127,18 +132,22 @@ function run(){
   h=harness('monopoly.js','gameMonopoly',3);
   assert('大富翁：主题/Token/观战/统计接口',typeof h.game.setBoardTheme==='function'&&typeof h.game.setCosmetic==='function'&&typeof h.game.getMatchStats==='function');
   h.game.setCosmetic({players:{0:'car'}});assert('大富翁：Character/Car 支持按玩家映射',h.game.serialize().presentation.cosmetic.players[0]==='car');
-  h.game.setSpectators(true);const roll=findText(h.extra,'掷骰'),settleSpectator=findText(h.extra,'提前结算');const beforeMonopoly=JSON.stringify(h.game.snapshot());if(roll)roll.dispatch('click');if(settleSpectator)settleSpectator.dispatch('click');
+  h.game.setSpectators(true);const roll=findText(h.extra,'monopoly_roll'),settleSpectator=findText(h.extra,'monopoly_settle_early');const beforeMonopoly=JSON.stringify(h.game.snapshot());if(roll)roll.dispatch('click');if(settleSpectator)settleSpectator.dispatch('click');
   assert('大富翁：Spectator 不能掷骰',JSON.stringify(h.game.snapshot())===beforeMonopoly);
   const monopoly=h.game.snapshot();monopoly.players[0]={money:1200,pos:2,alive:true,props:[2],buildings:0};monopoly.players[1]={...monopoly.players[1],money:1400,props:[]};monopoly.players[2]={...monopoly.players[2],money:1300,props:[]};monopoly.owners[2]=0;h.game.onRestore(monopoly);
+  const propertyOwnerBadge=h.area.querySelector('.property-owner-avatar');
+  assert('大富翁：地产归属徽标使用本地化玩家编号',propertyOwnerBadge&&propertyOwnerBadge.textContent==='player_number(1)');
   const monopolyStats=h.game.getMatchStats();assert('大富翁：Net Worth/资产/名次按规则输出',monopolyStats[0].netWorth===1500&&monopolyStats[0].properties===1&&monopolyStats[0].placement===1);
-  h.game.setSpectators(false);const settle=findText(h.extra,'提前结算');if(settle)settle.dispatch('click');
+  h.game.setSpectators(false);const settle=findText(h.extra,'monopoly_settle_early');if(settle)settle.dispatch('click');
   assert('大富翁：正式结算与奖励名次使用净资产',h.results.length===1&&h.results[0][0].slot===0&&h.results[0][0].rank===1,JSON.stringify(h.results));h.game.destroy();
 
   h=harness('monopoly.js','gameMonopoly',3,{reducedMotion:true});h.game.onMove({roll:[1,1]},0);
   assert('大富翁：减少动态效果时逐格移动走静态落点',h.game.snapshot().players[0].pos===2&&h.game.snapshot().phase==='buy',JSON.stringify(h.game.snapshot()));h.game.destroy();
 
   h=harness('xiangqi.js','gameXiangqi',2);
-  assert('象棋：主题/棋子/棋钟/赛事接口',typeof h.game.setBoardTheme==='function'&&typeof h.game.setClockMode==='function'&&typeof h.game.startMatch==='function');
+  assert('象棋：主题/棋子/棋钟/赛事接口',typeof h.game.setBoardTheme==='function'&&typeof h.game.setClockMode==='function'&&typeof h.game.startMatch==='function'&&typeof h.game.onLanguageChange==='function');
+  const canvasBeforeLanguageChange=h.area.querySelector('.xiangqi-board');h.game.onLanguageChange();
+  assert('象棋：语言刷新 hook 立即重绘 Canvas',h.area.querySelector('.xiangqi-board')!==canvasBeforeLanguageChange);
   h.game.setCosmetic({players:{0:'jade'}});assert('象棋：木质/Jade 支持按阵营映射',h.game.serialize().presentation.cosmetic.players[0]==='jade');
   h.game.setSpectators(true);const xqBoard=h.area.querySelector('.xiangqi-board');const beforeXq=JSON.stringify(h.game.snapshot());xqBoard.dispatch('click',{clientX:30,clientY:375});
   assert('象棋：Spectator 不能走棋',JSON.stringify(h.game.snapshot())===beforeXq);
@@ -151,6 +160,9 @@ function run(){
 
   h=harness('tank.js','gameTank',3);
   assert('坦克：实时固定步长/多人/四季/统计接口',typeof h.game.fixedUpdate==='function'&&h.game.snapshot().tanks.length===3&&typeof h.game.setSeason==='function');
+  assert('坦克：性能计数与对象硬上限接口',typeof h.game.getPerformanceStats==='function'&&h.game.getPerformanceStats().caps.projectiles===128&&h.game.getPerformanceStats().caps.particles===40);
+  const stableTankBoard=h.area.querySelector('.tank-board'),stableTankControls=h.extra.querySelector('.tank-realtime-controls');h.game.onRestore(h.game.snapshot());
+  assert('坦克闪屏回归：状态刷新保持棋盘与控制器节点 identity',h.area.querySelector('.tank-board')===stableTankBoard&&h.extra.querySelector('.tank-realtime-controls')===stableTankControls);
   let tankState=h.game.snapshot();tankState.grid=tankState.grid.map((row,r)=>row.map((_,c)=>r===0||r===12||c===0||c===14?3:0));
   tankState.tanks[0].x=2.5;tankState.tanks[0].y=2.5;tankState.tanks[0].d=1;tankState.tanks[0].invulnerableUntil=0;
   tankState.tanks[1].x=4.5;tankState.tanks[1].y=2.5;tankState.tanks[1].hp=1;tankState.tanks[1].invulnerableUntil=0;
@@ -165,6 +177,10 @@ function run(){
   const copy=value=>JSON.parse(JSON.stringify(value));
   tankGuest.opts.sendMove=payload=>tankHost.game.onMove(copy(payload),1);
   tankHost.opts.sendMove=payload=>tankGuest.game.onMove(copy(payload),0);
+  const relayJoystick=tankGuest.extra.querySelector('.tank-joystick');
+  relayJoystick.dispatch('pointerdown',{clientX:500,clientY:260,buttons:1});
+  assert('坦克联机：真实摇杆输入带 seq 并映射可信玩家',tankHost.game.getRelayState().lastInputSeq[1]===1&&tankHost.game.snapshot().tanks[1].input.right===true);
+  relayJoystick.dispatch('pointerup');
   tankHost.game.onMove({act:'input',protocol:'tank-host-relay-v1',matchId:tankMatch,seq:7,input:{right:true}},1);
   tankHost.game.onMove({act:'input',protocol:'tank-host-relay-v1',matchId:tankMatch,seq:7,input:{left:true}},1);
   assert('坦克联机：同一玩家重复 input seq 被忽略',tankHost.game.snapshot().tanks[1].input.right===true&&tankHost.game.snapshot().tanks[1].input.left===false);
@@ -183,6 +199,9 @@ function run(){
 
   h=harness('tetris.js','gameTetris',3);
   assert('俄罗斯方块：同步生存/观察/控制/统计接口',h.game.snapshot().mode==='simultaneous-survival'&&typeof h.game.setObservedPlayer==='function'&&typeof h.game.getTarget==='function');
+  assert('俄罗斯方块：长局性能计数接口',typeof h.game.getPerformanceStats==='function'&&h.game.getPerformanceStats().boardCount===3);
+  const stableTetrisLayout=h.area.querySelector('.tetris-battle-layout'),stableTetrisWell=h.area.querySelector('.main-board'),stableTetrisActions=h.extra.querySelector('.tetris-actions');h.game.onRestore(h.game.snapshot());h.game.setObservedPlayer(1);
+  assert('俄罗斯方块闪屏回归：状态/观察目标刷新保持布局、主井与控制器节点 identity',h.area.querySelector('.tetris-battle-layout')===stableTetrisLayout&&h.area.querySelector('.main-board')===stableTetrisWell&&h.extra.querySelector('.tetris-actions')===stableTetrisActions);
   let tetris=h.game.snapshot();tetris.wells=tetris.wells.map(()=>Array.from({length:18},()=>Array(10).fill(0)));
   for(let r=14;r<18;r++)for(let c=1;c<10;c++)tetris.wells[0][r][c]=1;
   tetris.states=tetris.states.map((state,id)=>({...state,id,alive:true,incoming:[],score:0,lines:0,tetrisCount:0,garbageSent:0,garbageReceived:0,placement:0}));
@@ -203,7 +222,7 @@ function run(){
   const hostInitial=tetrisHost.game.snapshot(),guestInitial=tetrisGuest.game.snapshot();
   assert('俄罗斯方块联机：同 matchId/玩家生成相同确定性 7-Bag',hostInitial.bagSeed===tetrisMatch&&JSON.stringify(hostInitial.states.map(state=>state.queue))===JSON.stringify(guestInitial.states.map(state=>state.queue)));
   const remote=hostInitial.states[1],dropY=remote.active.kind===0?17:16;
-  const remoteLock={act:'lock',seq:1,piece:remote.active.kind,x:remote.active.x,y:dropY,rot:0,placementSeq:1,garbage:0,target:-1,attackId:'a1-1'};
+  const remoteLock={act:'lock',matchId:tetrisMatch,seq:1,piece:remote.active.kind,x:remote.active.x,y:dropY,rot:0,placementSeq:1,garbage:0,target:-1,attackId:'a1-1'};
   tetrisHost.game.onMove(copy(remoteLock),1);tetrisHost.game.onMove(copy(remoteLock),1);
   assert('俄罗斯方块联机：重复 placement seq 不会重复落块',tetrisHost.game.snapshot().pieceCount===1&&tetrisHost.game.snapshot().states[1].placementSeq===1);
   const guestDrift=copy(tetrisGuest.game.snapshot());guestDrift.wells[1][10][0]=1;tetrisGuest.game.onRestore(guestDrift);
@@ -219,6 +238,67 @@ function run(){
   assert('俄罗斯方块联机：本地 Top Out 广播一次 KO 且 seq 单调',guestMessages.filter(payload=>payload.act==='ko').length===1&&guestMessages.find(payload=>payload.act==='ko').seq===2);
   assert('俄罗斯方块联机：房主最终唯一名次驱动双方同一 claim',tetrisHost.results.length===1&&tetrisGuest.results.length===1&&JSON.stringify(hostRanks)===JSON.stringify(guestRanks)&&new Set(hostRanks.map(item=>item.rank)).size===2);
   tetrisHost.game.destroy();tetrisGuest.game.destroy();
+
+  const authorityTankInputs=[],authorityTankMatch='qa-tank-authority-client';
+  const authorityTank=harness('tank.js','gameTank',2,{opts:{online:true,myIdx:1,isHost:false,getMatchId:()=>authorityTankMatch,
+    gameplayMeta:{protocol:'tank-authority-v1',serverTick:0,startedAt:Date.now(),endAt:Date.now()+180000,season:'spring'},sendTankInput:payload=>authorityTankInputs.push(copy(payload))}});
+  authorityTank.document.dispatch('keydown',{key:'d',preventDefault(){}});
+  assert('坦克 Authority Client：只发送 Input/Seq，不发送坐标',authorityTankInputs.length===1&&authorityTankInputs[0].input.right===true&&authorityTankInputs[0].seq===1&&!Object.prototype.hasOwnProperty.call(authorityTankInputs[0],'x'));
+  const authorityTankBase=authorityTank.game.snapshot();
+  const serverTankState={protocol:'tank-authority-v1',matchId:authorityTankMatch,serverTick:4,serverNow:Date.now(),startedAt:Date.now()-1000,endAt:Date.now()+179000,remainingMs:179000,season:'winter',
+    players:authorityTankBase.tanks.map((tank,id)=>({...tank,x:id===1?8.5:tank.x,kills:id===1?2:0})),projectiles:[],destructibles:authorityTankBase.grid,ack:[0,1],finished:false,order:null};
+  assert('坦克 Authority Client：Snapshot Reconciliation 生效',authorityTank.game.onAuthoritySnapshot(serverTankState)===true&&Math.abs(authorityTank.game.snapshot().tanks[1].x-authorityTankBase.tanks[1].x)>.1);
+  authorityTank.game.onAuthorityResult({matchId:authorityTankMatch,order:[1,0],stats:serverTankState.players});
+  assert('坦克 Authority Client：Server Final 不再提交客户端 claim',authorityTank.game.snapshot().winner===1&&authorityTank.results.length===0);authorityTank.game.destroy();
+
+  const tetrisClaims=[],tetrisStates=[],authorityTetrisMatch='qa-tetris-authority-client',startAt=Date.now()-10;
+  const authorityTetris=harness('tetris.js','gameTetris',2,{opts:{online:true,myIdx:0,isHost:true,getMatchId:()=>authorityTetrisMatch,
+    gameplayMeta:{protocol:'tetris-battle-authority-v1',startAt,matchEndAt:startAt+300000,matchSeed:authorityTetrisMatch,rulesetVersion:'tetris-battle-v1'},
+    sendTetrisLockClaim:payload=>tetrisClaims.push(copy(payload)),sendTetrisKOClaim(){},sendTetrisState:payload=>tetrisStates.push(copy(payload))}});
+  const hardDrop=findText(authorityTetris.extra,'⤓');if(hardDrop)hardDrop.dispatch('click');
+  assert('Tetris Authority Client：Lock Claim 含幂等攻击与规则字段',tetrisClaims.length===1&&tetrisClaims[0].seq===1&&tetrisClaims[0].placementSeq===1&&typeof tetrisClaims[0].attackId==='string'&&Number.isInteger(tetrisClaims[0].linesCleared));
+  const remotePresentation=authorityTetris.game.snapshot().states[1];
+  const presentationPayload={well:remotePresentation.well||Array.from({length:18},()=>Array(10).fill(0)),active:remotePresentation.active,queue:remotePresentation.queue.slice(0,4),bagIndex:remotePresentation.bagIndex,hold:remotePresentation.hold,canHold:remotePresentation.canHold,score:remotePresentation.score,lines:remotePresentation.lines,tetrisCount:remotePresentation.tetrisCount,placementSeq:remotePresentation.placementSeq};
+  assert('Tetris Authority Client：合法展示状态按 matchId/seq 接收',authorityTetris.game.onTetrisState({matchId:authorityTetrisMatch,player:1,seq:1,updatedAt:Date.now(),state:presentationPayload})===true);
+  const beforeMaliciousPresentation=JSON.stringify(authorityTetris.game.snapshot().states[1]);let maliciousPresentationSafe=true;
+  try{
+    maliciousPresentationSafe=authorityTetris.game.onTetrisState({matchId:authorityTetrisMatch,player:1,seq:2,state:{...presentationPayload,active:{kind:99,rotation:0,x:3,y:0}}})===false&&
+      authorityTetris.game.onTetrisState({matchId:authorityTetrisMatch,player:1,seq:2,state:{...presentationPayload,queue:[99,1,2,3]}})===false&&
+      authorityTetris.game.onTetrisState({matchId:'wrong-match',player:1,seq:2,state:presentationPayload})===false;
+  }catch{maliciousPresentationSafe=false;}
+  assert('Tetris Authority Client：恶意 active/queue/match 不崩溃且不污染展示状态',maliciousPresentationSafe&&JSON.stringify(authorityTetris.game.snapshot().states[1])===beforeMaliciousPresentation);
+  const attackEvent={matchId:authorityTetrisMatch,revision:1,attackId:'remote_attack',source:1,target:0,amount:1,cancelled:0,sourceIncoming:[],targetIncoming:[{attackId:'remote_attack',source:1,target:0,amount:1,applyAt:Date.now()+650,delivered:false}]};
+  authorityTetris.game.onBattleEvent(attackEvent);assert('Tetris Authority Client：展示 Server Alive Ring / Incoming',authorityTetris.game.snapshot().states[0].incoming[0].lines===1&&authorityTetris.extra.textContent!==null);
+  authorityTetris.game.onGarbageDue({matchId:authorityTetrisMatch,revision:2,attackId:'remote_attack',source:1,target:0,amount:1,applyAt:Date.now()});
+  assert('Tetris Authority Client：只在 Server Due 后落垃圾',authorityTetris.game.snapshot().wells[0][17].filter(Boolean).length===9&&tetrisStates.length>0);
+  authorityTetris.game.onAuthorityResult({matchId:authorityTetrisMatch,order:[0,1]});
+  assert('Tetris Authority Client：Server Placement 不再提交客户端 claim',authorityTetris.game.snapshot().winner===0&&authorityTetris.results.length===0);authorityTetris.game.destroy();
+
+  const tetrisRuleMatch='qa-tetris-rule-v2-i18n',tetrisRuleStart=Date.now()-100;
+  const tetrisRule=harness('tetris.js','gameTetris',2,{opts:{online:true,myIdx:0,isHost:true,getMatchId:()=>tetrisRuleMatch,
+    gameplayMeta:{protocol:'tetris-rule-v2',startAt:tetrisRuleStart,matchEndAt:tetrisRuleStart+300000,matchSeed:tetrisRuleMatch,rulesetVersion:'tetris-rule-v2'},sendTetrisAction(){}}});
+  const ruleApi=tetrisRule.context.TetrisRules,ruleStates=[0,1].map(player=>ruleApi.createInitialState({seed:tetrisRuleMatch,player}));
+  ruleStates[1]=ruleApi.applyAction(ruleStates[1],{type:'garbage',lines:3,attackId:'qa-garbage'}).state;
+  const ruleSnapshot={protocol:'tetris-rule-v2',matchId:tetrisRuleMatch,startAt:tetrisRuleStart,matchEndAt:tetrisRuleStart+300000,matchSeed:tetrisRuleMatch,rulesetVersion:'tetris-rule-v2',revision:1,serverNow:Date.now(),
+    players:ruleStates.map((state,player)=>({player,seq:0,hash:'qa-'+player,state:JSON.parse(ruleApi.serialize(state)),incoming:[],alive:true,koTime:null,placement:0})),finished:false,order:null,inputCount:0};
+  const ruleApplied=tetrisRule.game.onTetrisRuleState(ruleSnapshot),garbageEvent=findText(tetrisRule.area,'tetris_event_garbage(3)');
+  assert('Tetris Rule v2：Garbage 事件保留 lines 并使用现有本地化 key',ruleApplied===true&&tetrisRule.game.snapshot().states[1].lastEvent==='+3 GARBAGE'&&!!garbageEvent);
+  tetrisRule.game.destroy();
+
+  const authorityClockMatch='qa-clock-client';
+  const authorityXiangqi=harness('xiangqi.js','gameXiangqi',2,{opts:{online:true,myIdx:0,isHost:true,getMatchId:()=>authorityClockMatch,
+    gameplayMeta:{protocol:'xiangqi-clock-v1',clock:{protocol:'xiangqi-clock-v1',matchId:authorityClockMatch,remainingMsByPlayer:[600000,600000],activePlayer:0,serverNow:Date.now(),turnStartedAt:Date.now()}}}});
+  assert('象棋 Authority Client：消费 Server Clock Snapshot',authorityXiangqi.game.onClockState({protocol:'xiangqi-clock-v1',matchId:authorityClockMatch,remainingMsByPlayer:[590000,580000],activePlayer:1,serverNow:Date.now(),turnStartedAt:Date.now()})===true&&authorityXiangqi.game.getClockState().remaining[1]<=580000);
+  authorityXiangqi.game.onClockState({protocol:'xiangqi-clock-v1',matchId:authorityClockMatch,remainingMsByPlayer:[590000,0],activePlayer:1,serverNow:Date.now(),turnStartedAt:Date.now(),finished:true,loser:1,winner:0});
+  assert('象棋 Authority Client：Server Timeout 不提交客户端 claim',authorityXiangqi.game.snapshot().winner===0&&authorityXiangqi.results.length===0);authorityXiangqi.game.destroy();
+
+  const authorityMonopolyMatch='qa-auction-client';
+  const authorityMonopoly=harness('monopoly.js','gameMonopoly',3,{opts:{online:true,myIdx:0,isHost:true,getMatchId:()=>authorityMonopolyMatch,
+    gameplayMeta:{protocol:'monopoly-auction-v1'},sendMonopolyAuctionOpen(){},sendMonopolyBid(){},sendMonopolyTurnEnd(){}}});
+  const auctionBase={protocol:'monopoly-auction-v1',matchId:authorityMonopolyMatch,auction:{auctionId:'a1',propertyId:7,status:'open',startAt:Date.now(),endAt:Date.now()+5000,currentBid:200,currentBidder:1,eligiblePlayers:[0,1,2],revision:2},cash:[2000,1800,2000],ownership:{},serverNow:Date.now(),remainingMs:5000};
+  assert('大富翁 Auction Client：展示服务端实时竞价',authorityMonopoly.game.onAuctionEvent('auction_open',auctionBase)===true&&findText(authorityMonopoly.extra,'monopoly_bid_button'));
+  authorityMonopoly.game.onAuctionEvent('auction_closed',{...auctionBase,auction:{...auctionBase.auction,status:'closed'},ownership:{7:1},remainingMs:0});
+  assert('大富翁 Auction Client：服务端关闭后同步产权',authorityMonopoly.game.snapshot().owners[7]===1&&authorityMonopoly.game.snapshot().players[1].props.includes(7));authorityMonopoly.game.destroy();
 
   if(failures.length){console.error('GAMEPLAY_UPGRADE_FAILED:',failures.join('、'));process.exitCode=1;}
   else console.log('GAMEPLAY_UPGRADE_ALL_PASS');

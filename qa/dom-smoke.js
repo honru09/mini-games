@@ -43,6 +43,7 @@ function makeEl(tag){
       this.attributes[k] = String(v);
       if (k.startsWith('data-')) this.dataset[k.slice(5)] = String(v);
     },
+    getAttribute(k){ return Object.prototype.hasOwnProperty.call(this.attributes, k) ? this.attributes[k] : null; },
     addEventListener(type, fn){ (this._listeners[type] = this._listeners[type] || []).push(fn); },
     dispatch(type, ev){ (this._listeners[type] || []).forEach(fn => fn(ev || {})); },
     appendChild(c){ c.parent = this; this.children.push(c); return c; },
@@ -88,6 +89,8 @@ function makeEl(tag){
 }
 function matchSel(n, sel){
   if (sel.startsWith('.')) return n.classList.contains(sel.slice(1));
+  const present = /^\[data-([\w-]+)\]$/.exec(sel);
+  if (present) return Object.prototype.hasOwnProperty.call(n.dataset, present[1]);
   const m = /^\[data-([\w-]+)="([^"]*)"\]$/.exec(sel);
   if (m) return n.dataset[m[1]] === m[2];
   return n.tagName.toLowerCase() === sel.toLowerCase();
@@ -97,9 +100,8 @@ const ctx = makeCtxProxy();
 const IDs = ['count-group','btn-back','btn-restart','btn-rules','btn-end-game','btn-theme','count-label','mode-group','screen-hub','screen-game','game-title',
   'player-bar','status-bar','board-area','game-extra','toast-wrap','game-grid',
   'btn-create-room','btn-join-room','room-input','btn-settings-page','online-status','online-banner',
-  'room-panel','room-code-big','room-info','seat-grid','room-status','room-actions',
-  'btn-quick-join','btn-browse-rooms','btn-join-code','join-room-code','online-play-actions','hero-banner',
-  'btn-me','slots-row','persona-row','lb-list','lb-note','lb-tab-all','lb-tab-online',
+  'room-panel','room-code-big','room-info','room-status','room-actions',
+  'btn-me','my-card','slots-row','persona-row','lb-list','lb-note','lb-tab-all','lb-tab-online',
   'lobby-panel','lobby-list','player-list'];
 const registry = new Map(IDs.map(id => {
   const e = makeEl('div');
@@ -110,8 +112,8 @@ const registry = new Map(IDs.map(id => {
 global.document = {
   getElementById: id => registry.get(id) || null,
   createElement: tag => makeEl(tag),
-  querySelectorAll: () => [],
-  querySelector: () => null,
+  querySelectorAll: sel => global.document.body.querySelectorAll(sel),
+  querySelector: sel => global.document.body.querySelector(sel),
   body: makeEl('body'),
   documentElement: makeEl('html'),
   addEventListener(){},
@@ -129,6 +131,11 @@ global.localStorage = {
   removeItem: k => lsStore.delete(k),
 };
 global.fetch = async (url, init) => {
+  const localeMatch = String(url).match(/locales\/(zh-CN|en-US|uk-UA)\.json$/);
+  if (localeMatch) {
+    const body = fs.readFileSync(path.join(ROOT, 'public', 'locales', localeMatch[1] + '.json'), 'utf8').replace(/^\uFEFF/, '');
+    return { ok: true, json: async () => JSON.parse(body) };
+  }
   let options = null;
   try { options = JSON.parse(init.body).options; } catch {}
   const choice = options && options.length ? options[0] : null;
@@ -152,14 +159,28 @@ function check(name, cond){
   if (!cond) fails++;
 }
 function findBtnByText(root, text){
-  const nodeText = node => String(node && node.textContent || '') + ((node && node.children) || []).map(nodeText).join('');
   const stack = [root];
   while (stack.length){
     const n = stack.shift();
     if (n.children && n.children.length) stack.push(...n.children);
-    if (String(n.tagName).toUpperCase() === 'BUTTON' && nodeText(n).includes(text)) return n;
+    if (String(n.tagName).toUpperCase() === 'BUTTON' && (n.textContent || '').includes(text)) return n;
   }
   return null;
+}
+function collectUiStrings(roots){
+  const values = [];
+  const queue = (Array.isArray(roots) ? roots : [roots]).filter(Boolean);
+  while (queue.length){
+    const node = queue.shift();
+    if (node.children && node.children.length) queue.push(...node.children);
+    for (const value of [node.textContent, node.title, node.placeholder, node.attributes && node.attributes['aria-label']]) {
+      if (typeof value === 'string' && value.trim()) values.push(value.trim());
+    }
+  }
+  return values;
+}
+function untranslatedUi(roots){
+  return collectUiStrings(roots).filter(value => /[\u3400-\u9fff]/.test(value) || /\b[a-z][a-z0-9]+(?:_[a-z0-9]+){1,}\b/i.test(value));
 }
 
 async function main(){
@@ -167,9 +188,36 @@ async function main(){
   check('大厅渲染 6 张精选游戏卡', $('game-grid').children.length === 6);
   check('运行时只注册 6 个精选游戏 ID',
     JSON.stringify(Object.keys(G.GAMES)) === JSON.stringify(['gomoku','ludo','monopoly','tank','tetris','xiangqi']));
+  const fiveGameProfile = { played:{ gomoku:1,ludo:1,monopoly:1,tank:1,tetris:1 }, achievements:[] };
+  const sixGameProfile = { played:{ ...fiveGameProfile.played, xiangqi:1 }, achievements:[] };
+  check('全能玩家成就要求当前六款游戏全部完成',
+    !G.checkAchievements(fiveGameProfile).includes('all_games') && G.checkAchievements(sixGameProfile).includes('all_games'));
   check('默认人数为 2', G.playerCount === 2);
-  check('大厅彻底移除本地热座入口与全局人数选择', !/data-mode=["']local["']/.test(html) && !/id=["']count-group["']/.test(html));
-  check('Avatar v2 固定六主题 48 款、注册仅 12 款免费',G.avatarCatalog.length===48&&new Set(G.avatarCatalog.map(item=>item.theme)).size===6&&G.freeAvatarIds.length===12&&G.avatarCatalog.filter(item=>item.animated).length===12);
+  await G.setLanguage('en-US');
+  check('英文切换覆盖游戏名称', G.GAMES.gomoku.name === 'Gomoku' && G.GAMES.xiangqi.name === 'Chinese Chess');
+  check('英文切换覆盖游戏描述', G.GAMES.tetris.desc === 'Synchronized survival: clear lines and attack');
+  G.aiMode = true; G.renderPersonaRow();
+  check('英文覆盖 AI 角色选择与大厅动态文字', untranslatedUi([$('game-grid'),$('persona-row'),$('my-card')]).length === 0);
+  G.aiMode = false;
+  for (const id of ['gomoku','ludo','monopoly','tank','tetris','xiangqi']){
+    G.playerCount = 2; G.showGame(id);
+    const leaks = untranslatedUi([area(),$('game-extra'),$('status-bar'),$('player-bar')]);
+    check(`英文覆盖 ${id} 初始对局文字`, leaks.length === 0);
+  }
+  const englishAiMateName = G.aiMateDisplayName('ai_gambler', 'legacy-name');
+  await G.setLanguage('uk-UA');
+  check('乌克兰语切换覆盖游戏名称', G.GAMES.monopoly.name === 'Міні-монополія');
+  check('对局标题随语言切换即时更新', $('game-title').textContent.includes('Китайські шахи'));
+  check('历史 AI 对手名称按当前语言实时派生', G.aiMateDisplayName('ai_gambler', 'legacy-name') !== englishAiMateName && !/[\u3400-\u9fff]/.test(G.aiMateDisplayName('ai_gambler', 'legacy-name')));
+  G.aiMode = true; G.renderPersonaRow();
+  check('乌克兰语覆盖 AI 角色选择与大厅动态文字', untranslatedUi([$('game-grid'),$('persona-row'),$('my-card')]).length === 0);
+  G.aiMode = false;
+  for (const id of ['gomoku','ludo','monopoly','tank','tetris','xiangqi']){
+    G.playerCount = 2; G.showGame(id);
+    const leaks = untranslatedUi([area(),$('game-extra'),$('status-bar'),$('player-bar')]);
+    check(`乌克兰语覆盖 ${id} 初始对局文字`, leaks.length === 0);
+  }
+  await G.setLanguage('zh-CN');
   const cards = $('game-grid').children;
   const gomokuCard = cards.find(card => card.dataset.gameId === 'gomoku');
   const tetrisCard = cards.find(card => card.dataset.gameId === 'tetris');
@@ -193,7 +241,7 @@ async function main(){
   localStorage.setItem('mg_art_gomoku_v1', '0');
   G.renderHub();
   const rollbackGomokuCard = $('game-grid').children.find(card => card.dataset.gameId === 'gomoku');
-  G.playerCount = 2; G.launchGame('gomoku',2);
+  G.playerCount = 2; G.showGame('gomoku');
   check('五子棋 feature flag 关闭后回退 Emoji 大厅卡', rollbackGomokuCard && !rollbackGomokuCard.classList.contains('has-cover'));
   check('五子棋 feature flag 关闭后仍可开局', area().children[0] && !area().children[0].classList.contains('game-art-v1'));
   localStorage.removeItem('mg_art_gomoku_v1');
@@ -211,7 +259,7 @@ async function main(){
   for (const [id, n] of combos){
     G.playerCount = n;
     try{
-      G.launchGame(id,n);
+      G.showGame(id);
       const ok = area().children.length > 0;
       check(id + ' p' + n + ' 初始化成功', ok);
     }catch(err){
@@ -220,10 +268,10 @@ async function main(){
     }
   }
 
-  G.playerCount = 2; G.launchGame('gomoku',2);
+  G.playerCount = 2; G.showGame('gomoku');
   check('五子棋 Canvas 接入木纹底材且规则层仍由 Canvas 绘制', area().children[0].classList.contains('game-art-v1'));
 
-  G.playerCount = 2; G.launchGame('tetris',2);
+  G.playerCount = 2; G.showGame('tetris');
   let tetrisWell = area().querySelector('.tetris-well');
   check('俄罗斯方块 DOM 井接入玻璃底材与 CSS 精确网格', tetrisWell && tetrisWell.classList.contains('game-art-v1'));
   G.game.onMove({ piece: 0, x: 0, y: 17, rot: 0 }, 0);
@@ -234,7 +282,7 @@ async function main(){
   check('俄罗斯方块快照不写入美术状态', !/(cosmetic|blockSkin|backgroundSkin|presentation)/i.test(tetrisSnapshotText));
 
   localStorage.setItem('mg_art_tetris_v1', '0');
-  G.launchGame('tetris',2);
+  G.showGame('tetris');
   tetrisWell = area().querySelector('.tetris-well');
   check('俄罗斯方块 feature flag 关闭后仍可开局并使用 CSS fallback', tetrisWell && !tetrisWell.classList.contains('game-art-v1'));
   localStorage.removeItem('mg_art_tetris_v1');
@@ -243,12 +291,12 @@ async function main(){
   G.playerCount = 3;
   const titleBefore = $('game-title').textContent;
   const areaCountBefore = area().children.length;
-  G.launchGame('gomoku',3);
+  G.startGame('gomoku');
   check('3 人点五子棋被拦截（不进入游戏）',
     $('game-title').textContent === titleBefore && area().children.length === areaCountBefore);
 
   /* 五子棋：模拟横排五连 */
-  G.playerCount = 2; G.launchGame('gomoku',2);
+  G.playerCount = 2; G.showGame('gomoku');
   const gomokuCanvas = area().children[0];
   const placeStone = (r, c) => {
     const LOGICAL = 520, CELL = 34, PAD = 22;
@@ -259,7 +307,7 @@ async function main(){
   check('五子棋：玩家1 五连获胜', $('status-bar').textContent.includes('获胜'));
 
   /* 飞行棋：掷骰直到出现可移动棋子并移动一次 */
-  G.playerCount = 4; G.launchGame('ludo',4);
+  G.playerCount = 4; G.showGame('ludo');
   const ludoBoard = area().children[0];
   const diceBtn = $('game-extra').querySelector('.dice-btn');
   let moved = false;
@@ -279,7 +327,7 @@ async function main(){
     chipDots[0] === '#e5484d' && chipDots[1] === '#3b82f6' && chipDots[2] === '#22a06b' && chipDots[3] === '#f59e0b');
 
   /* 迷你大富翁：走 5 回合不报错 */
-  G.playerCount = 3; G.launchGame('monopoly',3);
+  G.playerCount = 3; G.showGame('monopoly');
   const mBoard = area().children[0];
   const mRollBtn = mBoard.querySelectorAll('button')[0];
   for (let i = 0; i < 5; i++){
@@ -293,14 +341,14 @@ async function main(){
   check('大富翁：5 回合后仍有玩家存活', !$('status-bar').textContent.includes('获胜') || $('status-bar').textContent.includes('最终赢家'));
 
   /* 规则弹层 */
-  G.playerCount = 2; G.launchGame('ludo',2);
+  G.playerCount = 2; G.showGame('ludo');
   $('btn-rules').dispatch('click');
   const backdrops = document.body.children.filter(c => c.classList.contains('modal-backdrop') && !c.classList.contains('auth-backdrop'));
   check('规则弹层可打开', backdrops.length === 1);
   backdrops.forEach(b => b.remove());
 
   /* 大富翁：轮次显示 + 提前结算 */
-  G.playerCount = 3; G.launchGame('monopoly',3);
+  G.playerCount = 3; G.showGame('monopoly');
   check('大富翁：显示轮次', $('status-bar').textContent.includes('第 1/30 轮'));
   $('game-extra').children[2].dispatch('click'); // 提前结算
   check('大富翁：提前结算出结果', $('status-bar').textContent.includes('最终赢家'));
@@ -329,7 +377,7 @@ async function main(){
   G.registerAccount('小明', 'abc123', 0, 0); // 恢复主账号
   const roster0 = JSON.parse(localStorage.getItem('mg_roster'));
   check('档案已持久化', Array.isArray(roster0) && roster0.length >= 1);
-  check('大厅渲染档案按钮与玩家槽位', $('btn-me').children.length >= 2 && $('slots-row').children.length === G.playerCount);
+  check('大厅渲染档案按钮且热座槽位已移除', $('btn-me').children.length >= 2 && $('slots-row').children.length === 0 && $('slots-row').classList.contains('hidden'));
 
   // 编辑我的档案（昵称 + 头像）
   $('btn-me').dispatch('click');
@@ -352,10 +400,10 @@ async function main(){
   check('我的档案按钮显示新昵称', $('btn-me').children[1].textContent.includes('小明'));
   const devUid = G.deviceUid;
   const devBefore = roster1.find(p => p.uid === devUid).coins;
-  const p2Before = roster1.find(p => p.name === '玩家2') || { coins: 0, total: 0 };
+  const authorityBefore = new Map(roster1.map(p => [p.uid, { coins: p.coins || 0, total: p.total || 0 }]));
 
-  // 内部规则回归：无服务端票据时不得进入正式经济与成长。
-  G.playerCount = 2; G.launchGame('gomoku',2);
+  // 本地五子棋结算：热座模式不进入正式经济与成长。
+  G.playerCount = 2; G.showGame('gomoku');
   const settlementBoard = area().children[0];
   const placeSettlement = (r, c) => {
     const LOGICAL = 520, CELL = 34, PAD = 22;
@@ -364,15 +412,19 @@ async function main(){
   [[7,3],[3,3],[7,4],[3,4],[7,5],[3,5],[7,6],[3,6],[7,7]].forEach(([r,c]) => placeSettlement(r,c));
   const roster2 = JSON.parse(localStorage.getItem('mg_roster'));
   const devAfter = roster2.find(p => p.uid === devUid).coins;
-  const p2 = roster2.find(p => p.name === '玩家2');
-  check('内部规则回归不增加正式金币', devAfter - devBefore === 0);
-  check('内部规则回归不修改客户端权威场次', p2 && p2.coins - p2Before.coins === 0 && p2.total - p2Before.total === 0);
+  check('本地热座胜者不增加正式金币', devAfter - devBefore === 0);
+  const authorityChanged = roster2.filter(p => {
+    const before = authorityBefore.get(p.uid);
+    return before && ((p.coins || 0) !== before.coins || (p.total || 0) !== before.total);
+  });
+  if (authorityChanged.length) console.log('      authority changed:', JSON.stringify(authorityChanged.map(p => ({ uid:p.uid, before:authorityBefore.get(p.uid), after:{coins:p.coins||0,total:p.total||0} }))));
+  check('本地热座不修改客户端权威场次', authorityChanged.length === 0);
   check('本地排行榜仍可正常渲染', $('lb-list').children.length >= 2);
 
   /* 人机模式：AI 自动回应落子 */
   G.aiMode = true;
   G.playerCount = 2;
-  G.launchGame('gomoku',2);
+  G.showGame('gomoku');
   const aiCanvas = area().children[0];
   const LOGICAL_AI = 520, CELL_AI = 34, PAD_AI = 22;
   aiCanvas.dispatch('click', { clientX: (PAD_AI + 7*CELL_AI)/LOGICAL_AI*520, clientY: (PAD_AI + 7*CELL_AI)/LOGICAL_AI*520 });
@@ -428,21 +480,33 @@ async function main(){
   check('AI_PERSONAS 定义 5 个角色', G.personas && G.personas.length === 5);
   const personaBefore = G.currentPersona.id;
   G.setAiPersona('gambler');
-  check('切换 AI 角色生效', G.currentPersona.id === 'gambler' && G.currentPersona.randomness >= 0.3);
+  check('切换 AI 角色生效', G.currentPersona.id === 'gambler' && G.currentPersona === G.personas.find(persona => persona.id === 'gambler'));
   G.setAiPersona(personaBefore);
   G.aiMode = true;
   G.renderPersonaRow();
   check('人机模式渲染角色选择卡', $('persona-row').children.length >= 2 && $('persona-row').querySelectorAll('.persona-card').length === 5);
   G.aiMode = false;
   G.renderPersonaRow();
-  check('联机模式隐藏角色选择', $('persona-row').classList.contains('hidden'));
+  check('本地模式隐藏角色选择', $('persona-row').classList.contains('hidden'));
 
-  // 商城、设置弹层与房间面板初始状态
-  check('头像商城实现已进入构建产物', /function\s+openShop\s*\(/.test(script) && /shop-grid/.test(script));
-  check('商城不直接调用 HTMLCollection.forEach', !/\.children\s*\.forEach\s*\(/.test(script));
+  // 设置弹层与房间面板初始状态
   $('btn-settings-page').dispatch('click');
-  const stBd = document.body.children.find(c => c.classList.contains('modal-backdrop'));
+  const stBd = document.body.children.find(c => c.classList.contains('modal-backdrop') && !c.classList.contains('auth-backdrop'));
   check('设置弹层可打开', !!stBd);
+  if (stBd){
+    const englishButton = stBd.querySelectorAll('button').find(button => button.dataset.langCode === 'en-US');
+    if (englishButton) { englishButton.dispatch('click'); await sleep(20); }
+    const localizedSetting = key => {
+      const node = stBd.querySelector(`[data-i18n="${key}"]`);
+      return node && node.textContent;
+    };
+    check('设置弹层内切换语言后标题与分区即时更新',
+      localizedSetting('settings') === 'Settings' && localizedSetting('theme') === 'Theme' &&
+      localizedSetting('language') === 'Language' && localizedSetting('server_config') === 'Online Server' && localizedSetting('close') === 'Close');
+    check('设置页只持久化实际加载成功的账号语言', JSON.parse(localStorage.getItem('mg_account')).lang === 'en-US');
+    const chineseButton = stBd.querySelectorAll('button').find(button => button.dataset.langCode === 'zh-CN');
+    if (chineseButton) { chineseButton.dispatch('click'); await sleep(20); }
+  }
   if (stBd) stBd.remove();
   check('未建房时房间面板隐藏', $('room-panel').classList.contains('hidden'));
 

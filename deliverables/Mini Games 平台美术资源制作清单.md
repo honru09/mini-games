@@ -4,7 +4,7 @@
 > 版本日期：2026-08-07；已合并用户提供的 v3.0 稳定 ID、manifest、精确棋盘规格、Prompt、音频、3D 试点、QA 与接入验收要求。
 > 参考灵感：用户提供的《风起余烬 — 美术资产生成清单》中的 spritesheet、透明背景、帧序、9-slice、场景分层、特效 atlas 和保存路径方法；本清单不复用其角色、世界观、文件名或美术内容。
 > 当前工程基线：Web/CSS/Canvas 优先；后续如接入 Godot，沿用同一命名、帧序和资产 ID。
-> 执行快照：`public/assets/manifests/asset_manifest.json` 已落地；P-001 品牌 mark 与 P-003 虚拟现金 SVG 已接入；G-02 五子棋和 G-11 俄罗斯方块 P0 纵切已接入大厅封面、棋盘/井底材、绘制状态、feature flag 与程序化 fallback。
+> 执行快照：`public/assets/manifests/asset_manifest.json` 已落地；P-001 品牌 mark 与 P-003 虚拟现金 SVG 已接入；G-02 五子棋和 G-11 俄罗斯方块 P0 纵切已接入大厅封面、棋盘/井底材、绘制状态、feature flag 与程序化 fallback。其余四款保持可运行的 CSS/Canvas/Emoji fallback，正式包按本清单排期。
 
 ## 1. 总体美术方向
 
@@ -63,7 +63,7 @@
 }
 ```
 
-资产状态统一使用四种值：`现有占位`（当前 CSS/Canvas/DOM Emoji/WebAudio 已能运行）、`待制作`（本清单的美术交付）、`已接入`（运行时已替换并通过 QA）、`未来逻辑依赖`（功能协议尚未完成，美术可先做规范/线框，不应宣称已上线）。其中 DOM Emoji 仅指当前棋子/角色等程序化占位，不代表投掷 Emoji 功能已经上线。除特别注明外，下表新资源默认均为 `待制作`；公共 3D 骰子、共享反馈和音效已有程序化占位，但正式资源仍待制作。
+资产状态统一使用四种值：`现有占位`（当前 CSS/Canvas/DOM Emoji/WebAudio 已能运行）、`待制作`（本清单的美术交付）、`已接入`（运行时已替换并通过 QA）、`未来逻辑依赖`（对应产品逻辑尚未上线，美术不能宣称已上线）。观众席、赛事编排、Tank/Tetris 权威协议、象棋棋钟和大富翁拍卖逻辑已经落地，但专用美术仍可标记为 `待制作`；只有完整用户回放、聊天/好友、赛季和跨端发行仍属于未来逻辑依赖。DOM Emoji 仅指当前棋子/角色等程序化占位，不代表投掷 Emoji 功能已经上线。除特别注明外，下表新资源默认均为 `待制作`。
 
 ## 2. 平台公共资产
 
@@ -100,16 +100,16 @@
 | P-023 | `assets/social/friends_actions.svg` | 好友申请、接受、拒绝、删除、邀请、拉黑、举报；未来逻辑依赖 | 现有邀请/在线状态不等同于完整好友关系；destructive action 有二次确认；在线/离线不只靠颜色 |
 | P-024 | `assets/social/emoji_projectiles.webp` | 五类表情的发射/轨迹/命中 atlas；未来逻辑依赖 | 每类 6–10 帧；频控、静音、关闭动效时可用 |
 | P-025 | `assets/event/match_event_icons.svg` | Forward/Backward/Extra Roll/Curse/Blessing/Extra Life；未来逻辑依赖 | icon、事件卡、Buff/Debuff、小型 HUD、入场/命中/消退 |
-| P-026 | `assets/replay/replay_controls.svg` | 时间轴、播放、暂停、倍速、回合跳转、分享；未来逻辑依赖 | 现有断线恢复 moveLog 不等同于用户回放/观战；键盘可达；观战标签、延迟标识和只读状态 |
-| P-027 | `assets/meta/tasks_season.svg` | 每日/每周任务、赛季、锦标赛、季票、限时商品；未来逻辑依赖 | 当前仅有每日任务进度；周任务、领奖、赛季和赛事未上线；locked/active/claimable/claimed/expired；真实支付与 `💵` 分离 |
+| P-026 | `assets/replay/replay_controls.svg` | 用户回放时间轴、播放、暂停、倍速、回合跳转、分享；待制作 | 独立观众席/只读标签/重连快照及可配置延迟发送队列已上线；用户可操作的时间轴、跳转、分享与回放存档仍待实现；键盘可达 |
+| P-027 | `assets/meta/tasks_season.svg` | 每日/每周任务、赛季、锦标赛、季票、限时商品；待制作 | 赛事编排/积分面板已上线但没有专用正式美术；赛季、周任务、领奖与季票仍待实现；locked/active/claimable/claimed/expired；真实支付与 `💵` 分离 |
 | P-028 | `assets/platform/cross_platform_pack/` | PWA、App、小程序、桌面、Steam 发行包；未来逻辑依赖 | PWA 192/512、启动图、Android/iOS 自适应图标、商店截图、分享卡、Steam capsule/library/DLC 图 |
-| P-029 | `assets/ui/modes/mg_mode_*.svg` | 人机、联机 2 图标；待制作 | 24/48/96px；AI persona、Seat/READY/联机状态分别有可读徽标 |
-| P-030 | `assets/ai/mg_persona_<id>_*.webp` | `tsundere/gambler/mean/cute/teacher` 五套 192×192 头像；待制作 | 每人格 think/win/lose 气泡插图各 1；文字由 i18n/运行时渲染 |
+| P-029 | `assets/ui/modes/mg_mode_*.svg` | 本地热座、人机、联机 3 图标；待制作 | 24/48/96px；本地人数、AI persona、联机状态分别有可读徽标 |
+| P-030 | `assets/ai/mg_persona_<id>_*.webp` | `tsundere/gambler/mean/cute/teacher` 五套 192×192 头像；待制作 | 每人格 think/win/lose 气泡插图各 1；文字由 i18n/运行时渲染；人格只改变表达与近优选择，不允许覆盖强策略 |
 | P-031 | `assets/ui/room/mg_room_states.svg` | 席位、房主皇冠、等待、满员、游戏中、在线、离线、重连；待制作 | 不能只靠红/绿；房主与本人状态有形状/标签双编码 |
 | P-032 | `assets/ui/profile/mg_growth_states.svg` | XP、5 称号、8 成就、4 每日任务、最近一起玩；待制作 | locked/unlocked/progress/claimable；当前任务仅显示进度，领奖属未来逻辑 |
 | P-033 | `assets/ui/settings/mg_settings_states.svg` | 六主题预览、三语言旗帜、声音/动效开关；待制作 | 主题 ID 与 runtime 对齐；旗帜不是唯一语言文本；on/off/focus/disabled |
 
-功能追踪规则：Logo/封面/棋子/头像/主题氛围属于正式资产；交互网格、文字、焦点环、进度数值和 aria 语义由 HTML/CSS/Canvas/i18n 生成；Loading、骰子、基础音效现有程序化占位，正式资产到位前不得删除 fallback；聊天、Emoji、回放、锦标赛和跨端发行资产标记为“未来逻辑依赖”。
+功能追踪规则：Logo/封面/棋子/头像/主题氛围属于正式资产；交互网格、文字、焦点环、进度数值和 aria 语义由 HTML/CSS/Canvas/i18n 生成；Loading、骰子、基础音效现有程序化占位，正式资产到位前不得删除 fallback；聊天、Emoji、用户回放、赛季和跨端发行资产标记为“未来逻辑依赖”，观众席与赛事编排的运行时逻辑已完成但专用素材仍是“待制作”。当前仓库真实 raster/SVG 交付仅包括品牌 mark/wordmark、`currency_cash.svg`、五子棋/俄罗斯方块各两档封面和各自底材；其余清单项不得标记为“已接入”。
 
 ## 3. 6 款精选游戏资产矩阵
 
@@ -124,23 +124,23 @@
 
 | ID | 游戏 | 棋盘/场景 | 棋子/道具 3D 样式 | 必做动效 |
 |---|---|---|---|---|
-| G-07 | 飞行棋 | 52 格环形轨道 + 4 基地 + 4 条终点航线，网格/地形/标签分层 | 4 色×4 架飞机；单骰使用公共 3D atlas | 掷骰、逐格、碰撞回基地、终点折返（BUG-001 修复后接入）、归位皇冠、庆祝纸屑 |
+| G-07 | 飞行棋 | 52 格环形轨道 + 4 基地 + 4 条终点航线，网格/地形/标签分层 | 4 色×4 架飞机；单骰使用公共 3D atlas | 掷骰、逐格、碰撞回基地、已实现的终点折返、归位皇冠、庆祝纸屑 |
 | G-08 | 迷你大富翁 | 24 格环形地图；起点/机会/税/休息/车站/地产分层 | 双骰、5 个玩家标记、产权标记；首版无房屋升级 | 掷骰、格子弹跳、买地卡、收租局内资金、破产警示；局内资金图标不得使用平台 `💵` 钱包 ID |
-| G-09 | 坦克大战 | 13×13；砖墙/钢墙/基地/空地分层 | 2 坦克×四方向、3 生命、炮弹、击毁状态 | 移动、后坐力、炮口火、钢墙阻挡、砖墙碎裂、爆炸；护盾反弹为未来逻辑依赖 |
+| G-09 | 坦克大战 | 正式 2 人图为 15×13；砖墙/钢墙/基地/空地分层 | 2 坦克×四方向、3 HP、炮弹、击毁/2 秒重生状态 | 移动、后坐力、炮口火、钢墙阻挡、砖墙碎裂、爆炸；护盾反弹为未来逻辑依赖 |
 | G-11 | 俄罗斯方块 | 每人 10×18 井，最多并列 4 井；`mg_board_tetris_well_v01.webp` 已接入 | 7 种颜色 + 7 种纹理；active/ghost/locked/clear 已接入 | 已接入旋转、软降、硬降、锁定与消行脉冲；连击/Tetris 爆发继续深化 |
 
 每款游戏至少交付：棋盘底图 3 套、棋子/角色主视觉 1 套、状态变体（idle/selected/disabled/win/lose）5 套、移动/落子/吃子或碰撞动效 3–6 帧、胜负结算 1 套、深浅主题对比校验图 1 张。
 
-当前 G-02 五子棋与 G-11 俄罗斯方块已完成 P0 纵切；飞行棋、迷你大富翁、坦克大战和象棋仍为“现有 CSS/Canvas/DOM Emoji fallback + 正式游戏资产待制作”。未来规则项（五子棋禁手、坦克护盾、象棋回放）只有对应逻辑上线后才可标记“已接入”。
+当前 G-02 五子棋与 G-11 俄罗斯方块已完成 P0 纵切；飞行棋、迷你大富翁、坦克大战和象棋为“现有 CSS/Canvas/DOM Emoji fallback + 正式游戏资产待制作”。Tank/Tetris 权威协议、象棋棋钟、大富翁拍卖、观众席和赛事编排的运行时逻辑已通过专项 QA；五子棋禁手、坦克护盾、完整象棋回放和用户回放仍是未上线规则/产品能力，相关素材不能提前标记“已接入”。
 
 ### 3.3 运行时数量与拆层锁定（工程接入权威表）
 
 | runtime_id | 规则尺寸/数量 | 必须拆分的运行时层 | 首批导出规格 |
 |---|---|---|---|
 | `gomoku` | 15×15、黑白棋 | 木纹背景已接入；15×15 规则网格/星位/棋子/最后落子/胜线仍由 Canvas 精确绘制 | 背景 1024² WebP 已接入；棋子为 Canvas 软 3D v1；当前无禁手资产 |
-| `ludo` | 52 格轨道、4 色×4 架、4 基地、4 终点航线、单骰 | 背景、轨道/基地/终点标签、交互坐标（代码原生）、16 架飞机、骰子 | 棋盘 1200²；飞机 4 色×192²；折返动画在 BUG-001 修复后启用 |
+| `ludo` | 52 格轨道、4 色×4 架、4 基地、4 终点航线、单骰 | 背景、轨道/基地/终点标签、交互坐标（代码原生）、16 架飞机、骰子 | 棋盘 1200²；飞机 4 色×192²；折返规则已实现，正式折返素材待制作 |
 | `monopoly` | 24 格、双骰、最多 5 标记 | 城市背景、24 格规则层、起点/机会/税/休息/车站/地产、产权标记、5 pawn | 棋盘 1200²；地块图标 SVG；pawn 192²；首版不做房屋升级 |
-| `tank` | 13×13、砖/钢/基地、2 坦克×4 方向、3 生命 | 地面、规则网格、墙/基地 tile、坦克、炮弹、生命、击毁 | tile 96²；坦克每方向 192²；爆炸 6 帧；未来护盾另 flag |
+| `tank` | 15×13、砖/钢/基地、2 坦克×4 方向、3 HP | 地面、规则网格、墙/基地 tile、坦克、炮弹、生命、击毁/重生 | tile 96²；坦克每方向 192²；爆炸 6 帧；未来护盾另 flag |
 | `tetris` | 每人 10×18 井，最多 4 井、7 方块 | 玻璃井背景已接入；规则格由 CSS 精确生成；7 方块 active/ghost/locked/clear 已接入 | 640×1152 WebP 井底材；7 色同时用纹理区分；4 井保留 CSS fallback |
 | `xiangqi` | 9×10、双方各 16 子、14 种正面字形 | 背景、线/楚河汉界、规则交点（代码原生）、红黑棋、将军/将死 | 棋盘 1024×1152；棋子 160²；文字保留可编辑 SVG 母版 |
 
@@ -153,7 +153,7 @@
 1. **五子棋 `gomoku`**：`A refined 15x15 gomoku tabletop, warm maple wood grain background with subtle metal star points, polished black and ivory stone pieces, soft reflections, top-left 45 degree light, calm modern board-game photography rendered as clean soft 3D, no labels or text.`
 2. **飞行棋 `ludo`**：`A whimsical pocket aviation race board based on a 52-cell circular track, four colored home bases and four finish lanes, cloud-layer background, sixteen toy airplane tokens in red blue green yellow, collectible soft 3D plastic, clear silhouettes and colorblind-safe emblem patterns, no text.`
 3. **迷你大富翁 `monopoly`**：`A compact 24-cell city property board, miniature streets and skyline diorama, start chance tax rest station and property icon zones, five distinct toy pawns and two dice, soft 3D, readable top-down layout, no brand names, no baked currency text.`
-4. **坦克大战 `tank`**：`A 13 by 13 toy tank arena, modular brick wall steel wall base and ground tiles, two compact toy tanks with four directional views, luminous shells, soft 3D plastic and metal, clean tile boundaries, no shield unless marked future concept.`
+4. **坦克大战 `tank`**：`A 15 by 13 toy tank arena, modular brick wall steel wall base and ground tiles, two compact toy tanks with four directional views, luminous shells, soft 3D plastic and metal, clean tile boundaries, no shield unless marked future concept.`
 5. **俄罗斯方块 `tetris`**：`A translucent glass tetris well, seven frosted glass tetromino families with bevel highlights and unique surface patterns, active ghost locked and line-clear visual states, neon edge accents, soft 3D, clean grid alignment, no text.`
 6. **象棋 `xiangqi`**：`An elegant 9 by 10 Chinese chess tabletop, jade and carved wood round pieces, red and dark teams, soft 3D rim and contact shadows, clean river and palace linework, piece face characters left blank for manually verified SVG overlays, no AI-generated Chinese text.`
 
@@ -240,7 +240,7 @@ Deliver as <size>, <frame count>, atlas order f00..fNN, plus 2x export.
 3. **P0/P1 原子扩展**：逐款发布其余 4 款；不允许只替换棋盘而保留风格不一致的棋子，或只交动画不交静态 fallback。
 4. **P1 平台与个性化**：Logo、`💵`、模式/AI/房间/商城/成长 UI，随后按持久化 ID 接入 56 头像、9 个头像框 ID（默认 + 8 款）、5 个头像效果 ID（默认 + 4 款）、5 个闪名 ID（默认 + 4 款）、11 个背景 ID（默认 + 10 款）和 6 主题。
 5. **P2 3D/Godot 试点**：3 款 GLB pilot；失败时保留 2D fallback；通过后分批覆盖剩余 3 款。
-6. **P2 未来功能资产**：Emoji、Match Event、好友/聊天、回放/观战、赛季/锦标赛和跨端商店素材，只有协议/逻辑 ready 后才启用。
+6. **P2 功能资产**：观众席与锦标赛专用素材可按已落地协议制作但当前仍未生成；Emoji、Match Event、好友/聊天、用户回放、赛季和跨端商店素材继续等待对应产品逻辑 ready 后再启用。
 
 每批都需要 feature flag、现有 CSS/Canvas/WebAudio fallback、视觉快照、字节预算、CI manifest 校验和明确回滚条件。
 

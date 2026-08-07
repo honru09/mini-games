@@ -10,6 +10,7 @@ create table if not exists profiles (
   frame integer not null default 0,
   effect integer not null default 0,
   owned jsonb not null default '{"avatars":[],"frames":[],"effects":[],"backgrounds":[]}'::jsonb,
+  game_cosmetics jsonb not null default '{}'::jsonb,
   pin_hash TEXT,
   lang VARCHAR(10) DEFAULT 'zh-CN',
   xp integer not null default 0,
@@ -119,26 +120,27 @@ create table if not exists analytics_events (
   created_at timestamptz not null default now()
 );
 
--- Social Graph v1：全部写入均由 Node 服务端完成；浏览器不直连这些表。
+-- 正式社交图谱：关系和审核入口由服务端维护，浏览器只通过 WebSocket 读取脱敏结果。
 create table if not exists friend_requests (
   id text primary key,
   from_uid text not null references profiles(uid) on delete cascade,
   to_uid text not null references profiles(uid) on delete cascade,
-  status text not null default 'pending' check (status in ('pending','accepted','declined','cancelled')),
+  status text not null check (status in ('pending','accepted','declined','cancelled')),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   check (from_uid <> to_uid)
 );
-create unique index if not exists idx_friend_requests_pending_pair on friend_requests (from_uid, to_uid) where status = 'pending';
+create unique index if not exists idx_friend_requests_pending_pair
+  on friend_requests (from_uid, to_uid) where status = 'pending';
 
 create table if not exists friendships (
   id text primary key,
   a_uid text not null references profiles(uid) on delete cascade,
   b_uid text not null references profiles(uid) on delete cascade,
   created_at timestamptz not null default now(),
-  unique (a_uid, b_uid),
   check (a_uid < b_uid)
 );
+create unique index if not exists idx_friendships_pair on friendships (a_uid, b_uid);
 
 create table if not exists blocks (
   id text primary key,
@@ -146,9 +148,9 @@ create table if not exists blocks (
   blocked_uid text not null references profiles(uid) on delete cascade,
   target_snapshot jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now(),
-  unique (blocker_uid, blocked_uid),
   check (blocker_uid <> blocked_uid)
 );
+create unique index if not exists idx_blocks_pair on blocks (blocker_uid, blocked_uid);
 
 create table if not exists reports (
   id text primary key,
@@ -160,9 +162,50 @@ create table if not exists reports (
   match_id text not null default '',
   recent_event_ids jsonb not null default '[]'::jsonb,
   target_snapshot jsonb not null default '{}'::jsonb,
-  status text not null default 'open' check (status in ('open','reviewing','resolved','dismissed')),
+  status text not null default 'open',
   created_at timestamptz not null default now(),
   check (reporter_uid <> target_uid)
+);
+create index if not exists idx_reports_target_created on reports (target_uid, created_at desc);
+
+-- 个性化 AI 持续学习模型：每位玩家、每款游戏独立，避免一个客户端污染全局 AI。
+-- weights/stats/mistakes 使用 JSONB，允许在不改表结构的前提下增加游戏特征、技能版本和训练统计。
+create table if not exists ai_learning_models (
+  uid text not null references profiles(uid) on delete cascade,
+  game text not null check (game in ('gomoku','ludo','monopoly','tank','tetris','xiangqi')),
+  model_version text not null,
+  skill_version text not null,
+  revision bigint not null default 0,
+  weights jsonb not null default '{}'::jsonb,
+  trust double precision not null default 0.28 check (trust between 0.05 and 0.65),
+  learning_rate double precision not null default 0.08 check (learning_rate between 0.01 and 0.15),
+  mistakes jsonb not null default '[]'::jsonb,
+  stats jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now(),
+  primary key (uid, game)
+);
+
+-- 只保存局面哈希、归一化候选特征和赛果，不保存玩家的原始完整局面或对话文本。
+create table if not exists ai_learning_experiences (
+  id bigserial primary key,
+  uid text not null references profiles(uid) on delete cascade,
+  game text not null check (game in ('gomoku','ludo','monopoly','tank','tetris','xiangqi')),
+  result_id text not null,
+  match_id text,
+  decision_index integer not null check (decision_index >= 0 and decision_index < 300),
+  state_hash text not null check (state_hash ~ '^[a-f0-9]{32}$'),
+  choice text not null,
+  local_best text,
+  option_rank integer not null default 0,
+  candidate_count integer not null default 1,
+  features jsonb not null default '{}'::jsonb,
+  ai_outcome smallint not null check (ai_outcome between -1 and 1),
+  human_result text not null check (human_result in ('win','draw','loss')),
+  used_for_training boolean not null default false,
+  model_version text not null,
+  skill_version text not null,
+  created_at timestamptz not null default now(),
+  unique (uid, result_id, decision_index)
 );
 
 -- 旧环境迁移：CREATE TABLE IF NOT EXISTS 不会自动补列，以下语句可重复执行。
@@ -170,6 +213,7 @@ alter table profiles add column if not exists background integer not null defaul
 alter table profiles add column if not exists frame integer not null default 0;
 alter table profiles add column if not exists effect integer not null default 0;
 alter table profiles add column if not exists owned jsonb not null default '{"avatars":[],"frames":[],"effects":[],"backgrounds":[]}'::jsonb;
+alter table profiles add column if not exists game_cosmetics jsonb not null default '{}'::jsonb;
 alter table profiles add column if not exists pin_hash text;
 alter table profiles add column if not exists lang varchar(10) default 'zh-CN';
 alter table profiles add column if not exists xp integer not null default 0;
@@ -179,6 +223,12 @@ alter table profiles add column if not exists best_streak integer not null defau
 alter table profiles add column if not exists wins jsonb not null default '{}'::jsonb;
 alter table profiles add column if not exists total_wins integer not null default 0;
 alter table profiles add column if not exists name_fx integer not null default 0;
+alter table profiles add column if not exists signature text not null default '';
+alter table profiles add column if not exists country_region varchar(2) not null default '';
+alter table profiles add column if not exists gender_tag varchar(24) not null default 'hidden';
+alter table profiles add column if not exists presence_preference varchar(16) not null default 'joinable';
+alter table profiles add column if not exists presence_visibility varchar(16) not null default 'everyone';
+alter table profiles add column if not exists showcase jsonb;
 alter table profiles add column if not exists achievements jsonb not null default '[]'::jsonb;
 alter table profiles add column if not exists playmates jsonb not null default '{}'::jsonb;
 alter table profiles add column if not exists daily jsonb not null default '{"play":0,"win":0,"streak":0}'::jsonb;
@@ -191,12 +241,6 @@ alter table profiles add column if not exists daily_first_win_date text not null
 alter table profiles add column if not exists daily_ai_currency_key text not null default '';
 alter table profiles add column if not exists daily_ai_currency_earned integer not null default 0;
 alter table profiles add column if not exists xp_curve_version integer not null default 1;
-alter table profiles add column if not exists signature text not null default '';
-alter table profiles add column if not exists country_region varchar(2) not null default '';
-alter table profiles add column if not exists gender_tag varchar(24) not null default 'hidden';
-alter table profiles add column if not exists presence_preference varchar(16) not null default 'joinable';
-alter table profiles add column if not exists presence_visibility varchar(16) not null default 'everyone';
-alter table profiles add column if not exists showcase jsonb;
 alter table history add column if not exists result_id text;
 alter table history add column if not exists match_id text;
 alter table history add column if not exists mode text not null default 'online';
@@ -250,12 +294,10 @@ create unique index if not exists idx_reward_history_result on reward_history (r
 create index if not exists idx_economy_ledger_uid_created on economy_ledger (uid, created_at desc);
 create unique index if not exists idx_economy_ledger_ref on economy_ledger (uid, kind, ref_id) where ref_id is not null;
 create index if not exists idx_analytics_events_event_created on analytics_events (event, created_at desc);
-create index if not exists idx_friend_requests_to_created on friend_requests (to_uid, created_at desc);
-create index if not exists idx_friendships_a on friendships (a_uid, created_at desc);
-create index if not exists idx_friendships_b on friendships (b_uid, created_at desc);
-create index if not exists idx_blocks_blocker on blocks (blocker_uid, created_at desc);
-create index if not exists idx_blocks_blocked on blocks (blocked_uid, created_at desc);
-create index if not exists idx_reports_target_created on reports (target_uid, created_at desc);
+create index if not exists idx_ai_learning_experiences_uid_game_created
+  on ai_learning_experiences (uid, game, created_at desc);
+create index if not exists idx_ai_learning_experiences_state
+  on ai_learning_experiences (uid, game, state_hash, created_at desc);
 
 -- 正式奖励以单个事务落库：锁定账号、检查 result_id 幂等、更新档案并同时写入三类流水。
 create or replace function apply_reward_v1(
@@ -316,6 +358,7 @@ begin
     frame = coalesce((p_profile->>'frame')::integer, frame),
     effect = coalesce((p_profile->>'effect')::integer, effect),
     owned = coalesce(p_profile->'owned', owned),
+    game_cosmetics = coalesce(p_profile->'game_cosmetics', game_cosmetics),
     pin_hash = coalesce(p_profile->>'pin_hash', pin_hash),
     lang = coalesce(p_profile->>'lang', lang),
     xp = coalesce((p_profile->>'xp')::integer, xp),
@@ -325,10 +368,6 @@ begin
     wins = coalesce(p_profile->'wins', wins),
     total_wins = coalesce((p_profile->>'total_wins')::integer, total_wins),
     name_fx = coalesce((p_profile->>'name_fx')::integer, name_fx),
-    signature = coalesce(p_profile->>'signature', signature),
-    country_region = coalesce(p_profile->>'country_region', country_region),
-    gender_tag = coalesce(p_profile->>'gender_tag', gender_tag),
-    presence_preference = coalesce(p_profile->>'presence_preference', presence_preference),
     achievements = coalesce(p_profile->'achievements', achievements),
     playmates = coalesce(p_profile->'playmates', playmates),
     daily = coalesce(p_profile->'daily', daily),
@@ -489,6 +528,111 @@ $$;
 revoke all on function apply_purchase_v1(text, text, integer, integer, text) from public, anon, authenticated;
 grant execute on function apply_purchase_v1(text, text, integer, integer, text) to service_role;
 
+-- 将一局经服务端票据验证的 AI 经验与新模型版本原子提交；result_id 重放不会二次训练。
+create or replace function apply_ai_learning_v1(
+  p_model jsonb,
+  p_result_id text,
+  p_experiences jsonb
+) returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_uid text := p_model->>'uid';
+  v_game text := p_model->>'game';
+  v_revision bigint := coalesce((p_model->>'revision')::bigint, 0);
+  v_current_revision bigint;
+  v_count integer;
+begin
+  if coalesce(v_uid, '') = '' or v_game not in ('gomoku','ludo','monopoly','tank','tetris','xiangqi') or
+      coalesce(p_result_id, '') = '' or v_revision <= 0 or
+      coalesce(p_model->>'model_version', '') = '' or coalesce(p_model->>'skill_version', '') = '' then
+    raise exception 'invalid_ai_learning_payload';
+  end if;
+  if jsonb_typeof(coalesce(p_model->'weights', '{}'::jsonb)) <> 'object' or
+      jsonb_typeof(coalesce(p_model->'mistakes', '[]'::jsonb)) <> 'array' or
+      jsonb_typeof(coalesce(p_model->'stats', '{}'::jsonb)) <> 'object' or
+      jsonb_typeof(coalesce(p_experiences, '[]'::jsonb)) <> 'array' then
+    raise exception 'invalid_ai_learning_payload';
+  end if;
+  if jsonb_array_length(p_experiences) < 1 or jsonb_array_length(p_experiences) > 300 or
+      jsonb_array_length(coalesce(p_model->'mistakes', '[]'::jsonb)) > 80 then
+    raise exception 'invalid_ai_learning_payload';
+  end if;
+
+  if exists (
+    select 1 from jsonb_array_elements(p_experiences) item
+    where item->>'uid' <> v_uid or item->>'game' <> v_game or item->>'result_id' <> p_result_id or
+      coalesce(item->>'state_hash', '') !~ '^[a-f0-9]{32}$' or
+      coalesce(item->>'choice', '') = '' or
+      coalesce(item->>'human_result', '') not in ('win','draw','loss') or
+      coalesce((item->>'ai_outcome')::integer, 9) not between -1 and 1 or
+      coalesce((item->>'decision_index')::integer, -1) not between 0 and 299 or
+      jsonb_typeof(coalesce(item->'features', '{}'::jsonb)) <> 'object'
+  ) then
+    raise exception 'ai_learning_contract_mismatch';
+  end if;
+
+  perform pg_advisory_xact_lock(hashtext('ai-learning:' || v_uid || ':' || v_game));
+  if exists (select 1 from ai_learning_experiences where uid = v_uid and result_id = p_result_id) then
+    select revision into v_current_revision from ai_learning_models where uid = v_uid and game = v_game;
+    return jsonb_build_object('applied', false, 'duplicate', true, 'resultId', p_result_id,
+      'revision', coalesce(v_current_revision, v_revision));
+  end if;
+
+  select revision into v_current_revision from ai_learning_models where uid = v_uid and game = v_game for update;
+  if found and v_revision <= v_current_revision then
+    raise exception 'stale_ai_learning_revision';
+  end if;
+
+  insert into ai_learning_experiences (
+    uid, game, result_id, match_id, decision_index, state_hash, choice, local_best,
+    option_rank, candidate_count, features, ai_outcome, human_result, used_for_training,
+    model_version, skill_version, created_at
+  )
+  select
+    item->>'uid', item->>'game', item->>'result_id', nullif(item->>'match_id', ''),
+    (item->>'decision_index')::integer, item->>'state_hash', left(item->>'choice', 240),
+    nullif(left(coalesce(item->>'local_best', ''), 240), ''),
+    greatest(0, coalesce((item->>'option_rank')::integer, 0)),
+    greatest(1, coalesce((item->>'candidate_count')::integer, 1)),
+    coalesce(item->'features', '{}'::jsonb), (item->>'ai_outcome')::smallint,
+    item->>'human_result', coalesce((item->>'used_for_training')::boolean, false),
+    coalesce(item->>'model_version', p_model->>'model_version'),
+    coalesce(item->>'skill_version', p_model->>'skill_version'),
+    coalesce((item->>'created_at')::timestamptz, now())
+  from jsonb_array_elements(p_experiences) item;
+  get diagnostics v_count = row_count;
+
+  insert into ai_learning_models (
+    uid, game, model_version, skill_version, revision, weights, trust,
+    learning_rate, mistakes, stats, updated_at
+  ) values (
+    v_uid, v_game, p_model->>'model_version', p_model->>'skill_version', v_revision,
+    coalesce(p_model->'weights', '{}'::jsonb), (p_model->>'trust')::double precision,
+    (p_model->>'learning_rate')::double precision, coalesce(p_model->'mistakes', '[]'::jsonb),
+    coalesce(p_model->'stats', '{}'::jsonb), coalesce((p_model->>'updated_at')::timestamptz, now())
+  )
+  on conflict (uid, game) do update set
+    model_version = excluded.model_version,
+    skill_version = excluded.skill_version,
+    revision = excluded.revision,
+    weights = excluded.weights,
+    trust = excluded.trust,
+    learning_rate = excluded.learning_rate,
+    mistakes = excluded.mistakes,
+    stats = excluded.stats,
+    updated_at = excluded.updated_at;
+
+  return jsonb_build_object('applied', true, 'duplicate', false, 'resultId', p_result_id,
+    'revision', v_revision, 'experiences', v_count);
+end;
+$$;
+
+revoke all on function apply_ai_learning_v1(jsonb, text, jsonb) from public, anon, authenticated;
+grant execute on function apply_ai_learning_v1(jsonb, text, jsonb) to service_role;
+
 -- 服务端是唯一数据库访问方。启用 RLS 且不创建 anon/authenticated policy，
 -- 浏览器端即使拿到公开项目地址也不能读取账号、令牌哈希或结算数据。
 -- Node 服务必须使用仅保存在 Render 的 service_role secret；service_role 会绕过 RLS。
@@ -497,6 +641,8 @@ alter table history enable row level security;
 alter table reward_history enable row level security;
 alter table economy_ledger enable row level security;
 alter table analytics_events enable row level security;
+alter table ai_learning_models enable row level security;
+alter table ai_learning_experiences enable row level security;
 alter table friend_requests enable row level security;
 alter table friendships enable row level security;
 alter table blocks enable row level security;
@@ -506,14 +652,17 @@ revoke all on table history from anon, authenticated;
 revoke all on table reward_history from anon, authenticated;
 revoke all on table economy_ledger from anon, authenticated;
 revoke all on table analytics_events from anon, authenticated;
-revoke all on table friend_requests from anon, authenticated;
-revoke all on table friendships from anon, authenticated;
-revoke all on table blocks from anon, authenticated;
-revoke all on table reports from anon, authenticated;
+revoke all on table ai_learning_models from anon, authenticated;
+revoke all on table ai_learning_experiences from anon, authenticated;
+revoke all on table friend_requests from public, anon, authenticated;
+revoke all on table friendships from public, anon, authenticated;
+revoke all on table blocks from public, anon, authenticated;
+revoke all on table reports from public, anon, authenticated;
 revoke all on sequence history_id_seq from anon, authenticated;
 revoke all on sequence reward_history_id_seq from anon, authenticated;
 revoke all on sequence economy_ledger_id_seq from anon, authenticated;
 revoke all on sequence analytics_events_id_seq from anon, authenticated;
+revoke all on sequence ai_learning_experiences_id_seq from anon, authenticated;
 
 -- 常用管理查询（供日后在 Dashboard 使用）
 -- 1) 全球总榜：select name, coins, total, played from profiles order by coins desc;

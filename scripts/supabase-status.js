@@ -4,9 +4,9 @@
 'use strict';
 
 const url = String(process.env.SUPABASE_URL || '').replace(/\/+$/, '');
-const key = String(process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY || '');
+const key = String(process.env.SUPABASE_KEY || '');
 if (!url || !key){
-  console.error('SUPABASE_URL 与 SUPABASE_SERVICE_ROLE_KEY 未设置；旧 SUPABASE_KEY 仅保留兼容。请提供服务端 service_role 凭证。');
+  console.error('SUPABASE_URL 与 SUPABASE_KEY 未设置；请提供服务端 service_role 凭证，不能在本地猜测或生成。');
   process.exit(2);
 }
 if (!/^https:\/\/[^/]+\.supabase\.co$/i.test(url)){
@@ -53,6 +53,22 @@ async function checkPurchaseRpc(){
   const text = await res.text();
   return res.status === 400 && /invalid_purchase_request/i.test(text);
 }
+async function checkAILearningRpc(){
+  const res = await fetch(url + '/rest/v1/rpc/apply_ai_learning_v1', {
+    method: 'POST',
+    headers: {
+      apikey: key,
+      Authorization: 'Bearer ' + key,
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    },
+    // 无效空载荷在任何读写前失败，只用于确认 RPC 和权限已刷新。
+    body: JSON.stringify({ p_model: {}, p_result_id: '', p_experiences: [] }),
+    signal: AbortSignal.timeout(10000),
+  });
+  const text = await res.text();
+  return res.status === 400 && /invalid_ai_learning_payload/i.test(text);
+}
 (async () => {
   const base = await check('profiles?select=uid&limit=1');
   if (!base.ok){
@@ -61,7 +77,7 @@ async function checkPurchaseRpc(){
     return;
   }
   console.log('Supabase REST 连接正常。');
-  const required = await check('profiles?select=uid,auth_tokens,recent_results,purchase_requests,solo_rate,daily_key,daily_first_win_date,daily_ai_currency_key,daily_ai_currency_earned,xp_curve_version,wins,total_wins,signature,country_region,gender_tag,presence_preference,presence_visibility,showcase&limit=1');
+  const required = await check('profiles?select=uid,auth_tokens,recent_results,purchase_requests,solo_rate,daily_key,daily_first_win_date,daily_ai_currency_key,daily_ai_currency_earned,xp_curve_version,wins,total_wins&limit=1');
   if (!required.ok){
     console.error('数据库迁移未完成：缺少本轮新增列（HTTP ' + required.status + '）。请在 SQL Editor 执行 supabase/schema.sql。');
     process.exitCode = 1;
@@ -77,10 +93,8 @@ async function checkPurchaseRpc(){
     ['reward_history', 'reward_history?select=uid,result_id,reward_currency,reward_xp,eligible,config_version&limit=1'],
     ['economy_ledger', 'economy_ledger?select=uid,kind,amount,balance_after&limit=1'],
     ['analytics_events', 'analytics_events?select=event,uid,match_id&limit=1'],
-    ['friend_requests', 'friend_requests?select=id,from_uid,to_uid,status&limit=1'],
-    ['friendships', 'friendships?select=id,a_uid,b_uid&limit=1'],
-    ['blocks', 'blocks?select=id,blocker_uid,blocked_uid&limit=1'],
-    ['reports', 'reports?select=id,reporter_uid,target_uid,reason,status&limit=1'],
+    ['ai_learning_models', 'ai_learning_models?select=uid,game,model_version,skill_version,revision,weights,trust,stats&limit=1'],
+    ['ai_learning_experiences', 'ai_learning_experiences?select=uid,game,result_id,decision_index,state_hash,ai_outcome,used_for_training&limit=1'],
   ]){
     const result = await check(tableCheck[1]);
     if (!result.ok){
@@ -99,8 +113,12 @@ async function checkPurchaseRpc(){
     process.exitCode = 1;
     return;
   }
-  console.log('SCHEMA_READY：必需字段、Social Graph 表与 apply_reward_v1/apply_purchase_v1 RPC 检查通过。');
-  console.log('STAGING_VERIFIED / MIGRATION_VERIFIED / BACKUP_VERIFIED 仍需在真实 Staging 项目执行后确认。');
+  if (!(await checkAILearningRpc())){
+    console.error('apply_ai_learning_v1 RPC 不存在、未刷新到 PostgREST，或入口校验异常；请重新执行 supabase/schema.sql。');
+    process.exitCode = 1;
+    return;
+  }
+  console.log('必需字段与奖励/购买/AI 学习 RPC 检查通过（含个性化 AI 模型与经验表）。');
 })().catch(err => {
   console.error('Supabase 检查失败：' + (err && err.message || String(err)));
   process.exitCode = 1;

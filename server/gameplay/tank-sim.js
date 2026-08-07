@@ -40,6 +40,11 @@ class TankAuthority {
     this.lastSeq = Array(this.playerCount).fill(0);
     this.inputTimes = Array.from({length:this.playerCount}, () => []);
     this.finished = false;
+    this.finishedAt = null;
+    this.finishReason = null;
+    this.stopped = false;
+    this.stoppedAt = null;
+    this.stopReason = null;
     this.order = null;
   }
 
@@ -62,7 +67,9 @@ class TankAuthority {
   }
 
   acceptInput(player, payload, now = Date.now()){
-    if (this.finished || !Number.isInteger(player) || player<0 || player>=this.playerCount) return {ok:false,reason:'invalid_player'};
+    if (this.stopped) return {ok:false,reason:'stopped'};
+    if (this.finished) return {ok:false,reason:'finished'};
+    if (!Number.isInteger(player) || player<0 || player>=this.playerCount) return {ok:false,reason:'invalid_player'};
     if (!payload || String(payload.matchId || '') !== this.matchId) return {ok:false,reason:'invalid_match'};
     const seq=Number(payload.seq),clientTick=Number(payload.clientTick);
     if (!Number.isSafeInteger(seq)||seq<1||seq<=this.lastSeq[player]) return {ok:false,reason:'stale_seq'};
@@ -72,6 +79,20 @@ class TankAuthority {
     times.push(now);this.inputTimes[player]=times;this.lastSeq[player]=seq;
     this.players[player].input=normalizeInput(payload.input);
     return {ok:true,ack:seq};
+  }
+
+  clearPlayerInput(player){
+    if (!Number.isInteger(player) || player<0 || player>=this.playerCount) return false;
+    this.players[player].input=emptyInput();
+    return true;
+  }
+
+  // 断线/席位切换时的兼容别名；两者都只清输入，不改权威比分。
+  clearInput(player){return this.clearPlayerInput(player);}
+  clearDisconnectedInput(player){return this.clearPlayerInput(player);}
+
+  clearAllInputs(){
+    this.players.forEach(tank=>{tank.input=emptyInput();});
   }
 
   isBlocked(x,y,ignoreId){
@@ -96,6 +117,7 @@ class TankAuthority {
     tank.fireReadyAt=now+420;tank.shots++;
     const d=DIRS[tank.d];
     this.projectiles.push({id:++this.projectileSeq,owner:tank.id,x:tank.x+d[0]*.55,y:tank.y+d[1]*.55,d:tank.d,ttl:2600});
+    if(this.projectiles.length>160)this.projectiles.splice(0,this.projectiles.length-160);
     return true;
   }
 
@@ -120,7 +142,7 @@ class TankAuthority {
   }
 
   fixedStep(now){
-    if (this.finished) return;
+    if (this.finished||this.stopped) return;
     const dt=this.tickMs/1000;
     this.players.forEach(tank=>{
       if(!tank.alive){if(tank.respawnAt&&now>=tank.respawnAt&&now<this.endAt)this.respawn(tank,now);return;}
@@ -137,25 +159,39 @@ class TankAuthority {
       if(hit){this.damage(hit,projectile.owner,now);return;}next.push(projectile);
     });
     this.projectiles=next;this.serverTick++;
-    if(now>=this.endAt)this.finish();
+    if(now>=this.endAt)this.finish(now,'time_limit');
   }
 
   advance(now = Date.now()){
+    if(this.finished||this.stopped)return this.snapshot(now);
     const elapsed=Math.min(500,Math.max(0,now-this.lastStepAt));this.lastStepAt=now;this.accumulator+=elapsed;
-    while(this.accumulator>=this.tickMs&&!this.finished){this.fixedStep(now-this.accumulator+this.tickMs);this.accumulator-=this.tickMs;}
-    if(now>=this.endAt&&!this.finished)this.finish();
+    while(this.accumulator>=this.tickMs&&!this.finished&&!this.stopped){const stepAt=now-this.accumulator+this.tickMs;this.accumulator-=this.tickMs;this.fixedStep(stepAt);}
+    if(now>=this.endAt&&!this.finished)this.finish(now,'time_limit');
     return this.snapshot(now);
   }
 
   ranking(){return this.players.map(t=>t.id).sort((a,b)=>this.players[b].kills-this.players[a].kills||this.players[a].deaths-this.players[b].deaths||this.players[b].damage-this.players[a].damage||a-b);}
-  finish(){
-    if(this.finished)return this.order;this.finished=true;this.order=this.ranking();this.order.forEach((id,index)=>{this.players[id].placement=index+1;this.players[id].input=emptyInput();});return this.order;
+  finish(now=Date.now(),reason='completed'){
+    if(this.finished)return this.order;
+    if(this.stopped)return null;
+    this.finished=true;this.finishedAt=Number.isFinite(now)?now:Date.now();this.finishReason=String(reason||'completed').slice(0,40);this.accumulator=0;this.projectiles=[];
+    this.order=this.ranking();this.order.forEach((id,index)=>{this.players[id].placement=index+1;});this.clearAllInputs();return this.order;
   }
 
+  stop(now=Date.now(),reason='stopped'){
+    if(this.stopped)return false;
+    this.stopped=true;this.stoppedAt=Number.isFinite(now)?now:Date.now();this.stopReason=String(reason||'stopped').slice(0,40);this.accumulator=0;
+    this.clearAllInputs();this.projectiles=[];return true;
+  }
+
+  shouldStop(){return this.finished||this.stopped;}
+
   snapshot(now = Date.now()){
+    const status=this.stopped?'stopped':this.finished?'finished':'running';
     return {protocol:'tank-authority-v1',matchId:this.matchId,serverTick:this.serverTick,serverNow:now,startedAt:this.startedAt,endAt:this.endAt,
-      remainingMs:Math.max(0,this.endAt-now),season:this.season,players:this.players.map(t=>({...t,input:{...t.input}})),
-      projectiles:this.projectiles.map(p=>({...p})),destructibles:this.grid.map(row=>row.slice()),ack:this.lastSeq.slice(),finished:this.finished,order:this.order?this.order.slice():null};
+      remainingMs:status==='running'?Math.max(0,this.endAt-now):0,status,running:status==='running',season:this.season,players:this.players.map(t=>({...t,input:{...t.input}})),
+      projectiles:this.projectiles.map(p=>({...p})),destructibles:this.grid.map(row=>row.slice()),ack:this.lastSeq.slice(),finished:this.finished,finishedAt:this.finishedAt,
+      finishReason:this.finishReason,stopped:this.stopped,stoppedAt:this.stoppedAt,stopReason:this.stopReason,order:this.order?this.order.slice():null};
   }
 }
 

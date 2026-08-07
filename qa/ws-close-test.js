@@ -14,6 +14,7 @@ const server = spawn(process.execPath, [SERVER], {
     PORT: String(PORT),
     DATA_DIR,
     NODE_ENV: 'test',
+    ENABLE_RULE_AUTHORITY_V2: '0',
     SUPABASE_URL: '',
     SUPABASE_KEY: '',
     DEEPSEEK_KEY: '',

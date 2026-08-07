@@ -1,12 +1,12 @@
 /* ================= 联机对战（WebSocket 中继） ================= */
 const online = {
-  ws: null, room: null, spectatorRoom:null, player: 0, isHost: false, game: null, connected: false, pending: null, roomInfo: null, capacity: 2, _hb: null,
+  ws: null, room: null, spectatorRoom:null, player: 0, isHost: false, isSpectator: false, game: null, gameplayMeta: null, presentationMeta:null, connected: false, pending: null, roomInfo: null, capacity: 2, _hb: null,
   lobby: [], inviteTarget: null, pendingGame:null, matchId: null, reportedMatchIds: [], soloReportedIds: [], legacyResultSubmitted: false,
   resume: null, _reconnectTimer: null, _reconnectAttempts: 0, _manualClose: false, _replaying: false, _liveMoveQueue: [],
   pendingResultClaim: null, _resultRetryTimer: null, _authenticated: false,
   soloMatch: null, pendingSoloClaims: [], _soloClaimsLoaded: false, displayedRewardIds: [], rewardVersion: null,
   socialState: { version:'1.0', friends:[], incoming:[], outgoing:[], blocked:[], counts:{ friends:0, incoming:0, outgoing:0, blocked:0 } },
-  socialTab: 'friends',
+  socialTab:'friends',
   defaultServer: 'https://mini-games-online.onrender.com',
   connect(){
     if (this.connected || (this.ws && (this.ws.readyState === 0 || this.ws.readyState === 1))) return;
@@ -28,13 +28,14 @@ const online = {
       if (this.ws !== ws) return;
       this.connected = true;
       this._authenticated = false;
-      this.status('已连接服务器，可创建或加入房间');
+      this.status(t('online_status_connected'));
       const authAccount = typeof account !== 'undefined' ? account : null;
       const authPin = typeof pendingAuthPin !== 'undefined' ? pendingAuthPin : null;
       this.send({ type: 'hello', payload: {
         uid: authAccount && authAccount.uid ? authAccount.uid : (typeof deviceUid !== 'undefined' ? deviceUid : null),
         token: authAccount && authAccount.authToken ? authAccount.authToken : null,
         proto: typeof PROTOCOL_VERSION !== 'undefined' ? PROTOCOL_VERSION : 2,
+        capabilities: ['tank-authority-v1','tetris-battle-authority-v1','tetris-rule-v2','spectator-room-v1','tournament-orchestrator-v1','xiangqi-clock-v1','xiangqi-rule-v2','monopoly-auction-v1','monopoly-rule-v2','game-cosmetic-presentation-v1'],
       } });
       this.send({ type: 'lobby' });
       const needsRegister = authAccount && authAccount.uid && authPin && authAccount.registered === false;
@@ -82,12 +83,12 @@ const online = {
       this._authenticated = false;
       this.ws = null;
       if (this._hb){ clearInterval(this._hb); this._hb = null; }
-      this.status(shouldResume ? t('online_reconnecting') : '连接已断开');
+      this.status(shouldResume ? t('online_reconnecting') : t('online_disconnected'));
       this.resetState(shouldResume);
       if (shouldResume) this.scheduleReconnect();
       this._manualClose = false;
     };
-    ws.onerror = () => { if (this.ws === ws) this.status(this.resume ? t('online_reconnecting') : '连接失败，请确认服务已启动'); };
+    ws.onerror = () => { if (this.ws === ws) this.status(this.resume ? t('online_reconnecting') : t('online_status_failed')); };
   },
   scheduleReconnect(){
     if (!this.resume || !account || !account.authToken) return;
@@ -220,42 +221,51 @@ const online = {
   },
   status(text, trustedHtml){
     const node = $('online-status');
-    if (trustedHtml) node.innerHTML = text;
-    else { node.innerHTML = ''; node.textContent = String(text || ''); }
+    const localized=localizeRuntimeText(text);
+    if (trustedHtml) node.innerHTML = localized;
+    else {
+      node.innerHTML = '';
+      if (typeof setLocalizedText === 'function') setLocalizedText(node, text);
+      else node.textContent = localized;
+    }
   },
-  send(msg){ if (this.ws && this.ws.readyState === 1) this.ws.send(JSON.stringify(msg)); },
+  send(msg){
+    if (!this.ws || this.ws.readyState !== 1) return false;
+    this.ws.send(JSON.stringify(msg));
+    return true;
+  },
   create(settings){
-    if (!account){ toast('请先创建账号或登录后再联机'); openAuthModal(); return; }
+    if (!account){ toast(t('need_account_online')); openAuthModal(); return; }
     settings = settings || {};
     if (this.connected){
-      this.send({type:'create', payload:{ capacity:Math.max(2,Math.min(5,Number(settings.capacity)||2)), visibility:settings.visibility || 'public', allowSpectators:settings.allowSpectators !== false }});
-      this.status('正在创建房间…');
+      this.send({ type:'create', payload:{ capacity:Math.max(2,Math.min(5,Number(settings.capacity)||playerCount||2)), visibility:settings.visibility || 'public', allowSpectators:settings.allowSpectators !== false } });
+      this.status(t('room_creating'));
     } else {
       this.pending = { type:'create', settings };
       this.connect();
-      this.status('正在连接服务器…');
+      this.status(t('online_connecting'));
     }
   },
   join(code){
-    if (!account){ toast('请先创建账号或登录后再联机'); openAuthModal(); return; }
+    if (!account){ toast(t('need_account_online')); openAuthModal(); return; }
     code = String(code || '').trim().toUpperCase();
-    if (code.length < 4){ toast('请输入房间码'); return; }
+    if (code.length < 4){ toast(t('room_code_required')); return; }
     if (this.connected){
       this.send({type:'join', payload:{room:code}});
-      this.status('正在加入房间 ' + code + ' …');
+      this.status(t('room_joining',code));
     } else {
       this.pending = { type:'join', room:code };
       this.connect();
-      this.status('正在连接服务器…');
+      this.status(t('online_connecting'));
     }
   },
   selectGame(id){ this.send({ type:'select_game', payload:{ game:id } }); },
   quickJoin(game){
-    if (!account){ openAuthModal(); return; }
+    if (!account){ toast(t('need_account_online')); openAuthModal(); return; }
     if (this.connected) this.send({ type:'quick_join', payload:{ game:game || null } });
-    else { this.pending={type:'quick_join',game:game||null}; this.connect(); this.status('正在连接服务器…'); }
+    else { this.pending={type:'quick_join',game:game||null}; this.connect(); this.status(t('online_connecting')); }
   },
-  spectate(room){ this.send({ type:'spectate', payload:{ room } }); },
+  spectateRoom(room){ this.send({ type:'spectate', payload:{ room } }); },
   setReady(ready){ this.send({ type:'ready', payload:{ ready:ready !== false } }); },
   requestSocial(){ if (this.connected && this._authenticated) this.send({ type:'social_get' }); },
   friendRequest(uid){ this.send({ type:'friend_request', payload:{ toUid:String(uid || '') } }); },
@@ -267,28 +277,25 @@ const online = {
   addAI(difficulty, persona){ this.send({ type:'add_ai', payload:{ difficulty:difficulty || 'normal', persona:persona || 'teacher' } }); },
   removeAI(seatId){ this.send({ type:'remove_ai', payload:{ seatId } }); },
   sendBotMove(seatId, payload){ this.send({ type:'bot_move', payload:{ seatId, payload } }); },
-  sendMove(payload){
-    if (this.game === 'tank' && payload && payload.act === 'input'){
-      this.send({ type:'tank_input', payload:{ matchId:this.matchId, seq:payload.seq, clientTick:Number(this.serverTick)||0, input:payload.input } }); return;
-    }
-    if (this.game === 'tank' && payload && payload.act === 'shoot'){
-      this.send({ type:'tank_input', payload:{ matchId:this.matchId, seq:payload.seq, clientTick:Number(this.serverTick)||0, input:{ fire:true } } }); return;
-    }
-    if (this.game === 'tank' && payload && payload.act === 'move'){
-      const input={up:false,right:false,down:false,left:false}; input[['up','right','down','left'][Number(payload.d)]] = true;
-      this.send({ type:'tank_input', payload:{ matchId:this.matchId, seq:payload.seq, clientTick:Number(this.serverTick)||0, input } }); return;
-    }
-    if (this.game === 'tetris' && payload){
-      if (payload.act === 'lock'){
-        this.send({ type:'tetris_lock_claim', payload:{ ...payload, matchId:this.matchId, linesCleared:Number(payload.linesCleared)||0, attack:Number(payload.attack)||0 } }); return;
-      }
-      if (payload.act === 'ko'){
-        this.send({ type:'tetris_ko_claim', payload:{ ...payload, matchId:this.matchId } }); return;
-      }
-      if (payload.act === 'active') this.send({ type:'tetris_sync', payload:{ matchId:this.matchId, payload } });
-      return;
-    }
-    this.send({type:'move', payload});
+  sendBotTankInput(seatId, payload){ this.send({ type:'bot_tank_input', payload:{ ...(payload || {}), seatId, matchId:this.matchId } }); },
+  sendBotTetrisAction(seatId, action){ this.send({ type:'bot_tetris_action', payload:{ seatId, action, matchId:this.matchId } }); },
+  sendMove(payload){ this.send({type:'move', payload}); setTimeout(() => this.publishGameState(), 0); },
+  sendTankInput(payload){ this.send({type:'tank_input', payload:{...(payload||{}),matchId:this.matchId}}); },
+  sendTetrisLockClaim(payload){ this.send({type:'tetris_lock_claim', payload:{...(payload||{}),matchId:this.matchId}}); },
+  sendTetrisKOClaim(payload){ this.send({type:'tetris_ko_claim', payload:{...(payload||{}),matchId:this.matchId}}); },
+  sendTetrisAction(payload){ this.send({type:'tetris_action', payload:{...(payload||{}),matchId:this.matchId}}); },
+  sendTetrisState(payload){ this.send({type:'tetris_state',payload:{...(payload||{}),matchId:this.matchId}}); },
+  sendMonopolyAuctionOpen(payload){ this.send({type:'monopoly_auction_open',payload:{...(payload||{}),matchId:this.matchId}}); },
+  sendMonopolyBid(payload){ this.send({type:'monopoly_bid',payload}); },
+  sendMonopolyTurnEnd(nextPlayer){ this.send({type:'monopoly_turn_end',payload:{matchId:this.matchId,nextPlayer}}); setTimeout(()=>this.publishGameState(),0); },
+  sendMonopolyState(snapshot){ if(!this.isHost||!this.matchId||!snapshot)return false;this.send({type:'game_state',payload:{matchId:this.matchId,snapshot}});return true; },
+  sendMonopolyAction(payload){ this.send({type:'monopoly_action',payload:{...(payload||{}),matchId:this.matchId}}); },
+  sendXiangqiAction(payload){ this.send({type:'xiangqi_action',payload:{...(payload||{}),matchId:this.matchId}}); },
+  spectate(roomId,matchId){ this.send({type:'spectate_join',payload:{roomId,matchId}}); },
+  publishGameState(){
+    if(!this.isHost||this.isSpectator||!this.matchId||!currentGame||typeof currentGame.serialize!=='function'||['tank','tetris'].includes(this.game))return;
+    const ready=typeof currentGame.whenIdle==='function'?currentGame.whenIdle():Promise.resolve();
+    Promise.resolve(ready).then(()=>{if(!this.isHost||!currentGame||!this.matchId)return;const snapshot=currentGame.serialize();const state=snapshot&&snapshot.state?snapshot.state:snapshot;if(this.game==='monopoly'&&state&&!state.over&&state.phase!=='roll')return;this.send({type:'game_state',payload:{matchId:this.matchId,snapshot}});}).catch(()=>{});
   },
   sendRestart(){ this.send({type:'restart'}); },
   onMessage(msg){
@@ -297,27 +304,28 @@ const online = {
         msg.room = String(msg.room || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12);
         this.room = msg.room; this.player = msg.player; this.isHost = true;
         this.capacity = msg.capacity || 2;
-        this.roomInfo = msg.payload || { room: msg.room, game: null, capacity: this.capacity, players: [{ uid: null, player: 0 }], seats:[], size: 1, started: false };
-        this.status('房间已创建：<span class="room-code">' + msg.room + '</span>，等待对方加入…', true);
+        this.roomInfo = msg.payload || { room:msg.room, game:null, capacity:this.capacity, players:[{uid:null,player:0}], seats:[], size:1, started:false };
+        this.status(t('room_created_status',msg.room));
         renderRoomPanel();
         if (this.inviteTarget){
           const toUid = this.inviteTarget;
           this.inviteTarget = null;
           this.send({ type: 'invite', payload: { toUid } });
-          toast('邀请已发送');
+          toast(t('invite_sent'));
         }
         break;
       case 'joined':
         msg.room = String(msg.room || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12);
         this.room = msg.room; this.player = msg.player; this.isHost = false;
-        this.roomInfo = msg.payload || { room: msg.room, game: null, capacity: 2, players: [{ uid: null, player: 0 }], seats:[], size: 1, started: false };
-        this.status('已加入房间 <span class="room-code">' + msg.room + '</span>，等待房主开始…', true);
+        this.roomInfo = msg.payload || { room:msg.room, game:null, capacity:2, players:[{uid:null,player:0}], seats:[], size:1, started:false };
+        this.status(t('room_joined_status',msg.room));
         renderRoomPanel();
         break;
       case 'room_update':
         this.roomInfo = msg.payload;
         this.capacity = msg.payload.capacity || this.capacity;
         if (this.room) this.isHost = !!(msg.payload.host && Number(msg.payload.host.seatId) === Number(this.player));
+        if (!this.isHost && !this.room && !this.isSpectator) this.room = msg.payload.room;
         if (this.game && !msg.payload.game && !msg.payload.started){
           finishRoomGame();
           return;
@@ -326,26 +334,34 @@ const online = {
         if (this.pendingGame){ const game=this.pendingGame; this.pendingGame=null; this.selectGame(game); }
         break;
       case 'spectating':
-        this.spectatorRoom = msg.payload && msg.payload.room;
-        this.roomInfo = msg.payload || null; this.player = null; this.isHost = false;
-        this.game = msg.payload && msg.payload.started ? msg.payload.game : null;
-        this.matchId = msg.payload && msg.payload.matchId || null;
-        this.status('正在观战房间 ' + this.spectatorRoom);
-        renderRoomPanel();
-        if (this.game){
-          startOnlineGame(this.game, msg.payload.size);
-          if (msg.payload.tankSnapshot && currentGame && typeof currentGame.applyServerSnapshot === 'function'){
-            this.serverTick=Number(msg.payload.tankSnapshot.serverTick)||0;currentGame.applyServerSnapshot(msg.payload.tankSnapshot);
-          }
-          this.replayMoveLog(msg.payload.moveLog || []);
+        {
+          const p=msg.payload || {};
+          this.spectatorRoom=p.room || null;this.room=null;this.player=null;this.isHost=false;this.isSpectator=true;this.roomInfo=p;
+          this.game=p.started?p.game:null;this.matchId=p.matchId||null;this.gameplayMeta=p.gameplay||null;this.presentationMeta=p.presentation||null;
+          this.status(t('spectating_room',p.room || ''));renderRoomPanel();
+          if (this.game){ startOnlineGame(this.game,p.size); this.replayMoveLog(p.moveLog || []); }
         }
         break;
-      case 'spectator_left':
-        this.spectatorRoom = null; this.roomInfo = null; this.game = null; this.matchId = null;
-        if (currentGameId) showHub(); renderRoomPanel(); this.status('已离开观战');
-        break;
-      case 'quick_join_empty':
-        toast('当前没有可快速加入的公开房间');
+      case 'spectate_joined':
+        {
+          const p=msg.payload||{};
+          this.room=p.room;this.player=-1;this.isHost=false;this.isSpectator=true;this.game=p.game||null;this.matchId=p.matchId||null;this.gameplayMeta=p.gameplay||null;this.presentationMeta=p.presentation||null;
+          this.capacity=p.capacity||2;this.roomInfo=p;renderRoomPanel();
+          if(this.game){
+            startOnlineGame(this.game,p.size);
+            if(p.gameSnapshot&&currentGame&&currentGame.onRestore)currentGame.onRestore(p.gameSnapshot.snapshot);
+            else this.replayMoveLog(p.moveLog||[]);
+            if(p.tankSnapshot&&currentGame&&currentGame.onAuthoritySnapshot)currentGame.onAuthoritySnapshot(p.tankSnapshot,true);
+            if(p.tetrisSnapshot&&currentGame&&currentGame.onBattleSnapshot)currentGame.onBattleSnapshot(p.tetrisSnapshot);
+             if(p.tetrisRuleSnapshot&&currentGame&&currentGame.onTetrisRuleState)currentGame.onTetrisRuleState(p.tetrisRuleSnapshot);
+             if(Array.isArray(p.tetrisPresentation)&&currentGame&&currentGame.onTetrisState)p.tetrisPresentation.forEach(item=>currentGame.onTetrisState(item));
+             if(p.xiangqiRuleSnapshot&&currentGame&&currentGame.onXiangqiRuleState)currentGame.onXiangqiRuleState(p.xiangqiRuleSnapshot);
+             if(p.monopolyRuleSnapshot&&currentGame&&currentGame.onMonopolyRuleState)currentGame.onMonopolyRuleState(p.monopolyRuleSnapshot);
+             if(p.clockSnapshot&&currentGame&&currentGame.onClockState)currentGame.onClockState(p.clockSnapshot);
+            if(p.auctionSnapshot&&currentGame&&currentGame.onAuctionEvent)currentGame.onAuctionEvent('auction_state',p.auctionSnapshot);
+            if(p.finalResult){this.lastMatchResult=p.finalResult;toast(t('match_already_finished'));}
+          }
+        }
         break;
       case 'lobby':
         this.lobby = msg.payload || [];
@@ -361,20 +377,23 @@ const online = {
           this.flushSoloMatch();
           this.requestSocial();
         } else if (account && account.authToken){
-          toast('登录会话已失效，请使用 PIN 重新登录');
+          toast(t('session_expired'));
           if (typeof completeLocalLogout === 'function') completeLocalLogout(true);
         }
         break;
+      case 'quick_join_empty':
+        toast(t('quick_join_empty'));
+        break;
       case 'social_state':
-        this.socialState = msg.payload || { version:'1.0', friends:[], incoming:[], outgoing:[], blocked:[], counts:{ friends:0, incoming:0, outgoing:0, blocked:0 } };
+        this.socialState = msg.payload || this.socialState;
         if (typeof renderSocialRail === 'function') renderSocialRail();
         break;
       case 'social_ok':
+        if (msg.msg) toast(translateServerMessage(msg.msg,msg.reason||(msg.payload&&msg.payload.reason),'operation_success'));
         this.requestSocial();
-        toast(msg.action === 'reported' ? t('social_report_sent') : t('social_action_ok'));
         break;
       case 'social_error':
-        toast(t('social_action_error'));
+        toast(translateServerMessage(msg.msg,msg.reason||(msg.payload&&msg.payload.reason),'operation_failed'));
         break;
       case 'rejoined':
         {
@@ -384,20 +403,30 @@ const online = {
           this.isHost = !!p.isHost;
           this.capacity = p.capacity || 2;
           this.matchId = p.matchId || null;
+          this.gameplayMeta = p.gameplay || null;
+          this.presentationMeta = p.presentation || null;
+          this.isSpectator = false;
           this.roomInfo = {
             room: p.room, game: p.game || null, capacity: this.capacity,
             players: p.players || [], size: p.size || 1, onlineSize: p.onlineSize || 1,
-            started: !!p.started, matchId: p.matchId || null,
+            seats: p.seats || [], humanCount:p.humanCount || 0, aiCount:p.aiCount || 0,
+            visibility:p.visibility || 'public', allowSpectators:p.allowSpectators !== false,
+            started: !!p.started, settled:!!p.settled, matchId: p.matchId || null,
           };
           this.game = p.started ? (p.game || null) : null;
           this.clearResume();
           renderRoomPanel();
           if (this.game){
             startOnlineGame(this.game, p.size);
-            if (p.tankSnapshot && currentGame && typeof currentGame.applyServerSnapshot === 'function'){
-              this.serverTick=Number(p.tankSnapshot.serverTick)||0; currentGame.applyServerSnapshot(p.tankSnapshot);
-            }
-            this.replayMoveLog(p.moveLog || []);
+            if(p.gameSnapshot&&currentGame&&currentGame.onRestore)currentGame.onRestore(p.gameSnapshot.snapshot);
+            else this.replayMoveLog(p.moveLog || []);
+            if(p.tankSnapshot&&currentGame&&currentGame.onAuthoritySnapshot)currentGame.onAuthoritySnapshot(p.tankSnapshot,true);
+            if(p.tetrisSnapshot&&currentGame&&currentGame.onBattleSnapshot)currentGame.onBattleSnapshot(p.tetrisSnapshot);
+            if(p.tetrisRuleSnapshot&&currentGame&&currentGame.onTetrisRuleState)currentGame.onTetrisRuleState(p.tetrisRuleSnapshot);
+            if(Array.isArray(p.tetrisPresentation)&&currentGame&&currentGame.onTetrisState)p.tetrisPresentation.forEach(item=>currentGame.onTetrisState(item));
+            if(p.xiangqiRuleSnapshot&&currentGame&&currentGame.onXiangqiRuleState)currentGame.onXiangqiRuleState(p.xiangqiRuleSnapshot);
+            if(p.monopolyRuleSnapshot&&currentGame&&currentGame.onMonopolyRuleState)currentGame.onMonopolyRuleState(p.monopolyRuleSnapshot);
+            if(p.finalResult){this.lastMatchResult=p.finalResult;toast(t('match_already_finished'));}
           } else {
             this.status(t('room_restored', this.room));
           }
@@ -445,45 +474,101 @@ const online = {
         showInviteModal(msg.payload);
         break;
       case 'invite_result':
-        toast(msg.payload && msg.payload.accepted ? '对方已接受邀请 🎉' : '对方拒绝了邀请');
+        toast(t(msg.payload && msg.payload.accepted ? 'invite_accepted' : 'invite_declined'));
         break;
       case 'started':
         {
           const started = msg.payload || msg;
           this.game = msg.game || started.game;
           this.matchId = msg.matchId || started.matchId || null;
+          this.gameplayMeta = msg.gameplay || started.gameplay || null;
+          this.presentationMeta = msg.presentation || started.presentation || null;
           this.legacyResultSubmitted = false;
-          if (started.seats && this.roomInfo) this.roomInfo.seats = started.seats;
           if (this.pendingResultClaim && String(this.pendingResultClaim.matchId) !== String(this.matchId || '')) this.clearPendingResultClaim();
           startOnlineGame(this.game, msg.size || started.size);
         }
         break;
       case 'move':
         if (this._replaying) this._liveMoveQueue.push({ payload: msg.payload, player: msg.player });
-        else if (this.game && currentGame && currentGame.onMove) currentGame.onMove(msg.payload, msg.player);
+        else if (this.game && currentGame && currentGame.onMove){ currentGame.onMove(msg.payload, msg.player); if(this.isHost)setTimeout(()=>this.publishGameState(),0); }
         break;
       case 'tank_snapshot':
-        this.serverTick = Number(msg.payload && msg.payload.serverTick) || 0;
-        if (this.game === 'tank' && currentGame && typeof currentGame.applyServerSnapshot === 'function') currentGame.applyServerSnapshot(msg.payload);
+        if(this.game==='tank'&&currentGame&&currentGame.onAuthoritySnapshot)currentGame.onAuthoritySnapshot(msg.payload);
         break;
       case 'tank_result':
-        if (this.game === 'tank' && currentGame && typeof currentGame.applyServerResult === 'function') currentGame.applyServerResult(msg.payload);
+        if(this.game==='tank'&&currentGame&&currentGame.onAuthorityResult)currentGame.onAuthorityResult(msg.payload);
+        break;
+      case 'tetris_battle':
+        if(this.game==='tetris'&&currentGame&&currentGame.onBattleEvent)currentGame.onBattleEvent(msg.payload||msg);
+        break;
+      case 'tetris_rule_state':
+        if(this.game==='tetris'&&currentGame&&currentGame.onTetrisRuleState)currentGame.onTetrisRuleState(msg.payload||msg);
+        break;
+      case 'tetris_state':
+        if(this.game==='tetris'&&currentGame&&currentGame.onTetrisState)currentGame.onTetrisState(msg.payload||msg);
         break;
       case 'tetris_garbage_due':
-        if (this.game === 'tetris' && currentGame && typeof currentGame.queueGarbage === 'function'){
-          const p = msg.payload || {}; currentGame.queueGarbage(Number(p.target), Number(p.amount), Number(p.source), p.attackId);
-        }
+        if(this.game==='tetris'&&currentGame&&currentGame.onGarbageDue)currentGame.onGarbageDue(msg.payload||msg);
         break;
       case 'tetris_ko':
-        if (this.game === 'tetris' && currentGame && currentGame.onMove) currentGame.onMove({ act:'ko', reason:'TOP OUT', seq:Number(msg.revision)||0 }, Number(msg.player));
+        if(this.game==='tetris'&&currentGame&&currentGame.onAuthorityKO)currentGame.onAuthorityKO(msg.payload||msg);
         break;
       case 'tetris_result':
-        if (this.game === 'tetris' && currentGame && currentGame.onMove) currentGame.onMove({ act:'final', order:msg.order, state:null }, 0);
+        if(this.game==='tetris'&&currentGame&&currentGame.onAuthorityResult)currentGame.onAuthorityResult(msg.payload||msg);
+        break;
+      case 'xiangqi_rule_state':
+        if(this.game==='xiangqi'&&currentGame&&currentGame.onXiangqiRuleState)currentGame.onXiangqiRuleState(msg.payload||msg);
+        break;
+      case 'xiangqi_result':
+        if(this.game==='xiangqi'&&currentGame&&currentGame.onXiangqiRuleResult)currentGame.onXiangqiRuleResult(msg.payload||msg);
+        break;
+      case 'monopoly_rule_state':
+        if(this.game==='monopoly'&&currentGame&&currentGame.onMonopolyRuleState)currentGame.onMonopolyRuleState(msg.payload||msg);
+        break;
+      case 'monopoly_result':
+        if(this.game==='monopoly'&&currentGame&&currentGame.onMonopolyRuleResult)currentGame.onMonopolyRuleResult(msg.payload||msg);
+        break;
+      case 'clock_state':
+      case 'clock_timeout':
+        if(this.game==='xiangqi'&&currentGame&&currentGame.onClockState)currentGame.onClockState(msg.payload||msg);
+        break;
+      case 'auction_open':
+      case 'auction_bid':
+      case 'auction_closed':
+        if(this.game==='monopoly'&&currentGame&&currentGame.onAuctionEvent)currentGame.onAuctionEvent(msg.type,msg.payload||msg);
+        break;
+      case 'game_state':
+        if(!this.isHost&&currentGame&&currentGame.onRestore&&msg.payload&&msg.payload.snapshot&&String(msg.payload.matchId||'')===String(this.matchId||''))currentGame.onRestore(msg.payload.snapshot);
+        break;
+      case 'spectator_error':
+      case 'tournament_error':
+        toast(translateServerMessage(msg.msg,msg.reason||(msg.payload&&msg.payload.reason),'operation_failed'));
+        break;
+      case 'tournament_state':
+        this.tournamentState=msg.payload||null;
+        if(typeof renderTournamentState==='function')renderTournamentState(this.tournamentState);
+        break;
+      case 'tournament_match_assigned':
+        this.tournamentMatch=msg.payload||null;
+        this.status(t('tournament_match_assigned',this.tournamentMatch.roundId,this.tournamentMatch.matchRoomId));
+        break;
+      case 'tournament_bye':
+        this.status(t('tournament_bye_round',msg.payload&&msg.payload.roundId));
+        toast(t('tournament_bye_round',msg.payload&&msg.payload.roundId));
+        break;
+      case 'match_result':
+        this.lastMatchResult=msg.payload||null;
+        if(this.isSpectator&&msg.payload)toast(t('spectator_result',(msg.payload.results||[]).map(item=>t('spectator_result_entry',t('player_number',item.slot+1),item.rank)).join(' · ')));
+        break;
+      case 'gameplay_error':
+        if(msg.payload&&msg.payload.reason&&!['stale_seq','legacy_move_rejected'].includes(msg.payload.reason))console.warn('Gameplay protocol:',msg.payload.reason);
         break;
       case 'restart':
         {
           const restarted = msg.payload || msg;
           this.matchId = msg.matchId || restarted.matchId || null;
+          this.gameplayMeta = msg.gameplay || restarted.gameplay || null;
+          this.presentationMeta = msg.presentation || restarted.presentation || null;
           this.legacyResultSubmitted = false;
           if (this.pendingResultClaim && String(this.pendingResultClaim.matchId) !== String(this.matchId || '')) this.clearPendingResultClaim();
         }
@@ -524,8 +609,8 @@ const online = {
         }
         break;
       case 'error':
-        this.status(msg.msg || '出错了');
-        toast(msg.msg || '出错了');
+        this.status(translateServerMessage(msg.msg,msg.reason||(msg.payload&&msg.payload.reason),'generic_error'));
+        toast(translateServerMessage(msg.msg,msg.reason||(msg.payload&&msg.payload.reason),'generic_error'));
         break;
       case 'leaderboard':
         lastServerLB = msg.payload;
@@ -537,6 +622,7 @@ const online = {
           if (profile && account && profile.uid === account.uid){
             updateAccountProfile(profile);
             renderMe(); renderSlots();
+            if (typeof renderSocialRail === 'function') renderSocialRail();
           }
         }
         break;
@@ -561,7 +647,7 @@ const online = {
             this.requestSocial();
             if (typeof syncProfiles === 'function') syncProfiles();
             renderMyCard();
-            toast('🎉 账号创建成功，欢迎 ' + account.name);
+            toast(t('account_created_success',account.name));
             if (authModalEl){ authModalEl.remove(); authModalEl = null; }
           }
         }
@@ -583,21 +669,19 @@ const online = {
             this.requestSocial();
             if (typeof syncProfiles === 'function') syncProfiles();
             renderMyCard();
-            toast('✅ 登录成功：' + account.name);
+            toast(t('login_success',account.name));
             if (authModalEl){ authModalEl.remove(); authModalEl = null; }
           }
         }
         break;
       case 'auth_error':
-        toast(msg.msg || '账号验证失败');
+        toast(translateServerMessage(msg.msg,msg.reason||(msg.payload&&msg.payload.reason),'account_verify_failed'));
         if (account && account.registered === false){
           if (typeof completeLocalLogout === 'function') completeLocalLogout(false);
           if (typeof openAuthModal === 'function' && !authModalEl) openAuthModal('register');
         }
         break;
       case 'logged_out':
-        this.socialState = { version:'1.0', friends:[], incoming:[], outgoing:[], blocked:[], counts:{ friends:0, incoming:0, outgoing:0, blocked:0 } };
-        if (typeof renderSocialRail === 'function') renderSocialRail();
         if (typeof completeLocalLogout === 'function') completeLocalLogout(true);
         else this.resetState();
         break;
@@ -615,11 +699,11 @@ const online = {
           if (typeof renderMe === 'function') renderMe();
           if (typeof renderSlots === 'function') renderSlots();
           if (typeof renderMyCard === 'function') renderMyCard();
-          toast(payload.msg || msg.msg || t('purchase_success'));
+          toast(translateServerMessage(payload.msg||msg.msg,payload.reason||msg.reason,'purchase_success'));
         }
         break;
       case 'purchase_error':
-        toast((msg.payload && msg.payload.msg) || msg.msg || t('purchase_failed'));
+        toast(translateServerMessage((msg.payload&&msg.payload.msg)||msg.msg,(msg.payload&&msg.payload.reason)||msg.reason,'purchase_failed'));
         if (typeof refreshOpenShop === 'function') refreshOpenShop();
         break;
       case 'solo_started':
@@ -681,7 +765,7 @@ const online = {
           if (errorResultId || errorMatchId) this.removeSoloClaim(errorResultId, errorMatchId);
           if (this.soloMatch && errorMatchId && String(this.soloMatch.matchId || '') === String(errorMatchId)) this.soloMatch = null;
         }
-        toast(msg.msg || (msg.payload && msg.payload.msg) || t('result_failed'));
+        toast(translateServerMessage(msg.msg||(msg.payload&&msg.payload.msg),msg.reason||(msg.payload&&msg.payload.reason),'result_failed'));
         break;
     }
   },
@@ -819,7 +903,7 @@ const online = {
     const wasRoomGame = !!(this.room || this.game);
     if (!preserveResume) this.clearResume();
     if (!preserveResume) this.clearPendingResultClaim();
-    this.room = null; this.spectatorRoom = null; this.game = null; this.isHost = false; this.pending = null; this.roomInfo = null; this.capacity = 2; this.inviteTarget = null;
+    this.room = null; this.spectatorRoom=null; this.game = null; this.isHost = false; this.isSpectator = false; this.gameplayMeta = null; this.presentationMeta=null; this.pending = null; this.roomInfo = null; this.capacity = 2; this.inviteTarget = null; this.pendingGame=null;
     this.matchId = null; this.legacyResultSubmitted = false;
     $('online-banner').classList.add('hidden');
     $('room-panel').classList.add('hidden');
@@ -842,7 +926,7 @@ function finishRoomGame(){
   online.game = null;
   online.matchId = null;
   online.legacyResultSubmitted = false;
-  toast('本局已结束，可以在当前房间切换游戏');
+  toast(t('room_game_ended_switch'));
   showHub();
   renderRoomPanel();
 }
@@ -852,12 +936,13 @@ function startOnlineGame(id, sizeOverride){
   showGame(id);
   const banner = $('online-banner');
   banner.classList.remove('hidden');
-  banner.textContent = '房间 ' + (online.room || online.spectatorRoom) + ' · ' + size + ' 席 · ' + (online.spectatorRoom ? '观战（只读）' : ('你是席位 ' + (online.player+1) + (online.isHost ? '（房主）' : '')));
+  banner.textContent = t('room_banner',online.room,size,online.isSpectator ? t('spectating') : t('room_you_are_player',online.player+1,online.isHost ? t('room_banner_host') : ''));
   runCountdown();
 }
 function renderRoomPanel(){
   const panel = $('room-panel');
   const roomId = online.room || online.spectatorRoom;
+  const watching = !!(online.isSpectator || online.spectatorRoom);
   if (!roomId){
     panel.classList.add('hidden');
     return;
@@ -866,70 +951,132 @@ function renderRoomPanel(){
   $('room-code-big').textContent = roomId;
   const info = online.roomInfo || { size:1, capacity:2, players:[], seats:[], game:null, started:false };
   const cap = info.capacity || 2;
-  $('room-info').textContent = (info.visibility === 'private' ? '🔒 私密' : '🌐 公开') + ' · ' + (info.size || 0) + '/' + cap + ' 席 · ' + (info.humanCount || 0) + ' 真人 · ' + (info.aiCount || 0) + ' AI · ' + (info.allowSpectators ? ('可观战 ' + (info.spectatorCount || 0)) : '禁止观战') + ' · ' + (info.game && GAMES[info.game] ? GAMES[info.game].name : '未选游戏');
-  const seatGrid=$('seat-grid'); seatGrid.innerHTML='';
-  (info.seats || []).forEach(seat => {
-    const card=el('div','seat-card '+(seat.type==='empty'?'is-empty ':'')+(seat.host?'is-host ':'')+(seat.online===false&&seat.type==='human'?'is-offline':''));
-    if(seat.type==='human'){
-      const profile={...(profileByUid(seat.userId)||{}),uid:seat.userId,name:seat.nickname,avatar:seat.avatar};
-      const av=avatarStageNode(profile,38); av.style.cursor='pointer'; av.addEventListener('click',()=>seat.userId&&openProfileModal(seat.userId)); card.appendChild(av);
-      card.appendChild(el('div','seat-name',seat.nickname+(seat.userId===deviceUid?'（你）':'')));
-      const badges=el('div','seat-badges'); if(seat.host)badges.appendChild(el('span','seat-badge','HOST')); badges.appendChild(el('span','seat-badge '+(seat.ready?'ready':''),seat.ready?'READY':'未准备')); if(!seat.online)badges.appendChild(el('span','seat-badge','离线')); card.appendChild(badges);
-    }else if(seat.type==='ai'){
-      card.appendChild(avatarCanvas(seat.avatar||141,38)); card.appendChild(el('div','seat-name',(seat.nickname||'AI')+' 🤖'));
-      const badges=el('div','seat-badges'); badges.appendChild(el('span','seat-badge bot','BOT / AI')); badges.appendChild(el('span','seat-badge ready','READY')); card.appendChild(badges);
-      card.appendChild(el('div','seat-meta',(seat.aiDifficulty||'normal').toUpperCase()+' · '+(seat.aiPersona||'teacher')));
-      if(online.isHost&&!info.started){const remove=el('button','btn btn-ghost','移除 AI');remove.addEventListener('click',()=>online.removeAI(seat.seatId));card.appendChild(remove);}
-    }else{
-      card.appendChild(el('div',null,'＋')); card.appendChild(el('div','seat-name','空席位'));
-      if(online.isHost&&!info.started){const add=el('button','btn','添加 AI');add.addEventListener('click',()=>online.addAI('normal',currentPersona&&currentPersona.id||'teacher'));card.appendChild(add);}
-    }
-    seatGrid.appendChild(card);
-  });
-  $('room-status').textContent = online.spectatorRoom ? '观战模式 · 只读，不可走子或提交结算' : (info.started ? '对局进行中…' : (info.canStart ? '所有真人玩家已 READY，房主可以开始' : (info.game ? '等待真人玩家 READY' : '房主请选择游戏')));
+  $('room-info').textContent = t('room_summary',
+    info.visibility === 'private' ? t('room_private') : t('room_public'), info.size || 0, cap,
+    info.humanCount || 0, info.aiCount || 0,
+    info.allowSpectators ? t('room_spectators_on',info.spectatorCount || 0) : t('room_spectators_off'),
+    info.game && GAMES[info.game] ? t(GAMES[info.game].nameKey) : t('not_selected'));
+  const seatGrid=$('seat-grid');
+  if (seatGrid){
+    seatGrid.innerHTML='';
+    (info.seats || []).forEach(seat => {
+      const card=el('div','seat-card '+(seat.type==='empty'?'is-empty ':'')+(seat.host?'is-host ':'')+(seat.online===false&&seat.type==='human'?'is-offline':''));
+      if(seat.type==='human'){
+        const profile={...(profileByUid(seat.userId)||{}),uid:seat.userId,name:seat.nickname,avatar:seat.avatar};
+        const av=avatarStageNode(profile,38);av.style.cursor='pointer';av.addEventListener('click',()=>seat.userId&&openProfileModal(seat.userId));card.appendChild(av);
+        card.appendChild(elRaw('div','seat-name',seat.nickname+(seat.userId===deviceUid?t('profile_mine'):'')));
+        const badges=el('div','seat-badges');if(seat.host)badges.appendChild(el('span','seat-badge','HOST'));badges.appendChild(el('span','seat-badge '+(seat.ready?'ready':''),seat.ready?'READY':t('not_ready')));if(!seat.online)badges.appendChild(el('span','seat-badge',t('offline')));card.appendChild(badges);
+      }else if(seat.type==='ai'){
+        card.appendChild(avatarStageNode({avatar:seat.avatar||141,frame:0,effect:0},38));card.appendChild(elRaw('div','seat-name',(seat.nickname||'AI')+' AI'));
+        const badges=el('div','seat-badges');badges.appendChild(el('span','seat-badge bot','BOT / AI'));badges.appendChild(el('span','seat-badge ready','READY'));card.appendChild(badges);
+        card.appendChild(el('div','seat-meta',(seat.aiDifficulty||'normal').toUpperCase()+' · '+(seat.aiPersona||'teacher')));
+        if(online.isHost&&!info.started){const remove=el('button','btn btn-ghost',t('remove_ai'));remove.addEventListener('click',()=>online.removeAI(seat.seatId));card.appendChild(remove);}
+      }else{
+        card.appendChild(el('div',null,'＋'));card.appendChild(el('div','seat-name',t('empty_seat')));
+        if(online.isHost&&!info.started){const add=el('button','btn',t('add_ai'));add.addEventListener('click',()=>online.addAI('normal',currentPersona&&currentPersona.id||'teacher'));card.appendChild(add);}
+      }
+      seatGrid.appendChild(card);
+    });
+  }
+  const selectedGameName = info.game && GAMES[info.game] ? t(GAMES[info.game].nameKey) : '';
+  $('room-status').textContent = watching ? t('spectator_readonly') : (info.started ? t('match_in_progress') : (info.canStart ? t('all_ready_start') : (info.game ? t('room_selected_ready', selectedGameName) : t('room_wait_host_select'))));
   const actions = $('room-actions');
   actions.innerHTML = '';
-  if(online.spectatorRoom){
-    const leaveWatch=el('button','btn','离开观战');leaveWatch.addEventListener('click',()=>online.send({type:'leave_spectator'}));actions.appendChild(leaveWatch);return;
+  if(watching){
+    const leaveWatch=el('button','btn',t('leave_spectating'));leaveWatch.addEventListener('click',()=>online.send({type:'spectate_leave'}));actions.appendChild(leaveWatch);return;
   }
   if (online.game){
     if (currentGameId && $('screen-hub') && !$('screen-hub').classList.contains('hidden')){
-      const backBtn = el('button','btn','🎮 返回对局');
+      const backBtn = el('button','btn',t('room_return_game'));
       backBtn.addEventListener('click', () => showGame(online.game));
       actions.appendChild(backBtn);
     }
   } else {
     const mine=(info.seats||[]).find(seat=>seat.type==='human'&&Number(seat.seatId)===Number(online.player));
-    if(!online.isHost&&mine&&!info.started){const ready=el('button','btn '+(mine.ready?'btn-primary':''),mine.ready?'✓ READY':'准备');ready.addEventListener('click',()=>online.setReady(!mine.ready));actions.appendChild(ready);}
+    if(!online.isHost&&mine&&!info.started){const ready=el('button','btn '+(mine.ready?'btn-primary':''),mine.ready?'READY':t('ready'));ready.addEventListener('click',()=>online.setReady(!mine.ready));actions.appendChild(ready);}
     if (online.isHost && info.game && info.canStart && !info.started){
-      const startBtn = el('button','btn btn-primary','▶ 开始游戏');
+      const startBtn = el('button','btn btn-primary',t('room_start'));
       startBtn.addEventListener('click', () => online.send({ type: 'start' }));
       actions.appendChild(startBtn);
     }
+    if(online.isHost&&(info.humanCount||0)>=3&&!(info.aiCount||0)&&!info.started){
+      const tournament=el('button','btn',t('tournament_create'));tournament.addEventListener('click',()=>openTournamentCreate(info));actions.appendChild(tournament);
+    }
     if(online.isHost){
-      const invite=el('button','btn','邀请真人');invite.addEventListener('click',openInvitePicker);actions.appendChild(invite);
-      const visibility=el('button','btn',info.visibility==='private'?'改为公开房':'改为私密房');visibility.addEventListener('click',()=>online.send({type:'room_settings',payload:{visibility:info.visibility==='private'?'public':'private'}}));actions.appendChild(visibility);
-      const watch=el('button','btn',info.allowSpectators?'关闭观战':'开放观战');watch.addEventListener('click',()=>online.send({type:'room_settings',payload:{allowSpectators:!info.allowSpectators}}));actions.appendChild(watch);
+      const invite=el('button','btn',t('invite_player'));invite.addEventListener('click',openInvitePicker);actions.appendChild(invite);
+      const visibility=el('button','btn',info.visibility==='private'?t('make_public'):t('make_private'));visibility.addEventListener('click',()=>online.send({type:'room_settings',payload:{visibility:info.visibility==='private'?'public':'private'}}));actions.appendChild(visibility);
+      const watch=el('button','btn',info.allowSpectators?t('disable_spectators'):t('enable_spectators'));watch.addEventListener('click',()=>online.send({type:'room_settings',payload:{allowSpectators:!info.allowSpectators}}));actions.appendChild(watch);
     }
   }
-  const leave = el('button','btn','离开房间');
+  if(online.tournamentState&&Array.isArray(online.tournamentState.standings)&&online.tournamentState.standings.some(item=>item.id===deviceUid)){
+    const tournament=el('button','btn',t('tournament_open'));
+    tournament.addEventListener('click',()=>renderTournamentState(online.tournamentState));
+    actions.appendChild(tournament);
+  }
+  const leave = el('button','btn',t('room_leave'));
   leave.addEventListener('click', () => {
     online.clearResume();
     online.send({ type: 'leave' });
     online.resetState();
-    online.status('已离开房间');
+    online.status(t('room_left'));
   });
   actions.appendChild(leave);
+}
+function openTournamentCreate(info){
+  const ids=(info.players||[]).map(item=>item.uid).filter(Boolean);if(ids.length<3){toast(t('tournament_requires_players'));return;}
+  const bd=el('div','modal-backdrop'),card=el('div','modal-card');card.appendChild(el('h3',null,t('tournament_create_title')));
+  card.appendChild(el('p','muted',t('tournament_hint')));
+  ['gomoku','xiangqi'].forEach(gameId=>{const button=el('button','btn btn-primary',t('game_'+gameId));button.addEventListener('click',()=>{online.send({type:'tournament_create',payload:{gameId,participants:ids}});bd.remove();});card.appendChild(button);});
+  const cancel=el('button','btn',t('cancel'));cancel.addEventListener('click',()=>bd.remove());card.appendChild(cancel);bd.appendChild(card);document.body.appendChild(bd);
+}
+function renderTournamentState(state){
+  if(!state)return;let bd=document.querySelector&&document.querySelector('.tournament-state-modal');if(bd)bd.remove();bd=el('div','modal-backdrop tournament-state-modal');const card=el('div','modal-card');
+  const format=t('tournament_format_'+state.format),effectiveStatus=['expired','declined'].includes(state.guardStatus)?state.guardStatus:state.status,status=t('tournament_status_'+effectiveStatus);
+  card.appendChild(el('h3',null,'🏆 '+t('tournament_title',t('game_'+state.gameId),format)));card.appendChild(el('p','muted',t('tournament_state_line',status,state.round,state.maxRounds)));
+  const standings=el('div','tournament-standings');(state.standings||[]).forEach(item=>standings.appendChild(el('div','roster-item',t('tournament_standing_line',item.rank,item.id,item.points,item.wins,item.draws,item.losses))));card.appendChild(standings);
+  const owner=state.ownerUid===deviceUid;
+  const consents=state.consents||{},allConsented=(state.standings||[]).every(item=>consents[item.id]===true);
+  if(state.status==='waiting'&&consents[deviceUid]!==true&&effectiveStatus==='waiting'){
+    card.appendChild(el('p','muted',t('tournament_consent_prompt')));
+    const row=el('div','row'),accept=el('button','btn btn-primary',t('invite_accept')),decline=el('button','btn',t('invite_decline'));
+    accept.addEventListener('click',()=>online.send({type:'tournament_consent',payload:{tournamentId:state.tournamentId,accepted:true}}));decline.addEventListener('click',()=>online.send({type:'tournament_consent',payload:{tournamentId:state.tournamentId,accepted:false}}));row.appendChild(accept);row.appendChild(decline);card.appendChild(row);
+  }
+  (state.pairings||[]).forEach(pair=>{
+    const pairStatusKey='tournament_pair_status_'+pair.status,pairStatus=t(pairStatusKey),bound=!!(pair.roomMetadata&&pair.roomMetadata.serverMatchId),row=el('div','tournament-table',t('tournament_table_line',pair.table,pair.players.join(t('versus_separator')),pairStatus===pairStatusKey?pair.status:pairStatus));card.appendChild(row);
+    if(bound){
+      card.appendChild(el('p','muted',t('tournament_bound',pair.matchRoomId)));
+      const canWatch=pair.status!=='complete'&&!pair.players.includes(deviceUid)&&(!online.game||online.isSpectator);
+      if(canWatch){
+        const sameRoom=online.isSpectator&&online.room===pair.matchRoomId;
+        const watch=el('button','btn',t(sameRoom?'tournament_watching_table':online.isSpectator?'tournament_switch_table':'tournament_watch_table',pair.table));
+        watch.disabled=sameRoom;
+        watch.addEventListener('click',()=>{
+          if(online.isSpectator)online.send({type:'spectate_leave'});
+          online.spectate(pair.matchRoomId,pair.roomMetadata.serverMatchId);
+          bd.remove();
+        });
+        card.appendChild(watch);
+      }
+    }
+    else if(pair.status!=='complete'&&pair.players.includes(deviceUid)){
+      const canBind=online.room&&online.matchId&&online.game===state.gameId;
+      if(canBind){const bind=el('button','btn btn-primary',t('tournament_bind'));bind.addEventListener('click',()=>online.send({type:'tournament_bind',payload:{tournamentId:state.tournamentId,pairingId:pair.pairingId,roomId:online.room}}));card.appendChild(bind);}
+      else card.appendChild(el('p','muted',t('tournament_wait_result')));
+    }
+  });
+  if(owner&&state.status==='waiting'&&effectiveStatus==='waiting'){const start=el('button','btn btn-primary',t('tournament_start'));start.disabled=!allConsented;start.addEventListener('click',()=>online.send({type:'tournament_start',payload:{tournamentId:state.tournamentId}}));card.appendChild(start);}
+  if(owner&&state.status==='round_complete'){const next=el('button','btn btn-primary',t('tournament_next'));next.addEventListener('click',()=>online.send({type:'tournament_next',payload:{tournamentId:state.tournamentId}}));card.appendChild(next);}
+  const close=el('button','btn',t('close'));close.addEventListener('click',()=>bd.remove());card.appendChild(close);bd.appendChild(card);document.body.appendChild(bd);
 }
 function openInvitePicker(){
   const bd = el('div','modal-backdrop');
   const card = el('div','modal-card');
-  card.appendChild(el('h3', null, '邀请玩家加入房间'));
+  card.appendChild(el('h3', null, t('invite_picker_title')));
   const list = el('div','roster-list');
   const data = online.connected && lastServerLB ? lastServerLB : localLeaderboard();
   const onlineUsers = (data.list || []).filter(u => u.online && u.uid !== deviceUid);
   if (!onlineUsers.length){
-    card.appendChild(el('p','lobby-empty','当前没有其他在线玩家'));
+    card.appendChild(el('p','lobby-empty',t('invite_no_online')));
   } else {
     onlineUsers.forEach(u => {
       const item = el('button','roster-item');
@@ -937,7 +1084,7 @@ function openInvitePicker(){
       const av = el('span','av');
       av.appendChild(avatarStageNode(u, 24));
       item.appendChild(av);
-      item.appendChild(el('span','nm', u.name + ' [Lv.' + (u.level || levelFromXp(u.xp || 0)) + ']'));
+      const inviteName=el('span','nm');inviteName.appendChild(elRaw('span',null,u.name));inviteName.appendChild(el('span',null,t('level_bracket',u.level || levelFromXp(u.xp || 0))));item.appendChild(inviteName);
       item.appendChild(el('span','lb-game', CURRENCY + (u.coins || 0)));
       item.addEventListener('click', () => {
         bd.remove();
@@ -947,13 +1094,57 @@ function openInvitePicker(){
     });
     card.appendChild(list);
   }
-  const cancel = el('button','btn','取消');
+  const cancel = el('button','btn',t('cancel'));
   cancel.addEventListener('click', () => bd.remove());
   card.appendChild(cancel);
   bd.appendChild(card);
   bd.addEventListener('click', e => { if (e.target === bd) bd.remove(); });
   document.body.appendChild(bd);
 }
+function presenceLabel(value){
+  const key='presence_'+String(value||'offline');const localized=t(key);return localized===key?String(value||'offline'):localized;
+}
+function socialRelationshipFor(uid){
+  const state=online.socialState||{};
+  if((state.blocked||[]).some(item=>item.uid===uid))return'blocked';
+  if((state.friends||[]).some(item=>item.uid===uid))return'friends';
+  if((state.incoming||[]).some(item=>item.user&&item.user.uid===uid))return'incoming';
+  if((state.outgoing||[]).some(item=>item.user&&item.user.uid===uid))return'outgoing';
+  return'none';
+}
+function openReportUserModal(profile,context){
+  if(!profile||!profile.uid||profile.uid===deviceUid)return;
+  const bd=el('div','modal-backdrop'),card=el('div','modal-card');card.appendChild(el('h3',null,t('social_report')+' · '+(profile.name||t('social_player'))));
+  const select=el('select','nick-input');[['harassment','social_reason_harassment'],['inappropriate_name','social_reason_inappropriate_name'],['cheating','social_reason_cheating'],['spam','social_reason_spam'],['other','social_reason_other']].forEach(([value,key])=>{const option=document.createElement('option');option.value=value;option.textContent=t(key);select.appendChild(option);});card.appendChild(select);card.appendChild(el('p','lb-note',t('social_report_note')));
+  const send=el('button','btn btn-primary');setButtonIcon(send,'flag',t('social_report'));send.addEventListener('click',()=>{online.reportUser({targetUid:profile.uid,reason:select.value,contextType:context&&context.type||'profile',contextId:context&&context.id||profile.uid,matchId:online.matchId||null});bd.remove();});card.appendChild(send);const cancel=el('button','btn',t('cancel'));cancel.addEventListener('click',()=>bd.remove());card.appendChild(cancel);bd.appendChild(card);bd.addEventListener('click',event=>{if(event.target===bd)bd.remove();});document.body.appendChild(bd);
+}
+function openSocialActions(profile,context){
+  if(!profile||!profile.uid||profile.uid===deviceUid)return;const relation=socialRelationshipFor(profile.uid),bd=el('div','modal-backdrop'),card=el('div','modal-card');card.appendChild(el('h3',null,(profile.name||t('social_player'))+' · '+presenceLabel(profile.presence||(profile.online?'online':'offline'))));
+  const add=(label,cls,iconName,handler)=>{const button=el('button','btn'+(cls?' '+cls:''));setButtonIcon(button,iconName,label);button.addEventListener('click',()=>{handler();bd.remove();});card.appendChild(button);};
+  if(relation==='none')add(t('social_add_friend'),'btn-primary','user-plus',()=>online.friendRequest(profile.uid));
+  if(relation==='outgoing'){const req=(online.socialState.outgoing||[]).find(item=>item.user&&item.user.uid===profile.uid);if(req)add(t('social_cancel'),'','user-minus',()=>online.friendRequestAction('cancel',req.id));}
+  if(relation==='incoming'){const req=(online.socialState.incoming||[]).find(item=>item.user&&item.user.uid===profile.uid);if(req){add(t('social_accept'),'btn-primary','user-plus',()=>online.friendRequestAction('accept',req.id));add(t('social_decline'),'','user-minus',()=>online.friendRequestAction('decline',req.id));}}
+  if(relation==='friends'){if(profile.online)add(t('social_invite_room'),'btn-primary','door-open',()=>inviteUser(profile.uid));add(t('social_remove'),'','user-minus',()=>online.removeFriend(profile.uid));}
+  if(relation!=='blocked')add(t('social_block'),'social-danger','shield-alert',()=>online.blockUser(profile.uid));else add(t('social_unblock'),'','shield',()=>online.unblockUser(profile.uid));
+  add(t('social_report'),'social-danger','flag',()=>openReportUserModal(profile,context));const close=el('button','btn',t('close'));close.addEventListener('click',()=>bd.remove());card.appendChild(close);bd.appendChild(card);bd.addEventListener('click',event=>{if(event.target===bd)bd.remove();});document.body.appendChild(bd);
+}
+function socialRow(profile,relationship,request){
+  const row=el('div','social-row'),avatar=el('span','lb-av');avatar.appendChild(avatarStageNode(profile,24));avatar.addEventListener('click',()=>openProfileModal(profile.uid));row.appendChild(avatar);const copy=el('div','social-copy');copy.appendChild(el('div','social-name',profile.name||t('social_player')));copy.appendChild(el('div','social-meta',presenceLabel(profile.presence||(profile.online?'online':'offline'))+(relationship==='friends'?' · '+t('social_friend'):'')));row.appendChild(copy);const actions=el('div','social-actions');
+  if(request&&relationship==='incoming'){const accept=el('button','btn btn-primary');setButtonIcon(accept,'user-plus',t('social_accept'));accept.addEventListener('click',()=>online.friendRequestAction('accept',request.id));actions.appendChild(accept);const decline=el('button','btn');setButtonIcon(decline,'user-minus',t('social_decline'));decline.addEventListener('click',()=>online.friendRequestAction('decline',request.id));actions.appendChild(decline);}
+  else if(relationship==='none'){const add=el('button','btn');setButtonIcon(add,'user-plus',t('social_add_friend'));add.addEventListener('click',()=>online.friendRequest(profile.uid));actions.appendChild(add);}else if(relationship==='outgoing')actions.appendChild(el('span','social-meta',t('social_pending')));else if(relationship==='friends'&&profile.online){const invite=el('button','btn');setButtonIcon(invite,'door-open',t('social_invite_room'));invite.addEventListener('click',()=>inviteUser(profile.uid));actions.appendChild(invite);}
+  const more=el('button','btn');setButtonIcon(more,'ellipsis','',{ariaLabel:t('social_more_actions',profile.name||t('social_player'))});more.addEventListener('click',()=>openSocialActions(profile,{type:'social',id:profile.uid}));actions.appendChild(more);row.appendChild(actions);return row;
+}
+function openBlockedUsers(){
+  const bd=el('div','modal-backdrop'),card=el('div','modal-card');card.appendChild(el('h3',null,t('social_block_manage')));const blocked=(online.socialState&&online.socialState.blocked)||[];if(!blocked.length)card.appendChild(el('div','social-empty',t('social_empty')));blocked.forEach(item=>{const row=el('div','social-row');row.appendChild(el('div','social-copy',item.name||t('social_player')));const button=el('button','btn',t('social_unblock'));button.addEventListener('click',()=>{online.unblockUser(item.uid);bd.remove();});row.appendChild(button);card.appendChild(row);});const close=el('button','btn',t('close'));close.addEventListener('click',()=>bd.remove());card.appendChild(close);bd.appendChild(card);document.body.appendChild(bd);
+}
+function renderSocialRail(){
+  const listEl=$('social-list');if(!listEl)return;listEl.innerHTML='';const state=online.socialState||{friends:[],incoming:[],outgoing:[],blocked:[],counts:{}};const badge=$('social-requests-badge');const incomingCount=(state.incoming||[]).length;if(badge){badge.textContent=String(incomingCount);badge.classList.toggle('hidden',!incomingCount);}['friends','online','recent'].forEach(name=>{const button=$('social-tab-'+name);if(button)button.setAttribute('aria-pressed',String(online.socialTab===name));});if(!account){listEl.appendChild(el('div','social-empty',t('social_login_required')));return;}
+  if(online.socialTab==='friends'){(state.incoming||[]).forEach(request=>listEl.appendChild(socialRow(request.user,'incoming',request)));(state.friends||[]).forEach(profile=>listEl.appendChild(socialRow(profile,'friends')));if(!(state.incoming||[]).length&&!(state.friends||[]).length)listEl.appendChild(el('div','social-empty',t('social_empty')));if((state.blocked||[]).length){const manage=el('button','btn social-tab',t('social_block_manage_count',state.blocked.length));manage.addEventListener('click',openBlockedUsers);listEl.appendChild(manage);}}
+  else if(online.socialTab==='online'){const blocked=new Set((state.blocked||[]).map(item=>item.uid));const users=((lastServerLB&&lastServerLB.list)||[]).filter(profile=>profile.uid!==deviceUid&&profile.online&&!blocked.has(profile.uid));users.forEach(profile=>listEl.appendChild(socialRow(profile,socialRelationshipFor(profile.uid))));if(!users.length)listEl.appendChild(el('div','social-empty',t('leaderboard_no_online')));}
+  else{const blocked=new Set((state.blocked||[]).map(item=>item.uid));const recent=recentPlaymates(account,8).filter(item=>!blocked.has(item.uid));recent.forEach(item=>{const remote=(lastServerLB&&lastServerLB.list||[]).find(profile=>profile.uid===item.uid)||{uid:item.uid,name:item.name,avatar:100,presence:'offline'};listEl.appendChild(socialRow(remote,socialRelationshipFor(remote.uid)));});if(!recent.length)listEl.appendChild(el('div','social-empty',t('social_empty')));}
+  applyI18n(listEl);
+}
+function initSocialRail(){['friends','online','recent'].forEach(name=>{const button=$('social-tab-'+name);if(button)button.addEventListener('click',()=>{online.socialTab=name;renderSocialRail();});});}
 function renderLobby(){
   const listEl = $('lobby-list');
   listEl.innerHTML = '';
@@ -968,7 +1159,6 @@ function renderLobby(){
   online.lobby.forEach(r => {
     if (r.room === online.room) return;
     const row = el('div','lobby-row');
-    row.dataset.room = r.room;
     const av = el('span','av');
     const hostProf = { uid: r.hostUid, avatar: r.hostAvatar, name: r.hostName, frame: 0, effect: 0 };
     av.appendChild(avatarStageNode(hostProf, 30));
@@ -976,17 +1166,21 @@ function renderLobby(){
   av.addEventListener('click', e => { if (e && e.stopPropagation) e.stopPropagation(); if (r.hostUid) openProfileModal(r.hostUid); });
     row.appendChild(av);
     const info = el('div','info');
-    info.appendChild(el('div','nm', (r.game && GAMES[r.game] ? GAMES[r.game].name : '待选游戏') + ' · ' + (r.status==='playing'?'游戏中':'等待中')));
-    info.appendChild(el('div','meta', r.hostName + ' HOST · ' + r.humanCount + ' 真人 / ' + r.aiCount + ' AI · ' + r.size + '/' + r.capacity + ' · ' + (r.allowSpectators?'可观战':'不可观战')));
-    const strip=el('div','lobby-seat-strip');(r.seats||[]).forEach(seat=>strip.appendChild(el('span','lobby-seat-dot',seat.type==='ai'?'🤖 AI':seat.type==='human'?(seat.ready?'✓ '+seat.nickname:seat.nickname):'＋ 空席')));info.appendChild(strip);
+    const roomName=el('div','nm');roomName.appendChild(elRaw('span',null,r.hostName+' '+(r.hostLang?langFlag(r.hostLang):'')));roomName.appendChild(document.createTextNode(t('host_room_suffix')));info.appendChild(roomName);
+    info.appendChild(el('div','meta',t('lobby_room_meta',r.size,r.capacity,r.game && GAMES[r.game] ? t(GAMES[r.game].nameKey) : t('not_selected'))));
     row.appendChild(info);
-    const joinBtn = el('button','btn btn-primary invite-btn','加入'); joinBtn.disabled=!r.canJoin;
+    const canJoin = r.canJoin !== undefined ? r.canJoin : r.joinable;
+    const canSpectate = r.canSpectate !== undefined ? r.canSpectate : r.spectatable;
+    const joinBtn = el('button','btn btn-primary invite-btn',t(canSpectate&&!canJoin?'spectate':'join'));
     joinBtn.addEventListener('click', () => {
-      if (online.game){ toast('对局进行中，请先返回大厅离开房间'); return; }
-      online.send({ type: 'join', payload: { room: r.room } });
+      if (online.game&&!online.isSpectator){ toast(t('game_in_progress_leave_first')); return; }
+      if(canSpectate&&!canJoin){
+        if(online.spectatorRoom===r.room)return;
+        if(online.isSpectator)online.send({type:'spectate_leave'});
+        if(r.started&&r.matchId) online.spectate(r.room,r.matchId); else online.spectateRoom(r.room);
+      }else online.send({ type: 'join', payload: { room: r.room } });
     });
     row.appendChild(joinBtn);
-    if(r.canSpectate){const watch=el('button','btn invite-btn','观战');watch.addEventListener('click',()=>online.spectate(r.room));row.appendChild(watch);}
     listEl.appendChild(row);
   });
 }
@@ -1006,14 +1200,14 @@ function renderAccounts(){
     av.style.cursor = 'pointer';
   av.addEventListener('click', e => { if (e && e.stopPropagation) e.stopPropagation(); openProfileModal(u.uid); });
     row.appendChild(av);
-        row.appendChild(el('span','nm', u.name + ' [Lv.' + (u.level || levelFromXp(u.xp || 0)) + ']' + (u.uid === deviceUid ? t('profile_mine') : '') + ' ' + (u.lang ? langFlag(u.lang) : '')));
+        const playerName=el('span','nm');playerName.appendChild(elRaw('span',null,u.name));playerName.appendChild(el('span',null,t('level_bracket',u.level || levelFromXp(u.xp || 0))+(u.uid === deviceUid ? t('profile_mine') : '')+' '+(u.lang ? langFlag(u.lang) : '')));row.appendChild(playerName);
     if (u.online) row.appendChild(el('span','online-dot',''));
     const coinLine = el('span','coin-line');
     coinLine.appendChild(currencyIcon('sm'));
     coinLine.appendChild(el('span','pts', (u.coins || 0)));
     row.appendChild(coinLine);
     if (u.uid !== deviceUid){
-      const inv = el('button','btn invite-btn');setButtonIcon(inv,'user-plus','邀请');
+      const inv = el('button','btn invite-btn',t('invite_short'));
       inv.disabled = !u.online || (online.room && !online.isHost);
   inv.addEventListener('click', e => { if (e && e.stopPropagation) e.stopPropagation(); inviteUser(u.uid); });
       row.appendChild(inv);
@@ -1024,102 +1218,11 @@ function renderAccounts(){
   });
   applyI18n(listEl);
 }
-function socialRelationshipFor(uid){
-  const state = online.socialState || {};
-  if ((state.blocked || []).some(item => item.uid === uid)) return 'blocked';
-  if ((state.friends || []).some(item => item.uid === uid)) return 'friends';
-  if ((state.incoming || []).some(item => item.user && item.user.uid === uid)) return 'incoming';
-  if ((state.outgoing || []).some(item => item.user && item.user.uid === uid)) return 'outgoing';
-  return 'none';
-}
-function openReportUserModal(profile, context){
-  if (!profile || !profile.uid || profile.uid === deviceUid) return;
-  const bd=el('div','modal-backdrop'), card=el('div','modal-card');
-  card.appendChild(el('h3',null,t('social_report')+' · '+(profile.name||t('social_player'))));
-  const select=el('select','nick-input');
-  [['harassment','social_reason_harassment'],['inappropriate_name','social_reason_inappropriate_name'],['cheating','social_reason_cheating'],['spam','social_reason_spam'],['other','social_reason_other']].forEach(([value,key])=>{const option=document.createElement('option');option.value=value;option.textContent=t(key);select.appendChild(option);});
-  card.appendChild(select);
-  card.appendChild(el('p','lb-note',t('social_report_note')));
-  const send=el('button','btn btn-primary');setButtonIcon(send,'flag',t('social_report'));send.addEventListener('click',()=>{
-    online.reportUser({ targetUid:profile.uid, reason:select.value, contextType:context&&context.type||'profile', contextId:context&&context.id||profile.uid, matchId:online.matchId||null });bd.remove();
-  });card.appendChild(send);
-  const cancel=el('button','btn',t('cancel'));cancel.addEventListener('click',()=>bd.remove());card.appendChild(cancel);
-  bd.appendChild(card);bd.addEventListener('click',event=>{if(event.target===bd)bd.remove();});document.body.appendChild(bd);
-}
-function openSocialActions(profile, context){
-  if (!profile || !profile.uid || profile.uid === deviceUid) return;
-  const relation=socialRelationshipFor(profile.uid), bd=el('div','modal-backdrop'), card=el('div','modal-card');
-  card.appendChild(el('h3',null,(profile.name||t('social_player'))+' · '+presenceLabel(profile.presence||(profile.online?'online':'offline'))));
-  const add=(label,cls,iconName,handler)=>{const button=el('button','btn'+(cls?' '+cls:''));setButtonIcon(button,iconName,label);button.addEventListener('click',()=>{handler();bd.remove();});card.appendChild(button);};
-  if(relation==='none') add(t('social_add_friend'),'btn-primary','user-plus',()=>online.friendRequest(profile.uid));
-  if(relation==='outgoing'){
-    const req=(online.socialState.outgoing||[]).find(item=>item.user&&item.user.uid===profile.uid);if(req)add(t('social_cancel'),'','user-minus',()=>online.friendRequestAction('cancel',req.id));
-  }
-  if(relation==='incoming'){
-    const req=(online.socialState.incoming||[]).find(item=>item.user&&item.user.uid===profile.uid);if(req){add(t('social_accept'),'btn-primary','user-plus',()=>online.friendRequestAction('accept',req.id));add(t('social_decline'),'','user-minus',()=>online.friendRequestAction('decline',req.id));}
-  }
-  if(relation==='friends'){
-    if(profile.online) add(t('social_invite_room'),'btn-primary','door-open',()=>inviteUser(profile.uid));
-    add(t('social_remove'),'','user-minus',()=>online.removeFriend(profile.uid));
-  }
-  if(relation!=='blocked') add(t('social_block'),'social-danger','shield-alert',()=>online.blockUser(profile.uid));
-  else add(t('social_unblock'),'','shield',()=>online.unblockUser(profile.uid));
-  add(t('social_report'),'social-danger','flag',()=>openReportUserModal(profile,context));
-  const close=el('button','btn',t('close'));close.addEventListener('click',()=>bd.remove());card.appendChild(close);
-  bd.appendChild(card);bd.addEventListener('click',event=>{if(event.target===bd)bd.remove();});document.body.appendChild(bd);
-}
-function socialRow(profile, relationship, request){
-  const row=el('div','social-row');
-  const avatar=el('span','lb-av');avatar.appendChild(avatarStageNode(profile,24));avatar.addEventListener('click',()=>openProfileModal(profile.uid));row.appendChild(avatar);
-  const copy=el('div','social-copy');copy.appendChild(el('div','social-name',profile.name||t('social_player')));copy.appendChild(el('div','social-meta',presenceLabel(profile.presence||(profile.online?'online':'offline'))+(relationship==='friends'?' · '+t('social_friend'):'')));row.appendChild(copy);
-  const actions=el('div','social-actions');
-  if(request&&relationship==='incoming'){
-    const accept=el('button','btn btn-primary');setButtonIcon(accept,'user-plus',t('social_accept'));accept.addEventListener('click',()=>online.friendRequestAction('accept',request.id));actions.appendChild(accept);
-    const decline=el('button','btn');setButtonIcon(decline,'user-minus',t('social_decline'));decline.addEventListener('click',()=>online.friendRequestAction('decline',request.id));actions.appendChild(decline);
-  }else if(relationship==='none'){
-    const add=el('button','btn');setButtonIcon(add,'user-plus',t('social_add_friend'));add.addEventListener('click',()=>online.friendRequest(profile.uid));actions.appendChild(add);
-  }else if(relationship==='outgoing'){
-    actions.appendChild(el('span','social-meta',t('social_pending')));
-  }else if(relationship==='friends'&&profile.online){
-    const invite=el('button','btn');setButtonIcon(invite,'door-open',t('social_invite_room'));invite.addEventListener('click',()=>inviteUser(profile.uid));actions.appendChild(invite);
-  }
-  const more=el('button','btn');setButtonIcon(more,'ellipsis','',{ariaLabel:t('social_more_actions',profile.name||t('social_player'))});more.addEventListener('click',()=>openSocialActions(profile,{type:'social',id:profile.uid}));actions.appendChild(more);row.appendChild(actions);return row;
-}
-function openBlockedUsers(){
-  const bd=el('div','modal-backdrop'),card=el('div','modal-card');card.appendChild(el('h3',null,t('social_block_manage')));
-  const blocked=(online.socialState&&online.socialState.blocked)||[];
-  if(!blocked.length)card.appendChild(el('div','social-empty',t('social_empty')));
-  blocked.forEach(item=>{const row=el('div','social-row');row.appendChild(el('div','social-copy',item.name||t('social_player')));const button=el('button','btn',t('social_unblock'));button.addEventListener('click',()=>{online.unblockUser(item.uid);bd.remove();});row.appendChild(button);card.appendChild(row);});
-  const close=el('button','btn',t('close'));close.addEventListener('click',()=>bd.remove());card.appendChild(close);bd.appendChild(card);document.body.appendChild(bd);
-}
-function renderSocialRail(){
-  const listEl=$('social-list');if(!listEl)return;listEl.innerHTML='';
-  const state=online.socialState||{friends:[],incoming:[],outgoing:[],blocked:[],counts:{}};
-  const badge=$('social-requests-badge');const incomingCount=(state.incoming||[]).length;if(badge){badge.textContent=String(incomingCount);badge.classList.toggle('hidden',!incomingCount);}
-  ['friends','online','recent'].forEach(name=>{const button=$('social-tab-'+name);if(button)button.setAttribute('aria-pressed',String(online.socialTab===name));});
-  if(!account){listEl.appendChild(el('div','social-empty',t('social_login_required')));return;}
-  if(online.socialTab==='friends'){
-    (state.incoming||[]).forEach(request=>listEl.appendChild(socialRow(request.user,'incoming',request)));
-    (state.friends||[]).forEach(profile=>listEl.appendChild(socialRow(profile,'friends')));
-    if(!(state.incoming||[]).length&&!(state.friends||[]).length)listEl.appendChild(el('div','social-empty',t('social_empty')));
-    if((state.blocked||[]).length){const manage=el('button','btn social-tab',t('social_block_manage_count',state.blocked.length));manage.addEventListener('click',openBlockedUsers);listEl.appendChild(manage);}
-  }else if(online.socialTab==='online'){
-    const blocked=new Set((state.blocked||[]).map(item=>item.uid));const users=((lastServerLB&&lastServerLB.list)||[]).filter(profile=>profile.uid!==deviceUid&&profile.online&&!blocked.has(profile.uid));
-    users.forEach(profile=>listEl.appendChild(socialRow(profile,socialRelationshipFor(profile.uid))));if(!users.length)listEl.appendChild(el('div','social-empty',t('leaderboard_no_online')));
-  }else{
-    const blocked=new Set((state.blocked||[]).map(item=>item.uid));const recent=recentPlaymates(account,8).filter(item=>!blocked.has(item.uid));
-    recent.forEach(item=>{const remote=(lastServerLB&&lastServerLB.list||[]).find(profile=>profile.uid===item.uid)||{uid:item.uid,name:item.name,avatar:100,presence:'offline'};listEl.appendChild(socialRow(remote,socialRelationshipFor(remote.uid)));});if(!recent.length)listEl.appendChild(el('div','social-empty',t('social_empty')));
-  }
-  applyI18n(listEl);
-}
-function initSocialRail(){
-  ['friends','online','recent'].forEach(name=>{const button=$('social-tab-'+name);if(button)button.addEventListener('click',()=>{online.socialTab=name;renderSocialRail();});});
-}
 function inviteUser(uid){
   if (online.room){
-    if (!online.isHost){ toast('只有房主可以邀请'); return; }
+    if (!online.isHost){ toast(t('host_only_invite')); return; }
     online.send({ type: 'invite', payload: { toUid: uid } });
-    toast('邀请已发送');
+    toast(t('invite_sent'));
     return;
   }
   online.inviteTarget = uid;
@@ -1128,22 +1231,22 @@ function inviteUser(uid){
 function showInviteModal(inv){
   if (!inv || !inv.room) return;
   if (online.room){
-    toast('你已在房间中，无法接受新邀请');
+    toast(t('invite_already_in_room'));
     return;
   }
   const bd = el('div','modal-backdrop');
   const card = el('div','modal-card');
-  card.appendChild(el('h3', null, '📨 收到邀请'));
-  const msg = el('p', null, inv.fromName + ' 邀请你加入房间 ' + inv.room + (inv.game ? '（' + GAMES[inv.game].name + '）' : '（未选游戏）'));
+  card.appendChild(el('h3', null, t('invite_title')));
+  const msg = el('p', null, t('invite_message',inv.fromName,inv.room,inv.game ? GAMES[inv.game].name : t('not_selected')));
   msg.style.margin = '0 0 14px';
   msg.style.fontSize = '14px';
   card.appendChild(msg);
-  const accept = el('button','btn btn-primary','接受');
+  const accept = el('button','btn btn-primary',t('invite_accept'));
   accept.addEventListener('click', () => {
     bd.remove();
     online.send({ type: 'invite_accept', payload: { room: inv.room } });
   });
-  const decline = el('button','btn','拒绝');
+  const decline = el('button','btn',t('invite_decline'));
   decline.addEventListener('click', () => {
     bd.remove();
     online.send({ type: 'invite_decline', payload: { room: inv.room } });
@@ -1156,20 +1259,20 @@ function showInviteModal(inv){
 function openSettings(){
   const bd = el('div','modal-backdrop');
   const card = el('div','modal-card');
-  card.appendChild(el('h3', null, '联机服务设置'));
+  card.appendChild(el('h3', null, t('server_config')));
   const input = el('input','nick-input');
   input.type = 'text';
-  input.placeholder = '服务端地址（留空 = 自动，线上默认 Render 服务）';
+  input.placeholder = t('server_placeholder');
   try { input.value = localStorage.getItem('mg_server') || online.defaultServer; } catch {}
   card.appendChild(input);
-  card.appendChild(el('p','lb-note','前端与联机服务不在同一域名时，填写服务端地址（如 https://xxx.onrender.com），保存后重新连接生效。'));
-  const save = el('button','btn btn-primary','保存');
+  card.appendChild(el('p','lb-note',t('server_note')));
+  const save = el('button','btn btn-primary',t('save'));
   save.addEventListener('click', () => {
     try { localStorage.setItem('mg_server', input.value.trim()); } catch {}
     bd.remove();
-    toast('设置已保存，重新连接后生效');
+    toast(t('settings_saved'));
   });
-  const cancel = el('button','btn','取消');
+  const cancel = el('button','btn',t('cancel'));
   cancel.addEventListener('click', () => bd.remove());
   card.appendChild(save);
   card.appendChild(cancel);

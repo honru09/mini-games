@@ -5,11 +5,13 @@ function gameTank(area, extra, n, opts){
   const W = playerCount > 4 ? 17 : 15, H = 13;
   const FIXED_MS = 50, MATCH_MS = Math.max(10000, Number(opts.matchDurationMs) || 180000);
   const RELAY_PROTOCOL = 'tank-host-relay-v1', HOST_PLAYER = 0;
+  const AUTH_PROTOCOL = 'tank-authority-v1';
+  const authorityMode = !!(opts.online && opts.gameplayMeta && opts.gameplayMeta.protocol === AUTH_PROTOCOL && typeof opts.sendTankInput === 'function');
   const RELAY_SNAPSHOT_MS = Math.max(200, Math.min(1000, Number(opts.relaySnapshotMs) || 400));
   const DIRS = [[0,-1],[1,0],[0,1],[-1,0]]; // 上右下左
   const SPAWNS = [[1.5,1.5],[W-2.5,H-2.5],[W-2.5,1.5],[1.5,H-2.5],[Math.floor(W/2)+.5,Math.floor(H/2)+.5]];
   const SEASONS = ['spring','summer','autumn','winter'];
-  const SEASON_LABEL = { spring:'春日细雨', summer:'盛夏晴空', autumn:'金秋落叶', winter:'冬日雪原' };
+  const seasonLabel=value=>t('tank_season_'+value);
   const previousTouchAction = area.style.touchAction || '';
   const previousOverscroll = area.style.overscrollBehavior || '';
   area.style.touchAction = 'none'; area.style.overscrollBehavior = 'contain';
@@ -20,9 +22,33 @@ function gameTank(area, extra, n, opts){
   let bulletSequence = 0, inputSequence = 0, authoritySequence = 0, lastAuthoritySequence = -1, aiEpoch = 0;
   let lastInputSequence = Array(playerCount).fill(-1), relayMatchId = '', resultCommitted = false, lastRelayAt = 0;
   let spectator = !!opts.spectator;
+  let authorityServerTick = 0, authorityEndAt = 0;
   let season = chooseSeason(matchSeed());
   let cosmetic = { default:'classic', players:{}, ...(opts.cosmetic || {}) };
   let lastRenderAt = 0;
+  const performanceStats={samples:0,lastFrameMs:0,maxFrameMs:0,longFrames:0};
+  const transientTimers=new Set();
+  const renderObjectIds=new WeakMap();
+  let nextRenderObjectId=0,lastPlayersSignature='',lastStatusText='',victoryShown=false;
+  const renderNodes={board:null,staticCells:new Map(),traces:new Map(),bullets:new Map(),tanks:new Map(),respawns:new Map(),effects:new Map(),time:null,scores:[]};
+
+  function clearTransientTimers(){transientTimers.forEach(timer=>clearTimeout(timer));transientTimers.clear();}
+  function scheduleTransient(callback,delay){
+    const timer=setTimeout(()=>{transientTimers.delete(timer);if(!destroyed)callback();},delay);
+    if(timer&&typeof timer.unref==='function')timer.unref();transientTimers.add(timer);return timer;
+  }
+  function renderObjectKey(value,prefix){
+    if(!value||typeof value!=='object')return prefix+'-none';
+    if(!renderObjectIds.has(value))renderObjectIds.set(value,prefix+'-'+(++nextRenderObjectId));
+    return renderObjectIds.get(value);
+  }
+  function removeRenderNode(node){if(node&&typeof node.remove==='function')node.remove();}
+  function syncRenderMap(map,items,keyFor,create,update){
+    const active=new Set();
+    items.forEach((item,index)=>{const key=keyFor(item,index);active.add(key);let node=map.get(key);if(!node){node=create(item,index);map.set(key,node);}update(node,item,index);});
+    for(const [key,node] of map)if(!active.has(key)){removeRenderNode(node);map.delete(key);}
+  }
+  function removeVictoryOverlay(){const overlay=area.querySelector&&area.querySelector('.victory-overlay');if(overlay)removeRenderNode(overlay);victoryShown=false;}
 
   function currentMatchId(){
     const dynamic = typeof opts.getMatchId === 'function' ? opts.getMatchId() : null;
@@ -73,11 +99,13 @@ function gameTank(area, extra, n, opts){
     };
   }
   function resetLocal(){
-    aiEpoch++; aiPending.clear(); buildMap();
+    aiEpoch++; aiPending.clear(); clearTransientTimers(); removeVictoryOverlay(); lastPlayersSignature='';lastStatusText='';buildMap();
     startedAt = Date.now(); finishedAt = 0; remainingMs = MATCH_MS; lastLoopAt = startedAt; accumulator = 0;
     tanks = Array.from({length:playerCount}, (_, i) => createTank(i));
     bullets = []; traces = []; effects = []; over = false; winner = -1; cur = 0; bulletSequence = 0; destroyed = false;
     resetRelayState();
+    authorityServerTick = 0;
+    authorityEndAt = authorityMode && opts.gameplayMeta ? Number(opts.gameplayMeta.endAt) || 0 : 0;
     season = chooseSeason(matchSeed());
     render(); updateStatus();
   }
@@ -151,6 +179,14 @@ function gameTank(area, extra, n, opts){
   function fixedUpdate(dt){
     if (over) return;
     const now = Date.now();
+    if (authorityMode){
+      remainingMs=Math.max(0,(authorityEndAt||now+remainingMs)-now);
+      const local=tanks[controlledPlayer()];
+      if(local&&local.alive){const input=local.input||emptyInput();moveTank(local,(input.right?1:0)-(input.left?1:0),(input.down?1:0)-(input.up?1:0),dt);}
+      traces=traces.filter(item=>now-item.at<(item.type==='scorch'?7000:1600)).slice(-60);
+      effects=effects.filter(item=>now-item.at<item.ttl).slice(-40);
+      return;
+    }
     remainingMs = Math.max(0, MATCH_MS - (now - startedAt));
     tanks.forEach(tank => {
       if (!tank.alive){ if (tank.respawnAt && now >= tank.respawnAt && remainingMs > 0) respawn(tank, now); return; }
@@ -196,20 +232,22 @@ function gameTank(area, extra, n, opts){
     resultCommitted = true;
     if (broadcastFinal) broadcastAuthoritativeState(order);
     if (opts.onEnd) opts.onEnd(resultsForOrder(order));
-    render(); setStatus('🏆 玩家' + (winner+1) + ' 获胜 · ' + tanks[winner].kills + ' 击杀', true);
+    render(); setStatus(t('tank_win_status',winner+1,tanks[winner].kills), true);
     return true;
   }
   function finishMatch(){
-    if (opts.online && opts.serverAuthority) return false;
+    if (authorityMode) return false;
+    // 休闲联机采用房主客户端权威；服务端仍只是附带可信 player 的房间中继。
     if (opts.online && !opts.isHost) return false;
     return commitFinal(ranking(), !!opts.online);
   }
   function loop(){
     if (destroyed) return;
     const now = Date.now(), elapsed = Math.min(250, Math.max(0, now - lastLoopAt));
+    performanceStats.samples++;performanceStats.lastFrameMs=elapsed;performanceStats.maxFrameMs=Math.max(performanceStats.maxFrameMs,elapsed);if(elapsed>50)performanceStats.longFrames++;
     lastLoopAt = now; accumulator += elapsed;
-    while (accumulator >= FIXED_MS){ if (!(opts.online && opts.serverAuthority)) fixedUpdate(FIXED_MS/1000); accumulator -= FIXED_MS; }
-    if (opts.online && opts.isHost && !opts.serverAuthority && !over && now - lastRelayAt >= RELAY_SNAPSHOT_MS) broadcastAuthoritativeState();
+    while (accumulator >= FIXED_MS){ fixedUpdate(FIXED_MS/1000); accumulator -= FIXED_MS; }
+    if (opts.online && !authorityMode && opts.isHost && !over && now - lastRelayAt >= RELAY_SNAPSHOT_MS) broadcastAuthoritativeState();
     if (now - lastRenderAt >= 80){ render(); lastRenderAt = now; }
   }
   const simulationTimer = setInterval(loop, FIXED_MS);
@@ -221,6 +259,11 @@ function gameTank(area, extra, n, opts){
     };
   }
   function sendRelayAction(value){
+    if(authorityMode){
+      const input=value&&value.input?normalizeInput(value.input):normalizeInput(keyboardInput);
+      opts.sendTankInput({seq:++inputSequence,clientTick:authorityServerTick,input});
+      return true;
+    }
     if (!opts.online || typeof opts.sendMove !== 'function') return false;
     opts.sendMove(relayActionPayload(value));
     return true;
@@ -235,7 +278,7 @@ function gameTank(area, extra, n, opts){
     if (!Number.isInteger(d) || d < 0 || d > 3) return false;
     const input = emptyInput(); input[['up','right','down','left'][d]] = true;
     setPlayerInput(pi,input,shouldSend);
-    setTimeout(() => { if (tanks[pi]) tanks[pi].input = emptyInput(); }, 180);
+    scheduleTransient(() => { if (tanks[pi]) tanks[pi].input = emptyInput(); }, 180);
     return true;
   }
   function localInputChanged(){
@@ -246,6 +289,11 @@ function gameTank(area, extra, n, opts){
   }
   function localShoot(){
     if (!canControl()) return false;
+    if(authorityMode){
+      keyboardInput.fire=true;localInputChanged();
+      scheduleTransient(()=>{keyboardInput.fire=false;localInputChanged();},90);
+      return true;
+    }
     const fired = fireTank(tanks[controlledPlayer()]);
     if (!fired) return false;
     if (opts.onProgress) opts.onProgress({act:'shoot'});
@@ -273,7 +321,7 @@ function gameTank(area, extra, n, opts){
   const controls = el('div','tank-realtime-controls');
   const joystick = el('div','tank-joystick','●');
   joystick.style.cssText = 'width:104px;height:104px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle,rgba(255,255,255,.22),rgba(15,23,42,.66));color:#fff;font-size:38px;touch-action:none;user-select:none;';
-  const fireBtn = el('button','btn btn-primary tank-fire','🔥 FIRE');
+  const fireBtn = el('button','btn btn-primary tank-fire',t('tank_fire'));
   controls.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:28px;margin-top:8px;touch-action:none;';
   fireBtn.style.cssText = 'width:92px;height:92px;border-radius:50%;font-weight:900;';
   controls.appendChild(joystick); controls.appendChild(fireBtn); extra.appendChild(hud); extra.appendChild(controls);
@@ -292,23 +340,241 @@ function gameTank(area, extra, n, opts){
   fireBtn.addEventListener('pointerup',() => { keyboardInput.fire = false; localInputChanged(); });
   fireBtn.addEventListener('click',localShoot);
 
-  const aiPending = new Set();
+  /* Influence-map kiting：借鉴 AIIDE《Kiting in RTS Games Using Influence Maps》的
+     “先避开高威胁区，再沿安全梯度取得射界”思路；这里只输出既合法又近优的动作。 */
+  const AI_BULLET_SPEED = 8.2, AI_DANGER_HORIZON = 1.5, AI_MOVE_LOOKAHEAD = .58;
+  function tankAIClamp(value,min,max){
+    const number = Number(value);
+    return Math.max(min,Math.min(max,Number.isFinite(number)?number:0));
+  }
+  function tankAIWallBetween(x1,y1,x2,y2){
+    const distance = Math.hypot(x2-x1,y2-y1);
+    if (distance < .72) return false;
+    const dx=(x2-x1)/distance,dy=(y2-y1)/distance;
+    for(let step=.42;step<distance-.34;step+=.2){
+      const r=Math.floor(y1+dy*step),c=Math.floor(x1+dx*step);
+      if(!grid[r]||grid[r][c]===2||grid[r][c]===3)return true;
+    }
+    return false;
+  }
+  function tankAIFireLine(from,target){
+    if(!from||!target)return null;
+    const vertical=Math.abs(from.x-target.x)<.44,horizontal=Math.abs(from.y-target.y)<.44;
+    if(!vertical&&!horizontal)return null;
+    const direction=vertical?(target.y<from.y?0:2):(target.x>from.x?1:3);
+    const distance=vertical?Math.abs(target.y-from.y):Math.abs(target.x-from.x);
+    if(distance<.7||tankAIWallBetween(from.x,from.y,target.x,target.y))return null;
+    const blocked=tanks.some(t=>{
+      if(!t.alive||t.id===from.id||t.id===target.id)return false;
+      if(vertical&&Math.abs(t.x-from.x)<.48){
+        return (t.y-from.y)*(target.y-from.y)>0&&Math.abs(t.y-from.y)<distance-.35;
+      }
+      if(horizontal&&Math.abs(t.y-from.y)<.48){
+        return (t.x-from.x)*(target.x-from.x)>0&&Math.abs(t.x-from.x)<distance-.35;
+      }
+      return false;
+    });
+    return blocked?null:{direction,distance};
+  }
+  function tankAIProjectileApproach(bullet,x,y){
+    if(!bullet||!DIRS[bullet.d])return null;
+    const vector=DIRS[bullet.d],rx=x-bullet.x,ry=y-bullet.y;
+    const along=rx*vector[0]+ry*vector[1],cross=Math.abs(rx*vector[1]-ry*vector[0]);
+    const lifetime=Math.max(0,Math.min(AI_DANGER_HORIZON,(Number(bullet.ttl)||0)/1000));
+    if(along<-.2||along>AI_BULLET_SPEED*lifetime+.45||cross>.78)return null;
+    const rayX=bullet.x+vector[0]*Math.max(0,along),rayY=bullet.y+vector[1]*Math.max(0,along);
+    if(tankAIWallBetween(bullet.x,bullet.y,rayX,rayY))return null;
+    const eta=Math.max(0,along)/AI_BULLET_SPEED;
+    const lane=tankAIClamp(1-cross/.78,0,1),imminence=tankAIClamp(1-eta/AI_DANGER_HORIZON,0,1);
+    return {bullet,eta,cross,value:lane*imminence};
+  }
+  function tankAIBulletThreat(x,y,meId,ownerId){
+    let value=0,urgent=null;
+    bullets.forEach(bullet=>{
+      if(bullet.owner===meId||(Number.isInteger(ownerId)&&bullet.owner!==ownerId))return;
+      const approach=tankAIProjectileApproach(bullet,x,y);
+      if(approach&&approach.value>value){value=approach.value;urgent=approach;}
+    });
+    return {value:tankAIClamp(value,0,1),urgent};
+  }
+  function tankAITargetInfo(me,target){
+    const distance=Math.hypot(target.x-me.x,target.y-me.y),line=tankAIFireLine(target,me);
+    const aimed=!!(line&&target.d===line.direction),projectile=tankAIBulletThreat(me.x,me.y,me.id,target.id).value;
+    const proximity=tankAIClamp(1-distance/9,0,1);
+    const threat=tankAIClamp((aimed ? .42 : line ? .18 : 0)+projectile*.38+proximity*.18+
+      tankAIClamp(target.kills/5,0,1)*.16+tankAIClamp(target.damage/12,0,1)*.1,0,1);
+    const lowHealth=tankAIClamp((4-Math.max(1,target.hp))/3,0,1);
+    const protectedNow=Date.now()<target.invulnerableUntil;
+    const opportunity=tankAIFireLine(me,target) ? .12 : 0;
+    const priority=tankAIClamp(lowHealth*.5+threat*.38+proximity*.12+opportunity-(protectedNow ? .35 : 0),0,1);
+    return {target,distance,threat,priority,lowHealth,protectedNow};
+  }
+  function tankAISelectTarget(me){
+    return tanks.filter(t=>t.id!==me.id&&t.alive).map(t=>tankAITargetInfo(me,t)).sort((a,b)=>
+      b.priority-a.priority||b.threat-a.threat||a.target.hp-b.target.hp||a.distance-b.distance||a.target.id-b.target.id)[0]||null;
+  }
+  function tankAICellPassable(r,c,meId){
+    if(r<1||r>=H-1||c<1||c>=W-1||!grid[r]||grid[r][c]!==0)return false;
+    return !tanks.some(t=>t.id!==meId&&t.alive&&Math.abs(t.x-(c+.5))<.62&&Math.abs(t.y-(r+.5))<.62);
+  }
+  function tankAICoverAt(x,y,me){
+    const r=Math.floor(y),c=Math.floor(x);
+    let adjacent=0,blockedLane=0,relevantLanes=0;
+    DIRS.forEach(([dx,dy])=>{const row=r+dy,col=c+dx;if(!grid[row]||grid[row][col]===2||grid[row][col]===3)adjacent++;});
+    tanks.forEach(enemy=>{
+      if(enemy.id===me.id||!enemy.alive)return;
+      if(Math.abs(enemy.x-x)<.44||Math.abs(enemy.y-y)<.44){
+        relevantLanes++;
+        if(tankAIWallBetween(enemy.x,enemy.y,x,y))blockedLane++;
+      }
+    });
+    return tankAIClamp(adjacent*.18+(relevantLanes?blockedLane/relevantLanes*.48:0),0,1);
+  }
+  function tankAIBuildInfluence(me){
+    // 敌人、未来弹道、障碍邻接和边界共同构成危险势场；墙本身为不可达极值。
+    return Array.from({length:H},(_,r)=>Array.from({length:W},(_,c)=>{
+      if(!tankAICellPassable(r,c,me.id)&&!(r===Math.floor(me.y)&&c===Math.floor(me.x))){
+        return {danger:1,projectile:0,cover:0,boundary:1};
+      }
+      const x=c+.5,y=r+.5,projectile=tankAIBulletThreat(x,y,me.id).value;
+      let enemyInfluence=0;
+      tanks.forEach(enemy=>{
+        if(enemy.id===me.id||!enemy.alive)return;
+        const distance=Math.hypot(enemy.x-x,enemy.y-y),line=tankAIFireLine(enemy,{id:me.id,x,y});
+        enemyInfluence+=tankAIClamp(1-distance/7,0,1)*.2;
+        if(line)enemyInfluence+=enemy.d===line.direction ? .48 : .2;
+      });
+      const edge=Math.min(c-1,W-2-c,r-1,H-2-r);
+      const boundary=tankAIClamp((1.35-edge)/1.35,0,1);
+      const cover=tankAICoverAt(x,y,me);
+      const danger=tankAIClamp(projectile+enemyInfluence+boundary*.22+cover*.04,0,1);
+      return {danger,projectile,cover,boundary};
+    }));
+  }
+  function tankAIFireDistance(me,target,influence){
+    const distance=Array.from({length:H},()=>Array(W).fill(Infinity)),queue=[];
+    if(!target)return distance;
+    for(let r=1;r<H-1;r++)for(let c=1;c<W-1;c++){
+      if(!tankAICellPassable(r,c,me.id)||influence[r][c].danger>.94)continue;
+      const line=tankAIFireLine({id:me.id,x:c+.5,y:r+.5},target);
+      if(!line||line.distance<1.35)continue;
+      distance[r][c]=0;queue.push([r,c]);
+    }
+    for(let head=0;head<queue.length;head++){
+      const [r,c]=queue[head],nextDistance=distance[r][c]+1;
+      DIRS.forEach(([dx,dy])=>{
+        const nr=r+dy,nc=c+dx;
+        if(tankAICellPassable(nr,nc,me.id)&&nextDistance<distance[nr][nc]){
+          distance[nr][nc]=nextDistance;queue.push([nr,nc]);
+        }
+      });
+    }
+    return distance;
+  }
+  function tankAIPersonaBonus(item){
+    const id=opts.aiPersona&&opts.aiPersona.id,features=item.features;
+    if(id==='gambler')return (item.choice==='shoot'?5:0)+features.line_of_sight*2-features.cover;
+    if(id==='mean')return (item.choice==='shoot'?3:0)+features.target_priority*3;
+    if(id==='cute')return features.dodge*3+features.cover*2;
+    if(id==='tsundere')return features.line_of_sight*2+features.path_progress;
+    return 0;
+  }
+  function tankAIPlan(pi){
+    const me=tanks[pi];
+    if(!me||!me.alive)return null;
+    const targetInfo=tankAISelectTarget(me),target=targetInfo&&targetInfo.target;
+    const influence=tankAIBuildInfluence(me),fireDistance=tankAIFireDistance(me,target,influence);
+    const currentCell=[Math.floor(me.y),Math.floor(me.x)],currentMap=influence[currentCell[0]][currentCell[1]]||{danger:1,cover:0};
+    const currentBullet=tankAIBulletThreat(me.x,me.y,me.id),urgent=currentBullet.urgent;
+    const currentFireDistance=fireDistance[currentCell[0]][currentCell[1]],ranked=[];
+    DIRS.forEach(([dx,dy],direction)=>{
+      const x=me.x+dx*AI_MOVE_LOOKAHEAD,y=me.y+dy*AI_MOVE_LOOKAHEAD;
+      if(isBlocked(x,y,me.id))return;
+      const r=Math.floor(y),c=Math.floor(x),map=influence[r]&&influence[r][c]||{danger:1,cover:0,boundary:1};
+      const projectile=tankAIBulletThreat(x,y,me.id).value,danger=Math.max(map.danger,projectile);
+      const line=target&&tankAIFireLine({id:me.id,x,y},target),aimed=!!(line&&line.direction===direction);
+      const nextFireDistance=fireDistance[r]&&fireDistance[r][c];
+      let pathProgress=0;
+      if(Number.isFinite(currentFireDistance)&&Number.isFinite(nextFireDistance))pathProgress=tankAIClamp((currentFireDistance-nextFireDistance)/2,-1,1);
+      else if(!Number.isFinite(currentFireDistance)&&Number.isFinite(nextFireDistance))pathProgress=1;
+      else if(Number.isFinite(currentFireDistance)&&!Number.isFinite(nextFireDistance))pathProgress=-1;
+      let dodge=0;
+      if(urgent){
+        const perpendicular=(urgent.bullet.d%2)!==(direction%2),reduction=currentBullet.value-projectile;
+        dodge=tankAIClamp((perpendicular ? .55 : -.45)+reduction*1.15,-1,1);
+      }
+      const targetDistance=target?Math.hypot(target.x-x,target.y-y):8;
+      const kite=tankAIClamp(1-Math.abs(targetDistance-4.5)/4.5,-1,1);
+      const features={
+        threat:tankAIClamp(danger,0,1),line_of_sight:aimed ? 1 : line ? .45 : 0,dodge,
+        path_progress:pathProgress,cover:tankAIClamp(map.cover,0,1),
+        target_priority:targetInfo?tankAIClamp(targetInfo.priority,0,1):0,
+        boundary_safety:tankAIClamp(1-(map.boundary||0),0,1),kite_distance:kite,quality:0,
+      };
+      let score=dodge*220-danger*175+pathProgress*86+features.cover*24+features.boundary_safety*18+kite*16;
+      if(aimed)score+=118+(targetInfo?targetInfo.priority*38:0);
+      if(targetDistance<1.7)score-=55;
+      ranked.push({choice:'move:'+direction,score,features});
+    });
+    const shotTargets=tanks.filter(t=>t.id!==me.id&&t.alive).map(t=>{
+      const line=tankAIFireLine(me,t),info=tankAITargetInfo(me,t);
+      return line&&line.direction===me.d?{target:t,line,info}:null;
+    }).filter(Boolean).sort((a,b)=>b.info.priority-a.info.priority||a.target.hp-b.target.hp||a.line.distance-b.line.distance||a.target.id-b.target.id);
+    const shotTarget=shotTargets[0],fireReady=Date.now()>=me.fireReadyAt;
+    const shotFeatures={
+      threat:tankAIClamp(currentMap.danger,0,1),line_of_sight:shotTarget?1:0,
+      dodge:urgent?tankAIClamp(-.55-currentBullet.value*.45,-1,0):0,path_progress:0,
+      cover:tankAIClamp(currentMap.cover,0,1),target_priority:shotTarget?tankAIClamp(shotTarget.info.priority,0,1):(targetInfo?tankAIClamp(targetInfo.priority,0,1):0),
+      boundary_safety:tankAIClamp(1-(currentMap.boundary||0),0,1),fire_ready:fireReady?1:-1,quality:0,
+    };
+    let shotScore=-currentMap.danger*170+shotFeatures.cover*14;
+    if(shotTarget&&fireReady)shotScore+=285+shotTarget.info.priority*70+shotTarget.info.lowHealth*70;
+    else if(!fireReady)shotScore-=150;
+    else shotScore-=72;
+    if(urgent)shotScore-=currentBullet.value*230;
+    ranked.push({choice:'shoot',score:shotScore,features:shotFeatures});
+    ranked.sort((a,b)=>b.score-a.score||a.choice.localeCompare(b.choice));
+    const best=ranked[0],band=Math.max(16,Math.min(42,Math.abs(best.score)*.1+10));
+    const near=ranked.filter(item=>item.score>=best.score-band).slice(0,4);
+    near.forEach(item=>{item.features.quality=tankAIClamp(1-(best.score-item.score)/Math.max(1,band),-1,1);});
+    near.sort((a,b)=>(b.score+tankAIPersonaBonus(b))-(a.score+tankAIPersonaBonus(a))||a.choice.localeCompare(b.choice));
+    return {me,targetInfo,influence,currentDanger:currentMap.danger,urgent,best,near};
+  }
+
+  const aiPending = new Set(),aiThinkGate=new Map();
   async function scheduleAIPlayer(pi){
     if (destroyed || over || aiPending.has(pi) || !opts.ai || !opts.ai.has(pi) || !tanks[pi] || !tanks[pi].alive) return;
-    aiPending.add(pi); const epoch = aiEpoch; const choices = ['move:0','move:1','move:2','move:3','shoot'];
-    const me = tanks[pi];
+    const gate=aiThinkGate.get(pi),now=Date.now();
+    if(gate&&gate.epoch===aiEpoch&&now<gate.readyAt)return;
+    // 正常 650ms 调度不受影响；同时避免后台/测试的压缩计时器造成高频重复寻路。
+    aiThinkGate.set(pi,{epoch:aiEpoch,readyAt:now+400});
+    const plan=tankAIPlan(pi);
+    if(!plan||!plan.near.length)return;
+    aiPending.add(pi); const epoch = aiEpoch,plannedAt=Date.now();
+    const choices=plan.near.map(item=>item.choice);
+    const learningCandidates=plan.near.map(item=>({choice:item.choice,features:{...item.features}}));
     const remote = await aiChoose('tank', {
-      season, remainingMs, player:pi, tanks:tanks.map(t => ({id:t.id,x:+t.x.toFixed(2),y:+t.y.toFixed(2),hp:t.hp,alive:t.alive,kills:t.kills})),
+      season, remainingMs, player:pi,
+      tanks:tanks.map(t => ({id:t.id,x:+t.x.toFixed(2),y:+t.y.toFixed(2),d:t.d,hp:t.hp,alive:t.alive,kills:t.kills,damage:t.damage})),
+      bullets:bullets.map(b=>({owner:b.owner,x:+b.x.toFixed(2),y:+b.y.toFixed(2),d:b.d,ttl:Math.round(b.ttl)})),
       grid:grid.map(row => row.join('')),
-    }, choices, opts.aiPersona);
-    if (destroyed || over || epoch !== aiEpoch){ aiPending.delete(pi); return; }
-    const choice = choices.includes(remote) ? remote : choices[Math.floor(Math.random()*choices.length)];
+      target:plan.targetInfo?{id:plan.targetInfo.target.id,priority:+plan.targetInfo.priority.toFixed(3),threat:+plan.targetInfo.threat.toFixed(3)}:null,
+      localRanking:plan.near.map(item=>({choice:item.choice,score:+item.score.toFixed(2)})),
+    }, choices, opts.aiPersona, learningCandidates);
+    if (destroyed || over || epoch !== aiEpoch || !tanks[pi] || !tanks[pi].alive){ aiPending.delete(pi); return; }
+    // 实时局面在模型等待期间仍会变化：旧选择必须在新影响图中仍属近优，否则立即重规划。
+    const livePlan=Date.now()-plannedAt>120?tankAIPlan(pi):plan;
+    const liveChoices=livePlan?livePlan.near.map(item=>item.choice):[];
+    // Persona/模型只能在近优带内微调；无网、超时或非法返回始终执行固定的本地最优。
+    const choice = choices.includes(remote)&&liveChoices.includes(remote) ? remote : (livePlan?livePlan.best.choice:plan.best.choice);
     aiPending.delete(pi);
+    const actor=tanks[pi];
     if (choice === 'shoot'){
-      if (opts.onProgress) opts.onProgress({act:'shoot'});
-      fireTank(me);
+      if (authorityMode && typeof opts.sendBotTankInput === 'function') { opts.sendBotTankInput(pi, { input:{ fire:true, direction:actor.d }, clientTick:authorityServerTick }); aiPending.delete(pi); return; }
+      if(fireTank(actor)&&opts.onProgress)opts.onProgress({act:'shoot'});
     } else {
       const direction = Number(choice.slice(-1));
+      if (authorityMode && typeof opts.sendBotTankInput === 'function') { opts.sendBotTankInput(pi, { input:{ up:direction===0, right:direction===1, down:direction===2, left:direction===3 }, clientTick:authorityServerTick }); aiPending.delete(pi); return; }
       if (opts.onProgress) opts.onProgress({act:'move',d:direction});
       pulseMove(pi,direction,false);
     }
@@ -326,51 +592,56 @@ function gameTank(area, extra, n, opts){
   }
   function updateStatus(){
     if (over) return;
-    setStatus((spectator ? '观战 · ' : '') + '实时坦克竞技 · ' + SEASON_LABEL[season] + ' · ' + Math.ceil(remainingMs/1000) + ' 秒');
+    const text=(spectator ? t('spectating_prefix') : '') + t('tank_realtime') + ' · ' + seasonLabel(season) + ' · ' + t('seconds_short',Math.ceil(remainingMs/1000));
+    if(text!==lastStatusText){lastStatusText=text;setStatus(text);}
+  }
+  function ensureRenderTree(){
+    if(renderNodes.board&&area.querySelector&&area.querySelector('.tank-board')===renderNodes.board)return renderNodes.board;
+    area.innerHTML='';
+    const board=el('div','tank-board realtime-arena season-'+season);
+    board.style.touchAction='none';board.style.overscrollBehavior='contain';board.style.overflow='hidden';
+    board.addEventListener('pointerdown',event=>{if(event.button===0)localShoot();});
+    area.appendChild(board);renderNodes.board=board;
+    renderNodes.staticCells.clear();renderNodes.traces.clear();renderNodes.bullets.clear();renderNodes.tanks.clear();renderNodes.respawns.clear();renderNodes.effects.clear();
+    if(!renderNodes.time){
+      renderNodes.time=el('strong','tank-time');hud.appendChild(renderNodes.time);
+      for(let index=0;index<playerCount;index++){const score=el('span','tank-score-chip');renderNodes.scores.push(score);hud.appendChild(score);}
+      hud.style.cssText='display:flex;gap:7px;justify-content:center;align-items:center;flex-wrap:wrap;margin-bottom:6px;font-size:12px;';
+    }
+    return board;
   }
   function render(){
     if (destroyed) return;
     const width = Math.min(area.clientWidth || 560, 620), cell = width/W, height = cell*H;
-    area.innerHTML = '';
-    const board = el('div','tank-board realtime-arena season-' + season);
+    const board=ensureRenderTree();
+    board.className='tank-board realtime-arena season-'+season;
     board.style.width = width+'px'; board.style.height = height+'px'; board.style.background = seasonBackground();
-    board.style.touchAction = 'none'; board.style.overscrollBehavior = 'contain'; board.style.overflow = 'hidden';
-    for (let r=0;r<H;r++) for (let c=0;c<W;c++){
-      if (!grid[r][c]) continue;
-      const cellEl = el('div','tank-cell ' + (grid[r][c]===3?'steel':'brick'));
-      cellEl.style.left=c*cell+'px'; cellEl.style.top=r*cell+'px'; cellEl.style.width=cell+'px'; cellEl.style.height=cell+'px'; board.appendChild(cellEl);
-    }
-    traces.forEach(item => {
-      const mark = el('div','tank-trace '+item.type,item.type==='scorch'?'✹':'');
-      mark.style.cssText='position:absolute;left:'+((item.x-.18)*cell)+'px;top:'+((item.y-.18)*cell)+'px;width:'+(cell*.36)+'px;height:'+(cell*.36)+'px;opacity:.34;pointer-events:none;color:#312e2a;font-size:'+(cell*.28)+'px;'; board.appendChild(mark);
-    });
-    bullets.forEach(item => {
-      const bullet=el('div','tank-projectile','●'); bullet.style.cssText='position:absolute;z-index:3;left:'+((item.x-.12)*cell)+'px;top:'+((item.y-.12)*cell)+'px;width:'+(cell*.24)+'px;height:'+(cell*.24)+'px;color:#fde047;text-shadow:0 0 8px #fff;pointer-events:none;'; board.appendChild(bullet);
-    });
-    tanks.forEach(tank => {
-      if (!tank.alive){
-        const countdown=el('div','tank-respawn','↻ '+Math.max(1,Math.ceil((tank.respawnAt-Date.now())/1000)));
-        countdown.style.cssText='position:absolute;left:'+((tank.x-.45)*cell)+'px;top:'+((tank.y-.45)*cell)+'px;color:#fff;font-weight:900;'; board.appendChild(countdown); return;
-      }
-      const skin = cosmetic.players && cosmetic.players[tank.id] || cosmetic.default || 'classic';
-      const node=el('div','tank-cell arena-tank tank'+tank.id+' skin-'+skin,skin==='cyber'?'🤖':'🛡️');
-      node.style.left=((tank.x-.5)*cell)+'px'; node.style.top=((tank.y-.5)*cell)+'px'; node.style.width=cell+'px'; node.style.height=cell+'px';
-      node.style.transform='rotate('+(tank.d*90)+'deg)'; node.style.filter=Date.now()<tank.invulnerableUntil?'drop-shadow(0 0 9px #fff) brightness(1.3)':'';
-      node.appendChild(el('span','hp','♥'.repeat(Math.max(0,tank.hp)))); board.appendChild(node);
-    });
-    effects.forEach(item => {
-      const fx=el('div','tank-effect '+item.type,item.type==='explosion'?'💥':item.type==='respawn'?'✨':item.type==='muzzle'?'✦':'✹');
-      fx.style.cssText='position:absolute;z-index:5;left:'+((item.x-.45)*cell)+'px;top:'+((item.y-.45)*cell)+'px;width:'+cell+'px;height:'+cell+'px;font-size:'+(cell*.7)+'px;pointer-events:none;'; board.appendChild(fx);
-    });
-    board.addEventListener('pointerdown',e => { if (e.button === 0) localShoot(); });
-    area.appendChild(board);
-    hud.innerHTML='';
-    const time=el('strong','tank-time','⏱ '+Math.floor(remainingMs/60000)+':'+String(Math.ceil(remainingMs/1000)%60).padStart(2,'0')+' · '+SEASON_LABEL[season]); hud.appendChild(time);
-    ranking().forEach(id => { const t=tanks[id]; hud.appendChild(el('span','tank-score-chip','P'+(id+1)+' '+t.kills+'K/'+t.deaths+'D · '+t.damage+' DMG')); });
-    hud.style.cssText='display:flex;gap:7px;justify-content:center;align-items:center;flex-wrap:wrap;margin-bottom:6px;font-size:12px;';
+    const staticItems=[];for(let r=0;r<H;r++)for(let c=0;c<W;c++)if(grid[r][c])staticItems.push({r,c,type:grid[r][c]});
+    syncRenderMap(renderNodes.staticCells,staticItems,item=>item.r+':'+item.c,
+      item=>{const node=el('div','tank-cell');node.style.zIndex='1';board.appendChild(node);return node;},
+      (node,item)=>{node.className='tank-cell '+(item.type===3?'steel':'brick');node.style.left=item.c*cell+'px';node.style.top=item.r*cell+'px';node.style.width=cell+'px';node.style.height=cell+'px';});
+    syncRenderMap(renderNodes.traces,traces,item=>renderObjectKey(item,'trace'),
+      item=>{const node=el('div','tank-trace');board.appendChild(node);return node;},
+      (node,item)=>{node.className='tank-trace '+item.type;node.textContent=item.type==='scorch'?'✹':'';node.style.cssText='position:absolute;z-index:2;left:'+((item.x-.18)*cell)+'px;top:'+((item.y-.18)*cell)+'px;width:'+(cell*.36)+'px;height:'+(cell*.36)+'px;opacity:.34;pointer-events:none;color:#312e2a;font-size:'+(cell*.28)+'px;';});
+    syncRenderMap(renderNodes.bullets,bullets,item=>String(item.id),
+      item=>{const node=el('div','tank-projectile','●');board.appendChild(node);return node;},
+      (node,item)=>{node.style.cssText='position:absolute;z-index:3;left:'+((item.x-.12)*cell)+'px;top:'+((item.y-.12)*cell)+'px;width:'+(cell*.24)+'px;height:'+(cell*.24)+'px;color:#fde047;text-shadow:0 0 8px #fff;pointer-events:none;';});
+    syncRenderMap(renderNodes.tanks,tanks,item=>String(item.id),
+      tank=>{const node=el('div','tank-cell arena-tank');node._icon=el('span','tank-icon');node._hp=el('span','hp');node.appendChild(node._icon);node.appendChild(node._hp);board.appendChild(node);return node;},
+      (node,tank)=>{const skin=cosmetic.players&&cosmetic.players[tank.id]||cosmetic.default||'classic';node.className='tank-cell arena-tank tank'+tank.id+' skin-'+skin;node.style.display=tank.alive?'flex':'none';node.style.zIndex='4';node.style.left=((tank.x-.5)*cell)+'px';node.style.top=((tank.y-.5)*cell)+'px';node.style.width=cell+'px';node.style.height=cell+'px';node.style.transform='rotate('+(tank.d*90)+'deg)';node.style.filter=Date.now()<tank.invulnerableUntil?'drop-shadow(0 0 9px #fff) brightness(1.3)':'';node._icon.textContent=skin==='cyber'?'🤖':'🛡️';node._hp.textContent='♥'.repeat(Math.max(0,tank.hp));});
+    syncRenderMap(renderNodes.respawns,tanks.filter(tank=>!tank.alive),item=>String(item.id),
+      tank=>{const node=el('div','tank-respawn');board.appendChild(node);return node;},
+      (node,tank)=>{node.textContent='↻ '+Math.max(1,Math.ceil((tank.respawnAt-Date.now())/1000));node.style.cssText='position:absolute;z-index:4;left:'+((tank.x-.45)*cell)+'px;top:'+((tank.y-.45)*cell)+'px;color:#fff;font-weight:900;';});
+    syncRenderMap(renderNodes.effects,effects,item=>renderObjectKey(item,'effect'),
+      item=>{const node=el('div','tank-effect');board.appendChild(node);return node;},
+      (node,item)=>{node.className='tank-effect '+item.type;node.textContent=item.type==='explosion'?'💥':item.type==='respawn'?'✨':item.type==='muzzle'?'✦':'✹';node.style.cssText='position:absolute;z-index:5;left:'+((item.x-.45)*cell)+'px;top:'+((item.y-.45)*cell)+'px;width:'+cell+'px;height:'+cell+'px;font-size:'+(cell*.7)+'px;pointer-events:none;';});
+    const timeText='⏱ '+Math.floor(remainingMs/60000)+':'+String(Math.ceil(remainingMs/1000)%60).padStart(2,'0')+' · '+seasonLabel(season);
+    if(renderNodes.time.textContent!==timeText)renderNodes.time.textContent=timeText;
+    ranking().forEach((id,index)=>{const tank=tanks[id],text=t('tank_score_line',id+1,tank.kills,tank.deaths,tank.damage);if(renderNodes.scores[index].textContent!==text)renderNodes.scores[index].textContent=text;});
     controls.style.display=spectator?'none':'flex';
-    renderPlayers(controlledPlayer(),tanks.map(t=>t.kills+'K/'+t.deaths+'D · '+t.damage+' DMG'));
-    if (over){ showVictoryOverlay(area,{winner,winnerName:'玩家'+(winner+1),emoji:'🏆',subtitle:'实时坦克竞技获胜',coins:1,onRestart:reset}); }
+    const playerRows=tanks.map(tank=>t('tank_player_stats',tank.kills,tank.deaths,tank.damage)),playersSignature=controlledPlayer()+'|'+playerRows.join('|');
+    if(playersSignature!==lastPlayersSignature){lastPlayersSignature=playersSignature;renderPlayers(controlledPlayer(),playerRows);}
+    if(over&&!victoryShown){victoryShown=true;showVictoryOverlay(area,{winner,winnerName:t('player_number',winner+1),emoji:'🏆',subtitle:t('tank_victory_subtitle'),coins:1,onRestart:reset});}
     updateStatus();
   }
 
@@ -394,7 +665,7 @@ function gameTank(area, extra, n, opts){
     return true;
   }
   function broadcastAuthoritativeState(finalOrder){
-    if (!opts.online || opts.serverAuthority || !opts.isHost || typeof opts.sendMove !== 'function' || (opts.isReplaying && opts.isReplaying())) return false;
+    if (authorityMode || !opts.online || !opts.isHost || typeof opts.sendMove !== 'function' || (opts.isReplaying && opts.isReplaying())) return false;
     const matchId = syncRelayMatch();
     if (!matchId) return false;
     const order = validOrder(finalOrder) ? finalOrder.slice() : null;
@@ -423,6 +694,7 @@ function gameTank(area, extra, n, opts){
     return true;
   }
   opts.onMove = (payload, player) => {
+    if(authorityMode)return;
     if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return;
     const pi = opts.online ? Number(player) : (Number.isInteger(player) ? player : 0);
     if (!Number.isInteger(pi) || pi < 0 || pi >= tanks.length) return;
@@ -437,14 +709,14 @@ function gameTank(area, extra, n, opts){
     else if (payload.act === 'shoot') fireTank(tanks[pi]);
   };
   function reset(){
-    if (opts.online && !opts.isHost){ toast('由房主开始新一局'); return; }
+    if (opts.online && !opts.isHost){ toast(t('host_only_restart')); return; }
     if (opts.online){ opts.sendRestart(); return; }
     resetLocal();
   }
   function snapshot(){
     const compat = id => { const t=tanks[id]||createTank(id); return {r:Math.round(t.y),c:Math.round(t.x),d:t.d,lives:t.hp}; };
     return {
-      version:3, mode:'realtime-deathmatch', authority:opts.online?'casual-host-relay':'local-simulation',
+      version:3, mode:'realtime-deathmatch', authority:authorityMode?'server-authority':opts.online?'casual-host-relay':'local-simulation',
       tanks:tanks.map(t=>({ ...t,input:{...t.input} })), bullets:bullets.map(b=>({...b})),
       grid:grid.map(row=>row.slice()), season, remainingMs, startedAt, over, winner, cur,
       t0:compat(0), t1:compat(1),
@@ -492,44 +764,59 @@ function gameTank(area, extra, n, opts){
     if (value&&value.presentation) setCosmetic(value.presentation.cosmetic);
     if (!silent) render(); return true;
   }
-  function applyServerSnapshot(state){
-    if (!state || state.protocol !== 'tank-authority-v1' || String(state.matchId || '') !== currentMatchId()) return false;
-    const restored = onRestore({
-      tanks:state.players, bullets:state.projectiles, grid:state.destructibles, season:state.season,
-      remainingMs:state.remainingMs, over:!!state.finished, winner:Array.isArray(state.order) ? state.order[0] : -1, cur:controlledPlayer(),
+  function onAuthoritySnapshot(state,silent){
+    if(!authorityMode||!state||state.protocol!==AUTH_PROTOCOL||String(state.matchId||'')!==currentMatchId()||!Array.isArray(state.players)||state.players.length!==playerCount)return false;
+    if(Number(state.serverTick)<authorityServerTick)return false;
+    const old=tanks.slice(),localId=controlledPlayer();authorityServerTick=Math.max(authorityServerTick,Number(state.serverTick)||0);
+    const ack=Array.isArray(state.ack)?state.ack.slice(0,playerCount).map(value=>Math.max(0,Math.floor(Number(value)||0))):[];
+    if(ack.length===playerCount){lastInputSequence=ack;inputSequence=Math.max(inputSequence,ack[localId]||0);}
+    lastAuthoritySequence=authorityServerTick;
+    authorityEndAt=Number(state.endAt)||authorityEndAt;remainingMs=Math.max(0,Number(state.remainingMs)||0);season=SEASONS.includes(state.season)?state.season:season;
+    grid=(Array.isArray(state.destructibles)?state.destructibles:grid).map(row=>Array.isArray(row)?row.map(v=>v===2||v===3?v:0):[]);
+    tanks=state.players.map((raw,id)=>{
+      const server=sanitizeTank(raw,id),previous=old[id];
+      if(previous){
+        const distance=Math.hypot(previous.x-server.x,previous.y-server.y),factor=id===localId?(distance<.8?.35:1):.55;
+        server.x=previous.x+(server.x-previous.x)*factor;server.y=previous.y+(server.y-previous.y)*factor;
+        if(previous.alive&&!server.alive)effects.push({x:server.x,y:server.y,type:'explosion',at:Date.now(),ttl:850});
+        else if(!previous.alive&&server.alive)effects.push({x:server.x,y:server.y,type:'respawn',at:Date.now(),ttl:600});
+      }
+      if(id===localId)server.input=normalizeInput(keyboardInput);
+      return server;
     });
-    if (Array.isArray(state.ack)) state.ack.forEach((seq,id)=>{ if(Number.isInteger(id)&&id<lastInputSequence.length) lastInputSequence[id]=Math.max(lastInputSequence[id],Number(seq)||0); });
-    if (Array.isArray(state.ack)) inputSequence=Math.max(inputSequence,Number(state.ack[controlledPlayer()])||0);
-    lastAuthoritySequence = Math.max(lastAuthoritySequence, Number(state.serverTick)||0);
-    if (state.finished && Array.isArray(state.order)) commitFinal(state.order, false);
-    return restored;
+    bullets=(Array.isArray(state.projectiles)?state.projectiles:[]).slice(0,128).map((b,index)=>({id:Number(b.id)||index+1,owner:Number(b.owner)||0,x:Number(b.x)||0,y:Number(b.y)||0,d:Number(b.d)||0,ttl:Number(b.ttl)||0}));
+    if(!silent)render();return true;
   }
-  function applyServerResult(payload){
-    return payload && String(payload.matchId || '') === currentMatchId() && commitFinal((payload.order || []).map(Number), false);
+  function onAuthorityResult(payload){
+    const order=payload&&payload.order;if(!authorityMode||resultCommitted||!validOrder(order))return false;
+    if(Array.isArray(payload.stats))payload.stats.forEach((item,id)=>{if(tanks[id])Object.assign(tanks[id],sanitizeTank(item,id));});
+    over=true;finishedAt=Date.now();remainingMs=0;winner=order[0];resultCommitted=true;order.forEach((id,index)=>{if(tanks[id])tanks[id].placement=index+1;});
+    render();setStatus(t('tank_server_final',winner+1),true);return true;
   }
   function getMatchStats(){
     const order=ranking();
     return tanks.map(t=>({kills:t.kills,deaths:t.deaths,damage:t.damage,shots:t.shots,hits:t.hits,placement:t.placement||order.indexOf(t.id)+1}));
   }
+  function getPerformanceStats(){return{...performanceStats,activeParticles:effects.length,activeProjectiles:bullets.length,trailCount:traces.length,caps:{particles:40,projectiles:128,trails:60}};}
   function setSeason(value){ season=SEASONS.includes(value)?value:'spring'; render(); return season; }
   function setCosmetic(value){ cosmetic={default:'classic',players:{},...(value||{})}; cosmetic.default=cosmetic.default==='cyber'?'cyber':'classic'; render(); return cosmetic; }
   function setSpectators(value){ spectator=Array.isArray(value)?value.includes(opts.viewerId):!!value; Object.assign(keyboardInput,emptyInput()); render(); return spectator; }
   function destroy(){
-    destroyed=true; aiEpoch++; aiPending.clear(); clearInterval(simulationTimer); clearInterval(aiTimer);
+    destroyed=true; aiEpoch++; aiPending.clear(); aiThinkGate.clear(); clearTransientTimers(); clearInterval(simulationTimer); clearInterval(aiTimer);
     if (document.removeEventListener){ document.removeEventListener('keydown',keyDown); document.removeEventListener('keyup',keyUp); }
     area.style.touchAction=previousTouchAction; area.style.overscrollBehavior=previousOverscroll;
   }
   resetLocal();
-  return { reset,onMove:opts.onMove,onRestart:resetLocal,destroy,snapshot,onRestore,
+  return { reset,onMove:opts.onMove,onRestart:resetLocal,destroy,snapshot,onRestore,onAuthoritySnapshot,onAuthorityResult,
     serialize:()=>({state:snapshot(),presentation:{season,cosmetic},stats:getMatchStats()}),
-    fixedUpdate,getMatchStats,setSeason,setCosmetic,renderCosmetic:setCosmetic,setSpectators,finishMatch,
+    fixedUpdate,getMatchStats,getPerformanceStats,setSeason,setCosmetic,renderCosmetic:setCosmetic,setSpectators,finishMatch,
     // moveLog 中的权威快照已包含完整状态，重连回放无需为每条实时事件等待动画。
     whenIdle:()=>Promise.resolve(),
-    broadcastAuthoritativeState,applyServerSnapshot,applyServerResult,
+    broadcastAuthoritativeState,
     getRelayState:()=>({
-      protocol:RELAY_PROTOCOL, role:opts.online?(opts.isHost?'host':'client'):'local', matchId:currentMatchId(),
+      protocol:authorityMode?AUTH_PROTOCOL:RELAY_PROTOCOL, role:opts.online?(opts.isHost?'host':'client'):'local', matchId:currentMatchId(),
       localInputSeq:inputSequence, authoritySeq:authoritySequence, lastAuthoritySeq:lastAuthoritySequence,
-      lastInputSeq:lastInputSequence.slice(), resultCommitted,
+      serverTick:authorityServerTick, lastInputSeq:lastInputSequence.slice(), resultCommitted,
     }),
     getMultiplayerRequirement:()=>opts.online?'REALTIME_TANK_PROTOCOL_V1':null,
   };

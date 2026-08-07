@@ -23,8 +23,8 @@ if (typeof document !== 'undefined'){
   renderLeaderboard();
   renderLobby();
   renderAccounts();
-  initSocialRail();
-  renderSocialRail();
+  if (typeof initSocialRail === 'function') initSocialRail();
+  if (typeof renderSocialRail === 'function') renderSocialRail();
   renderHub();
   if (typeof parseHash === 'function') parseHash();
   online.connect();

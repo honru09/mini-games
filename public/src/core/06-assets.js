@@ -233,7 +233,7 @@ function gameCoverNode(id, game){
 function currencyIcon(sizeClass){
   const wrap = el('span', 'coin' + (sizeClass ? ' ' + sizeClass : ''));
   wrap.setAttribute('role', 'img');
-  wrap.setAttribute('aria-label', '平台虚拟现金');
+  wrap.setAttribute('aria-label', t('currency_aria'));
   const img = el('img', 'coin-asset');
   img.src = assetUrl('currencyCash');
   img.alt = '';

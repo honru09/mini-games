@@ -25,9 +25,12 @@ let appOutput = '';
 let dataDir = null;
 let failNextRewardTransaction = false;
 let dropNextRewardResponse = false;
+let failNextLearningRevision = false;
+let fakeLearningModel = null;
 let assertionCount = 0;
 const appliedRewardIds = new Set();
 const appliedPurchaseIds = new Set();
+const appliedLearningIds = new Set();
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -65,6 +68,28 @@ function request(port, pathname){
       res.once('end', () => resolve(res.statusCode));
     });
     req.once('error', reject);
+  });
+}
+
+function postJSON(port, pathname, body, token){
+  return new Promise((resolve, reject) => {
+    const raw = JSON.stringify(body || {});
+    const req = http.request({
+      host: '127.0.0.1', port, path: pathname, method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(raw),
+        ...(token ? { Authorization: 'Bearer ' + token } : {}) },
+    }, res => {
+      const chunks = [];
+      res.on('data', chunk => chunks.push(chunk));
+      res.once('end', () => {
+        const text = Buffer.concat(chunks).toString('utf8');
+        let data = null;
+        try { data = JSON.parse(text); } catch {}
+        resolve({ status: res.statusCode, data, text });
+      });
+    });
+    req.once('error', reject);
+    req.end(raw);
   });
 }
 
@@ -140,6 +165,22 @@ function startFakePostgrest(port){
         res.end('[]');
         return;
       }
+      if (req.method === 'GET' && req.url.startsWith('/rest/v1/ai_learning_models?')){
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(fakeLearningModel ? [fakeLearningModel] : []));
+        return;
+      }
+      if (req.method === 'PATCH' && req.url.startsWith('/rest/v1/profiles?uid=eq.')){
+        // 新档案同步协议只 PATCH 可编辑/认证字段；模拟 PostgREST 的 204 空响应。
+        if (body && typeof body === 'object'){
+          for (const field of ['name','avatar','background','frame','effect','lang','name_fx','pin_hash','auth_tokens']){
+            if (Object.prototype.hasOwnProperty.call(body, field)) seed[field] = body[field];
+          }
+        }
+        res.writeHead(204, { 'Content-Type': 'application/json' });
+        res.end();
+        return;
+      }
       if (req.method === 'POST' && (req.url.startsWith('/rest/v1/profiles?') ||
           ['/rest/v1/history', '/rest/v1/reward_history', '/rest/v1/economy_ledger', '/rest/v1/analytics_events'].includes(req.url))){
         // PostgREST 在未请求 representation 时可返回 201 且响应体为空。
@@ -200,6 +241,22 @@ function startFakePostgrest(port){
         seed.purchase_requests = seed.purchase_requests.concat(requestId).slice(-100);
         appliedPurchaseIds.add(requestId);
         reply({ applied: true, duplicate: false });
+        return;
+      }
+      if (req.method === 'POST' && req.url === '/rest/v1/rpc/apply_ai_learning_v1'){
+        const resultId = body && body.p_result_id;
+        if (failNextLearningRevision){
+          failNextLearningRevision = false;
+          res.writeHead(409, { 'Content-Type': 'application/json' });
+          res.end('{"error":"stale_ai_learning_revision"}');
+          return;
+        }
+        const duplicate = resultId && appliedLearningIds.has(resultId);
+        if (resultId) appliedLearningIds.add(resultId);
+        if (body && body.p_model) fakeLearningModel = body.p_model;
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ applied: !duplicate, duplicate: !!duplicate, resultId,
+          revision: body && body.p_model && body.p_model.revision || 0 }));
         return;
       }
       res.writeHead(404, { 'Content-Type': 'application/json' });
@@ -279,6 +336,7 @@ async function main(){
       PORT: String(appPort),
       DATA_DIR: dataDir,
       NODE_ENV: 'test',
+      ENABLE_RULE_AUTHORITY_V2: '0',
       SUPABASE_URL: 'http://127.0.0.1:' + fakePort,
       SUPABASE_KEY: TEST_KEY,
       DEEPSEEK_KEY: '',
@@ -337,14 +395,14 @@ async function main(){
   fakeProfile.coins = 0;
   mark = client.mark();
   client.send({ type: 'purchase', payload: {
-    category: 'backgrounds', id: 7, requestId: 'purchase_adapter_insufficient_20260807',
+    category: 'backgrounds', id: 10, requestId: 'purchase_adapter_insufficient_20260807',
   } });
   const insufficientPurchase = await client.waitAfter(mark, 'purchase_error');
   check('余额不足由购买 RPC 拒绝且不写入 requestId', insufficientPurchase && /余额不足/.test(insufficientPurchase.msg || '') &&
     !fakeProfile.purchase_requests.includes('purchase_adapter_insufficient_20260807'), JSON.stringify(insufficientPurchase));
   const purchaseRequests = requests.slice(purchaseStart).filter(item =>
     item.method === 'POST' && item.url === '/rest/v1/rpc/apply_purchase_v1');
-  check('购买档案与经济流水只通过 apply_purchase_v1 提交', purchaseRequests.length === 3 &&
+  check('购买档案与经济流水只通过 apply_purchase_v1 提交', purchaseRequests.length === 4 &&
     !requests.slice(purchaseStart).some(item => item.method === 'POST' && item.url === '/rest/v1/economy_ledger'));
 
   mark = client.mark();
@@ -358,6 +416,27 @@ async function main(){
   client.send({ type: 'solo_start', payload: { game: 'gomoku', clientRunId } });
   const soloStarted = await client.waitAfter(mark, 'solo_started');
   const ticket = soloStarted && soloStarted.payload || {};
+  const aiResponse = await postJSON(appPort, '/api/ai', {
+    game: 'gomoku',
+    state: { board: 'adapter-private-board', turn: 1 },
+    options: ['7,7', '7,8'],
+    candidates: [
+      { choice: '7,7', features: { quality: 1, center: 1 } },
+      { choice: '7,8', features: { quality: .8, center: .9 } },
+    ],
+    persona: { id: 'teacher' },
+    context: { matchId: ticket.matchId, resultId: ticket.resultId },
+  }, loggedIn.payload.token);
+  check('AI API 使用本地强候选并绑定当前服务端票据', aiResponse.status === 200 &&
+    aiResponse.data && aiResponse.data.choice === '7,7' && aiResponse.data.strategyVersion === 'game-skill-v1', aiResponse.text);
+  mark = client.mark();
+  client.send({ type: 'ai_decision_confirm', payload: {
+    game: 'gomoku', matchId: ticket.matchId, resultId: ticket.resultId,
+    decisionId: aiResponse.data.decisionId, choice: aiResponse.data.choice,
+  } });
+  const aiConfirmed = await client.waitAfter(mark, 'ai_decision_confirmed');
+  check('AI 学习建议在实际执行确认后才入缓存', aiConfirmed && aiConfirmed.payload &&
+    aiConfirmed.payload.decisionId === aiResponse.data.decisionId, JSON.stringify(aiConfirmed));
   [[7,7],[7,8],[8,7],[8,8]].forEach(action => client.send({
     type: 'solo_progress', payload: { matchId: ticket.matchId, game: 'gomoku', action },
   }));
@@ -379,10 +458,9 @@ async function main(){
   const resultProfile = rewardTransaction.body.p_profile;
 
   const requiredProfileFields = [
-    'uid', 'pin_hash', 'owned', 'daily_key', 'auth_tokens', 'recent_results',
+    'uid', 'pin_hash', 'owned', 'game_cosmetics', 'daily_key', 'auth_tokens', 'recent_results',
     'purchase_requests', 'solo_rate', 'daily_first_win_date', 'daily_ai_currency_key',
-    'daily_ai_currency_earned', 'xp_curve_version', 'signature', 'country_region', 'gender_tag', 'presence_preference',
-    'coins', 'played', 'total', 'wins', 'total_wins', 'updated_at',
+    'daily_ai_currency_earned', 'xp_curve_version', 'coins', 'played', 'total', 'wins', 'total_wins', 'updated_at',
   ];
   check('profile 同步包含本轮关键字段', requiredProfileFields.every(field =>
     Object.prototype.hasOwnProperty.call(resultProfile, field)),
@@ -402,15 +480,40 @@ async function main(){
     ledgerRow.amount === 1 && Number.isInteger(ledgerRow.balance_after));
   check('奖励档案、历史、Reward Breakdown 与账本使用单个事务 RPC',
     !requests.some(item => item.method === 'POST' && ['/rest/v1/history','/rest/v1/reward_history','/rest/v1/economy_ledger'].includes(item.url)));
+  const learningTransaction = await waitUntil(() => requests.find(item =>
+    item.method === 'POST' && item.url === '/rest/v1/rpc/apply_ai_learning_v1' &&
+    item.body && item.body.p_result_id === ticket.resultId), 'AI 学习原子事务');
+  const learningModel = learningTransaction.body.p_model;
+  const learningRows = learningTransaction.body.p_experiences;
+  check('AI 胜负经验与个性化模型使用单个事务 RPC', learningModel.uid === UID &&
+    learningModel.game === 'gomoku' && learningModel.revision === 1 && Array.isArray(learningRows) && learningRows.length === 1);
+  check('AI 经验只保存局面哈希和归一化特征', /^[a-f0-9]{32}$/.test(learningRows[0].state_hash) &&
+    learningRows[0].result_id === ticket.resultId && learningRows[0].used_for_training === true &&
+    !JSON.stringify(learningTransaction.body).includes('adapter-private-board'));
   check('所有 Supabase 请求只使用测试凭证', requests.every(item =>
     item.headers.apikey === TEST_KEY && item.headers.authorization === 'Bearer ' + TEST_KEY));
 
   // 先故意让一次事务失败：客户端仍收到本地结算，服务端 outbox 必须自动重试同一 resultId。
   failNextRewardTransaction = true;
+  // 再制造一次 AI 模型 revision 冲突，验证 outbox 能从远端模型重放 confirmed replay。
+  failNextLearningRevision = true;
   mark = client.mark();
   client.send({ type: 'solo_start', payload: { game: 'gomoku', clientRunId: 'run_adapter_retry_20260807' } });
   const retryStarted = await client.waitAfter(mark, 'solo_started');
   const retryTicket = retryStarted && retryStarted.payload || {};
+  const retryAI = await postJSON(appPort, '/api/ai', {
+    game: 'gomoku', state: { board: 'adapter-retry-board', turn: 1 },
+    options: ['6,6', '6,7'], candidates: [
+      { choice: '6,6', features: { quality: 1, safety: .8 } },
+      { choice: '6,7', features: { quality: .8, safety: .7 } },
+    ], persona: { id: 'teacher' }, context: { matchId: retryTicket.matchId, resultId: retryTicket.resultId },
+  }, loggedIn.payload.token);
+  mark = client.mark();
+  client.send({ type: 'ai_decision_confirm', payload: {
+    game: 'gomoku', matchId: retryTicket.matchId, resultId: retryTicket.resultId,
+    decisionId: retryAI.data && retryAI.data.decisionId, choice: retryAI.data && retryAI.data.choice,
+  } });
+  await client.waitAfter(mark, 'ai_decision_confirmed');
   [[6,6],[6,7],[7,6],[7,7]].forEach((payload, index) => client.send({
     type: 'solo_progress', payload: {
       matchId: retryTicket.matchId, game: 'gomoku',
@@ -432,6 +535,19 @@ async function main(){
   check('Supabase 奖励事务失败后按相同 resultId 自动重试', retryTransactions.length >= 2 &&
     retryTransactions.every(item => item.body.p_reward.result_id === retryTicket.resultId),
   'attempts=' + retryTransactions.length);
+  const retryLearningTransactions = await waitUntil(() => {
+    const attempts = requests.filter(item => item.method === 'POST' && item.url === '/rest/v1/rpc/apply_ai_learning_v1' &&
+      item.body && item.body.p_result_id === retryTicket.resultId);
+    return attempts.length >= 2 ? attempts : null;
+  }, 'AI 学习 revision 冲突后重试', 5000);
+  await waitUntil(() => {
+    if (!fs.existsSync(path.join(dataDir, 'leaderboard.json'))) return false;
+    const saved = JSON.parse(fs.readFileSync(path.join(dataDir, 'leaderboard.json'), 'utf8'));
+    return !(saved.pendingAILearningSync || []).some(item => item && item.resultId === retryTicket.resultId);
+  }, 'AI 学习 revision 重基后清理 outbox', 5000);
+  check('AI 学习 revision 冲突按 replay 重基并以连续 revision 重试', retryLearningTransactions.length >= 2 &&
+    retryLearningTransactions[retryLearningTransactions.length - 1].body.p_model.revision >= 2,
+  'attempts=' + retryLearningTransactions.length);
 
   // 模拟数据库已经提交，但 HTTP 响应在客户端收到前断开；下一次幂等重试返回 duplicate。
   dropNextRewardResponse = true;

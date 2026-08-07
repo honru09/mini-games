@@ -5,6 +5,12 @@ function gameXiangqi(area, extra, n, opts){
   const PIECE = { 'k':'帅','a':'仕','e':'相','h':'马','r':'车','c':'炮','p':'兵' };
   const BLACK_PIECE = { 'k':'将','a':'士','e':'象','h':'马','r':'车','c':'炮','p':'卒' };
   const EMOJI = { '帅':'🤴','仕':'🧑‍⚖️','相':'🧓','马':'🐴','车':'🚗','炮':'💣','兵':'🪖','将':'👑','士':'🧑‍⚖️','象':'🐘','卒':'🪖' };
+  function xiangqiPieceName(piece){return piece?t('xiangqi_piece_'+(piece.p===0?'red_':'black_')+piece.t):'';}
+  function xiangqiCapturedName(label){
+    for(const [type,name] of Object.entries(PIECE))if(name===label)return t('xiangqi_piece_red_'+type);
+    for(const [type,name] of Object.entries(BLACK_PIECE))if(name===label)return t('xiangqi_piece_black_'+type);
+    return label;
+  }
   let board = Array.from({length:ROWS}, () => Array(COLS).fill(null)); // {p, t}
   let cur = 0, over = false, winner = -1, selected = null, legalMoves = [], lastMove = null;
   let aiPending = false, aiEpoch = 0;
@@ -13,6 +19,10 @@ function gameXiangqi(area, extra, n, opts){
   let spectator = !!opts.spectator;
   let startedAt = Date.now(), finishedAt = 0, moveCount = 0, captureCount = 0, checkCount = 0;
   let capturedPieces = [[], []], motion = null, motionEpoch = 0;
+  const RULE_PROTOCOL='xiangqi-rule-v2';
+  const ruleAuthority=!!(opts.online&&opts.gameplayMeta&&opts.gameplayMeta.protocol===RULE_PROTOCOL&&typeof opts.sendXiangqiAction==='function'&&typeof XiangqiRules!=='undefined');
+  const clockAuthority=!!(opts.online&&opts.gameplayMeta&&['xiangqi-clock-v1',RULE_PROTOCOL].includes(opts.gameplayMeta.protocol));
+  let clockMoveSeq=0;
   let clockMode = ['rapid','blitz'].includes(opts.clockMode) ? opts.clockMode : 'casual';
   let clockRemaining = clockMode === 'rapid' ? [600000,600000] : clockMode === 'blitz' ? [180000,180000] : [null,null];
   let lastClockAt = Date.now();
@@ -41,11 +51,11 @@ function gameXiangqi(area, extra, n, opts){
   function renderAux(){
     clockHud.innerHTML = '';
     for (let i = 0; i < 2; i++){
-      const chip = el('span','xiangqi-clock' + (i === cur && !over ? ' active' : ''), (i === 0 ? '红方 ' : '黑方 ') + formatClock(clockRemaining[i]));
+      const chip = el('span','xiangqi-clock' + (i === cur && !over ? ' active' : ''), t(i===0?'xiangqi_red_side':'xiangqi_black_side')+' '+formatClock(clockRemaining[i]));
       chip.style.cssText = 'display:inline-flex;margin:3px;padding:6px 10px;border-radius:999px;background:' + (i === cur && !over ? 'var(--accent)' : 'var(--card)') + ';color:' + (i === cur && !over ? '#fff' : 'var(--text)') + ';font-weight:800;';
       clockHud.appendChild(chip);
     }
-    capturedHud.textContent = '红方已吃：' + (capturedPieces[0].length ? capturedPieces[0].join(' ') : '—') + '　黑方已吃：' + (capturedPieces[1].length ? capturedPieces[1].join(' ') : '—');
+    capturedHud.textContent = t('xiangqi_captured_summary',capturedPieces[0].length?capturedPieces[0].map(xiangqiCapturedName).join(' '):'—',capturedPieces[1].length?capturedPieces[1].map(xiangqiCapturedName).join(' '):'—');
     capturedHud.style.cssText = 'text-align:center;font-size:12px;color:var(--muted);margin:4px 0 8px;';
   }
   function initBoard(){
@@ -174,6 +184,7 @@ function gameXiangqi(area, extra, n, opts){
     return res;
   }
   function legalMovesOf(p, r, c){
+    if(ruleAuthority&&typeof XiangqiRules!=='undefined')return XiangqiRules.legalMovesForPiece({protocol:RULE_PROTOCOL,board:board.map(row=>row.map(piece=>piece?{...piece}:null)),current:cur,terminal:over},p,r,c);
     return movesOf(p, r, c).filter(([nr,nc]) => {
       const from = board[r][c], to = board[nr][nc];
       board[r][c] = null; board[nr][nc] = from;
@@ -182,48 +193,232 @@ function gameXiangqi(area, extra, n, opts){
       return !bad;
     });
   }
+  const XQ_VALUE = { p:100, a:250, e:260, h:470, c:500, r:1000, k:30000 };
+  const XQ_MATE = 10000000;
+  function xqPieceSquare(piece, r, c){
+    const forward = piece.p === 0 ? 9 - r : r;
+    const center = 4 - Math.abs(c - 4);
+    const middleRank = 4.5 - Math.abs(r - 4.5);
+    if (piece.t === 'p') return forward * 7 + center * (forward >= 5 ? 5 : 2) + (forward >= 5 ? 28 : 0);
+    if (piece.t === 'h') return center * 10 + middleRank * 5 - ((c === 0 || c === 8) ? 18 : 0);
+    if (piece.t === 'c') return center * 5 + middleRank * 3 + (forward >= 2 && forward <= 7 ? 10 : 0);
+    if (piece.t === 'r') return center * 3 + middleRank * 2 + forward;
+    if (piece.t === 'a') return c === 4 ? 14 : 8;
+    if (piece.t === 'e') return center * 2 + (forward <= 4 ? 8 : 0);
+    if (piece.t === 'k') return -Math.abs(c - 4) * 12 - forward * 5;
+    return 0;
+  }
+  function xqAllLegal(p){
+    const all = [];
+    for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++){
+      const piece = board[r][c];
+      if (!piece || piece.p !== p) continue;
+      legalMovesOf(p, r, c).forEach(to => all.push({ from:[r,c], to }));
+    }
+    return all;
+  }
+  function xqMakeMove(move){
+    const piece = board[move.from[0]][move.from[1]];
+    const captured = board[move.to[0]][move.to[1]];
+    board[move.from[0]][move.from[1]] = null;
+    board[move.to[0]][move.to[1]] = piece;
+    return captured;
+  }
+  function xqUndoMove(move, captured){
+    board[move.from[0]][move.from[1]] = board[move.to[0]][move.to[1]];
+    board[move.to[0]][move.to[1]] = captured;
+  }
+  function xqMoveKey(move){ return move.from.join(',') + '>' + move.to.join(','); }
+  function xqMoveOrderScore(move){
+    const piece = board[move.from[0]][move.from[1]];
+    const target = board[move.to[0]][move.to[1]];
+    if (!piece) return -Infinity;
+    const capture = target ? (target.t === 'k' ? XQ_MATE : XQ_VALUE[target.t] * 12 - XQ_VALUE[piece.t]) : 0;
+    return capture + xqPieceSquare(piece, move.to[0], move.to[1]) - xqPieceSquare(piece, move.from[0], move.from[1]);
+  }
+  function xqOrderedMoves(p, limit, capturesOnly){
+    let moves = xqAllLegal(p);
+    if (capturesOnly) moves = moves.filter(move => !!board[move.to[0]][move.to[1]]);
+    moves.forEach(move => { move.order = xqMoveOrderScore(move); });
+    moves.sort((a, b) => b.order - a.order || xqMoveKey(a).localeCompare(xqMoveKey(b)));
+    return limit ? moves.slice(0, limit) : moves;
+  }
+  // 确定性局面评估：子力、位置、机动性、王区守卫/压力与将军状态。
+  function xqEvaluate(perspective){
+    const kings = [findKing(0), findKing(1)];
+    if (!kings[perspective]) return -XQ_MATE;
+    if (!kings[perspective ^ 1]) return XQ_MATE;
+    const score = [0, 0], pressure = [0, 0];
+    const mobilityWeight = { p:1, a:1, e:1, h:3, c:2, r:2, k:1 };
+    for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++){
+      const piece = board[r][c];
+      if (!piece) continue;
+      const moves = movesOf(piece.p, r, c);
+      score[piece.p] += XQ_VALUE[piece.t] + xqPieceSquare(piece, r, c) + moves.length * mobilityWeight[piece.t];
+      const enemyKing = kings[piece.p ^ 1];
+      if (enemyKing){
+        for (const [mr, mc] of moves){
+          const distance = Math.abs(mr - enemyKing[0]) + Math.abs(mc - enemyKing[1]);
+          if (distance <= 1) pressure[piece.p] += distance ? 1 : 4;
+        }
+      }
+    }
+    for (let p = 0; p < 2; p++){
+      const king = kings[p];
+      let guards = 0;
+      for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++){
+        if (!dr && !dc) continue;
+        const r = king[0] + dr, c = king[1] + dc;
+        if (r >= 0 && r < ROWS && c >= 0 && c < COLS && board[r][c] && board[r][c].p === p) guards++;
+      }
+      score[p] += guards * 15 - pressure[p ^ 1] * 13;
+      if (isCheck(p)) score[p] -= 190;
+    }
+    return score[perspective] - score[perspective ^ 1];
+  }
+  function xqBudgetExceeded(control){
+    control.nodes++;
+    if (control.nodes > control.maxNodes || Date.now() >= control.deadline){ control.stopped = true; return true; }
+    return false;
+  }
+  function xqQuiescence(side, alpha, beta, qDepth, ply, control){
+    if (xqBudgetExceeded(control)) return xqEvaluate(side);
+    if (!findKing(side)) return -XQ_MATE + ply;
+    if (!findKing(side ^ 1)) return XQ_MATE - ply;
+    const checked = isCheck(side);
+    const stand = xqEvaluate(side);
+    if (!checked){
+      if (stand >= beta) return beta;
+      if (stand > alpha) alpha = stand;
+      if (qDepth <= 0) return alpha;
+    } else if (qDepth < 0){
+      return stand;
+    }
+    const moves = xqOrderedMoves(side, checked ? 20 : 9, !checked);
+    if (!moves.length) return checked ? -XQ_MATE + ply : alpha;
+    for (const move of moves){
+      const captured = xqMakeMove(move);
+      const score = captured && captured.t === 'k'
+        ? XQ_MATE - ply
+        : -xqQuiescence(side ^ 1, -beta, -alpha, qDepth - 1, ply + 1, control);
+      xqUndoMove(move, captured);
+      if (control.stopped) return alpha;
+      if (score >= beta) return beta;
+      if (score > alpha) alpha = score;
+    }
+    return alpha;
+  }
+  function xqNegamax(side, depth, alpha, beta, ply, control){
+    if (xqBudgetExceeded(control)) return xqEvaluate(side);
+    if (!findKing(side)) return -XQ_MATE + ply;
+    if (!findKing(side ^ 1)) return XQ_MATE - ply;
+    if (depth <= 0) return xqQuiescence(side, alpha, beta, 1, ply, control);
+    const checked = isCheck(side);
+    const width = checked ? 24 : (depth >= 3 ? 12 : (depth === 2 ? 16 : 19));
+    const moves = xqOrderedMoves(side, width, false);
+    if (!moves.length) return -XQ_MATE + ply;
+    let best = -Infinity;
+    for (const move of moves){
+      const captured = xqMakeMove(move);
+      const score = captured && captured.t === 'k'
+        ? XQ_MATE - ply
+        : -xqNegamax(side ^ 1, depth - 1, -beta, -alpha, ply + 1, control);
+      xqUndoMove(move, captured);
+      if (control.stopped) return best > -Infinity ? best : xqEvaluate(side);
+      if (score > best) best = score;
+      if (score > alpha) alpha = score;
+      if (alpha >= beta) break;
+    }
+    return best;
+  }
+  function xqSearchRoot(side){
+    const all = xqOrderedMoves(side, 0, false);
+    if (!all.length) return [];
+    const fallback = [];
+    for (const move of all){
+      const captured = xqMakeMove(move);
+      const givesCheck = !!findKing(side ^ 1) && isCheck(side ^ 1);
+      const score = captured && captured.t === 'k' ? XQ_MATE : xqEvaluate(side) + (givesCheck ? 26 : 0);
+      xqUndoMove(move, captured);
+      fallback.push({ move, score, givesCheck, captured, order:move.order });
+    }
+    fallback.sort((a, b) => b.score - a.score || b.order - a.order || xqMoveKey(a.move).localeCompare(xqMoveKey(b.move)));
+    let completed = fallback.slice(0, 28);
+    const pieceCount = board.reduce((sum, row) => sum + row.filter(Boolean).length, 0);
+    const maxDepth = pieceCount <= 12 ? 4 : 3;
+    const control = { deadline:Date.now() + 190, nodes:0, maxNodes:7200, stopped:false };
+    for (let depth = 2; depth <= maxDepth; depth++){
+      const iteration = [];
+      control.stopped = false;
+      for (const base of completed){
+        if (Date.now() >= control.deadline || control.nodes >= control.maxNodes){ control.stopped = true; break; }
+        const move = base.move;
+        const captured = xqMakeMove(move);
+        const score = captured && captured.t === 'k'
+          ? XQ_MATE
+          : -xqNegamax(side ^ 1, depth - 1, -XQ_MATE, XQ_MATE, 1, control);
+        xqUndoMove(move, captured);
+        if (control.stopped) break;
+        iteration.push({ move, score, givesCheck:base.givesCheck, captured:base.captured, order:base.order });
+      }
+      if (control.stopped || iteration.length !== completed.length) break;
+      iteration.sort((a, b) => b.score - a.score || b.order - a.order || xqMoveKey(a.move).localeCompare(xqMoveKey(b.move)));
+      completed = iteration;
+    }
+    return completed;
+  }
+  function xqPersonaBonus(item){
+    const id = opts.aiPersona && opts.aiPersona.id;
+    const captureValue = item.captured ? Math.min(18, XQ_VALUE[item.captured.t] / 45) : 0;
+    if (id === 'gambler') return captureValue + (item.givesCheck ? 12 : 0);
+    if (id === 'mean') return (item.givesCheck ? 16 : 0) + captureValue * .4;
+    if (id === 'tsundere') return item.captured ? captureValue * .5 : Math.max(-5, item.order / 40);
+    if (id === 'cute') return Math.max(-4, Math.min(8, item.order / 55));
+    return 0;
+  }
   function scheduleAI(){
     if (opts.destroyed || aiPending || over) return;
     if (!opts.ai || !opts.ai.has(cur)) return;
     aiPending = true;
     const gen = aiEpoch;
     const turn = cur;
-    setStatus('🤖 AI 思考中…');
+    setStatus(t('ai_thinking'));
     setTimeout(async () => {
       if (opts.destroyed || over || gen !== aiEpoch || cur !== turn || !opts.ai.has(cur)){
         aiPending = false;
         return;
       }
-      const all = [];
-      for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++){
-        const piece = board[r][c];
-        if (piece && piece.p === cur){
-          legalMovesOf(cur, r, c).forEach(m => all.push({ from: [r,c], to: m }));
-        }
-      }
-      if (!all.length){ aiPending = false; lose(cur); return; }
-      const VAL = { 'p':1,'a':2,'e':2,'h':4,'c':4.5,'r':9,'k':100 };
-      all.forEach(mv => {
-        const target = board[mv.to[0]][mv.to[1]];
-        mv.score = (target ? (VAL[target.t] * 10) : 0) + (Math.random() - 0.5) * 0.5;
-      });
-      const ranked = all.slice().sort((a, b) => b.score - a.score).slice(0, 180);
-      const choices = ranked.map(mv => mv.from.join(',') + '>' + mv.to.join(','));
+      const ranked = xqSearchRoot(cur);
+      if (!ranked.length){ aiPending = false; lose(cur); return; }
+      const best = ranked[0];
+      const band = best.score >= XQ_MATE / 2 ? 1 : 48;
+      const near = ranked.filter(item => item.score >= best.score - band).slice(0, 8)
+        .sort((a, b) => (b.score + xqPersonaBonus(b)) - (a.score + xqPersonaBonus(a)) || xqMoveKey(a.move).localeCompare(xqMoveKey(b.move)));
+      const choices = near.map(item => xqMoveKey(item.move));
+      const moveByChoice = new Map(near.map(item => [xqMoveKey(item.move), item.move]));
+      const learningCandidates = near.map(item => ({ choice:xqMoveKey(item.move), features:{
+        quality:Math.max(-1, Math.min(1, 1 - Math.max(0, best.score - item.score) / Math.max(1, band))),
+        search_value:Math.max(-1, Math.min(1, item.score / 1200)),
+        capture_value:item.captured ? Math.min(1, XQ_VALUE[item.captured.t] / 1200) : 0,
+        gives_check:item.givesCheck ? 1 : 0,
+        move_order:Math.max(-1, Math.min(1, item.order / 1000)),
+      } }));
       const remoteChoice = await aiChoose('xiangqi', {
         board: board.map(row => row.map(item => item ? (item.p + item.t) : '--')),
         turn: cur, inCheck: isCheck(cur), lastMove,
-      }, choices, opts.aiPersona);
+      }, choices, opts.aiPersona, learningCandidates);
       if (opts.destroyed || over || gen !== aiEpoch || cur !== turn){
         aiPending = false;
         return;
       }
-      let xqPick = choices.indexOf(remoteChoice);
-      if (xqPick < 0) xqPick = aiPersonaMove(ranked.length, 0, opts.aiPersona);
-      const xqMv = ranked[xqPick];
+      const xqMv = moveByChoice.get(remoteChoice) || near[0].move;
+      const executedChoice = xqMoveKey(xqMv);
       aiPending = false;
       aiSpeak(opts.aiPersona, 'think');
-      if (opts.online && typeof opts.sendBotMove === 'function'){ opts.sendBotMove(turn, { from:xqMv.from, to:xqMv.to }); return; }
-      doMove(xqMv.from, xqMv.to);
+      if (opts.online && opts.ai && opts.ai.has(turn) && typeof opts.sendBotMove === 'function') opts.sendBotMove(turn, { from:xqMv.from, to:xqMv.to });
+      if (doMove(xqMv.from, xqMv.to) && typeof confirmAIReady === 'function') {
+        confirmAIReady('xiangqi', executedChoice);
+      }
     }, 750);
   }
   function doMove(from, to){
@@ -267,18 +462,18 @@ function gameXiangqi(area, extra, n, opts){
     }
     if (isCheck(cur)) checkCount++;
     render();
-    setStatus(isCheck(cur) ? '⚠️ 玩家' + (cur+1) + ' 被将军！请应将' : '轮到玩家' + (cur+1));
+    setStatus(isCheck(cur) ? t('xiangqi_player_in_check',cur+1) : t('player_turn',cur+1));
     if (animateMove) setTimeout(() => { if (thisMotion === motionEpoch){ motion = null; render(); } }, 260);
     scheduleAI();
     return true;
   }
-  function lose(pi, reason){
+  function lose(pi, reason, suppressReport){
     if (over) return;
     over = true; finishedAt = Date.now();
     winner = pi ^ 1;
-    if (opts.onEnd) opts.onEnd([{ slot: winner, coins: 1, rank: 1 }, { slot: pi, coins: 0, rank: 2 }]);
+    if (!suppressReport && opts.onEnd) opts.onEnd([{ slot: winner, coins: 1, rank: 1 }, { slot: pi, coins: 0, rank: 2 }]);
     render();
-    if (reason) setStatus('🏆 玩家' + (winner + 1) + ' 获胜 · ' + reason, true);
+    if (reason) setStatus(t('xiangqi_win_reason',winner+1,reason), true);
   }
   function render(){
     const w = area.clientWidth || 520;
@@ -348,7 +543,7 @@ function gameXiangqi(area, extra, n, opts){
           ? (piece.p === 0 ? '#b91c1c' : '#164e63')
           : (piece.p === 0 ? '#b23a1f' : '#1f4e79');
         ctx.lineWidth = skin === 'jade' ? 2.2 : 1.6; ctx.stroke();
-        const label = piece.p === 0 ? PIECE[piece.t] : BLACK_PIECE[piece.t];
+        const label = xiangqiPieceName(piece);
         ctx.fillStyle = piece.p === 0 ? '#b23a1f' : '#1f4e79';
         ctx.font = 'bold ' + (cs*0.5) + 'px sans-serif';
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
@@ -374,7 +569,7 @@ function gameXiangqi(area, extra, n, opts){
     }
     if (motion){
       const renderedMotion = motion;
-      const label = renderedMotion.piece.p === 0 ? PIECE[renderedMotion.piece.t] : BLACK_PIECE[renderedMotion.piece.t];
+      const label = xiangqiPieceName(renderedMotion.piece);
       const mover = el('div','xiangqi-motion-piece',label);
       mover.style.cssText = 'position:absolute;z-index:4;width:' + (cs*.84) + 'px;height:' + (cs*.84) + 'px;line-height:' + (cs*.84) + 'px;text-align:center;border-radius:50%;font-weight:900;background:rgba(255,255,255,.9);box-shadow:0 8px 18px rgba(0,0,0,.25);pointer-events:none;transition:transform .24s cubic-bezier(.2,.8,.2,1);left:' + (pad + renderedMotion.from[1]*cs - cs*.42) + 'px;top:' + (pad + renderedMotion.from[0]*cs - cs*.42) + 'px;';
       boardEl.appendChild(mover);
@@ -392,7 +587,7 @@ function gameXiangqi(area, extra, n, opts){
       if (selected){
         if (legalMoves.some(([mr,mc]) => mr === r && mc === c)){
           if (opts.onProgress) opts.onProgress({ from: selected, to: [r,c] });
-          if (opts.online) opts.sendMove({ from: selected, to: [r,c] });
+          if (opts.online){const move={from:selected,to:[r,c],seq:++clockMoveSeq};if(ruleAuthority&&typeof opts.sendXiangqiAction==='function')opts.sendXiangqiAction(move);else opts.sendMove(move);}
           doMove(selected, [r,c]);
           return;
         }
@@ -406,20 +601,21 @@ function gameXiangqi(area, extra, n, opts){
       render();
     });
     if (over){
-      const winnerName = '玩家' + (winner+1);
+      const winnerName = t('player_number',winner+1);
       showVictoryOverlay(area, {
         winner: winner, winnerName: winnerName,
-        emoji: '🏆', subtitle: '象棋获胜', coins: 1, onRestart: reset
+        emoji: '🏆', subtitle: t('xiangqi_victory_subtitle'), coins: 1, onRestart: reset
       });
     }
     wrap.appendChild(boardEl);
     area.appendChild(wrap);
     renderAux();
-    const turnText = over ? '比赛结束' : (spectator ? '观战 · ' : '') + (cur === 0 ? '红方' : '黑方') + (opts.online && cur === opts.myIdx && !spectator ? ' · 你的回合' : '思考中');
-    setStatus(turnText + (isCheck(cur) && !over ? ' · ⚠️ 将军' : ''));
-    renderPlayers(cur, capturedPieces.map(list => '已吃 ' + list.length + ' 子'));
+    const turnText = over ? t('match_over') : t('xiangqi_turn_status',spectator ? t('spectating_prefix') : '',t(cur === 0 ? 'xiangqi_red_side' : 'xiangqi_black_side'),t(opts.online && cur === opts.myIdx && !spectator ? 'your_turn' : 'thinking'));
+    setStatus(turnText + (isCheck(cur) && !over ? t('xiangqi_check_suffix') : ''));
+    renderPlayers(cur, capturedPieces.map(list => t('xiangqi_captured_count',list.length)));
   }
   opts.onMove = (payload, player) => {
+    if(ruleAuthority)return;
     if (opts.online && (!Number.isInteger(player) || player !== cur)) return;
     if (!payload || !Array.isArray(payload.from) || !Array.isArray(payload.to)) return;
     doMove(payload.from, payload.to);
@@ -429,12 +625,16 @@ function gameXiangqi(area, extra, n, opts){
     initBoard();
     cur = 0; over = false; winner = -1; selected = null; legalMoves = []; lastMove = null; aiPending = false;
     startedAt = Date.now(); finishedAt = 0; moveCount = 0; captureCount = 0; checkCount = 0; capturedPieces = [[], []]; motion = null; motionEpoch++;
-    clockRemaining = clockMode === 'rapid' ? [600000,600000] : clockMode === 'blitz' ? [180000,180000] : [null,null]; lastClockAt = Date.now();
+    if(clockAuthority){
+      const state=opts.gameplayMeta&&opts.gameplayMeta.clock;clockMode='rapid';
+      clockRemaining=state&&Array.isArray(state.remainingMsByPlayer)?state.remainingMsByPlayer.slice(0,2):[600000,600000];
+    } else clockRemaining = clockMode === 'rapid' ? [600000,600000] : clockMode === 'blitz' ? [180000,180000] : [null,null];
+    clockMoveSeq=0;lastClockAt = Date.now();
     render();
-    setStatus('轮到玩家1，点击棋子走棋');
+    setStatus(t('xiangqi_initial_turn'));
   }
   function reset(){
-    if (opts.online && !opts.isHost){ toast('由房主开始新一局'); return; }
+    if (opts.online && !opts.isHost){ toast(t('host_only_restart')); return; }
     if (opts.online){ opts.sendRestart(); return; }
     resetLocal();
   }
@@ -461,6 +661,9 @@ function gameXiangqi(area, extra, n, opts){
   function setBoardTheme(theme){ boardTheme = theme === 'grass' ? 'grass' : 'classic'; render(); return boardTheme; }
   function setCosmetic(value){ cosmetic = normalizeCosmetic(value); render(); return {default:cosmetic.default,players:{...cosmetic.players}}; }
   function setSpectators(value){ spectator = Array.isArray(value) ? value.includes(opts.viewerId) : !!value; selected = null; legalMoves = []; render(); return spectator; }
+  // Canvas text is not part of the DOM i18n pass, so the platform calls this
+  // optional instance hook after a locale has finished loading.
+  function onLanguageChange(){ render(); return true; }
   function setClockMode(mode){
     clockMode = ['rapid','blitz'].includes(mode) ? mode : 'casual';
     clockRemaining = clockMode === 'rapid' ? [600000,600000] : clockMode === 'blitz' ? [180000,180000] : [null,null];
@@ -472,6 +675,18 @@ function gameXiangqi(area, extra, n, opts){
     clockMode = ['rapid','blitz'].includes(value.mode) ? value.mode : 'casual';
     clockRemaining = value.remaining.slice(0,2).map(v => v === null ? null : Math.max(0, Number(v) || 0)); lastClockAt = Date.now(); renderAux(); return true;
   }
+  function onClockState(value){
+    const state=value&&value.clock?value.clock:value;
+    if(!clockAuthority||!state||state.protocol!=='xiangqi-clock-v1'||!Array.isArray(state.remainingMsByPlayer))return false;
+    clockMode='rapid';clockRemaining=state.remainingMsByPlayer.slice(0,2).map(v=>Math.max(0,Number(v)||0));lastClockAt=Date.now();
+    if(state.finished&&Number.isInteger(state.loser)&&!over)lose(state.loser,t('xiangqi_clock_expired'),true);else renderAux();
+    return true;
+  }
+  function onXiangqiRuleState(value){
+    if(!ruleAuthority||!value||value.protocol!==RULE_PROTOCOL||String(value.matchId||'')!==String(typeof opts.getMatchId==='function'?opts.getMatchId():opts.matchId||''))return false;
+    const clock=value.clock||{};return onRestore({board:value.board,cur:value.current,over:!!value.terminal,winner:Number.isInteger(value.winner)?value.winner:-1,lastMove:value.lastMove?[value.lastMove.from,value.lastMove.to]:null,capturedPieces:[[],[]],clockMode:'rapid',clockRemaining:Array.isArray(clock.remainingMsByPlayer)?clock.remainingMsByPlayer:[600000,600000],moveCount:Number(value.moveNumber)||0,captureCount:0,checkCount:value.check?1:0});
+  }
+  function onXiangqiRuleResult(value){if(!ruleAuthority||!value||value.protocol!==RULE_PROTOCOL)return false;return onXiangqiRuleState(value.state||value);}
   function getMatchStats(){ return {
     duration: Math.max(0, (finishedAt || Date.now()) - startedAt), moves: moveCount, captures: captureCount,
     checks: checkCount, remainingTime: clockRemaining.slice(), winner,
@@ -481,16 +696,16 @@ function gameXiangqi(area, extra, n, opts){
   const clockTimer = setInterval(() => {
     if (over || clockRemaining[cur] === null) return;
     syncClock(); renderAux();
-    if (clockRemaining[cur] <= 0) lose(cur, '棋钟用尽');
+    if (!clockAuthority && clockRemaining[cur] <= 0) lose(cur, t('xiangqi_clock_expired'));
   }, 250);
   if (clockTimer && typeof clockTimer.unref === 'function') clockTimer.unref();
   resetLocal();
-  return { reset, onMove: opts.onMove, onRestart: resetLocal, snapshot, onRestore,
+  return { reset, onMove: opts.onMove, onRestart: resetLocal, snapshot, onRestore, onClockState,onXiangqiRuleState,onXiangqiRuleResult,
     serialize: () => ({ state: snapshot(), presentation: { boardTheme, cosmetic:{default:cosmetic.default,players:{...cosmetic.players}} }, stats: getMatchStats() }),
-    setBoardTheme, setCosmetic, renderCosmetic: setCosmetic, setSpectators,
+    setBoardTheme, setCosmetic, renderCosmetic: setCosmetic, setSpectators, onLanguageChange,
     setClockMode, getClockState, setClockState, getMatchStats, startMatch, reportGameResult,
     getTournamentRequirement: count => count > 2 ? 'TOURNAMENT_ORCHESTRATOR_V1' : null,
-    getMultiplayerRequirement: () => opts.online && clockMode !== 'casual' ? 'XIANGQI_CLOCK_PROTOCOL_V1' : null,
+    getMultiplayerRequirement: () => opts.online ? (ruleAuthority?'XIANGQI_RULE_PROTOCOL_V2':(clockMode !== 'casual'?'XIANGQI_CLOCK_PROTOCOL_V1':null)) : null,
     destroy: () => { aiEpoch++; motionEpoch++; aiPending = false; clearInterval(clockTimer); area.style.touchAction = previousTouchAction; area.style.overscrollBehavior = previousOverscroll; },
   };
 }

@@ -9,6 +9,16 @@
 - 2026-08-07 18:24｜新增 Supabase 奖励持久 outbox、自动重试机制、奖励流水时间索引，以及 AI 重放、三人名次和 Supabase 短暂故障专项回归。
 - 2026-08-07 18:28｜新增六款 Gameplay Upgrade 专项测试、差分/共享依赖文档与一次性实施报告；详情见 `LOG-游戏板块.md`。
 - 2026-08-07 18:57｜新增六款游戏 AI 策略知识包，内嵌威胁搜索、Alpha-Beta、随机博弈、净资产策略、影响图和 Tetris 井面评估的研究原则。
-- 2026-08-07 21:16｜新增商城浏览器兼容回归断言，以及人机模式标题、状态和联机房标记的三语言文案。
-- 2026-08-07 23:26｜新增 Social Graph v1、Supabase 四张社交表、Premium Background Pack v1、统一平台图标、专项 QA、浏览器视觉证据、社交协议与第二阶段一次性完成报告。
-- 2026-08-08 01:22｜新增 Collection 整套 Try-On（头像、头像框、背景、名称效果）及浏览器视觉证据与“不购买、不装备”专项回归。
+- 2026-08-07 19:12｜新增个性化 AI 持续学习引擎、模型/经验数据库表、原子学习 RPC 与专项回归；按玩家和游戏保存局面哈希、候选特征、胜负经验及可回滚修订。
+- 2026-08-07 20:06｜新增 Gameplay 第二阶段 Shared Protocol：Tank/Tetris 服务端模块、独立观众席、循环/瑞士赛事、象棋棋钟、大富翁拍卖、公开 Cosmetic 合同及六套专项 QA。
+- 2026-08-07 20:06｜新增真实设备待测清单与《六款游戏 Gameplay Upgrade 第二阶段完成报告》；未执行项和 Authority 边界已明确登记。
+- 2026-08-07 20:09｜本次最终协议一致性复核无新增文件。
+- 2026-08-08 00:15｜新增 60 组三语言服务端错误 reason、语言覆盖/运行时专项回归和零依赖 locale 规范化脚本；鉴权、商城、结算、赛事、观战均可显示具体本地化原因。
+- 2026-08-07 23:23｜新增 Tetris、象棋、大富翁共享纯 Rule Core 与三套 v2 Authority adapter、协议注册表、Authority Matrix、Cosmetic Profile 合同及配套 QA。
+- 2026-08-07 23:23｜新增 Tournament 自动真实房间/结果/下一轮测试、负载/内存/计时器/逻辑 Chaos 测试和《六款游戏 Gameplay Upgrade 第三阶段最终完成报告》。
+- 2026-08-08 00:50｜新增 Project Execution OS：10 个项目级 Skill 规范、项目状态矩阵、风险登记、所有权矩阵、Quality Gates、证据清单模板、Motion Tokens 与副窗融合审阅简易报告。
+- 2026-08-08 00:50｜新增 `简易报告/` 归档目录及报告索引，集中保存带年月日时后缀的一次性简易报告。
+- 2026-08-08 00:56｜新增 Project Execution OS 当前任务的回归证据登记，完整 npm test 与快速 Quality Gates 均通过。
+- 2026-08-08 01:02｜新增线上发布证据：GitHub Pages workflow 成功、Render live、远程 main 与两个首页 HTTP 200 验收通过。
+- 2026-08-08 00:26｜新增生成物忽略规则，避免 Python 缓存与 Office 临时锁文件进入版本库。
+- 2026-08-08 03:03｜新增 Seat v2、AI Seat/托管者、Social Graph、Profile v2、Premium Background、统一图标系统、Supabase 字段与专项 QA；本轮 npm test、Quality Gates 全部通过。

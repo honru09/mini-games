@@ -35,8 +35,8 @@ function gameGomoku(area, extra, n, opts){
   }
   function pieceSkin(player){ const value = cosmetic.players && cosmetic.players[player]; return value === 'glow' || (value && value.pieces === 'glow') ? 'glow' : cosmetic.default; }
   function updateHud(){
-    turnHud.textContent = over ? (winLine.length ? '五连完成 · 玩家' + (cur + 1) : '本局结束') :
-      (spectator ? '观战 · 玩家' + (cur + 1) + ' 的回合' : (opts.online ? (cur === opts.myIdx ? '你的回合' : '对方回合') : '玩家' + (cur + 1) + ' 的回合'));
+    turnHud.textContent = over ? (winLine.length ? t('gomoku_five_complete',cur+1) : t('match_over')) :
+      (spectator ? t('spectator_player_turn',cur+1) : (opts.online ? t(cur === opts.myIdx ? 'your_turn' : 'opponent_turn') : t('player_turn',cur+1)));
   }
   function winningCells(r, c){
     const p = grid[r][c];
@@ -59,19 +59,151 @@ function gameGomoku(area, extra, n, opts){
       last: last ? last.join(',') : null,
     };
   }
-  function gomokuLineScore(r, c, p){
-    let best = 0;
-    for (const [dr,dc] of [[1,0],[0,1],[1,1],[1,-1]]){
-      let cnt = 1, open = 0;
-      for (const s of [1,-1]){
-        let nr = r + dr*s, nc = c + dc*s;
-        while (nr >= 0 && nr < N && nc >= 0 && nc < N && grid[nr][nc] === p){ cnt++; nr += dr*s; nc += dc*s; }
-        if (nr >= 0 && nr < N && nc >= 0 && nc < N && grid[nr][nc] === -1) open++;
+  const GOMOKU_DIRS = [[1,0],[0,1],[1,1],[1,-1]];
+  const GOMOKU_MATE = 10000000;
+  function gomokuCandidates(radius){
+    const found = new Set();
+    const reach = radius || 2;
+    let hasStone = false;
+    for (let r = 0; r < N; r++) for (let c = 0; c < N; c++){
+      if (grid[r][c] === -1) continue;
+      hasStone = true;
+      for (let dr = -reach; dr <= reach; dr++) for (let dc = -reach; dc <= reach; dc++){
+        if (!dr && !dc) continue;
+        const nr = r + dr, nc = c + dc;
+        if (nr >= 0 && nr < N && nc >= 0 && nc < N && grid[nr][nc] === -1) found.add(nr + ',' + nc);
       }
-      if (cnt >= 5) return 1e9;
-      best = Math.max(best, Math.pow(cnt, 3) * (open + 1));
     }
-    return best;
+    if (!hasStone) return [[7,7]];
+    return [...found].map(key => key.split(',').map(Number));
+  }
+  // Allis 风格威胁刻画：只扩展落点相关的五连、四和可升级为活四的三。
+  function gomokuThreatProfile(r, c, p){
+    const empty = { win:false, openFour:0, rushFour:0, openThree:0, score:-Infinity };
+    if (r < 0 || r >= N || c < 0 || c >= N || grid[r][c] !== -1) return empty;
+    grid[r][c] = p;
+    const profile = { win:checkGomokuWin(grid, r, c), openFour:0, rushFour:0, openThree:0, score:0 };
+    for (const [dr, dc] of GOMOKU_DIRS){
+      const line = [];
+      for (let step = -5; step <= 5; step++){
+        const nr = r + dr * step, nc = c + dc * step;
+        line.push(nr < 0 || nr >= N || nc < 0 || nc >= N ? 'O' : (grid[nr][nc] === p ? 'X' : (grid[nr][nc] === -1 ? '.' : 'O')));
+      }
+      const winningPoints = new Set();
+      for (let start = 1; start <= 5; start++){
+        const window = line.slice(start, start + 5);
+        if (window.filter(ch => ch === 'X').length === 4 && window.filter(ch => ch === '.').length === 1){
+          winningPoints.add(start + window.indexOf('.'));
+        }
+      }
+      if (winningPoints.size >= 2) profile.openFour++;
+      else if (winningPoints.size === 1) profile.rushFour++;
+
+      let createsOpenFour = 0;
+      for (let point = 1; point <= 9; point++){
+        if (line[point] !== '.') continue;
+        line[point] = 'X';
+        const nextWins = new Set();
+        for (let start = 0; start <= 6; start++){
+          const window = line.slice(start, start + 5);
+          if (window.filter(ch => ch === 'X').length === 4 && window.filter(ch => ch === '.').length === 1){
+            nextWins.add(start + window.indexOf('.'));
+          }
+        }
+        line[point] = '.';
+        if (nextWins.size >= 2) createsOpenFour++;
+      }
+      if (createsOpenFour) profile.openThree++;
+    }
+    grid[r][c] = -1;
+    const fours = profile.openFour + profile.rushFour;
+    profile.score = profile.win ? GOMOKU_MATE :
+      profile.openFour ? 1200000 + profile.openFour * 90000 :
+      fours >= 2 ? 900000 + fours * 40000 :
+      profile.rushFour ? 230000 + profile.rushFour * 18000 + profile.openThree * 9000 :
+      profile.openThree >= 2 ? 95000 + profile.openThree * 7000 :
+      profile.openThree ? 17000 : 0;
+    return profile;
+  }
+  function gomokuNeighborValue(r, c, p){
+    let own = 0, opp = 0;
+    for (let dr = -2; dr <= 2; dr++) for (let dc = -2; dc <= 2; dc++){
+      if (!dr && !dc) continue;
+      const nr = r + dr, nc = c + dc;
+      if (nr < 0 || nr >= N || nc < 0 || nc >= N) continue;
+      const weight = Math.max(1, 4 - Math.max(Math.abs(dr), Math.abs(dc)));
+      if (grid[nr][nc] === p) own += weight;
+      else if (grid[nr][nc] === (p ^ 1)) opp += weight;
+    }
+    return own * 16 + opp * 11 - (Math.abs(r - 7) + Math.abs(c - 7)) * 2;
+  }
+  function gomokuRankCandidates(p, limit){
+    const ranked = gomokuCandidates(2).map(([r,c]) => {
+      const attack = gomokuThreatProfile(r, c, p);
+      const defense = gomokuThreatProfile(r, c, p ^ 1);
+      let tier = attack.win ? 7 : defense.win ? 6 : attack.openFour ? 5 :
+        (attack.openFour + attack.rushFour >= 2) ? 5 : defense.openFour ? 4 :
+        (defense.openFour + defense.rushFour >= 2) ? 4 : attack.rushFour ? 3 :
+        attack.openThree >= 2 ? 3 : defense.rushFour ? 2 : defense.openThree >= 2 ? 2 : attack.openThree ? 1 : 0;
+      const value = attack.score + defense.score * 1.08 + gomokuNeighborValue(r, c, p);
+      return { r, c, choice:r + ',' + c, attack, defense, tier, value, center:Math.abs(r - 7) + Math.abs(c - 7) };
+    }).sort((a, b) => b.tier - a.tier || b.value - a.value || a.center - b.center || a.r - b.r || a.c - b.c);
+    if (!ranked.length) return [];
+    const wins = ranked.filter(item => item.attack.win);
+    if (wins.length) return wins;
+    const blocks = ranked.filter(item => item.defense.win);
+    if (blocks.length) return blocks;
+    return ranked.slice(0, limit || ranked.length);
+  }
+  function gomokuLeafValue(p){
+    const ours = gomokuRankCandidates(p, 2);
+    const theirs = gomokuRankCandidates(p ^ 1, 2);
+    const ownThreat = ours.length ? ours[0].attack.score : 0;
+    const oppThreat = theirs.length ? theirs[0].attack.score : 0;
+    const ownBlock = ours.length ? ours[0].defense.score : 0;
+    return ownThreat + ownBlock * .22 - oppThreat * 1.12;
+  }
+  function gomokuSearchMove(root, p, deadline){
+    grid[root.r][root.c] = p;
+    if (checkGomokuWin(grid, root.r, root.c)){ grid[root.r][root.c] = -1; return GOMOKU_MATE; }
+    const replies = gomokuRankCandidates(p ^ 1, 10);
+    let worst = Infinity, searched = 0;
+    for (const reply of replies){
+      if (Date.now() >= deadline && searched){ break; }
+      grid[reply.r][reply.c] = p ^ 1;
+      let lineScore;
+      if (checkGomokuWin(grid, reply.r, reply.c)){
+        lineScore = -GOMOKU_MATE + 1;
+      } else {
+        const counters = gomokuRankCandidates(p, 6);
+        let bestCounter = -Infinity;
+        for (const counter of counters){
+          if (Date.now() >= deadline && bestCounter > -Infinity) break;
+          grid[counter.r][counter.c] = p;
+          const value = checkGomokuWin(grid, counter.r, counter.c)
+            ? GOMOKU_MATE - 2
+            : gomokuLeafValue(p) + counter.attack.score * .18 - reply.attack.score * .12;
+          grid[counter.r][counter.c] = -1;
+          if (value > bestCounter) bestCounter = value;
+        }
+        lineScore = bestCounter > -Infinity ? bestCounter : gomokuLeafValue(p);
+      }
+      grid[reply.r][reply.c] = -1;
+      searched++;
+      if (lineScore < worst) worst = lineScore;
+      if (worst <= -GOMOKU_MATE / 2) break;
+    }
+    grid[root.r][root.c] = -1;
+    if (!searched) worst = root.value;
+    return worst + root.value * .035;
+  }
+  function gomokuPersonaBonus(item){
+    const id = opts.aiPersona && opts.aiPersona.id;
+    if (id === 'gambler') return item.attack.openFour * 24 + item.attack.rushFour * 12 + item.attack.openThree * 5;
+    if (id === 'mean') return item.attack.rushFour * 18 + item.attack.openThree * 4;
+    if (id === 'tsundere') return item.defense.rushFour * 14 + item.defense.openThree * 4;
+    if (id === 'cute') return Math.max(0, 9 - item.center);
+    return -item.center * .1;
   }
   function scheduleAI(){
     if (opts.destroyed || aiPending || over) return;
@@ -81,41 +213,45 @@ function gameGomoku(area, extra, n, opts){
     const turn = cur;
     const state = aiState();
     const stateKey = JSON.stringify(state);
-    setStatus('🤖 AI 思考中…');
+    setStatus(t('ai_thinking'));
     setTimeout(async () => {
       if (opts.destroyed || epoch !== aiEpoch || over || cur !== turn || JSON.stringify(aiState()) !== stateKey){
         if (epoch === aiEpoch) aiPending = false;
         return;
       }
-      const empties = [];
-      for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) if (grid[r][c] === -1) empties.push(r + ',' + c);
-      if (!empties.length){ aiPending = false; return; }
-      let bestR = -1, bestC = -1, bestV = -1;
-      const scored = [];
-      for (const s of empties){
-        const [r, c] = s.split(',').map(Number);
-        const atk = gomokuLineScore(r, c, cur);
-        const def = gomokuLineScore(r, c, cur ^ 1);
-        const v = Math.max(atk, def * 1.1);
-        scored.push({ choice: s, value: v, center: Math.abs(r - 7) + Math.abs(c - 7) });
-        if (v > bestV){ bestV = v; bestR = r; bestC = c; }
-      }
-      const gomokuPick = aiPersonaMove(empties.length, empties.indexOf(bestR + ',' + bestC), opts.aiPersona);
-      const fallback = empties[gomokuPick];
-      const choices = scored.slice().sort((a, b) => b.value - a.value || a.center - b.center)
-        .slice(0, 200).map(item => item.choice);
-      const moveByChoice = new Map(empties.map(choice => [choice, choice.split(',').map(Number)]));
-      const remoteChoice = await aiChoose('gomoku', state, choices, opts.aiPersona);
+      const roots = gomokuRankCandidates(cur, hist.length < 8 ? 18 : 16);
+      if (!roots.length){ aiPending = false; return; }
+      const deadline = Date.now() + 135;
+      roots.forEach(item => { item.searchScore = gomokuSearchMove(item, cur, deadline); });
+      roots.sort((a, b) => b.searchScore - a.searchScore || b.tier - a.tier || b.value - a.value || a.r - b.r || a.c - b.c);
+      const best = roots[0];
+      const band = best.searchScore >= GOMOKU_MATE / 2 ? 1 : Math.max(90, Math.min(2400, Math.abs(best.searchScore) * .04));
+      const near = roots.filter(item => item.tier === best.tier && item.searchScore >= best.searchScore - band)
+        .slice(0, 8).sort((a, b) => (b.searchScore + gomokuPersonaBonus(b)) - (a.searchScore + gomokuPersonaBonus(a)) || a.r - b.r || a.c - b.c);
+      const choices = near.map(item => item.choice);
+      const moveByChoice = new Map(near.map(item => [item.choice, [item.r, item.c]]));
+      const learningCandidates = near.map(item => ({ choice:item.choice, features:{
+        quality:Math.max(-1, Math.min(1, 1 - Math.max(0, best.searchScore - item.searchScore) / Math.max(1, band))),
+        tactical_tier:item.tier / 7,
+        immediate_win:item.attack.win ? 1 : 0,
+        immediate_block:item.defense.win ? 1 : 0,
+        own_force:Math.min(1, (item.attack.openFour * 4 + item.attack.rushFour * 2 + item.attack.openThree) / 6),
+        opp_force:Math.min(1, (item.defense.openFour * 4 + item.defense.rushFour * 2 + item.defense.openThree) / 6),
+        center:Math.max(-1, 1 - item.center / 7),
+      } }));
+      const remoteChoice = await aiChoose('gomoku', state, choices, opts.aiPersona, learningCandidates);
       if (opts.destroyed || epoch !== aiEpoch || over || cur !== turn || JSON.stringify(aiState()) !== stateKey){
         if (epoch === aiEpoch) aiPending = false;
         return;
       }
-      const chosen = moveByChoice.has(remoteChoice) ? remoteChoice : fallback;
+      const chosen = moveByChoice.has(remoteChoice) ? remoteChoice : choices[0];
       const gpArr = moveByChoice.get(chosen);
       aiPending = false;
       aiSpeak(opts.aiPersona, 'think');
-      if (opts.online && typeof opts.sendBotMove === 'function'){ opts.sendBotMove(turn, [gpArr[0], gpArr[1]]); return; }
-      applyMove(gpArr[0], gpArr[1]);
+      if (opts.online && opts.ai && opts.ai.has(turn) && typeof opts.sendBotMove === 'function') opts.sendBotMove(turn, gpArr);
+      if (applyMove(gpArr[0], gpArr[1]) && typeof confirmAIReady === 'function') {
+        confirmAIReady('gomoku', chosen);
+      }
     }, 550);
   }
   const canvas = document.createElement('canvas');
@@ -228,10 +364,10 @@ function gameGomoku(area, extra, n, opts){
         { slot: cur ^ 1, coins: 0, rank: 2 },
       ]);
       draw(); renderPlayers(cur, null);
-      setStatus('🏆 玩家' + (cur+1) + ' 获胜！', true);
+      setStatus(t('result_winner',cur+1), true);
       showVictoryOverlay(area, {
-        winner: cur, winnerName: '玩家' + (cur+1), emoji: '🎉',
-        subtitle: '五子连线', coins: 1, onRestart: reset, onShare: () => shareGameLink('gomoku'), onInvite: online.room && online.isHost ? () => openInvitePicker() : null
+        winner: cur, winnerName: t('player_number',cur+1), emoji: '🎉',
+        subtitle: t('gomoku_five_line'), coins: 1, onRestart: reset, onShare: () => shareGameLink('gomoku'), onInvite: online.room && online.isHost ? () => openInvitePicker() : null
       });
       return true;
     }
@@ -244,13 +380,13 @@ function gameGomoku(area, extra, n, opts){
       draw(); renderPlayers(cur, null);
       setStatus(t('result_draw'), false);
       showVictoryOverlay(area, {
-        winner: 0, emoji: '🤝', subtitle: '棋盘已满，平局', coins: 0, onRestart: reset, onShare: () => shareGameLink('gomoku')
+        winner: 0, emoji: '🤝', subtitle: t('gomoku_board_full_draw'), coins: 0, onRestart: reset, onShare: () => shareGameLink('gomoku')
       });
       return true;
     }
     cur ^= 1;
     draw(); renderPlayers(cur, null);
-    setStatus(opts.online ? (cur === opts.myIdx ? '你的回合，点击棋盘落子' : '等待对方落子…') : ('玩家' + (cur+1) + ' 的回合'));
+    setStatus(opts.online ? t(cur === opts.myIdx ? 'gomoku_your_turn_hint' : 'gomoku_wait_opponent') : t('player_turn',cur+1));
     scheduleAI();
     return true;
   }
@@ -259,7 +395,7 @@ function gameGomoku(area, extra, n, opts){
     if (Array.isArray(payload) && payload.length === 2) applyMove(payload);
   };
   if (!opts.online && !spectator){
-    const undoBtn = el('button','btn','↩ 悔棋');
+    const undoBtn = el('button','btn',t('undo'));
     undoBtn.addEventListener('click', () => {
       if (spectator || over || !hist.length) return;
       aiEpoch++; aiPending = false;
@@ -268,7 +404,7 @@ function gameGomoku(area, extra, n, opts){
       cur ^= 1;
       last = hist.length ? hist[hist.length-1] : null;
       draw(); renderPlayers(cur, null);
-      setStatus('玩家' + (cur+1) + ' 的回合');
+      setStatus(t('player_turn',cur+1));
       scheduleAI();
     });
     extra.appendChild(undoBtn);
@@ -280,10 +416,10 @@ function gameGomoku(area, extra, n, opts){
     area.style.touchAction = spectator ? 'auto' : 'none';
     applyPresentation();
     draw(); renderPlayers(0, null);
-    setStatus(opts.online ? (cur === opts.myIdx ? '你的回合，点击棋盘落子' : '等待对方落子…') : '玩家1 的回合');
+    setStatus(opts.online ? t(cur === opts.myIdx ? 'gomoku_your_turn_hint' : 'gomoku_wait_opponent') : t('player_turn',1));
   }
   function reset(){
-    if (opts.online && !opts.isHost){ toast('由房主开始新一局'); return; }
+    if (opts.online && !opts.isHost){ toast(t('host_only_restart')); return; }
     if (opts.online){ opts.sendRestart(); return; }
     resetLocal();
   }

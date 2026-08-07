@@ -78,7 +78,7 @@ async function main(){
   if (typeof WebSocket !== 'function') throw new Error('Node 20 请加 --experimental-websocket');
   const port = await reservePort();
   server = spawn(process.execPath, [SERVER], {
-    env: { ...process.env, PORT: String(port), DATA_DIR, NODE_ENV: 'test', RECONNECT_GRACE_MS: '1000', SUPABASE_URL: '', SUPABASE_KEY: '', DEEPSEEK_KEY: '' },
+    env: { ...process.env, PORT: String(port), DATA_DIR, NODE_ENV: 'test', ENABLE_RULE_AUTHORITY_V2: '0', RECONNECT_GRACE_MS: '1000', SUPABASE_URL: '', SUPABASE_KEY: '', DEEPSEEK_KEY: '' },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
   server.stdout.on('data', d => { serverOut += d; });
@@ -92,12 +92,12 @@ async function main(){
   const accB = await register(b, 'u_recb' + suffix, 'RecB' + suffix);
   const created = await a.request('create', { capacity: 2 }, m => m.type === 'created', 'created');
   await b.request('join', { room: created.room }, m => m.type === 'joined', 'joined');
-  const am = a.mark(), bm = b.mark();
+  const selectedMark = a.mark();
   a.send('select_game', { game: 'gomoku' });
-  await b.waitAfter(bm, m => m.type === 'room_update' && m.payload && m.payload.game === 'gomoku', 'selected game');
-  b.send('ready', { ready:true });
-  await a.waitAfter(am, m => m.type === 'room_update' && m.payload && m.payload.canStart === true, 'guest ready');
-  a.send('start');
+  await a.waitAfter(selectedMark, m => m.type === 'room_update' && m.payload && m.payload.game === 'gomoku', 'selected game');
+  const am = a.mark(), bm = b.mark();
+  b.send('ready', { ready: true });
+  a.send('start', {});
   const startedA = await a.waitAfter(am, m => m.type === 'started', 'started A');
   const startedB = await b.waitAfter(bm, m => m.type === 'started', 'started B');
   check('双方拿到相同 matchId', !!startedA.matchId && startedA.matchId === startedB.matchId);
@@ -141,9 +141,8 @@ async function main(){
   b3.send('join', { room: created.room });
   const joinedAgain = await b3.waitAfter(rejoinRoomMark, m => m.type === 'joined', 'join after expired resume');
   check('过期账号可作为新连接重新加入', joinedAgain.player === 1 && joinedAgain.room === created.room);
-  b3.send('ready', {ready:true});
-  await b3.waitAfter(rejoinRoomMark, m => m.type === 'room_update' && m.payload && m.payload.canStart === true, 'ready after rejoin');
-  a.send('start');
+  b3.send('ready', { ready: true });
+  a.send('start', {});
   await b3.waitAfter(rejoinRoomMark, m => m.type === 'started', 'match restarted after join');
 
   const hostExpiryMark = b3.mark();

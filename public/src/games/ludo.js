@@ -33,13 +33,118 @@ function gameLudo(area, extra, n, opts){
     return { base:'classic',piece:'classic',dice:'classic',...source,players:{...(source.players||{})} };
   }
   function playerCosmetic(pi){ return { base:cosmetic.base,piece:cosmetic.piece,dice:cosmetic.dice,...(cosmetic.players&&cosmetic.players[pi]||{}) }; }
+  function aiClamp(value, scale){ return Math.max(-1, Math.min(1, value / (scale || 1))); }
+  function tokenProgress(position){ return position < 0 ? 0 : Math.min(HOME, position); }
+  function playerProgress(pi, state){
+    return state[pi].reduce((sum, position) => sum + tokenProgress(position), 0) / (HOME * 4);
+  }
+  function developmentBalance(list){
+    const values = list.map(tokenProgress);
+    const mean = values.reduce((sum, value) => sum + value, 0) / values.length;
+    const spread = values.reduce((sum, value) => sum + Math.abs(value - mean), 0) / (values.length * HOME);
+    return Math.max(0, 1 - spread * 2);
+  }
+  function captureCount(pi, destination, state){
+    if (destination < 0 || destination > 50) return 0;
+    const landing = cellOf(pids[pi], destination);
+    let count = 0;
+    state.forEach((list, other) => {
+      if (other === pi) return;
+      list.forEach(position => {
+        if (position >= 0 && position <= 50 && cellOf(pids[other], position) === landing) count++;
+      });
+    });
+    return count;
+  }
+  function simulateLudoMove(pi, ti, roll, state){
+    const next = state.map(list => list.slice());
+    const from = next[pi][ti];
+    const destination = advanceToken(from, roll);
+    const captured = captureCount(pi, destination, next);
+    next[pi][ti] = destination;
+    if (captured){
+      const landing = cellOf(pids[pi], destination);
+      next.forEach((list, other) => {
+        if (other === pi) return;
+        list.forEach((position, index) => {
+          if (position >= 0 && position <= 50 && cellOf(pids[other], position) === landing) list[index] = -1;
+        });
+      });
+    }
+    return { state:next, from, destination, captured };
+  }
+  function captureRisk(pi, position, state){
+    // 本规则中终点走廊/终点不会与公共轨道相交；公共轨道的“安全”按未来一轮实际骰面威胁计算。
+    if (position < 0 || position > 50) return 0;
+    const landing = cellOf(pids[pi], position);
+    let survival = 1;
+    state.forEach((list, other) => {
+      if (other === pi) return;
+      let threateningRolls = 0;
+      for (let roll = 1; roll <= 6; roll++){
+        const canCapture = list.some(enemy => {
+          if (enemy === -1) return roll === 6 && cellOf(pids[other], 0) === landing;
+          if (enemy < 0 || enemy >= HOME) return false;
+          const destination = advanceToken(enemy, roll);
+          return destination <= 50 && cellOf(pids[other], destination) === landing;
+        });
+        if (canCapture) threateningRolls++;
+      }
+      survival *= 1 - threateningRolls / 6;
+    });
+    return Math.max(0, Math.min(1, 1 - survival));
+  }
+  function futureMoveValue(pi, ti, roll, state){
+    const from = state[pi][ti];
+    if ((from === -1 && roll !== 6) || from >= HOME) return -Infinity;
+    const outcome = simulateLudoMove(pi, ti, roll, state);
+    const gain = tokenProgress(outcome.destination) - tokenProgress(from);
+    const finish = outcome.destination === HOME && from !== HOME;
+    const takeoff = from === -1;
+    const risk = captureRisk(pi, outcome.destination, outcome.state);
+    return gain * 1.5 + (finish ? 145 : 0) + outcome.captured * 55 + (takeoff ? 20 : 0) - risk * 42;
+  }
+  function expectedNextTurn(pi, state){
+    let total = 0;
+    for (let roll = 1; roll <= 6; roll++){
+      let best = 0;
+      for (let ti = 0; ti < 4; ti++) best = Math.max(best, futureMoveValue(pi, ti, roll, state));
+      total += best;
+    }
+    return total / 6;
+  }
+  function evaluateLudoMove(pi, ti){
+    const before = tokens;
+    const outcome = simulateLudoMove(pi, ti, dice, before);
+    const ownProgress = playerProgress(pi, before);
+    const leaderProgress = Math.max(...before.map((_, index) => playerProgress(index, before)));
+    const catchup = Math.max(0, leaderProgress - ownProgress);
+    const progressGain = tokenProgress(outcome.destination) - tokenProgress(outcome.from);
+    const finish = outcome.destination === HOME && outcome.from !== HOME;
+    const takeoff = outcome.from === -1;
+    const safeLane = outcome.destination > 50;
+    const oldRisk = captureRisk(pi, outcome.from, before);
+    const risk = captureRisk(pi, outcome.destination, outcome.state);
+    const balanceDelta = developmentBalance(outcome.state[pi]) - developmentBalance(before[pi]);
+    const activeBefore = before[pi].filter(position => position >= 0 && position < HOME).length;
+    const activeAfter = outcome.state[pi].filter(position => position >= 0 && position < HOME).length;
+    const sortedProgress = before[pi].map(tokenProgress).slice().sort((a, b) => a - b);
+    const developsLaggard = tokenProgress(outcome.from) <= sortedProgress[1];
+    const future = expectedNextTurn(pi, outcome.state);
+    const score = progressGain * (1.7 + catchup * .8) + (finish ? 155 : 0) +
+      outcome.captured * (58 + catchup * 30) + (takeoff ? 22 : 0) + (safeLane ? 16 : 0) +
+      (oldRisk - risk) * 28 - risk * (38 + tokenProgress(outcome.destination) * .3) +
+      balanceDelta * 24 + (activeAfter > activeBefore ? 7 : 0) + (developsLaggard ? 6 : 0) + future * .2;
+    return { ti, choice:'token:' + ti, score, outcome, progressGain, finish, takeoff, safeLane,
+      risk, oldRisk, balanceDelta, catchup, future, developsLaggard };
+  }
   function scheduleAI(){
     if (opts.destroyed || aiPending || over) return;
     if (!opts.ai || !opts.ai.has(curIdx)) return;
     aiPending = true;
     const gen = epoch;
     const turn = curIdx;
-    setStatus('🤖 AI 思考中…');
+    setStatus(t('ai_thinking'));
     setTimeout(async () => {
       if (opts.destroyed || over || gen !== epoch || curIdx !== turn || !opts.ai.has(curIdx)){
         aiPending = false;
@@ -48,53 +153,52 @@ function gameLudo(area, extra, n, opts){
       if (phase === 'roll'){
         const d = 1 + Math.floor(Math.random() * 6);
         aiPending = false;
-        if (opts.online && typeof opts.sendBotMove === 'function'){ opts.sendBotMove(turn, { dice:d }); return; }
+        if (opts.online && typeof opts.sendBotMove === 'function') opts.sendBotMove(turn, { dice:d });
         applyDice(d);
         return;
       }
       if (phase === 'pick'){
         const mv = movable();
-        if (!mv.length){ aiPending = false; nextTurn('无子可动'); return; }
-        // 启发式：优先击落/回家，其次推进
-        let bestT = mv[0], bestS = -1e9;
-        mv.forEach(ti => {
-          const arr = tokens[curIdx];
-          const curPos = arr[ti];
-          const newPos = advanceToken(curPos, dice);
-          let s = curPos === -1 ? 6 : (newPos === HOME ? 120 : newPos);
-          if (newPos <= 50){
-            const cell = cellOf(curPid(), newPos);
-            let hit = 0;
-            pids.forEach((p2, p2i) => {
-              if (p2 === curPid()) return;
-              for (let j = 0; j < 4; j++){
-                const t2 = tokens[p2i][j];
-                if (t2 >= 0 && t2 <= 50 && cellOf(p2, t2) === cell) hit++;
-              }
-            });
-            s += hit * 45;
-          }
-          if (s > bestS){ bestS = s; bestT = ti; }
-        });
-        const choices = mv.map(ti => 'token:' + ti);
+        if (!mv.length){ aiPending = false; nextTurn(t('ludo_no_movable')); return; }
+        const ranked = mv.map(ti => evaluateLudoMove(curIdx, ti)).sort((a, b) => b.score - a.score || a.ti - b.ti);
+        const best = ranked[0];
+        const band = Math.max(10, Math.min(24, Math.abs(best.score) * .08));
+        const near = ranked.filter(item => item.score >= best.score - band).slice(0, 4);
+        const choices = near.map(item => item.choice);
+        const moveByChoice = new Map(near.map(item => [item.choice, item.ti]));
+        const learningCandidates = near.map(item => ({ choice:item.choice, features:{
+          quality:Math.max(-1, Math.min(1, 1 - Math.max(0, best.score - item.score) / Math.max(1, band))),
+          progress_gain:aiClamp(item.progressGain, 6),
+          finish:item.finish ? 1 : 0,
+          capture:aiClamp(item.outcome.captured, 2),
+          takeoff:item.takeoff ? 1 : 0,
+          safe_position:item.safeLane || item.risk === 0 ? 1 : 0,
+          capture_risk:aiClamp(-item.risk, 1),
+          risk_reduction:aiClamp(item.oldRisk - item.risk, 1),
+          balance:aiClamp(item.balanceDelta, .5),
+          develops_laggard:item.developsLaggard ? 1 : 0,
+          catchup:aiClamp(item.catchup, .5),
+          future_expectation:aiClamp(item.future, 90),
+        } }));
         const remoteChoice = await aiChoose('ludo', {
           tokens: tokens.map(list => list.slice()), turn: curIdx, dice, home: HOME,
-        }, choices, opts.aiPersona);
+          localRanking: near.map(item => ({ choice:item.choice, score:Math.round(item.score * 10) / 10 })),
+        }, choices, opts.aiPersona, learningCandidates);
         if (opts.destroyed || over || gen !== epoch || curIdx !== turn || phase !== 'pick'){
           aiPending = false;
           return;
         }
-        let ludoPick = choices.indexOf(remoteChoice);
-        if (ludoPick < 0) ludoPick = aiPersonaMove(mv.length, mv.indexOf(bestT), opts.aiPersona);
-        const chosen = mv[ludoPick];
+        const chosen = moveByChoice.has(remoteChoice) ? moveByChoice.get(remoteChoice) : best.ti;
         if (!movable().includes(chosen)){
           aiPending = false;
           return;
         }
         aiPending = false;
         aiSpeak(opts.aiPersona, 'think');
-        if (opts.online && typeof opts.sendBotMove === 'function'){ opts.sendBotMove(turn, { ti:chosen }); return; }
-        applyPick(curPid(), chosen);
+        if (opts.online && typeof opts.sendBotMove === 'function') opts.sendBotMove(turn, { ti:chosen });
+        if (applyPick(curPid(), chosen) && typeof confirmAIReady === 'function') {
+          confirmAIReady('ludo', 'token:' + chosen);
+        }
         return;
       }
       aiPending = false;
@@ -279,24 +383,24 @@ function gameLudo(area, extra, n, opts){
     }
     // 结束覆盖层
     if (over){
-      const winnerName = '玩家' + (pids.indexOf(winner)+1);
+      const winnerName = t('player_number',pids.indexOf(winner)+1);
       showVictoryOverlay(area, {
         winner: pids.indexOf(winner), winnerName: winnerName,
-        emoji: '🏆', subtitle: '四架飞机全部归位', coins: 1, onRestart: reset
+        emoji: '🏆', subtitle: t('ludo_all_home'), coins: 1, onRestart: reset
       });
     }
     const infos = pids.map(pid => {
       const pi = pids.indexOf(pid);
       const cnt = tokens[pi].filter(t => t === HOME).length;
-      return '归位 ' + cnt + '/4';
+      return t('ludo_home_progress',cnt);
     });
     diceBtn.disabled = spectator || over || phase !== 'roll' || (opts.online && curIdx !== opts.myIdx) || (opts.ai && opts.ai.has(curIdx));
     const diceSkin = playerCosmetic(curIdx).dice === 'cyber' ? 'cyber' : 'classic';
     diceBtn.dataset.diceSkin = diceSkin;
     dice3d.wrap.dataset.diceSkin = diceSkin;
-    dice3d.wrap.setAttribute('aria-label', diceSkin === 'cyber' ? '赛博骰子' : '经典骰子');
+    dice3d.wrap.setAttribute('aria-label', t(diceSkin==='cyber'?'ludo_dice_cyber':'ludo_dice_classic'));
     diceBtn.style.transition = 'filter .22s ease,transform .22s ease';
-    turnHud.textContent = over ? '比赛结束' : (spectator ? '观战 · 玩家' + (curIdx + 1) + ' 行动' : '玩家' + (curIdx + 1) + ' · ' + (phase === 'roll' ? '掷骰子' : '选择飞机'));
+    turnHud.textContent = over ? t('match_over') : (spectator ? t('spectator_player_action',curIdx+1) : t('ludo_turn_phase',curIdx+1,t(phase === 'roll' ? 'ludo_roll_die' : 'ludo_choose_plane')));
     renderPlayers(curIdx, infos, null, pids.map(pid => PLAYER_COLORS[pid]));
   }
   function roll(){
@@ -317,17 +421,17 @@ function gameLudo(area, extra, n, opts){
     phase = 'rolling';
     dice = d;
     diceBtn.disabled = true;
-    setStatus('玩家' + (curIdx+1) + ' 掷骰子…');
+    setStatus(t('ludo_player_rolling',curIdx+1));
     dice3d.roll(dice, () => {
       if (gen !== epoch || over || curIdx !== turn || phase !== 'rolling') return;
       const mv = movable();
       if (!mv.length){
-        nextTurn('玩家' + (curIdx+1) + ' 掷出 ' + dice + '，无子可动');
+        nextTurn(t('ludo_roll_no_move',curIdx+1,dice));
         return;
       }
       phase = 'pick';
       renderBoard();
-      setStatus('玩家' + (curIdx+1) + ' 掷出 ' + dice + '，点击高亮棋子移动');
+      setStatus(t('ludo_roll_choose',curIdx+1,dice));
       drainRemoteInputs();
       if (phase === 'pick') scheduleAI();
     });
@@ -370,7 +474,7 @@ function gameLudo(area, extra, n, opts){
           }
         }
       });
-      if (captured){ captures += captured; toast('💥 击落对方 ' + captured + ' 个棋子！'); }
+      if (captured){ captures += captured; toast(t('ludo_captured',captured)); }
     }
     if (arr.every(v => v === HOME)){
       over = true; winner = pid; finishedAt = Date.now(); area.style.touchAction = 'auto';
@@ -385,7 +489,7 @@ function gameLudo(area, extra, n, opts){
       const ranks = new Map(order.map((slot, index) => [slot, index + 1]));
       if (opts.onEnd) opts.onEnd(pids.map((p2, i) => ({ slot: i, coins: i === curIdx ? 1 : 0, rank: ranks.get(i) })));
       renderBoard();
-      setStatus('🏆 玩家' + (curIdx+1) + ' 获胜！', true);
+      setStatus(t('result_winner',curIdx+1), true);
       animateTokenMove(movingToken, wasBase, capturedTokens, true);
       return true;
     }
@@ -393,11 +497,11 @@ function gameLudo(area, extra, n, opts){
       phase = 'roll';
       diceBtn.disabled = false;
       renderBoard();
-      setStatus('玩家' + (curIdx+1) + ' 掷出 6，再掷一次！');
+      setStatus(t('ludo_roll_again',curIdx+1));
       drainRemoteInputs();
       if (phase === 'roll') scheduleAI();
     } else {
-      nextTurn('玩家' + (curIdx+1) + ' 完成移动');
+      nextTurn(t('ludo_move_complete',curIdx+1));
     }
     animateTokenMove(movingToken, wasBase, capturedTokens, destination === HOME);
     return true;
@@ -450,7 +554,7 @@ function gameLudo(area, extra, n, opts){
     curIdx = (curIdx + 1) % pids.length;
     diceBtn.disabled = false;
     renderBoard();
-    setStatus((msg ? msg + '，' : '') + '轮到玩家' + (curIdx+1) + '，请掷骰子');
+    setStatus(t('ludo_next_turn',msg ? msg + t('message_separator') : '',curIdx+1));
     drainRemoteInputs();
     if (phase === 'roll') scheduleAI();
   }
@@ -512,10 +616,10 @@ function gameLudo(area, extra, n, opts){
     diceBtn.disabled = false;
     dice3d.reset();
     renderBoard();
-    setStatus('玩家1 的回合，请掷骰子');
+    setStatus(t('ludo_initial_turn'));
   }
   function reset(){
-    if (opts.online && !opts.isHost){ toast('由房主开始新一局'); return; }
+    if (opts.online && !opts.isHost){ toast(t('host_only_restart')); return; }
     if (opts.online){ opts.sendRestart(); return; }
     resetLocal();
   }
@@ -540,7 +644,7 @@ function gameLudo(area, extra, n, opts){
     renderBoard(); return true;
   }
   renderBoard();
-  setStatus('玩家1 的回合，请掷骰子');
+  setStatus(t('ludo_initial_turn'));
   return {
     reset, onMove: opts.onMove, onRestart: resetLocal,
     destroy: () => { epoch++; aiPending = false; remoteInputs = []; dice3d.reset(); area.style.touchAction = previousTouchAction; area.style.overscrollBehavior = previousOverscroll; },
