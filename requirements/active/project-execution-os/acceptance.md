@@ -7,6 +7,8 @@
 | 项目级 Skills 与状态矩阵 | PASS | `.agents/skills/`、`PROJECT_STATUS.json` | 10 个 Skill |
 | Quality Gates 与 state validator | PASS | `npm run validate:project`、`npm run quality:gates` | state、i18n、DOM、Build Drift 全部通过 |
 | 完整回归 | PASS | `npm test` | 构建、i18n、AI、Gameplay、Authority、Security、Reconnect、Supabase、E2E、WS Close 全部通过 |
+| GitHub Pages/Render 发布 | PASS | Pages workflow success、Render `live`、两个首页 HTTP 200 | Render 与远程 main 已验证 |
+| Project Execution OS 任务 | ACCEPTED | `8222fc1`、release evidence、线上验收 | RC 仍按真实设备/Supabase/网络限制保持 BLOCKED |
 | 真实设备/网络/Supabase | NOT_EXECUTED | `REAL_DEVICE_QA_CHECKLIST.md` | 明确阻塞 RC |
 
 ## Known Issues

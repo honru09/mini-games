@@ -22,3 +22,4 @@
 - 2026-08-08 00:50｜审阅副窗分支与主分支提交图，确认 `c5bb59e` 已被 `main` 包含；同步 Project Execution OS 到 AGENTS、README、WHITEPAPER、CI、package scripts 和 CSS Motion Tokens。
 - 2026-08-08 00:50｜将三份 Gameplay 简易报告迁移到 `简易报告/`，按最后核对时间追加 `202608072006`/`202608072323` 后缀并修正交叉引用。
 - 2026-08-08 00:56｜将 `PROJECT_STATUS.json`、任务 execution/plan/acceptance 同步到 `3e72c311` 的验证状态，保留真实设备、Supabase 和网络闸门的 BLOCKED 事实。
+- 2026-08-08 01:02｜将 Project Execution OS 任务状态收口为 `ACCEPTED`，补充最后发布提交、线上证据和 Release Candidate 阻塞边界。

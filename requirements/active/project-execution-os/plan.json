@@ -7,7 +7,7 @@
     {"id": "skills", "status": "completed", "evidence": [".agents/skills/"]},
     {"id": "state-and-gates", "status": "completed", "evidence": ["PROJECT_STATUS.json", "requirements/QUALITY_GATES.json", "scripts/validate-project-state.js"]},
     {"id": "report-archive", "status": "completed", "evidence": ["简易报告/"]},
-    {"id": "regression-and-release", "status": "in_progress", "evidence": ["npm test", "npm run quality:gates"]}
+    {"id": "regression-and-release", "status": "completed", "evidence": ["npm test", "npm run quality:gates", "GitHub Pages workflow success", "Render live"]}
   ],
   "risks": ["真实设备与真实 Supabase 仍未执行", "CI 只具 Pages workflow 入口，Render 仍需手动触发"],
   "tests": ["npm run validate:project", "npm run quality:gates", "npm test"],
