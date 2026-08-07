@@ -24,3 +24,4 @@
 - 2026-08-07 23:23｜修改｜修复 Tank/Tetris 持续闪屏；接通 Tournament 自动房间/结果/下一轮与观众跨桌；修复大富翁 snapshot turn 污染、v2 owner 按钮和重复掷骰窗口；补齐三语言与默认 v2 E2E。
 - 2026-08-07 23:23｜测试｜最终 `npm test` 109.8 秒退出码 0；Gameplay、Rule Authority、Tournament Auto、Reconnect、Spectator、完整 E2E 连续 5/5 通过，总计 374.9 秒，无 FLAKY。
 - 2026-08-07 23:23｜删除｜本次无游戏、规则模块、美术资源或兼容协议删除。
+- 2026-08-08 01:58｜查询｜完成游戏板块主线与 Seat/Social 分支差分审查，记录 Gameplay Cosmetic、赛事入口、Replay、每日任务奖励和 `all_games` 条件缺口；本次未改游戏规则代码。
