@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "roles": {
+    "master": {"owns": ["server/index.js", "scripts/build.js", "public/src/08-registry.js", "supabase/schema.sql", "PROJECT_STATUS.json", "AGENTS.md", "README.md"], "reason": "shared/high-risk integration"},
+    "gameplay": {"owns": ["public/src/games/**", "shared/rules/**", "server/gameplay/**"], "requires": ["playroom-gameplay", "playroom-multiplayer"]},
+    "uiMotion": {"owns": ["public/src/core/**", "public/src/shop/**", "public/src/ui/**", "MOTION_TOKENS.json"], "requires": ["playroom-ui-motion", "playroom-visual-qa"]},
+    "qaRelease": {"owns": ["qa/**", "scripts/quality-gates.js", "scripts/evidence-manifest.js", "HIGH_RISK_FILES.md"], "requires": ["playroom-release", "playroom-security"]},
+    "docsAssets": {"owns": ["requirements/**", "deliverables/**", "art-source/**", "public/assets/**"], "requires": ["playroom-assets", "playroom-doc-sync"]}
+  },
+  "sharedChangeRule": "A role may not directly modify another role's owned files. Shared/high-risk changes require SHARED_CHANGE_REQUEST.md and Master integration.",
+  "parallelability": {"0": "serial only", "1": "limited shared dependencies", "2": "mostly independent", "3": "fully independent"}
+}

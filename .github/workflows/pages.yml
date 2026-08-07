@@ -25,6 +25,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Project Execution OS state gate
+        run: |
+          node scripts/validate-project-state.js
+          node scripts/project-recon.js --check
       - name: Build and verify generated frontend
         run: |
           node scripts/build.js

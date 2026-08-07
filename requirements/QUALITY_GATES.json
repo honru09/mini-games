@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "order": ["syntax", "static", "gameplay", "protocol", "security", "reconnect", "dom", "e2e", "visualSmoke", "buildDrift", "docsAssetsStatus"],
+  "gates": {
+    "syntax": {"command": "node --check server/index.js && node --check scripts/build.js", "required": true},
+    "static": {"command": "node scripts/validate-project-state.js", "required": true},
+    "gameplay": {"command": "npm run test:gameplay", "required": true},
+    "protocol": {"command": "npm run test:protocol-version && npm run test:rule-authority", "required": true},
+    "security": {"command": "npm run test:security", "required": true},
+    "reconnect": {"command": "npm run test:reconnect", "required": true},
+    "dom": {"command": "npm run test:dom && npm run test:i18n", "required": true},
+    "e2e": {"command": "npm run test:e2e", "required": true},
+    "visualSmoke": {"command": "node qa/dom-smoke.js", "required": false, "manualEvidence": "requirements/active/<task>/evidence/visual"},
+    "buildDrift": {"command": "node scripts/build.js", "required": true, "policy": "working tree must be unchanged after build"},
+    "docsAssetsStatus": {"command": "node scripts/validate-project-state.js", "required": true}
+  },
+  "releasePolicy": {"realDevice": "NOT_EXECUTED is explicit, never inferred", "realSupabase": "NOT_EXECUTED until production migration/RLS evidence", "unknownThirdPartySkills": "audit before install"}
+}

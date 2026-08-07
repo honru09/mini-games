@@ -16,4 +16,6 @@
 - 2026-08-08 00:15｜新增 60 组三语言服务端错误 reason、语言覆盖/运行时专项回归和零依赖 locale 规范化脚本；鉴权、商城、结算、赛事、观战均可显示具体本地化原因。
 - 2026-08-07 23:23｜新增 Tetris、象棋、大富翁共享纯 Rule Core 与三套 v2 Authority adapter、协议注册表、Authority Matrix、Cosmetic Profile 合同及配套 QA。
 - 2026-08-07 23:23｜新增 Tournament 自动真实房间/结果/下一轮测试、负载/内存/计时器/逻辑 Chaos 测试和《六款游戏 Gameplay Upgrade 第三阶段最终完成报告》。
+- 2026-08-08 00:50｜新增 Project Execution OS：10 个项目级 Skill 规范、项目状态矩阵、风险登记、所有权矩阵、Quality Gates、证据清单模板、Motion Tokens 与副窗融合审阅简易报告。
+- 2026-08-08 00:50｜新增 `简易报告/` 归档目录及报告索引，集中保存带年月日时后缀的一次性简易报告。
 - 2026-08-08 00:26｜新增生成物忽略规则，避免 Python 缓存与 Office 临时锁文件进入版本库。

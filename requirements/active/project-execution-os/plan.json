@@ -1,0 +1,15 @@
+{
+  "status": "IMPLEMENTING",
+  "parallelability": 1,
+  "dependencies": ["current platform commit 2d87c58", "research report v1.0"],
+  "steps": [
+    {"id": "audit", "status": "completed", "evidence": ["git graph", "PROJECT_STATUS.json"]},
+    {"id": "skills", "status": "completed", "evidence": [".agents/skills/"]},
+    {"id": "state-and-gates", "status": "completed", "evidence": ["PROJECT_STATUS.json", "requirements/QUALITY_GATES.json", "scripts/validate-project-state.js"]},
+    {"id": "report-archive", "status": "completed", "evidence": ["简易报告/"]},
+    {"id": "regression-and-release", "status": "pending", "evidence": []}
+  ],
+  "risks": ["真实设备与真实 Supabase 仍未执行", "CI 只具 Pages workflow 入口，Render 仍需手动触发"],
+  "tests": ["npm run validate:project", "npm run quality:gates", "npm test"],
+  "rollback": "revert the OS-only commit; product commit 2d87c58 remains a known-good deployed baseline"
+}

@@ -206,6 +206,19 @@ AI 学习模型与经验在 `apply_ai_learning_v1` 中按账号+游戏加锁，�
 - **不破坏旧协议** — 所有更新兼容已有用户数据
 - **无打包器** — 不用 webpack/vite/rollup
 
+## Project Execution OS
+
+Playroom 的长期开发按项目级执行系统运行，而不是依赖单次长 Prompt：
+
+1. `RECON`：读取 `AGENTS.md`、`HIGH_RISK_FILES.md`、`PROJECT_STATUS.json`、需求和 dirty worktree。
+2. `REQUIREMENT_FROZEN`：在 `requirements/active/<task>/` 固定 Goal、IN、OUT、契约、所有权、测试与回滚点。
+3. `IMPLEMENTING`：Builder 只改 ownership 文件；共享高风险文件由 Master 集成。
+4. `VERIFYING`：通过 Quality Gates、自动化回归、浏览器/视觉证据；未执行项明确写 `NOT_EXECUTED`。
+5. `ACCEPTED`：同步代码事实到 README/AGENTS/WHITEPAPER/requirements/状态矩阵和三份中文日志，再提交发布。
+
+项目级 Skills 在 `.agents/skills/`，质量闸门配置在 `requirements/QUALITY_GATES.json`，当前能力与发布阻塞项在 `PROJECT_STATUS.json`。
+当前不会为了视觉参考强行迁移 React/Framer/GSAP，也不会自动安装未经审计的第三方 Skill。
+
 ## 第三阶段发布状态
 
 - 自动化：`npm test`、关键协议 5 次连续回归、10/25/50 逻辑并发房、1000 次生命周期内存、Timer Audit 均已通过。

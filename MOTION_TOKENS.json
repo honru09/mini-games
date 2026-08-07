@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "style": "soft-futuristic-playroom",
+  "durationsMs": {"instant": 70, "fast": 120, "normal": 180, "medium": 260, "slow": 360, "hero": 600},
+  "distancesPx": {"micro": 2, "small": 4, "medium": 8, "large": 16},
+  "scale": {"press": 0.97, "hover": 1.015, "enterFrom": 0.96, "enterTo": 1},
+  "easing": {
+    "standard": "cubic-bezier(0.2, 0, 0, 1)",
+    "enter": "cubic-bezier(0.16, 1, 0.3, 1)",
+    "exit": "cubic-bezier(0.7, 0, 0.84, 0)",
+    "springLite": "cubic-bezier(0.22, 1.2, 0.36, 1)"
+  },
+  "layers": {"L0": "static", "L1": "micro-interaction", "L2": "state-transition", "L3": "gameplay-emphasis", "L4": "ambient"},
+  "budgets": {"lobbyActiveAmbientMax": 2, "profileActiveAmbientMax": 3, "gameShellAmbientMax": 0, "minimumTouchTargetPx": 44},
+  "policy": {"pauseOffscreen": true, "posterWhenNotSelected": true, "respectReducedMotion": true, "neverBlockInput": true}
+}

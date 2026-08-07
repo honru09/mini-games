@@ -7,6 +7,10 @@
   "scripts": {
     "start": "node server/index.js",
     "build": "node scripts/build.js",
+    "recon": "node scripts/project-recon.js --check",
+    "validate:project": "node scripts/validate-project-state.js",
+    "quality:gates": "node scripts/quality-gates.js",
+    "evidence": "node scripts/evidence-manifest.js",
     "format:locales": "node scripts/format-locales.js",
     "test:dom": "node qa/dom-smoke.js",
     "test:i18n": "node qa/i18n-coverage.js && node qa/i18n-runtime.js",

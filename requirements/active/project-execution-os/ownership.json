@@ -1,0 +1,7 @@
+{
+  "builder": "master",
+  "owned": [".agents/**", "PROJECT_STATUS.json", "HIGH_RISK_FILES.md", "MOTION_TOKENS.json", "requirements/QUALITY_GATES.json", "requirements/OWNERSHIP_MATRIX.json", "requirements/skills-registry.json", "requirements/active/project-execution-os/**", "scripts/project-recon.js", "scripts/validate-project-state.js", "scripts/quality-gates.js", "scripts/evidence-manifest.js", "简易报告/**"],
+  "sharedDependencies": ["AGENTS.md", "README.md", "WHITEPAPER.md", "package.json", "public/index-template.html", ".github/workflows/pages.yml"],
+  "forbidden": ["server/index.js", "public/src/online/03-websocket.js", "supabase/schema.sql", "public/src/games/**"],
+  "sharedChangeRequests": []
+}

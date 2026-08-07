@@ -295,3 +295,12 @@ Supabase 首次接入或升级时，在 SQL Editor 执行可重复迁移的 `sup
 - 每次有项目改动时，在全部实现与验证完成后、结束任务前更新这三份文件。
 - 格式统一为 `日期 时间｜内容`，使用本地时间；内容保持简短、明确。
 - 某一类别本次没有内容时，也在对应日志记录“本次无新增 / 无修改 / 无删除”，避免遗漏审计。
+
+## 11. Project Execution OS（研究报告落地）
+
+- 所有大型任务先执行 `.agents/skills/playroom-recon`，再按 `.agents/skills/playroom-plan` 建立 `requirements/active/<task>/`，冻结 `IN/OUT/契约/所有权/验收证据` 后才施工。
+- 项目级 Skills 位于 `.agents/skills/`；第三方 Skill 只登记在 `requirements/skills-registry.json`，当前均为 `REFERENCE`，未经仓库/许可/脚本/网络/破坏性命令/密钥审计不得安装或运行。
+- 共享高风险文件见 `HIGH_RISK_FILES.md` 与 `requirements/OWNERSHIP_MATRIX.json`。普通 Agent 不得直接编辑，必须提交 `SHARED_CHANGE_REQUEST.md` 由 Master 集成。
+- 机器可读进度见 `PROJECT_STATUS.json`；状态必须区分 `implemented`、`verified`、`production-ready`、`not_executed`、`blocked`。真实设备、真实 Supabase、真实网络整形未执行时不可写生产就绪。
+- Motion 统一由 `MOTION_TOKENS.json` 和前端 CSS 令牌驱动；动效分 L0-L4，有大厅/档案/游戏 Shell 密度预算，并必须尊重 reduced-motion、暂停 offscreen 动画、不阻塞输入。
+- 发布前运行 `npm run quality:gates` 与完整 `npm test`；最终证据可由 `npm run evidence` 生成。发布声明必须包含 changed files、tests、visual/manual QA、NOT_EXECUTED、known issues、commit、回滚点和线上地址。

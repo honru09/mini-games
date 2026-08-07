@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "project": "Playroom",
+  "updatedAt": "2026-08-08T00:31:00+09:00",
+  "lastVerifiedCommit": "2d87c58968b838f20fb9e3fecaebf5b0163162de",
+  "stateVocabulary": ["planned", "partial", "implemented", "verified", "production-ready", "not_executed", "blocked"],
+  "releaseCandidate": {
+    "status": "blocked",
+    "reason": "自动化已通过，但真实设备、真实 Supabase/RLS/并发/备份回滚和真实网络整形尚未执行。"
+  },
+  "capabilities": {
+    "sixGames": {"status": "verified", "evidence": ["npm test", "qa/dom-smoke.js"]},
+    "threeLanguageI18n": {"status": "verified", "evidence": ["npm run test:i18n", "qa/dom-smoke.js"]},
+    "aiStrengthAndLearning": {"status": "verified", "evidence": ["qa/ai-strength.js", "qa/ai-learning.js", "qa/ai-learning-online.js"]},
+    "multiplayerAuthority": {"status": "verified", "evidence": ["qa/rule-authority-online.js", "qa/e2e-online.js"]},
+    "securityAndPersistence": {"status": "verified", "evidence": ["qa/security-online.js", "qa/supabase-adapter.js", "qa/supabase-schema.js"]},
+    "visualBrowser": {"status": "partial", "evidence": ["qa/dom-smoke.js", "REAL_DEVICE_QA_CHECKLIST.md"], "notExecuted": ["Android", "iPhone Safari", "Tablet", "second browser"]},
+    "realSupabase": {"status": "not_executed", "evidence": ["qa/supabase-adapter.js", "supabase/schema.sql"], "missing": ["production credentials", "RLS/concurrency/backup/rollback acceptance"]},
+    "productionTelemetry": {"status": "planned", "missing": ["Sentry or equivalent error loop", "performance dashboard"]}
+  },
+  "qualityGates": {"syntax": "pass", "static": "pass", "gameplay": "pass", "protocol": "pass", "security": "pass", "reconnect": "pass", "dom": "pass", "e2e": "pass", "visualSmoke": "partial", "buildDrift": "pass", "docsAssetsStatus": "pass"}
+}

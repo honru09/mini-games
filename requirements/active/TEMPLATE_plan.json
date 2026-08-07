@@ -1,0 +1,9 @@
+{
+  "status": "DRAFT",
+  "parallelability": 0,
+  "dependencies": [],
+  "steps": [],
+  "risks": [],
+  "tests": [],
+  "rollback": ""
+}

@@ -19,3 +19,5 @@
 - 2026-08-07 23:23｜修复大富翁未验证快照污染 turn、v2 购买按钮 ownership 来源和掷骰重复点击窗口；全量 E2E 改测默认 v2。
 - 2026-08-07 23:23｜补齐三语言动态游戏文案、更新白皮书/AGENTS/README/一次性报告并同步最终构建产物。
 - 2026-08-08 00:26｜修改 `.gitignore`，补充 `__pycache__`、Python 编译缓存和 `deliverables/~$*` 的版本库忽略规则。
+- 2026-08-08 00:50｜审阅副窗分支与主分支提交图，确认 `c5bb59e` 已被 `main` 包含；同步 Project Execution OS 到 AGENTS、README、WHITEPAPER、CI、package scripts 和 CSS Motion Tokens。
+- 2026-08-08 00:50｜将三份 Gameplay 简易报告迁移到 `简易报告/`，按最后核对时间追加 `202608072006`/`202608072323` 后缀并修正交叉引用。

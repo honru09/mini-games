@@ -201,3 +201,13 @@ node --experimental-websocket qa/ws-close-test.js
 - Render 服务通过 `node scripts/render-deploy.js` 手动触发部署。
 - Render 当前保持单实例；真实 Supabase 迁移/并发验收和多实例一致性改造完成前不应横向扩容。
 - 本机 Node 20 运行 WebSocket 测试需要 `--experimental-websocket`；Node 22+ 可直接运行。
+
+## 9. Agent Execution OS
+
+Playroom 后续工程执行采用项目级 Skills、需求冻结、文件所有权和证据化验收制度。规范入口为 `.agents/README.md`，
+高风险共享文件登记在 `HIGH_RISK_FILES.md`，能力状态登记在 `PROJECT_STATUS.json`，Quality Gates 登记在
+`requirements/QUALITY_GATES.json`。任务必须经历 `DRAFT → REQUIREMENT_FROZEN → PLANNED → IMPLEMENTING → VERIFYING → ACCEPTED`；
+真实设备、真实 Supabase、真实网络整形未执行时保留 `NOT_EXECUTED`，Release Candidate 不得标记为 `production-ready`。
+
+视觉动效统一由 `MOTION_TOKENS.json` 和现有 CSS 令牌驱动，平台层保持可读、快速和稳定，玩家层承载个性化表现；不因视觉参考强行迁移技术栈，
+也不自动安装未经审计的第三方 Skill。
