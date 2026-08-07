@@ -9,7 +9,7 @@ create table if not exists profiles (
   background integer not null default 0,
   frame integer not null default 0,
   effect integer not null default 0,
-  owned jsonb not null default '{"avatars":[],"frames":[],"effects":[],"backgrounds":[]}'::jsonb,
+  owned jsonb not null default '{"avatars":[],"frames":[],"effects":[],"backgrounds":[],"game_cosmetics":[]}'::jsonb,
   game_cosmetics jsonb not null default '{}'::jsonb,
   pin_hash TEXT,
   lang VARCHAR(10) DEFAULT 'zh-CN',
@@ -30,6 +30,8 @@ create table if not exists profiles (
   playmates jsonb not null default '{}'::jsonb,
   daily jsonb not null default '{"play":0,"win":0,"streak":0}'::jsonb,
   daily_key text not null default '',
+  daily_task_key text not null default '',
+  daily_tasks jsonb not null default '{"play":0,"win":0,"streak":0,"claimed":[],"claimIds":{}}'::jsonb,
   auth_tokens jsonb not null default '[]'::jsonb,
   recent_results jsonb not null default '[]'::jsonb,
   purchase_requests jsonb not null default '[]'::jsonb,
@@ -212,7 +214,7 @@ create table if not exists ai_learning_experiences (
 alter table profiles add column if not exists background integer not null default 0;
 alter table profiles add column if not exists frame integer not null default 0;
 alter table profiles add column if not exists effect integer not null default 0;
-alter table profiles add column if not exists owned jsonb not null default '{"avatars":[],"frames":[],"effects":[],"backgrounds":[]}'::jsonb;
+alter table profiles add column if not exists owned jsonb not null default '{"avatars":[],"frames":[],"effects":[],"backgrounds":[],"game_cosmetics":[]}'::jsonb;
 alter table profiles add column if not exists game_cosmetics jsonb not null default '{}'::jsonb;
 alter table profiles add column if not exists pin_hash text;
 alter table profiles add column if not exists lang varchar(10) default 'zh-CN';
@@ -233,6 +235,8 @@ alter table profiles add column if not exists achievements jsonb not null defaul
 alter table profiles add column if not exists playmates jsonb not null default '{}'::jsonb;
 alter table profiles add column if not exists daily jsonb not null default '{"play":0,"win":0,"streak":0}'::jsonb;
 alter table profiles add column if not exists daily_key text not null default '';
+alter table profiles add column if not exists daily_task_key text not null default '';
+alter table profiles add column if not exists daily_tasks jsonb not null default '{"play":0,"win":0,"streak":0,"claimed":[],"claimIds":{}}'::jsonb;
 alter table profiles add column if not exists auth_tokens jsonb not null default '[]'::jsonb;
 alter table profiles add column if not exists recent_results jsonb not null default '[]'::jsonb;
 alter table profiles add column if not exists purchase_requests jsonb not null default '[]'::jsonb;
@@ -372,6 +376,8 @@ begin
     playmates = coalesce(p_profile->'playmates', playmates),
     daily = coalesce(p_profile->'daily', daily),
     daily_key = coalesce(p_profile->>'daily_key', daily_key),
+    daily_task_key = coalesce(p_profile->>'daily_task_key', daily_task_key),
+    daily_tasks = coalesce(p_profile->'daily_tasks', daily_tasks),
     auth_tokens = coalesce(p_profile->'auth_tokens', auth_tokens),
     recent_results = coalesce(p_profile->'recent_results', recent_results),
     purchase_requests = coalesce(p_profile->'purchase_requests', purchase_requests),
@@ -462,6 +468,9 @@ begin
     when 'backgrounds' then case p_item_id
       when 1 then 10 when 2 then 10 when 3 then 10 when 4 then 12 when 5 then 12 when 6 then 15
       when 7 then 18 when 8 then 18 when 9 then 22 when 10 then 20 else null end
+    when 'game_cosmetics' then case p_item_id
+      when 2001 then 8 when 2011 then 10 when 2012 then 10 when 2013 then 10 when 2021 then 12
+      when 2031 then 14 when 2041 then 12 when 2042 then 12 when 2051 then 12 else null end
     else null
   end;
   if coalesce(p_uid, '') = '' or v_expected_price is null or p_price <> v_expected_price or
@@ -474,7 +483,7 @@ begin
   from profiles where uid = p_uid for update;
   if not found then raise exception 'purchase_profile_missing'; end if;
   v_owned := case when jsonb_typeof(v_owned) = 'object' then v_owned
-    else '{"avatars":[],"frames":[],"effects":[],"backgrounds":[]}'::jsonb end;
+    else '{"avatars":[],"frames":[],"effects":[],"backgrounds":[],"game_cosmetics":[]}'::jsonb end;
   v_requests := case when jsonb_typeof(v_requests) = 'array' then v_requests else '[]'::jsonb end;
 
   if exists (select 1 from jsonb_array_elements_text(v_requests) value where value = p_request_id) or

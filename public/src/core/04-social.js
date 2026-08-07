@@ -179,6 +179,12 @@ function renderMyCard(){
     item.appendChild(el('span', null, t(task.nameKey) + ' ' + task.cur + '/' + task.target));
     taskBar.appendChild(item);
   });
+  const serverTasks = typeof online !== 'undefined' && online.dailyTasks && Array.isArray(online.dailyTasks.tasks) ? online.dailyTasks.tasks : [];
+  serverTasks.filter(task => task.progress >= task.target && !task.claimed).forEach(task => {
+    const claim = el('button','btn btn-ghost daily-task-claim',t('daily_task_claim',task.reward));
+    claim.addEventListener('click',()=>online.claimDailyTask(task.id));
+    taskBar.appendChild(claim);
+  });
   taskRow.appendChild(taskBar);
   card.appendChild(taskRow);
   // 最近一起玩
@@ -206,6 +212,9 @@ function renderMyCard(){
   const shopBtn = el('button', 'btn btn-primary', t('shop'));
   shopBtn.addEventListener('click', openShop);
   btns.appendChild(shopBtn);
+  if (typeof online !== 'undefined' && Array.isArray(online.replays) && online.replays.length){
+    const replayBtn=el('button','btn',t('replay_open'));replayBtn.addEventListener('click',()=>renderReplayList(online.replays));btns.appendChild(replayBtn);
+  }
   const achBtn = el('button', 'btn', t('achievements_button'));
   achBtn.addEventListener('click', () => openAchievementsModal());
   btns.appendChild(achBtn);

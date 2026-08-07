@@ -239,7 +239,7 @@ Supabase 首次接入或升级时，在 SQL Editor 执行可重复迁移的 `sup
 ✅ 已完成：
 - 6 款精选游戏三模式（本地 / 人机 / 联机）
 - 联机大厅 / 邀请 / 在线状态 / 排行榜
-- PIN 账号体系、💵 商城（头像 / 相框 / 特效 / 背景）
+- PIN 账号体系、💵 商城（头像 / 相框 / 特效 / 背景 / 六款游戏外观）
 - 三语言 i18n + Settings 设置页 + 语言旗帜
 - 毛玻璃 UI、3D 骰子、开局倒计时、双栏大厅
 - CI：GitHub Pages 自动构建 + 冒烟 + 部署
@@ -264,11 +264,14 @@ Supabase 首次接入或升级时，在 SQL Editor 执行可重复迁移的 `sup
 - Tank/Tetris 闪屏修复：稳定 DOM 渲染树、keyed 节点增量更新、destroy/reset 定时器清理和节点身份回归
 - 第三阶段自动化巩固：10/25/50 逻辑并发、1000 生命周期内存、Timer Audit、逻辑 Chaos 与关键协议连续回归
 - 六款 AI 专项知识包、`personal-linear-v2` 个人持续学习、胜/负反事实更新、平局经验和 Supabase 原子学习 RPC
+- Seat/Social/Profile v2 已进入 main：真人/AI/空席、READY、AI Controller、公开/私密房、观战、房主转移、好友/拉黑/举报、Presence 隐私和 Profile v2。
+- Gameplay Cosmetic 产品闭环：服务端定价/owned/装备校验、商城按游戏筛选、公开档案只返回装备 ID，六款游戏保留 fallback。
+- Daily Task / Replay / Metrics MVP：服务端任务进度与 claimId 幂等领取、7 天回放列表/播放控制、Bearer 管理员指标只读接口、限频和访问审计。
 
 ⏳ 待办：
 1. 提供真实 Supabase 凭证并执行迁移、RLS/并发、备份与回滚验收（当前只通过 fake adapter）
 2. 执行 Desktop Chrome/第二浏览器、Android、iPhone、Tablet 实机矩阵，以及真实 `tc/netem`/等价网络整形和 30 分钟 Synthetic Session；完成前 RC 保持 `BLOCKED`
-3. Tetris T-Spin/B2B/Combo/Perfect Clear、赛事 Forfeit/Admin Recovery UI、延迟观战/Replay UI 与文字/社交游戏
+3. Tetris T-Spin/B2B/Combo/Perfect Clear、赛事专用 Admin Recovery UI、Sentry/指标历史导出、延迟观战与文字/社交游戏
 4. 多实例部署前完成 Reward Resolver 与 AI 学习 outbox 的数据库版本冲突重算/单写者改造
 5. 平台扩展（微信小程序 / App / 桌面版）
 

@@ -28,9 +28,9 @@ async function main(){
     const [host,guest]=clients;
     host.send('profile',{uid:host.uid,gameCosmetics:{tetris:{blockSkin:'neon',backgroundSkin:'grid'},tank:{tankSkin:'cyber'},gomoku:{pieceSkin:'unknown'}}});const hostProfile=(await host.wait('profile_ok')).payload;
     guest.send('profile',{uid:guest.uid,gameCosmetics:{tetris:{blockSkin:'classic',backgroundSkin:'classic'}}});await guest.wait('profile_ok');
-    check('Cosmetic Profile：合法装备保存且未知 ID 回退默认',hostProfile.cosmeticSchemaVersion===1&&hostProfile.gameCosmetics.tetris.blockSkin==='neon'&&hostProfile.gameCosmetics.tetris.backgroundSkin==='grid'&&hostProfile.gameCosmetics.gomoku.pieceSkin==='classic');
+    check('Cosmetic Profile：未购买装备不能伪造，未知 ID 回退默认',hostProfile.cosmeticSchemaVersion===1&&hostProfile.gameCosmetics.tetris.blockSkin==='classic'&&hostProfile.gameCosmetics.tetris.backgroundSkin==='classic'&&hostProfile.gameCosmetics.gomoku.pieceSkin==='classic');
     guest.send('profile_get',{uid:host.uid});const publicProfile=(await guest.wait('profile_data')).payload;
-    check('Cosmetic Profile：公开档案只暴露装备 ID，不暴露 owned',publicProfile.gameCosmetics.tank.tankSkin==='cyber'&&!Object.prototype.hasOwnProperty.call(publicProfile,'owned'));
+    check('Cosmetic Profile：公开档案只暴露装备 ID，不暴露 owned',publicProfile.gameCosmetics.tank.tankSkin==='classic'&&!Object.prototype.hasOwnProperty.call(publicProfile,'owned'));
     host.send('create',{capacity:2});const created=await host.wait('created');
     host.send('select_game',{game:'tetris'});
     await host.wait('room_update',6000,msg=>msg.payload&&msg.payload.game==='tetris');
@@ -41,7 +41,7 @@ async function main(){
     host.send('start');
     const hs=await host.wait('started'),gs=await guest.wait('started');
     const presentation=hs.presentation;
-    check('Cosmetic Profile：装备经公开 Match Metadata 到双方 renderer',presentation.cosmeticSchemaVersion===1&&presentation.cosmetic.players[0].block==='neon'&&presentation.cosmetic.players[0].background==='grid'&&presentation.cosmetic.players[1].block==='classic'&&JSON.stringify(presentation)===JSON.stringify(gs.presentation));
+    check('Cosmetic Profile：装备经公开 Match Metadata 到双方 renderer',presentation.cosmeticSchemaVersion===1&&presentation.cosmetic.players[0].block==='classic'&&presentation.cosmetic.players[0].background==='classic'&&presentation.cosmetic.players[1].block==='classic'&&JSON.stringify(presentation)===JSON.stringify(gs.presentation));
     const serialized=JSON.stringify(presentation);
     check('Cosmetic Profile：比赛元数据不含私有经济/购买字段',!serialized.includes('owned')&&!serialized.includes('balance')&&!serialized.includes('price')&&!serialized.includes('purchase'));
     if(!failures.length)console.log('GAME_COSMETIC_PROFILE_ALL_PASS');

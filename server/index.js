@@ -25,6 +25,24 @@ const { XiangqiRuleAuthority } = require('./gameplay/xiangqi-rule-authority');
 const { MonopolyRuleAuthority } = require('./gameplay/monopoly-rule-authority');
 const { PROTOCOL_VERSIONS, protocolError, capabilities: gameplayCapabilities } = require('./gameplay/protocol');
 const { increment: incrementGameplayMetric, snapshot: gameplayMetricsSnapshot } = require('./gameplay/metrics');
+const metricsRate = new Map();
+const METRICS_ADMIN_TOKEN = String(process.env.METRICS_ADMIN_TOKEN || '').trim();
+const TOURNAMENT_ADMIN_UIDS = new Set(String(process.env.TOURNAMENT_ADMIN_UIDS || '').split(',').map(value=>value.trim()).filter(Boolean));
+function isTournamentAdmin(uid){ return !!uid && TOURNAMENT_ADMIN_UIDS.has(String(uid)); }
+function metricsAdminAuthorized(req){
+  if (!METRICS_ADMIN_TOKEN) return { ok:false, status:503, reason:'metrics_not_configured' };
+  const ip = requestIp(req);
+  const now = Date.now();
+  const recent = (metricsRate.get(ip) || []).filter(at => now - at < 60000);
+  if (recent.length >= 60){ metricsRate.set(ip, recent); return { ok:false, status:429, reason:'metrics_rate_limited' }; }
+  recent.push(now); metricsRate.set(ip, recent);
+  const header = String((req.headers && req.headers.authorization) || '');
+  const match = /^Bearer\s+(.+)$/.exec(header);
+  if (!match || match[1].length !== METRICS_ADMIN_TOKEN.length || !crypto.timingSafeEqual(Buffer.from(match[1]), Buffer.from(METRICS_ADMIN_TOKEN))){
+    return { ok:false, status:401, reason:'metrics_unauthorized' };
+  }
+  return { ok:true, ip };
+}
 const { SpectatorAccessGuard, TournamentGuard } = require('./gameplay/guards');
 const { AI_STRATEGY_VERSION, aiStrategyPrompt } = require('./ai-strategy-skills');
 const {
@@ -373,10 +391,17 @@ const server = http.createServer((req, res) => {
     return;
   }
   if (req.method === 'GET' && urlPath === '/api/metrics'){
+    const auth = metricsAdminAuthorized(req);
+    if (!auth.ok){
+      res.writeHead(auth.status, {...corsHeaders(req),'Content-Type':'application/json','Cache-Control':'no-store'});
+      res.end(JSON.stringify({ error: auth.reason }));
+      return;
+    }
     const activeMatches=[...rooms.values()].filter(room=>room.started).length;
     const activeSpectators=[...rooms.values()].reduce((sum,room)=>sum+(room.spectators instanceof Map?room.spectators.size:0),0);
     res.writeHead(200,{...corsHeaders(req),'Content-Type':'application/json','Cache-Control':'no-store'});
-    res.end(JSON.stringify(gameplayMetricsSnapshot({activeMatches,activeSpectators,activeTournaments:tournaments.size})));return;
+    recordAnalytics('metrics_read', { metadata:{ ipHash: crypto.createHash('sha256').update(String(auth.ip || '')).digest('hex').slice(0,16) } });
+    res.end(JSON.stringify({ version:'metrics-v1', data: gameplayMetricsSnapshot({activeMatches,activeSpectators,activeTournaments:tournaments.size}) }));return;
   }
   const requestedPath = urlPath === '/' ? 'index.html' : urlPath.replace(/^[/\\]+/, '');
   const file = path.resolve(PUBLIC, requestedPath);
@@ -815,7 +840,7 @@ async function sbLoadProfiles(){
         presencePreference: r.presence_preference || 'joinable', presenceVisibility: r.presence_visibility || 'everyone', showcase: r.showcase || null,
         owned: normalizeOwned(r.owned), gameCosmetics: normalizeGameCosmetics(r.game_cosmetics),
         pin_hash: r.pin_hash || null, lang: r.lang || 'zh-CN',
-        achievements: r.achievements || [], playmates: r.playmates || {}, daily: r.daily || { play: 0, win: 0, streak: 0 }, dailyKey: r.daily_key || '', nameFx: r.name_fx || 0,
+        achievements: r.achievements || [], playmates: r.playmates || {}, daily: r.daily || { play: 0, win: 0, streak: 0 }, dailyKey: r.daily_key || '', dailyTaskKey: r.daily_task_key || '', dailyTasks: r.daily_tasks || null, nameFx: r.name_fx || 0,
         authTokens: normalizeAuthTokenRecords(r.auth_tokens),
         recentResults: Array.isArray(r.recent_results) ? r.recent_results.map(String).slice(-500) : [],
         purchaseRequests: Array.isArray(r.purchase_requests) ? r.purchase_requests.map(String).slice(-100) : [],
@@ -940,7 +965,7 @@ function profileDbRow(u){
     achievements: u.achievements || [], playmates: u.playmates || {},
     signature: u.signature || '', country_region: u.countryRegion || '', gender_tag: u.genderTag || 'hidden',
     presence_preference: u.presencePreference || 'joinable', presence_visibility: u.presenceVisibility || 'everyone', showcase: u.showcase || null,
-    daily: u.daily || { play: 0, win: 0, streak: 0 }, daily_key: u.dailyKey || '', name_fx: u.nameFx || 0,
+    daily: u.daily || { play: 0, win: 0, streak: 0 }, daily_key: u.dailyKey || '', daily_task_key: u.dailyTaskKey || '', daily_tasks: u.dailyTasks || null, name_fx: u.nameFx || 0,
     auth_tokens: Array.isArray(u.authTokens) ? u.authTokens.slice(-5) : [],
     recent_results: Array.isArray(u.recentResults) ? u.recentResults.slice(-500) : [],
     purchase_requests: Array.isArray(u.purchaseRequests) ? u.purchaseRequests.slice(-100) : [],
@@ -1185,7 +1210,7 @@ function sbApplyAILearningTransaction(uid, resultId, model, experiences){
 /* ---------------- 排行榜持久化（JSON 文件） ---------------- */
 function emptyDB(){
   return {
-    users: {}, history: [], rewardHistory: [], economyLedger: [], events: [],
+    users: {}, history: [], rewardHistory: [], economyLedger: [], events: [], replays: [],
     pendingRewardSync: [], aiLearning: normalizeAILearningStore(), pendingAILearningSync: [],
     friendRequests: [], friendships: [], blocks: [], reports: [],
   };
@@ -1201,6 +1226,7 @@ function loadDB(){
       rewardHistory: Array.isArray(parsed.rewardHistory) ? parsed.rewardHistory : [],
       economyLedger: Array.isArray(parsed.economyLedger) ? parsed.economyLedger : [],
       events: Array.isArray(parsed.events) ? parsed.events : [],
+      replays: Array.isArray(parsed.replays) ? parsed.replays : [],
       // 在 Supabase 短暂不可用或进程重启时保留正式奖励，避免已回执给玩家的奖励回档。
       pendingRewardSync: Array.isArray(parsed.pendingRewardSync) ? parsed.pendingRewardSync : [],
       aiLearning: normalizeAILearningStore(parsed.aiLearning),
@@ -1235,6 +1261,7 @@ function loadDB(){
     if (!['everyone','friends','nobody'].includes(u.presenceVisibility)) u.presenceVisibility = 'everyone';
     if (!u.showcase || typeof u.showcase !== 'object') u.showcase = null;
     if (!u.daily || typeof u.daily !== 'object') u.daily = { play: 0, win: 0, streak: 0 };
+    ensureServerDailyTasks(u);
     u.authTokens = normalizeAuthTokenRecords(u.authTokens);
     if (!Array.isArray(u.recentResults)) u.recentResults = [];
     u.recentResults = u.recentResults.map(String).slice(-500);
@@ -1265,11 +1292,12 @@ function saveDB(){
   const rewardHistory = db.rewardHistory.filter(h => !h.ephemeral && (!db.users[h.uid] || !db.users[h.uid].ephemeral));
   const economyLedger = db.economyLedger.filter(h => !h.ephemeral && (!db.users[h.uid] || !db.users[h.uid].ephemeral));
   const events = db.events.filter(h => !h.uid || !db.users[h.uid] || !db.users[h.uid].ephemeral);
+  const replays = (db.replays || []).filter(item => item && Number(item.expiresAt || 0) > Date.now() && (!item.uids || item.uids.some(uid => !db.users[uid] || !db.users[uid].ephemeral)));
   const pendingRewardSync = (db.pendingRewardSync || []).filter(item => item && !item.ephemeral &&
     (!db.users[item.uid] || !db.users[item.uid].ephemeral));
   const pendingAILearningSync = (db.pendingAILearningSync || []).filter(item => item && !item.ephemeral &&
     (!db.users[item.uid] || !db.users[item.uid].ephemeral));
-  fs.writeFileSync(tmp, JSON.stringify({ users, history, rewardHistory, economyLedger, events,
+  fs.writeFileSync(tmp, JSON.stringify({ users, history, rewardHistory, economyLedger, events, replays,
     pendingRewardSync, aiLearning: db.aiLearning, pendingAILearningSync,
     friendRequests: db.friendRequests || [], friendships: db.friendships || [], blocks: db.blocks || [], reports: db.reports || [],
   }, null, 2));
@@ -1280,6 +1308,7 @@ function trimAuditData(){
   if (db.rewardHistory.length > 50000) db.rewardHistory = db.rewardHistory.slice(-25000);
   if (db.economyLedger.length > 10000) db.economyLedger = db.economyLedger.slice(-5000);
   if (db.events.length > 20000) db.events = db.events.slice(-10000);
+  db.replays = (db.replays || []).filter(item => item && Number(item.expiresAt || 0) > Date.now()).slice(-2000);
   db.aiLearning.experiences = db.aiLearning.experiences.slice(-20000);
   db.aiLearning.appliedResults = db.aiLearning.appliedResults.slice(-50000);
   if (db.friendRequests.length > 50000) db.friendRequests = db.friendRequests.slice(-25000);
@@ -1716,12 +1745,26 @@ const SHOP_PRICES = {
   frames: { 1:10,2:12,3:16,4:20,5:24,6:28,7:32,8:36 },
   effects: { 1:10,2:12,3:12,4:20 },
   backgrounds: { 7:18,8:18,9:22,10:20,20:24,21:32,22:24,23:32,24:24,25:32,26:24,27:32,28:24,29:32,30:24,31:32 },
+  game_cosmetics: { 2001:8,2011:10,2012:10,2013:10,2021:12,2031:14,2041:12,2042:12,2051:12 },
 };
+const GAME_COSMETIC_CATALOG = Object.freeze([
+  { id:2001, game:'gomoku', slot:'pieceSkin', value:'glow' },
+  { id:2011, game:'ludo', slot:'baseSkin', value:'cyber' },
+  { id:2012, game:'ludo', slot:'pieceSkin', value:'jet' },
+  { id:2013, game:'ludo', slot:'diceSkin', value:'cyber' },
+  { id:2021, game:'monopoly', slot:'tokenSkin', value:'car' },
+  { id:2031, game:'tank', slot:'tankSkin', value:'cyber' },
+  { id:2041, game:'tetris', slot:'blockSkin', value:'neon' },
+  { id:2042, game:'tetris', slot:'backgroundSkin', value:'grid' },
+  { id:2051, game:'xiangqi', slot:'pieceSkin', value:'jade' },
+].map(item => Object.freeze(item)));
+const GAME_COSMETIC_BY_ID = new Map(GAME_COSMETIC_CATALOG.map(item => [item.id, item]));
 function validOwnedId(kind, id){
   if (!Number.isInteger(id)) return false;
   if (kind === 'avatars' && id >= 0 && id < 30) return true;
   if (kind === 'avatars' && id >= 100 && id <= 147 && (id - 100) % 8 < 2) return true;
   if (kind === 'backgrounds' && id >= 0 && id <= 6) return true;
+  if (kind === 'game_cosmetics' && GAME_COSMETIC_BY_ID.has(id)) return true;
   if (id === 0 && kind !== 'avatars') return true;
   return !!(SHOP_PRICES[kind] && Object.prototype.hasOwnProperty.call(SHOP_PRICES[kind], id));
 }
@@ -1729,6 +1772,7 @@ function ownsItem(u, kind, id){
   if (kind === 'avatars' && id >= 0 && id < 30) return true;
   if (kind === 'avatars' && id >= 100 && id <= 147 && (id - 100) % 8 < 2) return true;
   if (kind === 'backgrounds' && id >= 0 && id <= 6) return true;
+  if (kind === 'game_cosmetics' && GAME_COSMETIC_BY_ID.has(id)) return !!(u && u.owned && Array.isArray(u.owned[kind]) && u.owned[kind].includes(id));
   if (id === 0 && kind !== 'avatars') return true;
   return !!(u && u.owned && Array.isArray(u.owned[kind]) && u.owned[kind].includes(id));
 }
@@ -1737,7 +1781,7 @@ function profileObj(u, viewerUid){
   return {
     uid: u.uid, name: u.name, avatar: u.avatar,
     background: u.background || 0, frame: u.frame || 0, effect: u.effect || 0,
-    owned: u.owned || { avatars: [], frames: [], effects: [], backgrounds: [] },
+    owned: u.owned || { avatars: [], frames: [], effects: [], backgrounds: [], game_cosmetics: [] },
     cosmeticSchemaVersion: 1, gameCosmetics: normalizeGameCosmetics(u.gameCosmetics),
     coins: u.coins || 0, xp: u.xp || 0, level: u.level || 1, streak: u.streak || 0, bestStreak: u.bestStreak || 0,
     played: u.played || {}, total: u.total || 0, wins: u.wins || {}, totalWins: u.totalWins || 0, lang: u.lang || 'zh-CN',
@@ -1746,6 +1790,7 @@ function profileObj(u, viewerUid){
     dailyAICurrencyKey: u.dailyAICurrencyKey || '',
     dailyAICurrencyEarned: u.dailyAICurrencyEarned || 0,
     xpProgress: levelProgress(u.xp || 0),
+    dailyTasks: dailyTasksPayload(u),
     signature:u.signature || '', countryRegion:u.countryRegion || '', genderTag:u.genderTag || 'hidden', showcase:u.showcase || null,
     presencePreference:u.presencePreference || 'joinable', presenceVisibility:u.presenceVisibility || 'everyone', presence:publicPresence(u.uid, u, viewerUid || u.uid),
   };
@@ -1755,6 +1800,7 @@ function publicProfileObj(u, viewerUid){
   delete p.owned;
   delete p.playmates;
   delete p.daily;
+  delete p.dailyTasks;
   delete p.dailyFirstWinDate;
   delete p.dailyAICurrencyKey;
   delete p.dailyAICurrencyEarned;
@@ -1930,7 +1976,7 @@ function socialReport(session, payload){
 function socialAllowedBetween(aUid, bUid){ return !!aUid && !!bUid && aUid !== bUid && !socialBlockedBetween(aUid, bUid); }
 
 function normalizeOwned(o){
-  const base = { avatars: Array.from({ length: 30 }, (_, i) => i).concat([100,101,108,109,116,117,124,125,132,133,140,141]), frames: [0], effects: [0], backgrounds: [0] };
+  const base = { avatars: Array.from({ length: 30 }, (_, i) => i).concat([100,101,108,109,116,117,124,125,132,133,140,141]), frames: [0], effects: [0], backgrounds: [0], game_cosmetics: [] };
   if (o && typeof o === 'object'){
     for (const k of Object.keys(base)){
       if (Array.isArray(o[k])){
@@ -1941,16 +1987,16 @@ function normalizeOwned(o){
   }
   return base;
 }
-function normalizeGameCosmetics(value){
+function normalizeGameCosmetics(value, user){
   const source=value&&typeof value==='object'&&!Array.isArray(value)?value:{};
-  const choose=(input,allowed,fallback)=>allowed.includes(input)?input:fallback;
+  const choose=(game,slot,input,allowed,fallback)=>allowed.includes(input) && (input === fallback || !user || ownsItem(user,'game_cosmetics',GAME_COSMETIC_CATALOG.find(item=>item.game===game&&item.slot===slot&&item.value===input)?.id)) ? input : fallback;
   return{
-    gomoku:{pieceSkin:choose(source.gomoku&&source.gomoku.pieceSkin,['classic','glow'],'classic')},
-    ludo:{baseSkin:choose(source.ludo&&source.ludo.baseSkin,['classic','cyber'],'classic'),pieceSkin:choose(source.ludo&&source.ludo.pieceSkin,['classic','jet'],'classic'),diceSkin:choose(source.ludo&&source.ludo.diceSkin,['classic','cyber'],'classic')},
-    monopoly:{tokenSkin:choose(source.monopoly&&source.monopoly.tokenSkin,['character','car'],'character')},
-    tank:{tankSkin:choose(source.tank&&source.tank.tankSkin,['classic','cyber'],'classic')},
-    tetris:{blockSkin:choose(source.tetris&&source.tetris.blockSkin,['classic','neon'],'classic'),backgroundSkin:choose(source.tetris&&source.tetris.backgroundSkin,['classic','grid'],'classic')},
-    xiangqi:{pieceSkin:choose(source.xiangqi&&source.xiangqi.pieceSkin,['classic','jade'],'classic')},
+    gomoku:{pieceSkin:choose('gomoku','pieceSkin',source.gomoku&&source.gomoku.pieceSkin,['classic','glow'],'classic')},
+    ludo:{baseSkin:choose('ludo','baseSkin',source.ludo&&source.ludo.baseSkin,['classic','cyber'],'classic'),pieceSkin:choose('ludo','pieceSkin',source.ludo&&source.ludo.pieceSkin,['classic','jet'],'classic'),diceSkin:choose('ludo','diceSkin',source.ludo&&source.ludo.diceSkin,['classic','cyber'],'classic')},
+    monopoly:{tokenSkin:choose('monopoly','tokenSkin',source.monopoly&&source.monopoly.tokenSkin,['character','car'],'character')},
+    tank:{tankSkin:choose('tank','tankSkin',source.tank&&source.tank.tankSkin,['classic','cyber'],'classic')},
+    tetris:{blockSkin:choose('tetris','blockSkin',source.tetris&&source.tetris.blockSkin,['classic','neon'],'classic'),backgroundSkin:choose('tetris','backgroundSkin',source.tetris&&source.tetris.backgroundSkin,['classic','grid'],'classic')},
+    xiangqi:{pieceSkin:choose('xiangqi','pieceSkin',source.xiangqi&&source.xiangqi.pieceSkin,['classic','jade'],'classic')},
   };
 }
 loadDB();
@@ -2000,7 +2046,7 @@ function updateEditableProfile(u, payload){
   if (Number.isInteger(payload.frame) && validOwnedId('frames', payload.frame) && ownsItem(u, 'frames', payload.frame)) u.frame = payload.frame;
   if (Number.isInteger(payload.effect) && validOwnedId('effects', payload.effect) && ownsItem(u, 'effects', payload.effect)) u.effect = payload.effect;
   if (Number.isInteger(payload.nameFx) && payload.nameFx >= 0 && payload.nameFx <= 4) u.nameFx = payload.nameFx;
-  if (payload.gameCosmetics !== undefined) u.gameCosmetics = normalizeGameCosmetics(payload.gameCosmetics);
+  if (payload.gameCosmetics !== undefined) u.gameCosmetics = normalizeGameCosmetics(payload.gameCosmetics, u);
   if (payload.signature !== undefined) u.signature = sanitizePlainText(payload.signature, 80);
   if (payload.countryRegion !== undefined){
     const region = String(payload.countryRegion || '').trim().toUpperCase();
@@ -2044,6 +2090,30 @@ function updateServerDaily(u, won){
   u.daily.play = (u.daily.play || 0) + 1;
   if (won) u.daily.win = (u.daily.win || 0) + 1;
   u.daily.streak = Math.max(u.daily.streak || 0, u.streak || 0);
+  ensureServerDailyTasks(u, key);
+  u.dailyTasks.play = u.daily.play;
+  u.dailyTasks.win = u.daily.win;
+  u.dailyTasks.streak = u.daily.streak;
+}
+const DAILY_TASK_DEFS = Object.freeze([
+  { id:'play_1', kind:'play', target:1, reward:5 },
+  { id:'play_3', kind:'play', target:3, reward:10 },
+  { id:'win_1', kind:'win', target:1, reward:8 },
+  { id:'streak_2', kind:'streak', target:2, reward:12 },
+]);
+function ensureServerDailyTasks(u, key){
+  const day = key || new Date().toISOString().slice(0, 10);
+  if (u.dailyTaskKey !== day || !u.dailyTasks || typeof u.dailyTasks !== 'object'){
+    u.dailyTaskKey = day;
+    u.dailyTasks = { play:0, win:0, streak:0, claimed:[], claimIds:{} };
+  }
+  u.dailyTasks.claimed = Array.isArray(u.dailyTasks.claimed) ? u.dailyTasks.claimed.map(String).slice(-20) : [];
+  u.dailyTasks.claimIds = u.dailyTasks.claimIds && typeof u.dailyTasks.claimIds === 'object' ? u.dailyTasks.claimIds : {};
+  return u.dailyTasks;
+}
+function dailyTasksPayload(u){
+  const state = ensureServerDailyTasks(u);
+  return { dayKey:u.dailyTaskKey, tasks:DAILY_TASK_DEFS.map(task => ({...task, progress:Math.min(task.target,Number(state[task.kind])||0), claimed:state.claimed.includes(task.id)})) };
 }
 function recordServerPlaymate(u, other, game){
   if (!u || !other || !other.uid || other.uid === u.uid) return;
@@ -2602,10 +2672,20 @@ function settleRoomResult(r, results, options = {}){
     }));
   }
   r.finalResult={matchId:r.matchId,game:r.game,results:results.map(item=>({slot:item.slot,rank:item.rank})),cause:options.cause||'consensus'};
+  saveReplayForRoom(r, r.finalResult);
   broadcast(r,{type:'match_result',payload:r.finalResult});
   reportTournamentRoomResult(r,results,options);
   broadcastLeaderboard();
 }
+function saveReplayForRoom(r, finalResult){
+  if (!r || !r.matchId || !Array.isArray(r.moveLog) || !r.moveLog.length) return null;
+  const uids=[...r.clients.keys()].map(session=>session.uid).filter(Boolean);
+  const replay={replayId:'rep_'+crypto.randomBytes(10).toString('base64url'),matchId:r.matchId,game:r.game,createdAt:Date.now(),expiresAt:Date.now()+7*24*60*60*1000,visibility:normalizeRoomVisibility(r.visibility),uids,moveLog:r.moveLog.map(event=>({seq:event.seq,player:event.player,payload:event.payload})),moveLogTruncated:!!r.moveLogTruncated,finalResult:{...finalResult}};
+  db.replays=(db.replays||[]).filter(item=>item&&item.matchId!==r.matchId);db.replays.push(replay);trimAuditData();saveDB();
+  recordAnalytics('replay_created',{matchId:r.matchId,game:r.game,metadata:{replayId:replay.replayId,eventCount:replay.moveLog.length,truncated:replay.moveLogTruncated}});
+  return replay;
+}
+function replayMeta(replay){return{replayId:replay.replayId,matchId:replay.matchId,game:replay.game,createdAt:replay.createdAt,expiresAt:replay.expiresAt,visibility:replay.visibility,eventCount:replay.moveLog.length,moveLogTruncated:!!replay.moveLogTruncated,finalResult:replay.finalResult};}
 function settleRoomNoContest(r, reason){
   if (!r || !r.started || r.settled || !r.matchId) return;
   const results = activeRoomSeats(r).map((seat, index) => ({ slot:seat.seatId, coins:0, rank:index + 1 }));
@@ -3118,6 +3198,7 @@ class Session {
       }
       this.sendText(JSON.stringify({
         type: 'hello_ack', proto: PROTOCOL_VERSION, authenticated: !!this.uid,
+        admin: isTournamentAdmin(this.uid),
         rewardVersion: REWARD_CONFIG.version,
         capabilities: ['reward_breakdown','ai_reward_ticket','local_no_economy',...gameplayCapabilities(),
           'tank_authority_v1','tetris_battle_authority_v1','spectator_room_v1','tournament_orchestrator_v1','xiangqi_clock_v1','monopoly_auction_v1','game_cosmetic_presentation_v1',
@@ -3232,6 +3313,45 @@ class Session {
       const canReadPrivate = !!(u && uid === this.uid && userHasTokenHash(u, this.tokenHash));
       this.sendText(JSON.stringify({ type: 'profile_data', payload: u ? (canReadPrivate ? profileObj(u, this.uid) : publicProfileObj(u, this.uid)) : null }));
       return;
+    }
+    if (type === 'daily_tasks_get'){
+      const u = this.requireUser();
+      if (!u) return;
+      this.sendText(JSON.stringify({ type:'daily_tasks', payload:dailyTasksPayload(u) }));
+      return;
+    }
+    if (type === 'daily_task_claim'){
+      const u = this.requireUser();
+      if (!u) return;
+      const taskId = String(payload && payload.taskId || '');
+      const claimId = String(payload && payload.claimId || '');
+      if (!/^[a-z0-9_]{3,40}$/.test(taskId) || !/^[A-Za-z][A-Za-z0-9_-]{7,120}$/.test(claimId)){
+        this.sendText(JSON.stringify({type:'daily_task_error',msg:'任务领取请求无效',reason:'invalid_task_claim'}));return;
+      }
+      const task = DAILY_TASK_DEFS.find(item=>item.id===taskId);
+      const state = ensureServerDailyTasks(u);
+      if (!task){this.sendText(JSON.stringify({type:'daily_task_error',msg:'任务不存在',reason:'task_not_found'}));return;}
+      if (state.claimIds[claimId]){this.sendText(JSON.stringify({type:'daily_task_claimed',payload:{...dailyTasksPayload(u),replayed:true,claimId}}));return;}
+      if (state.claimed.includes(taskId)){this.sendText(JSON.stringify({type:'daily_task_claimed',payload:{...dailyTasksPayload(u),alreadyClaimed:true,claimId}}));return;}
+      if ((Number(state[task.kind])||0) < task.target){this.sendText(JSON.stringify({type:'daily_task_error',msg:'任务尚未完成',reason:'task_incomplete'}));return;}
+      u.coins = Math.max(0,Number(u.coins)||0) + task.reward;
+      state.claimed.push(taskId); state.claimIds[claimId]=taskId;
+      const ledger=recordEconomyChange(u,'daily_task',task.reward,'daily_task:'+u.dailyTaskKey+':'+taskId,{taskId,dayKey:u.dailyTaskKey,claimId});
+      saveDB(); sbSyncProfile(u);
+      this.sendText(JSON.stringify({type:'daily_task_claimed',payload:{...dailyTasksPayload(u),claimId,reward:task.reward,profile:profileObj(u),ledgerId:ledger&&ledger.refId}}));
+      broadcastLeaderboard();
+      return;
+    }
+    if (type === 'replay_list'){
+      const u=this.requireUser();if(!u)return;
+      const list=(db.replays||[]).filter(item=>item&&Number(item.expiresAt||0)>Date.now()&&(item.visibility==='public'||(item.uids||[]).includes(u.uid))).slice(-50).reverse().map(replayMeta);
+      this.sendText(JSON.stringify({type:'replay_list',payload:{items:list}}));return;
+    }
+    if (type === 'replay_get'){
+      const u=this.requireUser();if(!u)return;
+      const replayId=String(payload&&payload.replayId||'');const replay=(db.replays||[]).find(item=>item&&item.replayId===replayId&&Number(item.expiresAt||0)>Date.now());
+      if(!replay||!(replay.visibility==='public'||(replay.uids||[]).includes(u.uid))){this.sendText(JSON.stringify({type:'replay_error',msg:'回放不存在或无权访问',reason:'replay_forbidden'}));return;}
+      this.sendText(JSON.stringify({type:'replay_data',payload:{...replayMeta(replay),moveLog:replay.moveLog}}));return;
     }
     if (type === 'profile'){
       const u = this.requireUser();
@@ -3586,6 +3706,14 @@ class Session {
       matchRoom.tournamentBinding={tournamentId,pairingId,matchId:matchRoom.matchId,players:roomPlayers.slice()};
       broadcastTournament(entry);
       return;
+    }
+    if(type==='tournament_recover'){
+      if(!isTournamentAdmin(this.uid)){this.sendText(JSON.stringify({type:'tournament_error',msg:'只有赛事管理员可以执行恢复',reason:'admin_only'}));return;}
+      const tournamentId=String(payload&&payload.tournamentId||''),pairingId=String(payload&&payload.pairingId||''),entry=tournaments.get(tournamentId),pairing=entry&&entry.tournament.pairings.find(item=>item.pairingId===pairingId);
+      const room=pairing&&pairing.matchRoomId&&rooms.get(pairing.matchRoomId);
+      if(!entry||!pairing||!room||!room.started||room.settled){this.sendText(JSON.stringify({type:'tournament_error',msg:'赛事桌当前没有可恢复的进行中对局',reason:'recovery_match_unavailable'}));return;}
+      const offender=[...room.clients.keys()].find(session=>!session.alive)||[...room.clients.keys()][0];
+      settleRoomForfeit(room,offender,'admin_recovery');broadcastTournament(entry);this.sendText(JSON.stringify({type:'tournament_recovered',payload:{tournamentId,pairingId}}));return;
     }
     if (['tournament_start','tournament_result','tournament_next','tournament_get'].includes(type)){
       if (!this.requireUser()) return;

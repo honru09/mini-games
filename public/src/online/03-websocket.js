@@ -6,6 +6,8 @@ const online = {
   pendingResultClaim: null, _resultRetryTimer: null, _authenticated: false,
   soloMatch: null, pendingSoloClaims: [], _soloClaimsLoaded: false, displayedRewardIds: [], rewardVersion: null,
   socialState: { version:'1.0', friends:[], incoming:[], outgoing:[], blocked:[], counts:{ friends:0, incoming:0, outgoing:0, blocked:0 } },
+  dailyTasks: null, isAdmin:false,
+  replays: [],
   socialTab:'friends',
   defaultServer: 'https://mini-games-online.onrender.com',
   connect(){
@@ -369,6 +371,7 @@ const online = {
         break;
       case 'hello_ack':
         this._authenticated = !!msg.authenticated;
+        this.isAdmin = !!msg.admin;
         this.rewardVersion = msg.rewardVersion || null;
         if (msg.authenticated){
           if (!this.resume) this._reconnectAttempts = 0;
@@ -544,6 +547,9 @@ const online = {
       case 'tournament_error':
         toast(translateServerMessage(msg.msg,msg.reason||(msg.payload&&msg.payload.reason),'operation_failed'));
         break;
+      case 'tournament_recovered':
+        toast(t('tournament_admin_recover')); this.send({type:'tournament_get',payload:{tournamentId:msg.payload&&msg.payload.tournamentId}});
+        break;
       case 'tournament_state':
         this.tournamentState=msg.payload||null;
         if(typeof renderTournamentState==='function')renderTournamentState(this.tournamentState);
@@ -626,6 +632,23 @@ const online = {
           }
         }
         break;
+      case 'daily_tasks':
+      case 'daily_task_claimed':
+        this.dailyTasks = msg.payload || null;
+        if (msg.payload && msg.payload.profile && account && msg.payload.profile.uid === account.uid) updateAccountProfile(msg.payload.profile);
+        if (typeof renderMyCard === 'function') renderMyCard();
+        if (msg.type === 'daily_task_claimed') toast(t('daily_task_claimed_toast',msg.payload.reward || 0));
+        break;
+      case 'replay_list':
+        this.replays = msg.payload && Array.isArray(msg.payload.items) ? msg.payload.items : [];
+        renderReplayList(this.replays);
+        break;
+      case 'replay_data':
+        renderReplayPlayer(msg.payload || null);
+        break;
+      case 'replay_error':
+        toast(translateServerMessage(msg.msg,msg.reason,'operation_failed'));
+        break;
       case 'registered':
         {
           const payload = msg.payload || {};
@@ -645,6 +668,8 @@ const online = {
             this.flushPendingResultClaim();
             this.flushSoloMatch();
             this.requestSocial();
+            this.requestDailyTasks();
+            this.requestReplays();
             if (typeof syncProfiles === 'function') syncProfiles();
             renderMyCard();
             toast(t('account_created_success',account.name));
@@ -667,6 +692,8 @@ const online = {
             this.flushPendingResultClaim();
             this.flushSoloMatch();
             this.requestSocial();
+            this.requestDailyTasks();
+            this.requestReplays();
             if (typeof syncProfiles === 'function') syncProfiles();
             renderMyCard();
             toast(t('login_success',account.name));
@@ -899,6 +926,14 @@ const online = {
       if (this.soloMatch === match) this.soloMatch = null;
     }
   },
+  requestDailyTasks(){ if (this.connected && this._authenticated) this.send({type:'daily_tasks_get'}); },
+  claimDailyTask(taskId){
+    if (!this.connected || !this._authenticated) return false;
+    const claimId='task_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,10);
+    this.send({type:'daily_task_claim',payload:{taskId,claimId}}); return true;
+  },
+  requestReplays(){ if(this.connected&&this._authenticated)this.send({type:'replay_list'}); },
+  requestReplay(replayId){ if(this.connected&&this._authenticated)this.send({type:'replay_get',payload:{replayId}}); },
   resetState(preserveResume){
     const wasRoomGame = !!(this.room || this.game);
     if (!preserveResume) this.clearResume();
@@ -938,6 +973,28 @@ function startOnlineGame(id, sizeOverride){
   banner.classList.remove('hidden');
   banner.textContent = t('room_banner',online.room,size,online.isSpectator ? t('spectating') : t('room_you_are_player',online.player+1,online.isHost ? t('room_banner_host') : ''));
   runCountdown();
+}
+function renderReplayList(items){
+  const holder=$('my-card');if(!holder||!account)return;
+  const old=document.querySelector&&document.querySelector('.replay-entry');if(old)old.remove();
+  const button=el('button','btn replay-entry',t('replay_open'));button.addEventListener('click',()=>{
+    const bd=el('div','modal-backdrop replay-list-modal'),card=el('div','modal-card');card.appendChild(el('h3',null,t('replay_title')));
+    if(!items.length)card.appendChild(el('p','muted',t('replay_empty')));
+    items.forEach(item=>{const row=el('div','replay-row');row.appendChild(el('span',null,(GAMES[item.game]&&GAMES[item.game].icon||'🎮')+' '+(GAMES[item.game]&&t(GAMES[item.game].nameKey)||item.game)));row.appendChild(el('span','muted',t('replay_events',item.eventCount)));const open=el('button','btn',t('replay_watch'));open.addEventListener('click',()=>online.requestReplay(item.replayId));row.appendChild(open);card.appendChild(row);});
+    const close=el('button','btn btn-primary',t('close'));close.addEventListener('click',()=>bd.remove());card.appendChild(close);bd.appendChild(card);document.body.appendChild(bd);
+  });
+  holder.appendChild(button);
+}
+function renderReplayPlayer(replay){
+  if(!replay||!Array.isArray(replay.moveLog))return;
+  const bd=el('div','modal-backdrop replay-player-modal'),card=el('div','modal-card');card.appendChild(el('h3',null,t('replay_player_title')));card.appendChild(el('p','muted',t('replay_privacy_note')));
+  const progress=el('input','replay-progress');progress.type='range';progress.min=0;progress.max=replay.moveLog.length;progress.value=0;progress.style.width='100%';card.appendChild(progress);
+  const speed=el('select','nick-input');[0.5,1,2,4].forEach(value=>{const option=el('option');option.value=String(value);option.textContent=value+'×';speed.appendChild(option);});card.appendChild(speed);
+  const play=el('button','btn btn-primary',t('replay_play'));const pause=el('button','btn',t('replay_pause'));const status=el('p','muted',t('replay_step',0,replay.moveLog.length));card.appendChild(play);card.appendChild(pause);card.appendChild(status);
+  let timer=null,index=0;const stop=()=>{if(timer)clearInterval(timer);timer=null;};const applyIndex=()=>{if(!currentGame||typeof currentGame.onMove!=='function')showGame(replay.game);const event=replay.moveLog[index];if(event&&currentGame&&currentGame.onMove)currentGame.onMove(event.payload,event.player);progress.value=index;status.textContent=t('replay_step',index,replay.moveLog.length);};
+  progress.addEventListener('input',()=>{stop();index=Number(progress.value)||0;showGame(replay.game);for(let i=0;i<index;i++){const event=replay.moveLog[i];if(currentGame&&currentGame.onMove)currentGame.onMove(event.payload,event.player);}status.textContent=t('replay_step',index,replay.moveLog.length);});
+  play.addEventListener('click',()=>{stop();timer=setInterval(()=>{if(index>=replay.moveLog.length){stop();return;}applyIndex();index++;},Math.max(80,500/Number(speed.value||1)));});pause.addEventListener('click',stop);
+  const close=el('button','btn',t('close'));close.addEventListener('click',()=>{stop();bd.remove();});card.appendChild(close);bd.appendChild(card);document.body.appendChild(bd);
 }
 function renderRoomPanel(){
   const panel = $('room-panel');
@@ -999,7 +1056,7 @@ function renderRoomPanel(){
       startBtn.addEventListener('click', () => online.send({ type: 'start' }));
       actions.appendChild(startBtn);
     }
-    if(online.isHost&&(info.humanCount||0)>=3&&!(info.aiCount||0)&&!info.started){
+    if(online.isHost&&!(info.aiCount||0)&&!info.started){
       const tournament=el('button','btn',t('tournament_create'));tournament.addEventListener('click',()=>openTournamentCreate(info));actions.appendChild(tournament);
     }
     if(online.isHost){
@@ -1023,10 +1080,18 @@ function renderRoomPanel(){
   actions.appendChild(leave);
 }
 function openTournamentCreate(info){
-  const ids=(info.players||[]).map(item=>item.uid).filter(Boolean);if(ids.length<3){toast(t('tournament_requires_players'));return;}
+  const me=typeof deviceUid!=='undefined'?deviceUid:null;
+  const rosterCandidates=[];
+  (info.players||[]).forEach(item=>{if(item&&item.uid)rosterCandidates.push({uid:item.uid,name:item.name||item.uid,online:true});});
+  if(typeof lastServerLB!=='undefined'&&lastServerLB&&Array.isArray(lastServerLB.list)) lastServerLB.list.filter(item=>item&&item.uid&&item.online).forEach(item=>rosterCandidates.push(item));
+  const candidates=[...new Map(rosterCandidates.map(item=>[item.uid,item])).values()];
+  if(me&&!candidates.some(item=>item.uid===me)) candidates.unshift({uid:me,name:t('profile_mine'),online:true});
+  const selected=new Set(candidates.filter(item=>(info.players||[]).some(p=>p.uid===item.uid)).map(item=>item.uid));
   const bd=el('div','modal-backdrop'),card=el('div','modal-card');card.appendChild(el('h3',null,t('tournament_create_title')));
   card.appendChild(el('p','muted',t('tournament_hint')));
-  ['gomoku','xiangqi'].forEach(gameId=>{const button=el('button','btn btn-primary',t('game_'+gameId));button.addEventListener('click',()=>{online.send({type:'tournament_create',payload:{gameId,participants:ids}});bd.remove();});card.appendChild(button);});
+  const selectNote=el('p','muted',t('tournament_select_players',selected.size));card.appendChild(selectNote);
+  const playerGrid=el('div','tournament-player-picker');candidates.slice(0,16).forEach(item=>{const button=el('button','btn '+(selected.has(item.uid)?'btn-primary':''),item.name||item.uid);button.dataset.uid=item.uid;button.addEventListener('click',()=>{if(selected.has(item.uid)){if(item.uid===me)return;selected.delete(item.uid);}else if(selected.size<6)selected.add(item.uid);playerGrid.querySelectorAll('button').forEach(node=>node.classList.toggle('btn-primary',selected.has(node.dataset.uid)));selectNote.textContent=t('tournament_select_players',selected.size);});playerGrid.appendChild(button);});card.appendChild(playerGrid);
+  Object.keys(GAMES).forEach(gameId=>{const button=el('button','btn btn-primary',t('game_'+gameId));button.addEventListener('click',()=>{if(selected.size<3){toast(t('tournament_requires_players'));return;}online.send({type:'tournament_create',payload:{gameId,participants:[...selected]}});bd.remove();});card.appendChild(button);});
   const cancel=el('button','btn',t('cancel'));cancel.addEventListener('click',()=>bd.remove());card.appendChild(cancel);bd.appendChild(card);document.body.appendChild(bd);
 }
 function renderTournamentState(state){
@@ -1045,6 +1110,7 @@ function renderTournamentState(state){
     const pairStatusKey='tournament_pair_status_'+pair.status,pairStatus=t(pairStatusKey),bound=!!(pair.roomMetadata&&pair.roomMetadata.serverMatchId),row=el('div','tournament-table',t('tournament_table_line',pair.table,pair.players.join(t('versus_separator')),pairStatus===pairStatusKey?pair.status:pairStatus));card.appendChild(row);
     if(bound){
       card.appendChild(el('p','muted',t('tournament_bound',pair.matchRoomId)));
+      if(online.isAdmin&&pair.status!=='complete'){const recover=el('button','btn btn-danger',t('tournament_admin_recover'));recover.addEventListener('click',()=>online.send({type:'tournament_recover',payload:{tournamentId:state.tournamentId,pairingId:pair.pairingId}}));card.appendChild(recover);}
       const canWatch=pair.status!=='complete'&&!pair.players.includes(deviceUid)&&(!online.game||online.isSpectator);
       if(canWatch){
         const sameRoom=online.isSpectator&&online.room===pair.matchRoomId;

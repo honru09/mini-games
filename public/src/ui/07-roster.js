@@ -68,6 +68,17 @@ const SHOP = {
     { id: 10, name: '海洋波浪', price: 12, cls: 'bg-10' },
     ...PREMIUM_BACKGROUNDS.map(item=>({...item,cls:'bg-'+item.id})),
   ],
+  game_cosmetics: [
+    { id:2001, game:'gomoku', slot:'pieceSkin', value:'glow', name:'五子棋·辉光棋子', price:8 },
+    { id:2011, game:'ludo', slot:'baseSkin', value:'cyber', name:'飞行棋·赛博基地', price:10 },
+    { id:2012, game:'ludo', slot:'pieceSkin', value:'jet', name:'飞行棋·喷气棋子', price:10 },
+    { id:2013, game:'ludo', slot:'diceSkin', value:'cyber', name:'飞行棋·赛博骰子', price:10 },
+    { id:2021, game:'monopoly', slot:'tokenSkin', value:'car', name:'大富翁·赛车棋子', price:12 },
+    { id:2031, game:'tank', slot:'tankSkin', value:'cyber', name:'坦克·赛博装甲', price:14 },
+    { id:2041, game:'tetris', slot:'blockSkin', value:'neon', name:'方块·霓虹方块', price:12 },
+    { id:2042, game:'tetris', slot:'backgroundSkin', value:'grid', name:'方块·玻璃网格', price:12 },
+    { id:2051, game:'xiangqi', slot:'pieceSkin', value:'jade', name:'象棋·翡翠棋子', price:12 },
+  ],
 };
 function shopItemName(category,item){
   if(!item)return'';
@@ -114,7 +125,7 @@ function ownItem(acc, kind, id){
 }
 function addOwned(acc, kind, id){
   if (!acc) return;
-  if (!acc.owned) acc.owned = { avatars: [], frames: [], effects: [], backgrounds: [] };
+  if (!acc.owned) acc.owned = { avatars: [], frames: [], effects: [], backgrounds: [], game_cosmetics: [] };
   if (!acc.owned[kind]) acc.owned[kind] = [];
   if (!acc.owned[kind].includes(id)) acc.owned[kind].push(id);
 }
@@ -298,7 +309,7 @@ function deviceFingerprint(){
 function defaultOwned(){
   return {
     avatars: Array.from({ length: 30 }, (_, i) => i).concat([100,101,108,109,116,117,124,125,132,133,140,141]),
-    frames: [0], effects: [0], backgrounds: [0],
+    frames: [0], effects: [0], backgrounds: [0], game_cosmetics: [],
   };
 }
 function loadRoster(){
@@ -442,6 +453,7 @@ function updateAccountProfile(p){
   account.uid = p.uid; account.name = p.name; account.avatar = p.avatar;
   account.background = p.background || 0; account.frame = p.frame || 0; account.effect = p.effect || 0;
   account.owned = p.owned || defaultOwned(); account.coins = p.coins || 0;
+  account.gameCosmetics = p.gameCosmetics || account.gameCosmetics || {};
   account.xp = p.xp || 0; account.level = p.level || 1; account.streak = p.streak || 0; account.bestStreak = p.bestStreak || 0;
   account.dailyFirstWinDate = p.dailyFirstWinDate || '';
   account.dailyAICurrencyKey = p.dailyAICurrencyKey || '';

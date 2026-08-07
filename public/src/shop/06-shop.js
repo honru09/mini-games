@@ -41,7 +41,7 @@ function openShop(){
   let tab = 'avatars';
   const tabs = el('div','shop-tabs');
   const defs = [
-    ['avatars','shop_tab_avatars'], ['frames','shop_tab_frames'], ['effects','shop_tab_effects'], ['backgrounds','shop_tab_backgrounds'],
+    ['avatars','shop_tab_avatars'], ['frames','shop_tab_frames'], ['effects','shop_tab_effects'], ['backgrounds','shop_tab_backgrounds'], ['game_cosmetics','shop_tab_game_cosmetics'],
   ];
   defs.forEach(([k, labelKey]) => {
     const tabButton = el('button','btn shop-tab' + (k === tab ? ' btn-primary' : ''), t(labelKey));
@@ -104,6 +104,25 @@ function openShop(){
           it.appendChild(el('div','si-price',t('shop_owned')));
           const use = el('button','btn',t('shop_use'));
           use.addEventListener('click', () => { account.avatar = a.id; saveAccount(); syncProfiles(); closeShop(); toast(t('shop_avatar_changed')); });
+          it.appendChild(use);
+        }
+        listEl.appendChild(it);
+      });
+    } else if (tab === 'game_cosmetics') {
+      SHOP.game_cosmetics.forEach(item => {
+        const owned = ownItem(account, 'game_cosmetics', item.id);
+        const equipped = !!(account.gameCosmetics && account.gameCosmetics[item.game] && account.gameCosmetics[item.game][item.slot] === item.value);
+        const it = el('div','shop-item game-cosmetic-item' + (equipped ? ' selected' : '') + (owned ? ' owned' : ''));
+        it.appendChild(el('div','game-cosmetic-preview',GAMES[item.game] ? GAMES[item.game].icon : '🎮'));
+        it.appendChild(el('div','si-name',shopItemName('game_cosmetics',item)));
+        it.appendChild(el('div','seat-meta',t('game_cosmetic_slot',t('game_'+item.game),item.slot)));
+        if (!owned){
+          const price = el('div','si-price'); price.appendChild(currencyIcon('sm')); price.appendChild(el('span',null,' '+item.price)); it.appendChild(price);
+          const buy=el('button','btn btn-primary',t('shop_buy')); buy.addEventListener('click',()=>requestPurchase('game_cosmetics',item.id,buy)); it.appendChild(buy);
+        } else {
+          it.appendChild(el('div','si-price',equipped?t('shop_equipped'):t('shop_owned')));
+          const use=el('button','btn '+(equipped?'btn-primary':''),equipped?t('shop_equipped'):t('shop_equip'));
+          use.addEventListener('click',()=>{account.gameCosmetics=account.gameCosmetics||{};account.gameCosmetics[item.game]={...(account.gameCosmetics[item.game]||{}),[item.slot]:item.value};saveAccount();syncProfiles();render();renderMe();toast(t('shop_applied')+'「'+shopItemName('game_cosmetics',item)+'」');});
           it.appendChild(use);
         }
         listEl.appendChild(it);

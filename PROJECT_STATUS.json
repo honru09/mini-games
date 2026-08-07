@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "project": "Playroom",
-  "updatedAt": "2026-08-08T01:02:10+09:00",
+  "updatedAt": "2026-08-08T03:32:56+09:00",
   "lastVerifiedCommit": "3e72c311d45237b4305a3dad158fb9fab05c371e",
   "lastReleasedCommit": "8222fc18548d129a21b2903ac5821fb7ea9dad3a",
   "stateVocabulary": ["planned", "partial", "implemented", "verified", "production-ready", "not_executed", "blocked"],
@@ -17,7 +17,9 @@
     "securityAndPersistence": {"status": "verified", "evidence": ["qa/security-online.js", "qa/supabase-adapter.js", "qa/supabase-schema.js"]},
     "visualBrowser": {"status": "partial", "evidence": ["qa/dom-smoke.js", "REAL_DEVICE_QA_CHECKLIST.md"], "notExecuted": ["Android", "iPhone Safari", "Tablet", "second browser"]},
     "realSupabase": {"status": "not_executed", "evidence": ["qa/supabase-adapter.js", "supabase/schema.sql"], "missing": ["production credentials", "RLS/concurrency/backup/rollback acceptance"]},
-    "productionTelemetry": {"status": "planned", "missing": ["Sentry or equivalent error loop", "performance dashboard"]}
+    "productionTelemetry": {"status": "partial", "evidence": ["qa/metrics-online.js", "server/index.js /api/metrics"], "missing": ["Sentry or equivalent error loop", "performance dashboard history/export"]},
+    "gameplayCosmetics": {"status": "verified", "evidence": ["qa/game-cosmetic-profile.js", "qa/daily-tasks.js", "qa/asset-manifest-v2.js"]},
+    "dailyTasksAndReplay": {"status": "verified", "evidence": ["qa/daily-tasks.js", "server/index.js", "public/src/online/03-websocket.js"]}
   },
   "qualityGates": {"syntax": "pass", "static": "pass", "gameplay": "pass", "protocol": "pass", "security": "pass", "reconnect": "pass", "dom": "pass", "e2e": "pass", "visualSmoke": "partial", "buildDrift": "pass", "docsAssetsStatus": "pass"}
 }
