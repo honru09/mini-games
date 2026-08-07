@@ -5,8 +5,8 @@
 | 副窗提交已融合 | PASS | `简易报告/副窗任务融合审阅-202608080049.md` | `c5bb59e` 是 `main` 祖先 |
 | 简易报告统一归档并带时间后缀 | PASS | `简易报告/README.md` | 三份 Gameplay 报告已迁移 |
 | 项目级 Skills 与状态矩阵 | PASS | `.agents/skills/`、`PROJECT_STATUS.json` | 10 个 Skill |
-| Quality Gates 与 state validator | NOT_EXECUTED | 待本轮回归 | 代码已落地 |
-| 完整回归 | NOT_EXECUTED | 待本轮回归 | `npm test` |
+| Quality Gates 与 state validator | PASS | `npm run validate:project`、`npm run quality:gates` | state、i18n、DOM、Build Drift 全部通过 |
+| 完整回归 | PASS | `npm test` | 构建、i18n、AI、Gameplay、Authority、Security、Reconnect、Supabase、E2E、WS Close 全部通过 |
 | 真实设备/网络/Supabase | NOT_EXECUTED | `REAL_DEVICE_QA_CHECKLIST.md` | 明确阻塞 RC |
 
 ## Known Issues

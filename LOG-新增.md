@@ -18,4 +18,5 @@
 - 2026-08-07 23:23｜新增 Tournament 自动真实房间/结果/下一轮测试、负载/内存/计时器/逻辑 Chaos 测试和《六款游戏 Gameplay Upgrade 第三阶段最终完成报告》。
 - 2026-08-08 00:50｜新增 Project Execution OS：10 个项目级 Skill 规范、项目状态矩阵、风险登记、所有权矩阵、Quality Gates、证据清单模板、Motion Tokens 与副窗融合审阅简易报告。
 - 2026-08-08 00:50｜新增 `简易报告/` 归档目录及报告索引，集中保存带年月日时后缀的一次性简易报告。
+- 2026-08-08 00:56｜新增 Project Execution OS 当前任务的回归证据登记，完整 npm test 与快速 Quality Gates 均通过。
 - 2026-08-08 00:26｜新增生成物忽略规则，避免 Python 缓存与 Office 临时锁文件进入版本库。

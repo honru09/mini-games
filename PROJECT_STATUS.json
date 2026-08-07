@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "project": "Playroom",
-  "updatedAt": "2026-08-08T00:31:00+09:00",
-  "lastVerifiedCommit": "2d87c58968b838f20fb9e3fecaebf5b0163162de",
+  "updatedAt": "2026-08-08T00:56:31+09:00",
+  "lastVerifiedCommit": "3e72c311d45237b4305a3dad158fb9fab05c371e",
   "stateVocabulary": ["planned", "partial", "implemented", "verified", "production-ready", "not_executed", "blocked"],
   "releaseCandidate": {
     "status": "blocked",

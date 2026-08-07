@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-08-07T15:57:37.019Z",
+  "commit": "3e72c311d45237b4305a3dad158fb9fab05c371e",
+  "branch": "main",
+  "releaseCandidate": {
+    "status": "blocked",
+    "reason": "自动化已通过，但真实设备、真实 Supabase/RLS/并发/备份回滚和真实网络整形尚未执行。"
+  },
+  "qualityGates": {
+    "syntax": "pass",
+    "static": "pass",
+    "gameplay": "pass",
+    "protocol": "pass",
+    "security": "pass",
+    "reconnect": "pass",
+    "dom": "pass",
+    "e2e": "pass",
+    "visualSmoke": "partial",
+    "buildDrift": "pass",
+    "docsAssetsStatus": "pass"
+  },
+  "visual": {
+    "automated": [
+      "qa/dom-smoke.js"
+    ],
+    "manual": {
+      "android": "NOT_EXECUTED",
+      "iphoneSafari": "NOT_EXECUTED",
+      "tablet": "NOT_EXECUTED",
+      "secondBrowser": "NOT_EXECUTED"
+    }
+  },
+  "knownIssues": [
+    "真实 Supabase/RLS/并发/备份回滚尚未执行",
+    "真实设备与真实网络整形尚未执行"
+  ]
+}
