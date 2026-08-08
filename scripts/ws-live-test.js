@@ -1,5 +1,5 @@
 // 线上 WebSocket 冒烟测试：两个客户端建房/加入/开局
-// 用法：node scripts/ws-live-test.js [wss://.../ws]
+// 用法（Node 20）：node --experimental-websocket scripts/ws-live-test.js [wss://.../ws]
 const WS_URL = process.argv[2] || 'wss://mini-games-online.onrender.com/ws';
 const uidA = 'wstest_a_' + Date.now();
 const uidB = 'wstest_b_' + Date.now();
@@ -12,12 +12,16 @@ function client(uid, name) {
   ws.onmessage = (e) => {
     const msg = JSON.parse(e.data);
     log.push(msg);
-    console.log(`[${name}]`, msg.type, JSON.stringify(msg.payload || {}).slice(0, 120));
+    const safePayload = JSON.stringify(msg.payload || {}, (key, value) =>
+      /^(token|pin|secret|key)$/i.test(key) ? '[redacted]' : value
+    );
+    console.log(`[${name}]`, msg.type, safePayload.slice(0, 120));
   };
   return { ws, log, name };
 }
 
 function waitOpen(c) {
+  if (c.ws.readyState === 1) return Promise.resolve();
   return new Promise((resolve, reject) => {
     c.ws.addEventListener('open', () => resolve(), { once: true });
     c.ws.addEventListener('error', () => reject(new Error(c.name + ' 连接失败')), { once: true });
@@ -36,6 +40,22 @@ function waitFor(c, type, timeout = 15000) {
     const check = (e) => {
       const msg = JSON.parse(e.data);
       if (msg.type === type) {
+        clearTimeout(t);
+        c.ws.removeEventListener('message', check);
+        resolve(msg);
+      }
+    };
+    c.ws.addEventListener('message', check);
+  });
+}
+function waitForWhere(c, type, predicate, timeout = 15000) {
+  return new Promise((resolve, reject) => {
+    const existing = [...c.log].reverse().find(msg => msg.type === type && predicate(msg));
+    if (existing) { resolve(existing); return; }
+    const t = setTimeout(() => reject(new Error(`${c.name} 未收到符合条件的 ${type}`)), timeout);
+    const check = (e) => {
+      const msg = JSON.parse(e.data);
+      if (msg.type === type && predicate(msg)) {
         clearTimeout(t);
         c.ws.removeEventListener('message', check);
         resolve(msg);
@@ -75,10 +95,14 @@ async function registerLive(c, name, suffix){
   console.log('=== 房间创建成功:', room, '===');
 
   send(a, 'select_game', { game: 'gomoku' });
-  const startedP = waitFor(a, 'started');
   send(b, 'join', { room });
+  await waitFor(b, 'joined');
+  send(b, 'ready', { ready: true });
+  await waitForWhere(a, 'room_update', msg => msg.payload && msg.payload.canStart === true);
+  const startedP = waitFor(a, 'started');
+  send(a, 'start');
   const started = await startedP;
-  console.log('=== 自动开局成功:', started.game, '===');
+  console.log('=== READY 后开局成功:', started.game, '===');
 
   // 简单走一步棋验证同步
   send(a, 'move', { x: 7, y: 7 });
@@ -89,7 +113,7 @@ async function registerLive(c, name, suffix){
   b.ws.close();
 
   /* ---- 场景2：4 人房间 + 不满人数开局 + 结束切游戏 ---- */
-  const clients = [client('H'), client('P2'), client('P3')];
+  const clients = [client('H', 'H'), client('P2', 'P2'), client('P3', 'P3')];
   for (const c of clients) await waitOpen(c);
   const liveSuffix = Date.now().toString(36);
   await Promise.all(clients.map((c, i) => registerLive(c, i === 0 ? '房主' : ('玩家' + (i + 1)), liveSuffix + i)));
@@ -111,6 +135,9 @@ async function registerLive(c, name, suffix){
   const pIdx = ru3.payload.players.map(p => p.player);
   console.log('=== 玩家索引:', JSON.stringify(pIdx), '===');
   if (pIdx.join(',') !== '0,1,2') throw new Error('玩家索引异常');
+  send(clients[1], 'ready', { ready: true });
+  send(clients[2], 'ready', { ready: true });
+  await waitForWhere(clients[0], 'room_update', msg => msg.payload && msg.payload.canStart === true);
   send(clients[0], 'start');
   const started3 = await waitFor(clients[0], 'started');
   console.log('=== 不满人数开局成功:', started3.size, '人局 ===');

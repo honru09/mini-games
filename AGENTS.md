@@ -224,6 +224,7 @@ $env:RENDER_KEY='rnd_xxx'
 $env:DEEPSEEK_KEY='sk-...'
 $env:SUPABASE_URL='https://xxx.supabase.co'   # 可选
 $env:SUPABASE_KEY='sb_secret_...'              # 可选；必须是仅服务端保存的 service_role secret
+$env:METRICS_ADMIN_TOKEN='高熵随机值'           # 可选；管理员 Metrics API Bearer token
 node scripts/render-env.js
 ```
 

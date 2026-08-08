@@ -173,7 +173,7 @@ node scripts/render-deploy.js
 
 后端也支持 `DATA_DIR`（测试或持久磁盘路径）和 `ALLOWED_ORIGINS`。`POST /api/ai` 要求已认证账号的 Bearer token，并带 Origin、请求体大小、并发和速率限制。6 款游戏只把合法选项交给模型，客户端约 2.2 秒超时且会再次精确校验返回值；无 Key、断网、限流或非法响应会立即使用本地算法。生产环境不要把 DeepSeek key 放到前端。
 
-运营指标需单独配置 `METRICS_ADMIN_TOKEN`。`/api/metrics`、`/api/metrics/history`、`/api/metrics/export` 均要求 Bearer 管理员令牌，并提供限频、脱敏访问审计、有界历史、CSV 导出、阈值告警和脱敏错误聚合；只读页面为 `/admin-metrics.html`，令牌只保存在页面内存。未配置令牌时 API 返回 503。当前 Render 未挂载持久磁盘，跨重启长期历史仍需外部持久化后端。
+运营指标需单独配置高熵 `METRICS_ADMIN_TOKEN`，可与 `RENDER_KEY` 一起交给 `node scripts/render-env.js` 写入 Render。`/api/metrics`、`/api/metrics/history`、`/api/metrics/export` 均要求 Bearer 管理员令牌，并提供限频、脱敏访问审计、有界历史、CSV 导出、阈值告警和脱敏错误聚合；只读页面为 `/admin-metrics.html`，令牌只保存在页面内存。未配置令牌时 API 返回 503。当前 Render 未挂载持久磁盘，跨重启长期历史仍需外部持久化后端。
 
 ## 白皮书 × 美术资源运行时
 
