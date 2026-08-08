@@ -169,7 +169,7 @@ check('素材源文件尺寸与目录声明一致', catalog.assets.every(item =>
   return size&&size.width===item.dimensions.width&&size.height===item.dimensions.height;
 }));
 check('生成素材登记 Prompt、模型、作者与生成许可', catalog.assets.filter(item => item.sourceType==='generated').every(item => item.promptPath&&item.model&&item.author&&item.license==='project-owned-ai-generated'));
-check('local-only 状态禁止预填远端对象键', catalog.assets.every(item => item.status==='integrated-local-only'&&item.remoteObjectKey===null));
+check('local-only/reference-only 状态禁止预填远端对象键', catalog.assets.every(item => (item.status==='integrated-local-only'||item.status==='reference-only')&&item.remoteObjectKey===null));
 
 const coverMap=new Map(manifest.assets.filter(item => /-COVER$/.test(item.asset_id || '')).map(item => [item.asset_id,item]));
 const coverCatalogAssets=catalog.assets.filter(item => item.assetType==='lobby-cover');
@@ -178,9 +178,13 @@ check('六款封面目录与生产 Manifest 路径一致', coverCatalogAssets.le
   return production&&item.runtimePaths.includes(production.runtime_path)&&item.runtimePaths.includes(production.variants&&production.variants['320w']);
 }));
 const runtimeAssetMap=new Map(manifest.assets.map(item => [item.asset_id,item]));
-check('非封面运行时素材目录与生产 Manifest 路径一致', catalog.assets.filter(item => item.assetType!=='lobby-cover').every(item => {
+check('非封面运行时素材目录与生产 Manifest 路径一致', catalog.assets.filter(item => item.status==='integrated-local-only'&&item.assetType!=='lobby-cover').every(item => {
   const production=runtimeAssetMap.get(item.id);
   return production&&item.runtimePaths.includes(production.runtime_path);
+}));
+check('reference-only 素材只留在 art-source 且不进入 public', catalog.assets.filter(item => item.status==='reference-only').every(item => {
+  const paths=[item.sourcePath,item.previewPath,...item.runtimePaths];
+  return paths.every(value => typeof value==='string'&&value.startsWith('art-source/')&&!value.startsWith('public/'));
 }));
 
 if (failures){

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-08-09T01:08:11+09:00",
+  "updatedAt": "2026-08-09T02:13:03+09:00",
   "storage": {
     "mode": "local-only",
     "remoteProvider": null,
@@ -74,6 +74,30 @@
     }
   ],
   "assets": [
+    {
+      "id": "BRAND-HONRU-CHARACTER-MASTER-V2-DRAFT",
+      "category": "brand/honru",
+      "assetType": "character-master-candidate",
+      "sourceType": "generated",
+      "sourcePath": "art-source/brand/ghost-game/honru/v2/chroma/honru-character-master-v2-chroma-draft-v1.png",
+      "sourceSha256": "1f4a02bfbce503fd91cb0228e7da6dff4069443cdfeda6bf17ba9ccf301790eb",
+      "license": "project-owned-ai-generated",
+      "author": "OpenAI Codex for Ghost Game",
+      "status": "reference-only",
+      "dimensions": { "width": 1254, "height": 1254 },
+      "previewPath": "art-source/brand/ghost-game/honru/v2/honru-character-master-v2-flat-transparent-draft-v1.png",
+      "previewSha256": "9b9bd08f109ef83ba1da19007a6965d3caed3e3fa66b2a9a027c0120044fe971",
+      "runtimePaths": [
+        "art-source/brand/ghost-game/honru/v2/honru-character-master-v2-flat-transparent-draft-v1.png",
+        "art-source/brand/ghost-game/honru/v2/derived/honru-character-master-v2-192px-draft-v1.png",
+        "art-source/brand/ghost-game/honru/v2/derived/honru-character-master-v2-96px-draft-v1.png",
+        "art-source/brand/ghost-game/honru/v2/derived/honru-character-master-v2-64px-draft-v1.png",
+        "art-source/brand/ghost-game/honru/v2/derived/honru-character-master-v2-44px-draft-v1.png"
+      ],
+      "promptPath": "art-source/brand/ghost-game/honru/v2/PROMPT_AND_PROVENANCE_v2.md",
+      "model": "codex-built-in-imagegen-runtime-managed",
+      "remoteObjectKey": null
+    },
     {
       "id": "G-02-COVER",
       "category": "game/gomoku",
