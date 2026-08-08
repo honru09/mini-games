@@ -8,7 +8,7 @@
 
 本轮已将产品基线收敛为六款：五子棋、飞行棋、迷你大富翁、坦克大战、俄罗斯方块、象棋。井字棋、弹珠跳棋、国际跳棋、斗兽棋、贪吃蛇的运行时模块、注册表和测试入口均已删除。
 
-六款游戏统一具备本地热座、人机和联机入口，并接入 Spectator、恢复、Match Stats、Cosmetic Presentation、奖励结算和 AI 票据链。服务端默认新客户端路径已经升级：Tank 是 `tank-authority-v1` 全实时权威模拟；Tetris、象棋、大富翁分别使用 `tetris-rule-v2`、`xiangqi-rule-v2`、`monopoly-rule-v2` 共享纯 Rule Core。旧 Battle Coordination、棋钟、拍卖和 relay 只作为 capability 不匹配或紧急回滚路径。
+六款游戏统一具备人机和联机入口，并接入 Spectator、恢复、Match Stats、Cosmetic Presentation、奖励结算和 AI 票据链；旧同设备多人入口已按后续产品决定删除。服务端默认新客户端路径已经升级：Tank 是 `tank-authority-v1` 全实时权威模拟；Tetris、象棋、大富翁分别使用 `tetris-rule-v2`、`xiangqi-rule-v2`、`monopoly-rule-v2` 共享纯 Rule Core。旧 Battle Coordination、棋钟、拍卖和 relay 只作为 capability 不匹配或紧急回滚路径。
 
 ## 2. 六款游戏已实现能力
 
@@ -68,7 +68,7 @@
 - Spectator 独立席位：中途加入、初始快照、重连、人数上限、可配置延迟发送队列、只读服务端拒绝与最终结果广播。
 - `tournament-orchestrator-v1`：3–4 人循环赛、5+ 三轮 Swiss、Bye、对手分、积分快照和重连；已接通在线/busy 检查、真实 6 位房间自动创建、席位分配、单盘 Server Result、自动下一轮。赛事积分与 💵/XP 解耦，客户端手工结果被拒绝。
 - `game-cosmetic-presentation-v1`：Profile 保存六款白名单装备 ID 与 schema v1；started/rejoined/spectator 只公开当前局装备，owned/余额/价格/购买记录保持私有，未知 ID 回退默认。
-- Reward Resolver v1.0：三模式奖励、有效局/AFK/秒投、防刷、首胜、连胜、重复对手衰减、等级曲线、独立 `wins/totalWins`、Reward Breakdown、reward/economy/history/analytics 流水和 Supabase 原子 RPC。
+- Reward Resolver v1.0：人机/联机双模式奖励、有效局/AFK/秒投、防刷、首胜、连胜、重复对手衰减、等级曲线、独立 `wins/totalWins`、Reward Breakdown、reward/economy/history/analytics 流水和 Supabase 原子 RPC；旧同设备多人奖励分支已删除。
 - 白皮书 × 美术资源：品牌 mark、💵 SVG、五子棋木纹/软 3D 棋子、俄罗斯方块玻璃井/七类纹理/封面已接入；其它四款保持 CSS/Canvas/Emoji fallback，正式资产按清单排期。
 
 ## 5. 验证结果

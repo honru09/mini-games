@@ -103,7 +103,7 @@
 | P-026 | `assets/replay/replay_controls.svg` | 用户回放时间轴、播放、暂停、倍速、回合跳转、分享；待制作 | 独立观众席/只读标签/重连快照及可配置延迟发送队列已上线；用户可操作的时间轴、跳转、分享与回放存档仍待实现；键盘可达 |
 | P-027 | `assets/meta/tasks_season.svg` | 每日/每周任务、赛季、锦标赛、季票、限时商品；待制作 | 赛事编排/积分面板已上线但没有专用正式美术；赛季、周任务、领奖与季票仍待实现；locked/active/claimable/claimed/expired；真实支付与 `💵` 分离 |
 | P-028 | `assets/platform/cross_platform_pack/` | PWA、App、小程序、桌面、Steam 发行包；未来逻辑依赖 | PWA 192/512、启动图、Android/iOS 自适应图标、商店截图、分享卡、Steam capsule/library/DLC 图 |
-| P-029 | `assets/ui/modes/mg_mode_*.svg` | 本地热座、人机、联机 3 图标；待制作 | 24/48/96px；本地人数、AI persona、联机状态分别有可读徽标 |
+| P-029 | `assets/ui/modes/mg_mode_*.svg` | 人机、联机 2 图标；待制作 | 24/48/96px；AI persona 与联机状态分别有可读徽标 |
 | P-030 | `assets/ai/mg_persona_<id>_*.webp` | `tsundere/gambler/mean/cute/teacher` 五套 192×192 头像；待制作 | 每人格 think/win/lose 气泡插图各 1；文字由 i18n/运行时渲染；人格只改变表达与近优选择，不允许覆盖强策略 |
 | P-031 | `assets/ui/room/mg_room_states.svg` | 席位、房主皇冠、等待、满员、游戏中、在线、离线、重连；待制作 | 不能只靠红/绿；房主与本人状态有形状/标签双编码 |
 | P-032 | `assets/ui/profile/mg_growth_states.svg` | XP、5 称号、8 成就、4 每日任务、最近一起玩；待制作 | locked/unlocked/progress/claimable；当前任务仅显示进度，领奖属未来逻辑 |

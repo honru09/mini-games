@@ -2,7 +2,7 @@
   "name": "mini-games-online",
   "version": "1.0.0",
   "private": true,
-  "description": "零依赖的 6 款插件化多人小游戏平台（本地/人机/联机）",
+  "description": "零依赖的 6 款插件化小游戏平台（人机/联机）",
   "main": "server/index.js",
   "scripts": {
     "start": "node server/index.js",

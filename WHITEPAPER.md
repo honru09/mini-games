@@ -1,7 +1,7 @@
 # Mini Games Platform · 项目白皮书
 
-**版本：v3.0（2026-08-07）**
-**状态：6 款精选游戏 + Economy & Progression v1.0 + Gameplay Rule Authority v2 + 自动赛事生命周期 + personal-linear-v2 + P0 双游戏美术纵切已落地**
+**版本：v3.2（2026-08-08 交接执行收口版）**
+**状态：6 款精选游戏 + Seat/Social/Profile v2 + Economy & Progression v1.0 + Gameplay Rule Authority v2 + Tournament/Replay/Metrics 产品闭环已落地**
 **发布成熟度：AUTOMATED_VERIFIED；真实设备与真实网络闸门未执行，Release Candidate 为 BLOCKED**
 
 > 本文件是仓库内的公开技术总纲。完整排版版位于 `deliverables/`；实现事实以当前源码、测试和本文件为准。
@@ -10,14 +10,14 @@
 
 - 产品：网页版多人游戏平台，保留 6 款可持续深化的插件化游戏。
 - 游戏：五子棋、飞行棋、迷你大富翁、坦克大战、俄罗斯方块、象棋。
-- 模式：本地热座、人机对战、WebSocket 联机对战。
+- 模式：人机对战、WebSocket 联机对战；旧同设备多人入口、档案槽位、奖励分支和三语文案已彻底删除。
 - 核心体验：打开约 3 秒开局，约 5 分钟一局，结算后立刻再来；先看到人，再看到游戏。
 - 技术：零 npm 运行依赖；前端模板 + JS 模块构建成单页；Node 静态服务、手写 WebSocket、DeepSeek 代理、可选 Supabase。
 - 线上：GitHub Pages 前端 + Render 后端。
 
 ## 1. 产品基线
 
-| runtime_id | 游戏 | 人数 | 本地 | AI | 联机 |
+| runtime_id | 游戏 | 人数 | AI | 联机 | AI Seat |
 |---|---|---:|---:|---:|---:|
 | `gomoku` | 五子棋 | 2 | ✅ | ✅ | ✅ |
 | `ludo` | 飞行棋 | 2–4 | ✅ | ✅ | ✅ |
@@ -26,7 +26,7 @@
 | `tetris` | 俄罗斯方块 | 2–4 | ✅ | ✅ | ✅ |
 | `xiangqi` | 象棋 | 2 | ✅ | ✅ | ✅ |
 
-平台能力包括 PIN 账号、设备自动登录、换机登录、💵 虚拟现金商城、排行榜、XP/等级/连胜、个性化装扮、三语言、六主题、在线状态、房间大厅、邀请、掉线恢复、独立观众席、赛事编排和结算共识。
+平台能力包括 PIN 账号、设备自动登录、换机登录、💵 虚拟现金商城、排行榜、XP/等级/连胜、48 款 Avatar v2 与高级背景、三语言、六主题、好友/拉黑/举报、Presence 隐私、统一真人/AI/空 Seat、READY、公开/私密房、快速加入、掉线托管/房主转移、独立观众席、赛事编排、每日任务、Replay v1.1 和管理员 Metrics v2。
 
 ## 2. 架构
 
@@ -54,10 +54,12 @@ shared/rules/{tetris,xiangqi,monopoly}.js   Supabase profiles/history/reward_his
 - 五子棋和飞行棋仍以客户端规则校验、服务端顺序/玩家身份和稳定点快照为主，不能描述为完整 Server Rule Authority。
 - `move` 由服务端记录顺序、发送者编号和有限 moveLog；客户端仍会验证当前行动者与具体走法。
 - 开局按当前已加入人数，不要求房间达到容量上限。
-- 非房主离房会结束当前局并压紧剩余席位；房主离房关闭房间。
+- 真人离房会按 Seat v2 规则结束或保留当前局、压紧席位并迁移 AI Controller；房主离开时转移房主并保留真人会话，不再无条件关闭房间。
 - 联机结果需要同一 `matchId` 下所有参与者提交一致 claim；AI 结果必须使用服务端签发的 `matchId/resultId` 票据、有效动作进度、去重和频控。
 - 独立 Spectator Seat 支持中途加入、快照、重进、人数上限和服务端只读隔离。
-- `tournament-orchestrator-v1` 支持 3–4 人循环赛及 5+ 人三轮瑞士制，并已接通参赛者锁定、真实房间自动创建、玩家席位分配、单盘服务端结果回传、自动下一轮、Bye 与重连状态；客户端手工结果被拒绝，`tournament_bind` 只保留为恢复入口。
+- `tournament-orchestrator-v1.1` 支持 3–4 人循环赛及 5+ 人三轮瑞士制，并接通 3–6 人独立选择、六款游戏、真实房间自动创建、玩家席位、服务端结果、自动下一轮、Bye、重连、参与者自愿弃权和管理员明确目标恢复；赛事积分不进入普通 💵、XP 或胜场。
+- Replay v1.1 保存 7 天版本化动作流，支持列表、播放/暂停、跳转、0.5–4×、公开房延迟 5 分钟、参与者分享/撤销；服务端只持久化分享令牌哈希。
+- Metrics v2 通过 `METRICS_ADMIN_TOKEN` Bearer 鉴权提供脱敏快照、有界历史、CSV、阈值告警、脱敏错误聚合和访问审计；`/admin-metrics.html` 不持久化令牌。
 - Profile 只向比赛 presentation 暴露白名单 `gameCosmetics` 装备 ID 和 `cosmeticSchemaVersion=1`；owned、余额、价格与购买记录保持私有，未知 ID 回退默认。
 
 ## 3. 本地强 AI、DeepSeek 与持续学习
@@ -78,8 +80,9 @@ DeepSeek Key 只存在于服务端环境变量。`qa/ai-games.js` 使用本地�
 - 客户端只持久化服务端 session token，不保存 PIN。
 - 权威字段：💵 余额、owned、XP、等级、连胜、按游戏胜场 `wins`、总胜场 `totalWins`、局数、成就与结算历史；胜场与余额完全独立。
 - Economy & Progression v1.0 由统一服务端 Reward Resolver 驱动：联机 1v1 胜/平/负为 `3/2/1💵` 与 `12/10/8 XP`，多人按名次为 `4/3/2/1💵` 与 `14/12/10/8 XP`。
-- AI 通过服务端票据与有效动作进度结算，胜/平/负为 `1/0/0💵` 与 `8/6/5 XP`，每日 AI 货币上限为 `3💵`；本地热座不产生正式 💵/XP。
+- AI 通过服务端票据与有效动作进度结算，胜/平/负为 `1/0/0💵` 与 `8/6/5 XP`，每日 AI 货币上限为 `3💵`。
 - 每日首胜、连胜 XP、重复对手衰减、有效比赛/AFK/秒投判定和 `XPNext=min(200,30+5×Level)` 等级曲线均由服务端配置化执行。
+- 每日任务进度由服务端从有效人机/联机结算派生，领取以 `taskKey + UTC date + claimId` 幂等写入经济流水；客户端不能直接加币。
 - `history` 保留兼容结算记录，`reward_history` 保存完整奖励明细与防刷依据，`economy_ledger` 审计每次 💵 增减，`analytics_events` 记录比赛和经济埋点。
 - Supabase 正式奖励通过 `apply_reward_v1` 按账号加锁并以 `result_id` 幂等，在单事务中更新档案、历史、奖励明细和可选经济流水；埋点仍独立写入。
 - Supabase schema、RLS、奖励/购买/AI 学习原子 RPC 和适配脚本已就绪；真实生产接入仍取决于 `SUPABASE_URL` 与仅服务端保存的 `service_role` secret，并需要真实迁移、并发、备份和回滚验收。
@@ -137,6 +140,9 @@ node qa/rule-authority.js
 node --experimental-websocket qa/rule-authority-online.js
 node qa/protocol-version.js
 node --experimental-websocket qa/game-cosmetic-profile.js
+node qa/metrics-online.js
+node --experimental-websocket qa/daily-tasks.js
+node --experimental-websocket qa/replay-sharing.js
 node qa/gameplay-load.js
 node --expose-gc qa/gameplay-memory.js
 node qa/timer-audit.js
@@ -145,6 +151,7 @@ node qa/spectator-room.js
 node qa/tournament.js
 node qa/tournament-auto-room.js
 node --experimental-websocket qa/tournament-auto-online.js
+node --experimental-websocket qa/tournament-recovery-online.js
 node qa/xiangqi-clock.js
 node qa/monopoly-auction.js
 node qa/reward-system.js
@@ -159,7 +166,7 @@ node --experimental-websocket qa/ws-close-test.js
 发布前必须满足：
 
 - 构建产物与模板/源码同步。
-- 六款游戏本地、人机和联机初始化与关键动作通过。
+- 六款游戏人机和联机初始化与关键动作通过，构建产物中不存在旧同设备多人模式入口。
 - 安全、重连、结算、商城和 Supabase adapter 回归通过。
 - asset manifest 可解析，SVG/XML 合法，无孤儿路径，无旧货币显示。
 - 360px 与桌面、六主题、三语言、normal/reduced-motion 均可用。
@@ -174,20 +181,26 @@ node --experimental-websocket qa/ws-close-test.js
 - [x] 建立 `public/assets/`、asset manifest、品牌 SVG、现金 SVG 与 fallback。
 - [x] 💵 迁移到商城、档案、排行榜和结算 UI。
 - [x] 完成五子棋和俄罗斯方块两个美术纵切，并加入 manifest/flag/fallback/QA。
-- [x] 实施 Economy & Progression v1.0：权威结算、三模式隔离、有效局、防刷、独立胜场、`apply_reward_v1` 单事务落库、奖励流水与 Reward Breakdown UI。
+- [x] 实施 Economy & Progression v1.0：联机/AI 权威结算隔离、有效局、防刷、独立胜场、`apply_reward_v1` 单事务落库、奖励流水与 Reward Breakdown UI。
 - [x] 实施 Gameplay Shared Protocol V1：Tank Authority、Tetris Battle Coordination、Spectator Room、Tournament Orchestrator、Xiangqi Clock、Monopoly Auction。
 - [x] 实施 Gameplay Rule Authority v2：Tetris/象棋/大富翁共享纯规则核心、服务端动作验证、完整快照、确定性哈希与 v1 兼容回退。
 - [x] 接通 Tournament 自动真实房间、席位分配、单盘服务端结果回传、自动下一轮、Bye 与重连状态。
 - [x] 接入 `game-cosmetic-presentation-v1`：Profile 白名单装备、公开 presentation、私有经济隔离与未知 ID fallback。
 - [x] 修复 Tank/Tetris 运行时持续重建 DOM 引发的闪屏，改为稳定渲染树和 keyed 增量更新，并增加节点身份回归。
+- [x] Seat/Social/Profile v2：真人/AI/空席、READY、AI Controller、房主转移、公开/私密房、好友/拉黑/举报、Presence 隐私、Avatar/背景/收藏试穿。
+- [x] 游戏外观商城：服务端价格/owned/装备权威校验，按游戏筛选、预览、购买、装备和六款 fallback。
+- [x] Daily Task：服务端进度、领取幂等和经济流水。
+- [x] Replay v1.1：7 天记录、播放器、延迟公开、分享令牌哈希和撤销。
+- [x] Tournament v1.1：六款 3–6 人创建、自动多桌、自愿弃权、管理员指定判负、赛事积分经济隔离。
+- [x] Metrics v2：管理员只读页面、脱敏历史/CSV/阈值/错误闭环、限频与访问审计。
 - [ ] 配置并验证真实 Supabase，完成 JSON 数据迁移、并发/RLS、备份和回滚演练。
 - [ ] 执行真实设备矩阵、真实网络整形和 30 分钟真实 Synthetic Session，解除 RC `BLOCKED`。
 
 ### P1
 
 - 六款游戏完整美术包与声音包。
-- 好友关系、聊天与举报/屏蔽。
-- 观战跟随与用户 Replay UI 产品化、Tetris T-Spin/B2B/Combo/Perfect Clear、赛事 Forfeit/Admin Recovery UI 和赛季系统。
+- 聊天、Feed、公会、处罚/申诉后台和赛季系统。
+- 高级延迟观战、Tetris T-Spin/B2B/Combo/Perfect Clear、跨实例长期 Metrics 与外部 Sentry。
 
 ### P2
 
@@ -199,6 +212,7 @@ node --experimental-websocket qa/ws-close-test.js
 - 所有 Key/token 只放环境变量，不写入仓库或前端。
 - 前端推送 `main` 后由 GitHub Pages workflow 构建部署。
 - Render 服务通过 `node scripts/render-deploy.js` 手动触发部署。
+- Metrics 生产环境必须配置高熵 `METRICS_ADMIN_TOKEN`；不得把令牌写入前端、URL、仓库或日志。
 - Render 当前保持单实例；真实 Supabase 迁移/并发验收和多实例一致性改造完成前不应横向扩容。
 - 本机 Node 20 运行 WebSocket 测试需要 `--experimental-websocket`；Node 22+ 可直接运行。
 

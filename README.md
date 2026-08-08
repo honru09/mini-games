@@ -34,9 +34,8 @@
 | 俄罗斯方块 🧱 | 2-4 | ✅ | ✅ 井面+双块前瞻 |
 | 象棋 ♞ | 2 | ✅ | ✅ 限宽 Alpha-Beta |
 
-## 三种玩法
+## 两种玩法
 
-- **👥 本地热座**：2-5 人共用一台设备
 - **🤖 人机对战**：6 款游戏都以规范化合法选项接入 DeepSeek，并保留本地 AI 快速回退，单人且断网也能玩（可选 5 个 AI 角色：傲娇 / 赌狗 / 毒舌 / 萌妹 / 数学老师）
 - **🌐 联机对战**：Tank 服务端模拟 + Tetris/象棋/大富翁共享 Rule Core 服务端权威 + 独立观众席 + 自动赛事建桌/结果/下一轮 + 大厅 / 邀请 / 排行榜
 
@@ -122,7 +121,7 @@ WebSocket 端点 `/ws`，所有消息为 JSON：
 | S→C | `restart` / `end_game` | 房主操作广播：以新 `matchId` 重开，或结束本局回到选游戏状态 |
 | S→C | `leaderboard` | 全球排行榜 |
 | S→C | `invite` | 收到邀请 |
-| S→C | `peer_left` | 成员主动离开；`payload.roomClosed=true` 表示房主已关闭房间，`false` 表示房间保留且当前对局结束 |
+| S→C | `peer_left` | 成员主动离开；仍有真人时 `roomClosed=false` 并保留房间/转移房主，最后一个真人离开时 `roomClosed=true` |
 | S→C | `peer_status` / `rejoined` / `reconnect_expired` / `resume_expired` / `host_changed` | 掉线等待、令牌重连、权威快照/稳定快照恢复、超时释放与房主转移 |
 | S→C | `spectate_joined` / `spectator_error` / `match_result` | 观战初始快照、只读保护与最终结果 |
 | S→C | `tank_snapshot` / `tank_result` | Tank 权威状态、ack 和最终排名 |
@@ -132,7 +131,9 @@ WebSocket 端点 `/ws`，所有消息为 JSON：
 | S→C | `monopoly_rule_state` / `monopoly_result` | 大富翁 v2 权威棋盘经济状态、Server RNG 与结果 |
 | S→C | `clock_state` / `clock_timeout` | 象棋服务端棋钟基准与超时结果；不代表服务端验证完整象棋规则 |
 | S→C | `auction_open` / `auction_bid` / `auction_closed` | 大富翁服务端拍卖状态、竞价与产权结果 |
+| C↔S | `tournament_forfeit` / `tournament_forfeited` / `tournament_recover` / `tournament_recovered` | 参赛者仅可为自己弃权；管理员必须指定判负目标；赛事积分不进入普通 💵/XP/胜场 |
 | S→C | `tournament_state` / `tournament_match_assigned` / `tournament_bye` | 赛事状态、自动房间分配、轮空、积分与排名 |
+| C↔S | `replay_list` / `replay_get` / `replay_share` / `replay_unshare` | 7 天回放、公开延迟、参与者分享/撤销、令牌哈希与权限检查 |
 | S→C | `gameplay_error` | 统一 `protocol/code/message/reason` 错误；覆盖协议版本、非法/重复/过期动作等 |
 | S→C | `solo_started` | 下发人机对局的服务端 `matchId/resultId` 票据 |
 | S→C | `result_pending` / `result_ok` / `result_error` | 结算共识状态；`result_ok.payload.reward` 含当前玩家完整 Reward Breakdown |
@@ -145,9 +146,8 @@ WebSocket 端点 `/ws`，所有消息为 JSON：
 - 联机 1v1：胜/平/负为 `3/2/1💵` 与 `12/10/8 XP`。
 - 3–5 人联机：第 1/2/3/其他名次为 `4/3/2/1💵` 与 `14/12/10/8 XP`。
 - AI：胜/平/负为 `1/0/0💵` 与 `8/6/5 XP`，每账号每天通过 AI 触发的最终货币总额最多 `3💵`（含等级里程碑）；达到上限后仍得 XP。
-- 本地热座：不产生正式 `💵` 或 XP，不能改写账号等级与连胜。
 - 每日首次有效联机胜利额外 `+2💵/+5 XP`；3/5/8+ 连胜额外 `+2/+4/+6 XP`。
-- 每日任务由服务端按 `taskKey + date + claimId` 记录进度与领取，正式奖励进入经济流水；Replay MVP 保存 7 天并支持列表、播放/暂停、进度和倍速。
+- 每日任务由服务端按 `taskKey + date + claimId` 记录进度与领取，正式奖励进入经济流水；Replay v1.1 保存 7 天，支持列表、播放/暂停、进度、倍速、公开延迟和可撤销分享链接。
 - 同一玩家组合 24 小时内第 11–20 局货币减半；第 21 局起货币为 0、XP 为 50%。
 - 等级曲线：`XPNext(level)=min(200, 30+5×level)`；每跨越 5 级里程碑奖励 `5💵`。
 - 胜场使用独立的 `wins`（按游戏）与 `totalWins`（总胜场）权威字段，只在有效正式胜利结算时增长，与 💵 余额完全解耦。
@@ -173,6 +173,8 @@ node scripts/render-deploy.js
 
 后端也支持 `DATA_DIR`（测试或持久磁盘路径）和 `ALLOWED_ORIGINS`。`POST /api/ai` 要求已认证账号的 Bearer token，并带 Origin、请求体大小、并发和速率限制。6 款游戏只把合法选项交给模型，客户端约 2.2 秒超时且会再次精确校验返回值；无 Key、断网、限流或非法响应会立即使用本地算法。生产环境不要把 DeepSeek key 放到前端。
 
+运营指标需单独配置 `METRICS_ADMIN_TOKEN`。`/api/metrics`、`/api/metrics/history`、`/api/metrics/export` 均要求 Bearer 管理员令牌，并提供限频、脱敏访问审计、有界历史、CSV 导出、阈值告警和脱敏错误聚合；只读页面为 `/admin-metrics.html`，令牌只保存在页面内存。未配置令牌时 API 返回 503。当前 Render 未挂载持久磁盘，跨重启长期历史仍需外部持久化后端。
+
 ## 白皮书 × 美术资源运行时
 
 - `public/assets/manifests/asset_manifest.json` 锁定 6 个游戏 runtime ID、平台 asset ID、状态、fallback 和 a11y 语义。
@@ -192,7 +194,7 @@ node scripts/render-deploy.js
 
 `profiles.wins` / `profiles.total_wins` 分别保存按游戏胜场和总胜场；服务端/API 对应 `wins` / `totalWins`，不得由余额推导胜场。正式奖励统一调用 `apply_reward_v1`：按账号加事务锁、以 `result_id` 幂等校验，并在同一事务中更新 `profiles`、写入 `history`、`reward_history` 和可选 `economy_ledger`；`analytics_events` 仍为独立埋点写入。
 
-`profiles.game_cosmetics` 保存 `cosmeticSchemaVersion=1` 的公开已装备游戏外观 ID。未知 ID 在服务端回退默认值；比赛 Metadata 只广播装备 ID，不含 `owned`、余额、价格或购买记录。当前只接通既有原型外观，不新增游戏皮肤商品或购买入口。
+`profiles.game_cosmetics` 保存 `cosmeticSchemaVersion=1` 的公开已装备游戏外观 ID。未知 ID 在服务端回退默认值；比赛 Metadata 只广播装备 ID，不含 `owned`、余额、价格或购买记录。商城已提供六款游戏外观的筛选、预览、服务端权威购买、装备和默认回退入口。
 
 `profiles.solo_rate` 保存服务端维护的人机结算频控时间戳，首胜日期与 AI 日货币累计也只由服务端更新，均不属于客户端可写档案字段。正式奖励会先写入本地 outbox；Supabase 事务短暂失败后会以相同 `result_id` 自动重试，`applied` 或匹配 `resultId` 的 `duplicate` 都是成功终态。当前 Render 单实例且未挂载持久磁盘，outbox 只能覆盖进程存活期/正常重启场景，不能替代真实 Supabase；扩容多实例前还必须把 Reward Resolver 迁移为数据库内权威计算或增加版本冲突重算。没有真实 Supabase 凭证时，可运行 `node --experimental-websocket qa/supabase-adapter.js`，用本地 fake PostgREST 验证字段映射、单事务 RPC payload、幂等重试和空库迁移行为；它不能替代真实项目的 SQL、并发、连通性与 RLS 验收。
 

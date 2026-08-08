@@ -1,25 +1,29 @@
 {
   "schemaVersion": 1,
   "project": "Playroom",
-  "updatedAt": "2026-08-08T03:32:56+09:00",
-  "lastVerifiedCommit": "3e72c311d45237b4305a3dad158fb9fab05c371e",
-  "lastReleasedCommit": "8222fc18548d129a21b2903ac5821fb7ea9dad3a",
+  "updatedAt": "2026-08-08T13:33:27+09:00",
+  "lastVerifiedCommit": "b4943a8baa9e93c7b5f159777aaa7955e23d607d",
+  "lastReleasedCommit": "b4943a8baa9e93c7b5f159777aaa7955e23d607d",
   "stateVocabulary": ["planned", "partial", "implemented", "verified", "production-ready", "not_executed", "blocked"],
   "releaseCandidate": {
     "status": "blocked",
-    "reason": "自动化已通过，但真实设备、真实 Supabase/RLS/并发/备份回滚和真实网络整形尚未执行。"
+    "reason": "自动化与本地管理员页面浏览器验收已通过，但真实设备、真实 Supabase/RLS/并发/备份回滚、真实网络整形和跨实例生产遥测仍未执行。"
   },
   "capabilities": {
     "sixGames": {"status": "verified", "evidence": ["npm test", "qa/dom-smoke.js"]},
+    "officialModes": {"status": "verified", "evidence": ["public/index-template.html", "qa/dom-smoke.js", "server/reward-engine.js"], "scope": ["ai", "online"], "removed": ["legacy same-device multiplayer UI", "legacy profile slots", "legacy local reward branch"]},
+    "seatSocialProfileV2": {"status": "verified", "evidence": ["qa/room-seats.js", "qa/social-graph.js", "qa/reconnect-online.js", "qa/e2e-online.js"]},
     "threeLanguageI18n": {"status": "verified", "evidence": ["npm run test:i18n", "qa/dom-smoke.js"]},
     "aiStrengthAndLearning": {"status": "verified", "evidence": ["qa/ai-strength.js", "qa/ai-learning.js", "qa/ai-learning-online.js"]},
     "multiplayerAuthority": {"status": "verified", "evidence": ["qa/rule-authority-online.js", "qa/e2e-online.js"]},
     "securityAndPersistence": {"status": "verified", "evidence": ["qa/security-online.js", "qa/supabase-adapter.js", "qa/supabase-schema.js"]},
-    "visualBrowser": {"status": "partial", "evidence": ["qa/dom-smoke.js", "REAL_DEVICE_QA_CHECKLIST.md"], "notExecuted": ["Android", "iPhone Safari", "Tablet", "second browser"]},
+    "visualBrowser": {"status": "partial", "evidence": ["qa/dom-smoke.js", "local /admin-metrics.html browser QA", "REAL_DEVICE_QA_CHECKLIST.md"], "notExecuted": ["Android", "iPhone Safari", "Tablet", "second desktop browser"]},
     "realSupabase": {"status": "not_executed", "evidence": ["qa/supabase-adapter.js", "supabase/schema.sql"], "missing": ["production credentials", "RLS/concurrency/backup/rollback acceptance"]},
-    "productionTelemetry": {"status": "partial", "evidence": ["qa/metrics-online.js", "server/index.js /api/metrics"], "missing": ["Sentry or equivalent error loop", "performance dashboard history/export"]},
+    "productionTelemetry": {"status": "partial", "evidence": ["qa/metrics-online.js", "public/admin-metrics.html", "server/index.js metrics-v2"], "implemented": ["Bearer auth", "rate limit", "redacted aggregates", "bounded history", "CSV export", "threshold alerts", "redacted error incidents", "access audit"], "missing": ["cross-instance durable metrics store", "external Sentry or equivalent SaaS delivery"]},
     "gameplayCosmetics": {"status": "verified", "evidence": ["qa/game-cosmetic-profile.js", "qa/daily-tasks.js", "qa/asset-manifest-v2.js"]},
-    "dailyTasksAndReplay": {"status": "verified", "evidence": ["qa/daily-tasks.js", "server/index.js", "public/src/online/03-websocket.js"]}
+    "dailyTasks": {"status": "verified", "evidence": ["qa/daily-tasks.js", "server/index.js"]},
+    "replayV11": {"status": "verified", "evidence": ["qa/replay-sharing.js", "qa/daily-tasks.js", "public/src/online/03-websocket.js"], "boundary": "bounded event log; not full Tetris Rule Replay"},
+    "tournamentV11": {"status": "verified", "evidence": ["qa/tournament.js", "qa/tournament-auto-online.js", "qa/tournament-recovery-online.js"], "boundary": "tournament points are separated from normal currency, XP and wins"}
   },
   "qualityGates": {"syntax": "pass", "static": "pass", "gameplay": "pass", "protocol": "pass", "security": "pass", "reconnect": "pass", "dom": "pass", "e2e": "pass", "visualSmoke": "partial", "buildDrift": "pass", "docsAssetsStatus": "pass"}
 }

@@ -11,7 +11,7 @@
 
 核心理念 **Fast Fun Loop**：打开 3 秒开局 → 5 分钟一局 → 立刻再来；先看到「人」，再看到「游戏」。
 
-三种玩法：**本地热座**（2-5 人一台设备）、**人机对战**（六款本地强策略 + DeepSeek 近优裁决）、
+两种玩法：**人机对战**（六款本地强策略 + DeepSeek 近优裁决）、
 **联机对战**（WebSocket 房间 + 游戏大厅 + 邀请 + 在线状态 + 全球排行榜）。
 含 **PIN 账号体系**、**💵 商城**、**三语言 i18n**（zh-CN / en-US / uk-UA）、
 **Settings 设置页**（主题 + 语言 + 联机服务配置）。
@@ -33,7 +33,7 @@ mini-games-online/
 │   ├── index-template.html # 前端骨架模板
 │   ├── src/             # 前端源码（build.js 合并进 index.html）
 │   │   ├── core/        # i18n / utils / assets / app-shell / game-framework / social / ai-personas
-│   │   ├── games/       # 6 款游戏（本地 + 人机 scheduleAI）
+│   │   ├── games/       # 6 款游戏规则/表现 + 人机 scheduleAI
 │   │   ├── online/      # WebSocket 客户端（03-websocket）
 │   │   ├── shop/        # 04-auth / 05-profile / 06-shop
 │   │   └── ui/          # 07-roster（档案/排行榜/结算）
@@ -54,7 +54,7 @@ mini-games-online/
 ├── qa/                  # 测试
 │   ├── dom-smoke.js      # 前端冒烟
 │   ├── ai-games.js       # 6 款 AI 合法选择、回退与状态机回归
-│   ├── reward-system.js  # Reward Config、等级曲线、防刷与三模式奖励回归
+│   ├── reward-system.js  # Reward Config、等级曲线、防刷与人机/联机双模式奖励回归
 │   ├── rule-authority-online.js # 三套 v2 真实 WebSocket 动作/状态/错误/重连
 │   ├── tournament-auto-online.js # 自动建房、结果回传与下一轮生命周期
 │   ├── game-cosmetic-profile.js # 公开装备合同与私有字段隔离
@@ -124,13 +124,13 @@ node server/index.js
 - 连接必须先用服务端签发的 session token 鉴权；uid 本身不是凭证。
 - 对局开始时服务端下发一次性 `matchId`，保留有限 `moveLog`；异常掉线进入重连窗口，显式离开仍立即释放席位。
 - 服务端在实时广播和 `moveLog` 中附带可信 `player`；客户端只接受当前行动者的输入，大富翁提前结算另由服务端限制为房主。
-- 非房主离房时，服务端结束当前对局、压紧剩余玩家席位，并通过 `player_reassigned` 更新客户端索引；房主离房则关闭整间房。
-- `peer_left.payload.roomClosed` 明确区分房间是否关闭：`true` 为房主关闭房间，`false` 为房间保留、仅结束当前对局。
+- 真人离房时，服务端结束当前对局、压紧剩余席位并通过 `player_reassigned` 更新索引；若离开者是房主，则转移给剩余真人最低席位并迁移 AI Controller。
+- `peer_left.payload.roomClosed` 明确区分房间是否关闭：只有最后一个真人离开、房间不再有真人会话时为 `true`；仍有真人时为 `false`，房间保留并广播 `host_changed`（如适用）。
 - 消息类型见 README「消息协议」表；新消息在 `server/index.js handleMessage` 和
   `public/src/online/03-websocket.js onMessage` 两处成对添加，再运行构建同步 `public/index.html`。
 - 房主权限：选游戏、开始、结束本局、新一局；非房主点这些按钮会被拦（toast 提示）。
 - 独立观众席不占玩家位；观众只能接收快照/结果，服务端拒绝 `move`、Tank input、Tetris claim、拍卖出价等 mutation。
-- 赛事编排由 `tournament-orchestrator-v1` 维护 3–4 人循环赛、5+ 三轮 Swiss、Bye、积分和重连快照；全员同意后自动创建真实 6 位房间、分配席位、启动比赛、接收单盘服务端结果并自动推进下一轮。客户端手工结果被拒绝，`tournament_bind` 只保留为恢复路径。
+- 赛事编排由 `tournament-orchestrator-v1.1` 维护 3–4 人循环赛、5+ 三轮 Swiss、Bye、积分和重连快照；全员同意后自动创建真实 6 位房间、分配席位、启动比赛、接收单盘服务端结果并自动推进下一轮。参赛者只能为自己弃权，管理员恢复必须明确 `targetUid`，赛事桌不进入普通 💵/XP/胜场。
 - `ENABLE_RULE_AUTHORITY_V2=0` 是三套 v2 的紧急兼容开关；默认开启。新协议/消息必须同步 `server/gameplay/protocol.js`、README 注册表、客户端 capability 与专项测试。
 
 ### 人数规则
@@ -142,7 +142,7 @@ node server/index.js
 ### 结算与排行榜
 - 所有正式奖励由 `server/reward-engine.js` 的统一 Reward Resolver 决定；客户端和六款游戏只提交结果/展示明细，不能直接修改金币、XP、等级、连胜或胜场。
 - 联机 1v1 胜/平/负为 `3/2/1💵` 与 `12/10/8 XP`；3–5 人按第 1/2/3/其他名次为 `4/3/2/1💵` 与 `14/12/10/8 XP`。
-- AI 胜/平/负为 `1/0/0💵` 与 `8/6/5 XP`，服务端票据绑定对局且每日最终货币（含等级里程碑）最多产生 `3💵`；本地热座不进入正式金币和 XP 成长。
+- AI 胜/平/负为 `1/0/0💵` 与 `8/6/5 XP`，服务端票据绑定对局且每日最终货币（含等级里程碑）最多产生 `3💵`。
 - 联机时客户端提交完整结果 claim；服务端等待房间成员提交相同结果后才结算，`matchId`/重复提交都会校验。
 - 人机必须先通过 `solo_start` 获取服务端 `matchId/resultId`，并用 `solo_progress` 上报由游戏合法动作回调产生的进度；新客户端的每个操作含不可重复 `actionId`，重连补发不得重复计入；旧版客户端自造 `solo resultId/coins` 会被拒绝。
 - 有效局同时检查服务端开局时间、结构合法的有效操作数、唯一操作指纹和活跃参与者；秒投、过早取消、无进度、争议和 AFK 不产生正常奖励。
@@ -159,7 +159,7 @@ node server/index.js
 - 奖励数值、游戏权重、有效局阈值、等级曲线全部集中在 `server/reward-engine.js`；禁止重新散落到游戏文件。
 - 等级需求为 `XPNext(level)=min(200, 30+5×level)`，累计 XP 迁移不降低既有等级；每跨越 5 级里程碑奖励 `5💵`。
 - `result_ok.payload.reward` 返回当前玩家独立的资格、阻断原因、基础/加成/衰减、总 💵/XP、等级和连胜前后值，前端以 Reward Breakdown 弹层展示。
-- `💵`、XP、未来 Rank/MMR 必须完全分离；本地热座不得产生正式货币。
+- `💵`、XP、未来 Rank/MMR 必须完全分离。
 - 调整数值或资格阈值时必须同步 `qa/reward-system.js`、安全回归和联机 E2E。
 
 ### 人机对战（本地强 AI + DeepSeek）
@@ -237,7 +237,7 @@ Supabase 首次接入或升级时，在 SQL Editor 执行可重复迁移的 `sup
 ## 7. 当前状态
 
 ✅ 已完成：
-- 6 款精选游戏三模式（本地 / 人机 / 联机）
+- 6 款精选游戏两种正式玩法（人机 / 联机）；旧同设备多人入口与残留奖励分支已删除
 - 联机大厅 / 邀请 / 在线状态 / 排行榜
 - PIN 账号体系、💵 商城（头像 / 相框 / 特效 / 背景 / 六款游戏外观）
 - 三语言 i18n + Settings 设置页 + 语言旗帜
@@ -266,18 +266,18 @@ Supabase 首次接入或升级时，在 SQL Editor 执行可重复迁移的 `sup
 - 六款 AI 专项知识包、`personal-linear-v2` 个人持续学习、胜/负反事实更新、平局经验和 Supabase 原子学习 RPC
 - Seat/Social/Profile v2 已进入 main：真人/AI/空席、READY、AI Controller、公开/私密房、观战、房主转移、好友/拉黑/举报、Presence 隐私和 Profile v2。
 - Gameplay Cosmetic 产品闭环：服务端定价/owned/装备校验、商城按游戏筛选、公开档案只返回装备 ID，六款游戏保留 fallback。
-- Daily Task / Replay / Metrics MVP：服务端任务进度与 claimId 幂等领取、7 天回放列表/播放控制、Bearer 管理员指标只读接口、限频和访问审计。
+- Daily Task / Replay / Metrics：服务端任务进度与 claimId 幂等领取；Replay v1.1 支持 7 天保留、公开延迟、分享/撤销和播放控制；Metrics v2 提供 Bearer 管理员只读页面、有界历史、CSV、阈值告警、脱敏错误闭环、限频与访问审计。
 
 ⏳ 待办：
 1. 提供真实 Supabase 凭证并执行迁移、RLS/并发、备份与回滚验收（当前只通过 fake adapter）
 2. 执行 Desktop Chrome/第二浏览器、Android、iPhone、Tablet 实机矩阵，以及真实 `tc/netem`/等价网络整形和 30 分钟 Synthetic Session；完成前 RC 保持 `BLOCKED`
-3. Tetris T-Spin/B2B/Combo/Perfect Clear、赛事专用 Admin Recovery UI、Sentry/指标历史导出、延迟观战与文字/社交游戏
+3. Tetris T-Spin/B2B/Combo/Perfect Clear、外部 Sentry/跨实例长期指标存储、高级延迟观战与文字/社交游戏
 4. 多实例部署前完成 Reward Resolver 与 AI 学习 outbox 的数据库版本冲突重算/单写者改造
 5. 平台扩展（微信小程序 / App / 桌面版）
 
 ## 8. 项目历程
 
-- 初版：2-5 人小游戏网页版 → 5 款游戏本地热座。
+- 初版：2-5 人小游戏网页版 → 聚焦六款可持续深化的游戏。
 - 联机版：WS 房间/大厅/邀请、金币、排行榜、像素头像。
 - 增强版：人机 AI、黑夜主题、毛玻璃、3D 骰子、倒计时、房间内切游戏。
 - 聚焦版：保留 6 款可持续深化的游戏，删除低可玩性条目；接入品牌/现金 SVG、asset manifest 与程序化 fallback。

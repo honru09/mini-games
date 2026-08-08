@@ -211,7 +211,7 @@ function gameTank(area, extra, n, opts){
     bullets = nextBullets;
     traces = traces.filter(item => now - item.at < (item.type === 'scorch' ? 7000 : 1600)).slice(-60);
     effects = effects.filter(item => now - item.at < item.ttl).slice(-40);
-    // 联机客端只做预测显示，最终计时与排名必须等待房主快照；本地/AI 行为保持不变。
+    // 联机客端只做预测显示，最终计时与排名必须等待房主快照；人机模拟行为保持不变。
     if (remainingMs <= 0 && (!opts.online || opts.isHost)) finishMatch();
   }
   function ranking(){

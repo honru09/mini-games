@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "verifiedAt": "2026-08-08T12:59:47+09:00",
+  "commit": "b4943a8baa9e93c7b5f159777aaa7955e23d607d",
+  "automated": {
+    "npmTest": {"status": "pass", "durationSeconds": 137.8, "exitCode": 0},
+    "metrics": "METRICS_ONLINE_ALL_PASS",
+    "replay": "REPLAY_SHARING_ALL_PASS",
+    "tournamentRecovery": "TOURNAMENT_RECOVERY_ONLINE_ALL_PASS",
+    "dom": "ALL_PASS",
+    "security": "SECURITY_ALL_PASS",
+    "reconnect": "RECONNECT_ALL_PASS",
+    "supabaseAdapter": "SUPABASE_ADAPTER_ALL_PASS",
+    "e2e": "E2E_ALL_PASS"
+  },
+  "browser": {
+    "target": "local /admin-metrics.html",
+    "status": "pass",
+    "checks": ["authenticated refresh", "history table", "zero console warning/error", "desktop visual layout"]
+  },
+  "documents": {
+    "status": "pass_with_renderer_limit",
+    "whitepaper": "deliverables/Mini Games Platform 产品与技术白皮书 v3.0 完善版.docx",
+    "staleModeFacts": 0,
+    "accessibility": {"high": 0, "medium": 0, "low": 0},
+    "headingStyles": {"heading1": 38, "heading2": 112, "heading3": 16},
+    "sections": 1,
+    "standardPngRender": "not_executed_soffice_missing"
+  },
+  "notExecuted": [
+    "real Supabase migration/RLS/concurrency/backup/rollback",
+    "Android/iPhone/Tablet/second desktop browser",
+    "real network shaping",
+    "30-minute real synthetic session",
+    "cross-instance durable metrics and external Sentry"
+  ]
+}

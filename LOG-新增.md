@@ -24,3 +24,4 @@
 - 2026-08-08 01:58｜新增《下一窗口执行交接报告》，汇总未整合 Seat/Social/个性化分支、产品入口缺口、逻辑不一致、未完成项和下一步验收顺序。
 - 2026-08-08 03:03｜新增 Seat v2、AI Seat/托管者、Social Graph、Profile v2、Premium Background、统一图标系统、Supabase 字段与专项 QA；本轮 npm test、Quality Gates 全部通过。
 - 2026-08-08 03:36｜新增游戏外观商品与装备入口、每日任务服务端领取、7 天 Replay MVP、管理员 Metrics 只读接口、赛事 3–6 人选择器与 Admin Recovery 控件；专项及全量回归通过。
+- 2026-08-08 13:34｜新增 Replay v1.1 分享/撤销与公开延迟、Tournament v1.1 自愿弃权/指定判负、Metrics v2 管理页面/历史/CSV/告警，以及交接收口一次性报告和验证证据。
