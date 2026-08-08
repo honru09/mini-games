@@ -195,6 +195,9 @@ function gameTopLabels(){
 
 async function main(){
   /* 大厅渲染 */
+  const initialTitle = html.match(/<title[^>]*data-i18n=["']app_title["'][^>]*>([^<]*)<\/title>/i);
+  check('首屏静态标题与中文词典一致且不泄漏已删除玩法',
+    !!initialTitle && initialTitle[1].trim() === '小游戏合集');
   check('大厅渲染 6 张精选游戏卡', $('game-grid').children.length === 6);
   check('运行时只注册 6 个精选游戏 ID',
     JSON.stringify(Object.keys(G.GAMES)) === JSON.stringify(['gomoku','ludo','monopoly','tank','tetris','xiangqi']));

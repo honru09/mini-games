@@ -30,3 +30,4 @@
 - 2026-08-08 13:51｜修改线上 WebSocket 冒烟以执行 Seat v2 READY 开局、消除连接事件竞态并脱敏凭证；同步 Render 环境变量脚本、README 与 AGENTS。
 - 2026-08-08 17:45｜重构注册与商城信息层级和 481–768px 降级；修复商城价格漂移、Starter Background 假购买入口、重复弹层、滚动锁、游戏顶栏/Avatar alt/60 组商品三语泄漏，并同步构建、白皮书和项目状态。
 - 2026-08-08 18:14｜修正 DOCX 页眉 v3.3、P3 阶段缺字、第 26 章标题孤行与追加章节分页；逐页复验 1–40 页并重跑 Quality Gates/完整 npm test。
+- 2026-08-08 18:30｜将 HTML 首屏 fallback 标题改为“小游戏合集”，与 `app_title` 中文词典一致；重建 `public/index.html` 并通过 i18n、DOM 与 Quality Gates。
