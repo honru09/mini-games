@@ -109,7 +109,7 @@ const IDs = ['count-group','btn-back','btn-restart','btn-rules','btn-end-game','
   'player-bar','status-bar','board-area','game-extra','toast-wrap','game-grid',
   'btn-create-room','btn-join-room','room-input','btn-settings','online-status','online-banner',
   'room-panel','room-code-big','room-info','room-status','room-actions',
-  'btn-me','slots-row','lb-list','lb-note','lb-tab-all','lb-tab-online',
+  'btn-me','lb-list','lb-note','lb-tab-all','lb-tab-online',
   'lobby-panel','lobby-list','player-list'];
 
 function makeEnv(label, hash, timerScale){

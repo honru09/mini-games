@@ -168,7 +168,7 @@ function openShop(){
             if (tab === 'frames') account.frame = item.id;
             else if (tab === 'effects') account.effect = item.id;
             else account.background = item.id;
-            saveAccount(); syncProfiles(); render(); renderMe(); renderSlots();
+            saveAccount(); syncProfiles(); render(); renderMe();
             toast(t('shop_applied')+'「' + shopItemName(cat,item) + '」');
           });
           it.appendChild(use);

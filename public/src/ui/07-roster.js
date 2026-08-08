@@ -286,7 +286,6 @@ let roster = [];
 let account = null;
 let pendingAuthPin = null;
 let deviceUid = null;
-let slots = [];
 let lastServerLB = null;
 let lbFilter = 'all';
 let authModalEl = null;
@@ -356,12 +355,6 @@ function genUid(){
   return 'u_' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
 }
 function profileByUid(uid){ return roster.find(p => p.uid === uid); }
-function createProfile(name, avatar){
-  const p = { uid: genUid(), name: name || t('default_player_name'), avatar: (avatar === undefined ? Math.floor(Math.random() * AVATAR_COUNT) : avatar), coins: 0, played: {}, total: 0 };
-  roster.push(p);
-  saveRoster();
-  return p.uid;
-}
 function syncProfiles(){
   if (!online.connected) return;
   if (account && account.uid){
@@ -408,7 +401,7 @@ function registerAccount(name, pin, avatar, background, frame, effect){
       presencePreference: account.presencePreference, presenceVisibility: account.presenceVisibility, showcase: account.showcase,
     } });
   }
-  renderMe(); renderSlots(); renderLeaderboard();
+  renderMe(); renderLeaderboard();
   if (authModalEl) authModalEl.remove();
   authModalEl = null;
   return account;
@@ -445,7 +438,7 @@ function completeLocalLogout(showLogin){
     localStorage.removeItem('mg_displayed_reward_ids');
     localStorage.setItem('mg_uid', '');
   } catch {}
-  renderMe(); renderSlots(); renderLeaderboard();
+  renderMe(); renderLeaderboard();
   if (showLogin && !authModalEl) openAuthModal("login");
 }
 function updateAccountProfile(p){
@@ -509,104 +502,16 @@ function renderMe(){
   }
   btn.title = t('my_profile_button_title');
 }
-function renderSlots(){
-  const row = $('slots-row');
-  row.innerHTML = '';
-  row.classList.add('hidden');
-  row.setAttribute('aria-hidden','true');
-  return;
-  /* Legacy local roster rendering retained below only for migration snapshots. */
-  for (let i = 0; i < playerCount; i++){
-    if (aiMode && i > 0){
-      const chip = el('button','slot-chip ai');
-      chip.type = 'button';
-      chip.appendChild(el('span','av','🤖'));
-      chip.appendChild(el('span','nm',t('ai_player_number',i)));
-      chip.appendChild(el('span','pts',t('computer_opponent')));
-      row.appendChild(chip);
-      continue;
-    }
-    const uid = slots[i];
-    const p = uid ? profileByUid(uid) : null;
-    const chip = el('button','slot-chip' + (p ? ' set' : ''));
-    chip.type = 'button';
-    if (p){
-      const av = el('span','av');
-      const prof = p.uid === (account && account.uid) ? account : p;
-      av.appendChild(avatarStageNode(prof, 30));
-      chip.appendChild(av);
-      chip.appendChild(elRaw('span','nm', p.name));
-      const coinLine = el('span','coin-line');
-      coinLine.appendChild(currencyIcon('sm'));
-      coinLine.appendChild(el('span','pts', t('compact_account_stats',p.coins || 0,p.total || 0)));
-      chip.appendChild(coinLine);
-    } else {
-      chip.appendChild(el('span','av','➕'));
-      chip.appendChild(el('span','nm',t('player_number',i+1)));
-      chip.appendChild(el('span','pts',t('select_profile_hint')));
-    }
-    chip.addEventListener('click', () => openSlotPicker(i));
-    row.appendChild(chip);
-  }
-}
-function ensureSlots(){
-  if (aiMode) { slots = [deviceUid]; return; }
-  return;
-  /* Legacy local hot-seat slot migration path. */
-  slots = slots.slice(0, playerCount);
-  while (slots.length < playerCount) slots.push(null);
-  if (deviceUid) slots[0] = deviceUid;
-  if (aiMode){
-    for (let i = 1; i < slots.length; i++) slots[i] = null;
-    return;
-  }
-  for (let i = 0; i < playerCount; i++){
-    if (!slots[i]) slots[i] = createProfile(t('player_number',i+1));
-  }
-}
-function openSlotPicker(i){
-  const bd = el('div','modal-backdrop');
-  const card = el('div','modal-card');
-  card.appendChild(el('h3', null, t('select_profile_title',i+1)));
-  const list = el('div','roster-list');
-  roster.forEach(p => {
-    const item = el('button','roster-item');
-    item.type = 'button';
-    const av = el('span','av');
-    av.appendChild(avatarCanvas(p.avatar, 24));
-    item.appendChild(av);
-    item.appendChild(elRaw('span','nm', p.name));
-      item.appendChild(el('span','lb-game', t('profile_picker_stats',CURRENCY,p.coins || 0,p.total || 0)));
-    item.addEventListener('click', () => {
-      slots[i] = p.uid;
-      bd.remove();
-      renderSlots();
-    });
-    list.appendChild(item);
-  });
-  const create = el('button','btn btn-primary',t('profile_create'));
-  create.addEventListener('click', () => {
-    bd.remove();
-    openProfileEditor(null, i);
-  });
-  const cancel = el('button','btn',t('cancel'));
-  cancel.addEventListener('click', () => bd.remove());
-  card.appendChild(list);
-  card.appendChild(create);
-  card.appendChild(cancel);
-  bd.appendChild(card);
-  bd.addEventListener('click', e => { if (e.target === bd) bd.remove(); });
-  document.body.appendChild(bd);
-}
-function openProfileEditor(uid, slotIndex){
+function openProfileEditor(uid){
   const editing = uid ? profileByUid(uid) : null;
+  if (!editing) return;
   const editingMe = !!(account && uid === account.uid);
-  let name = editing ? editing.name : '';
-  let avatar = editing ? editing.avatar : Math.floor(Math.random() * AVATAR_COUNT);
+  let name = editing.name;
+  let avatar = editing.avatar;
   let background = editingMe ? (account.background || 0) : 0;
   const bd = el('div','modal-backdrop');
   const card = el('div','modal-card');
-  card.appendChild(el('h3', null, editing ? t('profile_edit_title') : t('profile_new_title')));
+  card.appendChild(el('h3', null,t('profile_edit_title')));
   const input = el('input','nick-input');
   input.type = 'text';
   input.maxLength = 12;
@@ -740,51 +645,41 @@ function openProfileEditor(uid, slotIndex){
     var profileExtraFields = { signatureInput, regionSelect, genderSelect, presenceSelect, visibilitySelect, showcaseSelect };
   }
   const stats = el('div','profile-stats');
-  if (editing){
-    const c1 = el('div','stat-chip');
-    c1.appendChild(currencyIcon('sm'));
-    c1.appendChild(el('span', null, t('profile_balance',editing.coins || 0)));
-    const c2 = el('div','stat-chip');
-    c2.textContent = t('games_count',editing.total || 0);
-    stats.appendChild(c1);
-    stats.appendChild(c2);
-    GAME_KEYS.forEach(k => {
-      const s = el('div','stat-chip small');
-      s.textContent = t('game_count_line',GAMES[k].name,(editing.played && editing.played[k]) || 0);
-      stats.appendChild(s);
-    });
-  } else {
-    stats.appendChild(el('div','stat-chip',t('profile_new_stats',CURRENCY)));
-  }
+  const c1 = el('div','stat-chip');
+  c1.appendChild(currencyIcon('sm'));
+  c1.appendChild(el('span', null, t('profile_balance',editing.coins || 0)));
+  const c2 = el('div','stat-chip');
+  c2.textContent = t('games_count',editing.total || 0);
+  stats.appendChild(c1);
+  stats.appendChild(c2);
+  GAME_KEYS.forEach(k => {
+    const s = el('div','stat-chip small');
+    s.textContent = t('game_count_line',GAMES[k].name,(editing.played && editing.played[k]) || 0);
+    stats.appendChild(s);
+  });
   card.appendChild(stats);
   const save = el('button','btn btn-primary',t('save'));
   save.addEventListener('click', () => {
-    const finalName = (input.value.trim() || (editing ? editing.name : t('default_player_name'))).slice(0, 12);
-    let targetUid = uid;
-    if (editing){
-      editing.name = finalName;
-      editing.avatar = avatar;
-      if (editingMe){
-        account.name = finalName;
-        account.avatar = avatar;
-        account.background = background;
-        account.signature = profileExtraFields.signatureInput.value.trim().slice(0, 80);
-        account.countryRegion = profileExtraFields.regionSelect.value;
-        account.genderTag = profileExtraFields.genderSelect.value;
-        account.presencePreference = profileExtraFields.presenceSelect.value;
-        account.presenceVisibility = profileExtraFields.visibilitySelect.value;
-        const showcaseValue = profileExtraFields.showcaseSelect.value;
-        account.showcase = showcaseValue ? { type: showcaseValue.split(':')[0], value: showcaseValue.slice(showcaseValue.indexOf(':') + 1) } : null;
-        saveAccount();
-      }
-    } else {
-      targetUid = createProfile(finalName, avatar);
-      if (slotIndex !== undefined && slotIndex !== null) slots[slotIndex] = targetUid;
+    const finalName = (input.value.trim() || editing.name).slice(0, 12);
+    editing.name = finalName;
+    editing.avatar = avatar;
+    if (editingMe){
+      account.name = finalName;
+      account.avatar = avatar;
+      account.background = background;
+      account.signature = profileExtraFields.signatureInput.value.trim().slice(0, 80);
+      account.countryRegion = profileExtraFields.regionSelect.value;
+      account.genderTag = profileExtraFields.genderSelect.value;
+      account.presencePreference = profileExtraFields.presenceSelect.value;
+      account.presenceVisibility = profileExtraFields.visibilitySelect.value;
+      const showcaseValue = profileExtraFields.showcaseSelect.value;
+      account.showcase = showcaseValue ? { type: showcaseValue.split(':')[0], value: showcaseValue.slice(showcaseValue.indexOf(':') + 1) } : null;
+      saveAccount();
     }
     saveRoster();
     syncProfiles();
     bd.remove();
-    renderMe(); renderSlots(); renderLeaderboard();
+    renderMe(); renderLeaderboard();
     toast(t('profile_saved',finalName));
   });
   const cancel = el('button','btn',t('cancel'));
@@ -860,25 +755,6 @@ function levelFromXp(xp){
   return low;
 }
 
-function recordPlaymatesFromResult(results, currentResult, gameId){
-  if (!account) return;
-  results.forEach(other => {
-    if (other.slot === currentResult.slot) return;
-    const otherUid = online.connected && online.game ? null : slots[other.slot];
-    if (!otherUid) return;
-    const otherP = profileByUid(otherUid);
-    if (otherP) recordPlaymate(account, otherUid, otherP.name, gameId);
-  });
-  // Also record online opponents via player list
-  if (online.connected && online.game && online.roomInfo) {
-    const players = online.roomInfo.players || [];
-    players.forEach(pl => {
-      if (pl.uid && pl.uid !== account.uid) {
-        recordPlaymate(account, pl.uid, pl.name || 'Player', gameId);
-      }
-    });
-  }
-}
 function resultForSlot(results, slot){
   const mine = (results || []).find(item => Number(item.slot) === Number(slot));
   if (!mine) return 'loss';
@@ -991,7 +867,7 @@ function applyGameResult(results, resultContext){
       toast(t('reward_ai_requires_login'));
     }
   }
-  renderMe(); renderSlots(); renderLeaderboard();
+  renderMe(); renderLeaderboard();
 }
 
 function showHub(){
@@ -1184,7 +1060,6 @@ if (typeof document !== 'undefined'){
     aiMode = b.dataset.mode === 'ai';
     modeBtns.forEach(x => x.setAttribute('aria-pressed', String(x === b)));
     renderHub();
-    renderSlots();
   }));
   const themeBtn = $('btn-theme');
   if (themeBtn) themeBtn.addEventListener('click', () => {

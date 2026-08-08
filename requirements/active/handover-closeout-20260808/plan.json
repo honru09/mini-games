@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "task": "handover-closeout-20260808",
+  "steps": [
+    "freeze_contract",
+    "implement_metrics_v2",
+    "implement_replay_v1_1",
+    "implement_tournament_v1_1",
+    "run_specialized_qa",
+    "run_full_qa",
+    "sync_status_reports_logs",
+    "update_and_render_whitepaper",
+    "release_if_authorized"
+  ]
+}

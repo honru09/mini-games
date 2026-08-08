@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "task": "handover-closeout-20260808",
+  "state": "IMPLEMENTING",
+  "startedAt": "2026-08-08T00:00:00+09:00",
+  "verifiedCommit": null,
+  "releasedCommit": null,
+  "blocked": [
+    "real_supabase_credentials_and_migration",
+    "real_mobile_and_tablet_devices",
+    "real_network_shaping",
+    "external_sentry_service"
+  ]
+}

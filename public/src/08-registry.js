@@ -19,7 +19,6 @@ if (typeof document !== 'undefined'){
   initStaticPlatformIcons();
   loadRoster();
   renderMe();
-  renderSlots();
   renderLeaderboard();
   renderLobby();
   renderAccounts();

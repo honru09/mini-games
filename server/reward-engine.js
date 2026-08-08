@@ -21,7 +21,6 @@ const REWARD_CONFIG = Object.freeze({
     loss: Object.freeze({ currency: 0, xp: 5 }),
     dailyCurrencyCap: 3,
   }),
-  local: Object.freeze({ currency: 0, xp: 0 }),
   dailyFirstWin: Object.freeze({ currency: 2, xp: 5 }),
   streakXp: Object.freeze({ three: 2, five: 4, eightPlus: 6 }),
   repeatOpponent: Object.freeze({
@@ -112,7 +111,6 @@ function evaluateEligibility(input){
   const mode = String(input && input.mode || '');
   const gameId = String(input && input.gameId || '');
   if (!VALID_GAMES.includes(gameId)) return { eligible: false, blockedReason: 'invalid_game' };
-  if (mode === 'local') return { eligible: false, blockedReason: 'local_mode' };
   if (mode !== 'online' && mode !== 'ai') return { eligible: false, blockedReason: 'invalid_mode' };
   if (!input || !input.resultId) return { eligible: false, blockedReason: 'missing_result_id' };
   if (mode === 'online' && !input.matchId) return { eligible: false, blockedReason: 'missing_match_id' };
@@ -156,7 +154,6 @@ function normalizeRoomResults(value, size){
 }
 
 function baseReward(mode, participantCount, result, placement){
-  if (mode === 'local') return REWARD_CONFIG.local;
   if (mode === 'ai') return REWARD_CONFIG.ai[result] || null;
   if (mode !== 'online') return null;
   if (nonNegativeInteger(participantCount) <= 2) return REWARD_CONFIG.online1v1[result] || null;
@@ -213,8 +210,8 @@ function resolveMatchReward(input, profile){
     : { eligible: data.eligible === true, blockedReason: data.blockedReason || null };
   const breakdown = [];
 
-  if (!eligibility.eligible || mode === 'local'){
-    const blockedReason = eligibility.blockedReason || (mode === 'local' ? 'local_mode' : 'ineligible_match');
+  if (!eligibility.eligible){
+    const blockedReason = eligibility.blockedReason || 'ineligible_match';
     const streakAfter = blockedReason === 'afk' ? 0 : streakBefore;
     return {
       version: REWARD_CONFIG.version,

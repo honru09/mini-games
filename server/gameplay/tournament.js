@@ -105,7 +105,7 @@ class TournamentOrchestrator {
     const pairing=this.pairings.find(item=>item.matchId===String(matchId||'')||item.matchRoomId===String(matchId||''));if(!pairing)return{ok:false,reason:'match_not_found'};
     if(metadata.source!=='server'&&metadata.source!=='admin_recovery')return{ok:false,reason:'server_result_required'};
     if(metadata.matchRoomId&&String(metadata.matchRoomId)!==String(pairing.matchRoomId))return{ok:false,reason:'match_room_mismatch'};
-    const normalized=result&&result.draw?{draw:true}:result&&Number.isInteger(result.winnerSlot)?{winner:pairing.players[result.winnerSlot]}:result&&result.winnerUid?{winner:result.winnerUid}:result;
+    const normalized=result&&result.draw?{draw:true,forfeit:!!result.forfeit}:result&&Number.isInteger(result.winnerSlot)?{winner:pairing.players[result.winnerSlot],forfeit:!!result.forfeit}:result&&result.winnerUid?{winner:result.winnerUid,forfeit:!!result.forfeit}:result;
     return this.reportResult(pairing.matchId,{...(normalized||{}),source:metadata.source,serverMatchId:metadata.matchRoomId||pairing.matchRoomId});
   }
   reportResult(matchId, result){

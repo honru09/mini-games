@@ -264,20 +264,8 @@ button{font-family:inherit; cursor:pointer}
 .me-chip:hover{border-color:var(--primary)}
 .me-chip .me-av{font-size:22px}
 .me-chip .me-pts{color:var(--muted); font-size:12.5px; font-weight:400}
-.slots-row{display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-bottom:14px}
-.slot-chip{
-  display:flex; flex-direction:column; align-items:center; gap:3px;
-  background:var(--card); border:1px dashed var(--border); border-radius:12px;
-  padding:9px 16px; font-size:12px; min-width:92px;
-}
-.slot-chip:hover{border-color:var(--primary)}
-.slot-chip.set{border-style:solid}
-.slot-chip.ai{border-style:solid; border-color:rgba(139,92,246,.55); background:rgba(139,92,246,.10)}
-.slot-chip .av{font-size:25px; line-height:1}
-.slot-chip .nm{font-weight:500; font-size:12.5px}
-.slot-chip .pts{color:var(--muted); font-size:11px}
 .lb-panel{background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px; margin-top:18px}
-.lb-panel, .lobby-panel, .game-card, .count-group, .slot-chip, .game-top, .status-bar, .pchip, .modal-card{backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px)}
+.lb-panel, .lobby-panel, .game-card, .count-group, .game-top, .status-bar, .pchip, .modal-card{backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px)}
 .lb-panel h3{margin:0 0 10px; font-size:15px}
 .lb-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px}
 .lb-head h3{margin:0}
@@ -748,7 +736,7 @@ canvas.board-canvas{width:100%; max-width:560px; display:block; border-radius:12
 /* ====== 触屏 & 移动端适配 ====== */
 /* 消除 300ms 延迟，防止双击缩放 */
 button, canvas, .game-card, .ttt-cell, .j-cell, .xq-cell,
-.slot-chip, .lobby-row, .roster-item, .lb-row, .player-row,
+.lobby-row, .roster-item, .lb-row, .player-row,
 .shop-item, .avatar-opt, .bg-swatch, .shop-tab, .pchip,
 .tcell, .hcell, .m-cell, .tok, .dice-btn, .count-btn, .btn {
   touch-action: manipulation;
@@ -772,9 +760,6 @@ button, canvas, .game-card, .ttt-cell, .j-cell, .xq-cell,
   .game-card .icon { font-size: 26px; }
   .game-card .name { font-size: 14px; }
   .game-card .desc { font-size: 11px; min-height: 28px; }
-  .slots-row { gap: 5px; }
-  .slot-chip { padding: 5px 8px; min-width: 60px; font-size: 10px; }
-  .slot-chip .av { font-size: 18px; }
   .btn { padding: 7px 10px; font-size: 12px; border-radius: 8px; }
   .online-panel { padding: 10px 12px; }
   .online-panel h3 { font-size: 13px; }
@@ -1150,7 +1135,7 @@ html[data-theme="dark"], html[data-theme="midnight"], html[data-theme="cyber"]{c
 
 /* 触控目标 ≥44px（关键交互） */
 @media (max-width:768px){
-  .btn, .count-btn, .shop-tab, .persona-card, .my-card-mate, .slot-chip{
+  .btn, .count-btn, .shop-tab, .persona-card, .my-card-mate{
     min-height:44px; min-width:44px; display:inline-flex; align-items:center; justify-content:center;
   }
   .xq-cell{min-width:44px; min-height:44px}
@@ -1311,7 +1296,6 @@ body.entered #screen-hub, body.entered #screen-game{animation:none}
           <button type="button" class="me-chip" id="btn-me" title="创建账号或使用 PIN 登录" data-i18n-title="account_button_title"></button>
         </div>
         <div id="my-card"></div>
-        <div class="slots-row hidden" id="slots-row" aria-hidden="true"></div>
         <div class="room-panel hidden" id="room-panel">
           <div class="room-head">
             <h3 data-i18n="my_room">🚪 我的房间</h3>
@@ -1798,7 +1782,6 @@ async function setLanguage(lang) {
   renderLeaderboard();
   renderAccounts();
   renderMe();
-  renderSlots();
   renderLobby();
   if (online.room) renderRoomPanel();
   if (currentGame && typeof currentGame.onLanguageChange === 'function') currentGame.onLanguageChange(currentLang);
@@ -3287,7 +3270,7 @@ const online = {
   soloMatch: null, pendingSoloClaims: [], _soloClaimsLoaded: false, displayedRewardIds: [], rewardVersion: null,
   socialState: { version:'1.0', friends:[], incoming:[], outgoing:[], blocked:[], counts:{ friends:0, incoming:0, outgoing:0, blocked:0 } },
   dailyTasks: null, isAdmin:false,
-  replays: [],
+  replays: [], _sharedReplayRequested:false,
   socialTab:'friends',
   defaultServer: 'https://mini-games-online.onrender.com',
   connect(){
@@ -3659,6 +3642,7 @@ const online = {
           this.flushPendingResultClaim();
           this.flushSoloMatch();
           this.requestSocial();
+          this.requestSharedReplayFromUrl();
         } else if (account && account.authToken){
           toast(t('session_expired'));
           if (typeof completeLocalLogout === 'function') completeLocalLogout(true);
@@ -3828,7 +3812,10 @@ const online = {
         toast(translateServerMessage(msg.msg,msg.reason||(msg.payload&&msg.payload.reason),'operation_failed'));
         break;
       case 'tournament_recovered':
-        toast(t('tournament_admin_recover')); this.send({type:'tournament_get',payload:{tournamentId:msg.payload&&msg.payload.tournamentId}});
+        toast(t('tournament_recovered_toast')); this.send({type:'tournament_get',payload:{tournamentId:msg.payload&&msg.payload.tournamentId}});
+        break;
+      case 'tournament_forfeited':
+        toast(t('tournament_forfeited_toast')); this.send({type:'tournament_get',payload:{tournamentId:msg.payload&&msg.payload.tournamentId}});
         break;
       case 'tournament_state':
         this.tournamentState=msg.payload||null;
@@ -3907,7 +3894,7 @@ const online = {
           const profile = msg.payload && (msg.payload.profile || msg.payload);
           if (profile && account && profile.uid === account.uid){
             updateAccountProfile(profile);
-            renderMe(); renderSlots();
+            renderMe();
             if (typeof renderSocialRail === 'function') renderSocialRail();
           }
         }
@@ -3925,6 +3912,12 @@ const online = {
         break;
       case 'replay_data':
         renderReplayPlayer(msg.payload || null);
+        break;
+      case 'replay_shared':
+        copyReplayShareUrl(msg.payload&&msg.payload.shareToken);this.requestReplays();
+        break;
+      case 'replay_unshared':
+        toast(t('replay_unshared_toast'));this.requestReplays();
         break;
       case 'replay_error':
         toast(translateServerMessage(msg.msg,msg.reason,'operation_failed'));
@@ -4004,7 +3997,6 @@ const online = {
           if (profile && account && profile.uid === account.uid) updateAccountProfile(profile);
           if (typeof refreshOpenShop === 'function') refreshOpenShop();
           if (typeof renderMe === 'function') renderMe();
-          if (typeof renderSlots === 'function') renderSlots();
           if (typeof renderMyCard === 'function') renderMyCard();
           toast(translateServerMessage(payload.msg||msg.msg,payload.reason||msg.reason,'purchase_success'));
         }
@@ -4034,7 +4026,6 @@ const online = {
           if (profile && account && profile.uid === account.uid){
             updateAccountProfile(profile);
             if (typeof renderMe === 'function') renderMe();
-            if (typeof renderSlots === 'function') renderSlots();
             if (typeof renderLeaderboard === 'function') renderLeaderboard();
           }
           const rewardId = String(payload.resultId || (resultMatchId ? resultMatchId + ':' + this.player : ''));
@@ -4213,7 +4204,14 @@ const online = {
     this.send({type:'daily_task_claim',payload:{taskId,claimId}}); return true;
   },
   requestReplays(){ if(this.connected&&this._authenticated)this.send({type:'replay_list'}); },
-  requestReplay(replayId){ if(this.connected&&this._authenticated)this.send({type:'replay_get',payload:{replayId}}); },
+  requestReplay(replayId){ if(this.connected&&this._authenticated&&replayId)this.send({type:'replay_get',payload:{replayId}}); },
+  shareReplay(replayId){ if(this.connected&&this._authenticated&&replayId)this.send({type:'replay_share',payload:{replayId}}); },
+  unshareReplay(replayId){ if(this.connected&&this._authenticated&&replayId)this.send({type:'replay_unshare',payload:{replayId}}); },
+  requestSharedReplayFromUrl(){
+    if(this._sharedReplayRequested||typeof location==='undefined')return;
+    this._sharedReplayRequested=true;
+    try{const ref=new URLSearchParams(location.search||'').get('replay');if(/^[A-Za-z0-9_-]{20,160}$/.test(String(ref||'')))this.requestReplay(ref);}catch{}
+  },
   resetState(preserveResume){
     const wasRoomGame = !!(this.room || this.game);
     if (!preserveResume) this.clearResume();
@@ -4260,7 +4258,7 @@ function renderReplayList(items){
   const button=el('button','btn replay-entry',t('replay_open'));button.addEventListener('click',()=>{
     const bd=el('div','modal-backdrop replay-list-modal'),card=el('div','modal-card');card.appendChild(el('h3',null,t('replay_title')));
     if(!items.length)card.appendChild(el('p','muted',t('replay_empty')));
-    items.forEach(item=>{const row=el('div','replay-row');row.appendChild(el('span',null,(GAMES[item.game]&&GAMES[item.game].icon||'🎮')+' '+(GAMES[item.game]&&t(GAMES[item.game].nameKey)||item.game)));row.appendChild(el('span','muted',t('replay_events',item.eventCount)));const open=el('button','btn',t('replay_watch'));open.addEventListener('click',()=>online.requestReplay(item.replayId));row.appendChild(open);card.appendChild(row);});
+    items.forEach(item=>{const row=el('div','replay-row');row.appendChild(el('span',null,(GAMES[item.game]&&GAMES[item.game].icon||'🎮')+' '+(GAMES[item.game]&&t(GAMES[item.game].nameKey)||item.game)));row.appendChild(el('span','muted',t('replay_events',item.eventCount)));const open=el('button','btn',t('replay_watch'));open.addEventListener('click',()=>online.requestReplay(item.replayId));row.appendChild(open);if(item.canShare){const share=el('button','btn',t('replay_share'));share.addEventListener('click',()=>online.shareReplay(item.replayId));row.appendChild(share);if(item.shared){const revoke=el('button','btn btn-danger',t('replay_unshare'));revoke.addEventListener('click',()=>online.unshareReplay(item.replayId));row.appendChild(revoke);}}card.appendChild(row);});
     const close=el('button','btn btn-primary',t('close'));close.addEventListener('click',()=>bd.remove());card.appendChild(close);bd.appendChild(card);document.body.appendChild(bd);
   });
   holder.appendChild(button);
@@ -4274,7 +4272,15 @@ function renderReplayPlayer(replay){
   let timer=null,index=0;const stop=()=>{if(timer)clearInterval(timer);timer=null;};const applyIndex=()=>{if(!currentGame||typeof currentGame.onMove!=='function')showGame(replay.game);const event=replay.moveLog[index];if(event&&currentGame&&currentGame.onMove)currentGame.onMove(event.payload,event.player);progress.value=index;status.textContent=t('replay_step',index,replay.moveLog.length);};
   progress.addEventListener('input',()=>{stop();index=Number(progress.value)||0;showGame(replay.game);for(let i=0;i<index;i++){const event=replay.moveLog[i];if(currentGame&&currentGame.onMove)currentGame.onMove(event.payload,event.player);}status.textContent=t('replay_step',index,replay.moveLog.length);});
   play.addEventListener('click',()=>{stop();timer=setInterval(()=>{if(index>=replay.moveLog.length){stop();return;}applyIndex();index++;},Math.max(80,500/Number(speed.value||1)));});pause.addEventListener('click',stop);
+  if(replay.canShare){const share=el('button','btn',t('replay_share'));share.addEventListener('click',()=>online.shareReplay(replay.replayId));card.appendChild(share);}
   const close=el('button','btn',t('close'));close.addEventListener('click',()=>{stop();bd.remove();});card.appendChild(close);bd.appendChild(card);document.body.appendChild(bd);
+}
+function copyReplayShareUrl(token){
+  if(!token)return;
+  let url=String(token);try{const target=new URL(location.href);target.hash='';target.searchParams.set('replay',token);url=target.toString();}catch{}
+  const done=()=>toast(t('replay_link_copied'));
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(url).then(done).catch(()=>toast(t('replay_copy_failed')));return;}
+  try{const input=document.createElement('input');input.value=url;input.setAttribute('readonly','');input.style.position='fixed';input.style.opacity='0';document.body.appendChild(input);input.select();const ok=document.execCommand&&document.execCommand('copy');input.remove();if(ok)done();else toast(t('replay_copy_failed'));}catch{toast(t('replay_copy_failed'));}
 }
 function renderRoomPanel(){
   const panel = $('room-panel');
@@ -4390,7 +4396,8 @@ function renderTournamentState(state){
     const pairStatusKey='tournament_pair_status_'+pair.status,pairStatus=t(pairStatusKey),bound=!!(pair.roomMetadata&&pair.roomMetadata.serverMatchId),row=el('div','tournament-table',t('tournament_table_line',pair.table,pair.players.join(t('versus_separator')),pairStatus===pairStatusKey?pair.status:pairStatus));card.appendChild(row);
     if(bound){
       card.appendChild(el('p','muted',t('tournament_bound',pair.matchRoomId)));
-      if(online.isAdmin&&pair.status!=='complete'){const recover=el('button','btn btn-danger',t('tournament_admin_recover'));recover.addEventListener('click',()=>online.send({type:'tournament_recover',payload:{tournamentId:state.tournamentId,pairingId:pair.pairingId}}));card.appendChild(recover);}
+      if(pair.status!=='complete'&&pair.players.includes(deviceUid)){const forfeit=el('button','btn btn-danger',t('tournament_forfeit_self'));forfeit.addEventListener('click',()=>{if(typeof confirm==='function'&&!confirm(t('tournament_forfeit_confirm')))return;online.send({type:'tournament_forfeit',payload:{tournamentId:state.tournamentId,pairingId:pair.pairingId,targetUid:deviceUid}});});card.appendChild(forfeit);}
+      if(online.isAdmin&&pair.status!=='complete'){const recovery=el('div','tournament-admin-recovery');recovery.appendChild(el('p','muted',t('tournament_admin_recover')));pair.players.forEach(uid=>{const recover=el('button','btn btn-danger',t('tournament_admin_forfeit_player',uid));recover.addEventListener('click',()=>{if(typeof confirm==='function'&&!confirm(t('tournament_admin_forfeit_confirm',uid)))return;online.send({type:'tournament_recover',payload:{tournamentId:state.tournamentId,pairingId:pair.pairingId,targetUid:uid}});});recovery.appendChild(recover);});card.appendChild(recovery);}
       const canWatch=pair.status!=='complete'&&!pair.players.includes(deviceUid)&&(!online.game||online.isSpectator);
       if(canWatch){
         const sameRoom=online.isSpectator&&online.room===pair.matchRoomId;
@@ -5072,7 +5079,7 @@ function openShop(){
             if (tab === 'frames') account.frame = item.id;
             else if (tab === 'effects') account.effect = item.id;
             else account.background = item.id;
-            saveAccount(); syncProfiles(); render(); renderMe(); renderSlots();
+            saveAccount(); syncProfiles(); render(); renderMe();
             toast(t('shop_applied')+'「' + shopItemName(cat,item) + '」');
           });
           it.appendChild(use);
@@ -5388,7 +5395,6 @@ let roster = [];
 let account = null;
 let pendingAuthPin = null;
 let deviceUid = null;
-let slots = [];
 let lastServerLB = null;
 let lbFilter = 'all';
 let authModalEl = null;
@@ -5458,12 +5464,6 @@ function genUid(){
   return 'u_' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
 }
 function profileByUid(uid){ return roster.find(p => p.uid === uid); }
-function createProfile(name, avatar){
-  const p = { uid: genUid(), name: name || t('default_player_name'), avatar: (avatar === undefined ? Math.floor(Math.random() * AVATAR_COUNT) : avatar), coins: 0, played: {}, total: 0 };
-  roster.push(p);
-  saveRoster();
-  return p.uid;
-}
 function syncProfiles(){
   if (!online.connected) return;
   if (account && account.uid){
@@ -5510,7 +5510,7 @@ function registerAccount(name, pin, avatar, background, frame, effect){
       presencePreference: account.presencePreference, presenceVisibility: account.presenceVisibility, showcase: account.showcase,
     } });
   }
-  renderMe(); renderSlots(); renderLeaderboard();
+  renderMe(); renderLeaderboard();
   if (authModalEl) authModalEl.remove();
   authModalEl = null;
   return account;
@@ -5547,7 +5547,7 @@ function completeLocalLogout(showLogin){
     localStorage.removeItem('mg_displayed_reward_ids');
     localStorage.setItem('mg_uid', '');
   } catch {}
-  renderMe(); renderSlots(); renderLeaderboard();
+  renderMe(); renderLeaderboard();
   if (showLogin && !authModalEl) openAuthModal("login");
 }
 function updateAccountProfile(p){
@@ -5611,104 +5611,16 @@ function renderMe(){
   }
   btn.title = t('my_profile_button_title');
 }
-function renderSlots(){
-  const row = $('slots-row');
-  row.innerHTML = '';
-  row.classList.add('hidden');
-  row.setAttribute('aria-hidden','true');
-  return;
-  /* Legacy local roster rendering retained below only for migration snapshots. */
-  for (let i = 0; i < playerCount; i++){
-    if (aiMode && i > 0){
-      const chip = el('button','slot-chip ai');
-      chip.type = 'button';
-      chip.appendChild(el('span','av','🤖'));
-      chip.appendChild(el('span','nm',t('ai_player_number',i)));
-      chip.appendChild(el('span','pts',t('computer_opponent')));
-      row.appendChild(chip);
-      continue;
-    }
-    const uid = slots[i];
-    const p = uid ? profileByUid(uid) : null;
-    const chip = el('button','slot-chip' + (p ? ' set' : ''));
-    chip.type = 'button';
-    if (p){
-      const av = el('span','av');
-      const prof = p.uid === (account && account.uid) ? account : p;
-      av.appendChild(avatarStageNode(prof, 30));
-      chip.appendChild(av);
-      chip.appendChild(elRaw('span','nm', p.name));
-      const coinLine = el('span','coin-line');
-      coinLine.appendChild(currencyIcon('sm'));
-      coinLine.appendChild(el('span','pts', t('compact_account_stats',p.coins || 0,p.total || 0)));
-      chip.appendChild(coinLine);
-    } else {
-      chip.appendChild(el('span','av','➕'));
-      chip.appendChild(el('span','nm',t('player_number',i+1)));
-      chip.appendChild(el('span','pts',t('select_profile_hint')));
-    }
-    chip.addEventListener('click', () => openSlotPicker(i));
-    row.appendChild(chip);
-  }
-}
-function ensureSlots(){
-  if (aiMode) { slots = [deviceUid]; return; }
-  return;
-  /* Legacy local hot-seat slot migration path. */
-  slots = slots.slice(0, playerCount);
-  while (slots.length < playerCount) slots.push(null);
-  if (deviceUid) slots[0] = deviceUid;
-  if (aiMode){
-    for (let i = 1; i < slots.length; i++) slots[i] = null;
-    return;
-  }
-  for (let i = 0; i < playerCount; i++){
-    if (!slots[i]) slots[i] = createProfile(t('player_number',i+1));
-  }
-}
-function openSlotPicker(i){
-  const bd = el('div','modal-backdrop');
-  const card = el('div','modal-card');
-  card.appendChild(el('h3', null, t('select_profile_title',i+1)));
-  const list = el('div','roster-list');
-  roster.forEach(p => {
-    const item = el('button','roster-item');
-    item.type = 'button';
-    const av = el('span','av');
-    av.appendChild(avatarCanvas(p.avatar, 24));
-    item.appendChild(av);
-    item.appendChild(elRaw('span','nm', p.name));
-      item.appendChild(el('span','lb-game', t('profile_picker_stats',CURRENCY,p.coins || 0,p.total || 0)));
-    item.addEventListener('click', () => {
-      slots[i] = p.uid;
-      bd.remove();
-      renderSlots();
-    });
-    list.appendChild(item);
-  });
-  const create = el('button','btn btn-primary',t('profile_create'));
-  create.addEventListener('click', () => {
-    bd.remove();
-    openProfileEditor(null, i);
-  });
-  const cancel = el('button','btn',t('cancel'));
-  cancel.addEventListener('click', () => bd.remove());
-  card.appendChild(list);
-  card.appendChild(create);
-  card.appendChild(cancel);
-  bd.appendChild(card);
-  bd.addEventListener('click', e => { if (e.target === bd) bd.remove(); });
-  document.body.appendChild(bd);
-}
-function openProfileEditor(uid, slotIndex){
+function openProfileEditor(uid){
   const editing = uid ? profileByUid(uid) : null;
+  if (!editing) return;
   const editingMe = !!(account && uid === account.uid);
-  let name = editing ? editing.name : '';
-  let avatar = editing ? editing.avatar : Math.floor(Math.random() * AVATAR_COUNT);
+  let name = editing.name;
+  let avatar = editing.avatar;
   let background = editingMe ? (account.background || 0) : 0;
   const bd = el('div','modal-backdrop');
   const card = el('div','modal-card');
-  card.appendChild(el('h3', null, editing ? t('profile_edit_title') : t('profile_new_title')));
+  card.appendChild(el('h3', null,t('profile_edit_title')));
   const input = el('input','nick-input');
   input.type = 'text';
   input.maxLength = 12;
@@ -5842,51 +5754,41 @@ function openProfileEditor(uid, slotIndex){
     var profileExtraFields = { signatureInput, regionSelect, genderSelect, presenceSelect, visibilitySelect, showcaseSelect };
   }
   const stats = el('div','profile-stats');
-  if (editing){
-    const c1 = el('div','stat-chip');
-    c1.appendChild(currencyIcon('sm'));
-    c1.appendChild(el('span', null, t('profile_balance',editing.coins || 0)));
-    const c2 = el('div','stat-chip');
-    c2.textContent = t('games_count',editing.total || 0);
-    stats.appendChild(c1);
-    stats.appendChild(c2);
-    GAME_KEYS.forEach(k => {
-      const s = el('div','stat-chip small');
-      s.textContent = t('game_count_line',GAMES[k].name,(editing.played && editing.played[k]) || 0);
-      stats.appendChild(s);
-    });
-  } else {
-    stats.appendChild(el('div','stat-chip',t('profile_new_stats',CURRENCY)));
-  }
+  const c1 = el('div','stat-chip');
+  c1.appendChild(currencyIcon('sm'));
+  c1.appendChild(el('span', null, t('profile_balance',editing.coins || 0)));
+  const c2 = el('div','stat-chip');
+  c2.textContent = t('games_count',editing.total || 0);
+  stats.appendChild(c1);
+  stats.appendChild(c2);
+  GAME_KEYS.forEach(k => {
+    const s = el('div','stat-chip small');
+    s.textContent = t('game_count_line',GAMES[k].name,(editing.played && editing.played[k]) || 0);
+    stats.appendChild(s);
+  });
   card.appendChild(stats);
   const save = el('button','btn btn-primary',t('save'));
   save.addEventListener('click', () => {
-    const finalName = (input.value.trim() || (editing ? editing.name : t('default_player_name'))).slice(0, 12);
-    let targetUid = uid;
-    if (editing){
-      editing.name = finalName;
-      editing.avatar = avatar;
-      if (editingMe){
-        account.name = finalName;
-        account.avatar = avatar;
-        account.background = background;
-        account.signature = profileExtraFields.signatureInput.value.trim().slice(0, 80);
-        account.countryRegion = profileExtraFields.regionSelect.value;
-        account.genderTag = profileExtraFields.genderSelect.value;
-        account.presencePreference = profileExtraFields.presenceSelect.value;
-        account.presenceVisibility = profileExtraFields.visibilitySelect.value;
-        const showcaseValue = profileExtraFields.showcaseSelect.value;
-        account.showcase = showcaseValue ? { type: showcaseValue.split(':')[0], value: showcaseValue.slice(showcaseValue.indexOf(':') + 1) } : null;
-        saveAccount();
-      }
-    } else {
-      targetUid = createProfile(finalName, avatar);
-      if (slotIndex !== undefined && slotIndex !== null) slots[slotIndex] = targetUid;
+    const finalName = (input.value.trim() || editing.name).slice(0, 12);
+    editing.name = finalName;
+    editing.avatar = avatar;
+    if (editingMe){
+      account.name = finalName;
+      account.avatar = avatar;
+      account.background = background;
+      account.signature = profileExtraFields.signatureInput.value.trim().slice(0, 80);
+      account.countryRegion = profileExtraFields.regionSelect.value;
+      account.genderTag = profileExtraFields.genderSelect.value;
+      account.presencePreference = profileExtraFields.presenceSelect.value;
+      account.presenceVisibility = profileExtraFields.visibilitySelect.value;
+      const showcaseValue = profileExtraFields.showcaseSelect.value;
+      account.showcase = showcaseValue ? { type: showcaseValue.split(':')[0], value: showcaseValue.slice(showcaseValue.indexOf(':') + 1) } : null;
+      saveAccount();
     }
     saveRoster();
     syncProfiles();
     bd.remove();
-    renderMe(); renderSlots(); renderLeaderboard();
+    renderMe(); renderLeaderboard();
     toast(t('profile_saved',finalName));
   });
   const cancel = el('button','btn',t('cancel'));
@@ -5962,25 +5864,6 @@ function levelFromXp(xp){
   return low;
 }
 
-function recordPlaymatesFromResult(results, currentResult, gameId){
-  if (!account) return;
-  results.forEach(other => {
-    if (other.slot === currentResult.slot) return;
-    const otherUid = online.connected && online.game ? null : slots[other.slot];
-    if (!otherUid) return;
-    const otherP = profileByUid(otherUid);
-    if (otherP) recordPlaymate(account, otherUid, otherP.name, gameId);
-  });
-  // Also record online opponents via player list
-  if (online.connected && online.game && online.roomInfo) {
-    const players = online.roomInfo.players || [];
-    players.forEach(pl => {
-      if (pl.uid && pl.uid !== account.uid) {
-        recordPlaymate(account, pl.uid, pl.name || 'Player', gameId);
-      }
-    });
-  }
-}
 function resultForSlot(results, slot){
   const mine = (results || []).find(item => Number(item.slot) === Number(slot));
   if (!mine) return 'loss';
@@ -6093,7 +5976,7 @@ function applyGameResult(results, resultContext){
       toast(t('reward_ai_requires_login'));
     }
   }
-  renderMe(); renderSlots(); renderLeaderboard();
+  renderMe(); renderLeaderboard();
 }
 
 function showHub(){
@@ -6286,7 +6169,6 @@ if (typeof document !== 'undefined'){
     aiMode = b.dataset.mode === 'ai';
     modeBtns.forEach(x => x.setAttribute('aria-pressed', String(x === b)));
     renderHub();
-    renderSlots();
   }));
   const themeBtn = $('btn-theme');
   if (themeBtn) themeBtn.addEventListener('click', () => {
@@ -10843,7 +10725,6 @@ if (typeof document !== 'undefined'){
   initStaticPlatformIcons();
   loadRoster();
   renderMe();
-  renderSlots();
   renderLeaderboard();
   renderLobby();
   renderAccounts();

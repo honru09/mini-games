@@ -926,7 +926,7 @@ async function runResultAndPurchaseTests(context){
     type: 'result', payload: { mode: 'solo', game: 'gomoku', resultId: 'solo_' + crypto.randomUUID(), coins: 1 },
   }, '客户端自造旧版单机奖励');
   const afterLegacy = await getProfile(authA, context.a.uid);
-  check('本地热座/旧版 solo payload 无法刷正式货币', sameProtectedState(beforeLegacy, afterLegacy));
+  check('旧版单机 payload 无法刷正式货币', sameProtectedState(beforeLegacy, afterLegacy));
 
   await verifyAfkForfeit(authA, authB, context);
 }

@@ -7,7 +7,7 @@ const online = {
   soloMatch: null, pendingSoloClaims: [], _soloClaimsLoaded: false, displayedRewardIds: [], rewardVersion: null,
   socialState: { version:'1.0', friends:[], incoming:[], outgoing:[], blocked:[], counts:{ friends:0, incoming:0, outgoing:0, blocked:0 } },
   dailyTasks: null, isAdmin:false,
-  replays: [],
+  replays: [], _sharedReplayRequested:false,
   socialTab:'friends',
   defaultServer: 'https://mini-games-online.onrender.com',
   connect(){
@@ -379,6 +379,7 @@ const online = {
           this.flushPendingResultClaim();
           this.flushSoloMatch();
           this.requestSocial();
+          this.requestSharedReplayFromUrl();
         } else if (account && account.authToken){
           toast(t('session_expired'));
           if (typeof completeLocalLogout === 'function') completeLocalLogout(true);
@@ -548,7 +549,10 @@ const online = {
         toast(translateServerMessage(msg.msg,msg.reason||(msg.payload&&msg.payload.reason),'operation_failed'));
         break;
       case 'tournament_recovered':
-        toast(t('tournament_admin_recover')); this.send({type:'tournament_get',payload:{tournamentId:msg.payload&&msg.payload.tournamentId}});
+        toast(t('tournament_recovered_toast')); this.send({type:'tournament_get',payload:{tournamentId:msg.payload&&msg.payload.tournamentId}});
+        break;
+      case 'tournament_forfeited':
+        toast(t('tournament_forfeited_toast')); this.send({type:'tournament_get',payload:{tournamentId:msg.payload&&msg.payload.tournamentId}});
         break;
       case 'tournament_state':
         this.tournamentState=msg.payload||null;
@@ -627,7 +631,7 @@ const online = {
           const profile = msg.payload && (msg.payload.profile || msg.payload);
           if (profile && account && profile.uid === account.uid){
             updateAccountProfile(profile);
-            renderMe(); renderSlots();
+            renderMe();
             if (typeof renderSocialRail === 'function') renderSocialRail();
           }
         }
@@ -645,6 +649,12 @@ const online = {
         break;
       case 'replay_data':
         renderReplayPlayer(msg.payload || null);
+        break;
+      case 'replay_shared':
+        copyReplayShareUrl(msg.payload&&msg.payload.shareToken);this.requestReplays();
+        break;
+      case 'replay_unshared':
+        toast(t('replay_unshared_toast'));this.requestReplays();
         break;
       case 'replay_error':
         toast(translateServerMessage(msg.msg,msg.reason,'operation_failed'));
@@ -724,7 +734,6 @@ const online = {
           if (profile && account && profile.uid === account.uid) updateAccountProfile(profile);
           if (typeof refreshOpenShop === 'function') refreshOpenShop();
           if (typeof renderMe === 'function') renderMe();
-          if (typeof renderSlots === 'function') renderSlots();
           if (typeof renderMyCard === 'function') renderMyCard();
           toast(translateServerMessage(payload.msg||msg.msg,payload.reason||msg.reason,'purchase_success'));
         }
@@ -754,7 +763,6 @@ const online = {
           if (profile && account && profile.uid === account.uid){
             updateAccountProfile(profile);
             if (typeof renderMe === 'function') renderMe();
-            if (typeof renderSlots === 'function') renderSlots();
             if (typeof renderLeaderboard === 'function') renderLeaderboard();
           }
           const rewardId = String(payload.resultId || (resultMatchId ? resultMatchId + ':' + this.player : ''));
@@ -933,7 +941,14 @@ const online = {
     this.send({type:'daily_task_claim',payload:{taskId,claimId}}); return true;
   },
   requestReplays(){ if(this.connected&&this._authenticated)this.send({type:'replay_list'}); },
-  requestReplay(replayId){ if(this.connected&&this._authenticated)this.send({type:'replay_get',payload:{replayId}}); },
+  requestReplay(replayId){ if(this.connected&&this._authenticated&&replayId)this.send({type:'replay_get',payload:{replayId}}); },
+  shareReplay(replayId){ if(this.connected&&this._authenticated&&replayId)this.send({type:'replay_share',payload:{replayId}}); },
+  unshareReplay(replayId){ if(this.connected&&this._authenticated&&replayId)this.send({type:'replay_unshare',payload:{replayId}}); },
+  requestSharedReplayFromUrl(){
+    if(this._sharedReplayRequested||typeof location==='undefined')return;
+    this._sharedReplayRequested=true;
+    try{const ref=new URLSearchParams(location.search||'').get('replay');if(/^[A-Za-z0-9_-]{20,160}$/.test(String(ref||'')))this.requestReplay(ref);}catch{}
+  },
   resetState(preserveResume){
     const wasRoomGame = !!(this.room || this.game);
     if (!preserveResume) this.clearResume();
@@ -980,7 +995,7 @@ function renderReplayList(items){
   const button=el('button','btn replay-entry',t('replay_open'));button.addEventListener('click',()=>{
     const bd=el('div','modal-backdrop replay-list-modal'),card=el('div','modal-card');card.appendChild(el('h3',null,t('replay_title')));
     if(!items.length)card.appendChild(el('p','muted',t('replay_empty')));
-    items.forEach(item=>{const row=el('div','replay-row');row.appendChild(el('span',null,(GAMES[item.game]&&GAMES[item.game].icon||'🎮')+' '+(GAMES[item.game]&&t(GAMES[item.game].nameKey)||item.game)));row.appendChild(el('span','muted',t('replay_events',item.eventCount)));const open=el('button','btn',t('replay_watch'));open.addEventListener('click',()=>online.requestReplay(item.replayId));row.appendChild(open);card.appendChild(row);});
+    items.forEach(item=>{const row=el('div','replay-row');row.appendChild(el('span',null,(GAMES[item.game]&&GAMES[item.game].icon||'🎮')+' '+(GAMES[item.game]&&t(GAMES[item.game].nameKey)||item.game)));row.appendChild(el('span','muted',t('replay_events',item.eventCount)));const open=el('button','btn',t('replay_watch'));open.addEventListener('click',()=>online.requestReplay(item.replayId));row.appendChild(open);if(item.canShare){const share=el('button','btn',t('replay_share'));share.addEventListener('click',()=>online.shareReplay(item.replayId));row.appendChild(share);if(item.shared){const revoke=el('button','btn btn-danger',t('replay_unshare'));revoke.addEventListener('click',()=>online.unshareReplay(item.replayId));row.appendChild(revoke);}}card.appendChild(row);});
     const close=el('button','btn btn-primary',t('close'));close.addEventListener('click',()=>bd.remove());card.appendChild(close);bd.appendChild(card);document.body.appendChild(bd);
   });
   holder.appendChild(button);
@@ -994,7 +1009,15 @@ function renderReplayPlayer(replay){
   let timer=null,index=0;const stop=()=>{if(timer)clearInterval(timer);timer=null;};const applyIndex=()=>{if(!currentGame||typeof currentGame.onMove!=='function')showGame(replay.game);const event=replay.moveLog[index];if(event&&currentGame&&currentGame.onMove)currentGame.onMove(event.payload,event.player);progress.value=index;status.textContent=t('replay_step',index,replay.moveLog.length);};
   progress.addEventListener('input',()=>{stop();index=Number(progress.value)||0;showGame(replay.game);for(let i=0;i<index;i++){const event=replay.moveLog[i];if(currentGame&&currentGame.onMove)currentGame.onMove(event.payload,event.player);}status.textContent=t('replay_step',index,replay.moveLog.length);});
   play.addEventListener('click',()=>{stop();timer=setInterval(()=>{if(index>=replay.moveLog.length){stop();return;}applyIndex();index++;},Math.max(80,500/Number(speed.value||1)));});pause.addEventListener('click',stop);
+  if(replay.canShare){const share=el('button','btn',t('replay_share'));share.addEventListener('click',()=>online.shareReplay(replay.replayId));card.appendChild(share);}
   const close=el('button','btn',t('close'));close.addEventListener('click',()=>{stop();bd.remove();});card.appendChild(close);bd.appendChild(card);document.body.appendChild(bd);
+}
+function copyReplayShareUrl(token){
+  if(!token)return;
+  let url=String(token);try{const target=new URL(location.href);target.hash='';target.searchParams.set('replay',token);url=target.toString();}catch{}
+  const done=()=>toast(t('replay_link_copied'));
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(url).then(done).catch(()=>toast(t('replay_copy_failed')));return;}
+  try{const input=document.createElement('input');input.value=url;input.setAttribute('readonly','');input.style.position='fixed';input.style.opacity='0';document.body.appendChild(input);input.select();const ok=document.execCommand&&document.execCommand('copy');input.remove();if(ok)done();else toast(t('replay_copy_failed'));}catch{toast(t('replay_copy_failed'));}
 }
 function renderRoomPanel(){
   const panel = $('room-panel');
@@ -1110,7 +1133,8 @@ function renderTournamentState(state){
     const pairStatusKey='tournament_pair_status_'+pair.status,pairStatus=t(pairStatusKey),bound=!!(pair.roomMetadata&&pair.roomMetadata.serverMatchId),row=el('div','tournament-table',t('tournament_table_line',pair.table,pair.players.join(t('versus_separator')),pairStatus===pairStatusKey?pair.status:pairStatus));card.appendChild(row);
     if(bound){
       card.appendChild(el('p','muted',t('tournament_bound',pair.matchRoomId)));
-      if(online.isAdmin&&pair.status!=='complete'){const recover=el('button','btn btn-danger',t('tournament_admin_recover'));recover.addEventListener('click',()=>online.send({type:'tournament_recover',payload:{tournamentId:state.tournamentId,pairingId:pair.pairingId}}));card.appendChild(recover);}
+      if(pair.status!=='complete'&&pair.players.includes(deviceUid)){const forfeit=el('button','btn btn-danger',t('tournament_forfeit_self'));forfeit.addEventListener('click',()=>{if(typeof confirm==='function'&&!confirm(t('tournament_forfeit_confirm')))return;online.send({type:'tournament_forfeit',payload:{tournamentId:state.tournamentId,pairingId:pair.pairingId,targetUid:deviceUid}});});card.appendChild(forfeit);}
+      if(online.isAdmin&&pair.status!=='complete'){const recovery=el('div','tournament-admin-recovery');recovery.appendChild(el('p','muted',t('tournament_admin_recover')));pair.players.forEach(uid=>{const recover=el('button','btn btn-danger',t('tournament_admin_forfeit_player',uid));recover.addEventListener('click',()=>{if(typeof confirm==='function'&&!confirm(t('tournament_admin_forfeit_confirm',uid)))return;online.send({type:'tournament_recover',payload:{tournamentId:state.tournamentId,pairingId:pair.pairingId,targetUid:uid}});});recovery.appendChild(recover);});card.appendChild(recovery);}
       const canWatch=pair.status!=='complete'&&!pair.players.includes(deviceUid)&&(!online.game||online.isSpectator);
       if(canWatch){
         const sameRoom=online.isSpectator&&online.room===pair.matchRoomId;

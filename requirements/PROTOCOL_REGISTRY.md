@@ -12,7 +12,8 @@
 | `monopoly-auction-v1` | open/bid/turn-end + host stable state | auction events | Auction subsystem fallback | auction revision/bidId + snapshot | deadline/revision/property errors | `qa/monopoly-auction.js`、`qa/spectator-room.js` |
 | `monopoly-rule-v2` | `monopoly_action(matchId,seq,action)` | `monopoly_rule_state`, `monopoly_result` | Shared Monopoly Rule Core | per-player seq + state hash + full snapshot | invalid state/action/deadline explicit `ERR_*` | `qa/monopoly-rule-core.js`、`qa/rule-authority-online.js` |
 | `spectator-room-v1` | join/leave only | initial snapshot + room/game events | Server read-only seat | room/match snapshot on reconnect | all mutation rejected | `qa/spectator-room.js` |
-| `tournament-orchestrator-v1` | create/consent/start；manual result 仅恢复入口 | state、match assignment、bye | Server pairing + real room + result adapter | pairing/binding/result guard；participant reconnect | participant busy/offline explicit；client result rejected | `qa/tournament.js`、`qa/tournament-auto-room.js`、`qa/tournament-auto-online.js` |
+| `tournament-orchestrator-v1.1` | create/consent/start、self-forfeit；管理员 target recovery | state、match assignment、bye、forfeited/recovered | Server pairing + real room + result adapter | pairing/binding/result guard；uid-bound target；participant reconnect | participant 只能弃权自己；管理员必须明确 targetUid；赛事不进入普通经济/胜场 | `qa/tournament.js`、`qa/tournament-auto-room.js`、`qa/tournament-auto-online.js`、`qa/tournament-recovery-online.js` |
+| `replay-v1.1` | list/get/share/unshare | metadata、bounded move log、一次性明文分享令牌 | Server privacy/expiry guard | 7 天过期；公开延迟；分享只持久化哈希且可撤销 | 原始 ID 不绕过延迟/私密权限；非参与者不能创建分享 | `qa/daily-tasks.js`、`qa/replay-sharing.js` |
 | `game-cosmetic-presentation-v1` | Profile equipped IDs | started/rejoined/spectator presentation | Public presentation only | `cosmeticSchemaVersion=1`；unknown ID fallback | 不广播 owned/price/balance/purchase | `qa/game-cosmetic-profile.js` |
 
 ## Capability 与错误

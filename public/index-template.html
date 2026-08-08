@@ -264,20 +264,8 @@ button{font-family:inherit; cursor:pointer}
 .me-chip:hover{border-color:var(--primary)}
 .me-chip .me-av{font-size:22px}
 .me-chip .me-pts{color:var(--muted); font-size:12.5px; font-weight:400}
-.slots-row{display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-bottom:14px}
-.slot-chip{
-  display:flex; flex-direction:column; align-items:center; gap:3px;
-  background:var(--card); border:1px dashed var(--border); border-radius:12px;
-  padding:9px 16px; font-size:12px; min-width:92px;
-}
-.slot-chip:hover{border-color:var(--primary)}
-.slot-chip.set{border-style:solid}
-.slot-chip.ai{border-style:solid; border-color:rgba(139,92,246,.55); background:rgba(139,92,246,.10)}
-.slot-chip .av{font-size:25px; line-height:1}
-.slot-chip .nm{font-weight:500; font-size:12.5px}
-.slot-chip .pts{color:var(--muted); font-size:11px}
 .lb-panel{background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px; margin-top:18px}
-.lb-panel, .lobby-panel, .game-card, .count-group, .slot-chip, .game-top, .status-bar, .pchip, .modal-card{backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px)}
+.lb-panel, .lobby-panel, .game-card, .count-group, .game-top, .status-bar, .pchip, .modal-card{backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px)}
 .lb-panel h3{margin:0 0 10px; font-size:15px}
 .lb-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px}
 .lb-head h3{margin:0}
@@ -748,7 +736,7 @@ canvas.board-canvas{width:100%; max-width:560px; display:block; border-radius:12
 /* ====== 触屏 & 移动端适配 ====== */
 /* 消除 300ms 延迟，防止双击缩放 */
 button, canvas, .game-card, .ttt-cell, .j-cell, .xq-cell,
-.slot-chip, .lobby-row, .roster-item, .lb-row, .player-row,
+.lobby-row, .roster-item, .lb-row, .player-row,
 .shop-item, .avatar-opt, .bg-swatch, .shop-tab, .pchip,
 .tcell, .hcell, .m-cell, .tok, .dice-btn, .count-btn, .btn {
   touch-action: manipulation;
@@ -772,9 +760,6 @@ button, canvas, .game-card, .ttt-cell, .j-cell, .xq-cell,
   .game-card .icon { font-size: 26px; }
   .game-card .name { font-size: 14px; }
   .game-card .desc { font-size: 11px; min-height: 28px; }
-  .slots-row { gap: 5px; }
-  .slot-chip { padding: 5px 8px; min-width: 60px; font-size: 10px; }
-  .slot-chip .av { font-size: 18px; }
   .btn { padding: 7px 10px; font-size: 12px; border-radius: 8px; }
   .online-panel { padding: 10px 12px; }
   .online-panel h3 { font-size: 13px; }
@@ -1150,7 +1135,7 @@ html[data-theme="dark"], html[data-theme="midnight"], html[data-theme="cyber"]{c
 
 /* 触控目标 ≥44px（关键交互） */
 @media (max-width:768px){
-  .btn, .count-btn, .shop-tab, .persona-card, .my-card-mate, .slot-chip{
+  .btn, .count-btn, .shop-tab, .persona-card, .my-card-mate{
     min-height:44px; min-width:44px; display:inline-flex; align-items:center; justify-content:center;
   }
   .xq-cell{min-width:44px; min-height:44px}
@@ -1311,7 +1296,6 @@ body.entered #screen-hub, body.entered #screen-game{animation:none}
           <button type="button" class="me-chip" id="btn-me" title="创建账号或使用 PIN 登录" data-i18n-title="account_button_title"></button>
         </div>
         <div id="my-card"></div>
-        <div class="slots-row hidden" id="slots-row" aria-hidden="true"></div>
         <div class="room-panel hidden" id="room-panel">
           <div class="room-head">
             <h3 data-i18n="my_room">🚪 我的房间</h3>

@@ -101,7 +101,7 @@ const IDs = ['count-group','btn-back','btn-restart','btn-rules','btn-end-game','
   'player-bar','status-bar','board-area','game-extra','toast-wrap','game-grid',
   'btn-create-room','btn-join-room','room-input','btn-settings-page','online-status','online-banner',
   'room-panel','room-code-big','room-info','room-status','room-actions',
-  'btn-me','my-card','slots-row','persona-row','lb-list','lb-note','lb-tab-all','lb-tab-online',
+  'btn-me','my-card','persona-row','lb-list','lb-note','lb-tab-all','lb-tab-online',
   'lobby-panel','lobby-list','player-list'];
 const registry = new Map(IDs.map(id => {
   const e = makeEl('div');
@@ -377,7 +377,7 @@ async function main(){
   G.registerAccount('小明', 'abc123', 0, 0); // 恢复主账号
   const roster0 = JSON.parse(localStorage.getItem('mg_roster'));
   check('档案已持久化', Array.isArray(roster0) && roster0.length >= 1);
-  check('大厅渲染档案按钮且热座槽位已移除', $('btn-me').children.length >= 2 && $('slots-row').children.length === 0 && $('slots-row').classList.contains('hidden'));
+  check('大厅只保留联机与人机模式入口', [...html.matchAll(/<button[^>]+data-mode="([^"]+)"/g)].map(match=>match[1]).join(',') === 'online,ai');
 
   // 编辑我的档案（昵称 + 头像）
   $('btn-me').dispatch('click');
@@ -398,29 +398,6 @@ async function main(){
   const roster1 = JSON.parse(localStorage.getItem('mg_roster'));
   check('档案昵称保存成功', roster1.some(p => p.name === '小明'));
   check('我的档案按钮显示新昵称', $('btn-me').children[1].textContent.includes('小明'));
-  const devUid = G.deviceUid;
-  const devBefore = roster1.find(p => p.uid === devUid).coins;
-  const authorityBefore = new Map(roster1.map(p => [p.uid, { coins: p.coins || 0, total: p.total || 0 }]));
-
-  // 本地五子棋结算：热座模式不进入正式经济与成长。
-  G.playerCount = 2; G.showGame('gomoku');
-  const settlementBoard = area().children[0];
-  const placeSettlement = (r, c) => {
-    const LOGICAL = 520, CELL = 34, PAD = 22;
-    settlementBoard.dispatch('click', { clientX: (PAD + c*CELL)/LOGICAL*520, clientY: (PAD + r*CELL)/LOGICAL*520 });
-  };
-  [[7,3],[3,3],[7,4],[3,4],[7,5],[3,5],[7,6],[3,6],[7,7]].forEach(([r,c]) => placeSettlement(r,c));
-  const roster2 = JSON.parse(localStorage.getItem('mg_roster'));
-  const devAfter = roster2.find(p => p.uid === devUid).coins;
-  check('本地热座胜者不增加正式金币', devAfter - devBefore === 0);
-  const authorityChanged = roster2.filter(p => {
-    const before = authorityBefore.get(p.uid);
-    return before && ((p.coins || 0) !== before.coins || (p.total || 0) !== before.total);
-  });
-  if (authorityChanged.length) console.log('      authority changed:', JSON.stringify(authorityChanged.map(p => ({ uid:p.uid, before:authorityBefore.get(p.uid), after:{coins:p.coins||0,total:p.total||0} }))));
-  check('本地热座不修改客户端权威场次', authorityChanged.length === 0);
-  check('本地排行榜仍可正常渲染', $('lb-list').children.length >= 2);
-
   /* 人机模式：AI 自动回应落子 */
   G.aiMode = true;
   G.playerCount = 2;
@@ -487,7 +464,7 @@ async function main(){
   check('人机模式渲染角色选择卡', $('persona-row').children.length >= 2 && $('persona-row').querySelectorAll('.persona-card').length === 5);
   G.aiMode = false;
   G.renderPersonaRow();
-  check('本地模式隐藏角色选择', $('persona-row').classList.contains('hidden'));
+  check('联机模式隐藏 AI 角色选择', $('persona-row').classList.contains('hidden'));
 
   // 设置弹层与房间面板初始状态
   $('btn-settings-page').dispatch('click');

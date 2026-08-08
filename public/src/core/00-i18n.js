@@ -398,7 +398,6 @@ async function setLanguage(lang) {
   renderLeaderboard();
   renderAccounts();
   renderMe();
-  renderSlots();
   renderLobby();
   if (online.room) renderRoomPanel();
   if (currentGame && typeof currentGame.onLanguageChange === 'function') currentGame.onLanguageChange(currentLang);

@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Mini Games · Metrics</title>
+  <style>
+    :root{color-scheme:light dark;--bg:#0b1020;--panel:#151d33;--panel2:#1d2947;--text:#edf2ff;--muted:#9caccc;--line:#2b3a60;--accent:#6d8bff;--ok:#49d597;--warn:#ffbd59;--danger:#ff6b7d}
+    *{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 10% 0,#1c2b56 0,transparent 36%),var(--bg);color:var(--text);font:14px/1.55 system-ui,"Segoe UI","Microsoft YaHei",sans-serif}
+    main{width:min(1180px,calc(100% - 32px));margin:0 auto;padding:30px 0 56px}header{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:20px}h1{font-size:clamp(24px,4vw,38px);line-height:1.1;margin:0 0 8px}h2{font-size:17px;margin:0 0 12px}.muted{color:var(--muted)}
+    .toolbar,.panel{border:1px solid var(--line);background:color-mix(in srgb,var(--panel) 92%,transparent);border-radius:16px;box-shadow:0 18px 50px rgba(0,0,0,.2)}.toolbar{display:grid;grid-template-columns:minmax(220px,1fr) auto auto auto;gap:10px;padding:14px;margin-bottom:18px}.panel{padding:18px;margin-top:16px}
+    input,button,select{min-height:44px;border-radius:10px;border:1px solid var(--line);font:inherit}input,select{background:var(--panel2);color:var(--text);padding:9px 12px}button{background:var(--accent);border-color:var(--accent);color:#fff;padding:9px 15px;font-weight:650;cursor:pointer}button.secondary{background:transparent;border-color:var(--line)}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 45%,transparent);outline-offset:2px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}.metric{background:var(--panel2);border:1px solid var(--line);border-radius:13px;padding:14px}.metric b{display:block;font-size:26px;margin-top:5px;overflow-wrap:anywhere}.badge{display:inline-flex;align-items:center;min-height:28px;padding:3px 10px;border-radius:999px;background:rgba(73,213,151,.14);color:var(--ok)}.badge.warning{background:rgba(255,189,89,.14);color:var(--warn)}.badge.critical{background:rgba(255,107,125,.14);color:var(--danger)}
+    .list{display:grid;gap:9px}.row{display:grid;grid-template-columns:minmax(160px,1fr) minmax(120px,auto) minmax(150px,auto);gap:12px;align-items:center;padding:11px 0;border-bottom:1px solid var(--line)}.row:last-child{border-bottom:0}.empty{padding:18px;border:1px dashed var(--line);border-radius:12px;color:var(--muted)}
+    table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);white-space:nowrap}th{color:var(--muted);font-weight:600}.table-wrap{overflow:auto}.status{min-height:24px;margin:12px 2px;color:var(--muted)}
+    @media(max-width:760px){header{display:block}.toolbar{grid-template-columns:1fr 1fr}.toolbar input{grid-column:1/-1}.row{grid-template-columns:1fr}.desktop-only{display:none}}
+    @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <div><h1 data-i18n="title">运营指标</h1><div class="muted" data-i18n="subtitle">仅展示脱敏聚合数据；管理令牌只保存在当前页面内存。</div></div>
+    <select id="language" aria-label="Language"><option value="zh-CN">中文</option><option value="en-US">English</option><option value="uk-UA">Українська</option></select>
+  </header>
+  <section class="toolbar" aria-label="Metrics controls">
+    <input id="token" type="password" autocomplete="off" spellcheck="false" data-i18n-placeholder="token" aria-label="Metrics admin token">
+    <button id="load" data-i18n="load">刷新</button>
+    <button id="history" class="secondary" data-i18n="history">历史</button>
+    <button id="export" class="secondary" data-i18n="export">导出 CSV</button>
+  </section>
+  <div id="status" class="status" role="status" aria-live="polite"></div>
+  <section class="panel"><h2 data-i18n="snapshot">当前快照</h2><div id="metrics" class="grid"><div class="empty" data-i18n="empty">输入管理员令牌后加载。</div></div></section>
+  <section class="panel"><h2 data-i18n="alerts">阈值告警</h2><div id="alerts" class="list"><div class="empty" data-i18n="none">暂无数据</div></div></section>
+  <section class="panel"><h2 data-i18n="incidents">脱敏错误闭环</h2><div id="incidents" class="list"><div class="empty" data-i18n="none">暂无数据</div></div></section>
+  <section id="history-panel" class="panel" hidden><h2 data-i18n="historyTitle">历史快照</h2><div class="table-wrap"><table><thead><tr><th data-i18n="time">时间</th><th data-i18n="matches">进行中比赛</th><th data-i18n="spectators">观众</th><th data-i18n="tournaments">赛事</th><th data-i18n="protocolErrors">协议错误</th><th data-i18n="serverErrors">服务错误</th></tr></thead><tbody id="history-body"></tbody></table></div></section>
+</main>
+<script>
+(()=>{'use strict';
+  const dictionaries={
+    'zh-CN':{title:'运营指标',subtitle:'仅展示脱敏聚合数据；管理令牌只保存在当前页面内存。',token:'输入 METRICS_ADMIN_TOKEN',load:'刷新',history:'历史',export:'导出 CSV',snapshot:'当前快照',alerts:'阈值告警',incidents:'脱敏错误闭环',empty:'输入管理员令牌后加载。',none:'暂无数据',historyTitle:'历史快照',time:'时间',matches:'进行中比赛',spectators:'观众',tournaments:'赛事',protocolErrors:'协议错误',serverErrors:'服务错误',loading:'正在读取…',loaded:'指标已更新',unauthorized:'令牌无效或没有权限',notConfigured:'服务端尚未配置 Metrics 管理令牌',failed:'读取失败',downloaded:'CSV 已导出'},
+    'en-US':{title:'Operations metrics',subtitle:'Redacted aggregates only. The admin token stays in this page memory.',token:'Enter METRICS_ADMIN_TOKEN',load:'Refresh',history:'History',export:'Export CSV',snapshot:'Current snapshot',alerts:'Threshold alerts',incidents:'Redacted error loop',empty:'Enter the admin token to load metrics.',none:'No data',historyTitle:'Metric history',time:'Time',matches:'Active matches',spectators:'Spectators',tournaments:'Tournaments',protocolErrors:'Protocol errors',serverErrors:'Server errors',loading:'Loading…',loaded:'Metrics updated',unauthorized:'Invalid token or access denied',notConfigured:'Metrics admin token is not configured on the server',failed:'Request failed',downloaded:'CSV exported'},
+    'uk-UA':{title:'Операційні метрики',subtitle:'Лише знеособлені агрегати. Токен адміністратора зберігається тільки в пам’яті цієї сторінки.',token:'Введіть METRICS_ADMIN_TOKEN',load:'Оновити',history:'Історія',export:'Експорт CSV',snapshot:'Поточний зріз',alerts:'Порогові сповіщення',incidents:'Знеособлений цикл помилок',empty:'Введіть токен адміністратора, щоб завантажити метрики.',none:'Даних немає',historyTitle:'Історія метрик',time:'Час',matches:'Активні матчі',spectators:'Глядачі',tournaments:'Турніри',protocolErrors:'Помилки протоколу',serverErrors:'Помилки сервера',loading:'Завантаження…',loaded:'Метрики оновлено',unauthorized:'Недійсний токен або доступ заборонено',notConfigured:'На сервері не налаштовано токен адміністратора метрик',failed:'Помилка запиту',downloaded:'CSV експортовано'}
+  };
+  const $=id=>document.getElementById(id),language=$('language'),status=$('status');let lang='zh-CN';
+  const t=key=>(dictionaries[lang]&&dictionaries[lang][key])||dictionaries['zh-CN'][key]||key;
+  function applyLanguage(){document.documentElement.lang=lang;document.querySelectorAll('[data-i18n]').forEach(node=>node.textContent=t(node.dataset.i18n));document.querySelectorAll('[data-i18n-placeholder]').forEach(node=>node.placeholder=t(node.dataset.i18nPlaceholder));}
+  language.addEventListener('change',()=>{lang=language.value;applyLanguage();});
+  function headers(){const token=$('token').value.trim();return token?{Authorization:'Bearer '+token}:{};}
+  async function request(path,type='json'){status.textContent=t('loading');const response=await fetch(path,{headers:headers(),cache:'no-store'});if(!response.ok){status.textContent=response.status===401?t('unauthorized'):response.status===503?t('notConfigured'):t('failed')+' ('+response.status+')';throw new Error('HTTP '+response.status);}return type==='blob'?response.blob():response.json();}
+  function render(payload){const data=payload.data||{},metricKeys=Object.keys(data).filter(key=>key!=='generatedAt').sort();$('metrics').replaceChildren(...metricKeys.map(key=>{const card=document.createElement('div');card.className='metric';const label=document.createElement('span');label.className='muted';label.textContent=key;const value=document.createElement('b');value.textContent=String(data[key]);card.append(label,value);return card;}));const alerts=payload.alerts||[];$('alerts').replaceChildren(...(alerts.length?alerts.map(item=>{const row=document.createElement('div');row.className='row';const code=document.createElement('strong');code.textContent=item.code;const badge=document.createElement('span');badge.className='badge '+item.severity;badge.textContent=item.severity;const value=document.createElement('span');value.textContent=String(item.value)+' / '+String(item.threshold);row.append(code,badge,value);return row;}):[empty()]));const incidents=payload.incidents||[];$('incidents').replaceChildren(...(incidents.length?incidents.map(item=>{const row=document.createElement('div');row.className='row';const context=document.createElement('strong');context.textContent=item.context;const kind=document.createElement('span');kind.textContent=item.kind;const count=document.createElement('span');count.textContent='×'+item.count+' · '+new Date(item.lastAt).toLocaleString(lang);row.append(context,kind,count);return row;}):[empty()]));status.textContent=t('loaded');}
+  function empty(){const node=document.createElement('div');node.className='empty';node.textContent=t('none');return node;}
+  $('load').addEventListener('click',async()=>{try{render(await request('/api/metrics'));}catch{}});
+  $('history').addEventListener('click',async()=>{try{const payload=await request('/api/metrics/history');render(payload);const body=$('history-body');body.replaceChildren(...(payload.history||[]).slice().reverse().map(item=>{const row=document.createElement('tr');[new Date(item.generatedAt).toLocaleString(lang),item.activeMatches||0,item.activeSpectators||0,item.activeTournaments||0,item.protocolErrors||0,item.serverErrors||0].forEach(value=>{const cell=document.createElement('td');cell.textContent=String(value);row.appendChild(cell);});return row;}));$('history-panel').hidden=false;}catch{}});
+  $('export').addEventListener('click',async()=>{try{const blob=await request('/api/metrics/export','blob'),url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download='mini-games-metrics.csv';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);status.textContent=t('downloaded');}catch{}});
+  applyLanguage();
+})();
+</script>
+</body>
+</html>

@@ -377,7 +377,7 @@ async function run(){
   check('经验只保存 state_hash，不保存原始局面', /^[a-f0-9]{32}$/.test(firstExperiences[0].stateHash) &&
     !Object.prototype.hasOwnProperty.call(firstExperiences[0], 'state') &&
     !JSON.stringify(firstDB.aiLearning).includes(firstMarker));
-  check('本地模式没有待同步 AI 学习记录', firstDB.pendingAILearningSync.length === 0);
+  check('学习成功回执不会残留待同步 AI 记录', firstDB.pendingAILearningSync.length === 0);
 
   const duplicate = await client.request({
     type: 'result', payload: {

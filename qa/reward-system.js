@@ -54,10 +54,10 @@ for (const gameId of expectedGames){
     gameId, mode: 'online', participantCount: multiplayerGame ? 4 : 2, placement: 1, result: 'win',
   });
   const aiReward = reward(profile(), { gameId, mode: 'ai', participantCount: 2, placement: 1, result: 'win' });
-  const localReward = reward(profile(), { gameId, mode: 'local', eligible: false, blockedReason: 'local_mode' });
-  check(gameId + ' 奖励模式严格区分联机/AI/本地',
+  const unsupportedReward = reward(profile(), { gameId, mode: 'legacy', eligible: false, blockedReason: 'invalid_mode' });
+  check(gameId + ' 奖励模式严格区分联机/AI',
     onlineReward.currency === (multiplayerGame ? 4 : 3) && aiReward.currency === 1 && aiReward.xp === 8 &&
-    localReward.currency === 0 && localReward.xp === 0);
+    unsupportedReward.currency === 0 && unsupportedReward.xp === 0 && unsupportedReward.blockedReason === 'invalid_mode');
 }
 
 check('等级曲线 Lv1→Lv2 需要 35 XP', xpRequiredForNextLevel(1) === 35 && xpForLevel(2) === 35);
@@ -117,10 +117,8 @@ const aiDraw = reward(profile(), { mode: 'ai', result: 'draw' });
 const aiLoss = reward(profile(), { mode: 'ai', result: 'loss' });
 check('AI 平/负分别为 0💵/6 XP、0💵/5 XP', aiDraw.currency === 0 && aiDraw.xp === 6 && aiLoss.currency === 0 && aiLoss.xp === 5);
 
-const local = reward(profile(), { mode: 'local', eligible: false, blockedReason: 'local_mode' });
 const blocked = reward(profile(), { eligible: false, blockedReason: 'insufficient_actions' });
 const afk = reward(profile({ streak: 4, bestStreak: 4 }), { eligible: false, blockedReason: 'afk' });
-check('本地热座永远不产生正式 💵 或 XP', local.currency === 0 && local.xp === 0 && local.eligible === false);
 check('无效局奖励与 XP 均为 0', blocked.currency === 0 && blocked.xp === 0 && blocked.blockedReason === 'insufficient_actions');
 check('AFK 不获失败奖励并中断联机连胜', afk.currency === 0 && afk.xp === 0 && afk.streakAfter === 0);
 

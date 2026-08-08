@@ -24,9 +24,26 @@ const { TetrisRuleAuthority } = require('./gameplay/tetris-rule-authority');
 const { XiangqiRuleAuthority } = require('./gameplay/xiangqi-rule-authority');
 const { MonopolyRuleAuthority } = require('./gameplay/monopoly-rule-authority');
 const { PROTOCOL_VERSIONS, protocolError, capabilities: gameplayCapabilities } = require('./gameplay/protocol');
-const { increment: incrementGameplayMetric, snapshot: gameplayMetricsSnapshot } = require('./gameplay/metrics');
+const {
+  increment: incrementGameplayMetric,
+  snapshot: gameplayMetricsSnapshot,
+  safeSnapshot: safeGameplayMetricsSnapshot,
+  alerts: gameplayMetricAlerts,
+  historyCsv: gameplayMetricsHistoryCsv,
+} = require('./gameplay/metrics');
 const metricsRate = new Map();
 const METRICS_ADMIN_TOKEN = String(process.env.METRICS_ADMIN_TOKEN || '').trim();
+const METRICS_HISTORY_INTERVAL_MS = Math.max(60000, Math.min(60 * 60 * 1000, Number(process.env.METRICS_HISTORY_INTERVAL_MS) || 5 * 60 * 1000));
+const METRICS_HISTORY_LIMIT = Math.max(24, Math.min(10000, Number(process.env.METRICS_HISTORY_LIMIT) || 2016));
+const REPLAY_TTL_MS = Math.max(60 * 60 * 1000, Math.min(30 * 24 * 60 * 60 * 1000, Number(process.env.REPLAY_TTL_MS) || 7 * 24 * 60 * 60 * 1000));
+const REPLAY_PUBLIC_DELAY_MS = Math.max(0, Math.min(24 * 60 * 60 * 1000, Number(process.env.REPLAY_PUBLIC_DELAY_MS) || 5 * 60 * 1000));
+const REPLAY_SHARE_TTL_MS = Math.max(10 * 60 * 1000, Math.min(7 * 24 * 60 * 60 * 1000, Number(process.env.REPLAY_SHARE_TTL_MS) || 24 * 60 * 60 * 1000));
+const METRICS_THRESHOLDS = Object.freeze({
+  protocolErrors: Math.max(1, Number(process.env.METRICS_PROTOCOL_ERROR_ALERT_THRESHOLD) || 20),
+  clientResultRejected: Math.max(1, Number(process.env.METRICS_RESULT_REJECT_ALERT_THRESHOLD) || 20),
+  serverErrors: Math.max(1, Number(process.env.METRICS_SERVER_ERROR_ALERT_THRESHOLD) || 1),
+  activeMatches: Math.max(1, Number(process.env.METRICS_ACTIVE_MATCH_ALERT_THRESHOLD) || 200),
+});
 const TOURNAMENT_ADMIN_UIDS = new Set(String(process.env.TOURNAMENT_ADMIN_UIDS || '').split(',').map(value=>value.trim()).filter(Boolean));
 function isTournamentAdmin(uid){ return !!uid && TOURNAMENT_ADMIN_UIDS.has(String(uid)); }
 function metricsAdminAuthorized(req){
@@ -42,6 +59,51 @@ function metricsAdminAuthorized(req){
     return { ok:false, status:401, reason:'metrics_unauthorized' };
   }
   return { ok:true, ip };
+}
+function currentGameplayMetrics(){
+  return safeGameplayMetricsSnapshot(gameplayMetricsSnapshot({
+    activeMatches:[...rooms.values()].filter(room=>room.started&&!room.settled).length,
+    activeSpectators:[...rooms.values()].reduce((sum,room)=>sum+(room.spectators instanceof Map?room.spectators.size:0),0),
+    activeTournaments:tournaments.size,
+  }));
+}
+function captureGameplayMetrics(force=false){
+  const current=currentGameplayMetrics(),history=Array.isArray(db.metricsHistory)?db.metricsHistory:(db.metricsHistory=[]);
+  const last=history[history.length-1],lastAt=last?Date.parse(last.generatedAt):0;
+  if(force||!last||!Number.isFinite(lastAt)||Date.now()-lastAt>=METRICS_HISTORY_INTERVAL_MS){
+    history.push(current);db.metricsHistory=history.slice(-METRICS_HISTORY_LIMIT);trimAuditData();saveDB();
+  }
+  return current;
+}
+function operationalMetricsPayload(force=false){
+  const current=captureGameplayMetrics(force),history=Array.isArray(db.metricsHistory)?db.metricsHistory:[];
+  const previous=history.length>1?history[history.length-2]:{};
+  return {
+    version:'metrics-v2',data:current,
+    alerts:gameplayMetricAlerts(current,previous,METRICS_THRESHOLDS),
+    incidents:(db.opsIncidents||[]).slice(-50).reverse().map(item=>({
+      fingerprint:item.fingerprint,context:item.context,kind:item.kind,count:item.count,firstAt:item.firstAt,lastAt:item.lastAt,
+    })),
+  };
+}
+function recordMetricsAccess(auth,urlPath){
+  recordAnalytics('metrics_read',{metadata:{
+    path:String(urlPath||'/api/metrics').slice(0,80),
+    ipHash:crypto.createHash('sha256').update(String(auth&&auth.ip||'')).digest('hex').slice(0,16),
+  }});
+  trimAuditData();saveDB();
+}
+function recordOperationalError(context,error){
+  incrementGameplayMetric('serverErrors');
+  const safeContext=/^[a-z0-9_:-]{1,64}$/i.test(String(context||''))?String(context):'unknown';
+  const kind=/^[A-Za-z][A-Za-z0-9]{0,63}$/.test(String(error&&error.name||''))?String(error.name):'Error';
+  const fingerprint=crypto.createHash('sha256').update(safeContext+'|'+kind).digest('hex').slice(0,16),now=Date.now();
+  try{
+    const incidents=Array.isArray(db.opsIncidents)?db.opsIncidents:(db.opsIncidents=[]),existing=incidents.find(item=>item.fingerprint===fingerprint);
+    if(existing){existing.count=(Number(existing.count)||0)+1;existing.lastAt=now;}
+    else incidents.push({fingerprint,context:safeContext,kind,count:1,firstAt:now,lastAt:now});
+    db.opsIncidents=incidents.slice(-500);trimAuditData();saveDB();
+  }catch{}
 }
 const { SpectatorAccessGuard, TournamentGuard } = require('./gameplay/guards');
 const { AI_STRATEGY_VERSION, aiStrategyPrompt } = require('./ai-strategy-skills');
@@ -277,7 +339,7 @@ async function handleAI(req, res){
       try {
         upstreamChoice = await askDeepSeek(game, state, options, persona);
       } catch (e) {
-        console.error('AI 请求失败:', e.message);
+        recordOperationalError('ai_upstream_request',e);console.error('AI 请求失败:', e.message);
       }
     }
     if (options && !options.includes(upstreamChoice)) upstreamChoice = null;
@@ -352,7 +414,7 @@ async function handleAIConfirm(req, res){
     res.writeHead(200, { ...cors, 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ confirmed: true, ...(response.payload || {}) }));
   } catch (error) {
-    console.error('AI 确认请求处理失败:', error.message);
+    recordOperationalError('ai_confirm_request',error);console.error('AI 确认请求处理失败:', error.message);
     if (!res.headersSent) res.writeHead(500, { ...cors, 'Content-Type': 'application/json' });
     if (!res.writableEnded) res.end('{"confirmed":false,"error":"internal_error"}');
   }
@@ -371,7 +433,7 @@ const server = http.createServer((req, res) => {
   }
   if (req.method === 'POST' && urlPath === '/api/ai'){
     handleAI(req, res).catch(e => {
-      console.error('AI 请求处理失败:', e && e.message || String(e));
+      recordOperationalError('ai_http_handler',e);console.error('AI 请求处理失败:', e && e.message || String(e));
       if (!res.headersSent) res.writeHead(500, { ...corsHeaders(req), 'Content-Type': 'application/json' });
       if (!res.writableEnded) res.end('{"choice":null,"error":"internal_error"}');
     });
@@ -379,7 +441,7 @@ const server = http.createServer((req, res) => {
   }
   if (req.method === 'POST' && urlPath === '/api/ai/confirm'){
     handleAIConfirm(req, res).catch(e => {
-      console.error('AI 确认处理失败:', e && e.message || String(e));
+      recordOperationalError('ai_confirm_http_handler',e);console.error('AI 确认处理失败:', e && e.message || String(e));
       if (!res.headersSent) res.writeHead(500, { ...corsHeaders(req), 'Content-Type': 'application/json' });
       if (!res.writableEnded) res.end('{"confirmed":false,"error":"internal_error"}');
     });
@@ -390,18 +452,25 @@ const server = http.createServer((req, res) => {
     res.end(JSON.stringify({ ip: requestIp(req) }));
     return;
   }
-  if (req.method === 'GET' && urlPath === '/api/metrics'){
+  if (req.method === 'GET' && ['/api/metrics','/api/metrics/history','/api/metrics/export'].includes(urlPath)){
     const auth = metricsAdminAuthorized(req);
     if (!auth.ok){
       res.writeHead(auth.status, {...corsHeaders(req),'Content-Type':'application/json','Cache-Control':'no-store'});
       res.end(JSON.stringify({ error: auth.reason }));
       return;
     }
-    const activeMatches=[...rooms.values()].filter(room=>room.started).length;
-    const activeSpectators=[...rooms.values()].reduce((sum,room)=>sum+(room.spectators instanceof Map?room.spectators.size:0),0);
+    const payload=operationalMetricsPayload(urlPath==='/api/metrics');
+    recordMetricsAccess(auth,urlPath);
+    if(urlPath==='/api/metrics/export'){
+      const csv=gameplayMetricsHistoryCsv(db.metricsHistory||[]);
+      res.writeHead(200,{...corsHeaders(req),'Content-Type':'text/csv; charset=utf-8','Content-Disposition':'attachment; filename="mini-games-metrics.csv"','Cache-Control':'no-store'});
+      res.end('\ufeff'+csv);return;
+    }
     res.writeHead(200,{...corsHeaders(req),'Content-Type':'application/json','Cache-Control':'no-store'});
-    recordAnalytics('metrics_read', { metadata:{ ipHash: crypto.createHash('sha256').update(String(auth.ip || '')).digest('hex').slice(0,16) } });
-    res.end(JSON.stringify({ version:'metrics-v1', data: gameplayMetricsSnapshot({activeMatches,activeSpectators,activeTournaments:tournaments.size}) }));return;
+    if(urlPath==='/api/metrics/history'){
+      res.end(JSON.stringify({...payload,history:(db.metricsHistory||[]).slice(-METRICS_HISTORY_LIMIT)}));return;
+    }
+    res.end(JSON.stringify(payload));return;
   }
   const requestedPath = urlPath === '/' ? 'index.html' : urlPath.replace(/^[/\\]+/, '');
   const file = path.resolve(PUBLIC, requestedPath);
@@ -557,7 +626,7 @@ function reportTournamentRoomResult(r,results,options={}){
   if(leaders.length===1){
     const winner=participants.find(item=>item.slot===leaders[0].slot);
     if(!winner)return false;
-    outcome={winnerUid:winner.uid,forfeit:String(options.cause||'')==='forfeit'};
+    outcome={winnerUid:winner.uid,forfeit:/forfeit|admin_recovery/.test(String(options.cause||''))};
   }
   const reported=entry.tournament.reportServerResult(r.id,outcome,{source:'server',matchRoomId:r.id});
   if(!reported.ok)return false;
@@ -864,7 +933,7 @@ async function sbLoadProfiles(){
     await retryPendingAILearningSync();
     console.log('已从 Supabase 加载 ' + Object.keys(users).length + ' 位玩家');
   } catch (e) {
-    console.error('加载 Supabase 数据失败（继续使用本地数据）:', e.message);
+    recordOperationalError('supabase_profile_load',e);console.error('加载 Supabase 数据失败（继续使用本地数据）:', e.message);
   }
 }
 async function sbLoadRewardHistory(){
@@ -935,7 +1004,7 @@ async function sbLoadRewardHistory(){
     }
     db.rewardHistory = [...byResult.values()].sort((a, b) => Number(a.at || 0) - Number(b.at || 0)).slice(-50000);
   } catch (e) {
-    console.error('加载 Supabase 奖励流水失败（重复对手衰减仅使用当前进程数据）:', e.message);
+    recordOperationalError('supabase_reward_load',e);console.error('加载 Supabase 奖励流水失败（重复对手衰减仅使用当前进程数据）:', e.message);
   }
 }
 async function sbLoadAILearningModels(){
@@ -952,7 +1021,7 @@ async function sbLoadAILearningModels(){
     loadAILearningModelRows(db.aiLearning, rows);
     console.log('已从 Supabase 加载 ' + rows.length + ' 个个性化 AI 模型');
   } catch (error) {
-    console.error('加载 Supabase AI 学习模型失败（继续使用本地模型）:', error.message);
+    recordOperationalError('supabase_ai_model_load',error);console.error('加载 Supabase AI 学习模型失败（继续使用本地模型）:', error.message);
   }
 }
 function profileDbRow(u){
@@ -1024,7 +1093,7 @@ function sbProfileQueue(uid, task, label){
   const previous = sbProfileQueues.get(uid) || Promise.resolve();
   // task 在真正出队时执行；不能在调用 sbSyncProfile 时预先 JSON.stringify(u)。
   const run = previous.catch(() => {}).then(task).catch(error => {
-    console.error('Supabase ' + (label || '同步档案') + '失败:', error.message);
+    recordOperationalError('supabase_profile_sync',error);console.error('Supabase ' + (label || '同步档案') + '失败:', error.message);
     return false;
   });
   sbProfileQueues.set(uid, run);
@@ -1074,7 +1143,7 @@ async function sbInsert(table, rows, label){
       method: 'POST',
       body: JSON.stringify(rows),
     });
-  } catch (e) { console.error('Supabase 写入' + label + '失败:', e.message); }
+  } catch (e) { recordOperationalError('supabase_row_write',e);console.error('Supabase 写入' + label + '失败:', e.message); }
 }
 function isoTimestamp(value){
   const input = value === undefined || value === null || value === '' ? Date.now() : value;
@@ -1199,7 +1268,7 @@ function sbApplyAILearningTransaction(uid, resultId, model, experiences){
   })).catch(error => {
     const message = String(error && error.message || error || '');
     const conflict = /stale_ai_learning_revision|revision[_ -]?conflict|current_revision/i.test(message);
-    if (!conflict) console.error('Supabase AI 学习事务失败:', message);
+    if (!conflict){recordOperationalError('supabase_ai_learning_tx',error);console.error('Supabase AI 学习事务失败:', message);}
     return { ok: false, duplicate: false, conflict, error: message };
   });
   sbAILearningQueues.set(queueKey, run);
@@ -1210,7 +1279,7 @@ function sbApplyAILearningTransaction(uid, resultId, model, experiences){
 /* ---------------- 排行榜持久化（JSON 文件） ---------------- */
 function emptyDB(){
   return {
-    users: {}, history: [], rewardHistory: [], economyLedger: [], events: [], replays: [],
+    users: {}, history: [], rewardHistory: [], economyLedger: [], events: [], replays: [], metricsHistory: [], opsIncidents: [],
     pendingRewardSync: [], aiLearning: normalizeAILearningStore(), pendingAILearningSync: [],
     friendRequests: [], friendships: [], blocks: [], reports: [],
   };
@@ -1227,6 +1296,8 @@ function loadDB(){
       economyLedger: Array.isArray(parsed.economyLedger) ? parsed.economyLedger : [],
       events: Array.isArray(parsed.events) ? parsed.events : [],
       replays: Array.isArray(parsed.replays) ? parsed.replays : [],
+      metricsHistory: Array.isArray(parsed.metricsHistory) ? parsed.metricsHistory.map(safeGameplayMetricsSnapshot) : [],
+      opsIncidents: Array.isArray(parsed.opsIncidents) ? parsed.opsIncidents : [],
       // 在 Supabase 短暂不可用或进程重启时保留正式奖励，避免已回执给玩家的奖励回档。
       pendingRewardSync: Array.isArray(parsed.pendingRewardSync) ? parsed.pendingRewardSync : [],
       aiLearning: normalizeAILearningStore(parsed.aiLearning),
@@ -1244,6 +1315,8 @@ function loadDB(){
   db.friendships = db.friendships.filter(row => row && row.id && row.aUid && row.bUid && row.aUid !== row.bUid).slice(-50000);
   db.blocks = db.blocks.filter(row => row && row.id && row.blockerUid && row.blockedUid && row.blockerUid !== row.blockedUid).slice(-50000);
   db.reports = db.reports.filter(row => row && row.id && row.reporterUid && row.targetUid && row.reason).slice(-50000);
+  db.metricsHistory = (db.metricsHistory || []).map(safeGameplayMetricsSnapshot).slice(-METRICS_HISTORY_LIMIT);
+  db.opsIncidents = (db.opsIncidents || []).filter(item=>item&&/^[a-f0-9]{16}$/.test(String(item.fingerprint||''))&&item.context&&item.kind).slice(-500);
   for (const [uid, u] of Object.entries(db.users)){
     u.uid = u.uid || uid;
     if (u.coins === undefined) u.coins = u.points || 0;
@@ -1298,6 +1371,7 @@ function saveDB(){
   const pendingAILearningSync = (db.pendingAILearningSync || []).filter(item => item && !item.ephemeral &&
     (!db.users[item.uid] || !db.users[item.uid].ephemeral));
   fs.writeFileSync(tmp, JSON.stringify({ users, history, rewardHistory, economyLedger, events, replays,
+    metricsHistory:db.metricsHistory||[],opsIncidents:db.opsIncidents||[],
     pendingRewardSync, aiLearning: db.aiLearning, pendingAILearningSync,
     friendRequests: db.friendRequests || [], friendships: db.friendships || [], blocks: db.blocks || [], reports: db.reports || [],
   }, null, 2));
@@ -1309,6 +1383,8 @@ function trimAuditData(){
   if (db.economyLedger.length > 10000) db.economyLedger = db.economyLedger.slice(-5000);
   if (db.events.length > 20000) db.events = db.events.slice(-10000);
   db.replays = (db.replays || []).filter(item => item && Number(item.expiresAt || 0) > Date.now()).slice(-2000);
+  db.metricsHistory = (db.metricsHistory || []).map(safeGameplayMetricsSnapshot).slice(-METRICS_HISTORY_LIMIT);
+  db.opsIncidents = (db.opsIncidents || []).filter(item=>item&&item.fingerprint&&item.context&&item.kind).slice(-500);
   db.aiLearning.experiences = db.aiLearning.experiences.slice(-20000);
   db.aiLearning.appliedResults = db.aiLearning.appliedResults.slice(-50000);
   if (db.friendRequests.length > 50000) db.friendRequests = db.friendRequests.slice(-25000);
@@ -1891,11 +1967,11 @@ function syncSocialRows(kind, rows){
     id:row.id, reporter_uid:row.reporterUid, target_uid:row.targetUid, reason:row.reason, context_type:row.contextType || 'profile', context_id:row.contextId || '', match_id:row.matchId || '', recent_event_ids:row.recentEventIds || [], target_snapshot:row.targetSnapshot || {}, status:row.status || 'open', created_at:isoTimestamp(row.createdAt),
   });
   sbFetch(table + '?on_conflict=id', { method:'POST', headers:{ Prefer:'resolution=merge-duplicates' }, body:JSON.stringify(mapped) })
-    .catch(error => console.error('Supabase 社交关系同步失败:', error.message));
+    .catch(error => {recordOperationalError('supabase_social_sync',error);console.error('Supabase 社交关系同步失败:', error.message);});
 }
 function deleteSocialRemote(table, id){
   if (!useSupabase || !table || !id) return;
-  sbFetch(table + '?id=eq.' + encodeURIComponent(id), { method:'DELETE' }).catch(error => console.error('Supabase 社交关系删除失败:', error.message));
+  sbFetch(table + '?id=eq.' + encodeURIComponent(id), { method:'DELETE' }).catch(error => {recordOperationalError('supabase_social_delete',error);console.error('Supabase 社交关系删除失败:', error.message);});
 }
 function socialSendRequest(session, targetUid){
   const target = socialTarget(session.uid, targetUid);
@@ -2327,7 +2403,7 @@ async function rebasePendingAILearningGroup(uid, game){
     Number(a.queuedAt || 0) - Number(b.queuedAt || 0) || Number(a.model.revision || 0) - Number(b.model.revision || 0));
   if (!pending.length) return true;
   if (!pending.every(item => item.replay && Array.isArray(item.replay.decisions))){
-    console.error('Supabase AI 学习 revision 冲突：旧 outbox 缺少 replay，暂不覆盖远端模型');
+    recordOperationalError('supabase_ai_rebase_legacy',new Error('legacy_replay_missing'));console.error('Supabase AI 学习 revision 冲突：旧 outbox 缺少 replay，暂不覆盖远端模型');
     return false;
   }
   const rebasedStore = normalizeAILearningStore({
@@ -2376,7 +2452,7 @@ function drainAILearningGroup(uid, game){
           try {
             if (await rebasePendingAILearningGroup(uid, game)) continue;
           } catch (error) {
-            console.error('Supabase AI 学习 revision 重基失败:', error.message);
+            recordOperationalError('supabase_ai_rebase',error);console.error('Supabase AI 学习 revision 重基失败:', error.message);
           }
         }
         allSynced = false;
@@ -2587,11 +2663,13 @@ function settleRoomResult(r, results, options = {}){
   stopRoomGameplayTimer(r);
   const now = Date.now();
   const progress = roomProgress(r);
-  const globalEligibility = options.eligibility || roomRewardEligibility(r, now);
+  const isTournamentMatch=!!r.tournamentBinding;
+  const globalEligibility = isTournamentMatch?{eligible:false,blockedReason:'tournament_mode'}:(options.eligibility || roomRewardEligibility(r, now));
   const participants = [...r.clients.entries()].map(([session, slot]) => ({ session, slot, user: session.uid && db.users[session.uid] })).filter(x => x.user);
   const participantUids = participants.map(p => p.user.uid);
   const aiIdentities = aiRoomSeats(r).map(seat => 'ai:' + seat.aiPersona + ':' + seat.aiDifficulty);
   const settlementMode = participants.length >= 2 ? 'online' : 'ai';
+  const rewardMode = isTournamentMatch ? 'tournament' : settlementMode;
   const opponentKey = opponentGroupKey(participantUids.concat(aiIdentities));
   const durationMs = Math.max(0, now - Number(progress.startedAt || r.startedAt || now));
   r.resultRewards = r.resultRewards instanceof Map ? r.resultRewards : new Map();
@@ -2608,7 +2686,7 @@ function settleRoomResult(r, results, options = {}){
     if (globalEligibility.eligible){
       for (const other of others) recordServerPlaymate(p.user, other, r.game);
     }
-    const resultMeta = { matchId:r.matchId, resultId:r.matchId + ':' + p.slot, mode:settlementMode };
+    const resultMeta = { matchId:r.matchId, resultId:r.matchId + ':' + p.slot, mode:rewardMode };
     const result = options.forceResult || playerResult(results, mine, activeSeatCount(r));
     const repeatCount24h = repeatOpponentCount(p.user.uid, opponentKey, now);
     const humanOrder = participants.slice().sort((a, b) => {
@@ -2623,7 +2701,7 @@ function settleRoomResult(r, results, options = {}){
       matchId: r.matchId,
       resultId: resultMeta.resultId,
       gameId: r.game,
-      mode:settlementMode,
+      mode:rewardMode,
       placement,
       result,
       participantCount:settlementMode === 'ai' ? 2 : participants.length,
@@ -2650,7 +2728,7 @@ function settleRoomResult(r, results, options = {}){
   recordAnalytics(globalEligibility.eligible ? 'match_completed' : 'match_invalidated', {
     matchId: r.matchId,
     game: r.game,
-    mode:settlementMode,
+    mode:rewardMode,
     metadata: {
       reason: globalEligibility.blockedReason || null,
       cause: options.cause || 'completed',
@@ -2659,7 +2737,7 @@ function settleRoomResult(r, results, options = {}){
       participantCount: participants.length,
     },
   });
-  if (options.cause === 'forfeit') recordAnalytics('match_forfeit', { matchId: r.matchId, game: r.game, mode: 'online', metadata: { offenderSlot: options.offenderSlot } });
+  if (/forfeit|admin_recovery/.test(String(options.cause||''))) recordAnalytics('match_forfeit', { matchId: r.matchId, game: r.game, mode:rewardMode, metadata: { offenderSlot: options.offenderSlot } });
   if (options.cause === 'afk') recordAnalytics('match_afk', { matchId: r.matchId, game: r.game, mode: 'online', metadata: { offenderSlot: options.offenderSlot } });
   trimAuditData();
   saveDB();
@@ -2679,13 +2757,26 @@ function settleRoomResult(r, results, options = {}){
 }
 function saveReplayForRoom(r, finalResult){
   if (!r || !r.matchId || !Array.isArray(r.moveLog) || !r.moveLog.length) return null;
-  const uids=[...r.clients.keys()].map(session=>session.uid).filter(Boolean);
-  const replay={replayId:'rep_'+crypto.randomBytes(10).toString('base64url'),matchId:r.matchId,game:r.game,createdAt:Date.now(),expiresAt:Date.now()+7*24*60*60*1000,visibility:normalizeRoomVisibility(r.visibility),uids,moveLog:r.moveLog.map(event=>({seq:event.seq,player:event.player,payload:event.payload})),moveLogTruncated:!!r.moveLogTruncated,finalResult:{...finalResult}};
+  const uids=[...r.clients.keys()].map(session=>session.uid).filter(Boolean),createdAt=Date.now(),visibility=normalizeRoomVisibility(r.visibility);
+  const replay={version:'replay-v1.1',replayId:'rep_'+crypto.randomBytes(10).toString('base64url'),matchId:r.matchId,game:r.game,createdAt,expiresAt:createdAt+REPLAY_TTL_MS,publicAt:visibility==='public'?createdAt+REPLAY_PUBLIC_DELAY_MS:0,visibility,uids,shareTokenHash:null,shareExpiresAt:0,moveLog:r.moveLog.map(event=>({seq:event.seq,player:event.player,payload:event.payload})),moveLogTruncated:!!r.moveLogTruncated,finalResult:{...finalResult}};
   db.replays=(db.replays||[]).filter(item=>item&&item.matchId!==r.matchId);db.replays.push(replay);trimAuditData();saveDB();
   recordAnalytics('replay_created',{matchId:r.matchId,game:r.game,metadata:{replayId:replay.replayId,eventCount:replay.moveLog.length,truncated:replay.moveLogTruncated}});
   return replay;
 }
-function replayMeta(replay){return{replayId:replay.replayId,matchId:replay.matchId,game:replay.game,createdAt:replay.createdAt,expiresAt:replay.expiresAt,visibility:replay.visibility,eventCount:replay.moveLog.length,moveLogTruncated:!!replay.moveLogTruncated,finalResult:replay.finalResult};}
+function replayPublicAt(replay){return Number(replay&&replay.publicAt)||((replay&&replay.visibility)==='public'?Number(replay.createdAt||0)+REPLAY_PUBLIC_DELAY_MS:0);}
+function replayParticipant(replay,uid){return !!uid&&Array.isArray(replay&&replay.uids)&&replay.uids.includes(uid);}
+function replayShareValid(replay,token,now=Date.now()){
+  if(!replay||!token||Number(replay.shareExpiresAt||0)<=now||!/^[A-Za-z0-9_-]{20,160}$/.test(String(token)))return false;
+  const expected=String(replay.shareTokenHash||''),actual=crypto.createHash('sha256').update(String(token)).digest('hex');
+  return expected.length===actual.length&&!!expected&&crypto.timingSafeEqual(Buffer.from(expected),Buffer.from(actual));
+}
+function replayVisibleById(replay,uid,now=Date.now()){
+  return replayParticipant(replay,uid)||(replay&&replay.visibility==='public'&&replayPublicAt(replay)<=now);
+}
+function replayMeta(replay,viewerUid){
+  const canShare=replayParticipant(replay,viewerUid),shared=canShare&&Number(replay.shareExpiresAt||0)>Date.now()&&!!replay.shareTokenHash;
+  return{version:replay.version||'replay-v1',replayId:replay.replayId,matchId:replay.matchId,game:replay.game,createdAt:replay.createdAt,expiresAt:replay.expiresAt,publicAt:replayPublicAt(replay),visibility:replay.visibility,eventCount:replay.moveLog.length,moveLogTruncated:!!replay.moveLogTruncated,finalResult:replay.finalResult,canShare,shared,shareExpiresAt:shared?replay.shareExpiresAt:0};
+}
 function settleRoomNoContest(r, reason){
   if (!r || !r.started || r.settled || !r.matchId) return;
   const results = activeRoomSeats(r).map((seat, index) => ({ slot:seat.seatId, coins:0, rank:index + 1 }));
@@ -3200,7 +3291,7 @@ class Session {
         type: 'hello_ack', proto: PROTOCOL_VERSION, authenticated: !!this.uid,
         admin: isTournamentAdmin(this.uid),
         rewardVersion: REWARD_CONFIG.version,
-        capabilities: ['reward_breakdown','ai_reward_ticket','local_no_economy',...gameplayCapabilities(),
+        capabilities: ['reward_breakdown','ai_reward_ticket','replay-v1.1','tournament-orchestrator-v1.1',...gameplayCapabilities(),
           'tank_authority_v1','tetris_battle_authority_v1','spectator_room_v1','tournament_orchestrator_v1','xiangqi_clock_v1','monopoly_auction_v1','game_cosmetic_presentation_v1',
           'ai_decision_confirm_v1','seat_protocol_v2','ready_v1','ai_seat_v1','room_visibility_v1','social_graph_v1'],
       }));
@@ -3344,14 +3435,31 @@ class Session {
     }
     if (type === 'replay_list'){
       const u=this.requireUser();if(!u)return;
-      const list=(db.replays||[]).filter(item=>item&&Number(item.expiresAt||0)>Date.now()&&(item.visibility==='public'||(item.uids||[]).includes(u.uid))).slice(-50).reverse().map(replayMeta);
+      const now=Date.now(),list=(db.replays||[]).filter(item=>item&&Number(item.expiresAt||0)>now&&replayVisibleById(item,u.uid,now)).slice(-50).reverse().map(item=>replayMeta(item,u.uid));
       this.sendText(JSON.stringify({type:'replay_list',payload:{items:list}}));return;
+    }
+    if (type === 'replay_share'){
+      const u=this.requireUser();if(!u)return;
+      const replayId=String(payload&&payload.replayId||''),replay=(db.replays||[]).find(item=>item&&item.replayId===replayId&&Number(item.expiresAt||0)>Date.now());
+      if(!replay||!replayParticipant(replay,u.uid)){this.sendText(JSON.stringify({type:'replay_error',msg:'只有对局参与者可以分享回放',reason:'replay_share_forbidden'}));return;}
+      const shareToken='shr_'+crypto.randomBytes(24).toString('base64url'),expiresAt=Math.min(Number(replay.expiresAt)||0,Date.now()+REPLAY_SHARE_TTL_MS);
+      replay.shareTokenHash=crypto.createHash('sha256').update(shareToken).digest('hex');replay.shareExpiresAt=expiresAt;saveDB();
+      recordAnalytics('replay_shared',{uid:u.uid,matchId:replay.matchId,game:replay.game,metadata:{replayId:replay.replayId,expiresAt}});
+      this.sendText(JSON.stringify({type:'replay_shared',payload:{replayId,shareToken,expiresAt}}));return;
+    }
+    if (type === 'replay_unshare'){
+      const u=this.requireUser();if(!u)return;
+      const replayId=String(payload&&payload.replayId||''),replay=(db.replays||[]).find(item=>item&&item.replayId===replayId&&Number(item.expiresAt||0)>Date.now());
+      if(!replay||!replayParticipant(replay,u.uid)){this.sendText(JSON.stringify({type:'replay_error',msg:'只有对局参与者可以撤销分享',reason:'replay_share_forbidden'}));return;}
+      replay.shareTokenHash=null;replay.shareExpiresAt=0;saveDB();recordAnalytics('replay_unshared',{uid:u.uid,matchId:replay.matchId,game:replay.game,metadata:{replayId:replay.replayId}});
+      this.sendText(JSON.stringify({type:'replay_unshared',payload:{replayId}}));return;
     }
     if (type === 'replay_get'){
       const u=this.requireUser();if(!u)return;
-      const replayId=String(payload&&payload.replayId||'');const replay=(db.replays||[]).find(item=>item&&item.replayId===replayId&&Number(item.expiresAt||0)>Date.now());
-      if(!replay||!(replay.visibility==='public'||(replay.uids||[]).includes(u.uid))){this.sendText(JSON.stringify({type:'replay_error',msg:'回放不存在或无权访问',reason:'replay_forbidden'}));return;}
-      this.sendText(JSON.stringify({type:'replay_data',payload:{...replayMeta(replay),moveLog:replay.moveLog}}));return;
+      const replayRef=String(payload&&(payload.replayId||payload.shareToken)||''),now=Date.now();
+      const replay=(db.replays||[]).find(item=>item&&Number(item.expiresAt||0)>now&&(item.replayId===replayRef||replayShareValid(item,replayRef,now)));
+      if(!replay||!(replayVisibleById(replay,u.uid,now)||replayShareValid(replay,replayRef,now))){this.sendText(JSON.stringify({type:'replay_error',msg:'回放不存在或无权访问',reason:'replay_forbidden'}));return;}
+      this.sendText(JSON.stringify({type:'replay_data',payload:{...replayMeta(replay,u.uid),moveLog:replay.moveLog}}));return;
     }
     if (type === 'profile'){
       const u = this.requireUser();
@@ -3707,13 +3815,20 @@ class Session {
       broadcastTournament(entry);
       return;
     }
-    if(type==='tournament_recover'){
-      if(!isTournamentAdmin(this.uid)){this.sendText(JSON.stringify({type:'tournament_error',msg:'只有赛事管理员可以执行恢复',reason:'admin_only'}));return;}
+    if(type==='tournament_forfeit'||type==='tournament_recover'){
+      if(!this.requireUser())return;
+      const admin=isTournamentAdmin(this.uid);
+      if(type==='tournament_recover'&&!admin){this.sendText(JSON.stringify({type:'tournament_error',msg:'只有赛事管理员可以执行恢复',reason:'admin_only'}));return;}
       const tournamentId=String(payload&&payload.tournamentId||''),pairingId=String(payload&&payload.pairingId||''),entry=tournaments.get(tournamentId),pairing=entry&&entry.tournament.pairings.find(item=>item.pairingId===pairingId);
       const room=pairing&&pairing.matchRoomId&&rooms.get(pairing.matchRoomId);
-      if(!entry||!pairing||!room||!room.started||room.settled){this.sendText(JSON.stringify({type:'tournament_error',msg:'赛事桌当前没有可恢复的进行中对局',reason:'recovery_match_unavailable'}));return;}
-      const offender=[...room.clients.keys()].find(session=>!session.alive)||[...room.clients.keys()][0];
-      settleRoomForfeit(room,offender,'admin_recovery');broadcastTournament(entry);this.sendText(JSON.stringify({type:'tournament_recovered',payload:{tournamentId,pairingId}}));return;
+      if(!entry||!pairing||!room||!room.started||room.settled){this.sendText(JSON.stringify({type:'tournament_error',msg:'赛事桌当前没有可处理的进行中对局',reason:'recovery_match_unavailable'}));return;}
+      const targetUid=String(payload&&payload.targetUid||(type==='tournament_forfeit'?this.uid:''));
+      if(!pairing.players.includes(targetUid)){this.sendText(JSON.stringify({type:'tournament_error',msg:'判负目标不属于当前赛事桌',reason:'invalid_forfeit_target'}));return;}
+      if(!admin&&targetUid!==this.uid){this.sendText(JSON.stringify({type:'tournament_error',msg:'参赛者只能为自己弃权',reason:'forfeit_target_forbidden'}));return;}
+      const offender=[...room.clients.keys()].find(session=>session.uid===targetUid);
+      if(!offender){this.sendText(JSON.stringify({type:'tournament_error',msg:'判负目标席位不存在',reason:'forfeit_target_unavailable'}));return;}
+      settleRoomForfeit(room,offender,type==='tournament_recover'?'admin_recovery':'tournament_forfeit');broadcastTournament(entry);
+      this.sendText(JSON.stringify({type:type==='tournament_recover'?'tournament_recovered':'tournament_forfeited',payload:{tournamentId,pairingId,targetUid}}));return;
     }
     if (['tournament_start','tournament_result','tournament_next','tournament_get'].includes(type)){
       if (!this.requireUser()) return;
@@ -4310,8 +4425,14 @@ const heartbeatSweep = setInterval(() => {
 }, Math.min(10000, Math.max(1000, Math.floor(HEARTBEAT_TIMEOUT_MS / 4))));
 if (heartbeatSweep.unref) heartbeatSweep.unref();
 
+const metricsHistorySweep=setInterval(()=>{
+  try{captureGameplayMetrics(false);}catch(error){recordOperationalError('metrics_history_capture',error);}
+},METRICS_HISTORY_INTERVAL_MS);
+if(metricsHistorySweep.unref)metricsHistorySweep.unref();
+
 sbLoadProfiles().finally(() => {
   server.listen(PORT, () => {
+    try{captureGameplayMetrics(true);}catch(error){recordOperationalError('metrics_initial_capture',error);}
     console.log('小游戏合集在线服务已启动: http://localhost:' + PORT + (useSupabase ? '（Supabase 数据库已连接）' : '（本地 JSON 存储）'));
   });
 });
