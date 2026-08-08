@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "task": "sticker-cartoon-runtime-integration-p1-20260809",
-  "state": "VERIFIED_DEFAULT_OFF",
+  "state": "VERIFYING",
   "risk": "HIGH",
   "dependsOn": ["ghost-game-rebrand-p0-20260808:released", "sticker-cartoon-golden-set-m0-20260808:implemented"],
   "steps": [

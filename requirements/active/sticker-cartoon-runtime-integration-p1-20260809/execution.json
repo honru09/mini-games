@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "task": "sticker-cartoon-runtime-integration-p1-20260809",
-  "state": "VERIFIED_DEFAULT_OFF",
+  "state": "VERIFYING",
   "startedAt": "2026-08-09T01:08:11+09:00",
   "updatedAt": "2026-08-09T02:01:21+09:00",
   "verifiedCommit": "d84f52eb8a27155b14baeb1243c17f53a358f91e",

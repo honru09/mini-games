@@ -35,3 +35,4 @@
 - 2026-08-09 00:47｜新增 Ghost Game P0 本地验收与发布前收口简易报告，并更新简易报告归档索引。
 - 2026-08-09 01:00｜新增 Ghost Game P0 线上发布证据与线上发布收口简易报告。
 - 2026-08-09 02:01｜新增默认关闭的 Sticker Cartoon P1 五子棋 998-byte SVG 底材、双闸门 Manifest 管线、激活态规则/安全/回退 QA、30 组合浏览器证据与收口报告。
+- 2026-08-09 02:21｜新增 Honru v2 source-only 角色母图候选：色键源、原始 Alpha、Ink/Paper/Cream 三色平涂版、192/96/64/44px 派生、完整 Prompt/provenance、技术/IP Draft、审计证据与简易报告。

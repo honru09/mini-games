@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "task": "honru-character-master-v2-20260809",
-  "state": "IMPLEMENTED_SOURCE_ONLY",
+  "state": "IMPLEMENTING",
   "risk": "MEDIUM",
   "dependsOn": ["ghost-game-rebrand-p0-20260808:released", "sticker-cartoon-runtime-integration-p1-20260809:verified-default-off"],
   "steps": [
