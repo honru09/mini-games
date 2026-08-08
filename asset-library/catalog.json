@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-08-08T20:08:00+09:00",
+  "updatedAt": "2026-08-09T00:37:00+09:00",
   "storage": {
     "mode": "local-only",
     "remoteProvider": null,
@@ -11,7 +11,7 @@
     {
       "id": "production-asset-manifest",
       "path": "public/assets/manifests/asset_manifest.json",
-      "sha256": "577f22364f75bfa21897e99d2612da9bff8914520dcc9b2ecc946c6be79d24ed"
+      "sha256": "61bb1c628a68085cf23a6ef6fcbc73140b0cf6d36ca5a886697c797926e3ca1a"
     }
   ],
   "collections": [

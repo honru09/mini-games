@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "task": "ghost-game-rebrand-p0-20260808",
+  "state": "VERIFIED_LOCAL",
+  "startedAt": "2026-08-08T20:30:00+09:00",
+  "updatedAt": "2026-08-09T00:37:00+09:00",
+  "verifiedCommit": null,
+  "releasedCommit": null,
+  "progress": {
+    "recon": {"status":"completed"},
+    "brandAssets": {"status":"verified","evidence":["evidence/brand-assets-audit.md","art-source/brand/ghost-game/IP_REVIEW_v1.md","qa/asset-manifest-v2.js"]},
+    "authentication": {"status":"verified","evidence":["qa/ghost-auth-credentials.js","qa/ghost-auth-online.js","qa/security-online.js","qa/supabase-schema.js"]},
+    "appShell": {"status":"verified","evidence":["qa/ghost-shell-contract.js","qa/ui-responsive-contract.js","evidence/browser-visual-qa-20260809.md"]},
+    "honruCompanion": {"status":"verified","evidence":["qa/ghost-companion.js","qa/ghost-auth-online.js","evidence/browser-visual-qa-20260809.md"]},
+    "integrationQa": {"status":"verified","evidence":["npm run quality:gates","npm test","evidence/browser-visual-qa-20260809.md"]},
+    "release": {"status":"not_executed"}
+  },
+  "notExecuted": ["real Supabase", "real mobile devices", "second desktop browser", "real network shaping", "30-minute synthetic session"],
+  "blocked": []
+}

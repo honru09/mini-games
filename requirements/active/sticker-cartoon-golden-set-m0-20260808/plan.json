@@ -10,7 +10,7 @@
     {"id":"source-manifest-v2","dependsOn":["art-bible-v1"],"risk":"medium","tests":["schema","hash/license","commerceId/artworkVersion compatibility","drift"],"rollback":"retain v1 manifest fields"},
     {"id":"golden-set-assets","dependsOn":["design-motion-v3","source-manifest-v2"],"risk":"high","tests":["persona 8-state","4 avatar contact sheet","gomoku vertical slice","ludo vertical slice"],"rollback":"feature flags to current assets"},
     {"id":"ip-review","dependsOn":["golden-set-assets"],"risk":"high","tests":["silhouette comparison","costume/prop/pose checklist","source provenance"],"rollback":"reject or redraw asset"},
-    {"id":"integration-qa","dependsOn":["ip-review"],"risk":"high","tests":["six themes","three locales","360/390/768/1024/1440","a11y","byte/memory","fallback"],"rollback":"disable M0 flags"},
+    {"id":"integration-qa","dependsOn":["ip-review"],"risk":"high","tests":["light/dark themes","three locales","360/390/768/1024/1440","a11y","byte/memory","fallback"],"rollback":"disable M0 flags"},
     {"id":"golden-set-decision","dependsOn":["integration-qa"],"risk":"high","tests":["human style approval","evidence manifest"],"rollback":"return to Art Bible revision"}
   ]
 }

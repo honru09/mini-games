@@ -83,19 +83,19 @@ if (typeof document !== 'undefined' && document.addEventListener){
   });
 }
 const THEME_LIST = [
-  { id: 'light',   icon: '☀️', name: 'Light',   nameZh: '日光', nameKey:'theme_light' },
-  { id: 'midnight',icon: '🌙', name: 'Midnight',nameZh: '午夜', nameKey:'theme_midnight' },
-  { id: 'ocean',   icon: '🌊', name: 'Ocean',   nameZh: '海洋', nameKey:'theme_ocean' },
-  { id: 'forest',  icon: '🌲', name: 'Forest',  nameZh: '森林', nameKey:'theme_forest' },
-  { id: 'cyber',   icon: '🤖', name: 'Cyber',   nameZh: '赛博', nameKey:'theme_cyber' },
-  { id: 'sakura',  icon: '🌸', name: 'Sakura',  nameZh: '樱花', nameKey:'theme_sakura' },
+  { id: 'light', icon: '☀️', name: 'Day', nameZh: '白天', nameKey:'theme_light' },
+  { id: 'dark', icon: '🌙', name: 'Night', nameZh: '黑夜', nameKey:'theme_dark' },
 ];
 function themeMeta(id){
-  if (id === 'dark') id = 'midnight';
-  return THEME_LIST.find(t => t.id === id) || THEME_LIST[0];
+  return THEME_LIST.find(t => t.id === normalizeTheme(id)) || THEME_LIST[0];
+}
+function normalizeTheme(theme){
+  const value = String(theme || 'light');
+  if (value === 'light' || value === 'ocean' || value === 'forest' || value === 'sakura') return 'light';
+  return 'dark';
 }
 function applyTheme(theme){
-  if (theme === 'dark') theme = 'midnight'; // 旧值兼容
+  theme = normalizeTheme(theme);
   if (document.documentElement && document.documentElement.setAttribute){
     document.documentElement.setAttribute('data-theme', theme);
   }
@@ -111,7 +111,8 @@ function themeName(meta){ return meta && meta.nameKey ? t(meta.nameKey) : (meta 
 function initTheme(){
   let t = 'light';
   try { t = localStorage.getItem('mg_theme') || 'light'; } catch {}
-  if (t === 'dark') t = 'midnight';
+  t = normalizeTheme(t);
+  try { localStorage.setItem('mg_theme', t); } catch {}
   applyTheme(t);
 }
 const PLAYER_COLORS = ['#e5484d','#3b82f6','#22a06b','#f59e0b','#8b5cf6'];

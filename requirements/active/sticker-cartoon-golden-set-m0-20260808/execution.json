@@ -9,7 +9,7 @@
     "human Art Bible review",
     "two-person IP Similarity Review",
     "human Golden Set decision",
-    "runtime feature-flag integration and full six-theme/three-locale/five-width matrix",
+    "runtime feature-flag integration and full light-dark/three-locale/five-width matrix",
     "real Android/iPhone/Tablet matrix",
     "second desktop browser",
     "real Supabase migration/RLS/concurrency/backup/rollback",
@@ -23,7 +23,7 @@
     "sourceManifestV2": {"status":"implemented","evidence":["art-source/style/source-manifest-v2.schema.json","art-source/style/golden-set-source-manifest-v2.json","qa/sticker-art-contract.js"],"boundary":"source-sidecar contract only; runtime asset_manifest.json remains v1 authority"},
     "goldenSetAssets": {"status":"implemented","evidence":["art-source/ai/teacher/sticker-v1/teacher-8-state-transparent-draft-v1.png","art-source/avatars/golden-set/sticker-v1/avatar_100/avatar_100-transparent-draft-v1.png","art-source/avatars/golden-set/sticker-v1/avatar_117/avatar_117-transparent-draft-v1.png","art-source/avatars/golden-set/sticker-v1/avatar_124/avatar_124-transparent-draft-v1.png","art-source/avatars/golden-set/sticker-v1/avatar_141/avatar_141-transparent-draft-v1.png","art-source/ui/sticker-v1/component-demo.html","art-source/games/gomoku/sticker-v1/gomoku-vertical-slice-spec-draft-v2.svg","art-source/games/ludo/sticker-v1/ludo-vertical-slice-spec-draft-v2.svg"],"boundary":"draft sources only; generated rule-error explorations are excluded; no runtime paths","missing":["teacher/avatar technical cleanup","human style approval"]},
     "ipReview": {"status":"partial","evidence":["art-source/style/IP_REVIEW_TEMPLATE.md","art-source/ai/teacher/sticker-v1/IP_REVIEW_draft-v1.md","art-source/avatars/golden-set/sticker-v1/avatar_100/IP_REVIEW_draft-v1.md","art-source/avatars/golden-set/sticker-v1/avatar_117/IP_REVIEW_draft-v1.md","art-source/avatars/golden-set/sticker-v1/avatar_124/IP_REVIEW_draft-v1.md","art-source/avatars/golden-set/sticker-v1/avatar_141/IP_REVIEW_draft-v1.md","art-source/ui/sticker-v1/IP_REVIEW_draft-v1.md","art-source/games/gomoku/sticker-v1/IP_REVIEW_draft-v1.md","art-source/games/ludo/sticker-v1/IP_REVIEW_draft-v1.md"],"missing":["Reviewer A","Reviewer B","final pass/fail"]},
-    "integrationQa": {"status":"partial","evidence":["qa/sticker-art-contract.js","deliverables/visual-qa/sticker-cartoon-m0/derived","evidence/golden-set-draft-verification-20260808.json"],"verifiedScope":["source hash","alpha PNG contract","exact Gomoku 15x15/five win","exact Ludo 52/four tokens","small-size draft sheets","grayscale and silhouette draft evidence","quality gates and full npm test"],"missing":["runtime integration","six themes","three locales","five widths","performance/fallback/offscreen/reduced-motion"]},
+    "integrationQa": {"status":"partial","evidence":["qa/sticker-art-contract.js","deliverables/visual-qa/sticker-cartoon-m0/derived","evidence/golden-set-draft-verification-20260808.json","CHANGE_REQUEST-双主题-20260809.md"],"verifiedScope":["source hash","alpha PNG contract","exact Gomoku 15x15/five win","exact Ludo 52/four tokens","small-size draft sheets","grayscale and silhouette draft evidence","quality gates and full npm test"],"missing":["runtime integration","light/dark themes","three locales","five widths","performance/fallback/offscreen/reduced-motion"]},
     "humanDecision": {"status":"not_executed"}
   }
 }

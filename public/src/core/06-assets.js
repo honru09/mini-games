@@ -2,8 +2,8 @@
 const ASSET_ROOT = 'assets/';
 const CURRENCY = '💵';
 const ASSET_CATALOG = Object.freeze({
-  brandMark: 'brand/logo_mark.svg',
-  brandWordmark: 'brand/logo_wordmark.svg',
+  brandMark: 'brand/ghost-game-mark.svg',
+  brandWordmark: 'brand/ghost-game-wordmark.svg',
   currencyCash: 'ui/currency_cash.svg',
   manifest: 'manifests/asset_manifest.json',
   backgroundCatalog: 'backgrounds/v1/background_catalog_v1.json',
@@ -97,7 +97,7 @@ function initStaticPlatformIcons(){
   const root = document.documentElement;
   const theme = root && typeof root.getAttribute === 'function' ? (root.getAttribute('data-theme') || 'light') : 'light';
   setButtonIcon($('btn-theme'),theme==='light'?'moon':'sun','',{ariaLabel:t('theme'),title:t('theme'),size:19});
-  setButtonIcon($('btn-hero-quick'),'zap',t('quick_join'));
+  setButtonIcon($('btn-hero-quick'),'play',t('home_enter_games'));
   setButtonIcon($('btn-quick-join'),'zap',t('quick_join'));
   setButtonIcon($('btn-create-room'),'plus',t('create_room'));
   setButtonIcon($('btn-browse-rooms'),'search',t('browse_rooms'));

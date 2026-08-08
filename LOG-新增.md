@@ -30,3 +30,6 @@
 - 2026-08-08 18:14｜新增可重复的白皮书 P0 增量更新脚本，并生成 40 页 DOCX 最终视觉验收基线。
 - 2026-08-08 18:30｜新增首屏静态标题与中文词典一致性回归，防止已删除玩法在 i18n 加载前短暂闪现。
 - 2026-08-08 20:13｜新增 Sticker Cartoon M0 Draft：Teacher 八状态与四 Avatar Alpha 源、核心 UI 状态板、五子棋精确 15×15/五连、飞行棋 52 格/每方四机/四剪影、Prompt/provenance、八份 IP Review、视觉证据与执行报告。
+- 2026-08-09 00:43｜新增 Ghost Game/Honru 原创 SVG 品牌、独立登录 Page、用户名密码与旧 PIN 迁移、一次性访客、Home/Games/Chat/Profile 四区、Honru 签到/对话、昼夜动态场景、Supabase 迁移字段及四套专项 QA。
+- 2026-08-09 00:43｜新增 Ghost Game 冻结需求、浏览器 1440/768/390/360 验收证据，以及 Sticker Cartoon M0 六主题收敛为昼夜双主题的 Change Request。
+- 2026-08-09 00:47｜新增 Ghost Game P0 本地验收与发布前收口简易报告，并更新简易报告归档索引。

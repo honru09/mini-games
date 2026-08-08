@@ -799,7 +799,7 @@ async function main(){
 
     /* 19. 人机模式：本地 AI 自动回应 */
     const aiEnv = registerEnv(makeEnv('ai-local'));
-    await waitFor(aiEnv, () => /已连接服务器/.test(aiEnv.onlineStatus()), 'AI 环境连接', 5000);
+    await waitFor(aiEnv, () => /已连接服务器/.test(aiEnv.onlineStatus()) && aiEnv.info().online._authenticated, 'AI 环境连接并完成认证', 5000);
     aiEnv.info().aiMode = true;
     aiEnv.info().playerCount = 2;
     aiEnv.info().startGame('gomoku');

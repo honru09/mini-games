@@ -17,14 +17,14 @@
 - Avatar 117：栏杆、窗口和浪纹小尺寸过密。
 - Avatar 124：眼镜、胡须和脸线交叉复杂，毛发纹理偏噪。
 - Avatar 141：剪影最清楚，但高光/渐变层仍需简化。
-- UI：code-native demo 补齐状态映射，但未进入真实三语、六主题和键盘页面。
+- UI：code-native demo 补齐状态映射，但未进入真实三语、昼夜双主题和键盘页面（主题范围由 `CHANGE_REQUEST-双主题-20260809.md` 更新）。
 - 游戏 v2：规则规格已纠正；仍未映射到现有 Canvas/DOM 坐标，也没有 360px 真实页面证据。
 
 ## 未执行 / 阻断
 
 - 人工 Art Bible 审查、两名人工 IP 评审、五人盲测与 Golden Set 决议。
 - Teacher/Avatar 人工闭线和 44/64px 专门重画。
-- 运行时 Feature Flag、六主题×三语×五宽、性能、资源失败、reduced-motion 与离屏暂停。
+- 运行时 Feature Flag、昼夜双主题×三语×五宽、性能、资源失败、reduced-motion 与离屏暂停。
 - 第二桌面浏览器、真实 Android/iPhone/Tablet、真实 Supabase、真实网络整形和 30 分钟会话。
 
 裁决：`IMPLEMENTED DRAFT / HUMAN_REVIEW_REQUIRED`，不得写 `verified` 或 `production-ready`。

@@ -17,12 +17,8 @@
     "brown500": "#82513F"
   },
   "themes": {
-    "light": {"background":"#FFF2E5","panel":"#FFFDF8","accent":"#56C987"},
-    "midnight": {"background":"#242038","panel":"#332D4D","accent":"#A17BEC"},
-    "ocean": {"background":"#DDF4F2","panel":"#F5FFFD","accent":"#31B8B1"},
-    "forest": {"background":"#E6F0DD","panel":"#F8FFF4","accent":"#58A85E"},
-    "cyber": {"background":"#202338","panel":"#30354C","accent":"#55D4C5"},
-    "sakura": {"background":"#FFF0F4","panel":"#FFF8FA","accent":"#E96C9A"}
+    "light": {"background":"#F0F5F9","panel":"#FFFFFF","accent":"#211923"},
+    "dark": {"background":"#03050A","panel":"#0A0D13","accent":"#FFF9F2"}
   },
   "themeInvariants": [
     "ink",

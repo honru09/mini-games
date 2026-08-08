@@ -1,34 +1,53 @@
 {
   "schemaVersion": 1,
-  "productVersion": "3.0",
+  "productVersion": "3.1",
   "productBaseline": {
     "gameCount": 6,
     "runtimeIds": ["gomoku", "ludo", "monopoly", "tank", "tetris", "xiangqi"]
   },
   "assets": [
     {
-      "asset_id": "P-001-MARK",
+      "asset_id": "P-001-GHOST-MARK",
       "runtime_id": "platform",
-      "runtime_path": "public/assets/brand/logo_mark.svg",
+      "runtime_path": "public/assets/brand/ghost-game-mark.svg",
       "logical_size": "24/48/96 CSS px",
       "pixel_size": "vector",
       "status": "integrated",
-      "fallback": "🎮",
+      "fallback": "Ghost Game",
       "load": "initial",
-      "a11y": "Playroom 品牌标志；调用方提供可读名称",
-      "license": "project-owned"
+      "a11y": "Ghost Game 幽灵手柄标志；调用方提供可读名称",
+      "license": "project-owned",
+      "source": "art-source/brand/ghost-game/source/ghost-game-mark-master-v1.svg",
+      "integrity": "sha256:df7d06e492b23cd35199596499550797bae828f30820e18a0f96745b5244b452"
     },
     {
-      "asset_id": "P-001-WORDMARK",
+      "asset_id": "P-001-GHOST-WORDMARK",
       "runtime_id": "platform",
-      "runtime_path": "public/assets/brand/logo_wordmark.svg",
+      "runtime_path": "public/assets/brand/ghost-game-wordmark.svg",
       "logical_size": "210x48 CSS px",
       "pixel_size": "vector",
       "status": "ready",
-      "fallback": "Playroom",
+      "fallback": "Ghost Game",
       "load": "on demand",
-      "a11y": "Mini Games Platform 英文品牌字标",
-      "license": "project-owned"
+      "a11y": "Ghost Game 英文品牌字标",
+      "license": "project-owned",
+      "source": "art-source/brand/ghost-game/source/ghost-game-wordmark-master-v1.svg",
+      "integrity": "sha256:203d86fca82f1a86583fe200c8eb2b7ca72d47fe9a8d6bf1363db824945a669e"
+    },
+    {
+      "asset_id": "P-002-HONRU-MASCOT-V1",
+      "runtime_id": "honru",
+      "runtime_path": "public/assets/brand/honru-mascot-v1.svg",
+      "logical_size": "64/96/320 CSS px",
+      "pixel_size": "vector",
+      "status": "integrated-p0",
+      "fallback": "P-001-GHOST-MARK",
+      "load": "initial hero and companion",
+      "a11y": "Ghost Game 平台助手鬼精灵 Honru；左眼为十字键、右眼为四点按键",
+      "license": "project-owned",
+      "source": "art-source/brand/ghost-game/honru/honru-mascot-master-v1.svg",
+      "integrity": "sha256:42c6442efc3d86ef6d939d936bff3c83a59c46c63002fa817ea4551da3a2de64",
+      "feature_flag": "mg_companion_honru_v1"
     },
     {
       "asset_id": "P-003",

@@ -7,18 +7,18 @@
 ## IN
 
 - Art Bible v1：原创色板、Ink/Paper Token、轮廓档位、比例、两级赛璐璐明暗、材质、接触影、Facial Kit 16×L1/L2/L3、三语字体/fallback 与授权记录。
-- Design System v3：Button、Card、Modal、Room Seat、Shop Card、Avatar、Badge、Toast 的结构、状态、六主题映射与 44px/对比度要求。
+- Design System v3：Button、Card、Modal、Room Seat、Shop Card、Avatar、Badge、Toast 的结构、状态、昼夜双主题映射与 44px/对比度要求。
 - Motion System v1：Anticipation / Action / Impact / Settle 四段式、L0–L4 密度、reduced-motion、离屏暂停、输入不阻塞与闪烁限制。
 - Golden Set：1 个 AI Persona 的 8 状态、4 个 Avatar、核心平台 UI、五子棋与飞行棋的棋盘/棋子/状态/动效/结算完整纵切。
 - Source Manifest v2：`commerceId` 与 `artworkVersion` 分离，记录来源、许可、Prompt/模型、hash、尺寸、pivot、poster、fallback、字节预算、加载时机与 feature flag。
 - IP Similarity Review：参考图只提取高层视觉语法；逐资产完成轮廓、服饰、道具、徽记、构图与高潮 Pose 原创性检查。
-- Visual QA：六主题、三语言、360/390/768/1024/1440、多尺寸读图、灰度、对比度、资源失败、reduced-motion 和性能预算。
+- Visual QA：昼夜双主题、三语言、360/390/768/1024/1440、多尺寸读图、灰度、对比度、资源失败、reduced-motion 和性能预算。
 
 ## OUT
 
 - 不恢复已删除游戏、同机热座、旧经济或旧白皮书的 11 款/三模式描述。
 - 不修改 `server/index.js`、`server/reward-engine.js`、`server/gameplay/**`、`shared/rules/**`、`supabase/schema.sql` 或联机协议。
-- M0 未通过前不批量重绘 48 Avatar、Legacy Avatar、六主题背景或其余四款游戏完整包。
+- M0 未通过前不批量重绘 48 Avatar、Legacy Avatar、昼夜主题背景或其余四款游戏完整包。
 - 不直接复制《皇室战争》或任何商业游戏的角色、皇冠、服饰、构图、表情帧、图标和受保护资产。
 - 不把当前软 3D 过渡封面描述为最终 Sticker Cartoon 完成状态。
 - 不安装/运行未通过 `requirements/skills-registry.json` 审计的第三方 Skill 或未知脚本。
@@ -44,5 +44,5 @@
 
 - 玩家不看 Logo，仅凭 Avatar、Persona、按钮、商城卡、棋子和胜负反馈也能识别同一品牌。
 - 44–64px 下主要情绪与棋子剪影一眼可读，粗黑轮廓、圆角、两级明暗和右下接触影保持一致。
-- 六主题只改变氛围；中文、英文和乌克兰语布局都不烘焙文字进图片、不截断主要行动。
+- 昼夜双主题只改变氛围；中文、英文和乌克兰语布局都不烘焙文字进图片、不截断主要行动。
 - 操作反馈快速、短促、可打断；高情绪只在关键事件出现，非焦点内容保持静态或低幅 Idle。

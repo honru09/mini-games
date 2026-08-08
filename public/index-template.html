@@ -1362,25 +1362,135 @@ body.entered #screen-hub, body.entered #screen-game{animation:none}
   .online-row{gap:6px}
 }
 
+/* ================= Ghost Game Brand Shell v1 ================= */
+:root{
+  --ghost-ink:#07090d; --ghost-paper:#f7f8fa; --ghost-glass:rgba(255,255,255,.68);
+  --ghost-glass-strong:rgba(255,255,255,.86); --ghost-line:rgba(7,9,13,.12);
+  --ghost-scene:#dfeaf5; --ghost-nav-height:72px; color-scheme:light;
+}
+html[data-theme="light"]{
+  --bg-main:#eaf3fa; --bg-card:rgba(255,255,255,.68); --bg-card-solid:#fdfefe;
+  --text-primary:#0a0d12; --text-secondary:#4f5b68; --text-on-accent:#fff;
+  --accent:#0a0d12; --accent-strong:#000; --accent-soft:rgba(10,13,18,.08);
+  --border-color:rgba(10,13,18,.12); --ghost-glass:rgba(255,255,255,.62);
+  --ghost-glass-strong:rgba(255,255,255,.84); --ghost-line:rgba(7,9,13,.12);
+  --ghost-scene:#dceaf4; color-scheme:light;
+}
+html[data-theme="dark"]{
+  --bg-main:#05070b; --bg-card:rgba(12,15,22,.68); --bg-card-solid:#0e121a;
+  --text-primary:#f8f9fb; --text-secondary:#a8b0bd; --text-on-accent:#07090d;
+  --accent:#f8f9fb; --accent-strong:#fff; --accent-soft:rgba(255,255,255,.10);
+  --border-color:rgba(255,255,255,.14); --ghost-glass:rgba(10,13,19,.58);
+  --ghost-glass-strong:rgba(10,13,19,.82); --ghost-line:rgba(255,255,255,.14);
+  --ghost-scene:#03050a; color-scheme:dark;
+}
+html[data-theme="dark"] .ui-icon img{filter:brightness(0) invert(1)}
+body{min-height:100dvh;background:var(--ghost-scene);overflow-x:hidden}
+body::before,body::after{display:none}
+.ambient-scene{position:fixed;inset:0;z-index:-2;overflow:hidden;background:var(--ghost-scene);transition:background .45s ease,opacity .35s ease;pointer-events:none}
+.ambient-scene::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(0,0,0,.08));pointer-events:none}
+.ambient-stars,.ambient-clouds{position:absolute;inset:-45%;transform-origin:50% 50%;will-change:transform,opacity}
+.ambient-stars{display:none;background-repeat:repeat;background-size:220px 220px}
+.ambient-stars-a{background-image:radial-gradient(circle at 12% 18%,#fff 0 1px,transparent 1.6px),radial-gradient(circle at 78% 32%,rgba(255,255,255,.82) 0 1.4px,transparent 2px),radial-gradient(circle at 45% 82%,rgba(255,255,255,.65) 0 1px,transparent 1.7px);animation:ghostStarTravel 14s linear infinite}
+.ambient-stars-b{background-image:radial-gradient(circle at 22% 64%,rgba(255,255,255,.92) 0 1.2px,transparent 1.8px),radial-gradient(circle at 62% 12%,rgba(255,255,255,.72) 0 1px,transparent 1.6px),radial-gradient(circle at 92% 72%,#fff 0 1.5px,transparent 2px);background-size:310px 310px;animation:ghostStarTravel 20s linear infinite reverse;opacity:.72}
+html[data-theme="dark"] .ambient-stars{display:block}
+@keyframes ghostStarTravel{0%{transform:scale(.72);opacity:.2}48%{opacity:.92}100%{transform:scale(1.75);opacity:.12}}
+.ambient-clouds{display:block;filter:blur(18px);opacity:.72;background:radial-gradient(ellipse at 16% 40%,rgba(255,255,255,.94) 0 8%,transparent 24%),radial-gradient(ellipse at 52% 60%,rgba(255,255,255,.82) 0 10%,transparent 28%),radial-gradient(ellipse at 84% 36%,rgba(255,255,255,.9) 0 8%,transparent 25%);animation:ghostCloudTravel 26s linear infinite}
+.ambient-clouds-b{opacity:.42;transform:scale(.8);animation-duration:38s;animation-direction:reverse;background-position:120px 40px}
+html[data-theme="dark"] .ambient-clouds{display:none}
+@keyframes ghostCloudTravel{0%{transform:translate3d(-3%,5%,0) scale(.82)}100%{transform:translate3d(5%,-8%,0) scale(1.22)}}
+body.game-active .ambient-scene{opacity:.08}
+#app{max-width:1280px;padding:18px clamp(14px,3vw,36px) 52px;transition:opacity .42s var(--ease-enter),transform .42s var(--ease-enter)}
+body.ghost-shell-booting #app,body.auth-required #app{opacity:0;transform:scale(.985);pointer-events:none;user-select:none}
+body.auth-required .honru-dock,body.auth-required .mobile-app-nav{display:none!important}
+body.authenticated #app{opacity:1;transform:none}
+.app-header{position:sticky;top:10px;z-index:120;min-height:62px;padding:9px 12px;margin-bottom:22px;border:1px solid var(--ghost-line);border-radius:20px;background:var(--ghost-glass);backdrop-filter:blur(24px) saturate(140%);-webkit-backdrop-filter:blur(24px) saturate(140%);box-shadow:0 16px 44px rgba(4,7,12,.10)}
+.ghost-brand-button{border:0;background:transparent;color:var(--text-primary);padding:0;text-align:left;cursor:pointer}
+.brand .brand-icon{width:38px;height:38px}.brand .brand-tag{max-width:210px}
+html[data-theme="dark"] .brand-icon img,html[data-theme="dark"] .hero-ghost-cluster img{filter:invert(1)}
+.desktop-app-nav{display:flex;align-items:center;gap:5px;padding:4px;border:1px solid var(--ghost-line);border-radius:999px;background:rgba(127,127,127,.06)}
+.app-nav-button{min-height:38px;padding:8px 14px;border:0;border-radius:999px;background:transparent;color:var(--text-secondary);font:inherit;font-weight:650;cursor:pointer;transition:background var(--dur-base),color var(--dur-base),transform var(--dur-fast)}
+.app-nav-button:hover{color:var(--text-primary)}.app-nav-button:active{transform:scale(.96)}
+.app-nav-button[aria-current="page"]{background:var(--text-primary);color:var(--bg-card-solid);box-shadow:var(--elev-2)}
+.mobile-app-nav{display:none}
+.app-route{animation:ghostRouteIn .42s var(--ease-enter) both}
+@keyframes ghostRouteIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.hero-carousel{position:relative;min-height:clamp(390px,58vh,620px);overflow:hidden;border:1px solid var(--ghost-line);border-radius:34px;background:linear-gradient(145deg,var(--ghost-glass-strong),rgba(127,127,127,.07));backdrop-filter:blur(28px) saturate(135%);box-shadow:0 28px 80px rgba(4,7,12,.15)}
+.hero-slide{position:absolute;inset:0;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(280px,.95fr);align-items:center;gap:20px;padding:clamp(28px,6vw,76px);opacity:0;transform:translateX(28px) scale(.99);pointer-events:none;transition:opacity .55s ease,transform .65s var(--ease-enter)}
+.hero-slide.active{opacity:1;transform:none;pointer-events:auto}
+.hero-copy{position:relative;z-index:2;max-width:680px}.hero-copy h1,.hero-copy h2{margin:10px 0 14px;font-size:clamp(36px,5.6vw,74px);line-height:.98;letter-spacing:-.055em}.hero-copy h2{font-size:clamp(34px,5vw,66px)}
+.hero-copy p{max-width:600px;margin:0 0 24px;font-size:clamp(15px,1.8vw,20px);color:var(--text-secondary)}
+.hero-kicker,.route-heading>span,.home-card-label{font-size:11px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:var(--text-secondary)}
+.hero-honru{position:relative;justify-self:center;width:min(42vw,470px);aspect-ratio:1;display:grid;place-items:center;filter:drop-shadow(0 28px 32px rgba(0,0,0,.16));animation:honruFloat 3.4s ease-in-out infinite}
+.hero-honru>img{width:100%;height:100%;object-fit:contain}.ghost-mark-fallback img{width:70%;filter:none}
+@keyframes honruFloat{0%,100%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-14px) rotate(1deg)}}
+.hero-orbit{position:relative;justify-self:center;width:min(36vw,390px);aspect-ratio:1;border:1px solid var(--ghost-line);border-radius:50%;animation:ghostOrbit 18s linear infinite}.hero-orbit span{position:absolute;display:grid;place-items:center;width:72px;height:72px;border:1px solid var(--ghost-line);border-radius:24px;background:var(--ghost-glass-strong);font-size:30px;box-shadow:var(--elev-2)}.hero-orbit span:nth-child(1){left:42%;top:-8%}.hero-orbit span:nth-child(2){right:-7%;top:38%}.hero-orbit span:nth-child(3){left:38%;bottom:-8%}.hero-orbit span:nth-child(4){left:-7%;top:38%}@keyframes ghostOrbit{to{transform:rotate(360deg)}}.hero-orbit span{animation:ghostCounterOrbit 18s linear infinite}@keyframes ghostCounterOrbit{to{transform:rotate(-360deg)}}
+.hero-ghost-cluster{justify-self:center;display:flex;align-items:flex-end;gap:12px}.hero-ghost-cluster img{width:clamp(72px,10vw,132px)}.hero-ghost-cluster img:nth-child(2){width:clamp(110px,15vw,190px);transform:translateY(-18px)}
+.hero-pagination{position:absolute;left:clamp(28px,6vw,76px);bottom:22px;z-index:5;display:flex;gap:8px}.hero-pagination button{width:30px;height:5px;padding:0;border:0;border-radius:99px;background:var(--text-secondary);opacity:.28;transition:width .25s,opacity .25s}.hero-pagination button[aria-selected="true"]{width:54px;opacity:1;background:var(--text-primary)}
+.home-dashboard{display:grid;grid-template-columns:1.35fr .85fr .8fr;gap:14px;margin-top:14px}.home-glass-card{border:1px solid var(--ghost-line);border-radius:24px;background:var(--ghost-glass);backdrop-filter:blur(22px) saturate(130%);-webkit-backdrop-filter:blur(22px) saturate(130%);box-shadow:0 16px 46px rgba(4,7,12,.09);padding:22px}.home-glass-card h2{margin:7px 0 8px}.home-glass-card p{margin:0;color:var(--text-secondary)}.home-card-actions{display:flex;gap:8px;margin-top:18px}.home-live-status{display:grid;gap:8px;margin-top:12px}.home-status-line{display:flex;justify-content:space-between;gap:12px}.home-mini-games{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}.home-mini-games span{display:grid;place-items:center;min-height:54px;border:1px solid var(--ghost-line);border-radius:16px;background:rgba(127,127,127,.06);font-size:24px}
+.route-heading{max-width:800px;margin:38px 0 20px}.route-heading h1{font-size:clamp(36px,5vw,64px);line-height:1;margin:8px 0 10px;letter-spacing:-.045em}.route-heading p{font-size:17px;color:var(--text-secondary)}
+.companion-layout{display:grid;grid-template-columns:minmax(260px,.72fr) minmax(0,1.28fr);gap:16px}.companion-stage{text-align:center}.companion-mascot-wrap{position:relative;max-width:310px;margin:0 auto}.companion-mascot-wrap img{width:100%;aspect-ratio:1;object-fit:contain;filter:drop-shadow(0 20px 28px rgba(0,0,0,.16));animation:honruFloat 3.4s ease-in-out infinite}.companion-mood{position:absolute;right:4%;bottom:10%;padding:5px 10px;border-radius:99px;background:var(--text-primary);color:var(--bg-card-solid);font-size:11px;font-weight:750}.companion-privacy{font-size:11px!important;margin-top:14px!important}.companion-chat{display:flex;flex-direction:column;min-height:520px}.companion-messages{flex:1;display:flex;flex-direction:column;gap:10px;min-height:260px;max-height:480px;overflow:auto;padding:4px}.companion-message{max-width:82%;padding:11px 13px;border-radius:16px;background:rgba(127,127,127,.09);white-space:pre-wrap;overflow-wrap:anywhere}.companion-message.user{align-self:flex-end;background:var(--text-primary);color:var(--bg-card-solid)}.companion-message.honru{align-self:flex-start;border:1px solid var(--ghost-line)}.companion-form{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:14px}.companion-suggestions{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}.companion-suggestions .btn{font-size:12px}
+.ghost-profile-overview{display:grid;grid-template-columns:1.15fr .85fr;gap:16px}.ghost-profile-card,.ghost-profile-actions{min-height:260px}.ghost-profile-actions{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.ghost-profile-action{min-height:112px;display:flex;flex-direction:column;align-items:flex-start!important;justify-content:flex-end!important;text-align:left;font-size:16px}.ghost-profile-action span{font-size:12px;color:var(--text-secondary)}
+.honru-dock{position:fixed;right:18px;bottom:18px;z-index:180}.honru-dock button{position:relative;width:94px;height:94px;padding:0;border:0;background:transparent;cursor:pointer}.honru-dock img{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 12px 20px rgba(0,0,0,.22));transition:transform .22s var(--ease-spring)}.honru-dock button:hover img{transform:translateY(-5px) rotate(2deg)}.honru-dock.pet img{animation:honruPet .55s var(--ease-spring)}@keyframes honruPet{0%,100%{transform:none}35%{transform:scale(.88) rotate(-5deg)}70%{transform:scale(1.08) rotate(4deg)}}.honru-speech{position:absolute;right:82%;top:0;width:max-content;max-width:190px;padding:8px 11px;border:1px solid var(--ghost-line);border-radius:14px 14px 3px 14px;background:var(--ghost-glass-strong);backdrop-filter:blur(18px);color:var(--text-primary);font-size:12px;box-shadow:var(--elev-2)}
+body.game-active .app-header,body.game-active .mobile-app-nav,body.game-active .honru-dock{display:none!important}
+.ghost-auth-page{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;padding:22px;overflow:auto;background:transparent;backdrop-filter:none}.ghost-auth-shell{width:min(1080px,100%);display:grid;grid-template-columns:minmax(280px,1fr) minmax(340px,470px);align-items:center;gap:clamp(26px,7vw,92px)}.ghost-auth-brand{padding:26px;color:var(--text-primary)}.ghost-auth-brand-logo{display:flex;align-items:center;gap:14px;font-size:clamp(28px,4vw,46px);font-weight:850;letter-spacing:-.04em}.ghost-auth-brand-logo img{width:72px;height:72px}.ghost-auth-brand h1{max-width:650px;margin:28px 0 14px;font-size:clamp(42px,6vw,78px);line-height:.96;letter-spacing:-.06em}.ghost-auth-brand p{max-width:520px;font-size:17px;color:var(--text-secondary)}.ghost-auth-toolbar{display:flex;gap:7px;margin-top:24px}.ghost-auth-toolbar .btn{min-height:42px}.ghost-auth-card{width:100%;max-height:none;padding:24px;border:1px solid var(--ghost-line);border-radius:28px;background:var(--ghost-glass-strong);backdrop-filter:blur(30px) saturate(145%);box-shadow:0 32px 90px rgba(3,5,9,.2)}.ghost-auth-tabs{display:grid;grid-template-columns:repeat(2,1fr);gap:5px;padding:4px;border-radius:14px;background:rgba(127,127,127,.08);margin-bottom:20px}.ghost-auth-tabs button{border:0;border-radius:11px;padding:10px;background:transparent;color:var(--text-secondary);font-weight:700}.ghost-auth-tabs button[aria-selected="true"]{background:var(--text-primary);color:var(--bg-card-solid)}.ghost-auth-card .auth-hero{background:transparent;border:0;padding:0;margin:0 0 18px}.ghost-auth-card .auth-login-body,.ghost-auth-card .auth-details-panel{padding:0;border:0;background:transparent}.ghost-auth-card .auth-actions{display:grid;grid-template-columns:1fr;margin-top:16px}.ghost-auth-card .auth-actions .btn{width:100%;min-height:46px}.auth-inline-status{min-height:18px;margin-top:4px;font-size:11px;color:var(--text-secondary)}.auth-inline-status.available{color:var(--success)}.auth-inline-status.error{color:var(--danger)}.auth-guest-note{padding:11px;border:1px solid var(--ghost-line);border-radius:13px;background:rgba(127,127,127,.06);font-size:12px;color:var(--text-secondary)}.auth-connect-state{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--text-secondary)}.auth-connect-state::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--warning)}.auth-connect-state.connected::before{background:var(--success)}
+.sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+/* 个人购买背景不再随平台昼夜主题重新着色。 */
+html[data-theme="dark"] .profile-hero.bg-0,html[data-theme="light"] .profile-hero.bg-0{background:linear-gradient(135deg,#eef1f8,#dfe7fb);color:#1d2433}
+html[data-theme="dark"] .profile-hero.bg-1,html[data-theme="light"] .profile-hero.bg-1{background:linear-gradient(135deg,#ede9fe,#c4b5fd);color:#1d2433}
+html[data-theme="dark"] .profile-hero.bg-2,html[data-theme="light"] .profile-hero.bg-2{background:linear-gradient(135deg,#dbeafe,#93c5fd);color:#1d2433}
+html[data-theme="dark"] .profile-hero.bg-3,html[data-theme="light"] .profile-hero.bg-3{background:linear-gradient(135deg,#ffedd5,#fdba74);color:#1d2433}
+html[data-theme="dark"] .profile-hero.bg-4,html[data-theme="light"] .profile-hero.bg-4{background:linear-gradient(135deg,#dcfce7,#86efac);color:#1d2433}
+html[data-theme="dark"] .profile-hero.bg-5,html[data-theme="light"] .profile-hero.bg-5{background:linear-gradient(135deg,#fce7f3,#f9a8d4);color:#1d2433}
+html[data-theme="dark"] .profile-hero.bg-6,html[data-theme="light"] .profile-hero.bg-6{background:linear-gradient(135deg,#1e293b,#334155);color:#e2e8f0}
+@media(max-width:900px){.desktop-app-nav{order:3;width:100%;justify-content:center}.app-header{flex-wrap:wrap}.hero-slide{grid-template-columns:1fr .72fr}.home-dashboard{grid-template-columns:1fr 1fr}.home-welcome{grid-column:1/-1}.ghost-auth-shell{gap:24px}.ghost-auth-brand h1{font-size:52px}}
+@media(max-width:640px){
+  :root{--ghost-nav-height:74px}#app{padding:10px 10px calc(var(--ghost-nav-height) + 22px)}.app-header{position:relative;top:auto;min-height:54px;padding:7px 9px;border-radius:17px;margin-bottom:10px}.brand .brand-icon{width:34px;height:34px}.brand-tag,.desktop-app-nav{display:none}.header-actions .btn{min-width:42px;padding:6px}.mobile-app-nav{position:fixed;left:8px;right:8px;bottom:calc(8px + env(safe-area-inset-bottom,0px));z-index:500;display:grid;grid-template-columns:repeat(4,1fr);padding:6px;border:1px solid var(--ghost-line);border-radius:20px;background:var(--ghost-glass-strong);backdrop-filter:blur(28px) saturate(145%);box-shadow:0 18px 50px rgba(3,5,9,.28)}.mobile-app-nav .app-nav-button{min-width:0;min-height:52px;padding:5px 2px;display:flex;flex-direction:column;gap:1px;font-size:10px}.mobile-app-nav .app-nav-button>span:first-child{font-size:20px;line-height:1}.hero-carousel{min-height:560px;border-radius:25px}.hero-slide{grid-template-columns:1fr;grid-template-rows:auto 190px;align-content:center;padding:26px 20px 50px}.hero-copy h1,.hero-copy h2{font-size:42px}.hero-copy p{font-size:14px}.hero-honru{width:210px;grid-row:2;justify-self:end}.hero-orbit{width:190px;grid-row:2}.hero-orbit span{width:48px;height:48px;border-radius:15px;font-size:20px}.hero-ghost-cluster{grid-row:2}.hero-pagination{left:20px;bottom:18px}.home-dashboard{grid-template-columns:1fr}.home-welcome{grid-column:auto}.companion-layout,.ghost-profile-overview{grid-template-columns:1fr}.companion-stage{order:2}.companion-chat{min-height:430px}.honru-dock{display:none}.ghost-auth-page{place-items:start center;padding:10px}.ghost-auth-shell{grid-template-columns:1fr;gap:8px}.ghost-auth-brand{padding:12px 8px}.ghost-auth-brand-logo img{width:48px;height:48px}.ghost-auth-brand-logo{font-size:26px}.ghost-auth-brand h1{font-size:40px;margin:14px 0 8px}.ghost-auth-brand p{font-size:13px}.ghost-auth-toolbar{margin-top:10px}.ghost-auth-card{padding:18px;border-radius:22px}.ghost-profile-actions{grid-template-columns:1fr 1fr}.route-heading{margin:22px 4px 14px}.route-heading h1{font-size:42px}
+}
+@media(prefers-reduced-motion:reduce){.ambient-stars,.ambient-clouds,.hero-honru,.companion-mascot-wrap img,.hero-orbit,.hero-orbit span{animation:none!important}.hero-slide{transition:none}}
+
 </style>
 </head>
-<body>
+<body class="ghost-shell-booting">
+<div class="ambient-scene" id="ambient-scene" aria-hidden="true">
+  <div class="ambient-stars ambient-stars-a"></div>
+  <div class="ambient-stars ambient-stars-b"></div>
+  <div class="ambient-clouds ambient-clouds-a"></div>
+  <div class="ambient-clouds ambient-clouds-b"></div>
+</div>
 <div id="app">
   <header class="app-header">
-    <div class="brand"><span class="brand-icon" data-asset-fallback><img src="assets/brand/logo_mark.svg" alt=""><span class="asset-fallback">🎮</span></span><span data-i18n="brand">Playroom</span><span class="brand-tag" data-i18n="brand_tag">6 款精选游戏 · 联机对战</span></div>
-        <div class="header-actions">
+    <button type="button" class="brand ghost-brand-button" data-app-route-target="home"><span class="brand-icon" data-asset-fallback><img src="assets/brand/ghost-game-mark.svg" alt=""><span class="asset-fallback">◉</span></span><span data-i18n="brand">Ghost Game</span><span class="brand-tag" data-i18n="brand_tag">6 款精选游戏 · 联机对战</span></button>
+    <nav class="desktop-app-nav" aria-label="主导航" data-i18n-aria-label="app_nav_aria">
+      <button type="button" class="app-nav-button" data-app-route-target="home" data-i18n="nav_home">首页</button>
+      <button type="button" class="app-nav-button" data-app-route-target="games" data-i18n="nav_games">游戏</button>
+      <button type="button" class="app-nav-button" data-app-route-target="chat" data-i18n="nav_chat">聊天</button>
+      <button type="button" class="app-nav-button" data-app-route-target="profile" data-i18n="nav_profile">主页</button>
+    </nav>
+    <div class="header-actions">
       <button type="button" class="btn" id="btn-settings-page" data-i18n-title="settings" data-i18n-aria-label="settings"></button>
       <button type="button" class="btn theme-btn" id="btn-theme" data-i18n-title="theme" data-i18n-aria-label="theme"></button>
     </div>
   </header>
 
   <section id="screen-hub">
-    <section class="hero-banner" id="hero-banner">
-      <div class="hero-icon" data-asset-fallback><img src="assets/brand/logo_mark.svg" alt="Playroom" data-i18n-alt="brand"><span class="asset-fallback">🎮</span></div>
-      <h1 data-i18n="brand">Playroom</h1>
-      <p class="hero-tag" data-i18n="brand_tag">6 款精选游戏 · 联机对战</p>
-      <button type="button" class="btn btn-primary hero-cta" id="btn-hero-quick"></button>
+    <section class="app-route ghost-home-route" data-app-route="home">
+      <section class="hero-carousel" id="hero-banner" aria-roledescription="carousel" data-i18n-aria-label="home_carousel_aria">
+        <article class="hero-slide active" data-hero-slide="0">
+          <div class="hero-copy"><span class="hero-kicker" data-i18n="home_hero_kicker">欢迎进入 Ghost Game</span><h1 data-i18n="home_hero_title">和 Honru 一起，下一局现在开始</h1><p data-i18n="home_hero_desc">六款精选游戏，强力人机与实时联机，一处全部拥有。</p><button type="button" class="btn btn-primary hero-cta" id="btn-hero-quick" data-i18n="home_enter_games">进入游戏区</button></div>
+          <div class="hero-honru" data-asset-fallback><img src="assets/brand/honru-mascot-v1.svg" alt="Honru" data-i18n-alt="honru_alt"><span class="asset-fallback ghost-mark-fallback"><img src="assets/brand/ghost-game-mark.svg" alt=""></span></div>
+        </article>
+        <article class="hero-slide" data-hero-slide="1"><div class="hero-copy"><span class="hero-kicker" data-i18n="home_ai_kicker">Honru 的挑战</span><h2 data-i18n="home_ai_title">更聪明的人机，每一局都认真</h2><p data-i18n="home_ai_desc">六款专项策略与持续学习，让练习不再只是随机操作。</p><button type="button" class="btn" data-app-route-target="games" data-i18n="home_choose_game">选择一款游戏</button></div><div class="hero-orbit" aria-hidden="true"><span>⚫</span><span>✈</span><span>♞</span><span>▦</span></div></article>
+        <article class="hero-slide" data-hero-slide="2"><div class="hero-copy"><span class="hero-kicker" data-i18n="home_social_kicker">一起玩才有意思</span><h2 data-i18n="home_social_title">开房、邀请、观战，再来一局</h2><p data-i18n="home_social_desc">看见在线好友，三秒找到下一场。</p><button type="button" class="btn" data-app-route-target="chat" data-i18n="home_open_chat">去聊天</button></div><div class="hero-ghost-cluster" aria-hidden="true"><img src="assets/brand/ghost-game-mark.svg" alt=""><img src="assets/brand/ghost-game-mark.svg" alt=""><img src="assets/brand/ghost-game-mark.svg" alt=""></div></article>
+        <div class="hero-pagination" role="tablist" data-i18n-aria-label="home_carousel_pages"><button type="button" aria-selected="true" data-hero-dot="0"></button><button type="button" aria-selected="false" data-hero-dot="1"></button><button type="button" aria-selected="false" data-hero-dot="2"></button></div>
+      </section>
+      <section class="home-dashboard">
+        <article class="home-glass-card home-welcome"><span class="home-card-label" data-i18n="home_today">今天</span><h2 id="home-welcome-title" data-i18n="home_welcome_guest">准备好开始了吗？</h2><p id="home-welcome-copy" data-i18n="home_welcome_copy">选择一款游戏，或让 Honru 帮你决定。</p><div class="home-card-actions"><button type="button" class="btn btn-primary" data-app-route-target="games" data-i18n="nav_games">游戏</button><button type="button" class="btn" id="btn-home-honru" data-i18n="home_talk_honru">和 Honru 聊聊</button></div></article>
+        <article class="home-glass-card home-status-card"><span class="home-card-label" data-i18n="home_live_status">实时状态</span><div id="home-live-status" class="home-live-status"></div></article>
+        <article class="home-glass-card home-games-preview"><span class="home-card-label" data-i18n="home_six_games">六款精选</span><div class="home-mini-games" aria-hidden="true"><span>⚫</span><span>✈️</span><span>🏙️</span><span>🛡️</span><span>🧱</span><span>♞</span></div></article>
+      </section>
     </section>
+    <section class="app-route hidden" data-app-route="games">
     <div class="hub-grid">
       <div class="hub-main">
         <div class="hub-meta">
@@ -1449,6 +1559,18 @@ body.entered #screen-hub, body.entered #screen-game{animation:none}
         </div>
       </aside>
     </div>
+    </section>
+    <section class="app-route hidden ghost-chat-route" data-app-route="chat">
+      <div class="route-heading"><span data-i18n="chat_kicker">GHOST LINK</span><h1 data-i18n="chat_title">和 Honru 聊聊</h1><p data-i18n="chat_intro">聊聊心情、游戏，或者让 Honru 帮你挑选下一局。</p></div>
+      <div class="companion-layout">
+        <section class="companion-stage home-glass-card"><div class="companion-mascot-wrap"><img src="assets/brand/honru-mascot-v1.svg" alt="Honru" data-i18n-alt="honru_alt"><span class="companion-mood" id="companion-mood" data-i18n="honru_mood_neutral">平静</span></div><button type="button" class="btn" id="btn-companion-pet" data-i18n="honru_pet">摸摸 Honru · 今日签到</button><p class="companion-privacy" data-i18n="companion_privacy">聊天会发送给 DeepSeek，但 Ghost Game 不保存聊天原文。请勿输入密码或敏感信息。</p></section>
+        <section class="companion-chat home-glass-card"><div class="companion-messages" id="companion-messages" role="log" aria-live="polite"></div><form class="companion-form" id="companion-form"><label class="sr-only" for="companion-input" data-i18n="companion_input_label">给 Honru 发消息</label><input id="companion-input" class="nick-input" maxlength="500" autocomplete="off" data-i18n-placeholder="companion_placeholder"><button type="submit" class="btn btn-primary" data-i18n="send">发送</button></form><div class="companion-suggestions"><button type="button" class="btn btn-ghost" data-companion-prompt="mood" data-i18n="companion_prompt_mood">我今天有点累</button><button type="button" class="btn btn-ghost" data-companion-prompt="game" data-i18n="companion_prompt_game">帮我选个游戏</button><button type="button" class="btn btn-ghost" data-companion-prompt="news" data-i18n="companion_prompt_news">最近有什么新闻？</button></div></section>
+      </div>
+    </section>
+    <section class="app-route hidden ghost-profile-route" data-app-route="profile">
+      <div class="route-heading"><span data-i18n="profile_kicker">PLAYER IDENTITY</span><h1 data-i18n="nav_profile">主页</h1><p data-i18n="profile_route_intro">你的身份、成长与收藏，保持独立于昼夜主题。</p></div>
+      <div id="ghost-profile-overview" class="ghost-profile-overview"></div>
+    </section>
   </section>
 
   <section id="screen-game" class="hidden">
@@ -1468,6 +1590,13 @@ body.entered #screen-hub, body.entered #screen-game{animation:none}
     <div id="game-extra" class="game-extra"></div>
   </section>
 </div>
+<aside class="honru-dock" id="honru-dock"><button type="button" id="btn-honru-dock" data-i18n-aria-label="honru_open_chat"><img src="assets/brand/honru-mascot-v1.svg" alt="Honru" data-i18n-alt="honru_alt"><span class="honru-speech" id="honru-speech" data-i18n="honru_idle_line">要来一局吗？</span></button></aside>
+<nav class="mobile-app-nav" aria-label="主导航" data-i18n-aria-label="app_nav_aria">
+  <button type="button" class="app-nav-button" data-app-route-target="home"><span aria-hidden="true">⌂</span><span data-i18n="nav_home">首页</span></button>
+  <button type="button" class="app-nav-button" data-app-route-target="games"><span aria-hidden="true">✦</span><span data-i18n="nav_games">游戏</span></button>
+  <button type="button" class="app-nav-button" data-app-route-target="chat"><span aria-hidden="true">◌</span><span data-i18n="nav_chat">聊天</span></button>
+  <button type="button" class="app-nav-button" data-app-route-target="profile"><span aria-hidden="true">◎</span><span data-i18n="nav_profile">主页</span></button>
+</nav>
 <div id="toast-wrap"></div>
 
 <script>

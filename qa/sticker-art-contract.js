@@ -38,7 +38,7 @@ function contrast(a, b){
 const paletteKeys = ['ink900','ink700','paper50','cream100','green500','teal500','blue500','purple500','pink500','coral500','gold500','brown500'];
 check('Art Bible token schema and style ID are frozen', tokens.schemaVersion === 1 && tokens.styleId === 'pocket-tabletop-sticker-v1');
 check('Art Bible defines the complete 12-color palette', JSON.stringify(Object.keys(tokens.palette)) === JSON.stringify(paletteKeys));
-check('Art Bible defines exactly six runtime themes', JSON.stringify(Object.keys(tokens.themes)) === JSON.stringify(['light','midnight','ocean','forest','cyber','sakura']));
+check('Art Bible defines exactly the light/dark runtime themes', JSON.stringify(Object.keys(tokens.themes)) === JSON.stringify(['light','dark']));
 check('Theme invariants freeze player identity and structural style', ['ink','outlineScale','proportions','materialGrammar','lightDirection','componentStructure','playerIdentityEncoding'].every(key => tokens.themeInvariants.includes(key)));
 check('Outline scale covers 24/32/44/64/96/192/512px', JSON.stringify(tokens.outlineScale.map(item => item.displayPx)) === JSON.stringify([24,32,44,64,96,192,512]));
 check('Every outline tier preserves minimum semantic line width', tokens.outlineScale.every(item => item.outerMinPx >= 2 && item.innerMinPx >= 1.5 && item.outerMaxPx >= item.outerMinPx && item.innerMaxPx >= item.innerMinPx));

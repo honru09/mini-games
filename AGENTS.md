@@ -5,7 +5,7 @@
 
 ## 1. 项目一句话
 
-**Mini Games Platform** — 网页版多人游戏平台：五子棋、飞行棋、迷你大富翁、坦克大战、
+**Ghost Game / Mini Games Platform** — 网页版多人游戏平台：五子棋、飞行棋、迷你大富翁、坦克大战、
 俄罗斯方块、象棋，共 6 款精选插件化游戏。
 平台是主体（大厅 / 好友 / 房间 / 排行榜 / 💵 / 成长 / 社交），游戏是插件。
 
@@ -13,8 +13,8 @@
 
 两种玩法：**人机对战**（六款本地强策略 + DeepSeek 近优裁决）、
 **联机对战**（WebSocket 房间 + 游戏大厅 + 邀请 + 在线状态 + 全球排行榜）。
-含 **PIN 账号体系**、**💵 商城**、**三语言 i18n**（zh-CN / en-US / uk-UA）、
-**Settings 设置页**（主题 + 语言 + 联机服务配置）。
+含 **用户名密码账号 + 旧 PIN 迁移 + 一次性访客**、**💵 商城**、**三语言 i18n**（zh-CN / en-US / uk-UA）、
+**昼夜双主题**、Home/Games/Chat/Profile 四区外壳与原创助手 **Honru**。
 
 ## 2. 线上地址与仓库
 
@@ -39,7 +39,9 @@ mini-games-online/
 │   │   └── ui/          # 07-roster（档案/排行榜/结算）
 │   ├── locales/         # i18n 翻译文件（zh-CN / en-US / uk-UA）
 │   └── assets/          # 品牌、UI、游戏美术与 manifest；必须保留程序化 fallback
-├── server/index.js      # 零依赖 Node 服务：静态文件 + 手写 WebSocket(/ws) + /api/ai + Supabase
+├── server/index.js      # 零依赖 Node 服务：静态文件 + 手写 WebSocket(/ws) + /api/ai + /api/companion + Supabase
+├── server/auth-credentials.js # 用户名规范、随机盐 scrypt 密码哈希与恒定工作量验证
+├── server/companion.js  # Honru 请求净化、Prompt、白名单响应与三语离线回退
 ├── server/reward-engine.js # Economy & Progression v1.0 唯一奖励配置、等级曲线与纯计算层
 ├── server/ai-strategy-skills.js # 六款 AI 专项知识包（运行时不联网）
 ├── server/ai-learning.js # personal-linear-v2 玩家×游戏持续学习
@@ -164,18 +166,26 @@ node server/index.js
 
 ### 人机对战（本地强 AI + DeepSeek）
 - 6 款游戏各自的 `scheduleAI()` 先用规则/搜索筛出规范化合法近优候选，再交给 `aiChoose()`；模型返回值只有与候选原文完全匹配时才会执行，游戏自身的落子函数还会再次校验。
+- DeepSeek 默认使用官方 `deepseek-v4-flash`；只有服务端环境变量 `DEEPSEEK_MODEL=deepseek-v4-pro` 可切换，旧 `deepseek-chat/reasoner` 不再使用。
 - 客户端约 2.2 秒硬超时，服务端 DeepSeek 上游共享约 5 秒截止时间；无 token、无 Key、限流、断网、超时或非法响应都会静默使用六款本地强策略 fallback，不随机送子。
 - 异步响应绑定局次、回合、阶段与局面；重开或离开游戏后旧响应会被废弃。`qa/ai-games.js` 用本地模型桩覆盖全部 6 款游戏，不需要真实 Key。
 - DeepSeek Key 只存在服务端环境变量，绝不能写进前端或仓库。
 - `server/ai-strategy-skills.js` 内嵌六款专项策略；`server/ai-learning.js` 使用 `personal-linear-v2` 按账号 × 游戏隔离学习。对局中缓存近优候选，胜局强化、败局反事实修正、平局中性反馈；无效/争议/AFK/秒投只审计不调权。
 - AI 模型与经验只保存局面哈希和归一化特征，通过 JSON 或 Supabase `ai_learning_models` / `ai_learning_experiences` + `apply_ai_learning_v1` 原子持久化；`resultId` 重放、revision 冲突和账号/游戏并发均受保护。
 
-### 账号与 PIN
-- 首次进入弹「创建账号」：昵称、头像、背景、PIN（4-20 位仅字母数字）。
-- 同设备自动登录（deviceFingerprint）；换设备用 PIN 登录。
-- PIN 服务端使用版本化慢哈希兼容迁移，登录有失败退避；客户端注册/登录成功后只保存会话 token，不再持久化 PIN。
+### 账号、访客与旧 PIN 迁移
+- 未认证时只显示 Ghost Game 登录前品牌页；可在进入应用前切换语言与昼夜主题。
+- 正式账号用户名为 4–20 位 ASCII 字母数字且至少各一个，大小写不敏感唯一；密码为 8–64 位可打印 ASCII，保留大小写和首尾空格。
+- 密码服务端使用版本化随机盐 `scrypt`；未知用户与畸形哈希仍执行 dummy scrypt。客户端只保存会话 token，不持久化密码或 PIN。
+- 旧 PIN 注册/登录继续兼容；`legacy_bind` 将旧账号绑定到用户名密码并保留原 uid、资产、战绩与外观。
+- 访客由服务端生成 uid/token，不写 JSON/Supabase/排行榜/持久 AI 学习；显式退出立即删除，异常断线保留 60 秒重连窗口；永久购买与社交 mutation 由服务端拒绝。
 - session token 默认有效 30 天（`AUTH_TOKEN_TTL_MS` 可调整）；每个账号最多保留最近 5 个有效 token，超过上限淘汰最旧 token，`logout` 只撤销当前 token。
-- 服务端消息：register / login / hello / profile_get / profile / purchase / result / logout。
+- 新认证消息：`username_check/username_status`、`register/login(authVersion:2)`、`legacy_bind`、`guest_login/guest_logged_in`；既有 `hello/profile_get/profile/purchase/result/logout` 保持兼容。
+
+### Honru Companion
+- `companion_checkin/companion_checkin_ok` 按账号与日期幂等；访客签到只存在内存。
+- `POST /api/companion` 要求 Bearer token，并复用 Origin、请求体、并发、速率与超时边界；聊天原文不落库。
+- 无 Key、超时或上游错误使用三语本地回退；没有可信来源时不得伪造天气或新闻。
 
 ### 安全边界
 - `owned`、金币、XP、等级、连胜、胜场、局数、成就等权威字段不可由客户端 profile 消息写入；商城价格与扣款在服务端完成。
@@ -196,12 +206,13 @@ node server/index.js
 
 ### Settings 设置页
 - 入口：Header ⚙️ 按钮 → `openSettingsPage()`。
-- 功能：六主题切换、语言切换（三选一）、联机服务地址配置。
+- 功能：白天/黑夜双主题、语言切换（三选一）、联机服务地址配置。
 - 主题独立快捷切换：Header 🌙/☀️ 按钮。
 
 ### UI
-- 主题：`light/midnight/ocean/forest/cyber/sakura` 六个运行时 ID；旧 `dark` 只做兼容映射（localStorage `mg_theme`）。
-- 大厅为双栏布局；毛玻璃 + backdrop-filter；3D 骰子；开局倒计时。
+- 运行时主题只有 `light/dark`；旧 `midnight/ocean/forest/cyber/sakura` 读取时映射到双主题，个人购买背景 ID 不变（localStorage `mg_theme`）。
+- Home/Games/Chat/Profile 共用同一路由；`<=640px` 使用底部四项导航，平板与桌面使用顶部导航；Games 集中全部六款游戏。
+- Light 为缓慢云海/大气层，Dark 为向外运动的深空星场；毛玻璃、reduced-motion 和游戏中暂停环境动效同时生效。
 - 房间内切换游戏：`end_game` 消息 → `finishRoomGame()`。
 
 ## 6. 部署与环境变量
@@ -222,6 +233,7 @@ node scripts/render-deploy.js
 ```powershell
 $env:RENDER_KEY='rnd_xxx'
 $env:DEEPSEEK_KEY='sk-...'
+$env:DEEPSEEK_MODEL='deepseek-v4-pro'          # 可选；默认 deepseek-v4-flash
 $env:SUPABASE_URL='https://xxx.supabase.co'   # 可选
 $env:SUPABASE_KEY='sb_secret_...'              # 可选；必须是仅服务端保存的 service_role secret
 $env:METRICS_ADMIN_TOKEN='高熵随机值'           # 可选；管理员 Metrics API Bearer token
@@ -240,13 +252,13 @@ Supabase 首次接入或升级时，在 SQL Editor 执行可重复迁移的 `sup
 ✅ 已完成：
 - 6 款精选游戏两种正式玩法（人机 / 联机）；旧同设备多人入口与残留奖励分支已删除
 - 联机大厅 / 邀请 / 在线状态 / 排行榜
-- PIN 账号体系、💵 商城（头像 / 相框 / 特效 / 背景 / 六款游戏外观）
+- 用户名密码账号、一次性访客、旧 PIN 迁移、💵 商城（头像 / 相框 / 特效 / 背景 / 六款游戏外观）
 - 三语言 i18n + Settings 设置页 + 语言旗帜
-- 毛玻璃 UI、3D 骰子、开局倒计时、双栏大厅
+- Ghost Game / Honru 原创品牌、四区应用外壳、昼夜动态场景、毛玻璃 UI、3D 骰子与开局倒计时
 - CI：GitHub Pages 自动构建 + 冒烟 + 部署
 
 ✅ 已完成（本轮）：
-- UI/UX 产品级升级：Design System（间距/字号/色彩令牌）、6 套主题、Hero 首屏、卡片入场/按钮光效/胜负彩带/WebAudio 轻音效
+- UI/UX 产品级升级：Design System（间距/字号/色彩令牌）、昼夜双主题、Hero 首屏、卡片入场/按钮光效/胜负彩带/WebAudio 轻音效
 - 个性化系统：动态头像框（8 款）、闪名（4 种特效）、动态档案背景（4 款）、等级进度条
 - v2.5 产品级打磨：补齐 Motion/Elevation/Icon/Glass 设计令牌与组件规范；统一动效库（转场/入场/弹性/Loading）
 - Game Feel：6 款游戏全量接入分级操作反馈（落子/移动/掷骰/射击/放置 → 音效+震动+状态提示），AI 思考中提示

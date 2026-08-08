@@ -282,6 +282,7 @@ function avatarStageNode(profile, size, extraCls){
 const GAME_KEYS = Object.keys(GAMES);
 const LS_ROSTER = 'mg_roster';
 const LS_ACCOUNT = 'mg_account';
+const SS_GUEST_ACCOUNT = 'mg_guest_account';
 let roster = [];
 let account = null;
 let pendingAuthPin = null;
@@ -333,6 +334,9 @@ function loadRoster(){
       try { localStorage.removeItem(LS_ACCOUNT); } catch {}
     }
   } catch { account = null; }
+  if (!account){
+    try { const guestRaw=sessionStorage.getItem(SS_GUEST_ACCOUNT);account=guestRaw?JSON.parse(guestRaw):null; } catch { account=null; }
+  }
   if (account && account.uid && account.device === deviceFingerprint()){
     deviceUid = account.uid;
     const me = roster.find(p => p.uid === account.uid);
@@ -342,12 +346,18 @@ function loadRoster(){
   }
   try { localStorage.setItem('mg_uid', deviceUid || ''); } catch {}
 }
-function saveRoster(){ try { localStorage.setItem(LS_ROSTER, JSON.stringify(roster)); } catch {} }
+function saveRoster(){ try { localStorage.setItem(LS_ROSTER, JSON.stringify(roster.filter(item=>!item.ephemeral))); } catch {} }
 function saveAccount(){
   try {
     const safe = account && typeof account === 'object' ? { ...account } : account;
     if (safe && Object.prototype.hasOwnProperty.call(safe, 'pin')) delete safe.pin;
-    localStorage.setItem(LS_ACCOUNT, JSON.stringify(safe));
+    if (safe && safe.ephemeral){
+      localStorage.removeItem(LS_ACCOUNT);
+      try { sessionStorage.setItem(SS_GUEST_ACCOUNT,JSON.stringify(safe)); } catch {}
+    } else {
+      localStorage.setItem(LS_ACCOUNT, JSON.stringify(safe));
+      try { sessionStorage.removeItem(SS_GUEST_ACCOUNT); } catch {}
+    }
   } catch {}
 }
 function genUid(){
@@ -406,6 +416,23 @@ function registerAccount(name, pin, avatar, background, frame, effect){
   authModalEl = null;
   return account;
 }
+function registerCredentialAccount(username,password){
+  username=String(username||'');password=String(password||'');
+  if(!online.connected){setAuthPageError('', 'need_server_login');return;}
+  online.send({type:'register',payload:{authVersion:2,username,password,name:username,lang:currentLang,avatar:100,background:0}});
+}
+function loginCredentialAccount(username,password){
+  if(!online.connected){setAuthPageError('', 'need_server_login');return;}
+  online.send({type:'login',payload:{authVersion:2,username:String(username||''),password:String(password||'')}});
+}
+function guestLoginAccount(){
+  if(!online.connected){setAuthPageError('', 'need_server_login');return;}
+  online.send({type:'guest_login',payload:{lang:currentLang}});
+}
+function legacyBindAccount(pin,username,password){
+  if(!online.connected){setAuthPageError('', 'need_server_login');return;}
+  online.send({type:'legacy_bind',payload:{pin:String(pin||''),username:String(username||''),password:String(password||'')}});
+}
 function loginAccount(pin){
   pin = String(pin || '').trim();
   if (!/^[A-Za-z0-9]{4,20}$/.test(pin)){ toast(t('pin_invalid')); return; }
@@ -437,9 +464,13 @@ function completeLocalLogout(showLogin){
     localStorage.removeItem('mg_pending_solo_claims');
     localStorage.removeItem('mg_displayed_reward_ids');
     localStorage.setItem('mg_uid', '');
+    sessionStorage.removeItem(SS_GUEST_ACCOUNT);
   } catch {}
   renderMe(); renderLeaderboard();
-  if (showLogin && !authModalEl) openAuthModal("login");
+  if (showLogin){
+    if (typeof requireGhostAuth === 'function') requireGhostAuth('login');
+    else if (!authModalEl) openAuthModal("login");
+  }
 }
 function updateAccountProfile(p){
   if (!account) return;
@@ -467,6 +498,10 @@ function updateAccountProfile(p){
   account.presencePreference = p.presencePreference || account.presencePreference || 'joinable';
   account.presenceVisibility = p.presenceVisibility || account.presenceVisibility || 'everyone';
   account.showcase = p.showcase || null;
+  account.username = p.username || account.username || '';
+  account.authVersion = p.authVersion || account.authVersion || '';
+  account.ephemeral = p.ephemeral === true || account.ephemeral === true;
+  account.accountKind = p.accountKind || (account.ephemeral ? 'guest' : 'member');
   saveRoster(); saveAccount();
 }
 function renderMe(){
@@ -875,6 +910,7 @@ function showHub(){
   if (!preserveOnlineGame && currentGame && typeof currentGame.destroy === 'function') currentGame.destroy();
   $('screen-hub').classList.remove('hidden');
   $('screen-game').classList.add('hidden');
+  document.body.classList.remove('game-active');
   if (!preserveOnlineGame){
     currentGame = null;
     currentGameId = null;
@@ -887,6 +923,7 @@ function showGame(id){
   if (online && online.game === id && currentGame && currentGameId === id){
     $('screen-hub').classList.add('hidden');
     $('screen-game').classList.remove('hidden');
+    document.body.classList.add('game-active');
     const endBtn = $('btn-end-game');
     if (endBtn) endBtn.classList.remove('hidden');
     return;
@@ -894,6 +931,7 @@ function showGame(id){
   if (currentGame && typeof currentGame.destroy === 'function') currentGame.destroy();
   $('screen-hub').classList.add('hidden');
   $('screen-game').classList.remove('hidden');
+  document.body.classList.add('game-active');
   const meta = GAMES[id];
   $('game-title').textContent = meta.icon + ' ' + meta.name;
   currentGameId = id;
@@ -1056,6 +1094,9 @@ if (typeof document !== 'undefined'){
   };
   initI18n().then(() => {
   initTheme();
+  initGhostShell();
+  if (account && account.authToken) enterGhostApp({ silentHash:true });
+  else requireGhostAuth('login');
   const modeBtns = document.querySelectorAll('#mode-group .count-btn');
   modeBtns.forEach(b => b.addEventListener('click', () => {
     aiMode = b.dataset.mode === 'ai';
@@ -1086,8 +1127,7 @@ if (typeof document !== 'undefined'){
   const heroQuick = $('btn-hero-quick');
   if (heroQuick) heroQuick.addEventListener('click', () => {
     if (!account){ openAuthModal(); return; }
-    if (aiMode){ const playable=Object.keys(GAMES); openAISetup(playable[Math.floor(Math.random()*playable.length)]); }
-    else online.quickJoin(null);
+    setAppRoute('games');
   });
   const quickJoin=$('btn-quick-join'); if(quickJoin)quickJoin.addEventListener('click',()=>online.quickJoin(null));
   const createRoom=$('btn-create-room'); if(createRoom)createRoom.addEventListener('click',()=>openRoomSetup());

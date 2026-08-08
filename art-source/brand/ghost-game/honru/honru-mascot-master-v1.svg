@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 620" role="img" aria-labelledby="title desc">
+  <title id="title">Honru</title>
+  <desc id="desc">Ghost Game 的黑白鬼精灵，左眼是十字键，右眼是四枚手柄按键。</desc>
+  <g fill="#07090d">
+    <path d="M259 9c34 39 12 68-21 83 63-10 111 25 127 73 12-31 32-49 59-63-7 34 4 55 35 70-30 8-48 28-54 59 31-19 61-17 90 4-35 14-47 40-39 79 21-11 40-10 56 4-32 24-50 55-51 93H53c-2-37-18-68-50-92 17-15 37-16 58-5 8-39-5-65-39-79 29-21 59-23 89-4-6-31-24-51-54-59 31-15 42-36 35-70 28 14 47 32 59 63 17-48 64-83 127-73-33-15-54-44-19-83Z"/>
+    <circle cx="71" cy="165" r="9"/><circle cx="444" cy="193" r="7"/><circle cx="42" cy="286" r="6"/><circle cx="475" cy="330" r="8"/>
+  </g>
+  <path d="M256 111c-94 0-164 74-164 176v152c0 68 21 135 73 154 31 11 54-11 72-52 8-19 30-19 39 0 18 41 41 63 72 52 52-19 73-86 73-154V287c0-102-71-176-165-176Z" fill="#fff" stroke="#07090d" stroke-width="16" stroke-linejoin="round"/>
+  <path d="M101 347c-35-14-69 11-66 48 3 38 34 72 79 65 27-4 38-31 20-49-15-15-27-35-33-64Zm310 0c35-14 69 11 66 48-3 38-34 72-79 65-27-4-38-31-20-49 15-15 27-35 33-64Z" fill="#fff" stroke="#07090d" stroke-width="15" stroke-linejoin="round"/>
+  <path d="M76 379c11 21 27 34 49 39m311-39c-11 21-27 34-49 39" fill="none" stroke="#07090d" stroke-width="10" stroke-linecap="round"/>
+  <g>
+    <circle cx="190" cy="304" r="58" fill="#07090d"/>
+    <path d="M177 267h26v24h24v26h-24v24h-26v-24h-24v-26h24Z" fill="#fff"/>
+    <circle cx="322" cy="304" r="58" fill="#07090d"/>
+    <g fill="#fff"><circle cx="322" cy="274" r="12"/><circle cx="352" cy="304" r="12"/><circle cx="322" cy="334" r="12"/><circle cx="292" cy="304" r="12"/></g>
+  </g>
+  <path d="M224 381c8 22 20 34 32 34s24-12 32-34c-10 7-21 10-32 10s-22-3-32-10Z" fill="#07090d"/>
+  <path d="M244 390h24l-12 13Z" fill="#fff"/>
+  <ellipse cx="166" cy="381" rx="20" ry="7" fill="#d9dde3"/><ellipse cx="346" cy="381" rx="20" ry="7" fill="#d9dde3"/>
+  <path d="M179 133c-14-30-4-60 31-88-3 34 17 45 42 49m82 65c17-28 41-46 73-55-18 28-13 53 14 74m-253-19c-17-28-41-46-73-55 18 28 13 53-14 74" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" opacity=".96"/>
+</svg>

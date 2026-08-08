@@ -9,11 +9,13 @@ const TEMPLATE_PATH = path.join(ROOT, 'public', 'index-template.html');
 const UTILS_PATH = path.join(ROOT, 'public', 'src', 'core', '01-utils.js');
 const AUTH_PATH = path.join(ROOT, 'public', 'src', 'shop', '04-auth.js');
 const SHOP_PATH = path.join(ROOT, 'public', 'src', 'shop', '06-shop.js');
+const SHELL_PATH = path.join(ROOT, 'public', 'src', 'core', '02-app-shell.js');
 
 const template = fs.readFileSync(TEMPLATE_PATH, 'utf8');
 const utils = fs.readFileSync(UTILS_PATH, 'utf8');
 const auth = fs.readFileSync(AUTH_PATH, 'utf8');
 const shop = fs.readFileSync(SHOP_PATH, 'utf8');
+const shell = fs.readFileSync(SHELL_PATH, 'utf8');
 
 let failures = 0;
 function check(name, condition, detail){
@@ -186,11 +188,12 @@ try {
 /* 认证弹层必须由 owner 维度的 acquire/release 管理。 */
 const openAuthBody = extractBalancedBlock(auth, /function\s+openAuthModal\s*\([^)]*\)\s*\{/);
 check('认证弹层打开时登记 owner 滚动锁',
-  /authModalEl\s*=\s*bd/.test(openAuthBody) && /acquireModalScrollLock\(\s*bd\s*\)/.test(openAuthBody));
+  /authModalEl\s*=\s*page/.test(openAuthBody) && /acquireModalScrollLock\(\s*page\s*\)/.test(openAuthBody));
 check('认证弹层替换旧实例前释放旧 owner',
   /if\s*\(\s*authModalEl\s*\)[\s\S]*?releaseModalScrollLock\(\s*authModalEl\s*\)[\s\S]*?authModalEl\.remove\(\)/.test(openAuthBody));
-check('认证弹层关闭时清引用、释放 owner 并移除 DOM',
-  /const\s+closeAuth\s*=\s*\(\)\s*=>\s*\{[\s\S]*?authModalEl\s*===\s*bd[\s\S]*?authModalEl\s*=\s*null[\s\S]*?releaseModalScrollLock\(\s*bd\s*\)[\s\S]*?bd\.remove\(\)/.test(openAuthBody));
+check('认证前独立 Page 不允许点击背景绕过且成功后释放 owner',
+  !/page\.addEventListener\(\s*['"]click['"]/.test(openAuthBody) &&
+  /function\s+enterGhostApp[\s\S]*?releaseModalScrollLock\(authModalEl\)[\s\S]*?authModalEl\.remove\(\)[\s\S]*?authModalEl=null/.test(shell));
 
 /* 商城必须是单例；关闭函数自身也必须幂等并清理全部活动引用。 */
 const openShopBody = extractBalancedBlock(shop, /function\s+openShop\s*\(\s*\)\s*\{/);

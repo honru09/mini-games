@@ -1,6 +1,6 @@
 ﻿# Mini Games Platform 🎮
 
-> 多人游戏平台 — 6 款精选插件化游戏，先看到人，再看到游戏。
+> Ghost Game（临时品牌名）— 6 款精选插件化游戏与原创助手 Honru，先看到人，再看到游戏。
 > 体验目标：打开约 3 秒开局 → 约 5 分钟一局 → 立刻再来。
 
 线上试玩：https://honru09.github.io/mini-games/
@@ -13,11 +13,14 @@
 - 🎯 **Fast Fun Loop**：目标约 3 秒入局、约 5 分钟一局；当前线上冷启动与真实设备仍需专项实测
 - 🌐 **三语国际化**：中文 / English / Українська，Settings 一键切换
 - 🏳️ **语言旗帜**：个人档案、排行榜、房间大厅实时显示
-- ⚙️ **Settings 设置页**：6 套主题（日光/午夜/海洋/森林/赛博/樱花）、三语言、联机地址
+- ⚙️ **Settings 设置页**：白天云海 / 黑夜星空双主题、三语言、联机地址
+- 🧭 **四区应用外壳**：Home / Games / Chat / Profile；手机使用底部四项导航，平板与桌面使用顶部导航
 - 🎨 **Design System**：统一间距（4px 刻度）/ 字号 / 色彩令牌，卡片入场动画、按钮光效、胜负彩带、WebAudio 轻音效（零资源）
 - 🎬 **动效 + 手感**：统一 Motion 动效库（转场/入场/弹性/Loading）、6 款游戏全量操作反馈（音效+震动+状态提示）、棋盘棋子立体质感
 - ✨ **个性化**：动态头像框（8 款含流光/烈焰/彩虹/赛博脉冲）、闪名（4 种特效）、动态档案背景（星空/樱花/赛博矩阵/海浪）、等级进度条
-- 🔑 **PIN 账号**：设备识别 + PIN 换机登录；用户必须记住 PIN，跨重启持久性取决于已验收的服务端存储
+- 🔐 **用户名密码账号**：用户名大小写不敏感唯一，密码使用随机盐 scrypt 慢哈希；旧 PIN 账号可原 UID 迁移
+- 👻 **一次性访客**：服务端签发临时身份；退出立即删号，不进入持久库、排行榜、永久购买或持续 AI 学习
+- 💬 **Honru 助手**：每日抚摸签到、三语言短对话与离线安全回退；聊天原文不落库，不伪造实时天气或新闻
 - 🛍️ **💵 商城**：头像 / 头像框 / 动态特效 / 个人背景 / 六款游戏外观（游戏外观购买与装备由服务端权威校验）
 - 🎭 **AI 角色化**：5 个性格各异的 AI 对手，表达风格不同；强制胜/防守和本地强策略不会被人格覆盖
 - 🧠 **AI 持续学习**：按“账号 × 游戏”独立模型；对局中记录近优候选，胜局强化、败局反事实修正、平局保留中性经验，JSON 与 Supabase 原子恢复
@@ -95,7 +98,9 @@ WebSocket 端点 `/ws`，所有消息为 JSON：
 | 方向 | 消息 | 说明 |
 |---|---|---|
 | C→S | `hello` | 使用 uid + 服务端会话 token 鉴权；异常断线后尝试恢复房间 |
-| C→S | `register` / `login` / `logout` | 创建 PIN 账号、登录、撤销当前会话 token |
+| C→S | `register` / `login` / `logout` | `authVersion:2` 创建/登录用户名密码账号并撤销当前 token；旧 PIN 消息保留兼容 |
+| C→S | `username_check` / `legacy_bind` / `guest_login` | 实时查重、把旧 PIN 账号原 UID 绑定到用户名密码、创建一次性访客 |
+| C→S | `companion_checkin` | Honru 每日签到；按账号与日期幂等 |
 | C→S | `profile_get` / `profile` | 查询档案；仅修改 name/lang、本人平台外观与白名单 `gameCosmetics` 装备，不能写金币、owned、XP、胜场、局数等权威字段 |
 | C→S | `create` / `join` / `leave` | 创建、加入、主动离开房间或观众席 |
 | C→S | `spectate_join` / `spectate_leave` | 进入/离开独立观众席；不占玩家位、不能发送游戏输入 |
@@ -114,7 +119,8 @@ WebSocket 端点 `/ws`，所有消息为 JSON：
 | C→S | `solo_start` / `solo_progress` | 已认证人机对局获取服务端票据，并上报由合法游戏动作产生的有效进度 |
 | C→S | `result` | 联机携带 `matchId` 与完整结果 claim，所有参与者一致后才结算；人机携带服务端签发的 `matchId/resultId` 与胜平负 |
 | C→S | `purchase` | 服务端按商品目录和余额原子购买（requestId 幂等） |
-| S→C | `hello_ack` / `registered` / `logged_in` / `logged_out` / `auth_error` | 认证状态与服务端签发 token |
+| S→C | `hello_ack` / `registered` / `logged_in` / `logged_out` / `auth_error` | 认证状态、稳定错误 reason 与服务端签发 token |
+| S→C | `username_status` / `guest_logged_in` / `companion_checkin_ok` | 查重结果、临时访客身份与 Honru 签到幂等结果 |
 | S→C | `lobby` | 可加入的等待房与可观战的进行中房间列表 |
 | S→C | `created` / `joined` / `room_update` / `started` | 加房结果、房间实时状态和开局信息（含 `matchId`） |
 | S→C | `player_reassigned` | 有成员离房并压紧席位后，通知仍在房间中的客户端更新玩家索引 |
@@ -139,7 +145,7 @@ WebSocket 端点 `/ws`，所有消息为 JSON：
 | S→C | `result_pending` / `result_ok` / `result_error` | 结算共识状态；`result_ok.payload.reward` 含当前玩家完整 Reward Breakdown |
 | S→C | `profile_data` / `profile_ok` / `purchase_ok` / `purchase_error` | 档案与购买结果 |
 
-服务端签发的会话 token 默认有效 30 天（可通过 `AUTH_TOKEN_TTL_MS` 调整）；每个账号最多保留最近 5 个有效 token，通常对应 5 台设备或浏览器。新会话超过上限时会淘汰最旧 token，`logout` 只撤销当前 token。
+正式账号的会话 token 默认有效 30 天（可通过 `AUTH_TOKEN_TTL_MS` 调整）；每个账号最多保留最近 5 个有效 token。新会话超过上限时淘汰最旧 token，`logout` 只撤销当前 token。访客 token/账号不持久化：显式退出立即删除，异常断线仅保留 60 秒重连窗口。
 
 ## 奖励与成长（Economy & Progression v1.0）
 
@@ -171,7 +177,7 @@ $env:RENDER_KEY='rnd_xxx'
 node scripts/render-deploy.js
 ```
 
-后端也支持 `DATA_DIR`（测试或持久磁盘路径）和 `ALLOWED_ORIGINS`。`POST /api/ai` 要求已认证账号的 Bearer token，并带 Origin、请求体大小、并发和速率限制。6 款游戏只把合法选项交给模型，客户端约 2.2 秒超时且会再次精确校验返回值；无 Key、断网、限流或非法响应会立即使用本地算法。生产环境不要把 DeepSeek key 放到前端。
+后端也支持 `DATA_DIR`（测试或持久磁盘路径）和 `ALLOWED_ORIGINS`。`POST /api/ai` 与 `POST /api/companion` 都要求 Bearer token，并带 Origin、请求体大小、并发、速率和超时限制。默认模型为 `deepseek-v4-flash`，只允许通过服务端 `DEEPSEEK_MODEL=deepseek-v4-pro` 切换；6 款游戏仍只把合法近优选项交给模型，客户端会再次精确校验返回值。无 Key、断网、限流或非法响应时游戏使用本地强算法，Honru 使用本地安全回复。生产环境绝不能把 DeepSeek key 放到前端。
 
 运营指标需单独配置高熵 `METRICS_ADMIN_TOKEN`，可与 `RENDER_KEY` 一起交给 `node scripts/render-env.js` 写入 Render。`/api/metrics`、`/api/metrics/history`、`/api/metrics/export` 均要求 Bearer 管理员令牌，并提供限频、脱敏访问审计、有界历史、CSV 导出、阈值告警和脱敏错误聚合；只读页面为 `/admin-metrics.html`，令牌只保存在页面内存。未配置令牌时 API 返回 503。当前 Render 未挂载持久磁盘，跨重启长期历史仍需外部持久化后端。
 

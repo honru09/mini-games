@@ -6,7 +6,7 @@
 
 ## 1. 视觉母题
 
-目标是“口袋桌游 × 高表现力贴纸卡通”，不是复制任何商业游戏。没有 Logo 时，玩家仍应从粗深色轮廓、紧凑 Q 版比例、两级赛璐璐、左上主光、右下接触影、强剪影和短促弹性反馈辨认出 Playroom。
+目标是“口袋桌游 × 高表现力贴纸卡通”，不是复制任何商业游戏。没有 Logo 时，玩家仍应从粗深色轮廓、紧凑 Q 版比例、两级赛璐璐、左上主光、右下接触影、强剪影和短促弹性反馈辨认出 Ghost Game。
 
 允许借鉴的只有高层语法：大几何轮廓、夸张但可读的情绪、少而清晰的明暗层次、圆角和关键 Pose。禁止复制第三方角色、皇冠、服饰组合、徽记、武器、表情帧、封面构图和高潮 Pose。Supercell 官方政策明确限制基于其资产创建新产品及未经许可修改资产：https://supercell.com/en/fan-content-policy/ 。
 
@@ -21,7 +21,7 @@
 
 唯一权威色值见 `design-tokens.v1.json`。核心为 Ink `#211923/#443443`、Paper `#FFF9F2`、Cream `#F3E5C4`，辅以 Green/Teal/Blue/Purple/Pink/Coral/Gold/Brown。
 
-六主题只能替换 Background、Panel 与 Accent。以下内容跨主题绝对不变：Ink、轮廓档位、角色比例、材质语法、左上主光、右下接触影、组件结构和玩家身份编码。玩家不能只靠颜色区分。
+运行时只有 `light` 与 `dark`：白天为云海/大气层，黑夜为深空星场。双主题只能替换 Background、Panel 与 Accent。以下内容跨主题绝对不变：Ink、轮廓档位、角色比例、材质语法、左上主光、右下接触影、组件结构、玩家身份编码和购买背景。玩家不能只靠颜色区分。
 
 正文对比度至少 4.5:1，大字与非文本边界至少 3:1；这与 WCAG 2.2 的 AA 基线一致：https://www.w3.org/TR/WCAG22/ 。
 
@@ -79,7 +79,7 @@ Display 建议 Nunito Sans 800/900，正文 Noto Sans/Noto Sans SC 400/600，控
 - 交付适用档位的 512/256/128/96/64/48/44/32/24px 1×/2× Contact Sheet。
 - Avatar/Persona 64px 时眼眉口分离，关键负空间至少 2px；44px 情绪五人盲测至少四人一秒内正确。
 - 四 Avatar 黑色剪影识别率至少 90%；24px 图标五人语义盲测至少 80%。
-- 五子棋黑白子在正常、灰度和六主题中 100% 可区分；飞行棋四方同时使用颜色 + 机翼/鼻锥/纹样。
+- 五子棋黑白子在正常、灰度和昼夜双主题中 100% 可区分；飞行棋四方同时使用颜色 + 机翼/鼻锥/纹样。
 - 360px 布局下规则落点、棋盘线和状态标志不低于 2 CSS px；200% 文本缩放不丢主要行动。
 - 首屏新增资源 ≤500KB，单游戏懒加载 ≤1.5MB，单 atlas ≤2048² 且 ≤1MB，移动解码工作集目标 ≤80MB。
 - 所有非必要动画支持 reduced-motion、离屏暂停、静态 poster，且不阻塞输入；一秒闪烁不超过三次。
@@ -88,4 +88,4 @@ Art Bible Review 100 分制：剪影/轮廓/比例 20，色板/对比 15，赛�
 
 ## 12. 发布边界
 
-Art Bible、Golden Set Style Review、IP Similarity Review、Integration/Performance/A11y、Feature Flag Release 必须顺序通过。M0 未获人工 Golden Set 决议前不得批量翻新 48 Avatar、Legacy Avatar、其余四款完整游戏或六主题背景，也不得将状态写为 `verified` 或 `production-ready`。
+Art Bible、Golden Set Style Review、IP Similarity Review、Integration/Performance/A11y、Feature Flag Release 必须顺序通过。M0 未获人工 Golden Set 决议前不得批量翻新 48 Avatar、Legacy Avatar、其余四款完整游戏或昼夜主题背景，也不得将状态写为 `verified` 或 `production-ready`。

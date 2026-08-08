@@ -12,6 +12,11 @@ create table if not exists profiles (
   owned jsonb not null default '{"avatars":[],"frames":[],"effects":[],"backgrounds":[],"game_cosmetics":[]}'::jsonb,
   game_cosmetics jsonb not null default '{}'::jsonb,
   pin_hash TEXT,
+  username text,
+  username_key text,
+  password_hash text,
+  auth_version text,
+  companion_checkin_day text not null default '',
   lang VARCHAR(10) DEFAULT 'zh-CN',
   xp integer not null default 0,
   level integer not null default 1,
@@ -47,6 +52,7 @@ create table if not exists profiles (
   updated_at timestamptz not null default now()
 );
 create unique index if not exists idx_profiles_pin on profiles (pin_hash) where pin_hash is not null;
+create unique index if not exists idx_profiles_username_key on profiles (username_key) where username_key is not null;
 
 -- 对局历史表（每位参与者每局一条结算记录；单机每局一条，方便审计/统计）
 create table if not exists history (
@@ -217,6 +223,12 @@ alter table profiles add column if not exists effect integer not null default 0;
 alter table profiles add column if not exists owned jsonb not null default '{"avatars":[],"frames":[],"effects":[],"backgrounds":[],"game_cosmetics":[]}'::jsonb;
 alter table profiles add column if not exists game_cosmetics jsonb not null default '{}'::jsonb;
 alter table profiles add column if not exists pin_hash text;
+alter table profiles add column if not exists username text;
+alter table profiles add column if not exists username_key text;
+alter table profiles add column if not exists password_hash text;
+alter table profiles add column if not exists auth_version text;
+alter table profiles add column if not exists companion_checkin_day text not null default '';
+create unique index if not exists idx_profiles_username_key on profiles (username_key) where username_key is not null;
 alter table profiles add column if not exists lang varchar(10) default 'zh-CN';
 alter table profiles add column if not exists xp integer not null default 0;
 alter table profiles add column if not exists level integer not null default 1;

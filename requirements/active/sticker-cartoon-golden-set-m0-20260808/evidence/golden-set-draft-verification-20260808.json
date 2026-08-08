@@ -25,7 +25,7 @@
     "teacher/avatar technical cleanup",
     "two-person IP Similarity Review",
     "five-person 44px blind tests",
-    "runtime integration and six-theme/three-locale/five-width matrix",
+    "runtime integration and light-dark/three-locale/five-width matrix (superseded by CHANGE_REQUEST-双主题-20260809.md)",
     "second desktop browser",
     "real Android/iPhone/Tablet",
     "real Supabase migration/RLS/concurrency/backup/rollback",

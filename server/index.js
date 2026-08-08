@@ -5,6 +5,14 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const {
+  normalizeUsername,
+  validateUsername,
+  validatePassword,
+  hashPassword,
+  verifyPassword,
+} = require('./auth-credentials');
+const Companion = require('./companion');
+const {
   VALID_GAMES,
   REWARD_CONFIG,
   dayKey,
@@ -134,6 +142,8 @@ const MIME = {
 
 /* ---------------- AI 代理（DeepSeek） ---------------- */
 const DEEPSEEK_KEY = process.env.DEEPSEEK_KEY || '';
+const DEEPSEEK_MODELS = new Set(['deepseek-v4-flash','deepseek-v4-pro']);
+const DEEPSEEK_MODEL = DEEPSEEK_MODELS.has(String(process.env.DEEPSEEK_MODEL || '')) ? String(process.env.DEEPSEEK_MODEL) : 'deepseek-v4-flash';
 const AI_UPSTREAM_TIMEOUT_MS = Math.max(1500, Math.min(10000, Number(process.env.AI_UPSTREAM_TIMEOUT_MS) || 5000));
 const ALLOWED_ORIGINS = new Set([
   'https://honru09.github.io',
@@ -171,6 +181,8 @@ const aiRate = new Map();
 const aiConcurrentUser = new Map();
 const aiConcurrentIp = new Map();
 let aiGlobalConcurrent = 0;
+const companionConcurrentUser = new Set();
+let companionGlobalConcurrent = 0;
 const AI_GLOBAL_DAILY_LIMIT = Math.max(200, Number(process.env.AI_GLOBAL_DAILY_LIMIT) || 5000);
 function requestIp(req){
   const chain = String((req.headers && req.headers['x-forwarded-for']) || '').split(',').map(s => s.trim()).filter(Boolean);
@@ -206,14 +218,14 @@ function buildAIPrompt(game, state, options){
     '\n请决定下一步具体走法（例如落子坐标），严格只返回 JSON：{"choice":"具体走法"}';
 }
 
-async function callDeepSeek(messages, temperature){
+async function callDeepSeek(messages, temperature, maxTokens){
   const deadline = Date.now() + AI_UPSTREAM_TIMEOUT_MS;
   const timeoutSignal = () => AbortSignal.timeout(Math.max(250, deadline - Date.now()));
   const payload = {
-    model: 'deepseek-chat',
+    model: DEEPSEEK_MODEL,
     messages,
     temperature: (typeof temperature === 'number' && temperature >= 0 && temperature <= 2) ? temperature : 0.4,
-    max_tokens: 200,
+    max_tokens:Math.max(80,Math.min(600,Number(maxTokens)||200)),
     stream: false,
     response_format: { type: 'json_object' },
   };
@@ -437,6 +449,10 @@ const server = http.createServer((req, res) => {
       if (!res.headersSent) res.writeHead(500, { ...corsHeaders(req), 'Content-Type': 'application/json' });
       if (!res.writableEnded) res.end('{"choice":null,"error":"internal_error"}');
     });
+    return;
+  }
+  if(req.method==='POST'&&urlPath==='/api/companion'){
+    handleCompanion(req,res).catch(error=>{recordOperationalError('companion_http_handler',error);if(!res.headersSent)res.writeHead(500,{...corsHeaders(req),'Content-Type':'application/json','Cache-Control':'no-store'});if(!res.writableEnded)res.end('{"reply":"","mood":"neutral","animation":"idle","sourceType":"offline","error":"internal_error"}');});
     return;
   }
   if (req.method === 'POST' && urlPath === '/api/ai/confirm'){
@@ -878,6 +894,41 @@ const useSupabase = !!(SUPABASE_URL && SUPABASE_KEY);
 const sbProfileQueues = new Map();
 const sbAILearningQueues = new Map();
 const sbAILearningDrains = new Map();
+function profileRowToUser(r){
+  if (!r || !r.uid) return null;
+  return normalizeUserRewardState({
+    uid:r.uid,name:r.name,avatar:r.avatar,coins:r.coins||0,xp:r.xp||0,level:r.level||1,streak:r.streak||0,bestStreak:r.best_streak||0,played:r.played||{},total:r.total||0,wins:r.wins||{},totalWins:r.total_wins||0,
+    background:r.background||0,frame:r.frame||0,effect:r.effect||0,signature:r.signature||'',countryRegion:r.country_region||'',genderTag:r.gender_tag||'hidden',presencePreference:r.presence_preference||'joinable',presenceVisibility:r.presence_visibility||'everyone',showcase:r.showcase||null,
+    owned:normalizeOwned(r.owned),gameCosmetics:normalizeGameCosmetics(r.game_cosmetics),pin_hash:r.pin_hash||null,
+    username:r.username||'',usernameKey:r.username_key||'',passwordHash:r.password_hash||null,authVersion:r.auth_version||'',companionCheckinDay:r.companion_checkin_day||'',lang:r.lang||'zh-CN',
+    achievements:r.achievements||[],playmates:r.playmates||{},daily:r.daily||{play:0,win:0,streak:0},dailyKey:r.daily_key||'',dailyTaskKey:r.daily_task_key||'',dailyTasks:r.daily_tasks||null,nameFx:r.name_fx||0,
+    authTokens:normalizeAuthTokenRecords(r.auth_tokens),recentResults:Array.isArray(r.recent_results)?r.recent_results.map(String).slice(-500):[],purchaseRequests:Array.isArray(r.purchase_requests)?r.purchase_requests.map(String).slice(-100):[],soloRate:Array.isArray(r.solo_rate)?r.solo_rate.map(Number).filter(Number.isFinite).slice(-100):[],dailyFirstWinDate:r.daily_first_win_date||'',dailyAICurrencyKey:r.daily_ai_currency_key||'',dailyAICurrencyEarned:r.daily_ai_currency_earned||0,xpCurveVersion:r.xp_curve_version||0,
+  });
+}
+
+async function handleCompanion(req,res){
+  const cors=corsHeaders(req),headers={...cors,'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'};
+  if(!originAllowed(req)){res.writeHead(403,headers);res.end(JSON.stringify({error:'origin_not_allowed'}));return;}
+  if(!/^application\/json(?:\s*;|$)/i.test(String(req.headers['content-type']||''))){res.writeHead(415,headers);res.end(JSON.stringify({error:'content_type_required'}));return;}
+  const user=authenticateHttp(req);if(!user){res.writeHead(401,headers);res.end(JSON.stringify({error:'authentication_required'}));return;}
+  const ip=requestIp(req),minute=user.ephemeral?3:6,daily=user.ephemeral?20:60;
+  if(!consumeAIRate('companion:user:'+user.uid,minute,daily)||!consumeAIRate('companion:ip:'+ip,20,240)||!consumeAIRate('companion:global',100,2000)){res.writeHead(429,{...headers,'Retry-After':'60'});res.end(JSON.stringify({error:'rate_limited'}));return;}
+  if(companionConcurrentUser.has(user.uid)||companionGlobalConcurrent>=12){res.writeHead(429,{...headers,'Retry-After':'3'});res.end(JSON.stringify({error:'too_many_requests'}));return;}
+  companionConcurrentUser.add(user.uid);companionGlobalConcurrent++;
+  try{
+    const chunks=[];let size=0;
+    for await(const chunk of req){size+=chunk.length;if(size>8192){res.writeHead(413,headers);res.end(JSON.stringify({error:'payload_too_large'}));return;}chunks.push(chunk);}
+    let body=null;try{body=JSON.parse(Buffer.concat(chunks).toString('utf8'));}catch{res.writeHead(400,headers);res.end(JSON.stringify({error:'invalid_json'}));return;}
+    const input=Companion.normalizeRequest(body);if(!input.valid){res.writeHead(400,headers);res.end(JSON.stringify({error:input.reason}));return;}
+    let result;
+    if(!DEEPSEEK_KEY){result=Companion.fallback(input.locale,Companion.fallbackKind(input.message));}
+    else{
+      const messages=[{role:'system',content:Companion.systemPrompt(input.locale)},...input.history,{role:'user',content:input.message}];
+      try{const content=await callDeepSeek(messages,.55,320);result=Companion.parseResponse(content,input.locale);}catch{result=Companion.fallback(input.locale,Companion.fallbackKind(input.message));}
+    }
+    res.writeHead(200,headers);res.end(JSON.stringify(result));
+  }finally{companionConcurrentUser.delete(user.uid);companionGlobalConcurrent=Math.max(0,companionGlobalConcurrent-1);}
+}
 async function sbFetch(path, options = {}){
   const res = await fetch(SUPABASE_URL + '/rest/v1/' + path, {
     ...options,
@@ -902,23 +953,7 @@ async function sbLoadProfiles(){
     const rows = await sbFetch('profiles?select=*&order=coins.desc&limit=5000');
     const users = {};
     for (const r of (Array.isArray(rows) ? rows : [])){
-      users[r.uid] = normalizeUserRewardState({
-        uid: r.uid, name: r.name, avatar: r.avatar, coins: r.coins || 0, xp: r.xp || 0, level: r.level || 1, streak: r.streak || 0, bestStreak: r.best_streak || 0, played: r.played || {}, total: r.total || 0, wins: r.wins || {}, totalWins: r.total_wins || 0,
-        background: r.background || 0, frame: r.frame || 0, effect: r.effect || 0,
-        signature: r.signature || '', countryRegion: r.country_region || '', genderTag: r.gender_tag || 'hidden',
-        presencePreference: r.presence_preference || 'joinable', presenceVisibility: r.presence_visibility || 'everyone', showcase: r.showcase || null,
-        owned: normalizeOwned(r.owned), gameCosmetics: normalizeGameCosmetics(r.game_cosmetics),
-        pin_hash: r.pin_hash || null, lang: r.lang || 'zh-CN',
-        achievements: r.achievements || [], playmates: r.playmates || {}, daily: r.daily || { play: 0, win: 0, streak: 0 }, dailyKey: r.daily_key || '', dailyTaskKey: r.daily_task_key || '', dailyTasks: r.daily_tasks || null, nameFx: r.name_fx || 0,
-        authTokens: normalizeAuthTokenRecords(r.auth_tokens),
-        recentResults: Array.isArray(r.recent_results) ? r.recent_results.map(String).slice(-500) : [],
-        purchaseRequests: Array.isArray(r.purchase_requests) ? r.purchase_requests.map(String).slice(-100) : [],
-        soloRate: Array.isArray(r.solo_rate) ? r.solo_rate.map(Number).filter(Number.isFinite).slice(-100) : [],
-        dailyFirstWinDate: r.daily_first_win_date || '',
-        dailyAICurrencyKey: r.daily_ai_currency_key || '',
-        dailyAICurrencyEarned: r.daily_ai_currency_earned || 0,
-        xpCurveVersion: r.xp_curve_version || 0,
-      });
+      users[r.uid] = profileRowToUser(r);
     }
     // 已向玩家确认、但尚未成功写入远端的奖励必须优先保留本地档案；否则重启加载旧远端档案会造成回档。
     const pendingUids = new Set((db.pendingRewardSync || []).map(item => item && item.uid).filter(Boolean));
@@ -1030,7 +1065,9 @@ function profileDbRow(u){
     streak: u.streak || 0, best_streak: u.bestStreak || 0, played: u.played || {}, total: u.total || 0,
     wins: u.wins || {}, total_wins: u.totalWins || 0,
     background: u.background || 0, frame: u.frame || 0, effect: u.effect || 0,
-    owned: normalizeOwned(u.owned), game_cosmetics: normalizeGameCosmetics(u.gameCosmetics), pin_hash: u.pin_hash || null, lang: u.lang || 'zh-CN',
+    owned: normalizeOwned(u.owned), game_cosmetics: normalizeGameCosmetics(u.gameCosmetics), pin_hash: u.pin_hash || null,
+    username: u.username || null, username_key: u.usernameKey || null, password_hash: u.passwordHash || null, auth_version: u.authVersion || null, companion_checkin_day:u.companionCheckinDay || '',
+    lang: u.lang || 'zh-CN',
     achievements: u.achievements || [], playmates: u.playmates || {},
     signature: u.signature || '', country_region: u.countryRegion || '', gender_tag: u.genderTag || 'hidden',
     presence_preference: u.presencePreference || 'joinable', presence_visibility: u.presenceVisibility || 'everyone', showcase: u.showcase || null,
@@ -1069,6 +1106,11 @@ function editableProfileDbRow(u){
 function authProfileDbRow(u){
   return {
     pin_hash: u && u.pin_hash || null,
+    username: u && u.username || null,
+    username_key: u && u.usernameKey || null,
+    password_hash: u && u.passwordHash || null,
+    auth_version: u && u.authVersion || null,
+    companion_checkin_day:u && u.companionCheckinDay || '',
     auth_tokens: Array.isArray(u && u.authTokens) ? u.authTokens.slice(-5) : [],
     updated_at: new Date().toISOString(),
   };
@@ -1319,6 +1361,10 @@ function loadDB(){
   db.opsIncidents = (db.opsIncidents || []).filter(item=>item&&/^[a-f0-9]{16}$/.test(String(item.fingerprint||''))&&item.context&&item.kind).slice(-500);
   for (const [uid, u] of Object.entries(db.users)){
     u.uid = u.uid || uid;
+    u.username = typeof u.username === 'string' ? u.username : '';
+    u.usernameKey = u.username ? normalizeUsername(u.username) : '';
+    u.passwordHash = typeof u.passwordHash === 'string' ? u.passwordHash : null;
+    u.authVersion = typeof u.authVersion === 'string' ? u.authVersion : (u.passwordHash ? 'username-password-v1' : 'legacy-pin-v1');
     if (u.coins === undefined) u.coins = u.points || 0;
     delete u.points;
     if (!u.played) u.played = {};
@@ -1551,6 +1597,13 @@ function clearExpiredResumes(){
   const now = Date.now();
   for (const [key, value] of expiredResumes) if (!value || value.expiresAt <= now) expiredResumes.delete(key);
 }
+const ephemeralCleanupTimers = new Map();
+function scheduleEphemeralCleanup(uid,delayMs){
+  if(!uid||!db.users[uid]||!db.users[uid].ephemeral)return;
+  const old=ephemeralCleanupTimers.get(uid);if(old)clearTimeout(old);
+  const timer=setTimeout(()=>{ephemeralCleanupTimers.delete(uid);cleanupEphemeralUser(uid);},Math.max(1000,Number(delayMs)||60000));
+  ephemeralCleanupTimers.set(uid,timer);
+}
 function cleanupEphemeralUser(uid){
   const u = uid && db.users[uid];
   if (!u || !u.ephemeral) return;
@@ -1558,6 +1611,7 @@ function cleanupEphemeralUser(uid){
   const reserved = [...rooms.values()].some(r => [...r.clients.keys()].some(s => s.uid === uid) ||
     [...(r.spectators instanceof Map ? r.spectators.keys() : r.spectators instanceof Set ? r.spectators : [])].some(s => s.uid === uid));
   if (active || reserved) return;
+  const timer=ephemeralCleanupTimers.get(uid);if(timer)clearTimeout(timer);ephemeralCleanupTimers.delete(uid);
   delete db.users[uid];
   db.history = db.history.filter(h => h.uid !== uid);
   db.rewardHistory = db.rewardHistory.filter(h => h.uid !== uid);
@@ -1567,6 +1621,15 @@ function cleanupEphemeralUser(uid){
   db.aiLearning.experiences = (db.aiLearning.experiences || []).filter(row => row.uid !== uid);
   db.aiLearning.appliedResults = (db.aiLearning.appliedResults || []).filter(key => !String(key).startsWith(uid + '|'));
   db.pendingAILearningSync = (db.pendingAILearningSync || []).filter(item => item.uid !== uid);
+  db.pendingRewardSync = (db.pendingRewardSync || []).filter(item => item.uid !== uid);
+  db.friendRequests=(db.friendRequests||[]).filter(row=>row.fromUid!==uid&&row.toUid!==uid);
+  db.friendships=(db.friendships||[]).filter(row=>row.aUid!==uid&&row.bUid!==uid);
+  db.blocks=(db.blocks||[]).filter(row=>row.blockerUid!==uid&&row.blockedUid!==uid);
+  db.reports=(db.reports||[]).filter(row=>row.reporterUid!==uid&&row.targetUid!==uid);
+  db.replays=(db.replays||[]).filter(row=>!Array.isArray(row.uids)||!row.uids.includes(uid));
+  pendingInvites.delete(uid);
+  for(const [target,items] of pendingInvites){const next=(items||[]).filter(item=>item.fromUid!==uid&&item.toUid!==uid);if(next.length)pendingInvites.set(target,next);else pendingInvites.delete(target);}
+  for(const user of Object.values(db.users)){if(user&&user.playmates&&Object.prototype.hasOwnProperty.call(user.playmates,uid))delete user.playmates[uid];}
   saveDB();
 }
 function resetRoomMatch(r){
@@ -1806,6 +1869,81 @@ function userForToken(token){
   for (const u of Object.values(db.users)) if (userHasToken(u, token)) return u;
   return null;
 }
+function credentialUserByKey(usernameKey){
+  return Object.values(db.users).find(user => !user.ephemeral && user.usernameKey === usernameKey) || null;
+}
+const credentialRegistrationLocks=new Set();
+async function credentialUser(usernameKey){
+  const local=credentialUserByKey(usernameKey);
+  if(local||!useSupabase)return local;
+  const rows=await sbFetch('profiles?select=*&username_key=eq.'+encodeURIComponent(usernameKey)+'&limit=1');
+  const remote=Array.isArray(rows)&&rows[0]?profileRowToUser(rows[0]):null;
+  if(remote){db.users[remote.uid]=remote;saveDB();}
+  return remote;
+}
+function starterUser(uid,name,lang){
+  return {
+    uid,name:String(name||'玩家').slice(0,12),avatar:100,ephemeral:false,background:0,frame:0,effect:0,
+    achievements:[],playmates:{},daily:{play:0,win:0,streak:0},nameFx:0,owned:normalizeOwned({backgrounds:[0]}),gameCosmetics:normalizeGameCosmetics({}),
+    xp:0,level:1,streak:0,bestStreak:0,coins:0,played:{},total:0,wins:{},totalWins:0,recentResults:[],purchaseRequests:[],soloRate:[],pin_hash:null,
+    dailyFirstWinDate:'',dailyAICurrencyKey:'',dailyAICurrencyEarned:0,xpCurveVersion:REWARD_CONFIG.level.curveVersion,
+    signature:'',countryRegion:'',genderTag:'hidden',presencePreference:'joinable',presenceVisibility:'everyone',showcase:null,
+    lang:['zh-CN','en-US','uk-UA'].includes(lang)?lang:'zh-CN',created_at:Date.now(),authTokens:[],
+  };
+}
+async function handleCredentialMessage(session,type,payload){
+  payload=payload&&typeof payload==='object'?payload:{};
+  if(type==='username_check'){
+    const checked=validateUsername(payload.username),requestId=String(payload.requestId||'').slice(0,64);
+    if(!consumeAIRate('username-check:'+session.ip,30,500)){session.sendText(JSON.stringify({type:'username_status',payload:{requestId,username:'',normalized:'',available:false,reason:'rate_limited'}}));return;}
+    let available=false,reason=checked.reason||'username_invalid';
+    if(checked.valid){available=!(await credentialUser(checked.normalized));reason=available?'available':'username_taken';}
+    session.sendText(JSON.stringify({type:'username_status',payload:{requestId,username:checked.valid?String(payload.username):'',normalized:checked.valid?checked.normalized:'',available,reason}}));return;
+  }
+  if(type==='guest_login'){
+    if(session.uid){session.authError('请先退出当前账号', {reason:'login_requires_logout'});return;}
+    if(!allowRegistration('guest:'+session.ip)){session.authError('访客创建过于频繁，请稍后再试',{reason:'guest_unavailable',retryAfter:3600});return;}
+    const uid='u_guest_'+crypto.randomBytes(8).toString('hex'),suffix=crypto.randomBytes(2).toString('hex').toUpperCase();
+    const user=starterUser(uid,'Guest '+suffix,payload.lang);user.ephemeral=true;user.authVersion='guest-v1';user.guestExpiresAt=Date.now()+60*60000;
+    const auth=issueAuthToken(user);db.users[uid]=user;session.uid=uid;session.tokenHash=auth.tokenHash;
+    session.sendText(JSON.stringify({type:'guest_logged_in',token:auth.token,payload:{uid,token:auth.token,expiresAt:user.guestExpiresAt,profile:profileObj(user)}}));broadcastLobby();return;
+  }
+  if(!allowAuthHash()){session.authError('登录服务繁忙，请稍后再试',{reason:'auth_service_busy',retryAfter:30});return;}
+  if(session.uid){session.authError('请先退出当前账号再切换身份',{reason:type==='register'?'registration_requires_logout':'login_requires_logout'});return;}
+  const usernameCheck=validateUsername(payload.username),passwordCheck=validatePassword(payload.password);
+  if(!usernameCheck.valid){session.authError('用户名格式不正确',{reason:'username_invalid'});return;}
+  if(!passwordCheck.valid){session.authError('密码格式不正确',{reason:'password_invalid'});return;}
+  const authKey='credential:'+usernameCheck.normalized;
+  if(type==='register'){
+    if(!allowRegistration(session.ip)){session.authError('该网络注册过于频繁，请稍后再试',{reason:'registration_rate_limited',retryAfter:3600});return;}
+    if(credentialRegistrationLocks.has(usernameCheck.normalized)){session.authError('用户名已存在',{reason:'username_taken'});return;}
+    credentialRegistrationLocks.add(usernameCheck.normalized);
+    try{
+      if(await credentialUser(usernameCheck.normalized)){session.authError('用户名已存在',{reason:'username_taken'});return;}
+      const uid=genUid(),user=starterUser(uid,String(payload.username),payload.lang);user.username=String(payload.username);user.usernameKey=usernameCheck.normalized;user.passwordHash=await hashPassword(payload.password);user.authVersion='username-password-v1';
+      if(credentialUserByKey(usernameCheck.normalized)){session.authError('用户名已存在',{reason:'username_taken'});return;}
+      const auth=issueAuthToken(user);db.users[uid]=user;
+      const remoteOk=await sbCreateProfile(user);
+      if(!remoteOk){delete db.users[uid];session.authError('注册服务暂不可用',{reason:'auth_service_busy',retryAfter:30});return;}
+      saveDB();session.uid=uid;session.tokenHash=auth.tokenHash;session.sendText(JSON.stringify({type:'registered',token:auth.token,authVersion:'username-password-v1',payload:{uid,token:auth.token,profile:profileObj(user)}}));broadcastLeaderboard();broadcastLobby();return;
+    }finally{credentialRegistrationLocks.delete(usernameCheck.normalized);}
+  }
+  if(type==='login'){
+    const retry=Math.max(authRetryAfter(session.ip),authRetryAfter(authKey));if(retry){session.authError('尝试次数过多，请稍后再试',{reason:'login_rate_limited',retryAfter:retry});return;}
+    const user=await credentialUser(usernameCheck.normalized);
+    const valid=await verifyPassword(payload.password,user&&user.passwordHash);
+    if(!user){noteAuthFailure(session.ip);noteAuthFailure(authKey);session.authError('无对应用户',{reason:'user_not_found'});return;}
+    if(!valid){noteAuthFailure(session.ip);noteAuthFailure(authKey);session.authError('用户名或密码错误',{reason:'invalid_credentials'});return;}
+    clearAuthFailures(session.ip);clearAuthFailures(authKey);const auth=issueAuthToken(user);session.uid=user.uid;session.tokenHash=auth.tokenHash;saveDB();await sbSyncAuthProfile(user);session.sendText(JSON.stringify({type:'logged_in',token:auth.token,authVersion:'username-password-v1',payload:{uid:user.uid,token:auth.token,profile:profileObj(user)}}));broadcastLeaderboard();broadcastLobby();return;
+  }
+  if(type==='legacy_bind'){
+    const pin=String(payload.pin||'').trim();if(!validPin(pin)){session.authError('旧 PIN 格式不正确',{reason:'legacy_pin_invalid'});return;}
+    if(await credentialUser(usernameCheck.normalized)){session.authError('用户名已存在',{reason:'username_taken'});return;}
+    const ph=hashPin(pin),oldPh=legacyPinHash(pin),user=Object.values(db.users).find(item=>pinMatches(item,pin,ph,oldPh));
+    if(!user){noteAuthFailure(session.ip);session.authError('旧 PIN 不存在',{reason:'legacy_pin_invalid'});return;}
+    user.username=String(payload.username);user.usernameKey=usernameCheck.normalized;user.passwordHash=await hashPassword(payload.password);user.authVersion='username-password-v1';const auth=issueAuthToken(user);session.uid=user.uid;session.tokenHash=auth.tokenHash;saveDB();await sbSyncAuthProfile(user);session.sendText(JSON.stringify({type:'logged_in',token:auth.token,authVersion:'username-password-v1',payload:{uid:user.uid,token:auth.token,profile:profileObj(user)}}));broadcastLeaderboard();broadcastLobby();
+  }
+}
 function authenticateHttp(req){
   const value = String((req.headers && req.headers.authorization) || '');
   const m = /^Bearer\s+([A-Za-z0-9_-]{20,200})$/i.exec(value);
@@ -1869,6 +2007,8 @@ function profileObj(u, viewerUid){
     dailyTasks: dailyTasksPayload(u),
     signature:u.signature || '', countryRegion:u.countryRegion || '', genderTag:u.genderTag || 'hidden', showcase:u.showcase || null,
     presencePreference:u.presencePreference || 'joinable', presenceVisibility:u.presenceVisibility || 'everyone', presence:publicPresence(u.uid, u, viewerUid || u.uid),
+    username:u.username || '', authVersion:u.authVersion || (u.pin_hash ? 'legacy-pin-v1' : ''), ephemeral:!!u.ephemeral,
+    accountKind:u.ephemeral ? 'guest' : 'member', companionCheckinDay:u.companionCheckinDay || '',
   };
 }
 function publicProfileObj(u, viewerUid){
@@ -1882,6 +2022,9 @@ function publicProfileObj(u, viewerUid){
   delete p.dailyAICurrencyEarned;
   delete p.presencePreference;
   delete p.presenceVisibility;
+  delete p.username;
+  delete p.authVersion;
+  delete p.companionCheckinDay;
   return p;
 }
 
@@ -3204,6 +3347,7 @@ class Session {
     this.reconnectTimer = null;
     this.lastSeen = Date.now();
     this.messageTimes = [];
+    this.authBusy = false;
     this.buffer = Buffer.alloc(0);
     this.alive = true;
   }
@@ -3221,6 +3365,11 @@ class Session {
       this.authError('登录状态已失效，请重新登录', { reason: 'session_expired' });
       return null;
     }
+    return u;
+  }
+  requirePersistentUser(){
+    const u=this.requireUser();
+    if(u&&u.ephemeral){this.sendText(JSON.stringify({type:'auth_error',msg:'访客数据不会永久保存，此功能需要正式账号',reason:'guest_persistence_disabled'}));return null;}
     return u;
   }
   handleData(chunk){
@@ -3283,6 +3432,7 @@ class Session {
       if (u && userHasToken(u, token)){
         this.uid = uid;
         this.tokenHash = tokenHash;
+        const guestTimer=ephemeralCleanupTimers.get(uid);if(guestTimer){clearTimeout(guestTimer);ephemeralCleanupTimers.delete(uid);}
       } else {
         this.uid = null;
         this.tokenHash = null;
@@ -3308,6 +3458,13 @@ class Session {
           pendingInvites.delete(this.uid);
         }
       }
+      return;
+    }
+    const credentialV2=(type==='register'||type==='login')&&Number(payload&&payload.authVersion)===2;
+    if(credentialV2||type==='username_check'||type==='guest_login'||type==='legacy_bind'){
+      if(this.authBusy){this.authError('登录请求处理中，请稍候',{reason:'auth_service_busy',retryAfter:1});return;}
+      this.authBusy=true;
+      handleCredentialMessage(this,type,payload).catch(error=>{recordOperationalError('credential_auth',error);this.authError('登录服务繁忙，请稍后再试',{reason:'auth_service_busy',retryAfter:30});}).finally(()=>{this.authBusy=false;});
       return;
     }
     if (type === 'register'){
@@ -3412,7 +3569,7 @@ class Session {
       return;
     }
     if (type === 'daily_task_claim'){
-      const u = this.requireUser();
+      const u = this.requirePersistentUser();
       if (!u) return;
       const taskId = String(payload && payload.taskId || '');
       const claimId = String(payload && payload.claimId || '');
@@ -3474,7 +3631,7 @@ class Session {
       return;
     }
     if (type === 'purchase'){
-      const u = this.requireUser();
+      const u = this.requirePersistentUser();
       if (!u) return;
       const category = String(payload && payload.category || '');
       const id = Number(payload && payload.id);
@@ -3599,38 +3756,44 @@ class Session {
       if (!this.room) recordSoloProgress(this, user, payload);
       return;
     }
+    if(type==='companion_checkin'){
+      const user=this.requireUser();if(!user)return;
+      const today=dayKey(),already=user.companionCheckinDay===today;
+      if(!already){user.companionCheckinDay=today;saveDB();if(!user.ephemeral)sbSyncAuthProfile(user);}
+      this.sendText(JSON.stringify({type:'companion_checkin_ok',payload:{day:today,already,ephemeral:!!user.ephemeral}}));return;
+    }
     if (type === 'social_get'){
-      if (!this.requireUser()) return;
+      if (!this.requirePersistentUser()) return;
       this.sendText(JSON.stringify({ type:'social_state', payload:socialState(this.uid) }));
       return;
     }
     if (type === 'friend_request'){
-      if (!this.requireUser()) return;
+      if (!this.requirePersistentUser()) return;
       socialSendRequest(this, payload && payload.toUid);
       return;
     }
     if (type === 'friend_request_action'){
-      if (!this.requireUser()) return;
+      if (!this.requirePersistentUser()) return;
       socialFriendRequestAction(this, payload || {});
       return;
     }
     if (type === 'friend_remove'){
-      if (!this.requireUser()) return;
+      if (!this.requirePersistentUser()) return;
       socialRemoveFriend(this, payload && payload.uid);
       return;
     }
     if (type === 'block'){
-      if (!this.requireUser()) return;
+      if (!this.requirePersistentUser()) return;
       socialBlock(this, payload && payload.uid);
       return;
     }
     if (type === 'unblock'){
-      if (!this.requireUser()) return;
+      if (!this.requirePersistentUser()) return;
       socialUnblock(this, payload && payload.uid);
       return;
     }
     if (type === 'report'){
-      if (!this.requireUser()) return;
+      if (!this.requirePersistentUser()) return;
       socialReport(this, payload || {});
       return;
     }
@@ -4373,7 +4536,7 @@ class Session {
     const retained = !intentional && detachForReconnect(this);
     if (!retained) this.leaveRoom();
     try { this.socket.destroy(); } catch {}
-    if (!retained) cleanupEphemeralUser(uid);
+    if (!retained) scheduleEphemeralCleanup(uid,60000);
   }
 }
 
@@ -4402,6 +4565,8 @@ server.on('upgrade', (req, socket) => {
 const heartbeatSweep = setInterval(() => {
   const now = Date.now();
   for (const session of [...sessions]){
+    const user=session.uid&&db.users[session.uid];
+    if(user&&user.ephemeral&&Number(user.guestExpiresAt||0)<=now){session.sendText(JSON.stringify({type:'auth_error',msg:'访客会话已到期',reason:'session_expired'}));session.close(true);scheduleEphemeralCleanup(user.uid,1000);continue;}
     if (session.alive && now - session.lastSeen >= HEARTBEAT_TIMEOUT_MS) session.close();
   }
   for (const room of rooms.values()){

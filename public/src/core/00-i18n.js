@@ -403,6 +403,8 @@ async function setLanguage(lang) {
   renderAccounts();
   renderMe();
   renderLobby();
+  if (typeof renderGhostHome === 'function') renderGhostHome();
+  if (typeof renderGhostProfile === 'function') renderGhostProfile();
   if (typeof renderSocialRail === 'function') renderSocialRail();
   if (online.room) renderRoomPanel();
   if (currentGame && typeof currentGame.onLanguageChange === 'function') currentGame.onLanguageChange(currentLang);

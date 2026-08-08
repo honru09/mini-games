@@ -13,6 +13,9 @@ function check(name, condition){
 
 check('旧等级迁移按既有 level 补足最低 XP', /旧账号[\s\S]*xp\s*=\s*greatest\([\s\S]*xp_curve_version\s*=\s*1/i.test(sql));
 check('Profile 保存公开游戏装备字段', /game_cosmetics\s+jsonb\s+not null/i.test(sql) && /add column if not exists game_cosmetics/i.test(sql));
+check('用户名密码迁移列与大小写无关唯一索引可重复创建',
+  ['username text','username_key text','password_hash text','auth_version text'].every(token=>sql.toLowerCase().includes(token)) &&
+  /create unique index if not exists idx_profiles_username_key on profiles \(username_key\) where username_key is not null/i.test(sql));
 check('空档案可从 history 回填独立 wins/total_wins', /wins_by_game[\s\S]*jsonb_object_agg\(game,\s*wins\)[\s\S]*total_wins/i.test(sql));
 check('apply_reward_v1 使用账号级事务锁与 result_id 幂等', /create or replace function apply_reward_v1[\s\S]*pg_advisory_xact_lock[\s\S]*reward_history where result_id/i.test(sql));
 check('RPC 校验 history/reward/ledger 一致性', [

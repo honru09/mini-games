@@ -32,3 +32,7 @@
 - 2026-08-08 18:14｜修正 DOCX 页眉 v3.3、P3 阶段缺字、第 26 章标题孤行与追加章节分页；逐页复验 1–40 页并重跑 Quality Gates/完整 npm test。
 - 2026-08-08 18:30｜将 HTML 首屏 fallback 标题改为“小游戏合集”，与 `app_title` 中文词典一致；重建 `public/index.html` 并通过 i18n、DOM 与 Quality Gates。
 - 2026-08-08 20:13｜将 M0 Source Manifest 八项从 planned 更新为 draft，固定源 SHA/poster/默认关闭旗标；修正素材库审计以支持 Schema 已允许的 reference-only 集合，并同步 README、AGENTS、WHITEPAPER、PROJECT_STATUS 与执行证据。
+- 2026-08-09 00:43｜重构认证、导航、主题、i18n、资产 manifest、WebSocket 消息与服务端鉴权；DeepSeek 默认升级为 `deepseek-v4-flash`，Honru 无 Key 时使用安全本地回退。
+- 2026-08-09 00:43｜修复手机 Honru 浮层遮挡 Profile/Games、显式退出后旧 App 透出、素材库 manifest 哈希漂移及 E2E 未认证即启动 AI 的竞态；完整 `npm test` 与 Quality Gates 全部通过。
+- 2026-08-09 00:43｜将 M0 Art Bible/Design Token/IP 模板和验收矩阵从六主题同步为 `light/dark`，全部既有 M0 PNG/SVG、Prompt、Source Manifest 路径与 SHA 保留不变。
+- 2026-08-09 00:47｜本次仅更新简易报告索引；无产品代码修改。

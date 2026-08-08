@@ -27,5 +27,4 @@ if (typeof document !== 'undefined'){
   renderHub();
   if (typeof parseHash === 'function') parseHash();
   online.connect();
-  setTimeout(() => { if (!account) openAuthModal(); }, 300);
 }

@@ -37,7 +37,7 @@ const online = {
         uid: authAccount && authAccount.uid ? authAccount.uid : (typeof deviceUid !== 'undefined' ? deviceUid : null),
         token: authAccount && authAccount.authToken ? authAccount.authToken : null,
         proto: typeof PROTOCOL_VERSION !== 'undefined' ? PROTOCOL_VERSION : 2,
-        capabilities: ['tank-authority-v1','tetris-battle-authority-v1','tetris-rule-v2','spectator-room-v1','tournament-orchestrator-v1','xiangqi-clock-v1','xiangqi-rule-v2','monopoly-auction-v1','monopoly-rule-v2','game-cosmetic-presentation-v1'],
+        capabilities: ['tank-authority-v1','tetris-battle-authority-v1','tetris-rule-v2','spectator-room-v1','tournament-orchestrator-v1','xiangqi-clock-v1','xiangqi-rule-v2','monopoly-auction-v1','monopoly-rule-v2','game-cosmetic-presentation-v1','username-password-auth-v2','ephemeral-guest-v1','honru-companion-v1'],
       } });
       this.send({ type: 'lobby' });
       const needsRegister = authAccount && authAccount.uid && authPin && authAccount.registered === false;
@@ -664,8 +664,9 @@ const online = {
           const payload = msg.payload || {};
           const profile = payload.profile || msg.profile || (payload.uid && (payload.name !== undefined || payload.avatar !== undefined) ? payload : null);
           const uid = payload.uid || (profile && profile.uid);
-          if (account && uid){
+          if (profile && uid){
             const token = msg.token || payload.token;
+            if (!account || account.uid !== uid) account = Object.assign({},profile,{device:deviceFingerprint(),registered:true});
             if (token){ account.authToken = token; delete account.pin; }
             account.uid = uid;
             deviceUid = uid;
@@ -684,6 +685,7 @@ const online = {
             renderMyCard();
             toast(t('account_created_success',account.name));
             if (authModalEl){ authModalEl.remove(); authModalEl = null; }
+            if (typeof enterGhostApp === 'function') enterGhostApp();
           }
         }
         break;
@@ -708,11 +710,25 @@ const online = {
             renderMyCard();
             toast(t('login_success',account.name));
             if (authModalEl){ authModalEl.remove(); authModalEl = null; }
+            if (typeof enterGhostApp === 'function') enterGhostApp();
           }
         }
         break;
+      case 'guest_logged_in':
+        {
+          const payload=msg.payload||{},profile=payload.profile||null,uid=payload.uid||(profile&&profile.uid),token=msg.token||payload.token;
+          if(profile&&uid&&token){account=Object.assign({},profile,{uid,authToken:token,device:deviceFingerprint(),registered:true,ephemeral:true,accountKind:'guest'});deviceUid=uid;this._authenticated=true;updateAccountProfile(profile);saveAccount();renderMe();renderLeaderboard();if(authModalEl){authModalEl.remove();authModalEl=null;}toast(t('guest_login_success'));if(typeof enterGhostApp==='function')enterGhostApp();}
+        }
+        break;
+      case 'username_status':
+        if(typeof setAuthUsernameStatus==='function')setAuthUsernameStatus(msg.payload||msg);
+        break;
+      case 'companion_checkin_ok':
+        if(typeof handleCompanionCheckin==='function')handleCompanionCheckin(msg.payload||{});
+        break;
       case 'auth_error':
         toast(translateServerMessage(msg.msg,msg.reason||(msg.payload&&msg.payload.reason),'account_verify_failed'));
+        if(typeof setAuthPageError==='function')setAuthPageError(translateServerMessage(msg.msg,msg.reason||(msg.payload&&msg.payload.reason),'account_verify_failed'));
         if (account && account.registered === false){
           if (typeof completeLocalLogout === 'function') completeLocalLogout(false);
           if (typeof openAuthModal === 'function' && !authModalEl) openAuthModal('register');
