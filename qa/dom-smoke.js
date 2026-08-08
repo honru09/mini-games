@@ -321,6 +321,16 @@ async function main(){
   if (stickerCanvas._stickerAssetProbe){ stickerCanvas._stickerAssetProbe.decode=()=>Promise.reject(new Error('decode fixture')); stickerCanvas._stickerAssetProbe.dispatch('load'); }
   await sleep(10);
   check('M0 SVG decode reject 时回退旧木纹', stickerCanvas.dataset.stickerArt === 'fallback' && stickerCanvas.classList.contains('game-art-v1') && !stickerCanvas.classList.contains('game-art-sticker-v1'));
+  G.showGame('gomoku'); stickerCanvas=area().children[0]; await sleep(10);
+  if (stickerCanvas._stickerAssetProbe){ stickerCanvas._stickerAssetProbe.decode=()=>{ throw new Error('decode sync fixture'); }; stickerCanvas._stickerAssetProbe.dispatch('load'); }
+  await sleep(10);
+  check('M0 SVG decode 同步抛错时回退旧木纹', stickerCanvas.dataset.stickerArt === 'fallback' && stickerCanvas.classList.contains('game-art-v1') && !stickerCanvas.classList.contains('game-art-sticker-v1'));
+  G.showGame('gomoku'); stickerCanvas=area().children[0]; await sleep(10);
+  localStorage.removeItem('mg_art_gomoku_sticker_v1');
+  if (stickerCanvas._stickerAssetProbe){ stickerCanvas._stickerAssetProbe.decode=()=>Promise.resolve(); stickerCanvas._stickerAssetProbe.dispatch('load'); }
+  await sleep(10);
+  check('M0 资源加载期间撤销双闸门时不会晚激活', stickerCanvas.dataset.stickerArt === 'fallback' && stickerCanvas.classList.contains('game-art-v1') && !stickerCanvas.classList.contains('game-art-sticker-v1'));
+  localStorage.setItem('mg_art_gomoku_sticker_v1','1');
   localStorage.setItem('mg_art_gomoku_v1','0'); G.showGame('gomoku'); stickerCanvas=area().children[0]; await sleep(10);
   if (stickerCanvas._stickerAssetProbe) stickerCanvas._stickerAssetProbe.dispatch('error');
   await sleep(10);

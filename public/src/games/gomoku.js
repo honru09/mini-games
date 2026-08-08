@@ -389,11 +389,15 @@ function gameGomoku(area, extra, n, opts){
       };
       const activate = () => {
         if (settled || opts.destroyed || stickerAssetProbe !== probe) return;
+        if (!stickerArtEnabled('gomoku')) { fallback(); return; }
         settled = true; stickerArtActive = true; stickerArtState = 'active'; applyPresentation(); draw();
       };
       probe.addEventListener('load', () => {
         if (typeof probe.decode !== 'function'){ activate(); return; }
-        Promise.resolve(probe.decode()).then(activate, fallback);
+        let decoded;
+        try { decoded = probe.decode(); }
+        catch (error) { fallback(); return; }
+        Promise.resolve(decoded).then(activate, fallback);
       });
       probe.addEventListener('error', fallback);
       probe.src = url;
