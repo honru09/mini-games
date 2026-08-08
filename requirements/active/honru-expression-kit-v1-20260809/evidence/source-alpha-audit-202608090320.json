@@ -1,0 +1,842 @@
+{
+  "schemaVersion": 1,
+  "task": "honru-expression-kit-v1-20260809",
+  "generatedAt": "2026-08-09T03:06:00+09:00",
+  "status": "PASS",
+  "stateCount": 9,
+  "palette": [
+    "#211923",
+    "#FFF9F2",
+    "#F3E5C4"
+  ],
+  "states": [
+    {
+      "state": "idle",
+      "files": {
+        "chroma": {
+          "path": "art-source/brand/ghost-game/honru/states-v1/chroma/honru-idle-chroma-draft-v1.png",
+          "sha256": "53aab1a379153800e949d8d19ddfb8240ec609a6c61e3638ce172be07eb324c2",
+          "bytes": 1105464,
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "alphaBBox": [
+            0,
+            0,
+            1254,
+            1254
+          ],
+          "cornerAlpha": [
+            255,
+            255,
+            255,
+            255
+          ],
+          "visibleGreenPixels": 997328
+        },
+        "alpha": {
+          "path": "art-source/brand/ghost-game/honru/states-v1/alpha/honru-idle-alpha-draft-v1.png",
+          "sha256": "98f7622df877b9634c4604a20ab094c0a34c851f596707f6c32a45291c29eaf5",
+          "bytes": 596734,
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "alphaBBox": [
+            116,
+            103,
+            1137,
+            1150
+          ],
+          "cornerAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "visibleGreenPixels": 0
+        },
+        "flat": {
+          "path": "art-source/brand/ghost-game/honru/states-v1/flat/honru-idle-flat-draft-v1.png",
+          "sha256": "9fd41dce51a01ca079fd93726c95d71315c2636c7fe072913dcccf3bbf9abe27",
+          "bytes": 40458,
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "alphaBBox": [
+            116,
+            103,
+            1137,
+            1150
+          ],
+          "cornerAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "visibleGreenPixels": 0,
+          "visiblePalette": [
+            "#211923",
+            "#F3E5C4",
+            "#FFF9F2"
+          ],
+          "paletteExact": true
+        }
+      },
+      "derived": {
+        "192": {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-idle-flat-draft-v1-192px.png",
+          "sha256": "7bc2d83151a272ef243299ade80fa7161d3db83e351764e51f4c6435ec3ec5e7"
+        },
+        "96": {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-idle-flat-draft-v1-96px.png",
+          "sha256": "5a7840896164e195afcaed072c8c4e7cb94f869798da00abafafd3f239be6bfa"
+        },
+        "64": {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-idle-flat-draft-v1-64px.png",
+          "sha256": "1fee5467986c72d3f1a8200fb039ac2f482d6aada39ef37421662e4d1eaa88cb"
+        },
+        "44": {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-idle-flat-draft-v1-44px.png",
+          "sha256": "2c9171b9243deecc39cf91944a6bb362622f00d08ff0ff49c33eb1ab39f3ca15"
+        }
+      }
+    },
+    {
+      "state": "thinking",
+      "files": {
+        "chroma": {
+          "path": "art-source/brand/ghost-game/honru/states-v1/chroma/honru-thinking-chroma-draft-v1.png",
+          "sha256": "f4c6f8708e778f10ab6602dcf176c3fbbd6a9249c023de7d8698d76d9224b6bb",
+          "bytes": 1102111,
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "alphaBBox": [
+            0,
+            0,
+            1254,
+            1254
+          ],
+          "cornerAlpha": [
+            255,
+            255,
+            255,
+            255
+          ],
+          "visibleGreenPixels": 1041821
+        },
+        "alpha": {
+          "path": "art-source/brand/ghost-game/honru/states-v1/alpha/honru-thinking-alpha-draft-v1.png",
+          "sha256": "da4f39544fcb0ecf49f67ec7ab16abf17699b89670208b655ff366da20dfff87",
+          "bytes": 563789,
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "alphaBBox": [
+            239,
+            102,
+            1014,
+            1136
+          ],
+          "cornerAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "visibleGreenPixels": 0
+        },
+        "flat": {
+          "path": "art-source/brand/ghost-game/honru/states-v1/flat/honru-thinking-flat-draft-v1.png",
+          "sha256": "d28b589e13e01539696161af1ce75478d6b8e111f30182ffc23b15396256e81e",
+          "bytes": 37416,
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "alphaBBox": [
+            239,
+            102,
+            1014,
+            1136
+          ],
+          "cornerAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "visibleGreenPixels": 0,
+          "visiblePalette": [
+            "#211923",
+            "#F3E5C4",
+            "#FFF9F2"
+          ],
+          "paletteExact": true
+        }
+      },
+      "derived": {
+        "192": {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-thinking-flat-draft-v1-192px.png",
+          "sha256": "2bad8ba5bcf1835f572ae3f9f2cbb3081bd49fef3825addc6e58f906f0a627c6"
+        },
+        "96": {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-thinking-flat-draft-v1-96px.png",
+          "sha256": "5a847e3d283240fcae77b00303dbd9515f7cd8f3a948972a39f6de785338a5ce"
+        },
+        "64": {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-thinking-flat-draft-v1-64px.png",
+          "sha256": "553e8e3155943b46720558032f03bbc61a308995956bfb2e89651573c3ba36b1"
+        },
+        "44": {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-thinking-flat-draft-v1-44px.png",
+          "sha256": "9dedc5e91b9dc1737599bc69831c8fa841d464c3adfa16864486c71ab8209b83"
+        }
+      }
+    },
+    {
+      "state": "surprised",
+      "files": {
+        "chroma": {
+          "path": "art-source/brand/ghost-game/honru/states-v1/chroma/honru-surprised-chroma-draft-v1.png",
+          "sha256": "ccad811df1844f8cf60aabfab89e69900f7d00f024ed873d2a48284bb1566749",
+          "bytes": 1105231,
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "alphaBBox": [
+            0,
+            0,
+            1254,
+            1254
+          ],
+          "cornerAlpha": [
+            255,
+            255,
+            255,
+            255
+          ],
+          "visibleGreenPixels": 1070070
+        },
+        "alpha": {
+          "path": "art-source/brand/ghost-game/honru/states-v1/alpha/honru-surprised-alpha-draft-v1.png",
+          "sha256": "54d34d41e47779ddcc41fb869bf5e3d5fa25932ad50fdbbcf628a21452694e82",
+          "bytes": 545121,
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "alphaBBox": [
+            203,
+            145,
+            1038,
+            1104
+          ],
+          "cornerAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "visibleGreenPixels": 0
+        },
+        "flat": {
+          "path": "art-source/brand/ghost-game/honru/states-v1/flat/honru-surprised-flat-draft-v1.png",
+          "sha256": "87d9cf0c8232049108ca6cf1be1e70c08906bbcbad7e88caf09c8f2295eab432",
+          "bytes": 37120,
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "alphaBBox": [
+            203,
+            145,
+            1038,
+            1104
+          ],
+          "cornerAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "visibleGreenPixels": 0,
+          "visiblePalette": [
+            "#211923",
+            "#F3E5C4",
+            "#FFF9F2"
+          ],
+          "paletteExact": true
+        }
+      },
+      "derived": {
+        "192": {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-surprised-flat-draft-v1-192px.png",
+          "sha256": "c3c7336c73a85290d9527010b6b59f35ffa175469b26d8599897cf60e5e13f20"
+        },
+        "96": {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-surprised-flat-draft-v1-96px.png",
+          "sha256": "743aa3147ca266d1265436265a19c68a10a7b1b2cc9ad3edaf0b63016c46ebad"
+        },
+        "64": {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-surprised-flat-draft-v1-64px.png",
+          "sha256": "1519dc382a721f51df31d02d178d57487af57856bfb4d76579613a4b8f40f21e"
+        },
+        "44": {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-surprised-flat-draft-v1-44px.png",
+          "sha256": "7aed36b0b461a2c695fcc329e563984f5c7aa1a78f55138e381d188b94ee3ccd"
+        }
+      }
+    },
+    {
+      "state": "win",
+      "files": {
+        "chroma": {
+          "path": "art-source/brand/ghost-game/honru/states-v1/chroma/honru-win-chroma-draft-v1.png",
+          "sha256": "e9f5be26bfc4d3d7bf919a0515b34211cf52f3daa116c9ae4caba76c95b4bd07",
+          "bytes": 1148244,
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "alphaBBox": [
+            0,
+            0,
+            1254,
+            1254
+          ],
+          "cornerAlpha": [
+            255,
+            255,
+            255,
+            255
+          ],
+          "visibleGreenPixels": 1005387
+        },
+        "alpha": {
+          "path": "art-source/brand/ghost-game/honru/states-v1/alpha/honru-win-alpha-draft-v1.png",
+          "sha256": "d4ff17e9e956f3d6d400dd03d9dbd80830be2c4e8e245f489c9efb06aa340258",
+          "bytes": 636587,
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "alphaBBox": [
+            114,
+            122,
+            1132,
+            1085
+          ],
+          "cornerAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "visibleGreenPixels": 0
+        },
+        "flat": {
+          "path": "art-source/brand/ghost-game/honru/states-v1/flat/honru-win-flat-draft-v1.png",
+          "sha256": "55449a877843da04c1386302d965e45b3ced6cae55a8a37ac33f160da895c4ac",
+          "bytes": 46268,
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "alphaBBox": [
+            114,
+            122,
+            1132,
+            1085
+          ],
+          "cornerAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "visibleGreenPixels": 0,
+          "visiblePalette": [
+            "#211923",
+            "#F3E5C4",
+            "#FFF9F2"
+          ],
+          "paletteExact": true
+        }
+      },
+      "derived": {
+        "192": {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-win-flat-draft-v1-192px.png",
+          "sha256": "0d6da069e62a9f3b07465d4437dea3b1bba0c8702a446792b7014675a5070fae"
+        },
+        "96": {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-win-flat-draft-v1-96px.png",
+          "sha256": "8cc6f14da4309f09290ff850ea11cc0744c31c93130a1326a2301495fac9421a"
+        },
+        "64": {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-win-flat-draft-v1-64px.png",
+          "sha256": "80fc41749a3265e7c78f1f8c66b475b67d8428beb378c2fa0808caebe6787bcc"
+        },
+        "44": {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-win-flat-draft-v1-44px.png",
+          "sha256": "76360a50ffe4f9ea335e23be4df346e261a0b44eaeb2de51e6dc27d431973ebb"
+        }
+      }
+    },
+    {
+      "state": "lose",
+      "files": {
+        "chroma": {
+          "path": "art-source/brand/ghost-game/honru/states-v1/chroma/honru-lose-chroma-draft-v1.png",
+          "sha256": "cfa65977ed96e16b8b226f3f1705816e319b56fa87ce8404649fb032debe5121",
+          "bytes": 1093329,
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "alphaBBox": [
+            0,
+            0,
+            1254,
+            1254
+          ],
+          "cornerAlpha": [
+            255,
+            255,
+            255,
+            255
+          ],
+          "visibleGreenPixels": 1048795
+        },
+        "alpha": {
+          "path": "art-source/brand/ghost-game/honru/states-v1/alpha/honru-lose-alpha-draft-v1.png",
+          "sha256": "708ee0a2a684623bae5e944796b57daa73d6f920fd08235e260190d909c6f917",
+          "bytes": 548425,
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "alphaBBox": [
+            214,
+            102,
+            1037,
+            1103
+          ],
+          "cornerAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "visibleGreenPixels": 0
+        },
+        "flat": {
+          "path": "art-source/brand/ghost-game/honru/states-v1/flat/honru-lose-flat-draft-v1.png",
+          "sha256": "295c43d9fb9f8d73eb2bd028d9b335d7c900ae56b11b51be15d981633f94b223",
+          "bytes": 36848,
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "alphaBBox": [
+            214,
+            102,
+            1037,
+            1103
+          ],
+          "cornerAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "visibleGreenPixels": 0,
+          "visiblePalette": [
+            "#211923",
+            "#F3E5C4",
+            "#FFF9F2"
+          ],
+          "paletteExact": true
+        }
+      },
+      "derived": {
+        "192": {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-lose-flat-draft-v1-192px.png",
+          "sha256": "4fd0805a0ad6d8d973cb9ef7f7fe1018d296f4bae1a1649fe4565c1b7a16f273"
+        },
+        "96": {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-lose-flat-draft-v1-96px.png",
+          "sha256": "a62bae21197dcd922eb5cef42bce9618b518f03d68ef76ea93a6000bd939015f"
+        },
+        "64": {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-lose-flat-draft-v1-64px.png",
+          "sha256": "1baac5be9c9aaf95ddd4546c2d9934f2f7e4c07f6724d882df519a8f0638b556"
+        },
+        "44": {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-lose-flat-draft-v1-44px.png",
+          "sha256": "4d1ea850bc3c32f7b00ba7a965a08a29393e0e6f861117fef595d83aa710e478"
+        }
+      }
+    },
+    {
+      "state": "recover",
+      "files": {
+        "chroma": {
+          "path": "art-source/brand/ghost-game/honru/states-v1/chroma/honru-recover-chroma-draft-v1.png",
+          "sha256": "5693e9086b4762592b0def4bb57d893e40e76489bbb921226e7c5b1c3e1a14e7",
+          "bytes": 1107103,
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "alphaBBox": [
+            0,
+            0,
+            1254,
+            1254
+          ],
+          "cornerAlpha": [
+            255,
+            255,
+            255,
+            255
+          ],
+          "visibleGreenPixels": 1041885
+        },
+        "alpha": {
+          "path": "art-source/brand/ghost-game/honru/states-v1/alpha/honru-recover-alpha-draft-v1.png",
+          "sha256": "c88dfce65ec1110a2384923de827922b6debfea7ce3e03225d6fbb023dc65c01",
+          "bytes": 573473,
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "alphaBBox": [
+            168,
+            153,
+            1063,
+            1109
+          ],
+          "cornerAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "visibleGreenPixels": 0
+        },
+        "flat": {
+          "path": "art-source/brand/ghost-game/honru/states-v1/flat/honru-recover-flat-draft-v1.png",
+          "sha256": "68f4e7cf54c27d5b2faa140a35d0226f0c52255318eb315d32f0ebe80f985f96",
+          "bytes": 38492,
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "alphaBBox": [
+            168,
+            153,
+            1063,
+            1109
+          ],
+          "cornerAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "visibleGreenPixels": 0,
+          "visiblePalette": [
+            "#211923",
+            "#F3E5C4",
+            "#FFF9F2"
+          ],
+          "paletteExact": true
+        }
+      },
+      "derived": {
+        "192": {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-recover-flat-draft-v1-192px.png",
+          "sha256": "5795d45b60259e7f451416665d52b96f22b255b98c9e21732cbb61ffd05e83d0"
+        },
+        "96": {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-recover-flat-draft-v1-96px.png",
+          "sha256": "aca3c855572809c74f2d3e3268737da9b80e2492a94d6372834003f01c5c875d"
+        },
+        "64": {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-recover-flat-draft-v1-64px.png",
+          "sha256": "a706ec237d8be7cb5c9cade38240cc7c75332c1f70135e422222b380ec042a39"
+        },
+        "44": {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-recover-flat-draft-v1-44px.png",
+          "sha256": "41885b7bb6636278b1fed09356604135a21b2566da14b769fdac16f078656968"
+        }
+      }
+    },
+    {
+      "state": "waiting-invite",
+      "files": {
+        "chroma": {
+          "path": "art-source/brand/ghost-game/honru/states-v1/chroma/honru-waiting-invite-chroma-draft-v1.png",
+          "sha256": "6c4a60df86f6b3a619b9694b0e9de2cb564624ebfb638f0023212d62db11679d",
+          "bytes": 1139058,
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "alphaBBox": [
+            0,
+            0,
+            1254,
+            1254
+          ],
+          "cornerAlpha": [
+            255,
+            255,
+            255,
+            255
+          ],
+          "visibleGreenPixels": 959964
+        },
+        "alpha": {
+          "path": "art-source/brand/ghost-game/honru/states-v1/alpha/honru-waiting-invite-alpha-draft-v1.png",
+          "sha256": "1740484043de28d88d2923663f642f30181e4181e4c23850f82e6cdb2beef04e",
+          "bytes": 651251,
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "alphaBBox": [
+            115,
+            84,
+            1156,
+            1164
+          ],
+          "cornerAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "visibleGreenPixels": 0
+        },
+        "flat": {
+          "path": "art-source/brand/ghost-game/honru/states-v1/flat/honru-waiting-invite-flat-draft-v1.png",
+          "sha256": "577a91ba467ff11e6c56ae19d827c070c5d7756856dd5abd446a877651f23d5d",
+          "bytes": 43720,
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "alphaBBox": [
+            115,
+            84,
+            1156,
+            1164
+          ],
+          "cornerAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "visibleGreenPixels": 0,
+          "visiblePalette": [
+            "#211923",
+            "#F3E5C4",
+            "#FFF9F2"
+          ],
+          "paletteExact": true
+        }
+      },
+      "derived": {
+        "192": {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-waiting-invite-flat-draft-v1-192px.png",
+          "sha256": "63a46febe9c0b8bee19074433605d67793cf737c64283d62d3ac7ede74ec33ad"
+        },
+        "96": {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-waiting-invite-flat-draft-v1-96px.png",
+          "sha256": "faff0314df21d9226d31e6df211393f297b2997f0c9a6c81985f6550a863774a"
+        },
+        "64": {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-waiting-invite-flat-draft-v1-64px.png",
+          "sha256": "fc32bba09e00f4ad2838c4917f57a4c32c9e4dffa872843075e711c366f36ffc"
+        },
+        "44": {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-waiting-invite-flat-draft-v1-44px.png",
+          "sha256": "9fce6c90dbbb21cd9e273ff3fcefd4fa2513231d72d396e2065a66662c9583d6"
+        }
+      }
+    },
+    {
+      "state": "check-in",
+      "files": {
+        "chroma": {
+          "path": "art-source/brand/ghost-game/honru/states-v1/chroma/honru-check-in-chroma-draft-v1.png",
+          "sha256": "a7fee0d0976a000e7786de6e512873ff23a198848b4b7474b7e4dd68050d5464",
+          "bytes": 1128537,
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "alphaBBox": [
+            0,
+            0,
+            1254,
+            1254
+          ],
+          "cornerAlpha": [
+            255,
+            255,
+            255,
+            255
+          ],
+          "visibleGreenPixels": 1048023
+        },
+        "alpha": {
+          "path": "art-source/brand/ghost-game/honru/states-v1/alpha/honru-check-in-alpha-draft-v1.png",
+          "sha256": "68b23a5de2ec5e0d80f794fb8f322794e71d2d45677b68186216a63ab81d9f42",
+          "bytes": 587424,
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "alphaBBox": [
+            204,
+            114,
+            1024,
+            1120
+          ],
+          "cornerAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "visibleGreenPixels": 0
+        },
+        "flat": {
+          "path": "art-source/brand/ghost-game/honru/states-v1/flat/honru-check-in-flat-draft-v1.png",
+          "sha256": "b4bebe1c18837211b932cbdbfeb4a98724a8a8c32a4bf1450ed5e1ea61fa357c",
+          "bytes": 39070,
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "alphaBBox": [
+            204,
+            114,
+            1024,
+            1120
+          ],
+          "cornerAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "visibleGreenPixels": 0,
+          "visiblePalette": [
+            "#211923",
+            "#F3E5C4",
+            "#FFF9F2"
+          ],
+          "paletteExact": true
+        }
+      },
+      "derived": {
+        "192": {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-check-in-flat-draft-v1-192px.png",
+          "sha256": "6df496cd166a8b8b19921932115d5435842bb5d934ac98c0ec6dc5f719f743e9"
+        },
+        "96": {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-check-in-flat-draft-v1-96px.png",
+          "sha256": "3b3c9a96397f8708646681d08047fbc1cb5427aa74811ace16d9f5652df3bded"
+        },
+        "64": {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-check-in-flat-draft-v1-64px.png",
+          "sha256": "73de9eb3cb242e7adc2400e7156a8201035f591b67c7fbce05d0c3f7bb1080f0"
+        },
+        "44": {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-check-in-flat-draft-v1-44px.png",
+          "sha256": "a983256af876119abb4ea0328ece25aea88ffadec157afcd753ff88201036bc2"
+        }
+      }
+    },
+    {
+      "state": "playful",
+      "files": {
+        "chroma": {
+          "path": "art-source/brand/ghost-game/honru/states-v1/chroma/honru-playful-chroma-draft-v1.png",
+          "sha256": "08e4a5989cfcb2c5665c7e7d0310836385eace5467eacd71bcd4918bc632f98c",
+          "bytes": 1116107,
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "alphaBBox": [
+            0,
+            0,
+            1254,
+            1254
+          ],
+          "cornerAlpha": [
+            255,
+            255,
+            255,
+            255
+          ],
+          "visibleGreenPixels": 1014582
+        },
+        "alpha": {
+          "path": "art-source/brand/ghost-game/honru/states-v1/alpha/honru-playful-alpha-draft-v1.png",
+          "sha256": "f059529f77da6bcf4671147c50ccee2d3988ff0576c88e04755b0799c91e35ce",
+          "bytes": 599405,
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "alphaBBox": [
+            177,
+            93,
+            1058,
+            1163
+          ],
+          "cornerAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "visibleGreenPixels": 0
+        },
+        "flat": {
+          "path": "art-source/brand/ghost-game/honru/states-v1/flat/honru-playful-flat-draft-v1.png",
+          "sha256": "95b1f423ee77f39755374b93abe22feaced6d6e2b3f171c225d7074a8f2ea1c6",
+          "bytes": 39479,
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "alphaBBox": [
+            177,
+            93,
+            1058,
+            1163
+          ],
+          "cornerAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "visibleGreenPixels": 0,
+          "visiblePalette": [
+            "#211923",
+            "#F3E5C4",
+            "#FFF9F2"
+          ],
+          "paletteExact": true
+        }
+      },
+      "derived": {
+        "192": {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-playful-flat-draft-v1-192px.png",
+          "sha256": "f517e1e0e36e2458eac6df55baa3467684b946763a87b6bafdd24ad217a7a15f"
+        },
+        "96": {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-playful-flat-draft-v1-96px.png",
+          "sha256": "7ed30334e90b5ec95040e23df64d793a144f673fcf33f669b541e5fe2dbd17db"
+        },
+        "64": {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-playful-flat-draft-v1-64px.png",
+          "sha256": "d451b5128dfc775750c646907118fdceda8ef599fb79d879d1ff9cefd9ac1223"
+        },
+        "44": {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-playful-flat-draft-v1-44px.png",
+          "sha256": "dc926a35c05377d666de6a2712819da6d6c898a412d2a89c79874304d794f487"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "task": "honru-expression-kit-v1-20260809",
+  "state": "VERIFYING",
+  "startedAt": "2026-08-09T02:30:00+09:00",
+  "updatedAt": "2026-08-09T03:06:00+09:00",
+  "verifiedCommit": null,
+  "releasedCommit": null,
+  "progress": {
+    "recon": {"status":"completed","evidence":["AGENTS.md","HIGH_RISK_FILES.md","PROJECT_STATUS.json","git status/log","Honru v2/P1 source audit"]},
+    "freeze": {"status":"completed","evidence":["requirement.md","contract.md","plan.json","ownership.json","acceptance.md"]},
+    "generate": {"status":"implemented","evidence":["9 built-in ImageGen task IDs","chroma/*.png"]},
+    "alpha": {"status":"verified","evidence":["alpha/*.png","flat/*.png","derived/*.png","evidence/source-alpha-audit-202608090320.json"]},
+    "provenance": {"status":"verified","evidence":["PROMPT_AND_PROVENANCE_v1.md","asset-library/catalog.json","scripts/asset-library-audit.js"]},
+    "runtimePrep": {"status":"implemented","evidence":["contract.md default-off mg_art_honru_states_v1 boundary"]},
+    "verification": {"status":"verified","evidence":["node scripts/asset-library-audit.js","npm run validate:project","npm run quality:gates","npm test"]},
+    "review": {"status":"partial","evidence":["TECHNICAL_REVIEW_draft-v1.md","IP_REVIEW_draft-v1.md"],"missing":["user preview decision","Reviewer B"]}
+  },
+  "notExecuted": ["human preview decision","Reviewer B","real device matrix","real Supabase/RLS/backup/rollback"],
+  "blocked": []
+}

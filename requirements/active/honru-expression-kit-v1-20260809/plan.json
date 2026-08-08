@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "task": "honru-expression-kit-v1-20260809",
+  "state": "VERIFYING",
+  "risk": "MEDIUM",
+  "dependsOn": ["honru-character-master-v2-20260809:source-only", "sticker-cartoon-runtime-integration-p1-20260809:verified-default-off"],
+  "steps": [
+    {"id":"recon","status":"completed","dependsOn":[],"risk":"low","tests":["AGENTS/PROJECT_STATUS/ownership/recent commits/source audit"],"rollback":"no changes"},
+    {"id":"freeze","status":"completed","dependsOn":["recon"],"risk":"medium","tests":["IN/OUT/identity/alpha/runtime boundary frozen"],"rollback":"delete unopened task package"},
+    {"id":"generate","status":"completed","dependsOn":["freeze"],"risk":"medium","tests":["nine states, identity invariants, no text/third-party traits"],"rollback":"retain only chroma sources or reject candidates"},
+    {"id":"alpha-and-derived","status":"completed","dependsOn":["generate"],"risk":"medium","tests":["RGBA, transparent corners, green fringe, 192/96/64/44 readability"],"rollback":"keep source-only chroma evidence"},
+    {"id":"provenance-and-catalog","status":"completed","dependsOn":["alpha-and-derived"],"risk":"medium","tests":["hash, dimensions, prompt/model/task id, asset-library audit"],"rollback":"remove unapproved entries"},
+    {"id":"runtime-prep","status":"completed","dependsOn":["provenance-and-catalog"],"risk":"high","tests":["default-off flag and state map static contract; no protocol/rule coupling"],"rollback":"remove prep contract; keep source-only"},
+    {"id":"verification","status":"completed","dependsOn":["runtime-prep"],"risk":"high","tests":["asset audit, validate:project, quality:gates, npm test"],"rollback":"disable flag and revert task changes"},
+    {"id":"review","status":"pending","dependsOn":["verification"],"risk":"high","tests":["human preview and IP review"],"rollback":"keep reference-only"}
+  ]
+}
