@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "task": "sticker-cartoon-runtime-integration-p1-20260809",
+  "recordedAt": "2026-08-09T01:57:02+09:00",
+  "browserBaselineCommit": "8a1e18cc89f8e034285d0bf0d97ff33b4579d5a2",
+  "verifiedCommit": "d84f52eb8a27155b14baeb1243c17f53a358f91e",
+  "postBrowserChange": "async decode/destroy/flag-revocation hardening only; no visual output change",
+  "browser": "in-app Chromium",
+  "target": "http://localhost:8090/",
+  "productionReady": false,
+  "featureFlagsDefaultEnabled": false,
+  "matrix": {
+    "widths": [360, 390, 768, 1024, 1440],
+    "themes": ["light", "dark"],
+    "languages": ["zh-CN", "en-US", "uk-UA"],
+    "combinations": 30,
+    "passed": 30,
+    "failed": 0
+  },
+  "checks": [
+    "Sticker state active only while both local preview flags were explicitly enabled",
+    "canvas remains square and inside the viewport",
+    "document has no horizontal overflow",
+    "back/title/actions have zero intersection area",
+    "touch-width buttons are at least 44px high",
+    "390px title uses ellipsis and actions occupy a second row",
+    "theme and html language match each requested combination",
+    "console warnings/errors: 0"
+  ],
+  "representative": {
+    "390": {"canvas": "370x370", "gameTopHeight": 114, "scrollWidth": 390, "clientWidth": 390, "stickerState": "active"},
+    "1440": {"canvas": "560x560", "gameTop": "1208x60", "scrollWidth": 1440, "clientWidth": 1440, "stickerState": "active"}
+  },
+  "cleanup": {
+    "temporaryViewportReset": true,
+    "previewFlagsCleared": true,
+    "postCleanupStickerState": "disabled",
+    "temporaryHelperDeleted": true,
+    "browserTabFinalized": true
+  },
+  "automated": {
+    "npmRunQualityGates": "pass",
+    "npmTest": "pass",
+    "assetManifest": "pass",
+    "stickerContract": "pass",
+    "assetLibraryAudit": "pass",
+    "domSmoke": "pass",
+    "responsiveContract": "pass"
+  },
+  "notExecuted": [
+    "human Art Bible approval",
+    "Reviewer A/B IP Similarity approval",
+    "human P1 preview decision",
+    "second desktop browser",
+    "Android",
+    "iPhone Safari",
+    "real Tablet"
+  ]
+}

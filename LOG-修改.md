@@ -37,3 +37,4 @@
 - 2026-08-09 00:43｜将 M0 Art Bible/Design Token/IP 模板和验收矩阵从六主题同步为 `light/dark`，全部既有 M0 PNG/SVG、Prompt、Source Manifest 路径与 SHA 保留不变。
 - 2026-08-09 00:47｜本次仅更新简易报告索引；无产品代码修改。
 - 2026-08-09 01:00｜将 Ghost Game P0 计划、执行和项目状态写回 `RELEASED`，记录提交 `aac40da`、Pages/Render 部署与线上 HTTP/WS/Companion/浏览器验收；RC 仍保持 `BLOCKED`。
+- 2026-08-09 02:01｜将五子棋旧风格以默认关闭纵切接入 M0 Sticker 表现，保持 15×15/AI/联机/快照不变；修复 decode/销毁/开关撤销异步边界和 `<=480px` 三语言游戏顶栏重叠，并同步素材库、状态与构建产物。

@@ -1,16 +1,16 @@
 {
   "schemaVersion": 1,
   "task": "sticker-cartoon-runtime-integration-p1-20260809",
-  "state": "REQUIREMENT_FROZEN",
+  "state": "VERIFIED_DEFAULT_OFF",
   "risk": "HIGH",
   "dependsOn": ["ghost-game-rebrand-p0-20260808:released", "sticker-cartoon-golden-set-m0-20260808:implemented"],
   "steps": [
     {"id":"recon","status":"completed","dependsOn":[],"risk":"medium","tests":["dirty tree","M0 source/hash","runtime path/flag audit","shared-file audit"],"rollback":"no changes"},
     {"id":"freeze","status":"completed","dependsOn":["recon"],"risk":"high","tests":["IN/OUT/contract/ownership review"],"rollback":"delete unopened task package"},
-    {"id":"runtime-assets","status":"in_progress","dependsOn":["freeze"],"risk":"medium","tests":["SVG safety","dimensions","byte budget","hash"],"rollback":"remove versioned P1 runtime directory"},
-    {"id":"flag-resolver","status":"pending","dependsOn":["runtime-assets"],"risk":"high","tests":["default off","both flags required","invalid value off","legacy flag unchanged"],"rollback":"remove P1 resolver and manifest entry"},
-    {"id":"gomoku-integration","status":"pending","dependsOn":["flag-resolver"],"risk":"high","tests":["15x15 coordinates","legal click mapping","state/snapshot unchanged","resource failure fallback"],"rollback":"disable either P1 flag"},
-    {"id":"verification","status":"pending","dependsOn":["gomoku-integration"],"risk":"high","tests":["sticker/asset/DOM contracts","quality gates","full npm test","light/dark × zh/en/uk × 360/390/768/1024/1440 browser QA"],"rollback":"disable P1 flags and revert P1 commit"},
+    {"id":"runtime-assets","status":"completed","dependsOn":["freeze"],"risk":"medium","tests":["SVG safety","dimensions","byte budget","hash"],"rollback":"remove versioned P1 runtime directory"},
+    {"id":"flag-resolver","status":"completed","dependsOn":["runtime-assets"],"risk":"high","tests":["default off","both flags required","invalid value off","legacy flag unchanged"],"rollback":"remove P1 resolver and manifest entry"},
+    {"id":"gomoku-integration","status":"completed","dependsOn":["flag-resolver"],"risk":"high","tests":["15x15 coordinates","legal click mapping","state/snapshot unchanged","resource failure fallback"],"rollback":"disable either P1 flag"},
+    {"id":"verification","status":"completed","dependsOn":["gomoku-integration"],"risk":"high","tests":["sticker/asset/DOM contracts","quality gates","full npm test","light/dark × zh/en/uk × 360/390/768/1024/1440 browser QA"],"rollback":"disable P1 flags and revert P1 commit"},
     {"id":"preview-decision","status":"pending","dependsOn":["verification"],"risk":"high","tests":["human preview","evidence review"],"rollback":"keep default off"}
   ]
 }
