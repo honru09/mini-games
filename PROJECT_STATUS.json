@@ -1,23 +1,26 @@
 {
   "schemaVersion": 1,
   "project": "Playroom",
-  "updatedAt": "2026-08-08T13:33:27+09:00",
-  "lastVerifiedCommit": "b4943a8baa9e93c7b5f159777aaa7955e23d607d",
+  "updatedAt": "2026-08-08T17:41:48+09:00",
+  "lastVerifiedCommit": "52c1a85eedda2651da16b75a8d35a1f8afe3843f",
   "lastReleasedCommit": "b4943a8baa9e93c7b5f159777aaa7955e23d607d",
   "stateVocabulary": ["planned", "partial", "implemented", "verified", "production-ready", "not_executed", "blocked"],
   "releaseCandidate": {
     "status": "blocked",
-    "reason": "自动化与本地管理员页面浏览器验收已通过，但真实设备、真实 Supabase/RLS/并发/备份回滚、真实网络整形和跨实例生产遥测仍未执行。"
+    "reason": "完整自动化与本地五档视觉商城浏览器验收已通过，但第二桌面浏览器、真实移动设备、真实 Supabase/RLS/并发/备份回滚、真实网络整形、30 分钟会话和跨实例生产遥测仍未执行。"
   },
   "capabilities": {
     "sixGames": {"status": "verified", "evidence": ["npm test", "qa/dom-smoke.js"]},
     "officialModes": {"status": "verified", "evidence": ["public/index-template.html", "qa/dom-smoke.js", "server/reward-engine.js"], "scope": ["ai", "online"], "removed": ["legacy same-device multiplayer UI", "legacy profile slots", "legacy local reward branch"]},
     "seatSocialProfileV2": {"status": "verified", "evidence": ["qa/room-seats.js", "qa/social-graph.js", "qa/reconnect-online.js", "qa/e2e-online.js"]},
-    "threeLanguageI18n": {"status": "verified", "evidence": ["npm run test:i18n", "qa/dom-smoke.js"]},
+    "threeLanguageI18n": {"status": "verified", "evidence": ["npm run test:i18n", "qa/dom-smoke.js", "requirements/active/visual-commerce-assets-p0-20260808/evidence/browser-visual-qa-20260808.json"], "scope":"zh-CN/en-US/uk-UA automated coverage plus local English/Ukrainian browser traversal"},
     "aiStrengthAndLearning": {"status": "verified", "evidence": ["qa/ai-strength.js", "qa/ai-learning.js", "qa/ai-learning-online.js"]},
     "multiplayerAuthority": {"status": "verified", "evidence": ["qa/rule-authority-online.js", "qa/e2e-online.js"]},
-    "securityAndPersistence": {"status": "verified", "evidence": ["qa/security-online.js", "qa/supabase-adapter.js", "qa/supabase-schema.js"]},
-    "visualBrowser": {"status": "partial", "evidence": ["qa/dom-smoke.js", "local /admin-metrics.html browser QA", "REAL_DEVICE_QA_CHECKLIST.md"], "notExecuted": ["Android", "iPhone Safari", "Tablet", "second desktop browser"]},
+    "securityAndPersistence": {"status": "partial", "evidence": ["qa/security-online.js", "qa/supabase-adapter.js", "qa/supabase-schema.js"], "verifiedScope":"security and fake PostgREST mapping", "missing":["real Supabase persistence/RLS/concurrency/backup/rollback"]},
+    "visualBrowser": {"status": "partial", "evidence": ["qa/dom-smoke.js", "requirements/active/visual-commerce-assets-p0-20260808/evidence/browser-visual-qa-20260808.json", "deliverables/visual-qa/visual-commerce-p0-20260808", "REAL_DEVICE_QA_CHECKLIST.md"], "verifiedScope":["local in-app Chromium 1440/768/481/390/360", "Auth/Shop/Lobby", "English/Ukrainian", "overflow/touch/scroll-lock/console"], "notExecuted": ["Android", "iPhone Safari", "Tablet", "second desktop browser"]},
+    "visualCommerceAssetsP0": {"status": "verified", "evidence": ["52c1a85eedda2651da16b75a8d35a1f8afe3843f", "npm test", "qa/shop-contract.js", "qa/ui-responsive-contract.js", "qa/asset-manifest-v2.js", "requirements/active/visual-commerce-assets-p0-20260808/evidence/browser-visual-qa-20260808.json"], "boundary":"six soft-3D lobby covers are a reversible transition batch, not the final Sticker Cartoon style or complete in-game art packs"},
+    "assetLibrary": {"status": "partial", "evidence": ["asset-library/catalog.json", "asset-library/schema.json", "scripts/asset-library-audit.js"], "verifiedScope":"local provenance sidecar with schema/path/hash/license audit", "missing":["approved remote provider/bucket/CORS/lifecycle/cost", "external upload"]},
+    "stickerCartoonGoldenSetM0": {"status": "planned", "evidence": ["requirements/active/sticker-cartoon-golden-set-m0-20260808/requirement.md", "requirements/active/sticker-cartoon-golden-set-m0-20260808/plan.json"], "dependsOn":"visual-commerce-assets-p0-20260808 released"},
     "realSupabase": {"status": "not_executed", "evidence": ["qa/supabase-adapter.js", "supabase/schema.sql"], "missing": ["production credentials", "RLS/concurrency/backup/rollback acceptance"]},
     "productionTelemetry": {"status": "partial", "evidence": ["qa/metrics-online.js", "public/admin-metrics.html", "server/index.js metrics-v2"], "implemented": ["Bearer auth", "rate limit", "redacted aggregates", "bounded history", "CSV export", "threshold alerts", "redacted error incidents", "access audit"], "missing": ["cross-instance durable metrics store", "external Sentry or equivalent SaaS delivery"]},
     "gameplayCosmetics": {"status": "verified", "evidence": ["qa/game-cosmetic-profile.js", "qa/daily-tasks.js", "qa/asset-manifest-v2.js"]},

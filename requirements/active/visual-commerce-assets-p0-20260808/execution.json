@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
   "task": "visual-commerce-assets-p0-20260808",
-  "state": "VERIFYING",
+  "state": "ACCEPTED",
   "startedAt": "2026-08-08T14:00:00+09:00",
-  "verifiedCommit": null,
+  "verifiedCommit": "52c1a85eedda2651da16b75a8d35a1f8afe3843f",
   "releasedCommit": null,
   "notExecuted": [
     "real Android/iPhone/Tablet matrix",

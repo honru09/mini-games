@@ -255,7 +255,9 @@ Supabase 首次接入或升级时，在 SQL Editor 执行可重复迁移的 `sup
 - 安全回归（鉴权/档案/结算/商城/AI）和断线重连回归均 ALL_PASS；生成产物由 CI 构建后校验与源码同步
 - Economy & Progression v1.0：统一服务端 Reward Resolver、AI 票据/日上限、有效局/AFK/秒投拦截、首胜、连胜、重复对手衰减、等级曲线、完整奖励/经济流水与 Reward Breakdown UI
 - 独立胜场 `wins/totalWins`、旧等级不降级迁移、Supabase `apply_reward_v1` 单事务落库与失败 outbox 重试
-- P0 美术双纵切：五子棋与俄罗斯方块封面/底材已接入；Canvas/DOM 规则层不变，支持 `mg_art_gomoku_v1` / `mg_art_tetris_v1` 独立回滚
+- 视觉商城素材 P0：六款 640×360/320×180 大厅封面、48 Avatar 注册目录、商城主预览/单例/价格契约、五档响应式、三语商品与 Avatar alt 已通过自动化和本地浏览器验收；当前六封面只是 Sticker Cartoon 前的可回滚软 3D 过渡版
+- 五子棋与俄罗斯方块旧局内纵切继续保留；Canvas/DOM 规则层不变，支持 `mg_art_gomoku_v1` / `mg_art_tetris_v1` 独立回滚
+- 本地素材库 `asset-library/` 已建立 provenance、Schema 子集、目录/许可证独立哈希审计；运行时仍以 `asset_manifest.json` 为唯一机器事实源，远端对象存储尚未选择
 - 美术母图与 Prompt 位于 `art-source/`，运行时 WebP 位于 `public/assets/`，manifest 与 DOM 冒烟校验路径、ID 和 fallback
 - Gameplay Shared Protocol V1：`tank-authority-v1` 20Hz 服务端权威、`tetris-battle-authority-v1` Battle Coordination、独立观众席、循环/瑞士赛事编排、`xiangqi-clock-v1` 棋钟、`monopoly-auction-v1` 实时拍卖
 - Tank/Tetris 权威快照重连、通用稳定点快照、公开 Cosmetic ID 合同、协议专项测试与第二阶段报告
@@ -275,6 +277,7 @@ Supabase 首次接入或升级时，在 SQL Editor 执行可重复迁移的 `sup
 3. Tetris T-Spin/B2B/Combo/Perfect Clear、外部 Sentry/跨实例长期指标存储、高级延迟观战与文字/社交游戏
 4. 多实例部署前完成 Reward Resolver 与 AI 学习 outbox 的数据库版本冲突重算/单写者改造
 5. 平台扩展（微信小程序 / App / 桌面版）
+6. 按 `requirements/active/sticker-cartoon-golden-set-m0-20260808/` 执行 Art Bible v1、Design/Motion v3、Source Manifest v2、IP Review 与 Persona/Avatar/UI/五子棋/飞行棋 Golden Set；闸门通过前不批量生产
 
 ## 8. 项目历程
 

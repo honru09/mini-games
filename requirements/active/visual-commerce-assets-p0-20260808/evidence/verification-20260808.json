@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "verifiedAt": "2026-08-08T17:38:45+09:00",
-  "commit": null,
+  "commit": "52c1a85eedda2651da16b75a8d35a1f8afe3843f",
   "commands": [
     {"command":"npm run format:locales","status":"pass","detail":"1046 keys in each locale"},
     {"command":"npm run test:i18n","status":"pass"},

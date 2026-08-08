@@ -1,7 +1,7 @@
 # Mini Games Platform · 项目白皮书
 
-**版本：v3.2（2026-08-08 交接执行收口版）**
-**状态：6 款精选游戏 + Seat/Social/Profile v2 + Economy & Progression v1.0 + Gameplay Rule Authority v2 + Tournament/Replay/Metrics 产品闭环已落地**
+**版本：v3.3（2026-08-08 视觉商城 P0 收口与 Sticker Cartoon M0 冻结版）**
+**状态：6 款精选游戏 + Seat/Social/Profile v2 + Economy & Progression v1.0 + Gameplay Rule Authority v2 + Tournament/Replay/Metrics + 视觉商城素材 P0 已自动化验证**
 **发布成熟度：AUTOMATED_VERIFIED；真实设备与真实网络闸门未执行，Release Candidate 为 BLOCKED**
 
 > 本文件是仓库内的公开技术总纲。完整排版版位于 `deliverables/`；实现事实以当前源码、测试和本文件为准。
@@ -10,7 +10,7 @@
 
 - 产品：网页版多人游戏平台，保留 6 款可持续深化的插件化游戏。
 - 游戏：五子棋、飞行棋、迷你大富翁、坦克大战、俄罗斯方块、象棋。
-- 模式：人机对战、WebSocket 联机对战；旧同设备多人入口、档案槽位、奖励分支和三语文案已彻底删除。
+- 模式：人机对战、WebSocket 联机对战；旧同设备多人入口、档案槽位、奖励分支及其对应三语文案已删除。
 - 核心体验：打开约 3 秒开局，约 5 分钟一局，结算后立刻再来；先看到人，再看到游戏。
 - 技术：零 npm 运行依赖；前端模板 + JS 模块构建成单页；Node 静态服务、手写 WebSocket、DeepSeek 代理、可选 Supabase。
 - 线上：GitHub Pages 前端 + Render 后端。
@@ -99,9 +99,10 @@ DeepSeek Key 只存在于服务端环境变量。`qa/ai-games.js` 使用本地�
 - `P-001-WORDMARK`：可用于分享卡和后续商店物料的字标 SVG。
 - `P-003`：平台虚拟现金 SVG，商城、排行榜、档案与结算统一显示 💵。
 - `public/src/core/06-assets.js`：稳定资源路径、现金组件和加载失败 fallback。
-- `G-02-COVER / G-02-BOARD-SURFACE`：五子棋响应式封面、木纹底材、Canvas 软 3D 棋子和最后落子状态。
-- `G-11-COVER / G-11-WELL-SURFACE`：俄罗斯方块响应式封面、玻璃井、七类纹理及 active/ghost/locked/clear 状态。
-- `art-source/`：保留四张高分辨率母图与可复现 ImageGen Prompt；`public/assets/` 只保存运行时 WebP。
+- `G-02/G-07/G-08/G-09/G-11/G-06-COVER`：六款游戏均有 640×360 / 320×180 响应式大厅封面、lazy/srcset、完整性哈希与 Emoji fallback。
+- `G-02-BOARD-SURFACE / G-11-WELL-SURFACE`：五子棋木纹 Canvas 与俄罗斯方块玻璃井两个旧纵切继续保留。
+- `art-source/`：保留六张封面高分辨率母图与可复现 Prompt；`public/assets/` 只保存运行时 WebP。
+- `asset-library/`：记录 provenance、来源、许可、目录/许可证独立哈希、Prompt/模型、预览与未来对象键；它是 sidecar，不替代生产 manifest。
 
 融合规则：
 
@@ -116,10 +117,12 @@ DeepSeek Key 只存在于服务端环境变量。`qa/ai-games.js` 使用本地�
 
 1. 五子棋 Canvas：木纹氛围层、软 3D 黑白棋、最后落子、胜线、既有落子 WebAudio 与 fallback。
 2. 俄罗斯方块 DOM/网格：玻璃井、七类方块纹理、active/ghost/locked/clear、既有 WebAudio 与 fallback。
-3. 两款大厅封面使用 640×360 / 320×180 `srcset` 懒加载；任一封面失败时保留 Emoji。
+3. 六款大厅封面使用 640×360 / 320×180 `srcset` 懒加载；任一封面失败时保留 Emoji。
 4. `mg_art_gomoku_v1` 与 `mg_art_tetris_v1` 可独立关闭；规则、快照、AI 和联机消息不含美术状态。
+5. 注册与商城已覆盖 48 款 Avatar v2、主预览/试穿、服务端价格对齐、单例弹层、滚动锁和 1440/768/481/390/360 响应式。
+6. 当前六封面是可回滚的软 3D 过渡版，不作为 `Pocket Tabletop Sticker` 最终风格验收结论。
 
-下一批执行顺序：逐款原子覆盖飞行棋、迷你大富翁、坦克大战和象棋的正式美术/声音包；平台模式、房间、商城、成长 UI 资产继续按清单排期。资源制作不改变已完成的规则、AI 或权威协议。
+下一批严格执行新报告：先 Art Bible v1、Design System v3、Motion System v1 和 Source Manifest v2；再用 1 Persona×8 状态、4 Avatar、核心 UI、五子棋与飞行棋完整纵切组成 Golden Set，并完成 IP Similarity Review。Golden Set 未通过前不得批量重绘 48 Avatar 或其余游戏。资源制作不改变已完成的规则、AI、商品 ID、奖励或权威协议。
 
 ## 6. 质量与发布闸门
 
@@ -181,6 +184,9 @@ node --experimental-websocket qa/ws-close-test.js
 - [x] 建立 `public/assets/`、asset manifest、品牌 SVG、现金 SVG 与 fallback。
 - [x] 💵 迁移到商城、档案、排行榜和结算 UI。
 - [x] 完成五子棋和俄罗斯方块两个美术纵切，并加入 manifest/flag/fallback/QA。
+- [x] 六款大厅封面 640/320 双尺寸接入；注册/商城重排、三语言商品与 Avatar alt、价格契约、五档响应式和滚动锁通过自动化及本地浏览器验收。
+- [x] 建立本地素材库 provenance sidecar、Schema 子集验证、目录/许可证独立哈希和六封面交叉审计。
+- [x] 冻结 `Pocket Tabletop Sticker` M0：Art Bible、Design/Motion、Source Manifest、Golden Set 与 IP Review；当前过渡封面不冒充最终风格。
 - [x] 实施 Economy & Progression v1.0：联机/AI 权威结算隔离、有效局、防刷、独立胜场、`apply_reward_v1` 单事务落库、奖励流水与 Reward Breakdown UI。
 - [x] 实施 Gameplay Shared Protocol V1：Tank Authority、Tetris Battle Coordination、Spectator Room、Tournament Orchestrator、Xiangqi Clock、Monopoly Auction。
 - [x] 实施 Gameplay Rule Authority v2：Tetris/象棋/大富翁共享纯规则核心、服务端动作验证、完整快照、确定性哈希与 v1 兼容回退。
@@ -198,7 +204,8 @@ node --experimental-websocket qa/ws-close-test.js
 
 ### P1
 
-- 六款游戏完整美术包与声音包。
+- 先完成 `Pocket Tabletop Sticker` Art Bible 与 Golden Set；通过后按五子棋/飞行棋 → 其余四款 → Avatar/Persona/主题/社交顺序原子扩展完整美术包。
+- 旧 `commerceId`、owned/equipped、服务端价格和游戏 runtime ID 保持不变，仅递增 `artworkVersion`；每批必须含 source/runtime/poster/fallback/manifest/license/budget/pivot/event/QA。
 - 聊天、Feed、公会、处罚/申诉后台和赛季系统。
 - 高级延迟观战、Tetris T-Spin/B2B/Combo/Perfect Clear、跨实例长期 Metrics 与外部 Sentry。
 

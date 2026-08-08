@@ -1,7 +1,7 @@
 ﻿# Mini Games Platform 🎮
 
 > 多人游戏平台 — 6 款精选插件化游戏，先看到人，再看到游戏。
-> 打开 3 秒开局 → 5 分钟一局 → 立刻再来。
+> 体验目标：打开约 3 秒开局 → 约 5 分钟一局 → 立刻再来。
 
 线上试玩：https://honru09.github.io/mini-games/
 后端地址：https://mini-games-online.onrender.com
@@ -10,14 +10,14 @@
 
 ## 平台特色
 
-- 🎯 **Fast Fun Loop**：3 秒入局，5 分钟一局，即开即玩
+- 🎯 **Fast Fun Loop**：目标约 3 秒入局、约 5 分钟一局；当前线上冷启动与真实设备仍需专项实测
 - 🌐 **三语国际化**：中文 / English / Українська，Settings 一键切换
 - 🏳️ **语言旗帜**：个人档案、排行榜、房间大厅实时显示
 - ⚙️ **Settings 设置页**：6 套主题（日光/午夜/海洋/森林/赛博/樱花）、三语言、联机地址
 - 🎨 **Design System**：统一间距（4px 刻度）/ 字号 / 色彩令牌，卡片入场动画、按钮光效、胜负彩带、WebAudio 轻音效（零资源）
 - 🎬 **动效 + 手感**：统一 Motion 动效库（转场/入场/弹性/Loading）、6 款游戏全量操作反馈（音效+震动+状态提示）、棋盘棋子立体质感
 - ✨ **个性化**：动态头像框（8 款含流光/烈焰/彩虹/赛博脉冲）、闪名（4 种特效）、动态档案背景（星空/樱花/赛博矩阵/海浪）、等级进度条
-- 🔑 **PIN 账号**：设备识别 + 换机登录，账号永不丢失
+- 🔑 **PIN 账号**：设备识别 + PIN 换机登录；用户必须记住 PIN，跨重启持久性取决于已验收的服务端存储
 - 🛍️ **💵 商城**：头像 / 头像框 / 动态特效 / 个人背景 / 六款游戏外观（游戏外观购买与装备由服务端权威校验）
 - 🎭 **AI 角色化**：5 个性格各异的 AI 对手，表达风格不同；强制胜/防守和本地强策略不会被人格覆盖
 - 🧠 **AI 持续学习**：按“账号 × 游戏”独立模型；对局中记录近优候选，胜局强化、败局反事实修正、平局保留中性经验，JSON 与 Supabase 原子恢复
@@ -179,8 +179,12 @@ node scripts/render-deploy.js
 
 - `public/assets/manifests/asset_manifest.json` 锁定 6 个游戏 runtime ID、平台 asset ID、状态、fallback 和 a11y 语义。
 - 首批已接入 `public/assets/brand/` 品牌 SVG 与 `public/assets/ui/currency_cash.svg`；Header、Hero、商城、排行榜与结算统一显示 💵。
-- P0 纵切已接入五子棋与俄罗斯方块响应式大厅封面、五子棋木纹 Canvas 底材、俄罗斯方块玻璃井底材，以及软 3D 棋子/七类纹理/ghost/locked/clear 绘制状态。
+- 六款游戏都已接入 640×360 / 320×180 响应式大厅封面；五子棋与俄罗斯方块从旧版升级，飞行棋、大富翁、坦克和象棋补齐封面。当前六图是可回滚的软 3D 过渡批次，不等同于最终游戏包或 Sticker Cartoon Golden Set。
+- 五子棋木纹 Canvas 与俄罗斯方块玻璃井两个旧纵切继续保留，规则、快照、AI 与联机协议不包含美术状态。
 - 两款纵切可分别用 `mg_art_gomoku_v1`、`mg_art_tetris_v1` 本地 flag 回滚；关闭只影响绘制层，不改变规则、快照或联机协议。
+- 注册与商城完成产品级重排：48 款 Avatar v2（12 免费/36 商城）、单一滚动容器、五档响应式、主预览/试穿、单例弹层、服务端价格对齐和三语言商品/辅助文本。
+- `asset-library/` 是本地 provenance sidecar，分别校验目录与许可证哈希；`asset_manifest.json` 仍是唯一运行时机器事实源。未冻结对象存储提供商、许可、生命周期与凭证前不上传外部桶。
+- 新报告目标 `Pocket Tabletop Sticker × Expressive Sticker Cartoon` 已冻结在 `requirements/active/sticker-cartoon-golden-set-m0-20260808/`；顺序固定为 Art Bible v1 → Design/Motion v3 → Golden Set → IP Similarity Review → 批量生产。
 - 所有美术资源保留 CSS / Canvas / DOM Emoji / WebAudio 回退，资源加载失败不能阻塞大厅或开局。
 
 ### 数据库（Supabase）
@@ -205,6 +209,7 @@ AI 学习模型与经验在 `apply_ai_learning_v1` 中按账号+游戏加锁，�
 - **零 npm 依赖** — 手写 WebSocket，纯 Node 测试
 - **单页构建产物** — `public/index-template.html + public/src/*` 构建为 `public/index.html`
 - **三语言全量覆盖** — 静态文案使用 `data-i18n*`，运行时文案使用 `t()` / `setLocalizedText()`，服务端错误使用稳定 reason；用户昵称等原文节点标记 `data-i18n-raw`。新增或修改界面文字后必须同步三份 locale，并运行 `npm run test:i18n`
+- **商城与素材契约** — 修改商品目录或资产索引后运行 `npm run test:shop-contract`、`npm run test:asset-library` 与 `npm run test:ui-responsive`
 - **新消息成对添加** — `server/index.js` handleMessage ↔ `public/src/online/03-websocket.js` onMessage；随后重建生成物
 - **不破坏旧协议** — 所有更新兼容已有用户数据
 - **无打包器** — 不用 webpack/vite/rollup
@@ -225,6 +230,6 @@ Playroom 的长期开发按项目级执行系统运行，而不是依赖单次�
 ## 第三阶段发布状态
 
 - 自动化：`npm test`、关键协议 5 次连续回归、10/25/50 逻辑并发房、1000 次生命周期内存、Timer Audit 均已通过。
-- 浏览器：本地 Desktop Chromium 已确认 Tank/Tetris 连续运行保持稳定 DOM 根节点与尺寸，控制台无 warning/error。
+- 浏览器：本地 in-app Chromium 已完成当前 P0 的 1440/768/481/390/360 注册、商城、大厅、六封面、英/乌语言、overflow、44px 控件、单例与滚动锁验收，控制台无 warning/error；证据在 `deliverables/visual-qa/visual-commerce-p0-20260808/`。
 - 未执行：Android Chrome、iPhone Safari、Tablet、第二桌面浏览器、真实 `tc/netem`、30 分钟真实 Synthetic Session、真实 Supabase/RLS/并发/备份回滚。
 - 因真实设备发布闸门未完成，当前结论是 `AUTOMATED_VERIFIED`，Release Candidate 总状态仍为 `BLOCKED`，不能写 `PRODUCTION_READY`。
