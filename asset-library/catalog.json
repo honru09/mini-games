@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-08-09T00:37:00+09:00",
+  "updatedAt": "2026-08-09T01:08:11+09:00",
   "storage": {
     "mode": "local-only",
     "remoteProvider": null,
@@ -11,7 +11,7 @@
     {
       "id": "production-asset-manifest",
       "path": "public/assets/manifests/asset_manifest.json",
-      "sha256": "61bb1c628a68085cf23a6ef6fcbc73140b0cf6d36ca5a886697c797926e3ca1a"
+      "sha256": "9a900385b96778eda7743af67262430d2dbe933da7690000918573400caef599"
     }
   ],
   "collections": [
@@ -90,6 +90,24 @@
       "runtimePaths": ["public/assets/ui/game_covers/game_gomoku.webp", "public/assets/ui/game_covers/game_gomoku_320.webp"],
       "promptPath": "art-source/prompts/lobby-cover-family-v2-20260808.md",
       "model": "codex-built-in-imagegen-runtime-managed",
+      "remoteObjectKey": null
+    },
+    {
+      "id": "G-02-STICKER-BOARD-SURFACE-V1",
+      "category": "game/gomoku",
+      "assetType": "sticker-board-surface-preview",
+      "sourceType": "project-owned",
+      "sourcePath": "art-source/games/gomoku/sticker-v1/gomoku-vertical-slice-spec-draft-v2.svg",
+      "sourceSha256": "36638c20799829cda752469d26292ba0f2d17eef4e3c2c018139275b90e0f56c",
+      "license": "project-owned",
+      "author": "Mini Games Platform Master",
+      "status": "integrated-local-only",
+      "dimensions": { "width": 1600, "height": 900 },
+      "previewPath": "public/assets/games/gomoku/sticker-v1/gomoku-board-surface-v1.svg",
+      "previewSha256": "05f88a47b3902f6a96a6b243da19f97aa8e12d39500ebe95576221cb6c9a8e35",
+      "runtimePaths": ["public/assets/games/gomoku/sticker-v1/gomoku-board-surface-v1.svg"],
+      "promptPath": null,
+      "model": null,
       "remoteObjectKey": null
     },
     {

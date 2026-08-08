@@ -8,6 +8,7 @@ const ROOT = path.join(__dirname, '..');
 const catalog = JSON.parse(fs.readFileSync(path.join(ROOT, 'public', 'assets', 'backgrounds', 'v1', 'background_catalog_v1.json'), 'utf8'));
 const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'public', 'assets', 'manifests', 'asset_manifest.json'), 'utf8'));
 const assetsSource = fs.readFileSync(path.join(ROOT, 'public', 'src', 'core', '06-assets.js'), 'utf8');
+const gomokuSource = fs.readFileSync(path.join(ROOT, 'public', 'src', 'games', 'gomoku.js'), 'utf8');
 const shopSource = fs.readFileSync(path.join(ROOT, 'public', 'src', 'shop', '06-shop.js'), 'utf8');
 const serverSource = fs.readFileSync(path.join(ROOT, 'server', 'index.js'), 'utf8');
 
@@ -97,6 +98,31 @@ check('六款封面 integrity 与实际 SHA-256 一致', coverAssets.every(asset
 }));
 check('六款封面声明生成许可、懒加载、可读 fallback 与装饰图合同', coverAssets.every(asset => asset && asset.license === 'project-owned-ai-generated' && asset.load === 'lobby lazy' && asset.fallback && /可读 HTML/.test(asset.a11y || '')));
 check('封面组件具备 srcset、lazy 与失败回退', /img\.srcset\s*=/.test(assetsSource) && /img\.loading\s*=\s*['"]lazy['"]/.test(assetsSource) && /asset-failed/.test((assetsSource.match(/function gameCoverNode[\s\S]*?\n}/)||[''])[0]));
+const stickerGomoku = manifest.assets.find(asset => asset.asset_id === 'G-02-STICKER-BOARD-SURFACE-V1');
+const stickerGomokuPath = stickerGomoku && repoAbsolute(stickerGomoku.runtime_path);
+const stickerGomokuSvg = stickerGomokuPath && fs.existsSync(stickerGomokuPath) ? fs.readFileSync(stickerGomokuPath, 'utf8') : '';
+const stickerFlagContract = {operator:'all',enabled_value:'1',default_enabled:false,ids:['mg_art_sticker_m0_v1','mg_art_gomoku_sticker_v1']};
+const stickerRuntimePath = 'public/assets/games/gomoku/sticker-v1/gomoku-board-surface-v1.svg';
+const stickerFrozenHash = '05f88a47b3902f6a96a6b243da19f97aa8e12d39500ebe95576221cb6c9a8e35';
+const stickerDirectory = path.dirname(stickerGomokuPath || repoAbsolute(stickerRuntimePath));
+function safeStickerSvg(source){
+  const clean = String(source || '').replace(/xmlns="http:\/\/www\.w3\.org\/2000\/svg"/i,'');
+  return /<svg\b[^>]*\bwidth="520"[^>]*\bheight="520"[^>]*\bviewBox="0 0 520 520"/.test(clean) &&
+    !/<!DOCTYPE|<!ENTITY|<(?:script|style|foreignObject|iframe|object|embed|image|audio|video|filter|fe[A-Z]|animate|animateTransform|set|text)\b/i.test(clean) &&
+    !/\son[a-z]+\s*=|\s(?:href|src|style)\s*=|@import|url\s*\(/i.test(clean);
+}
+check('M0 五子棋运行时资产使用稳定 ID、版本、预算和默认关闭双闸门', !!stickerGomoku && stickerGomoku.runtime_id === 'gomoku' && stickerGomoku.artwork_version === 1 && stickerGomoku.status === 'ready' && stickerGomoku.actual_bytes === 998 && stickerGomoku.byte_budget === 1536*1024 && JSON.stringify(stickerGomoku.feature_flags) === JSON.stringify(stickerFlagContract));
+check('M0 五子棋 SVG 路径固定、普通文件、无越界且目录无未登记运行时文件', !!stickerGomokuPath && stickerGomoku.runtime_path === stickerRuntimePath && !stickerGomoku.runtime_path.includes('..') && !stickerGomoku.runtime_path.includes('\\') && fs.lstatSync(stickerGomokuPath).isFile() && !fs.lstatSync(stickerGomokuPath).isSymbolicLink() && fs.realpathSync(stickerGomokuPath).startsWith(fs.realpathSync(path.join(ROOT,'public','assets')) + path.sep) && JSON.stringify(fs.readdirSync(stickerDirectory).sort()) === JSON.stringify(['gomoku-board-surface-v1.svg']));
+check('M0 五子棋 SVG 实际字节不超过单游戏 1.5MB 预算', fs.statSync(stickerGomokuPath).size === stickerGomoku.actual_bytes && fs.statSync(stickerGomokuPath).size <= stickerGomoku.byte_budget);
+check('M0 五子棋 SVG integrity、冻结 hash 与实际 SHA-256 三方一致', /^sha256:[a-f0-9]{64}$/.test(stickerGomoku.integrity || '') && stickerGomoku.integrity === 'sha256:' + stickerFrozenHash && stickerFrozenHash === crypto.createHash('sha256').update(fs.readFileSync(stickerGomokuPath)).digest('hex'));
+check('M0 五子棋 SVG 为安全静态白名单且恶意样本会被拒绝', safeStickerSvg(stickerGomokuSvg) && !safeStickerSvg('<svg width="520" height="520" viewBox="0 0 520 520"><script>alert(1)</script></svg>') && !safeStickerSvg('<svg width="520" height="520" viewBox="0 0 520 520"><path href="other.svg#shape"/></svg>') && !safeStickerSvg('<svg width="520" height="520" viewBox="0 0 520 520"><path style="fill:url(other.svg#paint)"/></svg>') && !safeStickerSvg('<svg width="520" height="520" viewBox="0 0 520 520"><path fill="url(other.svg#paint)"/></svg>') && !safeStickerSvg('<!DOCTYPE svg [<!ENTITY x SYSTEM "file:///x">]><svg width="520" height="520" viewBox="0 0 520 520"/>'));
+const legacyGomokuBoard = manifest.assets.find(asset => asset.asset_id === 'G-02-BOARD-SURFACE');
+check('M0 五子棋 runtime 明确回退未漂移木纹资产且规则 Canvas 仍为权威', !!stickerGomoku && stickerGomoku.fallback_asset_id === 'G-02-BOARD-SURFACE' && legacyGomokuBoard.runtime_path === 'public/assets/board/gomoku/mg_board_gomoku_surface_v01.webp' && legacyGomokuBoard.integrity === 'sha256:6aee61b0425b31551c0b5c83795a4937047ca95f6542b37d0879391a3d0b10f8' && legacyGomokuBoard.feature_flag === 'mg_art_gomoku_v1' && /15x15 网格/.test(stickerGomoku.a11y || '') && /grid\s*=\s*Array\.from/.test(gomokuSource));
+const stickerFlagSource = (assetsSource.match(/function stickerArtEnabled\(id\)[\s\S]*?\n}/) || [''])[0];
+check('M0 双闸门只接受显式 1 且异常默认关闭', /STICKER_ART_MASTER_FLAG\) === '1'/.test(stickerFlagSource) && /getItem\(art\.flag\) === '1'/.test(stickerFlagSource) && /catch \(error\) \{\s*return false;/.test(stickerFlagSource));
+check('M0 路径只由 runtime manifest 稳定 asset ID 解析', !/games\/gomoku\/sticker-v1\/gomoku-board-surface-v1\.svg/.test(assetsSource) && /fetch\(assetUrl\('manifest'\)/.test(assetsSource) && /asset\.asset_id === assetId/.test(assetsSource) && assetsSource.includes("const expectedPrefix = 'public/assets/games/' + id + '/'") && /sticker-v\[1-9\]/.test(assetsSource));
+check('M0 Manifest、加载或 decode 失败只回退表现层', /response && response\.ok \? response\.json\(\) : null/.test(assetsSource) && /probe\.decode\(\)/.test(gomokuSource) && /stickerArtState = 'fallback'; applyPresentation\(\); draw\(\);/.test(gomokuSource) && !/stickerArt(?:Active|State|Requested)[\s\S]{0,80}(?:snapshot|sendMove|onProgress)/.test(gomokuSource));
+check('M0 静态底材无新增动画、计时器或持续重绘', !/<(?:animate|animateTransform|set)\b/i.test(stickerGomokuSvg) && !/requestAnimationFrame|setInterval/.test((gomokuSource.match(/function initStickerSurface\(\)[\s\S]*?\n  }/) || [''])[0]));
 const collectionPreviewSource = (shopSource.match(/function previewCollection\(item\)[\s\S]*?\n  function render\(/) || [''])[0];
 check('Collection Try-On 同时预览头像、框、背景与名称效果且不触发购买', /avatarCanvas\(parts\.avatarId/.test(collectionPreviewSource) && /frame-ring/.test(collectionPreviewSource) && /nameFxNode\(previewAccount/.test(collectionPreviewSource) && /applyPremiumBackground\(hero,item\.id/.test(collectionPreviewSource) && !/requestPurchase\(/.test(collectionPreviewSource));
 

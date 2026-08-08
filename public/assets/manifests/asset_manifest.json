@@ -204,6 +204,31 @@
       "feature_flag": "mg_art_gomoku_v1"
     },
     {
+      "asset_id": "G-02-STICKER-BOARD-SURFACE-V1",
+      "catalog_key": "STICKER_GAME_ART.gomoku.board",
+      "runtime_id": "gomoku",
+      "artwork_version": 1,
+      "runtime_path": "public/assets/games/gomoku/sticker-v1/gomoku-board-surface-v1.svg",
+      "logical_size": "Canvas 520x520 CSS px",
+      "pixel_size": "vector viewBox 0 0 520 520",
+      "status": "ready",
+      "actual_bytes": 998,
+      "byte_budget": 1572864,
+      "fallback_asset_id": "G-02-BOARD-SURFACE",
+      "fallback": "Current wood Canvas surface, then programmatic Canvas gradient",
+      "load": "selected game gated preview",
+      "a11y": "装饰性底材；15x15 网格、星位、棋子、最近落子和胜线仍由 Canvas 绘制",
+      "license": "project-owned",
+      "source": "art-source/games/gomoku/sticker-v1/gomoku-vertical-slice-spec-draft-v2.svg",
+      "integrity": "sha256:05f88a47b3902f6a96a6b243da19f97aa8e12d39500ebe95576221cb6c9a8e35",
+      "feature_flags": {
+        "operator": "all",
+        "enabled_value": "1",
+        "default_enabled": false,
+        "ids": ["mg_art_sticker_m0_v1", "mg_art_gomoku_sticker_v1"]
+      }
+    },
+    {
       "asset_id": "G-07-COVER",
       "catalog_key": "GAME_ART.ludo.cover",
       "runtime_id": "ludo",

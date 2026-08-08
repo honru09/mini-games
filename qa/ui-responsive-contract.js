@@ -61,6 +61,32 @@ function hasDeclaration(body, property, valuePattern){
   return new RegExp(`(?:^|[; ])${property.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*:\\s*${valuePattern}(?:\\s*;|$)`, 'i').test(normalized);
 }
 
+/* <=480px：游戏顶栏固定为两行，防止三语言按钮和长标题互相覆盖。 */
+const mobile = extractBalancedBlock(
+  template,
+  /@media\s*\(\s*max-width\s*:\s*480px\s*\)\s*\{/i,
+);
+check('存在 max-width:480px 手机专项响应式区间', mobile.length > 0);
+
+const gameTopMobile = ruleBody(mobile, /\.game-top\s*\{/);
+const gameTitleMobile = ruleBody(mobile, /\.game-top\s+h2\s*\{/);
+const gameActionsMobile = ruleBody(mobile, /\.game-top\s+\.top-actions\s*\{/);
+const gameActionButtonMobile = ruleBody(mobile, /\.game-top\s+\.top-actions\s+\.btn\s*\{/);
+check('<=480px 游戏顶栏使用返回/标题与操作区两行网格',
+  hasDeclaration(gameTopMobile, 'display', 'grid') &&
+  hasDeclaration(gameTopMobile, 'grid-template-columns', 'auto\\s+minmax\\(0\\s*,\\s*1fr\\)') &&
+  /grid-template-areas\s*:\s*["']back title["']\s*["']actions actions["']/i.test(compact(gameTopMobile)));
+check('<=480px 游戏标题可收缩、截断且不覆盖返回按钮',
+  hasDeclaration(gameTitleMobile, 'min-width', '0') &&
+  hasDeclaration(gameTitleMobile, 'overflow', 'hidden') &&
+  hasDeclaration(gameTitleMobile, 'text-overflow', 'ellipsis') &&
+  hasDeclaration(gameTitleMobile, 'white-space', 'nowrap'));
+check('<=480px 游戏操作区占满第二行且按钮等分可收缩',
+  hasDeclaration(gameActionsMobile, 'grid-area', 'actions') &&
+  hasDeclaration(gameActionsMobile, 'width', '100%') &&
+  hasDeclaration(gameActionButtonMobile, 'flex', '1\\s+1\\s+0') &&
+  hasDeclaration(gameActionButtonMobile, 'min-width', '0'));
+
 /* 481-768px：认证和商城必须显式降级成单列，并保留纵向/横向滚动。 */
 const tablet = extractBalancedBlock(
   template,

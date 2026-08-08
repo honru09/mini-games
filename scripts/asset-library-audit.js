@@ -103,6 +103,11 @@ function findUnsupportedSchemaKeywords(rule,pointer,errors){
 function imageSize(file){
   const buffer = fs.readFileSync(file);
   if (buffer.toString('ascii',1,4) === 'PNG') return { width:buffer.readUInt32BE(16), height:buffer.readUInt32BE(20) };
+  const text=buffer.subarray(0,Math.min(buffer.length,4096)).toString('utf8');
+  if (/<svg\b/i.test(text)){
+    const width=text.match(/\bwidth=["'](\d+)(?:px)?["']/i),height=text.match(/\bheight=["'](\d+)(?:px)?["']/i);
+    if (width&&height) return { width:Number(width[1]), height:Number(height[1]) };
+  }
   if (buffer.toString('ascii',0,4) !== 'RIFF' || buffer.toString('ascii',8,12) !== 'WEBP') return null;
   let offset=12;
   while (offset+8<=buffer.length){
@@ -167,9 +172,15 @@ check('生成素材登记 Prompt、模型、作者与生成许可', catalog.asse
 check('local-only 状态禁止预填远端对象键', catalog.assets.every(item => item.status==='integrated-local-only'&&item.remoteObjectKey===null));
 
 const coverMap=new Map(manifest.assets.filter(item => /-COVER$/.test(item.asset_id || '')).map(item => [item.asset_id,item]));
-check('六款封面目录与生产 Manifest 路径一致', catalog.assets.every(item => {
+const coverCatalogAssets=catalog.assets.filter(item => item.assetType==='lobby-cover');
+check('六款封面目录与生产 Manifest 路径一致', coverCatalogAssets.length===6&&coverCatalogAssets.every(item => {
   const production=coverMap.get(item.id);
   return production&&item.runtimePaths.includes(production.runtime_path)&&item.runtimePaths.includes(production.variants&&production.variants['320w']);
+}));
+const runtimeAssetMap=new Map(manifest.assets.map(item => [item.asset_id,item]));
+check('非封面运行时素材目录与生产 Manifest 路径一致', catalog.assets.filter(item => item.assetType!=='lobby-cover').every(item => {
+  const production=runtimeAssetMap.get(item.id);
+  return production&&item.runtimePaths.includes(production.runtime_path);
 }));
 
 if (failures){

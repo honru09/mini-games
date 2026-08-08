@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "task": "sticker-cartoon-runtime-integration-p1-20260809",
+  "state": "IMPLEMENTING",
+  "startedAt": "2026-08-09T01:08:11+09:00",
+  "updatedAt": "2026-08-09T01:08:11+09:00",
+  "verifiedCommit": null,
+  "releasedCommit": null,
+  "progress": {
+    "recon": {"status":"completed","evidence":["Ghost release evidence","M0 source manifest","runtime/flag audit"]},
+    "freeze": {"status":"completed","evidence":["requirement.md","contract.md","ownership.json","plan.json","acceptance.md","SHARED_CHANGE_REQUEST.md","CHANGE_REQUEST-静态底材策略-20260809.md"]},
+    "runtimeAssets": {"status":"in_progress"},
+    "flagResolver": {"status":"not_executed"},
+    "gomokuIntegration": {"status":"not_executed"},
+    "verification": {"status":"not_executed"},
+    "previewDecision": {"status":"not_executed"}
+  },
+  "notExecuted": ["runtime integration", "browser preview", "human preview decision", "real device matrix"],
+  "blocked": ["human Art Bible review", "Reviewer A/B IP Similarity Review", "human Golden Set decision"]
+}

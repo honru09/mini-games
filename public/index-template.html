@@ -809,8 +809,37 @@ button, canvas, .game-card, .ttt-cell, .j-cell, .xq-cell,
   .lb-panel h3, .lobby-panel h3 { font-size: 13px; }
   .modal-card { padding: 16px 14px; max-width: calc(100vw - 12px); width: auto; }
   .modal-card h3 { font-size: 15px; }
-  .game-top { padding: 8px 10px; }
-  .game-top h2 { font-size: 15px; }
+  .game-top {
+    display:grid;
+    grid-template-columns:auto minmax(0,1fr);
+    grid-template-areas:
+      "back title"
+      "actions actions";
+    gap:8px;
+    align-items:center;
+    padding:8px 10px;
+  }
+  #btn-back { grid-area:back; }
+  .game-top h2 {
+    grid-area:title;
+    min-width:0;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    text-align:right;
+    font-size:15px;
+  }
+  .game-top .top-actions {
+    grid-area:actions;
+    display:flex;
+    width:100%;
+    gap:8px;
+  }
+  .game-top .top-actions .btn {
+    flex:1 1 0;
+    min-width:0;
+    justify-content:center;
+  }
   canvas.board-canvas { max-width: 100%; }
   .auth-backdrop{padding:6px; align-items:flex-start}
   .auth-card,.auth-card.auth-login-mode{width:100%; max-width:none; max-height:calc(100dvh - 12px); padding:12px}

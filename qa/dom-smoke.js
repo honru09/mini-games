@@ -134,11 +134,19 @@ global.localStorage = {
   setItem: (k, v) => lsStore.set(k, String(v)),
   removeItem: k => lsStore.delete(k),
 };
+let assetManifestMode = 'ok';
 global.fetch = async (url, init) => {
   const localeMatch = String(url).match(/locales\/(zh-CN|en-US|uk-UA)\.json$/);
   if (localeMatch) {
     const body = fs.readFileSync(path.join(ROOT, 'public', 'locales', localeMatch[1] + '.json'), 'utf8').replace(/^\uFEFF/, '');
     return { ok: true, json: async () => JSON.parse(body) };
+  }
+  if (/assets\/manifests\/asset_manifest\.json$/.test(String(url))){
+    if (assetManifestMode === '404') return { ok:false, json:async()=>({}) };
+    if (assetManifestMode === 'missing') return { ok:true, json:async()=>({ ...assetManifest, assets:assetManifest.assets.filter(asset => asset.asset_id !== 'G-02-STICKER-BOARD-SURFACE-V1') }) };
+    if (assetManifestMode === 'invalid-path') return { ok:true, json:async()=>({ ...assetManifest, assets:assetManifest.assets.map(asset => asset.asset_id === 'G-02-STICKER-BOARD-SURFACE-V1' ? { ...asset, runtime_path:'public/assets/games/gomoku/sticker-v1/%2e%2e/evil.svg' } : asset) }) };
+    if (assetManifestMode === 'delayed') return { ok:true, json:async()=>{ await new Promise(resolve => setTimeout(resolve, 25)); return assetManifest; } };
+    return { ok:true, json:async()=>assetManifest };
   }
   let options = null;
   try { options = JSON.parse(init.body).options; } catch {}
@@ -265,6 +273,61 @@ async function main(){
   check('asset manifest 锁定 6 个 runtime ID', assetManifest.productBaseline.gameCount === 6 && JSON.stringify(assetManifest.productBaseline.runtimeIds) === JSON.stringify(Object.keys(G.GAMES)));
   check('asset manifest 的 asset ID 唯一', new Set(manifestIds).size === manifestIds.length);
   check('asset manifest 的 integrated 文件全部存在', integratedPaths.every(file => file.startsWith('public/assets/') && fs.existsSync(path.join(ROOT, ...file.split('/')))));
+
+  localStorage.removeItem('mg_art_sticker_m0_v1');
+  localStorage.removeItem('mg_art_gomoku_sticker_v1');
+  G.playerCount = 2; G.showGame('gomoku');
+  let stickerCanvas = area().children[0];
+  check('M0 五子棋双闸门默认关闭并保留旧木纹', stickerCanvas.dataset.stickerArt === 'disabled' && stickerCanvas.classList.contains('game-art-v1') && !stickerCanvas.classList.contains('game-art-sticker-v1') && !stickerCanvas._stickerAssetProbe);
+  localStorage.setItem('mg_art_gomoku_sticker_v1','1'); G.showGame('gomoku'); stickerCanvas=area().children[0];
+  check('M0 五子棋只有分闸门时仍关闭', stickerCanvas.dataset.stickerArt === 'disabled' && !stickerCanvas._stickerAssetProbe);
+  localStorage.removeItem('mg_art_gomoku_sticker_v1'); localStorage.setItem('mg_art_sticker_m0_v1','1'); G.showGame('gomoku'); stickerCanvas=area().children[0];
+  check('M0 五子棋只有总闸门时仍关闭', stickerCanvas.dataset.stickerArt === 'disabled' && !stickerCanvas._stickerAssetProbe);
+  localStorage.setItem('mg_art_gomoku_sticker_v1','true'); G.showGame('gomoku'); stickerCanvas=area().children[0];
+  check('M0 五子棋非严格 1 值不会误开', stickerCanvas.dataset.stickerArt === 'disabled' && !stickerCanvas._stickerAssetProbe);
+  const originalGetItem = localStorage.getItem; localStorage.getItem=()=>{ throw new Error('storage fixture'); }; G.showGame('gomoku'); stickerCanvas=area().children[0]; localStorage.getItem=originalGetItem;
+  check('M0 localStorage 异常时默认关闭并保留旧回退', stickerCanvas.dataset.stickerArt === 'disabled' && stickerCanvas.classList.contains('game-art-v1') && !stickerCanvas._stickerAssetProbe);
+  localStorage.setItem('mg_art_gomoku_sticker_v1','1');
+  assetManifestMode='404'; G.showGame('gomoku'); stickerCanvas=area().children[0]; await sleep(10);
+  check('M0 Manifest 404 时回退旧木纹且不阻塞棋盘', stickerCanvas.dataset.stickerArt === 'fallback' && stickerCanvas.classList.contains('game-art-v1') && !stickerCanvas.classList.contains('game-art-sticker-v1'));
+  assetManifestMode='missing'; G.showGame('gomoku'); stickerCanvas=area().children[0]; await sleep(10);
+  check('M0 Manifest 缺项时回退旧木纹', stickerCanvas.dataset.stickerArt === 'fallback' && !stickerCanvas.classList.contains('game-art-sticker-v1'));
+  assetManifestMode='invalid-path'; G.showGame('gomoku'); stickerCanvas=area().children[0]; await sleep(10);
+  check('M0 Manifest 编码路径越界时回退旧木纹', stickerCanvas.dataset.stickerArt === 'fallback' && !stickerCanvas.classList.contains('game-art-sticker-v1'));
+  assetManifestMode='delayed'; G.showGame('gomoku'); const destroyedStickerCanvas=area().children[0]; G.showGame('tetris'); await sleep(40);
+  check('M0 异步资源解析晚于游戏销毁时不再重绘旧 Canvas', destroyedStickerCanvas.dataset.stickerArt === 'loading' && !destroyedStickerCanvas.classList.contains('game-art-sticker-v1'));
+  assetManifestMode='ok'; G.showGame('gomoku'); stickerCanvas=area().children[0]; await sleep(10);
+  const stickerSnapshotBefore = JSON.stringify(G.game.snapshot());
+  if (stickerCanvas._stickerAssetProbe){ stickerCanvas._stickerAssetProbe.decode=()=>Promise.resolve(); stickerCanvas._stickerAssetProbe.dispatch('load'); }
+  await sleep(10);
+  const stickerSnapshotAfter = JSON.stringify(G.game.snapshot());
+  check('M0 双闸门与资源 decode 成功后启用 Sticker', stickerCanvas.dataset.stickerArt === 'active' && stickerCanvas.classList.contains('game-art-sticker-v1') && String(stickerCanvas.style['--game-board-art']||'').includes('games/gomoku/sticker-v1/gomoku-board-surface-v1.svg'));
+  check('M0 视觉激活前后规则快照完全一致', stickerSnapshotBefore === stickerSnapshotAfter && !/(sticker|asset|flag|art)/i.test(stickerSnapshotAfter));
+  const clickGomoku = (canvas, r, c) => canvas.dispatch('click',{clientX:22+c*34,clientY:22+r*34});
+  [[0,0],[7,7],[14,14]].forEach(move => clickGomoku(stickerCanvas, move[0], move[1]));
+  check('M0 Sticker 激活态保持角点与中心点击映射', JSON.stringify(G.game.snapshot().hist) === JSON.stringify([[0,0],[7,7],[14,14]]));
+  G.game.onRestart();
+  check('M0 Sticker 激活态重开清空规则历史', G.game.snapshot().hist.length === 0 && G.game.snapshot().cur === 0 && !G.game.snapshot().over);
+  const gomokuWinMoves = [[0,0],[14,14],[0,1],[14,13],[0,2],[14,12],[0,3],[14,11],[0,4]];
+  gomokuWinMoves.forEach(move => clickGomoku(stickerCanvas, move[0], move[1]));
+  const stickerWinSnapshot = JSON.stringify(G.game.snapshot());
+  check('M0 Sticker 激活态保持横向五连规则', G.game.snapshot().over && JSON.stringify(G.game.snapshot().last) === JSON.stringify([0,4]));
+  localStorage.removeItem('mg_art_sticker_m0_v1'); localStorage.removeItem('mg_art_gomoku_sticker_v1');
+  G.showGame('gomoku'); const legacyRuleCanvas=area().children[0];
+  gomokuWinMoves.forEach(move => clickGomoku(legacyRuleCanvas, move[0], move[1]));
+  check('M0 Sticker 与旧表现对同一完整落子序列生成相同快照', stickerWinSnapshot === JSON.stringify(G.game.snapshot()));
+  localStorage.setItem('mg_art_sticker_m0_v1','1'); localStorage.setItem('mg_art_gomoku_sticker_v1','1');
+  G.showGame('gomoku'); stickerCanvas=area().children[0]; await sleep(10);
+  if (stickerCanvas._stickerAssetProbe){ stickerCanvas._stickerAssetProbe.decode=()=>Promise.reject(new Error('decode fixture')); stickerCanvas._stickerAssetProbe.dispatch('load'); }
+  await sleep(10);
+  check('M0 SVG decode reject 时回退旧木纹', stickerCanvas.dataset.stickerArt === 'fallback' && stickerCanvas.classList.contains('game-art-v1') && !stickerCanvas.classList.contains('game-art-sticker-v1'));
+  localStorage.setItem('mg_art_gomoku_v1','0'); G.showGame('gomoku'); stickerCanvas=area().children[0]; await sleep(10);
+  if (stickerCanvas._stickerAssetProbe) stickerCanvas._stickerAssetProbe.dispatch('error');
+  await sleep(10);
+  check('M0 失败且旧旗标关闭时回退程序化 Canvas', stickerCanvas.dataset.stickerArt === 'fallback' && !stickerCanvas.classList.contains('game-art-v1') && !stickerCanvas.classList.contains('game-art-sticker-v1'));
+  stickerCanvas.dispatch('click',{clientX:(22+7*34),clientY:(22+7*34)});
+  check('M0 资源失败期间仍可在中心合法落子', G.game.snapshot().hist.length === 1 && JSON.stringify(G.game.snapshot().hist[0]) === JSON.stringify([7,7]));
+  localStorage.removeItem('mg_art_sticker_m0_v1'); localStorage.removeItem('mg_art_gomoku_sticker_v1'); localStorage.removeItem('mg_art_gomoku_v1'); assetManifestMode='ok';
 
   localStorage.setItem('mg_art_gomoku_v1', '0');
   G.renderHub();

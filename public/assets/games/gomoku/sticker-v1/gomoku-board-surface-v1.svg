@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="520" height="520" viewBox="0 0 520 520" role="img" aria-labelledby="title desc">
+  <title id="title">Pocket Tabletop Sticker Gomoku board surface</title>
+  <desc id="desc">A text-free rounded paperboard and simplified wood surface. The playable grid and stones remain programmatic Canvas layers.</desc>
+  <rect width="520" height="520" rx="34" fill="#211923"/>
+  <rect x="6" y="6" width="508" height="508" rx="30" fill="#82513F"/>
+  <rect x="14" y="14" width="492" height="492" rx="24" fill="#F1B640" stroke="#211923" stroke-width="5"/>
+  <path d="M24 112H496M24 264H496M24 408H496" fill="none" stroke="#82513F" stroke-width="12" opacity=".28"/>
+  <path d="M30 54C146 30 246 44 350 30C405 23 456 28 490 40" fill="none" stroke="#FFF9F2" stroke-width="7" stroke-linecap="round" opacity=".3"/>
+  <path d="M30 462C140 480 250 458 352 478C408 489 456 482 490 470" fill="none" stroke="#82513F" stroke-width="8" stroke-linecap="round" opacity=".24"/>
+</svg>

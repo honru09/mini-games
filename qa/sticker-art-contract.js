@@ -14,6 +14,7 @@ const tokens = readJson('art-source/style/design-tokens.v1.json');
 const facial = readJson('art-source/style/facial-kit.v1.json');
 const schema = readJson('art-source/style/source-manifest-v2.schema.json');
 const manifest = readJson('art-source/style/golden-set-source-manifest-v2.json');
+const runtimeManifest = readJson('public/assets/manifests/asset_manifest.json');
 const bible = readText('art-source/style/ART_BIBLE_v1.md');
 const motion = readText('art-source/style/MOTION_SYSTEM_v1.md');
 const design = readText('art-source/ui/sticker-v1/DESIGN_SYSTEM_v3.md');
@@ -77,7 +78,7 @@ const expectedSources = {
   'AVATAR-124-STICKER-V1': ['art-source/avatars/golden-set/sticker-v1/avatar_124/avatar_124-transparent-draft-v1.png', 'bd814903906d08bca9976ce5fc2ef70706c2c1c98f3090a20bc73fad1ab9875e', 'art-source/avatars/golden-set/sticker-v1/avatar_124/avatar_124-transparent-draft-v1.png'],
   'AVATAR-141-STICKER-V1': ['art-source/avatars/golden-set/sticker-v1/avatar_141/avatar_141-transparent-draft-v1.png', '1e923155cd6a114fd5a58dee4175baa894166e0db557654b40b03bcd829f95df', 'art-source/avatars/golden-set/sticker-v1/avatar_141/avatar_141-transparent-draft-v1.png'],
   'UI-STICKER-CORE-V1': ['art-source/ui/sticker-v1/component-demo.html', '67e52d8d0ceab8cd22d3e0583a724d1f8b8a8c366ec6040ce8d76b9071b5b1e1', 'art-source/ui/sticker-v1/component-demo.png'],
-  'G-02-STICKER-V1': ['art-source/games/gomoku/sticker-v1/gomoku-vertical-slice-spec-draft-v2.svg', null, 'art-source/games/gomoku/sticker-v1/gomoku-vertical-slice-spec-draft-v2.png'],
+  'G-02-STICKER-V1': ['art-source/games/gomoku/sticker-v1/gomoku-vertical-slice-spec-draft-v2.svg', '36638c20799829cda752469d26292ba0f2d17eef4e3c2c018139275b90e0f56c', 'art-source/games/gomoku/sticker-v1/gomoku-vertical-slice-spec-draft-v2.png'],
   'G-07-STICKER-V1': ['art-source/games/ludo/sticker-v1/ludo-vertical-slice-spec-draft-v2.svg', null, 'art-source/games/ludo/sticker-v1/ludo-vertical-slice-spec-draft-v2.png'],
 };
 check('Manifest freezes all eight current source and poster paths', manifest.assets.every(asset => {
@@ -90,6 +91,11 @@ const ludoSpec = readText('art-source/games/ludo/sticker-v1/ludo-vertical-slice-
 check('Gomoku v2 spec freezes an exact 15x15 grid and five-stone win', gomokuSpec.includes('data-grid-size="15"') && gomokuSpec.includes('data-standard-star-count="5"') && gomokuSpec.includes('data-win-length="5"') && (gomokuSpec.match(/M\d+ 125V769/g) || []).length === 15 && (gomokuSpec.match(/M180 \d+H824/g) || []).length === 15);
 check('Ludo v2 spec freezes 52 public cells and four tokens per team', ludoSpec.includes('data-public-track-cells="52"') && (ludoSpec.match(/data-base-token-count="4"/g) || []).length === 4 && ['greenPlane','bluePlane','coralPlane','goldPlane'].every(id => ludoSpec.includes(`id="${id}"`)));
 check('Generated rule-error explorations remain documented and excluded', readText('art-source/style/PROMPTS_draft-v1.md').includes('REJECTED_AS_RULE_SOURCE') && !manifest.assets.some(asset => asset.source.paths.some(rel => rel.includes('style-board-draft-v1.png'))));
+const gomokuSourceEntry = manifest.assets.find(asset => asset.assetId === 'G-02-STICKER-V1');
+const gomokuRuntimeEntry = runtimeManifest.assets.find(asset => asset.asset_id === 'G-02-STICKER-BOARD-SURFACE-V1');
+check('P1 五子棋只建立 runtime manifest 投影且 M0 sidecar 保持 Draft', !!gomokuSourceEntry && !!gomokuRuntimeEntry && gomokuSourceEntry.status === 'draft' && gomokuSourceEntry.ipReview.status === 'pending' && gomokuSourceEntry.runtime.paths.length === 0 && gomokuRuntimeEntry.source === gomokuSourceEntry.source.paths[0] && gomokuRuntimeEntry.runtime_path !== gomokuRuntimeEntry.source);
+check('P1 runtime 只接五子棋且没有提前接入 Teacher/Avatar/UI/Ludo', runtimeManifest.assets.filter(asset => asset.asset_id.includes('STICKER')).length === 1 && gomokuRuntimeEntry.runtime_id === 'gomoku' && !runtimeManifest.assets.some(asset => ['teacher','avatar_100','avatar_117','avatar_124','avatar_141','platform-ui','ludo'].includes(asset.runtime_id) && asset.asset_id.includes('STICKER')));
+check('P1 静态底材 Change Request 保留 Motion 边界', exists('requirements/active/sticker-cartoon-runtime-integration-p1-20260809/CHANGE_REQUEST-静态底材策略-20260809.md') && readText('requirements/active/sticker-cartoon-runtime-integration-p1-20260809/CHANGE_REQUEST-静态底材策略-20260809.md').includes('不新增 requestAnimationFrame'));
 
 for (const component of ['Button','Card','Modal','Room Seat','Shop Card','Avatar','Badge','Toast']) {
   check(`Design System v3 covers ${component}`, design.includes(component));

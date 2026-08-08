@@ -256,44 +256,75 @@ function gameGomoku(area, extra, n, opts){
   }
   const canvas = document.createElement('canvas');
   canvas.className = 'board-canvas gomoku-board';
-  const artEnabled = gameArtEnabled('gomoku');
-  if (artEnabled){
-    canvas.classList.add('game-art-v1');
-    setAssetCssUrl(canvas, '--game-board-art', gameArtUrl('gomoku', 'board'));
-  }
+  const legacyArtEnabled = gameArtEnabled('gomoku');
+  const stickerArtRequested = typeof stickerArtEnabled === 'function' && stickerArtEnabled('gomoku');
+  let stickerArtActive = false, stickerArtState = stickerArtRequested ? 'loading' : 'disabled', stickerAssetProbe = null, stickerAssetUrl = '';
   const dpr = window.devicePixelRatio || 1;
   canvas.width = LOGICAL * dpr; canvas.height = LOGICAL * dpr;
   area.appendChild(canvas);
   const ctx = canvas.getContext('2d');
+  function clearBoardAsset(){
+    if (canvas.style && typeof canvas.style.removeProperty === 'function') canvas.style.removeProperty('--game-board-art');
+    else if (canvas.style) canvas.style['--game-board-art'] = 'none';
+  }
   function applyPresentation(){
     canvas.dataset.boardTheme = boardTheme;
     canvas.dataset.pieceSkin = cosmetic.default;
+    canvas.dataset.stickerArt = stickerArtState;
     if (boardTheme === 'grass'){
-      canvas.classList.remove('game-art-v1');
+      canvas.classList.remove('game-art-v1'); canvas.classList.remove('game-art-sticker-v1');
       canvas.style.backgroundColor = '#86a96b';
       canvas.style.backgroundImage = 'radial-gradient(circle at 20% 15%,rgba(255,255,255,.24),transparent 34%),repeating-linear-gradient(105deg,rgba(35,92,45,.13) 0 2px,transparent 2px 7px),linear-gradient(#9fc17f,#668e57)';
+    } else if (stickerArtActive) {
+      canvas.classList.add('game-art-v1'); canvas.classList.add('game-art-sticker-v1');
+      setAssetCssUrl(canvas, '--game-board-art', stickerAssetUrl);
+      canvas.style.backgroundColor = '#F1B640'; canvas.style.backgroundImage = '';
+    } else if (legacyArtEnabled) {
+      canvas.classList.add('game-art-v1'); canvas.classList.remove('game-art-sticker-v1');
+      setAssetCssUrl(canvas, '--game-board-art', gameArtUrl('gomoku', 'board'));
+      canvas.style.backgroundColor = '#d7a153'; canvas.style.backgroundImage = '';
     } else {
-      if (artEnabled) canvas.classList.add('game-art-v1');
-      canvas.style.backgroundColor = artEnabled ? '#d7a153' : '#e6c58b';
-      if (!artEnabled) canvas.style.backgroundImage = 'linear-gradient(100deg,rgba(105,63,22,.12),transparent 35%,rgba(105,63,22,.08))';
+      canvas.classList.remove('game-art-v1'); canvas.classList.remove('game-art-sticker-v1'); clearBoardAsset();
+      canvas.style.backgroundColor = '#e6c58b';
+      canvas.style.backgroundImage = 'linear-gradient(100deg,rgba(105,63,22,.12),transparent 35%,rgba(105,63,22,.08))';
+    }
+  }
+  function drawStickerStone(x, y, player, skin){
+    const radius = CELL * .42, base = player === 0 ? '#443443' : '#FFF9F2', shade = player === 0 ? '#211923' : '#F3E5C4';
+    ctx.save();
+    ctx.shadowColor = 'rgba(33,25,35,.28)'; ctx.shadowBlur = 0; ctx.shadowOffsetX = 2.5; ctx.shadowOffsetY = 3.5;
+    ctx.fillStyle = base; ctx.strokeStyle = '#211923'; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI*2); ctx.fill(); ctx.stroke(); ctx.restore();
+    ctx.save();
+    ctx.beginPath(); ctx.arc(x, y, radius - 1.5, 0, Math.PI*2); ctx.clip();
+    ctx.fillStyle = shade; ctx.globalAlpha = player === 0 ? .62 : .9;
+    ctx.fillRect(x, y, radius + 2, radius + 2); ctx.restore();
+    ctx.fillStyle = player === 0 ? '#FFF9F2' : '#FFFFFF';
+    ctx.beginPath(); ctx.arc(x - radius*.34, y - radius*.38, radius*.14, 0, Math.PI*2); ctx.fill();
+    if (skin === 'glow'){
+      ctx.strokeStyle = player === 0 ? '#508BF0' : '#E45CA4'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(x, y, radius - 3.5, 0, Math.PI*2); ctx.stroke();
     }
   }
   function draw(){
+    const stickerMode = stickerArtActive && boardTheme === 'classic';
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, LOGICAL, LOGICAL);
-    ctx.strokeStyle = boardTheme === 'grass' ? 'rgba(30,61,31,.72)' : (artEnabled ? 'rgba(76,43,15,.68)' : '#8a6638'); ctx.lineWidth = 1;
+    ctx.strokeStyle = boardTheme === 'grass' ? 'rgba(30,61,31,.72)' : (stickerMode ? '#443443' : (legacyArtEnabled ? 'rgba(76,43,15,.68)' : '#8a6638'));
+    ctx.lineWidth = stickerMode ? 3.2 : 1; ctx.lineCap = stickerMode ? 'round' : 'butt';
     for (let i=0;i<N;i++){
       ctx.beginPath(); ctx.moveTo(PAD + i*CELL, PAD); ctx.lineTo(PAD + i*CELL, PAD + (N-1)*CELL); ctx.stroke();
       ctx.beginPath(); ctx.moveTo(PAD, PAD + i*CELL); ctx.lineTo(PAD + (N-1)*CELL, PAD + i*CELL); ctx.stroke();
     }
-    ctx.fillStyle = artEnabled ? '#5b3615' : '#1d2433';
+    ctx.fillStyle = stickerMode ? '#211923' : (legacyArtEnabled ? '#5b3615' : '#1d2433');
     for (const [r,c] of [[3,3],[3,11],[7,7],[11,3],[11,11]]){
-      ctx.beginPath(); ctx.arc(PAD + c*CELL, PAD + r*CELL, 3, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(PAD + c*CELL, PAD + r*CELL, stickerMode ? 3.5 : 3, 0, Math.PI*2); ctx.fill();
     }
     for (let r=0;r<N;r++) for (let c=0;c<N;c++){
       if (grid[r][c] === -1) continue;
       const x = PAD + c*CELL, y = PAD + r*CELL;
       const skin = pieceSkin(grid[r][c]);
+      if (stickerMode){ drawStickerStone(x, y, grid[r][c], skin); continue; }
       const stone = ctx.createRadialGradient(x-CELL*.14, y-CELL*.16, CELL*.05, x, y, CELL*.44);
       if (stone && stone.addColorStop){
         if (grid[r][c] === 0){
@@ -312,19 +343,64 @@ function gameGomoku(area, extra, n, opts){
       ctx.beginPath(); ctx.arc(x, y, CELL*0.39, 0, Math.PI*2); ctx.stroke();
     }
     if (last){
-      ctx.strokeStyle = grid[last[0]][last[1]] === 1 ? '#111827' : '#fff'; ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.arc(PAD + last[1]*CELL, PAD + last[0]*CELL, CELL*0.18, 0, Math.PI*2); ctx.stroke();
+      const x = PAD + last[1]*CELL, y = PAD + last[0]*CELL;
+      ctx.strokeStyle = stickerMode ? '#EF665F' : (grid[last[0]][last[1]] === 1 ? '#111827' : '#fff'); ctx.lineWidth = stickerMode ? 3 : 2;
+      ctx.beginPath();
+      if (stickerMode){
+        const mark = CELL*.2; ctx.moveTo(x-mark,y-mark); ctx.lineTo(x+mark,y-mark); ctx.lineTo(x+mark,y+mark); ctx.lineTo(x-mark,y+mark); ctx.closePath();
+      } else ctx.arc(x, y, CELL*0.18, 0, Math.PI*2);
+      if (stickerMode){ ctx.strokeStyle='#211923'; ctx.lineWidth=5; ctx.stroke(); ctx.strokeStyle='#EF665F'; ctx.lineWidth=2.5; }
+      ctx.stroke();
     }
     if (ghost && !spectator && !over && grid[ghost[0]][ghost[1]] === -1){
-      ctx.save(); ctx.globalAlpha = .36; ctx.fillStyle = cur === 0 ? '#111827' : '#f8fafc';
-      ctx.beginPath(); ctx.arc(PAD + ghost[1]*CELL, PAD + ghost[0]*CELL, CELL*.4, 0, Math.PI*2); ctx.fill(); ctx.restore();
+      ctx.save(); ctx.globalAlpha = stickerMode ? .5 : .36; ctx.fillStyle = cur === 0 ? '#211923' : '#FFF9F2';
+      ctx.strokeStyle = stickerMode ? '#443443' : ctx.fillStyle; ctx.lineWidth = stickerMode ? 2 : 1;
+      if (stickerMode && typeof ctx.setLineDash === 'function') ctx.setLineDash([5,4]);
+      ctx.beginPath(); ctx.arc(PAD + ghost[1]*CELL, PAD + ghost[0]*CELL, CELL*.4, 0, Math.PI*2);
+      if (stickerMode) ctx.stroke(); else ctx.fill(); ctx.restore();
     }
     if (winLine.length){
       const first = winLine[0], end = winLine[winLine.length - 1];
-      ctx.strokeStyle = '#facc15'; ctx.lineWidth = 5; ctx.lineCap = 'round';
-      ctx.beginPath(); ctx.moveTo(PAD + first[1]*CELL, PAD + first[0]*CELL); ctx.lineTo(PAD + end[1]*CELL, PAD + end[0]*CELL); ctx.stroke();
+      let x1 = PAD + first[1]*CELL, y1 = PAD + first[0]*CELL, x2 = PAD + end[1]*CELL, y2 = PAD + end[0]*CELL;
+      if (stickerMode){
+        const dx=x2-x1,dy=y2-y1,length=Math.hypot(dx,dy)||1,offset=CELL*.48;
+        x1 += -dy/length*offset; y1 += dx/length*offset; x2 += -dy/length*offset; y2 += dx/length*offset;
+      }
+      ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2);
+      if (stickerMode){ ctx.strokeStyle='#211923'; ctx.lineWidth=7; ctx.stroke(); ctx.strokeStyle='#F1B640'; ctx.lineWidth=3.5; }
+      else { ctx.strokeStyle='#facc15'; ctx.lineWidth=5; }
+      ctx.stroke();
     }
     updateHud();
+  }
+  function initStickerSurface(){
+    if (!stickerArtRequested) return;
+    Promise.resolve(resolveStickerArtUrl('gomoku', 'board')).then(url => {
+      if (opts.destroyed) return;
+      if (!url){ stickerArtState = 'fallback'; applyPresentation(); draw(); return; }
+      stickerAssetUrl = url;
+      const probe = document.createElement('img');
+      let settled = false;
+      stickerAssetProbe = probe; canvas._stickerAssetProbe = probe;
+      probe.alt = ''; probe.decoding = 'async';
+      const fallback = () => {
+        if (settled || opts.destroyed || stickerAssetProbe !== probe) return;
+        settled = true; stickerArtActive = false; stickerArtState = 'fallback'; applyPresentation(); draw();
+      };
+      const activate = () => {
+        if (settled || opts.destroyed || stickerAssetProbe !== probe) return;
+        settled = true; stickerArtActive = true; stickerArtState = 'active'; applyPresentation(); draw();
+      };
+      probe.addEventListener('load', () => {
+        if (typeof probe.decode !== 'function'){ activate(); return; }
+        Promise.resolve(probe.decode()).then(activate, fallback);
+      });
+      probe.addEventListener('error', fallback);
+      probe.src = url;
+    }).catch(() => {
+      if (opts.destroyed) return;
+      stickerArtState = 'fallback'; applyPresentation(); draw();
+    });
   }
   function pointerCell(e){
     const rect = canvas.getBoundingClientRect();
@@ -440,11 +516,12 @@ function gameGomoku(area, extra, n, opts){
     if (value && value.presentation){ boardTheme = value.presentation.boardTheme === 'grass' ? 'grass' : 'classic'; cosmetic = normalizeCosmetic(value.presentation.cosmetic); }
     applyPresentation(); draw(); renderPlayers(cur, null); return true;
   }
+  initStickerSurface();
   resetLocal();
   return {
     reset, onMove: opts.onMove, onRestart: resetLocal, snapshot, onRestore,
     serialize: () => ({ state: snapshot(), presentation: { boardTheme, cosmetic:{default:cosmetic.default,players:{...cosmetic.players}} }, stats: getMatchStats() }),
     setBoardTheme, setCosmetic, renderCosmetic: setCosmetic, setSpectators, startMatch, reportGameResult, getMatchStats,
-    destroy: () => { aiEpoch++; aiPending = false; area.style.touchAction = previousTouchAction; area.style.overscrollBehavior = previousOverscroll; },
+    destroy: () => { opts.destroyed = true; stickerAssetProbe = null; aiEpoch++; aiPending = false; area.style.touchAction = previousTouchAction; area.style.overscrollBehavior = previousOverscroll; },
   };
 }

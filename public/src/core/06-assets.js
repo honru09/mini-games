@@ -58,6 +58,14 @@ const GAME_ART = Object.freeze({
     coverSmall: 'ui/game_covers/game_xiangqi_320.webp',
   }),
 });
+const STICKER_ART_MASTER_FLAG = 'mg_art_sticker_m0_v1';
+const STICKER_GAME_ART = Object.freeze({
+  gomoku: Object.freeze({
+    flag: 'mg_art_gomoku_sticker_v1',
+    assets: Object.freeze({ board:'G-02-STICKER-BOARD-SURFACE-V1' }),
+  }),
+});
+let runtimeAssetManifestPromise = null;
 
 function assetUrl(key){
   const path = ASSET_CATALOG[key] || key || '';
@@ -122,6 +130,43 @@ function gameArtEnabled(id){
 function gameArtUrl(id, role){
   const art = GAME_ART[id];
   return art && art[role] ? assetUrl(art[role]) : '';
+}
+
+function stickerArtEnabled(id){
+  const art = STICKER_GAME_ART[id];
+  if (!art) return false;
+  try {
+    return localStorage.getItem(STICKER_ART_MASTER_FLAG) === '1' && localStorage.getItem(art.flag) === '1';
+  } catch (error) {
+    return false;
+  }
+}
+
+async function loadRuntimeAssetManifest(){
+  if (!runtimeAssetManifestPromise){
+    runtimeAssetManifestPromise = (typeof fetch === 'function'
+      ? fetch(assetUrl('manifest'), { cache:'no-store' }).then(response => response && response.ok ? response.json() : null)
+      : Promise.resolve(null)).catch(() => null);
+  }
+  const manifest = await runtimeAssetManifestPromise;
+  if (!manifest) runtimeAssetManifestPromise = null;
+  return manifest;
+}
+
+async function resolveStickerArtUrl(id, role){
+  const art = STICKER_GAME_ART[id];
+  if (!art || !stickerArtEnabled(id)) return '';
+  const assetId = art.assets && art.assets[role];
+  if (!assetId) return '';
+  const manifest = await loadRuntimeAssetManifest();
+  const item = manifest && Array.isArray(manifest.assets) ? manifest.assets.find(asset => asset && asset.asset_id === assetId) : null;
+  const flags = item && item.feature_flags;
+  const expectedFlags = [STICKER_ART_MASTER_FLAG, art.flag];
+  if (!item || item.runtime_id !== id || item.status !== 'ready' || !flags || flags.operator !== 'all' || flags.enabled_value !== '1' || flags.default_enabled !== false || JSON.stringify(flags.ids) !== JSON.stringify(expectedFlags)) { runtimeAssetManifestPromise = null; return ''; }
+  const path = String(item.runtime_path || '');
+  const expectedPrefix = 'public/assets/games/' + id + '/';
+  if (!path.startsWith(expectedPrefix) || !/^public\/assets\/games\/[a-z0-9-]+\/sticker-v[1-9]\d*\/[a-z0-9-]+\.svg$/.test(path)) { runtimeAssetManifestPromise = null; return ''; }
+  return assetUrl(path.slice('public/assets/'.length));
 }
 
 function setAssetCssUrl(element, property, url){
