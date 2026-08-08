@@ -4,7 +4,8 @@
   "state": "ACCEPTED",
   "startedAt": "2026-08-08T14:00:00+09:00",
   "verifiedCommit": "52c1a85eedda2651da16b75a8d35a1f8afe3843f",
-  "releasedCommit": null,
+  "releasedCommit": "669562af961884f4749b91bdfec9f4011ae73167",
+  "releasedAt": "2026-08-08T18:34:04+09:00",
   "notExecuted": [
     "real Android/iPhone/Tablet matrix",
     "second desktop browser",

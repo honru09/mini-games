@@ -256,6 +256,7 @@ Supabase 首次接入或升级时，在 SQL Editor 执行可重复迁移的 `sup
 - Economy & Progression v1.0：统一服务端 Reward Resolver、AI 票据/日上限、有效局/AFK/秒投拦截、首胜、连胜、重复对手衰减、等级曲线、完整奖励/经济流水与 Reward Breakdown UI
 - 独立胜场 `wins/totalWins`、旧等级不降级迁移、Supabase `apply_reward_v1` 单事务落库与失败 outbox 重试
 - 视觉商城素材 P0：六款 640×360/320×180 大厅封面、48 Avatar 注册目录、商城主预览/单例/价格契约、五档响应式、三语商品与 Avatar alt 已通过自动化和本地浏览器验收；当前六封面只是 Sticker Cartoon 前的可回滚软 3D 过渡版
+- Sticker Cartoon M0 Draft：`art-source/style/` 已含 Art Bible、Facial Kit、Motion、Source Manifest 与 Prompt/provenance；Teacher 八状态、四 Avatar 已有 Alpha Draft，核心 UI 有 HTML/CSS 状态板，五子棋/飞行棋有规则精确 SVG 纵切，`qa/sticker-art-contract.js` 固定 hash/Alpha/15×15/五连/52 格/四机。人工清稿、IP 双人审查、运行时矩阵和 Golden Set 人工决议未执行，全部新旗标默认关闭。
 - 五子棋与俄罗斯方块旧局内纵切继续保留；Canvas/DOM 规则层不变，支持 `mg_art_gomoku_v1` / `mg_art_tetris_v1` 独立回滚
 - 本地素材库 `asset-library/` 已建立 provenance、Schema 子集、目录/许可证独立哈希审计；运行时仍以 `asset_manifest.json` 为唯一机器事实源，远端对象存储尚未选择
 - 美术母图与 Prompt 位于 `art-source/`，运行时 WebP 位于 `public/assets/`，manifest 与 DOM 冒烟校验路径、ID 和 fallback

@@ -1,0 +1,243 @@
+{
+  "schemaVersion": 2,
+  "manifestType": "source-sidecar",
+  "styleId": "pocket-tabletop-sticker-v1",
+  "assets": [
+    {
+      "assetId": "AI-TEACHER-STICKER-V1",
+      "category": "persona",
+      "commerceId": null,
+      "runtimeId": "teacher",
+      "artworkVersion": 1,
+      "status": "draft",
+      "source": {
+        "paths": ["art-source/ai/teacher/sticker-v1/teacher-8-state-transparent-draft-v1.png"],
+        "sha256": "6fcc1177fb0eeaaf8d7f9a1a37931f9e66b10dfa2bbd930c4af23491b6c324fb"
+      },
+      "runtime": {"paths": [], "sha256": null},
+      "pivot": {"x": 0.5, "y": 0.9, "unit": "normalized"},
+      "poster": "art-source/ai/teacher/sticker-v1/states/idle-transparent-draft-v1.png",
+      "fallbackAssetId": "ai-persona-teacher-emoji",
+      "byteBudget": 393216,
+      "loadTiming": "preview",
+      "featureFlag": {"id": "mg_persona_sticker_v1", "defaultEnabled": false},
+      "events": ["idle", "think", "confident", "surprised", "win", "lose", "taunt", "recover"],
+      "provenance": {
+        "sourceType": "generated",
+        "license": "project-owned-ai-generated",
+        "promptPath": "art-source/style/PROMPTS_draft-v1.md",
+        "model": "codex-built-in-imagegen-runtime-managed",
+        "taskId": "local:exec-922c97c8-1ee5-4213-9e49-a1124c6963d3",
+        "createdAt": "2026-08-08T19:51:37+09:00"
+      },
+      "ipReview": {
+        "status": "pending",
+        "originalIdentifiers": ["teal half-rim glasses", "coral neck scarf with teal vest", "asymmetric brown cowlick"],
+        "reviewers": []
+      }
+    },
+    {
+      "assetId": "AVATAR-100-STICKER-V1",
+      "category": "avatar",
+      "commerceId": 100,
+      "runtimeId": "avatar_100",
+      "artworkVersion": 1,
+      "status": "draft",
+      "source": {
+        "paths": ["art-source/avatars/golden-set/sticker-v1/avatar_100/avatar_100-transparent-draft-v1.png"],
+        "sha256": "87a4eab8943b41b9dd85e6baa8c6bb2a1fe43b13bd7e8525284a4bb2f4abb633"
+      },
+      "runtime": {"paths": [], "sha256": null},
+      "pivot": {"x": 0.5, "y": 0.5, "unit": "normalized"},
+      "poster": "art-source/avatars/golden-set/sticker-v1/avatar_100/avatar_100-transparent-draft-v1.png",
+      "fallbackAssetId": "avatar-100-v2",
+      "byteBudget": 131072,
+      "loadTiming": "lobby-deferred",
+      "featureFlag": {"id": "mg_avatar_golden_v1", "defaultEnabled": false},
+      "events": ["idle"],
+      "provenance": {
+        "sourceType": "generated",
+        "license": "project-owned-ai-generated",
+        "promptPath": "art-source/style/PROMPTS_draft-v1.md",
+        "model": "codex-built-in-imagegen-runtime-managed",
+        "taskId": "local:exec-a290b025-b8bb-497a-9a8d-14ecc5b12896",
+        "createdAt": "2026-08-08T19:51:36+09:00"
+      },
+      "ipReview": {"status": "pending", "originalIdentifiers": ["asymmetric brown fringe", "teal scarf", "coral notebook pin"], "reviewers": []}
+    },
+    {
+      "assetId": "AVATAR-117-STICKER-V1",
+      "category": "avatar",
+      "commerceId": 117,
+      "runtimeId": "avatar_117",
+      "artworkVersion": 1,
+      "status": "draft",
+      "source": {
+        "paths": ["art-source/avatars/golden-set/sticker-v1/avatar_117/avatar_117-transparent-draft-v1.png"],
+        "sha256": "b62f370a5a58c7f1db173c67d04f824d4c72a50c2368ba5cf02322ebbe2d925f"
+      },
+      "runtime": {"paths": [], "sha256": null},
+      "pivot": {"x": 0.5, "y": 0.5, "unit": "normalized"},
+      "poster": "art-source/avatars/golden-set/sticker-v1/avatar_117/avatar_117-transparent-draft-v1.png",
+      "fallbackAssetId": "avatar-117-v2",
+      "byteBudget": 131072,
+      "loadTiming": "lobby-deferred",
+      "featureFlag": {"id": "mg_avatar_golden_v1", "defaultEnabled": false},
+      "events": ["idle"],
+      "provenance": {
+        "sourceType": "generated",
+        "license": "project-owned-ai-generated",
+        "promptPath": "art-source/style/PROMPTS_draft-v1.md",
+        "model": "codex-built-in-imagegen-runtime-managed",
+        "taskId": "local:exec-71311f0f-9f22-428c-9041-38332abe17a3",
+        "createdAt": "2026-08-08T19:51:36+09:00"
+      },
+      "ipReview": {"status": "pending", "originalIdentifiers": ["teal lighthouse dome", "coral triangular pennant", "paper-cut curling wave"], "reviewers": []}
+    },
+    {
+      "assetId": "AVATAR-124-STICKER-V1",
+      "category": "avatar",
+      "commerceId": 124,
+      "runtimeId": "avatar_124",
+      "artworkVersion": 1,
+      "status": "draft",
+      "source": {
+        "paths": ["art-source/avatars/golden-set/sticker-v1/avatar_124/avatar_124-transparent-draft-v1.png"],
+        "sha256": "bd814903906d08bca9976ce5fc2ef70706c2c1c98f3090a20bc73fad1ab9875e"
+      },
+      "runtime": {"paths": [], "sha256": null},
+      "pivot": {"x": 0.5, "y": 0.5, "unit": "normalized"},
+      "poster": "art-source/avatars/golden-set/sticker-v1/avatar_124/avatar_124-transparent-draft-v1.png",
+      "fallbackAssetId": "avatar-124-v2",
+      "byteBudget": 131072,
+      "loadTiming": "lobby-deferred",
+      "featureFlag": {"id": "mg_avatar_golden_v1", "defaultEnabled": false},
+      "events": ["idle"],
+      "provenance": {
+        "sourceType": "generated",
+        "license": "project-owned-ai-generated",
+        "promptPath": "art-source/style/PROMPTS_draft-v1.md",
+        "model": "codex-built-in-imagegen-runtime-managed",
+        "taskId": "local:exec-a0fe595c-f6d3-42cc-b826-453aaf7d4066",
+        "createdAt": "2026-08-08T19:51:36+09:00"
+      },
+      "ipReview": {"status": "pending", "originalIdentifiers": ["teal round glasses", "cream bow tie", "asymmetric gray cheek patch"], "reviewers": []}
+    },
+    {
+      "assetId": "AVATAR-141-STICKER-V1",
+      "category": "avatar",
+      "commerceId": 141,
+      "runtimeId": "avatar_141",
+      "artworkVersion": 1,
+      "status": "draft",
+      "source": {
+        "paths": ["art-source/avatars/golden-set/sticker-v1/avatar_141/avatar_141-transparent-draft-v1.png"],
+        "sha256": "1e923155cd6a114fd5a58dee4175baa894166e0db557654b40b03bcd829f95df"
+      },
+      "runtime": {"paths": [], "sha256": null},
+      "pivot": {"x": 0.5, "y": 0.5, "unit": "normalized"},
+      "poster": "art-source/avatars/golden-set/sticker-v1/avatar_141/avatar_141-transparent-draft-v1.png",
+      "fallbackAssetId": "avatar-141-v2",
+      "byteBudget": 131072,
+      "loadTiming": "lobby-deferred",
+      "featureFlag": {"id": "mg_avatar_golden_v1", "defaultEnabled": false},
+      "events": ["idle"],
+      "provenance": {
+        "sourceType": "generated",
+        "license": "project-owned-ai-generated",
+        "promptPath": "art-source/style/PROMPTS_draft-v1.md",
+        "model": "codex-built-in-imagegen-runtime-managed",
+        "taskId": "local:exec-ce9d7a4e-16c1-4046-a21c-4348a5152edf",
+        "createdAt": "2026-08-08T19:51:36+09:00"
+      },
+      "ipReview": {"status": "pending", "originalIdentifiers": ["cream capsule body", "teal square-eye screen", "coral ball antenna"], "reviewers": []}
+    },
+    {
+      "assetId": "UI-STICKER-CORE-V1",
+      "category": "ui-kit",
+      "commerceId": null,
+      "runtimeId": "platform-ui",
+      "artworkVersion": 1,
+      "status": "draft",
+      "source": {
+        "paths": ["art-source/ui/sticker-v1/component-demo.html"],
+        "sha256": "67e52d8d0ceab8cd22d3e0583a724d1f8b8a8c366ec6040ce8d76b9071b5b1e1"
+      },
+      "runtime": {"paths": [], "sha256": null},
+      "pivot": {"x": 0.5, "y": 0.5, "unit": "normalized"},
+      "poster": "art-source/ui/sticker-v1/component-demo.png",
+      "fallbackAssetId": "ui-soft-futuristic-v2",
+      "byteBudget": 204800,
+      "loadTiming": "critical",
+      "featureFlag": {"id": "mg_ui_sticker_v1", "defaultEnabled": false},
+      "events": ["default", "hover", "pressed", "focus", "disabled", "loading", "error", "owned", "equipped"],
+      "provenance": {
+        "sourceType": "project-owned",
+        "license": "project-owned",
+        "promptPath": null,
+        "model": null,
+        "taskId": "local:component-demo-v1",
+        "createdAt": "2026-08-08T19:37:51+09:00"
+      },
+      "ipReview": {"status": "pending", "originalIdentifiers": ["ink-paper hard-shadow system", "shape-plus-color state encoding", "seat-shop-avatar component grammar"], "reviewers": []}
+    },
+    {
+      "assetId": "G-02-STICKER-V1",
+      "category": "game-gomoku",
+      "commerceId": null,
+      "runtimeId": "gomoku",
+      "artworkVersion": 1,
+      "status": "draft",
+      "source": {
+        "paths": ["art-source/games/gomoku/sticker-v1/gomoku-vertical-slice-spec-draft-v2.svg"],
+        "sha256": "36638c20799829cda752469d26292ba0f2d17eef4e3c2c018139275b90e0f56c"
+      },
+      "runtime": {"paths": [], "sha256": null},
+      "pivot": {"x": 0.5, "y": 0.5, "unit": "normalized"},
+      "poster": "art-source/games/gomoku/sticker-v1/gomoku-vertical-slice-spec-draft-v2.png",
+      "fallbackAssetId": "G-02-BOARD-SURFACE",
+      "byteBudget": 1572864,
+      "loadTiming": "game-select",
+      "featureFlag": {"id": "mg_art_gomoku_sticker_v1", "defaultEnabled": false},
+      "events": ["place", "last-move", "win-line", "result"],
+      "provenance": {
+        "sourceType": "project-owned",
+        "license": "project-owned",
+        "promptPath": null,
+        "model": null,
+        "taskId": "local:gomoku-svg-spec-v2",
+        "createdAt": "2026-08-08T19:35:02+09:00"
+      },
+      "ipReview": {"status": "pending", "originalIdentifiers": ["coral intersection corner marker", "gold five-stone underline", "teal paper-fabric corner"], "reviewers": []}
+    },
+    {
+      "assetId": "G-07-STICKER-V1",
+      "category": "game-ludo",
+      "commerceId": null,
+      "runtimeId": "ludo",
+      "artworkVersion": 1,
+      "status": "draft",
+      "source": {
+        "paths": ["art-source/games/ludo/sticker-v1/ludo-vertical-slice-spec-draft-v2.svg"],
+        "sha256": "03f61c8883f9ceb7917892b7a8aa12d0662d00281c63e9a89467194610620f40"
+      },
+      "runtime": {"paths": [], "sha256": null},
+      "pivot": {"x": 0.5, "y": 0.5, "unit": "normalized"},
+      "poster": "art-source/games/ludo/sticker-v1/ludo-vertical-slice-spec-draft-v2.png",
+      "fallbackAssetId": "G-07-COVER",
+      "byteBudget": 1572864,
+      "loadTiming": "game-select",
+      "featureFlag": {"id": "mg_art_ludo_sticker_v1", "defaultEnabled": false},
+      "events": ["roll", "launch", "move", "capture", "home", "result"],
+      "provenance": {
+        "sourceType": "project-owned",
+        "license": "project-owned",
+        "promptPath": null,
+        "model": null,
+        "taskId": "local:ludo-svg-spec-v2",
+        "createdAt": "2026-08-08T19:35:02+09:00"
+      },
+      "ipReview": {"status": "pending", "originalIdentifiers": ["four distinct aircraft silhouettes", "exact 52-cell paper orbit", "four-slot color-plus-shape bases"], "reviewers": []}
+    }
+  ]
+}

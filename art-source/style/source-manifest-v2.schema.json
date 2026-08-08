@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://playroom.local/schemas/source-manifest-v2.json",
+  "title": "Playroom Source Manifest v2",
+  "type": "object",
+  "required": ["schemaVersion","manifestType","styleId","assets"],
+  "properties": {
+    "schemaVersion": {"const":2},
+    "manifestType": {"const":"source-sidecar"},
+    "styleId": {"const":"pocket-tabletop-sticker-v1"},
+    "assets": {
+      "type":"array",
+      "items": {
+        "type":"object",
+        "required":["assetId","category","commerceId","runtimeId","artworkVersion","status","source","runtime","pivot","poster","fallbackAssetId","byteBudget","loadTiming","featureFlag","events","provenance","ipReview"],
+        "properties": {
+          "assetId":{"type":"string","minLength":1},
+          "category":{"enum":["persona","avatar","ui-kit","game-gomoku","game-ludo"]},
+          "commerceId":{"type":["integer","null"]},
+          "runtimeId":{"type":["string","null"]},
+          "artworkVersion":{"type":"integer","minimum":1},
+          "status":{"enum":["planned","draft","ip-review","golden-review","integrated","rejected"]},
+          "source":{"type":"object","required":["paths","sha256"],"properties":{"paths":{"type":"array","minItems":1,"items":{"type":"string","minLength":1}},"sha256":{"type":["string","null"],"pattern":"^[a-f0-9]{64}$"}},"additionalProperties":false},
+          "runtime":{"type":"object","required":["paths","sha256"],"properties":{"paths":{"type":"array","items":{"type":"string"}},"sha256":{"type":["string","null"],"pattern":"^[a-f0-9]{64}$"}},"additionalProperties":false},
+          "pivot":{"type":"object","required":["x","y","unit"],"properties":{"x":{"type":"number","minimum":0,"maximum":1},"y":{"type":"number","minimum":0,"maximum":1},"unit":{"const":"normalized"}},"additionalProperties":false},
+          "poster":{"type":["string","null"]},
+          "fallbackAssetId":{"type":"string","minLength":1},
+          "byteBudget":{"type":"integer","minimum":1},
+          "loadTiming":{"enum":["critical","lobby-deferred","game-select","preview","never-preload"]},
+          "featureFlag":{"type":"object","required":["id","defaultEnabled"],"properties":{"id":{"type":"string","minLength":1},"defaultEnabled":{"const":false}},"additionalProperties":false},
+          "events":{"type":"array","uniqueItems":true,"items":{"type":"string"}},
+          "provenance":{"type":"object","required":["sourceType","license","promptPath","model","taskId","createdAt"],"properties":{"sourceType":{"enum":["project-owned","generated","external-licensed"]},"license":{"type":"string","minLength":1},"promptPath":{"type":["string","null"]},"model":{"type":["string","null"]},"taskId":{"type":["string","null"]},"createdAt":{"type":["string","null"],"format":"date-time"}},"additionalProperties":false},
+          "ipReview":{"type":"object","required":["status","originalIdentifiers","reviewers"],"properties":{"status":{"enum":["pending","pass","fail"]},"originalIdentifiers":{"type":"array","uniqueItems":true,"items":{"type":"string","minLength":1}},"reviewers":{"type":"array","uniqueItems":true,"items":{"type":"string","minLength":1}}},"additionalProperties":false}
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

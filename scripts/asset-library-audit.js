@@ -134,7 +134,8 @@ check('所有上游索引存在且哈希一致', catalog.indexes.every(item => {
 
 check('素材集合具备来源、许可、状态与本地根目录', catalog.collections.every(item => {
   const index=safePath(item.catalogPath),root=safePath(item.masterRoot),preview=safePath(item.previewPath);
-  return index&&root&&preview&&fs.existsSync(index)&&fs.existsSync(root)&&fs.existsSync(preview)&&item.license&&item.sourceType&&item.status==='integrated-local-only'&&item.remoteObjectKey===null&&sha256(index)===item.catalogSha256;
+  const localStatus=item.status==='integrated-local-only'||item.status==='reference-only';
+  return index&&root&&preview&&fs.existsSync(index)&&fs.existsSync(root)&&fs.existsSync(preview)&&item.license&&item.sourceType&&localStatus&&item.remoteObjectKey===null&&sha256(index)===item.catalogSha256;
 }));
 check('集合目录哈希只校验 catalogPath，不允许 hashPath 替代', catalog.collections.every(item => !Object.prototype.hasOwnProperty.call(item,'hashPath')));
 check('集合许可证路径与哈希成对且独立校验', catalog.collections.every(item => {

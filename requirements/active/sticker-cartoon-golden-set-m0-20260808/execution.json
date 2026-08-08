@@ -1,16 +1,29 @@
 {
   "schemaVersion": 1,
   "task": "sticker-cartoon-golden-set-m0-20260808",
-  "state": "REQUIREMENT_FROZEN",
-  "startedAt": null,
+  "state": "IMPLEMENTING",
+  "startedAt": "2026-08-08T18:51:31+09:00",
   "verifiedCommit": null,
   "releasedCommit": null,
   "notExecuted": [
-    "blocked until visual-commerce-assets-p0-20260808 is verified and released",
+    "human Art Bible review",
+    "two-person IP Similarity Review",
+    "human Golden Set decision",
+    "runtime feature-flag integration and full six-theme/three-locale/five-width matrix",
     "real Android/iPhone/Tablet matrix",
     "second desktop browser",
     "real Supabase migration/RLS/concurrency/backup/rollback",
     "real network shaping and 30-minute synthetic session"
   ],
-  "blocked": ["visual-commerce-assets-p0-20260808 not released"]
+  "blocked": [],
+  "progress": {
+    "styleAudit": {"status":"implemented","evidence":["evidence/current-style-audit-20260808.md"]},
+    "artBibleV1": {"status":"implemented","evidence":["art-source/style/ART_BIBLE_v1.md","art-source/style/design-tokens.v1.json","art-source/style/facial-kit.v1.json"],"missing":["human Art Bible review"]},
+    "designMotionV3": {"status":"partial","evidence":["art-source/ui/sticker-v1/DESIGN_SYSTEM_v3.md","art-source/style/MOTION_SYSTEM_v1.md","art-source/ui/sticker-v1/component-demo.html","art-source/ui/sticker-v1/component-demo.png"],"missing":["runtime token integration","runtime component integration","offscreen enforcement"]},
+    "sourceManifestV2": {"status":"implemented","evidence":["art-source/style/source-manifest-v2.schema.json","art-source/style/golden-set-source-manifest-v2.json","qa/sticker-art-contract.js"],"boundary":"source-sidecar contract only; runtime asset_manifest.json remains v1 authority"},
+    "goldenSetAssets": {"status":"implemented","evidence":["art-source/ai/teacher/sticker-v1/teacher-8-state-transparent-draft-v1.png","art-source/avatars/golden-set/sticker-v1/avatar_100/avatar_100-transparent-draft-v1.png","art-source/avatars/golden-set/sticker-v1/avatar_117/avatar_117-transparent-draft-v1.png","art-source/avatars/golden-set/sticker-v1/avatar_124/avatar_124-transparent-draft-v1.png","art-source/avatars/golden-set/sticker-v1/avatar_141/avatar_141-transparent-draft-v1.png","art-source/ui/sticker-v1/component-demo.html","art-source/games/gomoku/sticker-v1/gomoku-vertical-slice-spec-draft-v2.svg","art-source/games/ludo/sticker-v1/ludo-vertical-slice-spec-draft-v2.svg"],"boundary":"draft sources only; generated rule-error explorations are excluded; no runtime paths","missing":["teacher/avatar technical cleanup","human style approval"]},
+    "ipReview": {"status":"partial","evidence":["art-source/style/IP_REVIEW_TEMPLATE.md","art-source/ai/teacher/sticker-v1/IP_REVIEW_draft-v1.md","art-source/avatars/golden-set/sticker-v1/avatar_100/IP_REVIEW_draft-v1.md","art-source/avatars/golden-set/sticker-v1/avatar_117/IP_REVIEW_draft-v1.md","art-source/avatars/golden-set/sticker-v1/avatar_124/IP_REVIEW_draft-v1.md","art-source/avatars/golden-set/sticker-v1/avatar_141/IP_REVIEW_draft-v1.md","art-source/ui/sticker-v1/IP_REVIEW_draft-v1.md","art-source/games/gomoku/sticker-v1/IP_REVIEW_draft-v1.md","art-source/games/ludo/sticker-v1/IP_REVIEW_draft-v1.md"],"missing":["Reviewer A","Reviewer B","final pass/fail"]},
+    "integrationQa": {"status":"partial","evidence":["qa/sticker-art-contract.js","deliverables/visual-qa/sticker-cartoon-m0/derived","evidence/golden-set-draft-verification-20260808.json"],"verifiedScope":["source hash","alpha PNG contract","exact Gomoku 15x15/five win","exact Ludo 52/four tokens","small-size draft sheets","grayscale and silhouette draft evidence","quality gates and full npm test"],"missing":["runtime integration","six themes","three locales","five widths","performance/fallback/offscreen/reduced-motion"]},
+    "humanDecision": {"status":"not_executed"}
+  }
 }

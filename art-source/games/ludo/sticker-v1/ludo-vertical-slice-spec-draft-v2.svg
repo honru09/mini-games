@@ -1,0 +1,104 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">Playroom airplane race sticker art vertical-slice specification</title>
+  <desc id="desc">A four-player circular fifty-two-cell race board with four tokens per player and color-plus-silhouette identity encoding.</desc>
+  <defs>
+    <filter id="contact" x="-20%" y="-20%" width="150%" height="160%">
+      <feDropShadow dx="9" dy="14" stdDeviation="6" flood-color="#211923" flood-opacity=".22"/>
+    </filter>
+    <g id="greenPlane">
+      <path d="M0-30L11-10L38-2L38 10L12 7L7 31H-7L-12 7L-38 10L-38-2L-11-10Z" fill="#4BCB83" stroke="#211923" stroke-width="7" stroke-linejoin="round"/>
+      <path d="M0-20L0 19M-22 2H22" stroke="#FFF9F2" stroke-width="5" stroke-linecap="round"/>
+      <path d="M0-12L8-1L0 10L-8-1Z" fill="#FFF9F2"/>
+    </g>
+    <g id="bluePlane">
+      <path d="M0-34L9-7L32 9L25 19L7 10L5 32H-5L-7 10L-25 19L-32 9L-9-7Z" fill="#508BF0" stroke="#211923" stroke-width="7" stroke-linejoin="round"/>
+      <path d="M0-24V23" stroke="#FFF9F2" stroke-width="6" stroke-linecap="round"/>
+      <path d="M-10-2H10" stroke="#FFF9F2" stroke-width="4" stroke-linecap="round"/>
+    </g>
+    <g id="coralPlane">
+      <path d="M0-29L14-7L34 0L31 17L10 10L13 29H-13L-10 10L-31 17L-34 0L-14-7Z" fill="#EF665F" stroke="#211923" stroke-width="7" stroke-linejoin="round"/>
+      <circle cy="-5" r="7" fill="#FFF9F2"/><circle cy="13" r="5" fill="#FFF9F2"/>
+    </g>
+    <g id="goldPlane">
+      <path d="M0-32L12-9L35-1L31 12L12 8L19 30L5 25L0 13L-5 25L-19 30L-12 8L-31 12L-35-1L-12-9Z" fill="#F1B640" stroke="#211923" stroke-width="7" stroke-linejoin="round"/>
+      <path d="M-9-2L0 8L9-2M-9 10L0 20L9 10" fill="none" stroke="#211923" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+    <g id="slot"><circle r="42" fill="#FFF9F2" stroke="#211923" stroke-width="7"/></g>
+  </defs>
+  <rect width="1600" height="900" fill="#FFF9F2"/>
+  <g filter="url(#contact)">
+    <circle cx="480" cy="450" r="404" fill="#F3E5C4" stroke="#211923" stroke-width="14"/>
+    <circle cx="480" cy="450" r="340" fill="none" stroke="#211923" stroke-width="38"/>
+    <circle cx="480" cy="450" r="340" fill="none" stroke="#FFF9F2" stroke-width="28" pathLength="52" data-public-track-cells="52" stroke-dasharray=".68 .32" stroke-linecap="butt"/>
+  </g>
+  <!-- The dashed orbit uses pathLength=52 and therefore contains exactly 52 public track cells. -->
+  <g stroke="#211923" stroke-width="7">
+    <circle cx="480" cy="110" r="22" fill="#4BCB83"/><circle cx="820" cy="450" r="22" fill="#508BF0"/>
+    <circle cx="480" cy="790" r="22" fill="#EF665F"/><circle cx="140" cy="450" r="22" fill="#F1B640"/>
+  </g>
+  <!-- Four home lanes, four cells each, plus center goal. -->
+  <g stroke="#211923" stroke-width="6">
+    <path d="M480 175V385" stroke="#4BCB83" stroke-width="34" stroke-dasharray="36 14"/>
+    <path d="M755 450H545" stroke="#508BF0" stroke-width="34" stroke-dasharray="36 14"/>
+    <path d="M480 725V515" stroke="#EF665F" stroke-width="34" stroke-dasharray="36 14"/>
+    <path d="M205 450H415" stroke="#F1B640" stroke-width="34" stroke-dasharray="36 14"/>
+    <circle cx="480" cy="450" r="76" fill="#FFF9F2"/>
+    <path d="M480 384L546 450L480 516L414 450Z" fill="#39B9B2"/>
+  </g>
+
+  <!-- Four bases with four slots and four tokens each. -->
+  <g transform="translate(250 235)" data-team="green" data-base-token-count="4">
+    <rect x="-132" y="-108" width="264" height="216" rx="46" fill="#4BCB83" stroke="#211923" stroke-width="10"/>
+    <use href="#slot" x="-66" y="-45"/><use href="#slot" x="66" y="-45"/><use href="#slot" x="-66" y="55"/><use href="#slot" x="66" y="55"/>
+    <use href="#greenPlane" x="-66" y="-45"/><use href="#greenPlane" x="66" y="-45"/><use href="#greenPlane" x="-66" y="55"/><use href="#greenPlane" x="66" y="55"/>
+  </g>
+  <g transform="translate(710 235)" data-team="blue" data-base-token-count="4">
+    <rect x="-132" y="-108" width="264" height="216" rx="46" fill="#508BF0" stroke="#211923" stroke-width="10"/>
+    <use href="#slot" x="-66" y="-45"/><use href="#slot" x="66" y="-45"/><use href="#slot" x="-66" y="55"/><use href="#slot" x="66" y="55"/>
+    <use href="#bluePlane" x="-66" y="-45"/><use href="#bluePlane" x="66" y="-45"/><use href="#bluePlane" x="-66" y="55"/><use href="#bluePlane" x="66" y="55"/>
+  </g>
+  <g transform="translate(710 665)" data-team="coral" data-base-token-count="4">
+    <rect x="-132" y="-108" width="264" height="216" rx="46" fill="#EF665F" stroke="#211923" stroke-width="10"/>
+    <use href="#slot" x="-66" y="-45"/><use href="#slot" x="66" y="-45"/><use href="#slot" x="-66" y="55"/><use href="#slot" x="66" y="55"/>
+    <use href="#coralPlane" x="-66" y="-45"/><use href="#coralPlane" x="66" y="-45"/><use href="#coralPlane" x="-66" y="55"/><use href="#coralPlane" x="66" y="55"/>
+  </g>
+  <g transform="translate(250 665)" data-team="gold" data-base-token-count="4">
+    <rect x="-132" y="-108" width="264" height="216" rx="46" fill="#F1B640" stroke="#211923" stroke-width="10"/>
+    <use href="#slot" x="-66" y="-45"/><use href="#slot" x="66" y="-45"/><use href="#slot" x="-66" y="55"/><use href="#slot" x="66" y="55"/>
+    <use href="#goldPlane" x="-66" y="-45"/><use href="#goldPlane" x="66" y="-45"/><use href="#goldPlane" x="-66" y="55"/><use href="#goldPlane" x="66" y="55"/>
+  </g>
+
+  <!-- Interaction-state samples. -->
+  <g transform="translate(950 60)">
+    <rect width="590" height="780" rx="42" fill="#F3E5C4" stroke="#211923" stroke-width="10" filter="url(#contact)"/>
+    <g transform="translate(55 48)">
+      <rect width="220" height="210" rx="30" fill="#FFF9F2" stroke="#211923" stroke-width="7"/>
+      <path d="M52 51L133 28L174 80L153 159L72 181L30 127Z" fill="#FFF9F2" stroke="#211923" stroke-width="7"/>
+      <g fill="#211923"><circle cx="76" cy="75" r="8"/><circle cx="132" cy="61" r="8"/><circle cx="107" cy="105" r="8"/><circle cx="70" cy="135" r="8"/><circle cx="139" cy="139" r="8"/></g>
+    </g>
+    <g transform="translate(315 48)">
+      <rect width="220" height="210" rx="30" fill="#FFF9F2" stroke="#211923" stroke-width="7"/>
+      <use href="#greenPlane" x="110" y="122"/>
+      <path d="M110 76V32M91 51L110 32L129 51" fill="none" stroke="#4BCB83" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+    <g transform="translate(55 292)">
+      <rect width="220" height="210" rx="30" fill="#FFF9F2" stroke="#211923" stroke-width="7"/>
+      <use href="#bluePlane" x="70" y="133"/>
+      <path d="M100 128C130 104 152 84 176 55" fill="none" stroke="#508BF0" stroke-width="9" stroke-linecap="round" stroke-dasharray="12 14"/>
+      <path d="M159 57L179 52L175 73" fill="none" stroke="#211923" stroke-width="7" stroke-linejoin="round"/>
+    </g>
+    <g transform="translate(315 292)">
+      <rect width="220" height="210" rx="30" fill="#FFF9F2" stroke="#211923" stroke-width="7"/>
+      <use href="#coralPlane" x="85" y="118"/><use href="#goldPlane" x="139" y="92"/>
+      <path d="M102 65L117 82M117 64L102 83" stroke="#EF665F" stroke-width="8" stroke-linecap="round"/>
+    </g>
+    <g transform="translate(55 536)">
+      <rect width="480" height="188" rx="30" fill="#211923" stroke="#211923" stroke-width="7"/>
+      <g transform="translate(75 98)"><use href="#greenPlane"/></g>
+      <g transform="translate(185 98)"><use href="#bluePlane"/></g>
+      <g transform="translate(295 98)"><use href="#coralPlane"/></g>
+      <g transform="translate(405 98)"><use href="#goldPlane"/></g>
+      <circle cx="75" cy="157" r="10" fill="#4BCB83"/><circle cx="185" cy="157" r="10" fill="#508BF0"/><circle cx="295" cy="157" r="10" fill="#EF665F"/><circle cx="405" cy="157" r="10" fill="#F1B640"/>
+    </g>
+  </g>
+</svg>

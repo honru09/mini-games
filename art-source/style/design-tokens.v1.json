@@ -1,0 +1,128 @@
+{
+  "schemaVersion": 1,
+  "styleId": "pocket-tabletop-sticker-v1",
+  "artworkVersion": 1,
+  "palette": {
+    "ink900": "#211923",
+    "ink700": "#443443",
+    "paper50": "#FFF9F2",
+    "cream100": "#F3E5C4",
+    "green500": "#4BCB83",
+    "teal500": "#39B9B2",
+    "blue500": "#508BF0",
+    "purple500": "#8656CF",
+    "pink500": "#E45CA4",
+    "coral500": "#EF665F",
+    "gold500": "#F1B640",
+    "brown500": "#82513F"
+  },
+  "themes": {
+    "light": {"background":"#FFF2E5","panel":"#FFFDF8","accent":"#56C987"},
+    "midnight": {"background":"#242038","panel":"#332D4D","accent":"#A17BEC"},
+    "ocean": {"background":"#DDF4F2","panel":"#F5FFFD","accent":"#31B8B1"},
+    "forest": {"background":"#E6F0DD","panel":"#F8FFF4","accent":"#58A85E"},
+    "cyber": {"background":"#202338","panel":"#30354C","accent":"#55D4C5"},
+    "sakura": {"background":"#FFF0F4","panel":"#FFF8FA","accent":"#E96C9A"}
+  },
+  "themeInvariants": [
+    "ink",
+    "outlineScale",
+    "proportions",
+    "materialGrammar",
+    "lightDirection",
+    "componentStructure",
+    "playerIdentityEncoding"
+  ],
+  "outlineScale": [
+    {"displayPx":24,"outerMinPx":2,"outerMaxPx":2.25,"innerMinPx":1.5,"innerMaxPx":1.5},
+    {"displayPx":32,"outerMinPx":2.25,"outerMaxPx":2.75,"innerMinPx":1.5,"innerMaxPx":1.75},
+    {"displayPx":44,"outerMinPx":2.75,"outerMaxPx":3.5,"innerMinPx":1.75,"innerMaxPx":2.25},
+    {"displayPx":64,"outerMinPx":3.5,"outerMaxPx":4,"innerMinPx":2.25,"innerMaxPx":2.5},
+    {"displayPx":96,"outerMinPx":4.5,"outerMaxPx":5.5,"innerMinPx":2.75,"innerMaxPx":3.5},
+    {"displayPx":192,"outerMinPx":7,"outerMaxPx":9,"innerMinPx":4,"innerMaxPx":5},
+    {"displayPx":512,"outerMinPx":15,"outerMaxPx":20,"innerMinPx":8,"innerMaxPx":11}
+  ],
+  "linePolicy": {
+    "cap": "round",
+    "join": "round",
+    "innerToOuterMin": 0.55,
+    "innerToOuterMax": 0.7,
+    "semanticLineMinPxAt1x": 1.5,
+    "outlineToleranceRatio": 0.1,
+    "stickerBorderShortEdgeMinRatio": 0.04,
+    "stickerBorderShortEdgeMaxRatio": 0.06
+  },
+  "proportions": {
+    "personaHeadCountMin": 1.9,
+    "personaHeadCountMax": 2.3,
+    "personaHeadHeightMinRatio": 0.52,
+    "personaHeadHeightMaxRatio": 0.62,
+    "avatarHeadHeightMinRatio": 0.62,
+    "avatarHeadHeightMaxRatio": 0.74,
+    "avatarSubjectFillMinRatio": 0.78,
+    "avatarSubjectFillMaxRatio": 0.88,
+    "avatarSafeAreaMinRatio": 0.08,
+    "highEmotionMouthFaceWidthMinRatio": 0.45,
+    "highEmotionMouthFaceWidthMaxRatio": 0.65,
+    "gestureScaleMin": 1.2,
+    "gestureScaleMax": 1.45
+  },
+  "celShading": {
+    "baseAreaMinRatio": 0.72,
+    "baseAreaMaxRatio": 0.85,
+    "shadeAreaMinRatio": 0.1,
+    "shadeAreaMaxRatio": 0.22,
+    "highlightAreaMinRatio": 0.03,
+    "highlightAreaMaxRatio": 0.08,
+    "shadeInkMixMinRatio": 0.12,
+    "shadeInkMixMaxRatio": 0.18,
+    "highlightPaperMixMinRatio": 0.18,
+    "highlightPaperMixMaxRatio": 0.26,
+    "lightDirectionDegrees": 315
+  },
+  "shadows": {
+    "contact": {"color":"rgba(33,25,35,.22)","xWidthRatio":0.025,"yHeightRatio":0.045,"blurShortEdgeMaxRatio":0.02},
+    "lifted": {"color":"rgba(33,25,35,.18)","xWidthRatio":0.035,"yHeightRatio":0.07,"blurShortEdgeMaxRatio":0.04},
+    "buttonHardShadowMinPx": 3,
+    "buttonHardShadowMaxPx": 5,
+    "pressedTranslateMinPx": 2,
+    "pressedTranslateMaxPx": 3,
+    "disableBelowDisplayPx": 32
+  },
+  "materials": {
+    "wood": {"allowed":"2-4 wide grain bands and one shade block","forbidden":"photo grain, pores, complex rings"},
+    "paperboard": {"allowed":"one pressed edge and low-frequency color variation","forbidden":"fiber noise and dirt texture"},
+    "metal": {"allowed":"one highlight block and 1-3 large rivets","forbidden":"PBR reflection and dense scratches"},
+    "glassCandy": {"allowed":"transparent color block and one edge highlight","forbidden":"multi-refraction and environment mirror"},
+    "stone": {"allowed":"2-3 large planes","forbidden":"fracture noise and photo texture"},
+    "fabric": {"allowed":"1-2 broad folds","forbidden":"fine weave"},
+    "foliageCloud": {"allowed":"large grouped silhouettes","forbidden":"single-leaf or hair-like detail"}
+  },
+  "typography": {
+    "displayStack": ["Nunito Sans","Noto Sans SC","PingFang SC","Microsoft YaHei UI","Segoe UI","system-ui","sans-serif"],
+    "bodyStack": ["Noto Sans","Noto Sans SC","PingFang SC","Microsoft YaHei UI","Segoe UI","system-ui","sans-serif"],
+    "displayWeights": [800,900],
+    "bodyWeights": [400,600],
+    "controlWeight": 700,
+    "localeExpansionReserveRatio": 0.35,
+    "tabularNumericContexts": ["currency","countdown","score","ranking"],
+    "requiredUkrainianGlyphs": "ҐґЄєІіЇї"
+  },
+  "accessibility": {
+    "normalTextContrastMin": 4.5,
+    "largeTextContrastMin": 3,
+    "nonTextContrastMin": 3,
+    "minimumTouchTargetPx": 44,
+    "colorCannotBeSoleSignal": true,
+    "respectReducedMotion": true,
+    "flashesPerSecondMax": 3
+  },
+  "budgets": {
+    "firstScreenAdditionalBytesMax": 512000,
+    "singleGameLazyBytesMax": 1572864,
+    "singleAtlasDimensionMaxPx": 2048,
+    "singleAtlasBytesMax": 1048576,
+    "mobileDecodedWorkingSetBytesTarget": 83886080,
+    "desktopDecodedWorkingSetBytesTarget": 167772160
+  }
+}

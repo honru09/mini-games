@@ -24,3 +24,16 @@
 
 - Art Bible Review → Golden Set Style Review → IP Similarity Review → Integration/Performance/A11y → Feature Flag Release。
 - 任一 Gate 失败都回到上一阶段，不扩大批量生产范围。
+
+## Golden Set frozen selection
+
+- Persona：`teacher`，固定 `idle / think / confident / surprised / win / lose / taunt / recover` 八状态。
+- Avatar：`commerceId 100 / 117 / 124 / 141`，分别验证人类、无脸场景、动物和机械非人兼容形态；只递增 `artworkVersion`。
+- UI：Button / Card / Modal / Room Seat / Shop Card / Avatar / Badge / Toast 全状态。
+- 游戏：五子棋与飞行棋的棋盘、棋子、状态、动效、结算完整纵切。
+
+## Rollback flags
+
+- 总闸门：`mg_art_sticker_m0_v1`。
+- 分闸门：`mg_ui_sticker_v1`、`mg_persona_sticker_v1`、`mg_avatar_golden_v1`、`mg_art_gomoku_sticker_v1`、`mg_art_ludo_sticker_v1`。
+- 人工 Golden Set 决议前全部 `defaultEnabled=false`；关闭时完整回退现有 soft-3D / CSS / Canvas / DOM / Emoji。

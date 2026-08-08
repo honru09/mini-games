@@ -187,6 +187,8 @@ node --experimental-websocket qa/ws-close-test.js
 - [x] 六款大厅封面 640/320 双尺寸接入；注册/商城重排、三语言商品与 Avatar alt、价格契约、五档响应式和滚动锁通过自动化及本地浏览器验收。
 - [x] 建立本地素材库 provenance sidecar、Schema 子集验证、目录/许可证独立哈希和六封面交叉审计。
 - [x] 冻结 `Pocket Tabletop Sticker` M0：Art Bible、Design/Motion、Source Manifest、Golden Set 与 IP Review；当前过渡封面不冒充最终风格。
+- [x] 完成 M0 Draft 源：Teacher 八状态与四 Avatar Alpha、Core UI HTML/CSS 状态板、精确五子棋 15×15/五连、飞行棋 52 格/每方四机/四剪影；Source Manifest 固定 hash/provenance，生成式规则错误稿不进入当前源路径。
+- [ ] 完成 Teacher/Avatar 人工清稿、IP 双人审查、六主题×三语×五宽运行时集成验收与 Golden Set 人工决议；完成前全部 M0 旗标默认关闭。
 - [x] 实施 Economy & Progression v1.0：联机/AI 权威结算隔离、有效局、防刷、独立胜场、`apply_reward_v1` 单事务落库、奖励流水与 Reward Breakdown UI。
 - [x] 实施 Gameplay Shared Protocol V1：Tank Authority、Tetris Battle Coordination、Spectator Room、Tournament Orchestrator、Xiangqi Clock、Monopoly Auction。
 - [x] 实施 Gameplay Rule Authority v2：Tetris/象棋/大富翁共享纯规则核心、服务端动作验证、完整快照、确定性哈希与 v1 兼容回退。

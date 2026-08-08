@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "styleId": "pocket-tabletop-sticker-v1",
+  "levels": {
+    "L1": {"maxScaleDelta":0.04,"usage":["lobby","profile","idle"]},
+    "L2": {"maxScaleDelta":0.1,"usage":["room","ai-match","preview"]},
+    "L3": {"maxScaleDelta":0.18,"usage":["emote","ko","result","critical-event"]}
+  },
+  "requiredLayers": ["brow_L","brow_R","eye_L","eye_R","pupil_L","pupil_R","mouth","cheek","tear_sweat"],
+  "expressions": [
+    {"id":"neutral","L1":"relaxed eyes and closed mouth","L2":"direct gaze and gentle breath","L3":"clear calm hold pose"},
+    {"id":"smile","L1":"raised mouth corners","L2":"teeth and raised cheeks","L3":"full pre-laugh face"},
+    {"id":"laugh","L1":"narrow eyes and small open mouth","L2":"crescent eyes and open mouth","L3":"head back, tear accent, body rebound"},
+    {"id":"smug","L1":"one raised mouth corner","L2":"single raised brow and half-lidded eyes","L3":"raised chin and side gesture"},
+    {"id":"proud","L1":"slightly raised head","L2":"closed-eye smile and hands on hips","L3":"expanded chest winner pose"},
+    {"id":"angry","L1":"brows pressed inward","L2":"narrow eyes and clenched teeth","L3":"forward lean and clenched hands"},
+    {"id":"rage","L1":"forehead tension","L2":"wide eyes and shout","L3":"compression then full-body burst"},
+    {"id":"shock","L1":"raised brows and small round mouth","L2":"round eyes, O mouth, lean back","L3":"large eyes and full-body retreat"},
+    {"id":"panic","L1":"shifted gaze","L2":"asymmetric eyes, wave mouth, sweat","L3":"busy hands and strong squash"},
+    {"id":"cry","L1":"wet eyes","L2":"two tears and downturned mouth","L3":"continuous tears and curled body"},
+    {"id":"sad","L1":"inner brows lowered","L2":"head down and small pout","L3":"dropped shoulders and whole-body sink"},
+    {"id":"confused","L1":"single raised brow","L2":"head tilt and twisted mouth","L3":"crossed gaze and original question glyph"},
+    {"id":"dizzy","L1":"unfocused gaze","L2":"rotating pupils and head wobble","L3":"crossed eyes and original orbit glyph"},
+    {"id":"shy","L1":"small blush","L2":"averted gaze and raised shoulders","L3":"half-covered face and inward body"},
+    {"id":"focus","L1":"tight pupils","L2":"inward brows, closed mouth, lean forward","L3":"strong lean and local focus lines"},
+    {"id":"celebrate","L1":"raised hand and smile","L2":"both hands raised","L3":"jump, open smile, restrained confetti"}
+  ],
+  "goldenPersona": {
+    "personaId": "teacher",
+    "states": {
+      "idle": "neutral:L1",
+      "think": "focus:L2",
+      "confident": "proud:L2",
+      "surprised": "shock:L2",
+      "win": "celebrate:L3",
+      "lose": "sad:L3",
+      "taunt": "smug:L3",
+      "recover": "smile:L1>neutral:L1"
+    }
+  }
+}
