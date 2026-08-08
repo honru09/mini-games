@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "task": "visual-commerce-assets-p0-20260808",
+  "state": "VERIFYING",
+  "startedAt": "2026-08-08T14:00:00+09:00",
+  "verifiedCommit": null,
+  "releasedCommit": null,
+  "notExecuted": [
+    "real Android/iPhone/Tablet matrix",
+    "second desktop browser",
+    "external object storage upload",
+    "real browser screenshot evidence for the final commit"
+  ],
+  "blocked": [],
+  "changeRequest": {
+    "requestedAt": "2026-08-08T17:20:00+09:00",
+    "reason": "只读审计发现商城价格展示漂移、Starter Background 可购买假入口、游戏顶栏语言泄漏、重复商城弹层、481–768px 响应式缺口和素材哈希字段混用；新增深度研究报告要求当前封面只能作为可回滚过渡版。",
+    "acceptedAt": "2026-08-08T17:20:00+09:00",
+    "acceptedBy": "user request to execute all reports and continue",
+    "stateAfterApproval": "REQUIREMENT_FROZEN"
+  }
+}

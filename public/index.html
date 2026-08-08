@@ -137,6 +137,7 @@ body{
   -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
   transition:background var(--dur-base) var(--ease-standard), color var(--dur-base) var(--ease-standard);
 }
+body.modal-scroll-locked{overflow:hidden}
 body::before, body::after{
   content:''; position:fixed; z-index:-1; width:64vmax; height:64vmax; border-radius:50%;
   filter:blur(100px); opacity:.6; pointer-events:none;
@@ -295,7 +296,7 @@ button{font-family:inherit; cursor:pointer}
   background:rgba(15,23,42,.78); color:#fff; border-radius:99px; padding:1px 5px;
   line-height:1.5; white-space:nowrap; z-index:3;
 }
-.auth-avatar-grid{max-height:230px; overflow-y:auto; padding-right:4px}
+.auth-avatar-grid{padding-right:4px}
 .nick-input{
   width:100%; padding:9px 12px; border:1px solid var(--border); border-radius:10px;
   font-size:15px; font-family:inherit; box-sizing:border-box;
@@ -575,15 +576,36 @@ canvas.board-canvas{width:100%; max-width:560px; display:block; border-radius:12
 @keyframes toastIn{from{opacity:0; transform:translateY(8px)}to{opacity:1; transform:none}}
 
 /* ============ 账号 / 个人化 ============ */
+.auth-backdrop{padding:16px; box-sizing:border-box}
+.auth-card{
+  width:min(920px,calc(100vw - 32px)); max-width:none; max-height:min(760px,calc(100dvh - 32px));
+  overflow:auto; overscroll-behavior:contain; scrollbar-gutter:stable; box-sizing:border-box;
+}
+.auth-card.auth-login-mode{width:min(460px,calc(100vw - 32px))}
 .auth-hero{
-  border-radius:14px; padding:26px 22px; text-align:center; margin-bottom:14px;
+  display:flex; align-items:center; gap:14px; border-radius:14px; padding:14px 16px; text-align:left; margin-bottom:14px;
   background:linear-gradient(135deg, rgba(79,110,247,.16), rgba(139,92,246,.18));
   border:1px solid var(--border);
 }
-.auth-hero .big{font-size:40px; line-height:1; margin-bottom:8px}
-.auth-hero h2{margin:0 0 4px; font-size:19px}
-.auth-hero p{margin:0; font-size:12.5px; color:var(--muted)}
-.auth-avatar-wrap{display:flex; justify-content:center; margin:12px 0}
+.auth-hero .big{font-size:32px; line-height:1; flex:none}
+.auth-hero-copy{min-width:0}
+.auth-hero h2{margin:0 0 3px; font-size:19px}
+.auth-hero p{margin:0; font-size:12.5px; line-height:1.45; color:var(--muted)}
+.auth-register-layout{display:grid; grid-template-columns:minmax(0,1.28fr) minmax(280px,.72fr); gap:14px; align-items:start}
+.auth-choice-panel,.auth-details-panel,.auth-login-body{min-width:0; box-sizing:border-box; border:1px solid var(--border); border-radius:14px; padding:14px; background:linear-gradient(145deg,var(--card),var(--accent-soft))}
+.auth-section-title{font-size:13px; font-weight:750; color:var(--text); margin-bottom:8px}
+.auth-avatar-wrap{display:flex; justify-content:center; margin:4px 0 10px}
+.auth-category-tabs{flex-wrap:nowrap; overflow-x:auto; padding:2px 1px 6px; scrollbar-width:thin; overscroll-behavior-inline:contain}
+.auth-category-tabs .shop-tab{white-space:nowrap; flex:none}
+.auth-avatar-grid{grid-template-columns:repeat(auto-fill,minmax(62px,1fr)); gap:8px; margin:8px 0 0}
+.auth-avatar-grid .avatar-opt{min-height:58px; padding:7px 2px}
+.auth-field{display:flex; flex-direction:column; gap:5px; margin-bottom:11px}
+.auth-field-label{font-size:11.5px; color:var(--muted); font-weight:650}
+.auth-bg-grid{grid-template-columns:repeat(7,minmax(38px,1fr)); margin:7px 0 13px}
+.auth-bg-grid .bg-swatch{width:100%; min-width:38px; height:44px}
+.auth-actions{display:flex; flex-wrap:wrap; gap:8px; margin-top:12px}
+.auth-actions .btn-primary{flex:1 1 140px}
+.auth-login-body .auth-actions{margin-top:14px}
 .avatar-stage{position:relative; width:84px; height:84px}
 .avatar-stage canvas{position:relative; z-index:2; display:block; border-radius:50%}
 .avatar-stage .frame-ring{
@@ -644,18 +666,37 @@ canvas.board-canvas{width:100%; max-width:560px; display:block; border-radius:12
 :is(html[data-theme="dark"], html[data-theme="midnight"], html[data-theme="ocean"], html[data-theme="forest"], html[data-theme="cyber"], html[data-theme="sakura"]) .profile-hero.bg-4{background:linear-gradient(135deg,#132a1e,#1a4d2e)}
 :is(html[data-theme="dark"], html[data-theme="midnight"], html[data-theme="ocean"], html[data-theme="forest"], html[data-theme="cyber"], html[data-theme="sakura"]) .profile-hero.bg-5{background:linear-gradient(135deg,#2d1525,#5c2350)}
 :is(html[data-theme="dark"], html[data-theme="midnight"], html[data-theme="ocean"], html[data-theme="forest"], html[data-theme="cyber"], html[data-theme="sakura"]) .profile-hero.bg-6{background:linear-gradient(135deg,#1e293b,#334155); color:#e2e8f0; border-color:rgba(148,163,198,.25)}
-.shop-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(104px,1fr)); gap:8px; margin:8px 0 12px}
+.shop-modal-card{width:min(980px,calc(100vw - 32px)); max-width:none; max-height:min(820px,calc(100dvh - 32px)); overflow:hidden; display:flex; flex-direction:column; box-sizing:border-box}
+.shop-header{display:grid; grid-template-columns:minmax(0,1fr) auto auto; gap:10px; align-items:center; padding-bottom:12px; border-bottom:1px solid var(--border)}
+.shop-header h3{margin:0}
+.shop-header-copy{min-width:0}
+.shop-subtitle{margin:3px 0 0; color:var(--muted); font-size:11.5px; line-height:1.4}
+.shop-close{white-space:nowrap}
+.shop-layout{display:grid; grid-template-columns:minmax(238px,300px) minmax(0,1fr); gap:14px; min-height:0; flex:1}
+.shop-preview-panel{align-self:start; position:sticky; top:0; border:1px solid var(--border); border-radius:14px; padding:14px; text-align:center; background:linear-gradient(145deg,var(--accent-soft),var(--card)); min-height:310px}
+.shop-preview-eyebrow{font-size:10.5px; font-weight:750; letter-spacing:.08em; text-transform:uppercase; color:var(--muted)}
+.shop-preview-visual{height:166px; margin:10px 0; border-radius:14px; display:flex; align-items:center; justify-content:center; overflow:hidden; background:radial-gradient(circle at 50% 38%,rgba(255,255,255,.88),var(--accent-soft)); border:1px solid var(--border)}
+.shop-preview-visual .avatar-stage{display:flex; align-items:center; justify-content:center}
+.shop-preview-visual .background-poster{width:100%; height:100%; aspect-ratio:auto; border:0; border-radius:0}
+.shop-preview-background{width:100%; height:100%}
+.shop-preview-game-icon{font-size:70px; filter:drop-shadow(0 12px 18px rgba(15,23,42,.18))}
+.shop-preview-name{font-size:16px; font-weight:750; line-height:1.35}
+.shop-preview-state{display:inline-flex; margin-top:7px; padding:4px 9px; border-radius:99px; background:var(--p1bg); color:var(--primary); font-size:11.5px; font-weight:700}
+.shop-preview-note{margin:9px 0 0; color:var(--muted); font-size:11.5px; line-height:1.5}
+.shop-catalog{min-width:0; min-height:0; overflow-y:auto; padding-right:3px; scrollbar-width:thin}
+.shop-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(128px,1fr)); gap:9px; margin:0 0 12px; align-content:start}
 .shop-item{
-  border:1.5px solid var(--border); border-radius:12px; padding:10px 6px; text-align:center;
-  background:var(--card); display:flex; flex-direction:column; align-items:center; gap:5px; font-size:12px;
+  border:1.5px solid var(--border); border-radius:12px; padding:11px 8px; text-align:center; min-width:0;
+  background:var(--card); display:flex; flex-direction:column; align-items:center; gap:6px; font-size:12px;
 }
 .shop-item:hover{border-color:var(--primary)}
+.shop-item.preview-selected{border-color:var(--primary); box-shadow:0 0 0 2px var(--accent-soft)}
 .shop-item .si-name{font-weight:600}
 .shop-item .si-price{color:var(--muted); font-size:11.5px}
 .shop-item.selected{border-color:var(--primary); background:rgba(79,110,247,.08)}
 .shop-item.owned{border-style:dashed}
-.shop-item button{padding:3px 10px; font-size:11.5px}
-.shop-tabs{display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px}
+.shop-item button{padding:6px 10px; font-size:11.5px; min-height:34px}
+.shop-tabs{display:flex; gap:6px; flex-wrap:wrap; margin:12px 0}
 .shop-tab{padding:5px 12px; font-size:12.5px; border-radius:99px}
 .bg-swatch{
   width:38px; height:38px; border-radius:10px; border:2px solid var(--border); cursor:pointer;
@@ -756,7 +797,8 @@ button, canvas, .game-card, .ttt-cell, .j-cell, .xq-cell,
   .hub-label { font-size: 12px; }
   .count-btn { padding: 6px 12px; font-size: 12px; }
   .game-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
-  .game-card { padding: 12px 10px; }
+  .game-card { padding: 12px 10px; min-width:0; }
+  .game-card.has-cover{padding:7px 7px 11px}
   .game-card .icon { font-size: 26px; }
   .game-card .name { font-size: 14px; }
   .game-card .desc { font-size: 11px; min-height: 28px; }
@@ -765,14 +807,40 @@ button, canvas, .game-card, .ttt-cell, .j-cell, .xq-cell,
   .online-panel h3 { font-size: 13px; }
   .lb-panel, .lobby-panel { padding: 10px 12px; }
   .lb-panel h3, .lobby-panel h3 { font-size: 13px; }
-  .modal-card { padding: 16px 18px; max-width: 95vw; width: auto; }
+  .modal-card { padding: 16px 14px; max-width: calc(100vw - 12px); width: auto; }
   .modal-card h3 { font-size: 15px; }
   .game-top { padding: 8px 10px; }
   .game-top h2 { font-size: 15px; }
   canvas.board-canvas { max-width: 100%; }
-  .hero-banner { padding: var(--sp-lg) var(--sp-md); }
-  .hero-banner h1 { font-size: 22px; }
-  .hero-banner .hero-icon { font-size: 34px; }
+  .auth-backdrop{padding:6px; align-items:flex-start}
+  .auth-card,.auth-card.auth-login-mode{width:100%; max-width:none; max-height:calc(100dvh - 12px); padding:12px}
+  .auth-hero{padding:10px 12px; gap:10px; margin-bottom:10px}
+  .auth-hero .big{font-size:26px}
+  .auth-hero h2{font-size:16px}
+  .auth-hero p{font-size:11px}
+  .auth-register-layout{grid-template-columns:minmax(0,1fr); gap:10px}
+  .auth-choice-panel,.auth-details-panel,.auth-login-body{padding:11px}
+  .auth-avatar-grid{grid-template-columns:repeat(4,minmax(0,1fr)); gap:6px}
+  .auth-avatar-grid .avatar-opt{min-height:56px}
+  .auth-bg-grid{grid-template-columns:repeat(4,1fr)}
+  .auth-actions{display:grid; grid-template-columns:1fr}
+  .shop-modal-card{display:block; width:100%; max-width:none; max-height:calc(100dvh - 12px); overflow:auto; padding:12px}
+  .shop-header{grid-template-columns:minmax(0,1fr) auto; gap:8px}
+  .shop-header .stat-chip{grid-column:1; grid-row:2; justify-self:start}
+  .shop-close{grid-column:2; grid-row:1 / span 2}
+  .shop-tabs{flex-wrap:nowrap; overflow-x:auto; overflow-y:hidden; min-height:52px; padding-bottom:4px; scrollbar-width:thin}
+  .shop-tab{white-space:nowrap; flex:none}
+  .shop-layout{grid-template-columns:1fr; gap:10px; overflow:visible}
+  .shop-preview-panel{position:static; min-height:0; display:grid; grid-template-columns:96px minmax(0,1fr); grid-template-rows:auto auto auto 1fr; gap:3px 12px; text-align:left; padding:10px}
+  .shop-preview-eyebrow{grid-column:2; align-self:end}
+  .shop-preview-visual{grid-column:1; grid-row:1 / span 4; width:96px; height:96px; margin:0}
+  .shop-preview-name,.shop-preview-state,.shop-preview-note{grid-column:2}
+  .shop-preview-state{justify-self:start; margin-top:2px}
+  .shop-preview-note{margin:2px 0 0; line-height:1.35}
+  .shop-preview-game-icon{font-size:46px}
+  .shop-catalog{overflow:visible; padding:0}
+  .shop-grid{grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px}
+  .shop-item button.btn{min-height:44px; min-width:44px}
 }
 
 /* 平板 / 中等屏 (481px - 768px) */
@@ -781,21 +849,33 @@ button, canvas, .game-card, .ttt-cell, .j-cell, .xq-cell,
   .hub-side { gap: 12px; }
   .game-grid { grid-template-columns: repeat(3, 1fr); }
   .brand .brand-tag { font-size: 10px; }
+  .auth-backdrop{padding:10px; align-items:flex-start}
+  .auth-card,.auth-card.auth-login-mode{width:100%; max-width:none; max-height:calc(100dvh - 20px); padding:14px}
+  .auth-register-layout{grid-template-columns:minmax(0,1fr); gap:12px}
+  .auth-avatar-grid{grid-template-columns:repeat(6,minmax(0,1fr)); gap:7px}
+  .auth-bg-grid{grid-template-columns:repeat(7,minmax(44px,1fr))}
+  .shop-modal-card{display:block; width:calc(100vw - 20px); max-width:none; max-height:calc(100dvh - 20px); overflow:auto; padding:14px}
+  .shop-header{grid-template-columns:minmax(0,1fr) auto; gap:9px}
+  .shop-header .stat-chip{grid-column:1; grid-row:2; justify-self:start}
+  .shop-close{grid-column:2; grid-row:1 / span 2}
+  .shop-tabs{flex-wrap:nowrap; overflow-x:auto; overflow-y:hidden; min-height:52px; padding-bottom:4px; scrollbar-width:thin}
+  .shop-tab{white-space:nowrap; flex:none}
+  .shop-layout{grid-template-columns:1fr; gap:12px; overflow:visible}
+  .shop-preview-panel{position:static; min-height:0; display:grid; grid-template-columns:112px minmax(0,1fr); grid-template-rows:auto auto auto 1fr; gap:4px 14px; text-align:left; padding:12px}
+  .shop-preview-eyebrow{grid-column:2; align-self:end}
+  .shop-preview-visual{grid-column:1; grid-row:1 / span 4; width:112px; height:112px; margin:0}
+  .shop-preview-name,.shop-preview-state,.shop-preview-note{grid-column:2}
+  .shop-preview-state{justify-self:start; margin-top:2px}
+  .shop-preview-note{margin:2px 0 0; line-height:1.4}
+  .shop-preview-game-icon{font-size:54px}
+  .shop-catalog{overflow:visible; padding:0}
+  .shop-grid{grid-template-columns:repeat(auto-fill,minmax(132px,1fr)); gap:8px}
+  .shop-item button.btn{min-height:44px; min-width:44px}
 }
 
 /* 中等屏 (769px - 1024px) */
 @media (min-width: 769px) and (max-width: 1024px) {
   .hub-grid { grid-template-columns: minmax(0, 1fr) 280px; gap: 12px; }
-}
-
-/* 通用移动端按钮放大（确保至少 44px 触控目标） */
-@media (max-width: 768px) {
-  .btn, .count-btn, .shop-tab {
-    min-height: 40px;
-    min-width: 40px;
-  }
-  .invite-btn { padding: 6px 14px; }
-  .online-row { gap: 6px; }
 }
 
 /* ====== 胜利结算动画 ====== */
@@ -987,10 +1067,11 @@ button, canvas, .game-card, .ttt-cell, .j-cell, .xq-cell,
 /* --- Hero 区 --- */
 .hero-banner{
   position:relative; overflow:hidden; border-radius:var(--radius-xl);
-  padding:var(--sp-xl) var(--sp-lg); margin-bottom:var(--sp-lg);
+  display:grid; grid-template-columns:56px minmax(0,1fr) auto; grid-template-rows:auto auto; align-items:center; column-gap:14px;
+  padding:16px 18px; margin-bottom:var(--sp-md);
   background:linear-gradient(120deg, var(--accent-soft), rgba(139,92,246,.10), rgba(245,158,11,.08));
   border:1px solid var(--border-color);
-  text-align:center;
+  text-align:left;
 }
 .hero-banner::before, .hero-banner::after{
   content:''; position:absolute; border-radius:50%; filter:blur(46px); opacity:.55; pointer-events:none;
@@ -998,17 +1079,24 @@ button, canvas, .game-card, .ttt-cell, .j-cell, .xq-cell,
 .hero-banner::before{width:220px; height:220px; background:var(--hero-grad-a); top:-70px; left:-40px; animation:heroBlob 9s ease-in-out infinite alternate}
 .hero-banner::after{width:260px; height:260px; background:var(--hero-grad-b); bottom:-90px; right:-50px; animation:heroBlob 11s ease-in-out infinite alternate-reverse}
 @keyframes heroBlob{0%{transform:translate(0,0) scale(1)}100%{transform:translate(28px,-22px) scale(1.12)}}
-.hero-banner .hero-icon{width:72px; height:72px; position:relative; z-index:1; animation:heroFloat 3.2s ease-in-out infinite}
+.hero-banner .hero-icon{grid-row:1 / span 2; width:56px; height:56px; position:relative; z-index:1; animation:heroFloat 3.2s ease-in-out infinite}
 .hero-banner .hero-icon img{width:100%; height:100%; display:block; filter:drop-shadow(0 10px 20px rgba(42,54,126,.22))}
 @keyframes heroFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
 .hero-banner h1{
-  margin:8px 0 4px; position:relative; z-index:1; font-size:var(--fs-display); font-weight:var(--fw-black);
+  margin:0; align-self:end; position:relative; z-index:1; font-size:clamp(24px,3vw,var(--fs-display)); font-weight:var(--fw-black);
   letter-spacing:var(--ls-tight);
   background:linear-gradient(120deg, var(--accent), #8b5cf6 55%, var(--warning));
   -webkit-background-clip:text; background-clip:text; color:transparent;
 }
-.hero-banner .hero-tag{position:relative; z-index:1; font-size:var(--fs-small); color:var(--text-secondary); letter-spacing:var(--ls-wide); margin:0 0 var(--sp-md)}
-.hero-banner .hero-cta{position:relative; z-index:1}
+.hero-banner .hero-tag{position:relative; z-index:1; align-self:start; font-size:var(--fs-small); color:var(--text-secondary); letter-spacing:var(--ls-wide); margin:2px 0 0}
+.hero-banner .hero-cta{grid-column:3; grid-row:1 / span 2; position:relative; z-index:1; min-height:44px; padding-inline:20px}
+@media (max-width:480px){
+  .hero-banner{grid-template-columns:44px minmax(0,1fr); gap:2px 10px; padding:12px; text-align:left; margin-bottom:10px}
+  .hero-banner h1{font-size:20px; margin:0; align-self:end}
+  .hero-banner .hero-icon{grid-row:1 / span 2; width:44px; height:44px; align-self:center}
+  .hero-banner .hero-tag{margin:0; font-size:11px; letter-spacing:var(--ls-normal); white-space:normal}
+  .hero-banner .hero-cta{grid-column:1 / -1; grid-row:3; width:100%; margin-top:8px}
+}
 
 /* --- 卡片入场动画（stagger） --- */
 .game-card{animation:cardIn var(--dur-slow) var(--ease-out) both}
@@ -1132,14 +1220,6 @@ html[data-theme="dark"], html[data-theme="midnight"], html[data-theme="cyber"]{c
 
 /* 键盘可达：可见焦点环 */
 :focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:4px}
-
-/* 触控目标 ≥44px（关键交互） */
-@media (max-width:768px){
-  .btn, .count-btn, .shop-tab, .persona-card, .my-card-mate{
-    min-height:44px; min-width:44px; display:inline-flex; align-items:center; justify-content:center;
-  }
-  .xq-cell{min-width:44px; min-height:44px}
-}
 
 /* 最小字号 ≥11px */
 .lb-game, .my-card-stat-label, .my-card-task, .my-card-mate-info, .persona-card .persona-desc{font-size:11px}
@@ -1271,6 +1351,17 @@ body.entered #screen-hub, body.entered #screen-game{animation:none}
 .loading-inline{display:inline-flex; align-items:center; gap:var(--sp-sm); color:var(--text-secondary); font-size:var(--fs-small)}
 @keyframes spin{to{transform:rotate(360deg)}}
 
+/* 移动端最终触控合同：置于组件基础样式之后，避免 min-height 被覆盖。 */
+@media (max-width:768px){
+  .btn, .count-btn, .shop-tab, .persona-card, .my-card-mate, .avatar-opt, .bg-swatch{
+    min-height:44px; min-width:44px; display:inline-flex; align-items:center; justify-content:center;
+  }
+  input[type="text"], input[type="password"], input[type="search"], textarea, select{min-height:44px}
+  .xq-cell{min-width:44px; min-height:44px}
+  .invite-btn{padding:6px 14px}
+  .online-row{gap:6px}
+}
+
 </style>
 </head>
 <body>
@@ -1312,7 +1403,6 @@ body.entered #screen-hub, body.entered #screen-game{animation:none}
             <button type="button" class="btn count-btn" data-mode="ai" aria-pressed="false" data-i18n="mode_ai">人机对战</button>
           </div>
           <div class="online-row play-actions" id="online-play-actions">
-            <button type="button" class="btn btn-primary" id="btn-quick-join" data-i18n="quick_join">快速加入</button>
             <button type="button" class="btn" id="btn-create-room" data-i18n="create_room">创建房间</button>
             <button type="button" class="btn" id="btn-browse-rooms" data-i18n="browse_rooms">浏览房间</button>
             <input id="join-room-code" maxlength="12" data-i18n-placeholder="private_room_code" data-i18n-aria-label="private_room_code">
@@ -1774,6 +1864,10 @@ async function setLanguage(lang) {
     document.documentElement.setAttribute('lang', currentLang);
   }
   applyI18n();
+  // Static icon labels and early-rendered dynamic rails may be created before
+  // the async locale request resolves. Re-render them from stable keys once
+  // the committed locale is available so a temporary key never becomes UI.
+  if (typeof initStaticPlatformIcons === 'function') initStaticPlatformIcons();
   if (typeof currentGameId !== 'undefined' && currentGameId && typeof GAMES !== 'undefined' && GAMES[currentGameId] && typeof $ === 'function') {
     const gameTitle = $('game-title');
     if (gameTitle) gameTitle.textContent = GAMES[currentGameId].icon + ' ' + GAMES[currentGameId].name;
@@ -1783,6 +1877,7 @@ async function setLanguage(lang) {
   renderAccounts();
   renderMe();
   renderLobby();
+  if (typeof renderSocialRail === 'function') renderSocialRail();
   if (online.room) renderRoomPanel();
   if (currentGame && typeof currentGame.onLanguageChange === 'function') currentGame.onLanguageChange(currentLang);
   if (online.connected && account && account.uid) {
@@ -1802,6 +1897,29 @@ function initI18n() {
 /* ================= 通用工具 ================= */
 const $ = id => document.getElementById(id);
 const PROTOCOL_VERSION = 1;
+let modalScrollLockCount = 0;
+let modalScrollObserver = null;
+function ensureModalScrollObserver(){
+  if (modalScrollObserver || typeof MutationObserver === 'undefined' || !document.body) return;
+  modalScrollObserver = new MutationObserver(() => {
+    modalScrollLockCount = document.querySelectorAll('[data-modal-scroll-lock="1"]').length;
+    document.body.classList.toggle('modal-scroll-locked', modalScrollLockCount > 0);
+  });
+  modalScrollObserver.observe(document.body, { childList:true, subtree:true });
+}
+function acquireModalScrollLock(owner){
+  if (!owner || !owner.dataset || owner.dataset.modalScrollLock === '1') return;
+  ensureModalScrollObserver();
+  owner.dataset.modalScrollLock = '1';
+  modalScrollLockCount++;
+  if (document.body) document.body.classList.add('modal-scroll-locked');
+}
+function releaseModalScrollLock(owner){
+  if (!owner || !owner.dataset || owner.dataset.modalScrollLock !== '1') return;
+  delete owner.dataset.modalScrollLock;
+  modalScrollLockCount = Math.max(0, modalScrollLockCount - 1);
+  if (modalScrollLockCount === 0 && document.body) document.body.classList.remove('modal-scroll-locked');
+}
 
 /* ---------------- 轻量音效（WebAudio，零资源加载） ---------------- */
 let _actx = null;
@@ -2443,11 +2561,31 @@ const GAME_ART = Object.freeze({
     coverSmall: 'ui/game_covers/game_gomoku_320.webp',
     board: 'board/gomoku/mg_board_gomoku_surface_v01.webp',
   }),
+  ludo: Object.freeze({
+    flag: 'mg_art_ludo_cover_v1',
+    cover: 'ui/game_covers/game_ludo.webp',
+    coverSmall: 'ui/game_covers/game_ludo_320.webp',
+  }),
+  monopoly: Object.freeze({
+    flag: 'mg_art_monopoly_cover_v1',
+    cover: 'ui/game_covers/game_monopoly.webp',
+    coverSmall: 'ui/game_covers/game_monopoly_320.webp',
+  }),
+  tank: Object.freeze({
+    flag: 'mg_art_tank_cover_v1',
+    cover: 'ui/game_covers/game_tank.webp',
+    coverSmall: 'ui/game_covers/game_tank_320.webp',
+  }),
   tetris: Object.freeze({
     flag: 'mg_art_tetris_v1',
     cover: 'ui/game_covers/game_tetris.webp',
     coverSmall: 'ui/game_covers/game_tetris_320.webp',
     board: 'board/tetris/mg_board_tetris_well_v01.webp',
+  }),
+  xiangqi: Object.freeze({
+    flag: 'mg_art_xiangqi_cover_v1',
+    cover: 'ui/game_covers/game_xiangqi.webp',
+    coverSmall: 'ui/game_covers/game_xiangqi_320.webp',
   }),
 });
 
@@ -2494,10 +2632,10 @@ function initStaticPlatformIcons(){
   setButtonIcon($('btn-create-room'),'plus',t('create_room'));
   setButtonIcon($('btn-browse-rooms'),'search',t('browse_rooms'));
   setButtonIcon($('btn-join-code'),'door-open',t('join_room'));
-  setButtonIcon($('btn-back'),'arrow-left','返回');
-  setButtonIcon($('btn-end-game'),'square','结束本局');
-  setButtonIcon($('btn-rules'),'book-open','规则');
-  setButtonIcon($('btn-restart'),'refresh-cw','新一局');
+  setButtonIcon($('btn-back'),'arrow-left',t('back'));
+  setButtonIcon($('btn-end-game'),'square',t('end_game'));
+  setButtonIcon($('btn-rules'),'book-open',t('rules'));
+  setButtonIcon($('btn-restart'),'refresh-cw',t('restart'));
   const onlineMode=typeof document.querySelector==='function'?document.querySelector('[data-mode="online"]'):null;
   const aiMode=typeof document.querySelector==='function'?document.querySelector('[data-mode="ai"]'):null;
   setButtonIcon(onlineMode,'users',t('mode_online'));
@@ -4635,135 +4773,191 @@ function openSettings(){
 }
 /* ================= 账号注册 / PIN 登录 ================= */
 function openAuthModal(mode){
-  const bd = el("div","modal-backdrop auth-backdrop");
+  if (authModalEl){
+    releaseModalScrollLock(authModalEl);
+    authModalEl.remove();
+  }
+  const bd = el('div','modal-backdrop auth-backdrop');
   authModalEl = bd;
-  const card = el("div","modal-card");
-  card.style.width = "460px";
-  let m = mode || "register";
+  acquireModalScrollLock(bd);
+  const card = el('div','modal-card auth-card');
+  let m = mode || 'register';
+  let avatar = 100;
+  let bg = 0;
+  let catTab = 'pixel';
+
+  const closeAuth = () => {
+    if (authModalEl === bd) authModalEl = null;
+    releaseModalScrollLock(bd);
+    bd.remove();
+  };
+  const field = (labelKey,input) => {
+    const group = el('label','auth-field');
+    group.appendChild(el('span','auth-field-label',t(labelKey)));
+    group.appendChild(input);
+    return group;
+  };
+
   function render(){
-    card.innerHTML = "";
-    const hero = el("div","auth-hero");
-    hero.appendChild(el("div","big", m === "register" ? "✨" : "🔑"));
-    hero.appendChild(el("h2", null, t(m === "register" ? 'register_title' : 'login_title')));
-    hero.appendChild(el("p", null, t(m === "register" ? 'register_intro' : 'login_intro')));
+    card.innerHTML = '';
+    card.classList.toggle('auth-register-mode',m === 'register');
+    card.classList.toggle('auth-login-mode',m === 'login');
+
+    const hero = el('div','auth-hero');
+    hero.appendChild(el('div','big',m === 'register' ? '✨' : '🔑'));
+    const heroCopy = el('div','auth-hero-copy');
+    heroCopy.appendChild(el('h2',null,t(m === 'register' ? 'register_title' : 'login_title')));
+    heroCopy.appendChild(el('p',null,t(m === 'register' ? 'register_intro' : 'login_intro')));
+    hero.appendChild(heroCopy);
     card.appendChild(hero);
-    if (m === "register"){
-      let avatar = 100, bg = 0, catTab = "all";
-      const nameInput = el("input","nick-input");
-      nameInput.type = "text"; nameInput.maxLength = 12;
-      nameInput.placeholder = t('profile_name_placeholder');
-      card.appendChild(nameInput);
-      const avLabel = el("div","lb-note",t('auth_avatar_note'));
-      card.appendChild(avLabel);
-      const catTabs = el("div","shop-tabs");
-      const cats = [
-        {id:"all"},{id:"basic"},{id:"theme"},...AVATAR_CATEGORIES.map(item=>({id:item.id})),
-      ];
-      const grid = el("div","avatar-grid auth-avatar-grid");
+
+    if (m === 'register'){
+      const layout = el('div','auth-register-layout');
+      const identity = el('section','auth-choice-panel');
+      const details = el('section','auth-details-panel');
+
+      identity.appendChild(el('div','auth-section-title',t('auth_avatar_note')));
+      const preview = el('div','auth-avatar-wrap');
+      const stage = el('div','avatar-stage');
+      const updatePreview = () => {
+        stage.innerHTML = '';
+        stage.appendChild(avatarCanvas(avatar,72,{animate:true}));
+      };
+      updatePreview();
+      preview.appendChild(stage);
+      identity.appendChild(preview);
+
+      const catTabs = el('div','shop-tabs auth-category-tabs');
+      const categories = [{id:'all',name:t('avatar_category_all'),icon:''},...AVATAR_CATEGORIES];
+      const grid = el('div','avatar-grid auth-avatar-grid');
       function renderAvatarGrid(){
-        grid.innerHTML = "";
-        for (let i = 0; i < AVATAR_COUNT; i++){
-          if (catTab !== "all" && avatarCategory(i) !== catTab) continue;
-          const locked = avatarLocked(i);
-          const opt = el("button","avatar-opt" + (i === avatar ? " selected" : "") + (locked ? " locked" : ""));
-          opt.type = "button";
-          opt.appendChild(avatarCanvas(i, 26));
-          opt.setAttribute("aria-label", t('profile_avatar_aria',i+1));
+        grid.innerHTML = '';
+        PLAYROOM_AVATARS.forEach(meta => {
+          if (catTab !== 'all' && meta.theme !== catTab) return;
+          const locked = avatarLocked(meta.id);
+          const opt = el('button','avatar-opt' + (meta.id === avatar ? ' selected' : '') + (locked ? ' locked' : ''));
+          opt.type = 'button';
+          opt.appendChild(avatarCanvas(meta.id,40));
+          opt.setAttribute('aria-label',t('profile_avatar_aria',meta.id + 1));
           if (locked){
-            const meta = avatarMeta(i);
-            opt.appendChild(el("span","avatar-lock","🔒" + CURRENCY + (meta ? meta.price : 0)));
-            opt.addEventListener("click", () => {
-              toast(t('auth_avatar_locked', meta ? shopItemName('avatars', meta) : t('shop_tab_avatars'), CURRENCY, meta ? meta.price : 0));
-            });
+            opt.appendChild(el('span','avatar-lock','🔒' + CURRENCY + meta.price));
+            opt.addEventListener('click',() => toast(t('auth_avatar_locked',shopItemName('avatars',meta),CURRENCY,meta.price)));
           } else {
-            opt.addEventListener("click", () => {
-              avatar = i;
-              grid.querySelectorAll(".avatar-opt").forEach(o => o.classList.toggle("selected", o === opt));
-              stage.innerHTML = "";
-              stage.appendChild(avatarCanvas(i, 56));
+            opt.addEventListener('click',() => {
+              avatar = meta.id;
+              grid.querySelectorAll('.avatar-opt').forEach(node => node.classList.toggle('selected',node === opt));
+              updatePreview();
             });
           }
           grid.appendChild(opt);
-        }
+        });
       }
-      cats.forEach(c => {
-        const tb = el("button","btn shop-tab" + (catTab === c.id ? " btn-primary" : ""));
-        tb.textContent = t('avatar_category_' + c.id);
-        tb.addEventListener("click", () => {
-          catTab = c.id;
-          catTabs.querySelectorAll(".shop-tab").forEach(t => t.classList.remove("btn-primary"));
-          tb.classList.add("btn-primary");
+      categories.forEach(category => {
+        const button = el('button','btn shop-tab' + (catTab === category.id ? ' btn-primary' : ''));
+        button.type = 'button';
+        const label = category.id === 'all' ? t('avatar_category_all') : avatarCategoryName(category);
+        button.textContent = (category.icon ? category.icon + ' ' : '') + label;
+        button.addEventListener('click',() => {
+          catTab = category.id;
+          catTabs.querySelectorAll('.shop-tab').forEach(node => node.classList.toggle('btn-primary',node === button));
           renderAvatarGrid();
         });
-        catTabs.appendChild(tb);
+        catTabs.appendChild(button);
       });
-      card.appendChild(catTabs);
-      const preview = el("div","auth-avatar-wrap");
-      const stage = el("div","avatar-stage");
-      stage.appendChild(avatarCanvas(avatar, 56));
-      preview.appendChild(stage);
-      card.appendChild(preview);
-      card.appendChild(grid);
+      identity.appendChild(catTabs);
+      identity.appendChild(grid);
       renderAvatarGrid();
-      card.appendChild(el("div","lb-note",t('profile_background')));
-      const bgGrid = el("div","bg-grid");
-      const defSw = el("div","bg-swatch" + (bg === 0 ? " selected" : "") + " bg-0");
-      defSw.title = t('default_label');
-      defSw.addEventListener("click", () => {
-        bg = 0;
-        bgGrid.querySelectorAll(".bg-swatch").forEach(x => x.classList.toggle("selected", x === defSw));
-      });
-      bgGrid.appendChild(defSw);
-      SHOP.backgrounds.forEach(b => {
-        const sw = el("div","bg-swatch" + (b.id === bg ? " selected" : "") + " " + b.cls);
-        sw.title = shopItemName('backgrounds', b);
-        sw.addEventListener("click", () => {
-          bg = b.id;
-          bgGrid.querySelectorAll(".bg-swatch").forEach(x => x.classList.toggle("selected", x === sw));
+
+      details.appendChild(el('div','auth-section-title',t('auth_account_details')));
+      const nameInput = el('input','nick-input');
+      nameInput.type = 'text';
+      nameInput.maxLength = 12;
+      nameInput.placeholder = t('profile_name_placeholder');
+      details.appendChild(field('auth_name_label',nameInput));
+
+      details.appendChild(el('div','auth-field-label',t('profile_background')));
+      const bgGrid = el('div','bg-grid auth-bg-grid');
+      const backgrounds = [{id:0,cls:'bg-0',name:t('default_label')},...SHOP.backgrounds.filter(item => item.id >= 1 && item.id <= 6).map(item => ({...item,name:shopItemName('backgrounds',item)}))];
+      backgrounds.forEach(item => {
+        const swatch = el('button','bg-swatch ' + item.cls + (item.id === bg ? ' selected' : ''));
+        swatch.type = 'button';
+        swatch.title = item.name;
+        swatch.setAttribute('aria-label',item.name);
+        swatch.addEventListener('click',() => {
+          bg = item.id;
+          bgGrid.querySelectorAll('.bg-swatch').forEach(node => node.classList.toggle('selected',node === swatch));
         });
-        bgGrid.appendChild(sw);
+        bgGrid.appendChild(swatch);
       });
-      card.appendChild(bgGrid);
-      const pinInput = el("input","nick-input");
-      pinInput.type = "password"; pinInput.autocomplete = "new-password"; pinInput.setAttribute("autocomplete", "new-password"); pinInput.maxLength = 20;
+      details.appendChild(bgGrid);
+
+      const pinInput = el('input','nick-input');
+      pinInput.type = 'password';
+      pinInput.autocomplete = 'new-password';
+      pinInput.maxLength = 20;
       pinInput.placeholder = t('auth_pin_create_placeholder');
-      card.appendChild(pinInput);
-      const pin2 = el("input","nick-input");
-      pin2.type = "password"; pin2.autocomplete = "new-password"; pin2.setAttribute("autocomplete", "new-password"); pin2.maxLength = 20;
+      details.appendChild(field('auth_pin_label',pinInput));
+      const pin2 = el('input','nick-input');
+      pin2.type = 'password';
+      pin2.autocomplete = 'new-password';
+      pin2.maxLength = 20;
       pin2.placeholder = t('auth_pin_confirm_placeholder');
-      card.appendChild(pin2);
-      card.appendChild(el("p","pin-hint",t('auth_pin_hint')));
-      const submit = el("button","btn btn-primary",t('register_btn'));
-      submit.addEventListener("click", () => {
-        const nm = nameInput.value.trim();
-        if (!nm){ toast(t('name_required')); return; }
+      details.appendChild(field('auth_pin_confirm_label',pin2));
+      details.appendChild(el('p','pin-hint',t('auth_pin_hint')));
+
+      const actions = el('div','auth-actions');
+      const submit = el('button','btn btn-primary',t('register_btn'));
+      submit.type = 'button';
+      submit.addEventListener('click',() => {
+        const name = nameInput.value.trim();
+        if (!name){ toast(t('name_required')); return; }
         if (pinInput.value !== pin2.value){ toast(t('pin_mismatch')); return; }
         if (!/^[A-Za-z0-9]{4,20}$/.test(pinInput.value)){ toast(t('pin_invalid')); return; }
-        registerAccount(nm, pinInput.value, avatar, bg, 0, 0);
+        registerAccount(name,pinInput.value,avatar,bg,0,0);
       });
-      card.appendChild(submit);
-      const toLogin = el("button","btn btn-ghost",t('register_switch_login'));
-      toLogin.addEventListener("click", () => { m = "login"; render(); });
-      card.appendChild(toLogin);
+      const toLogin = el('button','btn btn-ghost',t('register_switch_login'));
+      toLogin.type = 'button';
+      toLogin.addEventListener('click',() => { m = 'login'; render(); });
+      const cancel = el('button','btn',t('cancel'));
+      cancel.type = 'button';
+      cancel.addEventListener('click',closeAuth);
+      actions.appendChild(submit);
+      actions.appendChild(toLogin);
+      actions.appendChild(cancel);
+      details.appendChild(actions);
+
+      layout.appendChild(identity);
+      layout.appendChild(details);
+      card.appendChild(layout);
     } else {
-      const pinInput = el("input","nick-input");
-      pinInput.type = "password"; pinInput.autocomplete = "current-password"; pinInput.setAttribute("autocomplete", "current-password"); pinInput.maxLength = 20;
+      const loginBody = el('div','auth-login-body');
+      const pinInput = el('input','nick-input');
+      pinInput.type = 'password';
+      pinInput.autocomplete = 'current-password';
+      pinInput.maxLength = 20;
       pinInput.placeholder = t('auth_pin_login_placeholder');
-      card.appendChild(pinInput);
-      const submit = el("button","btn btn-primary",t('login_btn'));
-      submit.addEventListener("click", () => loginAccount(pinInput.value));
-      card.appendChild(submit);
-      const toReg = el("button","btn btn-ghost",t('login_switch_register'));
-      toReg.addEventListener("click", () => { m = "register"; render(); });
-      card.appendChild(toReg);
+      loginBody.appendChild(field('auth_pin_label',pinInput));
+      const actions = el('div','auth-actions');
+      const submit = el('button','btn btn-primary',t('login_btn'));
+      submit.type = 'button';
+      submit.addEventListener('click',() => loginAccount(pinInput.value));
+      const toRegister = el('button','btn btn-ghost',t('login_switch_register'));
+      toRegister.type = 'button';
+      toRegister.addEventListener('click',() => { m = 'register'; render(); });
+      const cancel = el('button','btn',t('cancel'));
+      cancel.type = 'button';
+      cancel.addEventListener('click',closeAuth);
+      actions.appendChild(submit);
+      actions.appendChild(toRegister);
+      actions.appendChild(cancel);
+      loginBody.appendChild(actions);
+      card.appendChild(loginBody);
     }
-    const cancel = el("button","btn",t('cancel'));
-    cancel.addEventListener("click", () => bd.remove());
-    card.appendChild(cancel);
   }
+
   render();
   bd.appendChild(card);
-  bd.addEventListener("click", e => { if (e.target === bd) bd.remove(); });
+  bd.addEventListener('click',event => { if (event.target === bd) closeAuth(); });
   document.body.appendChild(bd);
 }
 /* ================= 个人档案弹层（自己的 / 他人的） ================= */
@@ -4911,6 +5105,7 @@ function renderProfilePopup(p, isMe){
 }
 /* ================= 商城（头像 / 边框 / 特效 / 背景） ================= */
 let activeShopRefresh = null;
+let activeShopModal = null;
 let purchaseRequestSeq = 0;
 
 function refreshOpenShop(){
@@ -4938,17 +5133,38 @@ function requestPurchase(category, id, button){
   }
 }
 
+function shopCatalogItems(category, currentAccount){
+  const items = Array.isArray(SHOP[category]) ? SHOP[category] : [];
+  if (category !== 'backgrounds') return items;
+  return items.filter(item => item.id >= 7 || ownItem(currentAccount, 'backgrounds', item.id));
+}
+
 function openShop(){
   if (!account){ openAuthModal(); return; }
+  if (activeShopModal && activeShopModal.isConnected) return;
+  if (activeShopModal){
+    activeShopModal = null;
+    activeShopRefresh = null;
+  }
   const bd = el('div','modal-backdrop');
-  const card = el('div','modal-card');
-  card.style.width = '520px';
-  card.appendChild(el('h3', null, t('shop_title')));
+  activeShopModal = bd;
+  acquireModalScrollLock(bd);
+  const card = el('div','modal-card shop-modal-card');
+  const header = el('div','shop-header');
+  const headerCopy = el('div','shop-header-copy');
+  headerCopy.appendChild(el('h3', null, t('shop_title')));
+  headerCopy.appendChild(el('p','shop-subtitle',t('shop_preview_hint')));
+  header.appendChild(headerCopy);
   const bal = el('div','stat-chip');
   bal.appendChild(currencyIcon());
   const balValue = el('span', null, ' ' + t('shop_available',account.coins || 0));
   bal.appendChild(balValue);
-  card.appendChild(bal);
+  header.appendChild(bal);
+  const closeTop = el('button','btn shop-close',t('close'));
+  closeTop.type = 'button';
+  closeTop.addEventListener('click',closeShop);
+  header.appendChild(closeTop);
+  card.appendChild(header);
   let tab = 'avatars';
   const tabs = el('div','shop-tabs');
   const defs = [
@@ -4959,7 +5175,11 @@ function openShop(){
     tabButton.addEventListener('click', () => { tab = k; render(); });
     tabs.appendChild(tabButton);
   });
+  const content = el('div','shop-layout');
+  const previewEl = el('aside','shop-preview-panel');
+  const catalog = el('section','shop-catalog');
   const listEl = el('div','shop-grid');
+  let previewSelection = null;
   function collectionParts(item){
     const index=AVATAR_CATEGORIES.findIndex(theme=>theme.id===item.theme);if(index<0)return null;
     const frames=[5,4,1,6,7,8],effects=[3,1,2,1,4,2],themed=PLAYROOM_AVATARS.filter(avatar=>avatar.theme===item.theme);
@@ -4981,25 +5201,68 @@ function openShop(){
     const progress=collectionProgress(item);if(progress)pc.appendChild(el('div','profile-showcase',t('premium_collection_progress',progress.name,progress.owned,progress.total)));
     const closePreview=()=>{releasePremiumBackground(hero);pbd.remove();};const close=el('button','btn',t('premium_back_to_shop'));close.addEventListener('click',closePreview);pc.appendChild(close);pbd.appendChild(pc);pbd.addEventListener('click',event=>{if(event.target===pbd)closePreview();});document.body.appendChild(pbd);
   }
+  function itemState(category,item){
+    const owned = ownItem(account,category,item.id);
+    const equipped = (category === 'avatars' && account.avatar === item.id) ||
+      (category === 'frames' && account.frame === item.id) ||
+      (category === 'effects' && account.effect === item.id) ||
+      (category === 'backgrounds' && account.background === item.id) ||
+      (category === 'game_cosmetics' && !!(account.gameCosmetics && account.gameCosmetics[item.game] && account.gameCosmetics[item.game][item.slot] === item.value));
+    if (equipped) return t('shop_equipped');
+    if (category === 'avatars' && item.free) return t('shop_free');
+    if (owned) return t('shop_owned');
+    return CURRENCY + item.price;
+  }
+  function cosmeticSlotLabel(item){
+    return t('game_cosmetic_slot_' + item.slot);
+  }
+  function renderPreview(category,item){
+    previewEl.innerHTML = '';
+    previewEl.appendChild(el('div','shop-preview-eyebrow',t('shop_preview_title')));
+    const visual = el('div','shop-preview-visual');
+    if (category === 'avatars'){
+      visual.appendChild(avatarCanvas(item.id,112,{animate:true}));
+    } else if (category === 'frames' || category === 'effects'){
+      const stage = el('div','avatar-stage' + (category === 'effects' ? ' ' + item.cls : ''));
+      if (category === 'frames') stage.appendChild(el('span','frame-ring ' + item.cls,''));
+      stage.appendChild(avatarCanvas(account.avatar,72,{animate:true}));
+      visual.appendChild(stage);
+    } else if (category === 'backgrounds'){
+      const premium = premiumBackgroundMeta(item.id);
+      if (premium) visual.appendChild(backgroundPosterNode(premium,{hoverPreview:true}));
+      else visual.appendChild(el('div','shop-preview-background ' + item.cls,''));
+    } else {
+      visual.appendChild(el('div','shop-preview-game-icon',GAMES[item.game] ? GAMES[item.game].icon : '🎮'));
+    }
+    previewEl.appendChild(visual);
+    previewEl.appendChild(el('div','shop-preview-name',shopItemName(category,item)));
+    previewEl.appendChild(el('div','shop-preview-state',itemState(category,item)));
+    if (category === 'game_cosmetics') previewEl.appendChild(el('p','shop-preview-note',t('game_cosmetic_slot',t('game_' + item.game),cosmeticSlotLabel(item))));
+    else previewEl.appendChild(el('p','shop-preview-note',t('shop_preview_hint')));
+  }
+  function wirePreview(node,category,item){
+    node.classList.add('shop-previewable');
+    node.addEventListener('click',event => {
+      if (event.target && event.target.closest && event.target.closest('button')) return;
+      listEl.querySelectorAll('.shop-item').forEach(card => card.classList.toggle('preview-selected',card === node));
+      previewSelection = {category,item};
+      renderPreview(category,item);
+    });
+    if (!previewSelection){
+      previewSelection = {category,item};
+      node.classList.add('preview-selected');
+      renderPreview(category,item);
+    }
+  }
   function render(){
     listEl.innerHTML = '';
-    tabs.children.forEach((t, i) => t.classList.toggle('btn-primary', defs[i][0] === tab));
+    previewSelection = null;
+    Array.from(tabs.children).forEach((node, i) => node.classList.toggle('btn-primary', defs[i][0] === tab));
     if (tab === 'avatars'){
-      const FREE = 30; // 0-29 free, 30-55 shop-only
-      for (let i = 0; i < FREE; i++){
-        const it = el('div','shop-item' + (account.avatar === i ? ' selected' : ''));
-        it.appendChild(avatarCanvas(i, 34));
-        it.appendChild(el('div','si-name',t('shop_basic_avatar',i+1)));
-        it.appendChild(el('div','si-price',t('shop_free')));
-        const use = el('button','btn',t('shop_use'));
-        use.addEventListener('click', () => { account.avatar = i; saveAccount(); syncProfiles(); closeShop(); toast(t('shop_avatar_changed')); });
-        it.appendChild(use);
-        listEl.appendChild(it);
-      }
-      SHOP.avatars.forEach(a => {
-        const owned = ownItem(account, 'avatars', a.id);
+      PLAYROOM_AVATARS.forEach(a => {
+        const owned = a.free || ownItem(account, 'avatars', a.id);
         const it = el('div','shop-item' + (account.avatar === a.id ? ' selected' : '') + (owned ? ' owned' : ''));
-        it.appendChild(avatarCanvas(a.id, 34));
+        it.appendChild(avatarCanvas(a.id, 48));
         it.appendChild(el('div','si-name', shopItemName('avatars',a)));
         if (!owned){
           const price = el('div','si-price');
@@ -5012,11 +5275,12 @@ function openShop(){
           });
           it.appendChild(buy);
         } else {
-          it.appendChild(el('div','si-price',t('shop_owned')));
+          it.appendChild(el('div','si-price',a.free ? t('shop_free') : t('shop_owned')));
           const use = el('button','btn',t('shop_use'));
           use.addEventListener('click', () => { account.avatar = a.id; saveAccount(); syncProfiles(); closeShop(); toast(t('shop_avatar_changed')); });
           it.appendChild(use);
         }
+        wirePreview(it,'avatars',a);
         listEl.appendChild(it);
       });
     } else if (tab === 'game_cosmetics') {
@@ -5026,7 +5290,7 @@ function openShop(){
         const it = el('div','shop-item game-cosmetic-item' + (equipped ? ' selected' : '') + (owned ? ' owned' : ''));
         it.appendChild(el('div','game-cosmetic-preview',GAMES[item.game] ? GAMES[item.game].icon : '🎮'));
         it.appendChild(el('div','si-name',shopItemName('game_cosmetics',item)));
-        it.appendChild(el('div','seat-meta',t('game_cosmetic_slot',t('game_'+item.game),item.slot)));
+        it.appendChild(el('div','seat-meta',t('game_cosmetic_slot',t('game_'+item.game),cosmeticSlotLabel(item))));
         if (!owned){
           const price = el('div','si-price'); price.appendChild(currencyIcon('sm')); price.appendChild(el('span',null,' '+item.price)); it.appendChild(price);
           const buy=el('button','btn btn-primary',t('shop_buy')); buy.addEventListener('click',()=>requestPurchase('game_cosmetics',item.id,buy)); it.appendChild(buy);
@@ -5036,11 +5300,12 @@ function openShop(){
           use.addEventListener('click',()=>{account.gameCosmetics=account.gameCosmetics||{};account.gameCosmetics[item.game]={...(account.gameCosmetics[item.game]||{}),[item.slot]:item.value};saveAccount();syncProfiles();render();renderMe();toast(t('shop_applied')+'「'+shopItemName('game_cosmetics',item)+'」');});
           it.appendChild(use);
         }
+        wirePreview(it,'game_cosmetics',item);
         listEl.appendChild(it);
       });
     } else {
       const cat = tab;
-      SHOP[cat].forEach(item => {
+      shopCatalogItems(cat, account).forEach(item => {
         const owned = ownItem(account, cat, item.id);
         const active = (tab === 'frames' && account.frame === item.id) ||
           (tab === 'effects' && account.effect === item.id) ||
@@ -5084,6 +5349,7 @@ function openShop(){
           });
           it.appendChild(use);
         }
+        wirePreview(it,cat,item);
         listEl.appendChild(it);
       });
     }
@@ -5092,17 +5358,22 @@ function openShop(){
     balValue.textContent = ' ' + t('shop_available',account.coins || 0);
     render();
   }
+  let closed = false;
   function closeShop(){
+    if (closed) return;
+    closed = true;
     if (activeShopRefresh === refresh) activeShopRefresh = null;
+    if (activeShopModal === bd) activeShopModal = null;
+    releaseModalScrollLock(bd);
     bd.remove();
   }
   activeShopRefresh = refresh;
   render();
-  const close = el('button','btn',t('close'));
-  close.addEventListener('click', closeShop);
   card.appendChild(tabs);
-  card.appendChild(listEl);
-  card.appendChild(close);
+  catalog.appendChild(listEl);
+  content.appendChild(previewEl);
+  content.appendChild(catalog);
+  card.appendChild(content);
   bd.appendChild(card);
   bd.addEventListener('click', e => { if (e.target === bd) closeShop(); });
   document.body.appendChild(bd);
@@ -5120,49 +5391,49 @@ const PLAYROOM_AVATAR_BY_ID=new Map(PLAYROOM_AVATARS.map(item=>[item.id,item]));
 
 const SHOP = {
   avatars: [
-    { id: 30, name: '天使', price: 8, category: 'fantasy' },
-    { id: 31, name: '吸血鬼', price: 10, category: 'fantasy' },
-    { id: 32, name: '精灵', price: 10, category: 'fantasy' },
-    { id: 33, name: '人鱼', price: 12, category: 'fantasy' },
-    { id: 34, name: '凤凰战士', price: 15, category: 'fantasy' },
-    { id: 35, name: '暗影刺客', price: 15, category: 'fantasy' },
-    { id: 36, name: '猫咪', price: 6, category: 'animals' },
-    { id: 37, name: '柴犬', price: 6, category: 'animals' },
-    { id: 38, name: '兔子', price: 8, category: 'animals' },
-    { id: 39, name: '小熊', price: 8, category: 'animals' },
-    { id: 40, name: '狐狸', price: 10, category: 'animals' },
-    { id: 41, name: '熊猫', price: 12, category: 'animals' },
-    { id: 42, name: '医生', price: 8, category: 'profession' },
-    { id: 43, name: '厨师', price: 8, category: 'profession' },
-    { id: 44, name: '画家', price: 10, category: 'profession' },
-    { id: 45, name: '音乐家', price: 10, category: 'profession' },
-    { id: 46, name: '运动员', price: 12, category: 'profession' },
-    { id: 47, name: '科学家', price: 12, category: 'profession' },
-    { id: 48, name: '彩虹', price: 8, category: 'creative' },
-    { id: 49, name: '霓虹', price: 10, category: 'creative' },
-    { id: 50, name: '像素英雄', price: 10, category: 'creative' },
-    { id: 51, name: '故障艺术', price: 12, category: 'creative' },
-    { id: 52, name: '宇宙', price: 15, category: 'creative' },
-    { id: 53, name: '暗影', price: 15, category: 'creative' },
-    { id: 54, name: '金冠骑士', price: 8, category: 'fantasy' },
-    { id: 55, name: '龙骑士', price: 20, category: 'fantasy' },
+    { id: 30, name: '天使', price: 10, category: 'fantasy' },
+    { id: 31, name: '吸血鬼', price: 12, category: 'fantasy' },
+    { id: 32, name: '精灵', price: 12, category: 'fantasy' },
+    { id: 33, name: '人鱼', price: 15, category: 'fantasy' },
+    { id: 34, name: '凤凰战士', price: 18, category: 'fantasy' },
+    { id: 35, name: '暗影刺客', price: 18, category: 'fantasy' },
+    { id: 36, name: '猫咪', price: 10, category: 'animals' },
+    { id: 37, name: '柴犬', price: 10, category: 'animals' },
+    { id: 38, name: '兔子', price: 12, category: 'animals' },
+    { id: 39, name: '小熊', price: 12, category: 'animals' },
+    { id: 40, name: '狐狸', price: 15, category: 'animals' },
+    { id: 41, name: '熊猫', price: 18, category: 'animals' },
+    { id: 42, name: '医生', price: 12, category: 'profession' },
+    { id: 43, name: '厨师', price: 12, category: 'profession' },
+    { id: 44, name: '画家', price: 15, category: 'profession' },
+    { id: 45, name: '音乐家', price: 15, category: 'profession' },
+    { id: 46, name: '运动员', price: 18, category: 'profession' },
+    { id: 47, name: '科学家', price: 18, category: 'profession' },
+    { id: 48, name: '彩虹', price: 12, category: 'creative' },
+    { id: 49, name: '霓虹', price: 15, category: 'creative' },
+    { id: 50, name: '像素英雄', price: 15, category: 'creative' },
+    { id: 51, name: '故障艺术', price: 18, category: 'creative' },
+    { id: 52, name: '宇宙', price: 22, category: 'creative' },
+    { id: 53, name: '暗影', price: 22, category: 'creative' },
+    { id: 54, name: '金冠骑士', price: 12, category: 'fantasy' },
+    { id: 55, name: '龙骑士', price: 30, category: 'fantasy' },
     ...PLAYROOM_AVATARS.filter(item=>!item.free).map(item=>({...item,category:item.theme})),
   ],
   frames: [
-    { id: 1, name: '金色边框', price: 5, cls: 'frame-1' },
-    { id: 2, name: '霓虹边框', price: 8, cls: 'frame-2' },
-    { id: 3, name: '紫焰边框', price: 12, cls: 'frame-3' },
-    { id: 4, name: '极光光环', price: 16, cls: 'frame-4' },
-    { id: 5, name: '流金脉冲', price: 18, cls: 'frame-5' },
-    { id: 6, name: '烈焰环绕', price: 22, cls: 'frame-6' },
-    { id: 7, name: '彩虹流光', price: 26, cls: 'frame-7' },
-    { id: 8, name: '赛博脉冲', price: 30, cls: 'frame-8' },
+    { id: 1, name: '金色边框', price: 10, cls: 'frame-1' },
+    { id: 2, name: '霓虹边框', price: 12, cls: 'frame-2' },
+    { id: 3, name: '紫焰边框', price: 16, cls: 'frame-3' },
+    { id: 4, name: '极光光环', price: 20, cls: 'frame-4' },
+    { id: 5, name: '流金脉冲', price: 24, cls: 'frame-5' },
+    { id: 6, name: '烈焰环绕', price: 28, cls: 'frame-6' },
+    { id: 7, name: '彩虹流光', price: 32, cls: 'frame-7' },
+    { id: 8, name: '赛博脉冲', price: 36, cls: 'frame-8' },
   ],
   effects: [
-    { id: 1, name: '呼吸光效', price: 6, cls: 'effect-1' },
-    { id: 2, name: '闪耀星光', price: 9, cls: 'effect-2' },
-    { id: 3, name: '漂浮',     price: 9, cls: 'effect-3' },
-    { id: 4, name: '环绕旋转', price: 15, cls: 'effect-4' },
+    { id: 1, name: '呼吸光效', price: 10, cls: 'effect-1' },
+    { id: 2, name: '闪耀星光', price: 12, cls: 'effect-2' },
+    { id: 3, name: '漂浮',     price: 12, cls: 'effect-3' },
+    { id: 4, name: '环绕旋转', price: 20, cls: 'effect-4' },
   ],
   backgrounds: [
     { id: 1, name: '薰衣草紫', price: 3, cls: 'bg-1' },
@@ -5171,10 +5442,10 @@ const SHOP = {
     { id: 4, name: '森林绿',   price: 3, cls: 'bg-4' },
     { id: 5, name: '樱花粉',   price: 3, cls: 'bg-5' },
     { id: 6, name: '暗夜',     price: 5, cls: 'bg-6' },
-    { id: 7, name: '星空闪烁', price: 10, cls: 'bg-7' },
-    { id: 8, name: '樱花飘落', price: 10, cls: 'bg-8' },
-    { id: 9, name: '赛博矩阵', price: 14, cls: 'bg-9' },
-    { id: 10, name: '海洋波浪', price: 12, cls: 'bg-10' },
+    { id: 7, name: '星空闪烁', price: 18, cls: 'bg-7' },
+    { id: 8, name: '樱花飘落', price: 18, cls: 'bg-8' },
+    { id: 9, name: '赛博矩阵', price: 22, cls: 'bg-9' },
+    { id: 10, name: '海洋波浪', price: 20, cls: 'bg-10' },
     ...PREMIUM_BACKGROUNDS.map(item=>({...item,cls:'bg-'+item.id})),
   ],
   game_cosmetics: [
@@ -5319,7 +5590,7 @@ function avatarCanvas(idx, size, options){
   size = size || 40;
   const v2=PLAYROOM_AVATAR_BY_ID.get(Number(idx));
   if(v2){
-    const img=document.createElement('img'),px=size<=64?'64':(size<=128?'128':'256');img.className='avatar-art-v2';img.width=size;img.height=size;img.alt=v2.name;img.loading='lazy';img.decoding='async';const animate=!!(options&&options.animate&&v2.animated);img.src=avatarAssetPath(v2,animate?'animated':px);if(!animate)img.srcset=avatarAssetPath(v2,'64')+' 64w, '+avatarAssetPath(v2,'128')+' 128w, '+avatarAssetPath(v2,'256')+' 256w';if(v2.animated&&!(options&&options.animate)){const poster=img.src,posterSrcset=img.srcset;img.dataset.animatedSrc=avatarAssetPath(v2,'animated');img.addEventListener('mouseenter',()=>{if(!matchMedia('(prefers-reduced-motion: reduce)').matches){img.removeAttribute('srcset');img.src=img.dataset.animatedSrc;}});img.addEventListener('mouseleave',()=>{img.src=poster;img.srcset=posterSrcset;});}img.addEventListener('error',()=>{img.replaceWith(avatarCanvas(Number(idx)%30,size));},{once:true});return img;
+    const img=document.createElement('img'),px=size<=64?'64':(size<=128?'128':'256');img.className='avatar-art-v2';img.width=size;img.height=size;img.setAttribute('data-i18n-alt','shop_item_avatars_'+v2.id);img.setAttribute('alt',shopItemName('avatars',v2));img.loading='lazy';img.decoding='async';const animate=!!(options&&options.animate&&v2.animated);img.src=avatarAssetPath(v2,animate?'animated':px);if(!animate)img.srcset=avatarAssetPath(v2,'64')+' 64w, '+avatarAssetPath(v2,'128')+' 128w, '+avatarAssetPath(v2,'256')+' 256w';if(v2.animated&&!(options&&options.animate)){const poster=img.src,posterSrcset=img.srcset;img.dataset.animatedSrc=avatarAssetPath(v2,'animated');img.addEventListener('mouseenter',()=>{if(!matchMedia('(prefers-reduced-motion: reduce)').matches){img.removeAttribute('srcset');img.src=img.dataset.animatedSrc;}});img.addEventListener('mouseleave',()=>{img.src=poster;img.srcset=posterSrcset;});}img.addEventListener('error',()=>{img.replaceWith(avatarCanvas(Number(idx)%30,size));},{once:true});return img;
   }
   const st = makeAvatar(idx);
   const off = document.createElement('canvas');
@@ -5677,7 +5948,7 @@ function openProfileEditor(uid){
   if (editingMe){
     card.appendChild(el('div','lb-note',t('profile_background')));
     const bgGrid = el('div','bg-grid');
-    SHOP.backgrounds.forEach(b => {
+    SHOP.backgrounds.filter(b => b.id >= 7 || ownItem(account, 'backgrounds', b.id)).forEach(b => {
       const sw = el('div','bg-swatch' + (b.id === background ? ' selected' : '') + ' ' + b.cls);
       sw.title = shopItemName('backgrounds',b);
       sw.addEventListener('click', () => {
@@ -6148,6 +6419,7 @@ if (typeof document !== 'undefined'){
   window.__gameInfo = {
     GAMES, startGame, showGame, registerAccount, loginAccount, logoutAccount, loadRoster,
     GAME_ART, gameArtEnabled, gameArtUrl, renderHub, setLanguage, checkAchievements, aiMateDisplayName,
+    avatarAltForQa(idx){ const image=avatarCanvas(idx,40); return image.getAttribute('alt') || ''; },
     get playerCount(){ return playerCount; },
     set playerCount(v){ playerCount = v; },
     get aiMode(){ return aiMode; },

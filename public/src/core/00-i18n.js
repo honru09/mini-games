@@ -390,6 +390,10 @@ async function setLanguage(lang) {
     document.documentElement.setAttribute('lang', currentLang);
   }
   applyI18n();
+  // Static icon labels and early-rendered dynamic rails may be created before
+  // the async locale request resolves. Re-render them from stable keys once
+  // the committed locale is available so a temporary key never becomes UI.
+  if (typeof initStaticPlatformIcons === 'function') initStaticPlatformIcons();
   if (typeof currentGameId !== 'undefined' && currentGameId && typeof GAMES !== 'undefined' && GAMES[currentGameId] && typeof $ === 'function') {
     const gameTitle = $('game-title');
     if (gameTitle) gameTitle.textContent = GAMES[currentGameId].icon + ' ' + GAMES[currentGameId].name;
@@ -399,6 +403,7 @@ async function setLanguage(lang) {
   renderAccounts();
   renderMe();
   renderLobby();
+  if (typeof renderSocialRail === 'function') renderSocialRail();
   if (online.room) renderRoomPanel();
   if (currentGame && typeof currentGame.onLanguageChange === 'function') currentGame.onLanguageChange(currentLang);
   if (online.connected && account && account.uid) {

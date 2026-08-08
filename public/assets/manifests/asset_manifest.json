@@ -164,8 +164,8 @@
       "load": "lobby lazy",
       "a11y": "装饰性封面；游戏名称与说明由可读 HTML 提供",
       "license": "project-owned-ai-generated",
-      "source": "art-source/games/gomoku/cover_master.png",
-      "integrity": "sha256:cf1e338650fbb1bfa3d6a34f37d4a6cfa7c52ed989616e8a571bf89fc1e21dd7",
+      "source": "art-source/games/gomoku/mg_gomoku_cover_source_v02.png",
+      "integrity": "sha256:8032665d43354bbab8e22fbe6bad910876f65cf9641a64c6385a3a0c7c1cdd30",
       "feature_flag": "mg_art_gomoku_v1"
     },
     {
@@ -185,6 +185,63 @@
       "feature_flag": "mg_art_gomoku_v1"
     },
     {
+      "asset_id": "G-07-COVER",
+      "catalog_key": "GAME_ART.ludo.cover",
+      "runtime_id": "ludo",
+      "runtime_path": "public/assets/ui/game_covers/game_ludo.webp",
+      "variants": {
+        "320w": "public/assets/ui/game_covers/game_ludo_320.webp"
+      },
+      "logical_size": "responsive 16:9",
+      "pixel_size": "640x360 WebP; 320x180 WebP",
+      "status": "integrated",
+      "fallback": "✈️ lobby icon",
+      "load": "lobby lazy",
+      "a11y": "装饰性封面；游戏名称与说明由可读 HTML 提供",
+      "license": "project-owned-ai-generated",
+      "source": "art-source/games/ludo/mg_ludo_cover_source_v01.png",
+      "integrity": "sha256:113d0342d531314dce8a391cde2aac6e1fe7efd43de925a59a2f28675c7ea97a",
+      "feature_flag": "mg_art_ludo_cover_v1"
+    },
+    {
+      "asset_id": "G-08-COVER",
+      "catalog_key": "GAME_ART.monopoly.cover",
+      "runtime_id": "monopoly",
+      "runtime_path": "public/assets/ui/game_covers/game_monopoly.webp",
+      "variants": {
+        "320w": "public/assets/ui/game_covers/game_monopoly_320.webp"
+      },
+      "logical_size": "responsive 16:9",
+      "pixel_size": "640x360 WebP; 320x180 WebP",
+      "status": "integrated",
+      "fallback": "🏙️ lobby icon",
+      "load": "lobby lazy",
+      "a11y": "装饰性封面；游戏名称与说明由可读 HTML 提供",
+      "license": "project-owned-ai-generated",
+      "source": "art-source/games/monopoly/mg_monopoly_cover_source_v01.png",
+      "integrity": "sha256:0b2b127abdbf7015c8d9af807f40f24ce2002c9db58b73fead404eb7ef6c0ad6",
+      "feature_flag": "mg_art_monopoly_cover_v1"
+    },
+    {
+      "asset_id": "G-09-COVER",
+      "catalog_key": "GAME_ART.tank.cover",
+      "runtime_id": "tank",
+      "runtime_path": "public/assets/ui/game_covers/game_tank.webp",
+      "variants": {
+        "320w": "public/assets/ui/game_covers/game_tank_320.webp"
+      },
+      "logical_size": "responsive 16:9",
+      "pixel_size": "640x360 WebP; 320x180 WebP",
+      "status": "integrated",
+      "fallback": "🛡️ lobby icon",
+      "load": "lobby lazy",
+      "a11y": "装饰性封面；游戏名称与说明由可读 HTML 提供",
+      "license": "project-owned-ai-generated",
+      "source": "art-source/games/tank/mg_tank_cover_source_v01.png",
+      "integrity": "sha256:4b58af5d95c5d5bf2030d57e095fd6d680aacdc025594364993d2924d53e7e78",
+      "feature_flag": "mg_art_tank_cover_v1"
+    },
+    {
       "asset_id": "G-11-COVER",
       "catalog_key": "GAME_ART.tetris.cover",
       "runtime_id": "tetris",
@@ -199,8 +256,8 @@
       "load": "lobby lazy",
       "a11y": "装饰性封面；游戏名称与说明由可读 HTML 提供",
       "license": "project-owned-ai-generated",
-      "source": "art-source/games/tetris/cover_master.png",
-      "integrity": "sha256:88c00b4b6a741f9b854bc03ba51cd81086434b651e8acb031608f32c1e882dcf",
+      "source": "art-source/games/tetris/mg_tetris_cover_source_v02.png",
+      "integrity": "sha256:7aca3034ecfb6ab08f768812818c13abc6f0ebf2acd23ca154c833fc880a6c1c",
       "feature_flag": "mg_art_tetris_v1"
     },
     {
@@ -218,6 +275,25 @@
       "source": "art-source/games/tetris/well_surface_master.png",
       "integrity": "sha256:cb1a892ee06a777ff79553566974a9a51b17abd8deb3005efae38fe2a7a46469",
       "feature_flag": "mg_art_tetris_v1"
+    },
+    {
+      "asset_id": "G-06-COVER",
+      "catalog_key": "GAME_ART.xiangqi.cover",
+      "runtime_id": "xiangqi",
+      "runtime_path": "public/assets/ui/game_covers/game_xiangqi.webp",
+      "variants": {
+        "320w": "public/assets/ui/game_covers/game_xiangqi_320.webp"
+      },
+      "logical_size": "responsive 16:9",
+      "pixel_size": "640x360 WebP; 320x180 WebP",
+      "status": "integrated",
+      "fallback": "♟️ lobby icon",
+      "load": "lobby lazy",
+      "a11y": "装饰性封面；游戏名称与说明由可读 HTML 提供",
+      "license": "project-owned-ai-generated",
+      "source": "art-source/games/xiangqi/mg_xiangqi_cover_source_v01.png",
+      "integrity": "sha256:7a11dfd555fb6d683482c2ca23f474e82f1612df6a7653d7c66bd5af3e8e95d7",
+      "feature_flag": "mg_art_xiangqi_cover_v1"
     }
   ],
   "cosmetics": {
@@ -240,11 +316,11 @@
     "runtimeDependency": false
   },
   "games": [
-    { "runtime_id": "gomoku", "cover": "integrated-v1", "board": "bitmap-surface+canvas-grid-v1", "pieces": "canvas-soft3d-v1", "states": "last-move+win-line", "audio": "webaudio-fallback", "feature_flag": "mg_art_gomoku_v1" },
-    { "runtime_id": "ludo", "cover": "pending", "board": "css-dom-fallback" },
-    { "runtime_id": "monopoly", "cover": "pending", "board": "css-dom-fallback" },
-    { "runtime_id": "tank", "cover": "pending", "board": "css-dom-fallback" },
-    { "runtime_id": "tetris", "cover": "integrated-v1", "board": "bitmap-surface+css-grid-v1", "pieces": "css-glass-v1", "states": "active+ghost+locked+clear", "audio": "webaudio-fallback", "feature_flag": "mg_art_tetris_v1" },
-    { "runtime_id": "xiangqi", "cover": "pending", "board": "css-canvas-fallback" }
+    { "runtime_id": "gomoku", "cover": "integrated-v2", "board": "bitmap-surface+canvas-grid-v1", "pieces": "canvas-soft3d-v1", "states": "last-move+win-line", "audio": "webaudio-fallback", "feature_flag": "mg_art_gomoku_v1" },
+    { "runtime_id": "ludo", "cover": "integrated-v1", "board": "css-dom-fallback", "feature_flag": "mg_art_ludo_cover_v1" },
+    { "runtime_id": "monopoly", "cover": "integrated-v1", "board": "css-dom-fallback", "feature_flag": "mg_art_monopoly_cover_v1" },
+    { "runtime_id": "tank", "cover": "integrated-v1", "board": "css-dom-fallback", "feature_flag": "mg_art_tank_cover_v1" },
+    { "runtime_id": "tetris", "cover": "integrated-v2", "board": "bitmap-surface+css-grid-v1", "pieces": "css-glass-v1", "states": "active+ghost+locked+clear", "audio": "webaudio-fallback", "feature_flag": "mg_art_tetris_v1" },
+    { "runtime_id": "xiangqi", "cover": "integrated-v1", "board": "css-canvas-fallback", "feature_flag": "mg_art_xiangqi_cover_v1" }
   ]
 }

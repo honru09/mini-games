@@ -11,49 +11,49 @@ const PLAYROOM_AVATAR_BY_ID=new Map(PLAYROOM_AVATARS.map(item=>[item.id,item]));
 
 const SHOP = {
   avatars: [
-    { id: 30, name: '天使', price: 8, category: 'fantasy' },
-    { id: 31, name: '吸血鬼', price: 10, category: 'fantasy' },
-    { id: 32, name: '精灵', price: 10, category: 'fantasy' },
-    { id: 33, name: '人鱼', price: 12, category: 'fantasy' },
-    { id: 34, name: '凤凰战士', price: 15, category: 'fantasy' },
-    { id: 35, name: '暗影刺客', price: 15, category: 'fantasy' },
-    { id: 36, name: '猫咪', price: 6, category: 'animals' },
-    { id: 37, name: '柴犬', price: 6, category: 'animals' },
-    { id: 38, name: '兔子', price: 8, category: 'animals' },
-    { id: 39, name: '小熊', price: 8, category: 'animals' },
-    { id: 40, name: '狐狸', price: 10, category: 'animals' },
-    { id: 41, name: '熊猫', price: 12, category: 'animals' },
-    { id: 42, name: '医生', price: 8, category: 'profession' },
-    { id: 43, name: '厨师', price: 8, category: 'profession' },
-    { id: 44, name: '画家', price: 10, category: 'profession' },
-    { id: 45, name: '音乐家', price: 10, category: 'profession' },
-    { id: 46, name: '运动员', price: 12, category: 'profession' },
-    { id: 47, name: '科学家', price: 12, category: 'profession' },
-    { id: 48, name: '彩虹', price: 8, category: 'creative' },
-    { id: 49, name: '霓虹', price: 10, category: 'creative' },
-    { id: 50, name: '像素英雄', price: 10, category: 'creative' },
-    { id: 51, name: '故障艺术', price: 12, category: 'creative' },
-    { id: 52, name: '宇宙', price: 15, category: 'creative' },
-    { id: 53, name: '暗影', price: 15, category: 'creative' },
-    { id: 54, name: '金冠骑士', price: 8, category: 'fantasy' },
-    { id: 55, name: '龙骑士', price: 20, category: 'fantasy' },
+    { id: 30, name: '天使', price: 10, category: 'fantasy' },
+    { id: 31, name: '吸血鬼', price: 12, category: 'fantasy' },
+    { id: 32, name: '精灵', price: 12, category: 'fantasy' },
+    { id: 33, name: '人鱼', price: 15, category: 'fantasy' },
+    { id: 34, name: '凤凰战士', price: 18, category: 'fantasy' },
+    { id: 35, name: '暗影刺客', price: 18, category: 'fantasy' },
+    { id: 36, name: '猫咪', price: 10, category: 'animals' },
+    { id: 37, name: '柴犬', price: 10, category: 'animals' },
+    { id: 38, name: '兔子', price: 12, category: 'animals' },
+    { id: 39, name: '小熊', price: 12, category: 'animals' },
+    { id: 40, name: '狐狸', price: 15, category: 'animals' },
+    { id: 41, name: '熊猫', price: 18, category: 'animals' },
+    { id: 42, name: '医生', price: 12, category: 'profession' },
+    { id: 43, name: '厨师', price: 12, category: 'profession' },
+    { id: 44, name: '画家', price: 15, category: 'profession' },
+    { id: 45, name: '音乐家', price: 15, category: 'profession' },
+    { id: 46, name: '运动员', price: 18, category: 'profession' },
+    { id: 47, name: '科学家', price: 18, category: 'profession' },
+    { id: 48, name: '彩虹', price: 12, category: 'creative' },
+    { id: 49, name: '霓虹', price: 15, category: 'creative' },
+    { id: 50, name: '像素英雄', price: 15, category: 'creative' },
+    { id: 51, name: '故障艺术', price: 18, category: 'creative' },
+    { id: 52, name: '宇宙', price: 22, category: 'creative' },
+    { id: 53, name: '暗影', price: 22, category: 'creative' },
+    { id: 54, name: '金冠骑士', price: 12, category: 'fantasy' },
+    { id: 55, name: '龙骑士', price: 30, category: 'fantasy' },
     ...PLAYROOM_AVATARS.filter(item=>!item.free).map(item=>({...item,category:item.theme})),
   ],
   frames: [
-    { id: 1, name: '金色边框', price: 5, cls: 'frame-1' },
-    { id: 2, name: '霓虹边框', price: 8, cls: 'frame-2' },
-    { id: 3, name: '紫焰边框', price: 12, cls: 'frame-3' },
-    { id: 4, name: '极光光环', price: 16, cls: 'frame-4' },
-    { id: 5, name: '流金脉冲', price: 18, cls: 'frame-5' },
-    { id: 6, name: '烈焰环绕', price: 22, cls: 'frame-6' },
-    { id: 7, name: '彩虹流光', price: 26, cls: 'frame-7' },
-    { id: 8, name: '赛博脉冲', price: 30, cls: 'frame-8' },
+    { id: 1, name: '金色边框', price: 10, cls: 'frame-1' },
+    { id: 2, name: '霓虹边框', price: 12, cls: 'frame-2' },
+    { id: 3, name: '紫焰边框', price: 16, cls: 'frame-3' },
+    { id: 4, name: '极光光环', price: 20, cls: 'frame-4' },
+    { id: 5, name: '流金脉冲', price: 24, cls: 'frame-5' },
+    { id: 6, name: '烈焰环绕', price: 28, cls: 'frame-6' },
+    { id: 7, name: '彩虹流光', price: 32, cls: 'frame-7' },
+    { id: 8, name: '赛博脉冲', price: 36, cls: 'frame-8' },
   ],
   effects: [
-    { id: 1, name: '呼吸光效', price: 6, cls: 'effect-1' },
-    { id: 2, name: '闪耀星光', price: 9, cls: 'effect-2' },
-    { id: 3, name: '漂浮',     price: 9, cls: 'effect-3' },
-    { id: 4, name: '环绕旋转', price: 15, cls: 'effect-4' },
+    { id: 1, name: '呼吸光效', price: 10, cls: 'effect-1' },
+    { id: 2, name: '闪耀星光', price: 12, cls: 'effect-2' },
+    { id: 3, name: '漂浮',     price: 12, cls: 'effect-3' },
+    { id: 4, name: '环绕旋转', price: 20, cls: 'effect-4' },
   ],
   backgrounds: [
     { id: 1, name: '薰衣草紫', price: 3, cls: 'bg-1' },
@@ -62,10 +62,10 @@ const SHOP = {
     { id: 4, name: '森林绿',   price: 3, cls: 'bg-4' },
     { id: 5, name: '樱花粉',   price: 3, cls: 'bg-5' },
     { id: 6, name: '暗夜',     price: 5, cls: 'bg-6' },
-    { id: 7, name: '星空闪烁', price: 10, cls: 'bg-7' },
-    { id: 8, name: '樱花飘落', price: 10, cls: 'bg-8' },
-    { id: 9, name: '赛博矩阵', price: 14, cls: 'bg-9' },
-    { id: 10, name: '海洋波浪', price: 12, cls: 'bg-10' },
+    { id: 7, name: '星空闪烁', price: 18, cls: 'bg-7' },
+    { id: 8, name: '樱花飘落', price: 18, cls: 'bg-8' },
+    { id: 9, name: '赛博矩阵', price: 22, cls: 'bg-9' },
+    { id: 10, name: '海洋波浪', price: 20, cls: 'bg-10' },
     ...PREMIUM_BACKGROUNDS.map(item=>({...item,cls:'bg-'+item.id})),
   ],
   game_cosmetics: [
@@ -210,7 +210,7 @@ function avatarCanvas(idx, size, options){
   size = size || 40;
   const v2=PLAYROOM_AVATAR_BY_ID.get(Number(idx));
   if(v2){
-    const img=document.createElement('img'),px=size<=64?'64':(size<=128?'128':'256');img.className='avatar-art-v2';img.width=size;img.height=size;img.alt=v2.name;img.loading='lazy';img.decoding='async';const animate=!!(options&&options.animate&&v2.animated);img.src=avatarAssetPath(v2,animate?'animated':px);if(!animate)img.srcset=avatarAssetPath(v2,'64')+' 64w, '+avatarAssetPath(v2,'128')+' 128w, '+avatarAssetPath(v2,'256')+' 256w';if(v2.animated&&!(options&&options.animate)){const poster=img.src,posterSrcset=img.srcset;img.dataset.animatedSrc=avatarAssetPath(v2,'animated');img.addEventListener('mouseenter',()=>{if(!matchMedia('(prefers-reduced-motion: reduce)').matches){img.removeAttribute('srcset');img.src=img.dataset.animatedSrc;}});img.addEventListener('mouseleave',()=>{img.src=poster;img.srcset=posterSrcset;});}img.addEventListener('error',()=>{img.replaceWith(avatarCanvas(Number(idx)%30,size));},{once:true});return img;
+    const img=document.createElement('img'),px=size<=64?'64':(size<=128?'128':'256');img.className='avatar-art-v2';img.width=size;img.height=size;img.setAttribute('data-i18n-alt','shop_item_avatars_'+v2.id);img.setAttribute('alt',shopItemName('avatars',v2));img.loading='lazy';img.decoding='async';const animate=!!(options&&options.animate&&v2.animated);img.src=avatarAssetPath(v2,animate?'animated':px);if(!animate)img.srcset=avatarAssetPath(v2,'64')+' 64w, '+avatarAssetPath(v2,'128')+' 128w, '+avatarAssetPath(v2,'256')+' 256w';if(v2.animated&&!(options&&options.animate)){const poster=img.src,posterSrcset=img.srcset;img.dataset.animatedSrc=avatarAssetPath(v2,'animated');img.addEventListener('mouseenter',()=>{if(!matchMedia('(prefers-reduced-motion: reduce)').matches){img.removeAttribute('srcset');img.src=img.dataset.animatedSrc;}});img.addEventListener('mouseleave',()=>{img.src=poster;img.srcset=posterSrcset;});}img.addEventListener('error',()=>{img.replaceWith(avatarCanvas(Number(idx)%30,size));},{once:true});return img;
   }
   const st = makeAvatar(idx);
   const off = document.createElement('canvas');
@@ -568,7 +568,7 @@ function openProfileEditor(uid){
   if (editingMe){
     card.appendChild(el('div','lb-note',t('profile_background')));
     const bgGrid = el('div','bg-grid');
-    SHOP.backgrounds.forEach(b => {
+    SHOP.backgrounds.filter(b => b.id >= 7 || ownItem(account, 'backgrounds', b.id)).forEach(b => {
       const sw = el('div','bg-swatch' + (b.id === background ? ' selected' : '') + ' ' + b.cls);
       sw.title = shopItemName('backgrounds',b);
       sw.addEventListener('click', () => {
@@ -1039,6 +1039,7 @@ if (typeof document !== 'undefined'){
   window.__gameInfo = {
     GAMES, startGame, showGame, registerAccount, loginAccount, logoutAccount, loadRoster,
     GAME_ART, gameArtEnabled, gameArtUrl, renderHub, setLanguage, checkAchievements, aiMateDisplayName,
+    avatarAltForQa(idx){ const image=avatarCanvas(idx,40); return image.getAttribute('alt') || ''; },
     get playerCount(){ return playerCount; },
     set playerCount(v){ playerCount = v; },
     get aiMode(){ return aiMode; },

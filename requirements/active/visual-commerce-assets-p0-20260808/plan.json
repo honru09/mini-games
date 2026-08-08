@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "task": "visual-commerce-assets-p0-20260808",
+  "state": "REQUIREMENT_FROZEN",
+  "steps": [
+    {"id":"audit","dependsOn":[],"risk":"medium","tests":["desktop DOM","390px DOM","360px DOM","console logs"],"rollback":"no code changes"},
+    {"id":"i18n-runtime","dependsOn":["audit"],"risk":"high","tests":["npm run test:i18n","node qa/dom-smoke.js"],"rollback":"restore previous dynamic render hooks"},
+    {"id":"auth-lobby-shop-ui","dependsOn":["audit","i18n-runtime"],"risk":"high","tests":["node qa/dom-smoke.js","manual DOM/bounding boxes","reduced-motion"],"rollback":"revert template/shop/auth presentation changes"},
+    {"id":"commerce-contract-closeout","dependsOn":["auth-lobby-shop-ui"],"risk":"high","tests":["client/server catalog price parity","starter background visibility","shop singleton","scroll lock lifecycle"],"rollback":"restore previous client catalog presentation"},
+    {"id":"responsive-i18n-closeout","dependsOn":["i18n-runtime","auth-lobby-shop-ui"],"risk":"high","tests":["481px and 768px auth/shop DOM","game-top locale leak scan","zh-en-uk-zh shop journey"],"rollback":"restore previous responsive and localization presentation"},
+    {"id":"four-lobby-covers","dependsOn":["audit"],"risk":"medium","tests":["npm run test:assets","node qa/dom-smoke.js","byte/dimension audit"],"rollback":"remove manifest entries and retain Emoji fallback"},
+    {"id":"asset-library-index","dependsOn":["four-lobby-covers"],"risk":"low","tests":["catalog parse","hash/path/license audit"],"rollback":"remove additive index files"},
+    {"id":"cache-slimming","dependsOn":["asset-library-index"],"risk":"medium","tests":["preserved deliverables exist","git status clean for ignored cache"],"rollback":"regenerate render caches from retained sources"},
+    {"id":"verification","dependsOn":["commerce-contract-closeout","responsive-i18n-closeout","four-lobby-covers","asset-library-index","cache-slimming"],"risk":"high","tests":["npm run test:i18n","npm run test:assets","npm run test:asset-library","node qa/dom-smoke.js","npm run quality:gates","npm test"],"rollback":"return to pre-task commit"},
+    {"id":"docs-logs-release","dependsOn":["verification"],"risk":"medium","tests":["npm run validate:project","git diff --check"],"rollback":"revert documentation-only commit or deploy previous commit"}
+  ]
+}

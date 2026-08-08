@@ -2,6 +2,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 
 const ROOT = path.join(__dirname, '..');
 const catalog = JSON.parse(fs.readFileSync(path.join(ROOT, 'public', 'assets', 'backgrounds', 'v1', 'background_catalog_v1.json'), 'utf8'));
@@ -17,6 +18,9 @@ function check(name, condition){
 }
 function absolute(assetPath){
   return path.join(ROOT, 'public', 'assets', ...String(assetPath).split('/'));
+}
+function repoAbsolute(assetPath){
+  return path.join(ROOT, ...String(assetPath).split('/'));
 }
 function read24(buffer, offset){
   return buffer[offset] | (buffer[offset + 1] << 8) | (buffer[offset + 2] << 16);
@@ -73,6 +77,26 @@ check('动态资源实际为 720×405 Animated WebP', animatedItems.every(item =
 check('动态策略包含离屏、页面隐藏与减少动态回退', /IntersectionObserver/.test(assetsSource) && /visibilitychange/.test(assetsSource) && /prefers-reduced-motion: reduce/.test(assetsSource));
 check('服务端权威商城包含全部 20–31 背景价格', Array.from({length:12},(_,i)=>20+i).every(id => new RegExp('(?:^|[,\\s{])'+id+':(?:24|32)(?:[,\\s}])').test(serverSource)));
 check('Asset Manifest 登记 Premium Background Pack', manifest.assets.some(asset => asset.asset_id === 'P-BACKGROUND-V1-CATALOG' && asset.status === 'integrated'));
+const coverContract = {
+  gomoku:'G-02-COVER', ludo:'G-07-COVER', monopoly:'G-08-COVER',
+  tank:'G-09-COVER', tetris:'G-11-COVER', xiangqi:'G-06-COVER',
+};
+const coverAssets = Object.entries(coverContract).map(([game,assetId]) => manifest.assets.find(asset => asset.asset_id === assetId && asset.runtime_id === game));
+check('六款大厅封面均有稳定 Asset ID 与 integrated 状态', coverAssets.every(Boolean) && coverAssets.every(asset => asset.status === 'integrated'));
+check('六款封面源文件、640w 与 320w 运行时文件全部存在', coverAssets.every(asset => asset && fs.existsSync(repoAbsolute(asset.source)) && fs.existsSync(repoAbsolute(asset.runtime_path)) && asset.variants && fs.existsSync(repoAbsolute(asset.variants['320w']))));
+check('六款封面尺寸严格为 640×360 与 320×180', coverAssets.every(asset => {
+  if (!asset) return false;
+  const large=webpInfo(repoAbsolute(asset.runtime_path)),small=webpInfo(repoAbsolute(asset.variants['320w']));
+  return large.width===640&&large.height===360&&!large.animated&&small.width===320&&small.height===180&&!small.animated;
+}));
+check('六款封面首屏候选总量不超过 500 KB', coverAssets.reduce((sum,asset)=>sum+(asset?fs.statSync(repoAbsolute(asset.runtime_path)).size:0),0) <= 500*1024);
+check('六款封面 integrity 与实际 SHA-256 一致', coverAssets.every(asset => {
+  if (!asset || !/^sha256:[a-f0-9]{64}$/.test(asset.integrity || '')) return false;
+  const actual=crypto.createHash('sha256').update(fs.readFileSync(repoAbsolute(asset.runtime_path))).digest('hex');
+  return asset.integrity === 'sha256:' + actual;
+}));
+check('六款封面声明生成许可、懒加载、可读 fallback 与装饰图合同', coverAssets.every(asset => asset && asset.license === 'project-owned-ai-generated' && asset.load === 'lobby lazy' && asset.fallback && /可读 HTML/.test(asset.a11y || '')));
+check('封面组件具备 srcset、lazy 与失败回退', /img\.srcset\s*=/.test(assetsSource) && /img\.loading\s*=\s*['"]lazy['"]/.test(assetsSource) && /asset-failed/.test((assetsSource.match(/function gameCoverNode[\s\S]*?\n}/)||[''])[0]));
 const collectionPreviewSource = (shopSource.match(/function previewCollection\(item\)[\s\S]*?\n  function render\(/) || [''])[0];
 check('Collection Try-On 同时预览头像、框、背景与名称效果且不触发购买', /avatarCanvas\(parts\.avatarId/.test(collectionPreviewSource) && /frame-ring/.test(collectionPreviewSource) && /nameFxNode\(previewAccount/.test(collectionPreviewSource) && /applyPremiumBackground\(hero,item\.id/.test(collectionPreviewSource) && !/requestPurchase\(/.test(collectionPreviewSource));
 

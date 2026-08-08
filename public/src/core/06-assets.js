@@ -31,11 +31,31 @@ const GAME_ART = Object.freeze({
     coverSmall: 'ui/game_covers/game_gomoku_320.webp',
     board: 'board/gomoku/mg_board_gomoku_surface_v01.webp',
   }),
+  ludo: Object.freeze({
+    flag: 'mg_art_ludo_cover_v1',
+    cover: 'ui/game_covers/game_ludo.webp',
+    coverSmall: 'ui/game_covers/game_ludo_320.webp',
+  }),
+  monopoly: Object.freeze({
+    flag: 'mg_art_monopoly_cover_v1',
+    cover: 'ui/game_covers/game_monopoly.webp',
+    coverSmall: 'ui/game_covers/game_monopoly_320.webp',
+  }),
+  tank: Object.freeze({
+    flag: 'mg_art_tank_cover_v1',
+    cover: 'ui/game_covers/game_tank.webp',
+    coverSmall: 'ui/game_covers/game_tank_320.webp',
+  }),
   tetris: Object.freeze({
     flag: 'mg_art_tetris_v1',
     cover: 'ui/game_covers/game_tetris.webp',
     coverSmall: 'ui/game_covers/game_tetris_320.webp',
     board: 'board/tetris/mg_board_tetris_well_v01.webp',
+  }),
+  xiangqi: Object.freeze({
+    flag: 'mg_art_xiangqi_cover_v1',
+    cover: 'ui/game_covers/game_xiangqi.webp',
+    coverSmall: 'ui/game_covers/game_xiangqi_320.webp',
   }),
 });
 
@@ -82,10 +102,10 @@ function initStaticPlatformIcons(){
   setButtonIcon($('btn-create-room'),'plus',t('create_room'));
   setButtonIcon($('btn-browse-rooms'),'search',t('browse_rooms'));
   setButtonIcon($('btn-join-code'),'door-open',t('join_room'));
-  setButtonIcon($('btn-back'),'arrow-left','返回');
-  setButtonIcon($('btn-end-game'),'square','结束本局');
-  setButtonIcon($('btn-rules'),'book-open','规则');
-  setButtonIcon($('btn-restart'),'refresh-cw','新一局');
+  setButtonIcon($('btn-back'),'arrow-left',t('back'));
+  setButtonIcon($('btn-end-game'),'square',t('end_game'));
+  setButtonIcon($('btn-rules'),'book-open',t('rules'));
+  setButtonIcon($('btn-restart'),'refresh-cw',t('restart'));
   const onlineMode=typeof document.querySelector==='function'?document.querySelector('[data-mode="online"]'):null;
   const aiMode=typeof document.querySelector==='function'?document.querySelector('[data-mode="ai"]'):null;
   setButtonIcon(onlineMode,'users',t('mode_online'));

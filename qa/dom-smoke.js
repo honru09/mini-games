@@ -119,6 +119,10 @@ global.document = {
   addEventListener(){},
   removeEventListener(){},
 };
+const gameTop = makeEl('div');
+gameTop.className = 'game-top';
+['btn-back','btn-end-game','btn-rules','btn-restart'].forEach(id => gameTop.appendChild(registry.get(id)));
+global.document.body.appendChild(gameTop);
 global.window = { devicePixelRatio: 1, location: { hash: '' }, __gameInfo: null };
 global.location = { hash: '' };
 global.WebSocket = class {
@@ -182,6 +186,12 @@ function collectUiStrings(roots){
 function untranslatedUi(roots){
   return collectUiStrings(roots).filter(value => /[\u3400-\u9fff]/.test(value) || /\b[a-z][a-z0-9]+(?:_[a-z0-9]+){1,}\b/i.test(value));
 }
+function gameTopLabels(){
+  return ['btn-back','btn-end-game','btn-rules','btn-restart'].map(id => {
+    const label = $(id).querySelector('.ui-icon-label');
+    return label && label.textContent;
+  });
+}
 
 async function main(){
   /* 大厅渲染 */
@@ -193,9 +203,17 @@ async function main(){
   check('全能玩家成就要求当前六款游戏全部完成',
     !G.checkAchievements(fiveGameProfile).includes('all_games') && G.checkAchievements(sixGameProfile).includes('all_games'));
   check('默认人数为 2', G.playerCount === 2);
+  await G.setLanguage('zh-CN');
+  check('中文初态覆盖游戏顶栏',
+    JSON.stringify(gameTopLabels()) === JSON.stringify(['← 返回','⏹ 结束本局','📖 规则','🔄 新一局']));
   await G.setLanguage('en-US');
   check('英文切换覆盖游戏名称', G.GAMES.gomoku.name === 'Gomoku' && G.GAMES.xiangqi.name === 'Chinese Chess');
   check('英文切换覆盖游戏描述', G.GAMES.tetris.desc === 'Synchronized survival: clear lines and attack');
+  check('英文切换覆盖游戏顶栏且无中文或裸 key',
+    JSON.stringify(gameTopLabels()) === JSON.stringify(['← Back','⏹ End Game','📖 Rules','🔄 New Round']) &&
+    untranslatedUi([document.querySelector('.game-top')]).length === 0);
+  const englishAvatarAlt = G.avatarAltForQa(100);
+  check('英文切换覆盖 Avatar v2 替代文本', !!englishAvatarAlt && !/[\u3400-\u9fff]/.test(englishAvatarAlt) && !/shop_item_/.test(englishAvatarAlt));
   G.aiMode = true; G.renderPersonaRow();
   check('英文覆盖 AI 角色选择与大厅动态文字', untranslatedUi([$('game-grid'),$('persona-row'),$('my-card')]).length === 0);
   G.aiMode = false;
@@ -208,6 +226,11 @@ async function main(){
   await G.setLanguage('uk-UA');
   check('乌克兰语切换覆盖游戏名称', G.GAMES.monopoly.name === 'Міні-монополія');
   check('对局标题随语言切换即时更新', $('game-title').textContent.includes('Китайські шахи'));
+  check('乌克兰语切换覆盖游戏顶栏且无中文或裸 key',
+    JSON.stringify(gameTopLabels()) === JSON.stringify(['← Назад','⏹ Завершити гру','📖 Правила','🔄 Новий раунд']) &&
+    untranslatedUi([document.querySelector('.game-top')]).length === 0);
+  const ukrainianAvatarAlt = G.avatarAltForQa(100);
+  check('乌克兰语切换覆盖 Avatar v2 替代文本', !!ukrainianAvatarAlt && !/[\u3400-\u9fff]/.test(ukrainianAvatarAlt) && !/shop_item_/.test(ukrainianAvatarAlt));
   check('历史 AI 对手名称按当前语言实时派生', G.aiMateDisplayName('ai_gambler', 'legacy-name') !== englishAiMateName && !/[\u3400-\u9fff]/.test(G.aiMateDisplayName('ai_gambler', 'legacy-name')));
   G.aiMode = true; G.renderPersonaRow();
   check('乌克兰语覆盖 AI 角色选择与大厅动态文字', untranslatedUi([$('game-grid'),$('persona-row'),$('my-card')]).length === 0);
@@ -218,11 +241,13 @@ async function main(){
     check(`乌克兰语覆盖 ${id} 初始对局文字`, leaks.length === 0);
   }
   await G.setLanguage('zh-CN');
+  check('回切中文后游戏顶栏即时恢复且无裸 key',
+    JSON.stringify(gameTopLabels()) === JSON.stringify(['← 返回','⏹ 结束本局','📖 规则','🔄 新一局']) &&
+    !collectUiStrings([document.querySelector('.game-top')]).some(value => /\b[a-z][a-z0-9]+(?:_[a-z0-9]+){1,}\b/i.test(value)));
   const cards = $('game-grid').children;
   const gomokuCard = cards.find(card => card.dataset.gameId === 'gomoku');
-  const tetrisCard = cards.find(card => card.dataset.gameId === 'tetris');
-  check('五子棋大厅卡接入 16:9 美术封面', gomokuCard && gomokuCard.classList.contains('has-cover') && !!gomokuCard.querySelector('.game-cover'));
-  check('俄罗斯方块大厅卡接入 16:9 美术封面', tetrisCard && tetrisCard.classList.contains('has-cover') && !!tetrisCard.querySelector('.game-cover'));
+  const coverCards = ['gomoku','ludo','monopoly','tank','tetris','xiangqi'].map(id => cards.find(card => card.dataset.gameId === id));
+  check('六款大厅卡全部接入统一 16:9 美术封面', coverCards.every(card => card && card.classList.contains('has-cover') && !!card.querySelector('.game-cover')));
   const failedCover = gomokuCard && gomokuCard.querySelector('.game-cover');
   const failedCoverImg = failedCover && failedCover.querySelector('img');
   if (failedCoverImg) failedCoverImg.dispatch('error');

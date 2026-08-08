@@ -1,0 +1,128 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://playroom.local/schemas/asset-library-v1.json",
+  "title": "Playroom Asset Library v1",
+  "type": "object",
+  "required": ["schemaVersion", "updatedAt", "storage", "indexes", "collections", "assets"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "updatedAt": { "type": "string", "minLength": 1 },
+    "storage": {
+      "type": "object",
+      "required": ["mode", "remoteProvider", "remoteBucket", "policy"],
+      "properties": {
+        "mode": { "enum": ["local-only", "hybrid", "remote"] },
+        "remoteProvider": { "type": ["string", "null"] },
+        "remoteBucket": { "type": ["string", "null"] },
+        "policy": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "indexes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "path", "sha256"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "path": { "type": "string", "minLength": 1 },
+          "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "collections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "category",
+          "catalogPath",
+          "catalogSha256",
+          "licensePath",
+          "licenseSha256",
+          "masterRoot",
+          "previewPath",
+          "sourceType",
+          "license",
+          "status",
+          "remoteObjectKey"
+        ],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "category": { "type": "string", "minLength": 1 },
+          "catalogPath": { "type": "string", "minLength": 1 },
+          "catalogSha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+          "licensePath": { "type": ["string", "null"] },
+          "licenseSha256": { "type": ["string", "null"], "pattern": "^[a-f0-9]{64}$" },
+          "masterRoot": { "type": "string", "minLength": 1 },
+          "previewPath": { "type": "string", "minLength": 1 },
+          "sourceType": { "enum": ["generated", "project-owned", "external-licensed"] },
+          "sourceUrl": { "type": "string", "pattern": "^https://" },
+          "license": { "type": "string", "minLength": 1 },
+          "status": { "enum": ["integrated-local-only", "integrated-hybrid", "remote-only", "reference-only", "blocked-license"] },
+          "remoteObjectKey": { "type": ["string", "null"] }
+        },
+        "additionalProperties": false
+      }
+    },
+    "assets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "category",
+          "assetType",
+          "sourceType",
+          "sourcePath",
+          "sourceSha256",
+          "license",
+          "author",
+          "status",
+          "dimensions",
+          "previewPath",
+          "previewSha256",
+          "runtimePaths",
+          "promptPath",
+          "model",
+          "remoteObjectKey"
+        ],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "category": { "type": "string", "minLength": 1 },
+          "assetType": { "type": "string", "minLength": 1 },
+          "sourceType": { "enum": ["generated", "project-owned", "external-licensed"] },
+          "sourcePath": { "type": "string", "minLength": 1 },
+          "sourceSha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+          "license": { "type": "string", "minLength": 1 },
+          "author": { "type": "string", "minLength": 1 },
+          "status": { "enum": ["integrated-local-only", "integrated-hybrid", "remote-only", "reference-only", "blocked-license"] },
+          "dimensions": {
+            "type": "object",
+            "required": ["width", "height"],
+            "properties": {
+              "width": { "type": "integer", "minimum": 1 },
+              "height": { "type": "integer", "minimum": 1 }
+            },
+            "additionalProperties": false
+          },
+          "previewPath": { "type": "string", "minLength": 1 },
+          "previewSha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+          "runtimePaths": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "promptPath": { "type": ["string", "null"] },
+          "model": { "type": ["string", "null"] },
+          "remoteObjectKey": { "type": ["string", "null"] }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "verifiedAt": "2026-08-08T17:38:45+09:00",
+  "commit": null,
+  "commands": [
+    {"command":"npm run format:locales","status":"pass","detail":"1046 keys in each locale"},
+    {"command":"npm run test:i18n","status":"pass"},
+    {"command":"npm run test:assets","status":"pass"},
+    {"command":"npm run test:asset-library","status":"pass"},
+    {"command":"npm run test:shop-contract","status":"pass"},
+    {"command":"npm run test:ui-responsive","status":"pass"},
+    {"command":"node qa/dom-smoke.js","status":"pass"},
+    {"command":"npm run quality:gates","status":"pass","detail":"QUALITY_GATES_FAST_ALL_PASS"},
+    {"command":"npm test","status":"pass","durationSeconds":177.2}
+  ],
+  "browserEvidence": "requirements/active/visual-commerce-assets-p0-20260808/evidence/browser-visual-qa-20260808.json",
+  "notExecuted": [
+    "physical Android device",
+    "physical iPhone Safari",
+    "physical Tablet",
+    "second desktop browser",
+    "real Supabase migration/RLS/concurrency/backup/rollback",
+    "real network shaping",
+    "30-minute synthetic session",
+    "external object storage upload"
+  ]
+}

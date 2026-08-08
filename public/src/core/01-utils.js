@@ -1,6 +1,29 @@
 /* ================= 通用工具 ================= */
 const $ = id => document.getElementById(id);
 const PROTOCOL_VERSION = 1;
+let modalScrollLockCount = 0;
+let modalScrollObserver = null;
+function ensureModalScrollObserver(){
+  if (modalScrollObserver || typeof MutationObserver === 'undefined' || !document.body) return;
+  modalScrollObserver = new MutationObserver(() => {
+    modalScrollLockCount = document.querySelectorAll('[data-modal-scroll-lock="1"]').length;
+    document.body.classList.toggle('modal-scroll-locked', modalScrollLockCount > 0);
+  });
+  modalScrollObserver.observe(document.body, { childList:true, subtree:true });
+}
+function acquireModalScrollLock(owner){
+  if (!owner || !owner.dataset || owner.dataset.modalScrollLock === '1') return;
+  ensureModalScrollObserver();
+  owner.dataset.modalScrollLock = '1';
+  modalScrollLockCount++;
+  if (document.body) document.body.classList.add('modal-scroll-locked');
+}
+function releaseModalScrollLock(owner){
+  if (!owner || !owner.dataset || owner.dataset.modalScrollLock !== '1') return;
+  delete owner.dataset.modalScrollLock;
+  modalScrollLockCount = Math.max(0, modalScrollLockCount - 1);
+  if (modalScrollLockCount === 0 && document.body) document.body.classList.remove('modal-scroll-locked');
+}
 
 /* ---------------- 轻量音效（WebAudio，零资源加载） ---------------- */
 let _actx = null;

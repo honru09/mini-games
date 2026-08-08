@@ -109,9 +109,12 @@ const families = {
     .flatMap(([id, count]) => Array.from({ length: count }, (_, i) => `rule_${id}_${i + 1}`)),
   shop_catalog: [
     ...Array.from({ length: 26 }, (_, i) => `shop_item_avatars_${i + 30}`),
+    ...Array.from({ length: 48 }, (_, i) => `shop_item_avatars_${i + 100}`),
     ...Array.from({ length: 8 }, (_, i) => `shop_item_frames_${i + 1}`),
     ...Array.from({ length: 4 }, (_, i) => `shop_item_effects_${i + 1}`),
     ...Array.from({ length: 10 }, (_, i) => `shop_item_backgrounds_${i + 1}`),
+    ...Array.from({ length: 12 }, (_, i) => `shop_item_backgrounds_${i + 20}`),
+    ...[2001,2011,2012,2013,2021,2031,2041,2042,2051].map(id => `shop_item_game_cosmetics_${id}`),
   ],
   monopoly_board: [
     ...Array.from({ length: 24 }, (_, i) => `monopoly_cell_${i}`),
@@ -154,7 +157,9 @@ const families = {
     'tetris_event_lock','tetris_event_spawn','tetris_event_sync','tetris_event_ready','tetris_event_tetris',
     'tetris_move_left','tetris_move_right','tetris_rotate_left','tetris_rotate_right','tetris_soft_drop','tetris_hard_drop',
     'gomoku_your_turn_hint','gomoku_wait_opponent','ludo_roll_die','ludo_choose_plane','thinking',
-    ...['all','basic','theme','fantasy','animals','profession','creative'].map(id => `avatar_category_${id}`),
+    ...['all','basic','theme','fantasy','animals','profession','creative','pixel','anime','landscape','animal','neon','technology'].map(id => `avatar_category_${id}`),
+    ...['pieceSkin','baseSkin','diceSkin','tokenSkin','tankSkin','blockSkin','backgroundSkin'].map(id => `game_cosmetic_slot_${id}`),
+    ...['pixel','anime','landscape','animal','neon','technology'].map(id => `premium_theme_${id}`),
   ],
   server_error_reasons: [
     'login_required','session_expired','identity_switch_requires_logout','registration_requires_logout','login_requires_logout',

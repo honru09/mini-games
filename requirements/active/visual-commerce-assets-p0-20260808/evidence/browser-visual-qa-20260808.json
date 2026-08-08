@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-08-08T17:33:02+09:00",
+  "target": "http://127.0.0.1:8091/",
+  "browserSurface": "Codex in-app browser",
+  "build": {
+    "generatedFile": "public/index.html",
+    "bytes": 642543
+  },
+  "viewports": [
+    {"width":1440,"height":900,"lobbyOverflowX":false,"quickJoinCount":1,"coverCount":6,"coversReady":true},
+    {"width":768,"height":900,"authOverflowX":false,"authControlsAtLeast44":true,"shopOverflowX":false,"shopControlsAtLeast44":true},
+    {"width":481,"height":900,"authOverflowX":false,"authControlsAtLeast44":true,"shopOverflowX":false,"shopControlsAtLeast44":true},
+    {"width":390,"height":844,"authOverflowX":false,"authControlsAtLeast44":true,"shopOverflowX":false,"shopControlsAtLeast44":true},
+    {"width":360,"height":800,"authOverflowX":false,"authControlsAtLeast44":true,"shopOverflowX":false,"shopControlsAtLeast44":true}
+  ],
+  "auth": {
+    "avatarCount": 48,
+    "freeCount": 12,
+    "lockedCount": 36,
+    "singleScrollContainer": true,
+    "submitReachableByScroll": true,
+    "cancelReleasesBodyLock": true
+  },
+  "shop": {
+    "avatarCount": 48,
+    "doubleClickModalCount": 1,
+    "doubleClickLockOwnerCount": 1,
+    "backgroundCountForFreshAccount": 16,
+    "starterBackgroundPurchaseEntries": 0,
+    "closeReleasesBodyLock": true,
+    "englishChineseLeak": false,
+    "ukrainianChineseLeak": false,
+    "ukrainianBareKeyLeak": false
+  },
+  "i18n": {
+    "ukrainianGameTop": ["← Назад", "📖 Правила", "🔄 Новий раунд"],
+    "ukrainianAvatarAltChineseLeak": false,
+    "ukrainianAttributeBareKeyLeak": false
+  },
+  "console": {
+    "messages": []
+  },
+  "screenshots": [
+    "deliverables/visual-qa/visual-commerce-p0-20260808/lobby-en-1440x900.png",
+    "deliverables/visual-qa/visual-commerce-p0-20260808/auth-en-768x900.png",
+    "deliverables/visual-qa/visual-commerce-p0-20260808/auth-en-360x800.png",
+    "deliverables/visual-qa/visual-commerce-p0-20260808/shop-en-768x900.png",
+    "deliverables/visual-qa/visual-commerce-p0-20260808/shop-en-360x800.png",
+    "deliverables/visual-qa/visual-commerce-p0-20260808/shop-uk-360x800.png"
+  ],
+  "notes": [
+    "Browser QA created a local-only account named P0Audit0808 for authenticated shop traversal.",
+    "Current six soft-3D covers are a reversible transition batch and are not the final Pocket Tabletop Sticker Golden Set.",
+    "Physical Android, iPhone and Tablet devices remain NOT_EXECUTED."
+  ]
+}

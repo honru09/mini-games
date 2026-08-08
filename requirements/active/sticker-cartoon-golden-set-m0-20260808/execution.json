@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "task": "sticker-cartoon-golden-set-m0-20260808",
+  "state": "REQUIREMENT_FROZEN",
+  "startedAt": null,
+  "verifiedCommit": null,
+  "releasedCommit": null,
+  "notExecuted": [
+    "blocked until visual-commerce-assets-p0-20260808 is verified and released",
+    "real Android/iPhone/Tablet matrix",
+    "second desktop browser",
+    "real Supabase migration/RLS/concurrency/backup/rollback",
+    "real network shaping and 30-minute synthetic session"
+  ],
+  "blocked": ["visual-commerce-assets-p0-20260808 not released"]
+}

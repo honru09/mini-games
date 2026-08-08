@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "task": "sticker-cartoon-golden-set-m0-20260808",
+  "owner": "primary_codex",
+  "owned": [
+    "requirements/active/sticker-cartoon-golden-set-m0-20260808/**",
+    "art-source/style/**",
+    "art-source/ai/**",
+    "art-source/avatars/golden-set/**",
+    "art-source/games/gomoku/sticker-v1/**",
+    "art-source/games/ludo/sticker-v1/**",
+    "art-source/ui/sticker-v1/**",
+    "deliverables/visual-qa/sticker-cartoon-m0/**"
+  ],
+  "shared": [
+    "MOTION_TOKENS.json",
+    "public/index-template.html",
+    "public/src/core/06-assets.js",
+    "public/assets/manifests/asset_manifest.json",
+    "asset-library/**",
+    "qa/**",
+    "package.json",
+    "README.md",
+    "WHITEPAPER.md",
+    "PROJECT_STATUS.json",
+    "public/index.html"
+  ],
+  "forbidden": [
+    "server/index.js",
+    "server/reward-engine.js",
+    "server/gameplay/**",
+    "shared/rules/**",
+    "public/src/online/03-websocket.js",
+    "public/src/08-registry.js",
+    "supabase/schema.sql"
+  ]
+}
