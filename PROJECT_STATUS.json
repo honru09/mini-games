@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
   "project": "Ghost Game / Mini Games Platform",
-  "updatedAt": "2026-08-09T00:37:00+09:00",
-  "lastVerifiedCommit": "52c1a85eedda2651da16b75a8d35a1f8afe3843f",
-  "lastReleasedCommit": "669562af961884f4749b91bdfec9f4011ae73167",
+  "updatedAt": "2026-08-09T01:00:09+09:00",
+  "lastVerifiedCommit": "aac40da1615f44aef3773c838ff51e737ce29e5a",
+  "lastReleasedCommit": "aac40da1615f44aef3773c838ff51e737ce29e5a",
   "stateVocabulary": ["planned", "partial", "implemented", "verified", "production-ready", "not_executed", "blocked"],
   "releaseCandidate": {
     "status": "blocked",
-    "reason": "Ghost Game P0 完整自动化与本地 1440/768/390/360 浏览器验收已通过，但第二桌面浏览器、真实移动设备、真实 Supabase/RLS/并发/备份回滚、真实网络整形、30 分钟会话和跨实例生产遥测仍未执行。"
+    "reason": "Ghost Game P0 已在 GitHub Pages 与 Render 发布并通过完整自动化、线上 HTTP/WS/Companion 和本地/线上 Chromium 验收，但第二桌面浏览器、真实移动设备、真实 Supabase/RLS/并发/备份回滚、真实网络整形、30 分钟会话和跨实例生产遥测仍未执行。"
   },
   "capabilities": {
     "sixGames": {"status": "verified", "evidence": ["npm test", "qa/dom-smoke.js"]},
-    "ghostGameP0": {"status":"verified","evidence":["requirements/active/ghost-game-rebrand-p0-20260808/evidence/browser-visual-qa-20260809.md","qa/ghost-shell-contract.js","qa/ghost-auth-credentials.js","qa/ghost-auth-online.js","qa/ghost-companion.js","npm test"],"scope":["Ghost Game/Honru original SVG brand","isolated pre-auth page","username/password and legacy PIN migration","ephemeral guest","Home/Games/Chat/Profile","light/dark scenes","Honru check-in and companion fallback"],"boundary":"local verified; production-ready remains blocked by external acceptance gates"},
+    "ghostGameP0": {"status":"verified","evidence":["aac40da1615f44aef3773c838ff51e737ce29e5a","requirements/active/ghost-game-rebrand-p0-20260808/evidence/browser-visual-qa-20260809.md","requirements/active/ghost-game-rebrand-p0-20260808/evidence/release-202608090100.json","qa/ghost-shell-contract.js","qa/ghost-auth-credentials.js","qa/ghost-auth-online.js","qa/ghost-companion.js","npm test"],"scope":["Ghost Game/Honru original SVG brand","isolated pre-auth page","username/password and legacy PIN migration","ephemeral guest","Home/Games/Chat/Profile","light/dark scenes","Honru check-in and companion fallback"],"boundary":"released and online-verified; production-ready remains blocked by external acceptance gates"},
     "officialModes": {"status": "verified", "evidence": ["public/index-template.html", "qa/dom-smoke.js", "server/reward-engine.js"], "scope": ["ai", "online"], "removed": ["legacy same-device multiplayer UI", "legacy profile slots", "legacy local reward branch"]},
     "seatSocialProfileV2": {"status": "verified", "evidence": ["qa/room-seats.js", "qa/social-graph.js", "qa/reconnect-online.js", "qa/e2e-online.js"]},
     "threeLanguageI18n": {"status": "verified", "evidence": ["npm run test:i18n", "qa/dom-smoke.js", "requirements/active/visual-commerce-assets-p0-20260808/evidence/browser-visual-qa-20260808.json"], "scope":"zh-CN/en-US/uk-UA automated coverage plus local English/Ukrainian browser traversal"},

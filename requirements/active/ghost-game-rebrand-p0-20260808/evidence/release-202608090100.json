@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "task": "ghost-game-rebrand-p0-20260808",
+  "recordedAt": "2026-08-09T01:00:09+09:00",
+  "releaseCommit": "aac40da1615f44aef3773c838ff51e737ce29e5a",
+  "rollbackCommit": "76262bd",
+  "productionReady": false,
+  "deployments": {
+    "githubPages": {
+      "status": "success",
+      "workflowRunId": 31265550395,
+      "url": "https://honru09.github.io/mini-games/",
+      "commit": "aac40da1615f44aef3773c838ff51e737ce29e5a"
+    },
+    "render": {
+      "status": "live",
+      "deploymentId": "dep-d9rl1son74is73f2ila0",
+      "url": "https://mini-games-online.onrender.com",
+      "commit": "aac40da1615f44aef3773c838ff51e737ce29e5a"
+    }
+  },
+  "verification": {
+    "http": {
+      "status": "pass",
+      "targets": [
+        "https://honru09.github.io/mini-games/",
+        "https://honru09.github.io/mini-games/assets/brand/ghost-game-mark.svg",
+        "https://honru09.github.io/mini-games/assets/brand/honru-mascot-v1.svg",
+        "https://mini-games-online.onrender.com/",
+        "https://mini-games-online.onrender.com/assets/brand/ghost-game-mark.svg"
+      ]
+    },
+    "websocket": {
+      "status": "pass",
+      "command": "node --experimental-websocket scripts/ws-live-test.js wss://mini-games-online.onrender.com/ws",
+      "scope": ["two-player READY start", "move relay", "three-player partial-capacity start", "server result", "end-game lifecycle"]
+    },
+    "companion": {
+      "status": "pass",
+      "httpStatus": 200,
+      "sourceType": "model",
+      "scope": ["ephemeral guest authentication", "allowed Origin", "Bearer token", "logout cleanup"]
+    },
+    "browser": {
+      "status": "pass",
+      "browser": "in-app Chromium",
+      "targets": ["GitHub Pages", "Render"],
+      "widths": [390, 1440],
+      "scope": ["isolated auth page", "app inert before authentication", "Chinese and English", "light theme", "no horizontal overflow", "no console warnings or errors"]
+    }
+  },
+  "notExecuted": [
+    "real Supabase/RLS/concurrency/backup/rollback",
+    "second desktop browser",
+    "Android",
+    "iPhone Safari",
+    "real Tablet",
+    "real network shaping",
+    "30-minute synthetic session",
+    "cross-instance durable telemetry"
+  ],
+  "knownIssues": [
+    "Generated Honru candidate remains source-only pending cleanup and Reviewer B; deterministic SVG is the only runtime mascot.",
+    "Release is online and verified but the project release candidate remains BLOCKED by external acceptance gates."
+  ]
+}

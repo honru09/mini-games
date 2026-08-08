@@ -36,3 +36,4 @@
 - 2026-08-09 00:43｜修复手机 Honru 浮层遮挡 Profile/Games、显式退出后旧 App 透出、素材库 manifest 哈希漂移及 E2E 未认证即启动 AI 的竞态；完整 `npm test` 与 Quality Gates 全部通过。
 - 2026-08-09 00:43｜将 M0 Art Bible/Design Token/IP 模板和验收矩阵从六主题同步为 `light/dark`，全部既有 M0 PNG/SVG、Prompt、Source Manifest 路径与 SHA 保留不变。
 - 2026-08-09 00:47｜本次仅更新简易报告索引；无产品代码修改。
+- 2026-08-09 01:00｜将 Ghost Game P0 计划、执行和项目状态写回 `RELEASED`，记录提交 `aac40da`、Pages/Render 部署与线上 HTTP/WS/Companion/浏览器验收；RC 仍保持 `BLOCKED`。

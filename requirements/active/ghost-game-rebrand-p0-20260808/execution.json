@@ -1,11 +1,12 @@
 {
   "schemaVersion": 1,
   "task": "ghost-game-rebrand-p0-20260808",
-  "state": "VERIFIED_LOCAL",
+  "state": "RELEASED",
   "startedAt": "2026-08-08T20:30:00+09:00",
-  "updatedAt": "2026-08-09T00:37:00+09:00",
-  "verifiedCommit": null,
-  "releasedCommit": null,
+  "updatedAt": "2026-08-09T01:00:09+09:00",
+  "verifiedCommit": "aac40da1615f44aef3773c838ff51e737ce29e5a",
+  "releasedCommit": "aac40da1615f44aef3773c838ff51e737ce29e5a",
+  "releasedAt": "2026-08-09T00:54:01+09:00",
   "progress": {
     "recon": {"status":"completed"},
     "brandAssets": {"status":"verified","evidence":["evidence/brand-assets-audit.md","art-source/brand/ghost-game/IP_REVIEW_v1.md","qa/asset-manifest-v2.js"]},
@@ -13,8 +14,8 @@
     "appShell": {"status":"verified","evidence":["qa/ghost-shell-contract.js","qa/ui-responsive-contract.js","evidence/browser-visual-qa-20260809.md"]},
     "honruCompanion": {"status":"verified","evidence":["qa/ghost-companion.js","qa/ghost-auth-online.js","evidence/browser-visual-qa-20260809.md"]},
     "integrationQa": {"status":"verified","evidence":["npm run quality:gates","npm test","evidence/browser-visual-qa-20260809.md"]},
-    "release": {"status":"not_executed"}
+    "release": {"status":"verified","evidence":["evidence/release-202608090100.json"]}
   },
   "notExecuted": ["real Supabase", "real mobile devices", "second desktop browser", "real network shaping", "30-minute synthetic session"],
-  "blocked": []
+  "blocked": ["real Supabase acceptance", "second desktop browser", "real mobile devices", "real network shaping", "30-minute synthetic session", "cross-instance durable telemetry"]
 }

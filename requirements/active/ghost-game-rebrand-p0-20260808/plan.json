@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "task": "ghost-game-rebrand-p0-20260808",
-  "state": "VERIFIED_LOCAL",
+  "state": "RELEASED",
   "risk": "HIGH",
   "steps": [
     {"id":"recon","status":"completed","dependsOn":[],"tests":[],"rollback":"none"},
@@ -11,7 +11,7 @@
     {"id":"shell-theme-navigation","status":"completed","dependsOn":["brand-assets"],"tests":["route contract","double theme contrast","360-1440 browser QA"],"rollback":"restore legacy hub layout and map stored theme"},
     {"id":"honru-companion","status":"completed","dependsOn":["auth-server","shell-theme-navigation"],"tests":["API auth/origin/rate/timeout/fallback","daily check-in idempotency"],"rollback":"disable companion feature flag; static Honru remains"},
     {"id":"integration","status":"completed","dependsOn":["auth-client","honru-companion"],"tests":["npm run quality:gates","npm test","browser visual QA","build drift"],"rollback":"revert release commit"},
-    {"id":"release","status":"pending","dependsOn":["integration"],"tests":["Pages workflow","Render deploy","HTTP/WS smoke"],"rollback":"redeploy previous commit 76262bd"}
+    {"id":"release","status":"completed","dependsOn":["integration"],"tests":["Pages workflow 31265550395","Render deploy dep-d9rl1son74is73f2ila0","HTTP/static resource smoke","WebSocket live smoke","Honru Companion live smoke","online browser QA"],"evidence":["evidence/release-202608090100.json"],"rollback":"redeploy previous commit 76262bd"}
   ],
   "notExecutedUntilProven": ["real Supabase", "Android", "iPhone Safari", "Tablet", "second desktop browser", "real network shaping", "30-minute synthetic session"]
 }
