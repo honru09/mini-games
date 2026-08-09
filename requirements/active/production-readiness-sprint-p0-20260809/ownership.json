@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "task": "production-readiness-sprint-p0-20260809",
+  "builder": "master",
+  "owned": [
+    "requirements/active/production-readiness-sprint-p0-20260809/**",
+    "scripts/supabase-production-ops.ps1",
+    "scripts/long-session-smoke.js",
+    "qa/production-readiness-contract.js",
+    "public/manifest.webmanifest",
+    "public/sw.js"
+  ],
+  "sharedDependencies": [
+    "shared/rules/tetris.js",
+    "server/gameplay/tetris-rule-authority.js",
+    "public/src/games/tetris.js",
+    "server/index.js",
+    "server/gameplay/metrics.js",
+    "supabase/schema.sql",
+    "public/index-template.html",
+    "public/index.html",
+    "package.json",
+    "README.md",
+    "AGENTS.md",
+    "PROJECT_STATUS.json",
+    "art-source/**",
+    "asset-library/**",
+    "public/assets/manifests/asset_manifest.json"
+  ],
+  "forbidden": [
+    "server/reward-engine.js numeric reward policy",
+    "shared/rules/xiangqi.js",
+    "shared/rules/monopoly.js",
+    "deleted game restoration",
+    "credential files"
+  ],
+  "sharedChangeRequests": ["SHARED_CHANGE_REQUEST.md"]
+}

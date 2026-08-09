@@ -9,7 +9,7 @@ function check(name,value,detail){console.log((value?'PASS':'FAIL')+'  '+name+(v
 const t=new TetrisRuleAuthority({matchId:'t-rule',playerCount:2,startAt:1,matchEndAt:100000,matchSeed:'t-rule'});
 const t1=t.acceptAction(0,{matchId:'t-rule',seq:1,action:{type:'hard_drop'}},1000),tdup=t.acceptAction(0,{matchId:'t-rule',seq:1,action:{type:'hard_drop'}},1001);
 check('Tetris Rule Authority：Action→Server State Hash',t1.ok&&t1.stateEvent.payload.players[0].hash&&tdup.reason==='ERR_DUPLICATE_ACTION');
-const tState=t.snapshot(1000);check('Tetris Rule Authority：Reconnect Snapshot 含所有 Rule Core 状态',tState.protocol==='tetris-rule-v2'&&tState.players.length===2&&tState.players[0].state.board.length===18);
+const tState=t.snapshot(1000);check('Tetris Rule Authority：Reconnect Snapshot 含所有 Rule Core 状态',tState.protocol==='tetris-rule-v3'&&tState.players.length===2&&tState.players[0].state.board.length===18);
 
 const x=new XiangqiRuleAuthority({matchId:'x-rule',startedAt:1000,initialMs:10000});
 const beforeIllegal=x.snapshot(1100).clock.remainingMsByPlayer[0];

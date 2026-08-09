@@ -4,6 +4,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const { ClusterCoordinator } = require('./cluster-coordinator');
 const {
   normalizeUsername,
   validateUsername,
@@ -138,6 +139,7 @@ const MIME = {
   '.svg': 'image/svg+xml',
   '.ico': 'image/x-icon',
   '.json': 'application/json; charset=utf-8',
+  '.webmanifest': 'application/manifest+json; charset=utf-8',
 };
 
 /* ---------------- AI 代理（DeepSeek） ---------------- */
@@ -947,6 +949,17 @@ async function sbFetch(path, options = {}){
   try { return JSON.parse(text); }
   catch { throw new Error('supabase 返回了无效 JSON（status=' + res.status + '）'); }
 }
+const clusterCoordinator = new ClusterCoordinator({
+  enabled:useSupabase && String(process.env.ENABLE_CLUSTER_COORDINATION || '') === '1',
+  rpc:(name,payload)=>sbFetch('rpc/'+name,{method:'POST',body:JSON.stringify(payload)}),
+  instanceId:process.env.RENDER_INSTANCE_ID || process.env.INSTANCE_ID,
+  deploymentId:process.env.RENDER_GIT_COMMIT || process.env.DEPLOYMENT_ID,
+  telemetryUrl:process.env.TELEMETRY_WEBHOOK_URL,
+  telemetryToken:process.env.TELEMETRY_WEBHOOK_TOKEN,
+  telemetryAllowlist:process.env.TELEMETRY_WEBHOOK_ALLOWLIST,
+  onEvent:handleClusterEvent,
+  onError:recordOperationalError,
+});
 async function sbLoadProfiles(){
   if (!useSupabase) return;
   try {
@@ -2458,6 +2471,8 @@ async function handleChatSend(session,payload){
   if(persisted.unavailable)return chatError(session,'chat_send',persisted.reason||'conversation_unavailable',clientMessageId);
   if(persisted.conflict)return chatError(session,'chat_send','idempotency_conflict',clientMessageId);
   const message=chatMessagePayload(persisted.row);
+  if(!persisted.duplicate&&clusterCoordinator.enabled)clusterCoordinator.publishDirectMessage(message.id,user.uid,peerUid)
+    .catch(error=>recordOperationalError('cluster_chat_publish',error));
   session.sendText(JSON.stringify({type:'chat_send_ok',payload:{clientMessageId,messageId:message.id,seq:message.seq,message,duplicate:!!persisted.duplicate}}));
   chatValidSessions(user.uid,target=>{if(target!==session)target.sendText(JSON.stringify({type:'chat_message',payload:{conversationId:conversation.id,message,
     unreadCount:chatUnreadCount(user.uid,peerUid),duplicate:!!persisted.duplicate}}));});
@@ -2475,9 +2490,45 @@ async function handleChatRead(session,payload){
   if(throughSeq==='0'||!received.some(row=>row.seq===throughSeq))return chatError(session,'chat_read','message_not_found');
   const current=chatReadState(conversation.id,user.uid,peerUid);if(chatSeqCompare(throughSeq,current.lastReadSeq)>0)current.lastReadSeq=throughSeq;
   try{await persistChatRead(current);}catch(error){recordOperationalError('direct_chat_read_persist',error);return chatError(session,'chat_read','server_unavailable','',3);}
+  if(clusterCoordinator.enabled)clusterCoordinator.publishDirectMessageRead(conversation.id,user.uid,peerUid,current.lastReadSeq)
+    .catch(error=>recordOperationalError('cluster_chat_read_publish',error));
   const response={conversationId:conversation.id,readerUid:user.uid,throughSeq:current.lastReadSeq,readAt:current.updatedAt};
   for(const uid of [user.uid,peerUid])chatValidSessions(uid,target=>target.sendText(JSON.stringify({type:'chat_read_ok',payload:response})));
   sendChatState(user.uid);sendChatState(peerUid);
+}
+
+async function handleClusterEvent(topic,payload){
+  if(topic==='direct_message'){
+    const messageId=String(payload&&payload.messageId||'');
+    if(!/^[A-Za-z0-9._:-]{3,128}$/.test(messageId))throw new Error('cluster_direct_message_id_invalid');
+    const raw=await sbFetch('rpc/get_direct_message_by_id_v1',{method:'POST',body:JSON.stringify({p_id:messageId})});
+    const row=directMessageFromDb(raw);
+    if(!row||row.id!==messageId||row.senderUid!==String(payload.senderUid||'')||row.recipientUid!==String(payload.recipientUid||''))
+      throw new Error('cluster_direct_message_lookup_mismatch');
+    const inserted=!db.chatMessages.some(item=>item.id===row.id);
+    if(inserted){
+      db.chatMessages.push(row);if(chatSeqCompare(row.seq,db.nextChatSeq)>0)db.nextChatSeq=row.seq;trimChatData();saveDB();
+    }
+    if(!inserted)return;
+    const message=chatMessagePayload(row),conversation=chatConversation(row.senderUid,row.recipientUid);
+    for(const uid of [row.senderUid,row.recipientUid])chatValidSessions(uid,target=>target.sendText(JSON.stringify({type:'chat_message',payload:{
+      conversationId:conversation.id,message,unreadCount:chatUnreadCount(uid,uid===row.senderUid?row.recipientUid:row.senderUid),duplicate:false,
+    }})));
+    sendChatState(row.senderUid);sendChatState(row.recipientUid);return;
+  }
+  if(topic==='direct_message_read'){
+    const conversationId=String(payload&&payload.conversationId||''),readerUid=String(payload&&payload.readerUid||''),peerUid=String(payload&&payload.peerUid||'');
+    if(chatConversation(readerUid,peerUid).id!==conversationId)throw new Error('cluster_direct_message_read_invalid');
+    const rows=await sbFetch('direct_message_reads?conversation_id=eq.'+encodeURIComponent(conversationId)+'&uid=eq.'+encodeURIComponent(readerUid)+'&select=*&limit=1');
+    const raw=Array.isArray(rows)&&rows[0];
+    const read=normalizeChatRead(raw&&{conversationId:raw.conversation_id,uid:raw.uid,peerUid:raw.peer_uid,lastReadSeq:raw.last_read_seq,updatedAt:Date.parse(raw.updated_at)||Date.now()});
+    if(!read||read.peerUid!==peerUid||chatSeqCompare(read.lastReadSeq,payload.throughSeq)<0)throw new Error('cluster_direct_message_read_lookup_mismatch');
+    const current=db.chatReads[chatReadKey(conversationId,readerUid)];if(current&&chatSeqCompare(current.lastReadSeq,read.lastReadSeq)>=0)return;
+    db.chatReads[chatReadKey(conversationId,readerUid)]=read;saveDB();
+    const response={conversationId,readerUid,throughSeq:read.lastReadSeq,readAt:read.updatedAt};
+    for(const uid of [readerUid,peerUid])chatValidSessions(uid,target=>target.sendText(JSON.stringify({type:'chat_read_ok',payload:response})));
+    sendChatState(readerUid);sendChatState(peerUid);
+  }
 }
 
 function normalizeOwned(o){
@@ -2949,6 +3000,7 @@ function sessionSupports(session, protocol){
   return values.includes(protocol)||values.includes(String(protocol).replace(/-/g,'_'));
 }
 const RULE_AUTHORITY_V2_ENABLED=String(process.env.ENABLE_RULE_AUTHORITY_V2||'1')!=='0';
+const TETRIS_ADVANCED_SCORING_ENABLED=String(process.env.TETRIS_GUIDELINE_SCORING||'1')!=='0';
 function roomSupports(r, protocol){return RULE_AUTHORITY_V2_ENABLED&&!!r&&[...r.clients.keys()].every(session=>sessionSupports(session,protocol));}
 function gameplayMetadata(r){
   if (!r || !r.started) return null;
@@ -3018,7 +3070,7 @@ function startRoomAuthorities(r){
   } else if (r.game === 'tetris'){
     const startAt = Date.now() + 3000;
     const matchEndAt=startAt+Math.max(15000,Number(process.env.TETRIS_MATCH_DURATION_MS)||300000);
-    if(roomSupports(r,PROTOCOL_VERSIONS.tetrisRules)){
+    if(TETRIS_ADVANCED_SCORING_ENABLED&&roomSupports(r,PROTOCOL_VERSIONS.tetrisRules)){
       r.tetrisRuleAuthority=new TetrisRuleAuthority({matchId:r.matchId,playerCount:activeSeatCount(r),startAt,matchEndAt,matchSeed:r.matchId});
       r.gameplayTimer=setInterval(()=>{
         if(!r.started||!r.tetrisRuleAuthority)return;const advanced=r.tetrisRuleAuthority.advance(Date.now());
@@ -4889,20 +4941,20 @@ const heartbeatSweep = setInterval(() => {
 if (heartbeatSweep.unref) heartbeatSweep.unref();
 
 const metricsHistorySweep=setInterval(()=>{
-  try{captureGameplayMetrics(false);}catch(error){recordOperationalError('metrics_history_capture',error);}
+  try{const snapshot=captureGameplayMetrics(false);if(clusterCoordinator.enabled)clusterCoordinator.recordMetrics(snapshot);}catch(error){recordOperationalError('metrics_history_capture',error);}
 },METRICS_HISTORY_INTERVAL_MS);
 if(metricsHistorySweep.unref)metricsHistorySweep.unref();
 
 sbLoadProfiles().finally(() => {
-  server.listen(PORT, () => {
-    try{captureGameplayMetrics(true);}catch(error){recordOperationalError('metrics_initial_capture',error);}
+  clusterCoordinator.start().finally(()=>server.listen(PORT, () => {
+    try{const snapshot=captureGameplayMetrics(true);if(clusterCoordinator.enabled)clusterCoordinator.recordMetrics(snapshot);}catch(error){recordOperationalError('metrics_initial_capture',error);}
     console.log('小游戏合集在线服务已启动: http://localhost:' + PORT + (useSupabase ? '（Supabase 数据库已连接）' : '（本地 JSON 存储）'));
-  });
+  }));
 });
 // outbox 失败后不依赖下一次重启；同一 resultId 的 RPC 是幂等的，可安全重试。
 if (useSupabase){
-  const rewardSyncSweep = setInterval(() => { retryPendingRewardSync(); }, REWARD_SYNC_RETRY_MS);
+  const rewardSyncSweep = setInterval(() => { if(clusterCoordinator.isLeader())retryPendingRewardSync(); }, REWARD_SYNC_RETRY_MS);
   if (rewardSyncSweep.unref) rewardSyncSweep.unref();
-  const aiLearningSyncSweep = setInterval(() => { retryPendingAILearningSync(); }, REWARD_SYNC_RETRY_MS);
+  const aiLearningSyncSweep = setInterval(() => { if(clusterCoordinator.isLeader())retryPendingAILearningSync(); }, REWARD_SYNC_RETRY_MS);
   if (aiLearningSyncSweep.unref) aiLearningSyncSweep.unref();
 }

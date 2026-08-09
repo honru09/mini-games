@@ -6,7 +6,7 @@
 |---|---|---|---|---|---|---|
 | `tank-authority-v1` | `tank_input(matchId,seq,clientTick,input)` | `tank_snapshot`, `tank_result` | Server simulation | input seq；完整 snapshot resume | future/stale/legacy move rejected | `qa/tank-authority.js`、Tank focused E2E |
 | `tetris-battle-authority-v1` | lock/KO claim、只读 presentation | battle/garbage/KO/result | Server coordination fallback | seq + placementSeq + attackId；snapshot resume | stale/duplicate/unknown fields rejected | `qa/tetris-battle-protocol.js`、Tetris focused E2E |
-| `tetris-rule-v2` | `tetris_action(matchId,seq,action)` | `tetris_rule_state`, `tetris_rule_battle`, `tetris_result` | Shared Tetris Rule Core | per-player seq + state hash + full snapshot | `ERR_*`；未协商则使用 v1，不接受 v2 silent failure | `qa/tetris-rule-core.js`、`qa/rule-authority.js`、`qa/rule-authority-online.js` |
+| `tetris-rule-v3` | `tetris_action(matchId,seq,action)` | `tetris_rule_state`, `tetris_rule_battle`, `tetris_result` | Shared Tetris Rule Core + Advanced Battle Score v1 | per-player seq + state hash + full snapshot | `ERR_*`；旧 v2/未协商客户端回退 v1 Coordination，避免严格字段白名单拒绝新状态 | `qa/tetris-rule-core.js`、`qa/rule-authority.js`、`qa/rule-authority-online.js` |
 | `xiangqi-clock-v1` | `move(matchId,seq,from,to)` | `clock_state`, timeout | Server clock fallback | move seq；clock snapshot | stale/not-turn rejected | `qa/xiangqi-clock.js` |
 | `xiangqi-rule-v2` | `xiangqi_action(matchId,seq,from,to)` | `xiangqi_rule_state`, `xiangqi_result` | Shared Xiangqi Rule Core + clock | per-player seq + board hash + snapshot | illegal/stale/not-turn explicit `ERR_*` | `qa/xiangqi-rule-core.js`、`qa/rule-authority-online.js` |
 | `monopoly-auction-v1` | open/bid/turn-end + host stable state | auction events | Auction subsystem fallback | auction revision/bidId + snapshot | deadline/revision/property errors | `qa/monopoly-auction.js`、`qa/spectator-room.js` |
@@ -21,4 +21,4 @@
 
 - 客户端在 `hello.payload.capabilities` 声明版本；服务端同时接受连字符 ID 与下划线 capability 别名。
 - 新规则消息进入未协商/未激活房间时返回 `ERR_PROTOCOL_VERSION`；非法动作使用 `ERR_INVALID_MOVE`、`ERR_NOT_ACTIVE_PLAYER`、`ERR_STALE_SEQ`、`ERR_DUPLICATE_ACTION`、`ERR_MATCH_FINISHED`、`ERR_INVALID_STATE` 等统一代码。
-- `ENABLE_RULE_AUTHORITY_V2=0` 只用于紧急回滚与旧协议回归。它不会把 v1 描述成完整规则权威。
+- `ENABLE_RULE_AUTHORITY_V2=0` 关闭三套共享权威；`TETRIS_GUIDELINE_SCORING=0` 只让 Tetris v3 回退 v1 Coordination。两者都不会把 v1 描述成完整规则权威。

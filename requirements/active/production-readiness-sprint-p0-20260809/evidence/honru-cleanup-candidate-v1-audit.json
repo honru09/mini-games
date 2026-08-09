@@ -1,0 +1,123 @@
+{
+  "schemaVersion": 1,
+  "assetId": "honru-cleanup-candidate-v1",
+  "status": "TECHNICAL_PASS",
+  "boundary": "AI-assisted cleanup candidate; not human cleanup, Reviewer B, legal opinion, Golden Set approval, or runtime enablement",
+  "source": {
+    "path": "art-source/brand/ghost-game/honru/cleanup-candidate-v1/alpha/honru-cleanup-candidate-v1-alpha.png",
+    "sha256": "33470dd91bed1961cc99f8b30f36bd5872e0e214c1ceb43900b80b9aae90829c",
+    "mode": "RGBA",
+    "width": 1254,
+    "height": 1254,
+    "alphaBoundingBox": [
+      139,
+      116,
+      1114,
+      1090
+    ],
+    "cornerAlpha": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "opaqueCoverage": 0.342919,
+    "greenContaminationPixels": 0,
+    "greenContaminationRatio": 0.0,
+    "technicalPass": true
+  },
+  "derived": [
+    {
+      "path": "art-source/brand/ghost-game/honru/cleanup-candidate-v1/derived/honru-cleanup-candidate-v1-44px.png",
+      "sha256": "e7682102dd8ca0e9e6ee0b5d3769b2673e8f5bf76a37921bdc02cc1aa1fb4876",
+      "mode": "RGBA",
+      "width": 44,
+      "height": 44,
+      "alphaBoundingBox": [
+        3,
+        3,
+        41,
+        41
+      ],
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "opaqueCoverage": 0.456612,
+      "greenContaminationPixels": 0,
+      "greenContaminationRatio": 0.0,
+      "technicalPass": true
+    },
+    {
+      "path": "art-source/brand/ghost-game/honru/cleanup-candidate-v1/derived/honru-cleanup-candidate-v1-64px.png",
+      "sha256": "f4d14f917ad3a21381efa547ee140ec85f7ed6b047959c12733075da096ccff2",
+      "mode": "RGBA",
+      "width": 64,
+      "height": 64,
+      "alphaBoundingBox": [
+        4,
+        4,
+        60,
+        60
+      ],
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "opaqueCoverage": 0.456055,
+      "greenContaminationPixels": 0,
+      "greenContaminationRatio": 0.0,
+      "technicalPass": true
+    },
+    {
+      "path": "art-source/brand/ghost-game/honru/cleanup-candidate-v1/derived/honru-cleanup-candidate-v1-96px.png",
+      "sha256": "baa02ecea487a3a75ae86752a8b6856483f16361720e7137b0faf966f0fa0258",
+      "mode": "RGBA",
+      "width": 96,
+      "height": 96,
+      "alphaBoundingBox": [
+        6,
+        6,
+        90,
+        90
+      ],
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "opaqueCoverage": 0.449544,
+      "greenContaminationPixels": 0,
+      "greenContaminationRatio": 0.0,
+      "technicalPass": true
+    },
+    {
+      "path": "art-source/brand/ghost-game/honru/cleanup-candidate-v1/derived/honru-cleanup-candidate-v1-192px.png",
+      "sha256": "7b4e11517bb678c19250f3b9545dad740b9e214bd3db697d00178e66111a6ee0",
+      "mode": "RGBA",
+      "width": 192,
+      "height": 192,
+      "alphaBoundingBox": [
+        12,
+        12,
+        180,
+        180
+      ],
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "opaqueCoverage": 0.441379,
+      "greenContaminationPixels": 0,
+      "greenContaminationRatio": 0.0,
+      "technicalPass": true
+    }
+  ]
+}

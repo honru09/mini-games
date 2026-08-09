@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-08-09T14:25:00+09:00",
+  "supabase": {
+    "status": "BLOCKED_EXTERNAL",
+    "facts": [
+      "SUPABASE_DB_URL is absent in the active process",
+      "SUPABASE_URL is absent in the active process",
+      "SUPABASE_SERVICE_ROLE_KEY/SUPABASE_KEY is absent in the active process",
+      "Render currently has no Supabase variables",
+      "psql/pg_dump/pg_restore are not installed",
+      "Docker Desktop daemon is unavailable and reports unable to start"
+    ],
+    "implementedEvidence": [
+      "supabase/schema.sql",
+      "supabase/production-acceptance.sql",
+      "supabase/non-destructive-rollback.sql",
+      "scripts/supabase-production-ops.ps1",
+      "scripts/supabase-status.js",
+      "qa/supabase-schema.js",
+      "qa/production-readiness-contract.js"
+    ],
+    "notClaimed": ["real migration", "real browser-role RLS denial", "real transaction concurrency", "real encrypted backup", "real restore drill", "real rollback"]
+  },
+  "browser": {
+    "status": "BLOCKED_RESTART_REQUIRED",
+    "facts": [
+      "current Codex process resolves Node v20.20.2 for the browser connector",
+      "browser connector requires Node >=22.22.0",
+      "user-level NODE_REPL_NODE_PATH points to the bundled Node v24.14.0",
+      "the current Codex process has no process-level NODE_REPL_NODE_PATH and cannot hot-refresh it"
+    ],
+    "recovery": "Restart Codex, then rerun the Browser matrix without changing the persisted user-level setting.",
+    "notClaimed": ["current visible browser matrix", "second browser", "physical Android", "physical iPhone", "physical Tablet", "DevTools network shaping"]
+  },
+  "syntheticSession": {
+    "status": "PASS",
+    "evidence": "synthetic-session-production-20260809-134916.json",
+    "facts": ["30 minutes against production WebSocket", "two formal friend accounts", "15 messages", "15 read receipts", "2 reconnects", "0 unexpected closes", "181ms p95 latency"],
+    "boundary": "protocol session only; not browser UI, physical device or real network shaping proof"
+  },
+  "art": {
+    "status": "BLOCKED_EXTERNAL",
+    "facts": ["AI-assisted cleanup candidate passed technical checks", "independent human Reviewer B has not signed", "IP review and user Golden Set approval are absent"],
+    "notClaimed": ["human cleanup", "Reviewer B PASS", "legal/IP PASS", "Golden Set PASS", "default-on approval"]
+  },
+  "distribution": {
+    "status": "BLOCKED_EXTERNAL",
+    "implemented": ["installable PWA baseline"],
+    "missing": ["WeChat developer account and verified business domain", "Apple/Google/Microsoft developer accounts", "signing certificates", "store review and physical-device evidence"]
+  }
+}

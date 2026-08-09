@@ -3,7 +3,8 @@ function gameTetris(area, extra, n, opts){
   opts = opts || {};
   const COLS = 10, ROWS = 18, playerCount = Math.max(2, Math.min(5, Number(n) || 2));
   const MATCH_MS = Math.max(15000, Number(opts.matchDurationMs) || 300000);
-  const AUTH_PROTOCOL='tetris-battle-authority-v1',RULE_PROTOCOL='tetris-rule-v2';
+  const AUTH_PROTOCOL='tetris-battle-authority-v1',RULE_PROTOCOL='tetris-rule-v3';
+  const SCORING_VERSION='advanced-battle-score-v1';
   const fullRuleAuthority=!!(opts.online&&opts.gameplayMeta&&opts.gameplayMeta.protocol===RULE_PROTOCOL&&typeof opts.sendTetrisAction==='function'&&typeof TetrisRules!=='undefined');
   const authorityMode=!!(opts.online&&opts.gameplayMeta&&((opts.gameplayMeta.protocol===AUTH_PROTOCOL&&typeof opts.sendTetrisLockClaim==='function')||fullRuleAuthority));
   const SHAPES = [
@@ -121,7 +122,7 @@ function gameTetris(area, extra, n, opts){
   function nextKind(state){ ensureQueue(state); const kind=state.queue.shift(); ensureQueue(state); return kind; }
   function createState(id){
     const state={
-      id,well:emptyWell(),active:null,queue:[],bagIndex:0,hold:null,canHold:true,score:0,lines:0,tetrisCount:0,placementSeq:0,
+      id,well:emptyWell(),active:null,queue:[],bagIndex:0,hold:null,canHold:true,score:0,lines:0,level:1,combo:-1,backToBack:false,backToBackCount:0,tSpins:0,tetrises:0,perfectClears:0,lastAction:null,scoringVersion:SCORING_VERSION,tetrisCount:0,placementSeq:0,
       garbageSent:0,garbageReceived:0,incoming:[],alive:true,koTime:null,koConfirmed:false,placement:0,fallMs:0,
       lastEvent:'READY',eventAt:Date.now(),
     };
@@ -132,7 +133,7 @@ function gameTetris(area, extra, n, opts){
     const kind=Number.isInteger(forcedKind)?forcedKind:nextKind(state), shape=shapeAt(kind,0);
     const active={kind,rotation:0,x:Math.floor((COLS-shape[0].length)/2),y:-Math.max(1,shape.length-1)};
     if (collide(state.well,shape,active.x,active.y)){ ko(state.id,'TOP OUT'); return false; }
-    state.active=active; state.canHold=true; return true;
+    state.active=active; state.canHold=true; state.lastAction=null; return true;
   }
   function resetLocal(){
     bagSeed=resolveMatchSeed();
@@ -189,6 +190,12 @@ function gameTetris(area, extra, n, opts){
     state.incoming=pending; due.forEach(item=>{ if (state.alive) applyGarbage(state,item); });
   }
   function attackFor(lines){ return [0,0,1,2,4][Math.max(0,Math.min(4,lines))]; }
+  function scoringFor(state,details){
+    if(typeof TetrisRules!=='undefined'&&TetrisRules&&typeof TetrisRules.resolveLockScore==='function')return TetrisRules.resolveLockScore(state,details);
+    const cleared=Math.max(0,Math.min(4,Number(details&&details.cleared)||0)),combo=cleared>0?(Number.isInteger(state.combo)?state.combo:-1)+1:-1;
+    return{clearType:['none','single','double','triple','tetris'][cleared],tSpin:false,level:Math.max(1,Math.floor(state.lines/10)+1),combo,backToBack:cleared===4,backToBackCount:cleared===4?(state.backToBackCount||0)+1:0,backToBackBonus:false,comboBonus:0,perfectClear:false,perfectClearBonus:0,scoreDelta:[0,100,300,500,800][cleared]||0,attack:attackFor(cleared),attackBreakdown:{base:attackFor(cleared),backToBack:0,combo:0,perfectClear:0}};
+  }
+  function scoringEventToken(scoring){return'SCORING:'+String(scoring.clearType||'none')+':'+String(scoring.combo)+':'+(scoring.backToBackBonus?'1':'0')+':'+(scoring.perfectClear?'1':'0');}
   function applyPlacement(pi,data,deriveAttack,emit){
     const state=states[pi]; if (!state || !state.alive) return false;
     const kind=Number(data.piece),rotation=Number(data.rot||0),x=Number(data.x),y=Number(data.y);
@@ -200,16 +207,18 @@ function gameTetris(area, extra, n, opts){
     }
     const shape=shapeAt(kind,rotation);
     if (collide(state.well,shape,x,y)||!collide(state.well,shape,x,y+1)) return false;
+    const tSpin=typeof TetrisRules!=='undefined'&&TetrisRules&&typeof TetrisRules.detectTSpin==='function'?TetrisRules.detectTSpin(state.well,{kind,rotation,x,y},state.lastAction):false;
     const result=lockInto(state.well,shape,x,y);
     if (result.cleared<0){ ko(pi,'TOP OUT'); return false; }
-    state.well=result.well; state.active=null; state.lines+=result.cleared;
+    const perfectClear=result.cleared>0&&result.well.every(row=>row.every(cell=>cell===0)),scoring=scoringFor(state,{cleared:result.cleared,tSpin,perfectClear});
+    state.well=result.well; state.active=null; state.lines+=result.cleared;state.level=Math.floor(state.lines/10)+1;
     state.placementSeq=Number.isInteger(incomingPlacementSeq)?incomingPlacementSeq:state.placementSeq+1;
-    const points=[0,100,300,500,800][result.cleared]||0; state.score+=points; if (result.cleared===4) state.tetrisCount++;
-    state.lastEvent=result.cleared===4?'TETRIS!':result.cleared?('CLEAR ×'+result.cleared):'LOCK'; state.eventAt=Date.now();
+    state.score+=scoring.scoreDelta;state.combo=scoring.combo;state.backToBack=scoring.backToBack;state.backToBackCount=scoring.backToBackCount;if(tSpin)state.tSpins++;if(result.cleared===4){state.tetrisCount++;state.tetrises++;}if(perfectClear)state.perfectClears++;state.lastAction=null;
+    state.lastEvent=scoringEventToken(scoring); state.eventAt=Date.now();
     pieceCount++;
     let sent=0,target=-1,cancelled=0,attackId='a'+pi+'-'+state.placementSeq+'-'+String(resolveMatchSeed()).slice(-12);
     if (deriveAttack){
-      const raw=attackFor(result.cleared), before=raw;
+      const raw=(fullRuleAuthority||!opts.online)?scoring.attack:attackFor(result.cleared), before=raw;
       if(authorityMode){sent=raw;}
       else{sent=cancelIncoming(state,raw);cancelled=before-sent;if(sent>0){target=targetFor(pi);if(target>=0){state.garbageSent+=sent;queueGarbage(target,sent,pi,attackId);}}}
     } else if (Number.isInteger(Number(data.garbage))&&Number(data.garbage)>0&&Number(data.garbage)<=4&&Number.isInteger(data.target)&&data.target>=0&&data.target<states.length){
@@ -229,29 +238,29 @@ function gameTetris(area, extra, n, opts){
   function moveActive(dx){
     if (!canControl()) return false; const state=states[controlled],active=state.active|| (spawn(state)&&state.active);
     if (!active) return false; const shape=shapeAt(active.kind,active.rotation);
-    if (!collide(state.well,shape,active.x+dx,active.y)){ active.x+=dx; if(fullRuleAuthority)sendRuleAction(dx<0?'left':'right');else emitActive(); render(); return true; } return false;
+    if (!collide(state.well,shape,active.x+dx,active.y)){ active.x+=dx;state.lastAction='move'; if(fullRuleAuthority)sendRuleAction(dx<0?'left':'right');else emitActive(); render(); return true; } return false;
   }
   function rotateActive(direction){
     if (!canControl()) return false; const state=states[controlled],active=state.active|| (spawn(state)&&state.active);
     if (!active) return false; const next=(active.rotation+(direction>0?1:3))%4,shape=shapeAt(active.kind,next);
-    for (const kick of [0,-1,1,-2,2]) if (!collide(state.well,shape,active.x+kick,active.y)){ active.rotation=next; active.x+=kick; if(fullRuleAuthority)sendRuleAction(direction>0?'rotate_cw':'rotate_ccw');else emitActive(); render(); return true; }
+    for (const kick of [0,-1,1,-2,2]) if (!collide(state.well,shape,active.x+kick,active.y)){ active.rotation=next; active.x+=kick;state.lastAction='rotate'; if(fullRuleAuthority)sendRuleAction(direction>0?'rotate_cw':'rotate_ccw');else emitActive(); render(); return true; }
     return false;
   }
   function softDrop(){
     if (!canControl()) return false; const state=states[controlled],active=state.active; if (!active) return false;
     const shape=shapeAt(active.kind,active.rotation);
-    if (!collide(state.well,shape,active.x,active.y+1)){ active.y++; if(fullRuleAuthority)sendRuleAction('soft_drop');else emitActive(); render(); return true; }
+    if (!collide(state.well,shape,active.x,active.y+1)){ active.y++;state.lastAction='drop'; if(fullRuleAuthority)sendRuleAction('soft_drop');else emitActive(); render(); return true; }
     const locked=lockActive(controlled,true);if(locked&&fullRuleAuthority)sendRuleAction('soft_drop');return locked;
   }
   function hardDrop(){
     if (!canControl()) return false; const state=states[controlled],active=state.active; if (!active) return false;
     const shape=shapeAt(active.kind,active.rotation); let distance=0;
-    while (!collide(state.well,shape,active.x,active.y+1)){ active.y++; distance++; }
+    while (!collide(state.well,shape,active.x,active.y+1)){ active.y++; distance++; }if(distance>0)state.lastAction='drop';
     const locked=lockActive(controlled,true);if(locked&&fullRuleAuthority)sendRuleAction('hard_drop');return locked;
   }
   function hold(){
     if (!canControl()) return false; const state=states[controlled],active=state.active;
-    if (!active||!state.canHold) return false; const previous=state.hold; state.hold=active.kind; state.active=null;
+    if (!active||!state.canHold) return false; const previous=state.hold; state.hold=active.kind; state.active=null;state.lastAction=null;
     if (!spawn(state,previous===null?undefined:previous)) return false; state.canHold=false; if(fullRuleAuthority)sendRuleAction('hold');else emitActive(); render(); return true;
   }
   function emitActive(){
@@ -414,7 +423,7 @@ function gameTetris(area, extra, n, opts){
     const now=Date.now(),dt=Math.min(250,Math.max(0,now-lastTickAt)); lastTickAt=now;
     performanceStats.samples++;performanceStats.lastFrameMs=dt;performanceStats.maxFrameMs=Math.max(performanceStats.maxFrameMs,dt);if(dt>50)performanceStats.longFrames++;
     remainingMs=authorityMode?Math.max(0,matchEndAt-now):Math.max(0,MATCH_MS-(now-startedAt));
-    // tetris-rule-v2 的重力/锁定完全由服务端推进；客户端只做输入乐观展示，避免本地计时器与权威快照竞态。
+    // tetris-rule-v3 的重力/锁定完全由服务端推进；客户端只做输入乐观展示，避免本地计时器与权威快照竞态。
     if(fullRuleAuthority){if(now-lastRenderAt>=100){render();lastRenderAt=now;}return;}
     states.forEach(state=>{
       if(!state.alive)return;
@@ -451,7 +460,7 @@ function gameTetris(area, extra, n, opts){
   if(document.addEventListener)document.addEventListener('keydown',handleKey);
 
   function localizeTetrisReason(reason){const key={ 'TOP OUT':'tetris_reason_top_out','GARBAGE KO':'tetris_reason_garbage_ko','REMOTE KO':'tetris_reason_remote_ko','SERVER KO':'tetris_reason_server_ko' }[String(reason||'').toUpperCase()];return key?t(key):String(reason||t('tetris_status_ko'));}
-  function localizeTetrisEvent(value){const text=String(value||''),incoming=/^⚠ \+(\d+)$/.exec(text),garbage=/^\+(\d+) GARBAGE$/.exec(text),cleared=/^CLEAR ×(\d+)$/.exec(text);if(incoming)return t('tetris_event_incoming',incoming[1]);if(garbage)return t('tetris_event_garbage',garbage[1]);if(cleared)return t('tetris_event_clear',cleared[1]);const key={KO:'tetris_status_ko',LOCK:'tetris_event_lock',HOLD:'tetris_hold',SPAWN:'tetris_event_spawn',SYNC:'tetris_event_sync',READY:'tetris_event_ready','TETRIS!':'tetris_event_tetris'}[text.toUpperCase()];return key?t(key):text;}
+  function localizeTetrisEvent(value){const text=String(value||''),incoming=/^⚠ \+(\d+)$/.exec(text),garbage=/^\+(\d+) GARBAGE$/.exec(text),cleared=/^CLEAR ×(\d+)$/.exec(text),scoring=/^SCORING:([a-z-]+):(-?\d+):([01]):([01])$/.exec(text);if(incoming)return t('tetris_event_incoming',incoming[1]);if(garbage)return t('tetris_event_garbage',garbage[1]);if(cleared)return t('tetris_event_clear',cleared[1]);if(scoring){const key={none:'tetris_event_lock',single:'tetris_event_single',double:'tetris_event_double',triple:'tetris_event_triple',tetris:'tetris_event_tetris','t-spin-zero':'tetris_event_tspin_zero','t-spin-single':'tetris_event_tspin_single','t-spin-double':'tetris_event_tspin_double','t-spin-triple':'tetris_event_tspin_triple'}[scoring[1]]||'tetris_event_lock',parts=[t(key)],combo=Number(scoring[2]);if(scoring[3]==='1')parts.push(t('tetris_event_b2b'));if(combo>=1)parts.push(t('tetris_event_combo',combo+1));if(scoring[4]==='1')parts.push(t('tetris_event_perfect_clear'));return parts.join(' · ');}const key={KO:'tetris_status_ko',LOCK:'tetris_event_lock',HOLD:'tetris_hold',SPAWN:'tetris_event_spawn',SYNC:'tetris_event_sync',READY:'tetris_event_ready','TETRIS!':'tetris_event_tetris'}[text.toUpperCase()];return key?t(key):text;}
   extra.innerHTML=''; const battleHud=el('div','tetris-battle-hud'),actions=el('div','tetris-actions'); extra.appendChild(battleHud); extra.appendChild(actions);
   function addControl(label,fn,primary,ariaKey){const button=el('button','btn'+(primary?' btn-primary':''),label);if(ariaKey)button.setAttribute('aria-label',t(ariaKey));button.addEventListener('click',fn);actions.appendChild(button);return button;}
   addControl('⬅',()=>moveActive(-1),false,'tetris_move_left'); addControl('➡',()=>moveActive(1),false,'tetris_move_right'); addControl('↺',()=>rotateActive(-1),false,'tetris_rotate_left'); addControl('↻',()=>rotateActive(1),false,'tetris_rotate_right');
@@ -552,7 +561,7 @@ function gameTetris(area, extra, n, opts){
     const seen=new Set(),out=[];
     for(const item of items){
       if(!plainRecord(item)||item.delivered===true||typeof item.attackId!=='string'||!ATTACK_ID_RE.test(item.attackId)||seen.has(item.attackId)||
-         !safeInt(item.source,0,playerCount-1)||!safeInt(item.target,0,playerCount-1)||!safeInt(item.amount,1,4)||!Number.isFinite(item.applyAt))continue;
+         !safeInt(item.source,0,playerCount-1)||!safeInt(item.target,0,playerCount-1)||!safeInt(item.amount,1,12)||!Number.isFinite(item.applyAt))continue;
       seen.add(item.attackId);out.push({id:item.attackId,from:item.source,lines:item.amount,applyAt:item.applyAt});
       if(out.length>=100)break;
     }
@@ -560,7 +569,7 @@ function gameTetris(area, extra, n, opts){
   }
   function onBattleEvent(event){
     if(!authorityMode||!plainRecord(event)||!validMatchId(event.matchId)||!safeInt(event.revision,1,Number.MAX_SAFE_INTEGER)||event.revision<=authorityRevision||
-       !ATTACK_ID_RE.test(String(event.attackId||''))||!safeInt(event.source,0,playerCount-1)||(!safeInt(event.target,-1,playerCount-1))||!safeInt(event.amount,0,4)||!safeInt(event.cancelled,0,4))return false;
+       !ATTACK_ID_RE.test(String(event.attackId||''))||!safeInt(event.source,0,playerCount-1)||(!safeInt(event.target,-1,playerCount-1))||!safeInt(event.amount,0,12)||!safeInt(event.cancelled,0,12))return false;
     const source=event.source,target=event.target,sourceIncoming=authorityIncoming(event.sourceIncoming),targetIncoming=authorityIncoming(event.targetIncoming);
     authorityRevision=event.revision;
     if(states[source]){states[source].incoming=sourceIncoming;states[source].garbageSent+=event.amount;}
@@ -569,7 +578,7 @@ function gameTetris(area, extra, n, opts){
   }
   function onGarbageDue(event){
     if(!authorityMode||!plainRecord(event)||!validMatchId(event.matchId)||!safeInt(event.revision,1,Number.MAX_SAFE_INTEGER)||event.revision<=authorityRevision||
-       !ATTACK_ID_RE.test(String(event.attackId||''))||!safeInt(event.source,0,playerCount-1)||!safeInt(event.target,0,playerCount-1)||!safeInt(event.amount,1,4)||
+       !ATTACK_ID_RE.test(String(event.attackId||''))||!safeInt(event.source,0,playerCount-1)||!safeInt(event.target,0,playerCount-1)||!safeInt(event.amount,1,12)||
        (event.applyAt!==undefined&&!Number.isFinite(event.applyAt)))return false;
     const target=event.target,state=states[target];if(!state)return false;
     const index=state.incoming.findIndex(item=>item.id===event.attackId);if(index<0||state.incoming[index].lines!==event.amount)return false;
@@ -587,10 +596,11 @@ function gameTetris(area, extra, n, opts){
     return !!(authorityMode&&plainRecord(payload)&&validMatchId(payload.matchId)&&validFinalOrder(Array.isArray(payload.order)?payload.order:[]))&&commitFinal(payload.order.slice(),true,true);
   }
   function validRuleEvent(value){return value===null||(plainRecord(value)&&typeof value.type==='string'&&value.type.length>0&&value.type.length<=32&&
-    (value.type!=='garbage'||safeInt(value.lines,0,12)));}
+    (value.type!=='garbage'||safeInt(value.lines,0,12))&&(value.type!=='lock'||(typeof value.clearType==='string'&&/^(?:none|single|double|triple|tetris|t-spin-(?:zero|single|double|triple))$/.test(value.clearType)&&safeInt(value.attack,0,12)&&safeInt(value.scoreDelta,0,1000000000))));}
   function ruleEventText(value){
     if(!value)return'SYNC';
     if(value.type==='garbage')return'+'+value.lines+' GARBAGE';
+    if(value.type==='lock')return scoringEventToken({clearType:value.clearType,combo:Number.isInteger(value.combo)?value.combo:-1,backToBackBonus:value.backToBackBonus===true,perfectClear:value.perfectClear===true});
     return value.type.toUpperCase();
   }
   function parseRulePlayer(meta,id){
@@ -598,10 +608,11 @@ function gameTetris(area, extra, n, opts){
        !plainRecord(meta.state)||!Array.isArray(meta.incoming)||meta.incoming.length>100||typeof meta.alive!=='boolean'||
        (meta.koTime!==null&&!Number.isFinite(meta.koTime))||!safeInt(meta.placement,0,playerCount))return null;
     const data=meta.state;
-    if(!onlyKeys(data,new Set(['protocol','seed','player','board','active','queue','bagIndex','hold','canHold','score','lines','pieces','terminal','reason','lastEvent']))||
+    if(!onlyKeys(data,new Set(['protocol','scoringVersion','seed','player','board','active','queue','bagIndex','hold','canHold','score','lines','level','combo','backToBack','backToBackCount','tSpins','tetrises','perfectClears','lastAction','pieces','terminal','reason','lastEvent']))||
        data.protocol!==RULE_PROTOCOL||typeof data.seed!=='string'||data.seed.length>128||data.player!==id||!validWell(data.board)||!validActive(data.active)||!validQueue(data.queue)||
        !safeInt(data.bagIndex,0,1000000)||!validHold(data.hold)||typeof data.canHold!=='boolean'||!safeInt(data.score,0,1000000000)||!safeInt(data.lines,0,100000)||
        !safeInt(data.pieces,0,100000)||typeof data.terminal!=='boolean'||(data.reason!==null&&(typeof data.reason!=='string'||data.reason.length>64))||!validRuleEvent(data.lastEvent))return null;
+    if(data.scoringVersion!==undefined&&(data.scoringVersion!==SCORING_VERSION||!safeInt(data.level,1,10001)||!safeInt(data.combo,-1,100000)||typeof data.backToBack!=='boolean'||!safeInt(data.backToBackCount,0,100000)||!safeInt(data.tSpins,0,100000)||!safeInt(data.tetrises,0,100000)||!safeInt(data.perfectClears,0,100000)||(data.lastAction!==null&&!['move','rotate','drop'].includes(data.lastAction))))return null;
     const incoming=authorityIncoming(meta.incoming);if(incoming.length!==meta.incoming.length)return null;
     return{seq:meta.seq,hash:meta.hash,state:data,incoming,alive:meta.alive,koTime:meta.koTime,placement:meta.placement};
   }
@@ -613,11 +624,11 @@ function gameTetris(area, extra, n, opts){
        !safeInt(value.inputCount,0,1000000)||(value.finished!==true&&value.finished!==false)||(value.order!==null&&!validFinalOrder(value.order)))return false;
     const parsed=value.players.map((meta,id)=>parseRulePlayer(meta,id));if(parsed.some(item=>!item))return false;
     authorityRevision=Math.max(authorityRevision,value.revision);startedAt=value.startAt;countdownEndsAt=startedAt;matchEndAt=value.matchEndAt;bagSeed=value.matchSeed;remainingMs=Math.max(0,matchEndAt-Date.now());
-    parsed.forEach((meta,id)=>{const state=states[id],data=meta.state;ruleSeq[id]=meta.seq;state.well=data.board.map(row=>row.slice());state.active=data.active===null?null:{kind:data.active.kind,rotation:data.active.rotation,x:data.active.x,y:data.active.y};state.queue=data.queue.slice();state.bagIndex=data.bagIndex;state.hold=data.hold;state.canHold=data.canHold;state.score=data.score;state.lines=data.lines;state.tetrisCount=0;state.placementSeq=data.pieces;state.alive=meta.alive&&!data.terminal;state.koTime=meta.koTime;state.placement=meta.placement;state.incoming=meta.incoming;state.lastEvent=ruleEventText(data.lastEvent);state.eventAt=Date.now();});
+    parsed.forEach((meta,id)=>{const state=states[id],data=meta.state;ruleSeq[id]=meta.seq;state.well=data.board.map(row=>row.slice());state.active=data.active===null?null:{kind:data.active.kind,rotation:data.active.rotation,x:data.active.x,y:data.active.y};state.queue=data.queue.slice();state.bagIndex=data.bagIndex;state.hold=data.hold;state.canHold=data.canHold;state.score=data.score;state.lines=data.lines;state.scoringVersion=data.scoringVersion||SCORING_VERSION;state.level=safeInt(data.level,1,10001)?data.level:Math.floor(data.lines/10)+1;state.combo=safeInt(data.combo,-1,100000)?data.combo:-1;state.backToBack=data.backToBack===true;state.backToBackCount=safeInt(data.backToBackCount,0,100000)?data.backToBackCount:0;state.tSpins=safeInt(data.tSpins,0,100000)?data.tSpins:0;state.tetrises=safeInt(data.tetrises,0,100000)?data.tetrises:0;state.perfectClears=safeInt(data.perfectClears,0,100000)?data.perfectClears:0;state.lastAction=typeof data.lastAction==='string'?data.lastAction:null;state.tetrisCount=state.tetrises;state.placementSeq=data.pieces;state.alive=meta.alive&&!data.terminal;state.koTime=meta.koTime;state.placement=meta.placement;state.incoming=meta.incoming;state.lastEvent=ruleEventText(data.lastEvent);state.eventAt=Date.now();});
     pieceCount=Math.max(pieceCount,parsed.reduce((sum,item)=>sum+item.state.pieces,0));
     syncArrays();if(value.finished&&validFinalOrder(value.order||[]))commitFinal(value.order.slice(),true,true);else render();return true;
   }
-  function onTetrisRuleResult(value){return !!(fullRuleAuthority&&onlyKeys(value,new Set(['type','matchId','protocol','revision','serverNow','order','stats']))&&value.protocol===RULE_PROTOCOL&&validMatchId(value.matchId)&&safeInt(value.revision,1,Number.MAX_SAFE_INTEGER)&&validFinalOrder(Array.isArray(value.order)?value.order:[]))&&commitFinal(value.order.slice(),true,true);}
+  function onTetrisRuleResult(value){return !!(fullRuleAuthority&&onlyKeys(value,new Set(['type','matchId','protocol','scoringVersion','revision','serverNow','order','stats']))&&value.protocol===RULE_PROTOCOL&&(value.scoringVersion===undefined||value.scoringVersion===SCORING_VERSION)&&validMatchId(value.matchId)&&safeInt(value.revision,1,Number.MAX_SAFE_INTEGER)&&validFinalOrder(Array.isArray(value.order)?value.order:[]))&&commitFinal(value.order.slice(),true,true);}
   function applyPresentation(player,value,incomingSeq){
     const state=states[player],data=value&&value.state?value.state:value;
     if(!state||!plainRecord(data)||!onlyKeys(data,PRESENTATION_KEYS)||!validWell(data.well)||!validActive(data.active)||!validQueue(data.queue)||!validHold(data.hold)||
@@ -648,7 +659,7 @@ function gameTetris(area, extra, n, opts){
   function reset(){if(opts.online&&!opts.isHost){toast(t('host_only_restart'));return;}if(opts.online){opts.sendRestart();return;}resetLocal();}
   function snapshot(){return{
     version:2,mode:'simultaneous-survival',wells:states.map(state=>state.well.map(row=>row.slice())),scores:states.map(state=>state.score),
-    states:states.map(state=>({id:state.id,active:state.active?{...state.active}:null,queue:state.queue.slice(),bagIndex:state.bagIndex,hold:state.hold,canHold:state.canHold,score:state.score,lines:state.lines,tetrisCount:state.tetrisCount,placementSeq:state.placementSeq,garbageSent:state.garbageSent,garbageReceived:state.garbageReceived,incoming:state.incoming.map(item=>({...item})),alive:state.alive,koTime:state.koTime,koConfirmed:state.koConfirmed,placement:state.placement,fallMs:state.fallMs,lastEvent:state.lastEvent,eventAt:state.eventAt})),
+    states:states.map(state=>({id:state.id,active:state.active?{...state.active}:null,queue:state.queue.slice(),bagIndex:state.bagIndex,hold:state.hold,canHold:state.canHold,score:state.score,lines:state.lines,scoringVersion:state.scoringVersion,level:state.level,combo:state.combo,backToBack:state.backToBack,backToBackCount:state.backToBackCount,tSpins:state.tSpins,tetrises:state.tetrises,perfectClears:state.perfectClears,lastAction:state.lastAction,tetrisCount:state.tetrisCount,placementSeq:state.placementSeq,garbageSent:state.garbageSent,garbageReceived:state.garbageReceived,incoming:state.incoming.map(item=>({...item})),alive:state.alive,koTime:state.koTime,koConfirmed:state.koConfirmed,placement:state.placement,fallMs:state.fallMs,lastEvent:state.lastEvent,eventAt:state.eventAt})),
     remainingMs,over,winner,pieceCount,cur,bagSeed,countdownRemainingMs:Math.max(0,countdownEndsAt-Date.now()),
     relay:{revision:relayRevision,seenSeq:lastSeq.slice(),seenAttacks:[...seenAttacks].slice(-500)},
   };}
@@ -674,7 +685,8 @@ function gameTetris(area, extra, n, opts){
       if(!plainRecord(meta)||!validQueue(meta.queue)||!validActive(meta.active)||!safeInt(meta.bagIndex,0,1000000)||!validHold(meta.hold)||typeof meta.canHold!=='boolean'||
          !safeInt(meta.score,0,1000000000)||!safeInt(meta.lines,0,100000)||!safeInt(meta.tetrisCount,0,25000)||!safeInt(meta.placementSeq,0,100000)||
          typeof meta.alive!=='boolean'||(meta.koTime!==null&&!Number.isFinite(meta.koTime))||!Array.isArray(meta.incoming)||meta.incoming.length>100)return false;
-      return meta.incoming.every(item=>plainRecord(item)&&typeof item.id==='string'&&ATTACK_ID_RE.test(item.id)&&safeInt(item.from,0,playerCount-1)&&safeInt(item.lines,1,4)&&Number.isFinite(item.applyAt));
+      if(meta.scoringVersion!==undefined&&(meta.scoringVersion!==SCORING_VERSION||!safeInt(meta.level,1,10001)||!safeInt(meta.combo,-1,100000)||typeof meta.backToBack!=='boolean'||!safeInt(meta.backToBackCount,0,100000)||!safeInt(meta.tSpins,0,100000)||!safeInt(meta.tetrises,0,100000)||!safeInt(meta.perfectClears,0,100000)||(meta.lastAction!==null&&!['move','rotate','drop'].includes(meta.lastAction))))return false;
+      return meta.incoming.every(item=>plainRecord(item)&&typeof item.id==='string'&&ATTACK_ID_RE.test(item.id)&&safeInt(item.from,0,playerCount-1)&&safeInt(item.lines,1,12)&&Number.isFinite(item.applyAt));
     });
   }
   function relaySnapshot(nextLocalSeq){
@@ -699,7 +711,7 @@ function gameTetris(area, extra, n, opts){
     if(state.bagSeed)bagSeed=String(state.bagSeed);aiEpoch++;
     states=state.wells.map((well,id)=>{const base=createState(id),meta=state.states[id];base.well=well.map(row=>row.slice());
       base.active=meta.active===null?null:{kind:meta.active.kind,rotation:meta.active.rotation,x:meta.active.x,y:meta.active.y};base.queue=meta.queue.slice();base.bagIndex=meta.bagIndex;base.hold=meta.hold;base.canHold=meta.canHold;
-      base.score=meta.score;base.lines=meta.lines;base.tetrisCount=meta.tetrisCount;base.placementSeq=meta.placementSeq;base.garbageSent=safeInt(meta.garbageSent,0,1000000)?meta.garbageSent:0;base.garbageReceived=safeInt(meta.garbageReceived,0,1000000)?meta.garbageReceived:0;
+      base.score=meta.score;base.lines=meta.lines;base.scoringVersion=meta.scoringVersion||SCORING_VERSION;base.level=safeInt(meta.level,1,10001)?meta.level:Math.floor(meta.lines/10)+1;base.combo=safeInt(meta.combo,-1,100000)?meta.combo:-1;base.backToBack=meta.backToBack===true;base.backToBackCount=safeInt(meta.backToBackCount,0,100000)?meta.backToBackCount:0;base.tSpins=safeInt(meta.tSpins,0,100000)?meta.tSpins:0;base.tetrises=safeInt(meta.tetrises,0,100000)?meta.tetrises:meta.tetrisCount;base.perfectClears=safeInt(meta.perfectClears,0,100000)?meta.perfectClears:0;base.lastAction=typeof meta.lastAction==='string'?meta.lastAction:null;base.tetrisCount=base.tetrises;base.placementSeq=meta.placementSeq;base.garbageSent=safeInt(meta.garbageSent,0,1000000)?meta.garbageSent:0;base.garbageReceived=safeInt(meta.garbageReceived,0,1000000)?meta.garbageReceived:0;
       base.incoming=meta.incoming.map(item=>({...item}));base.alive=meta.alive;base.koTime=meta.koTime;base.koConfirmed=meta.koConfirmed===true;base.placement=safeInt(meta.placement,0,playerCount)?meta.placement:0;base.fallMs=safeInt(meta.fallMs,0,1000000)?meta.fallMs:0;base.lastEvent=typeof meta.lastEvent==='string'?meta.lastEvent.slice(0,80):'READY';base.eventAt=Number.isFinite(meta.eventAt)?meta.eventAt:Date.now();return base;});
     remainingMs=Math.max(0,state.remainingMs);startedAt=Date.now()-(MATCH_MS-remainingMs);over=state.over===true;winner=safeInt(state.winner,-1,playerCount-1)?state.winner:-1;pieceCount=state.pieceCount;
     countdownEndsAt=Date.now()+Math.max(0,Number(state.countdownRemainingMs)||0);spectator=!!opts.spectator||(!states[controlled]||!states[controlled].alive);observedPlayer=Math.min(observedPlayer,states.length-1);lastTickAt=Date.now();
@@ -709,7 +721,7 @@ function gameTetris(area, extra, n, opts){
   function setSpectators(value){spectator=Array.isArray(value)?value.includes(opts.viewerId):!!value;if(spectator)observedPlayer=Math.min(observedPlayer,states.length-1);render();return spectator;}
   function setObservedPlayer(pi){if(Number.isInteger(pi)&&states[pi]){observedPlayer=pi;render();return true;}return false;}
   function setControlledPlayer(pi){if(opts.online||!Number.isInteger(pi)||!states[pi])return false;controlled=pi;cur=pi;observedPlayer=pi;spectator=!states[pi].alive;render();return true;}
-  function getMatchStats(){const order=finalOrder();return states.map(state=>({score:state.score,lines:state.lines,tetrisCount:state.tetrisCount,garbageSent:state.garbageSent,garbageReceived:state.garbageReceived,koTime:state.koTime,placement:state.placement||order.indexOf(state.id)+1}));}
+  function getMatchStats(){const order=finalOrder();return states.map(state=>({score:state.score,lines:state.lines,level:state.level,combo:state.combo,backToBackCount:state.backToBackCount,tSpins:state.tSpins,tetrisCount:state.tetrisCount,perfectClears:state.perfectClears,garbageSent:state.garbageSent,garbageReceived:state.garbageReceived,koTime:state.koTime,placement:state.placement||order.indexOf(state.id)+1}));}
   function getPerformanceStats(){return{...performanceStats,boardCount:states.length,activeCells:states.reduce((sum,state)=>sum+state.well.reduce((n,row)=>n+row.filter(Boolean).length,0),0),incomingCount:states.reduce((sum,state)=>sum+state.incoming.length,0)};}
   function destroy(){destroyed=true;aiEpoch++;aiPending.clear();aiTimers.forEach(timer=>clearTimeout(timer));aiTimers.clear();clearInterval(gameTimer);if(relayTimer)clearInterval(relayTimer);if(document.removeEventListener)document.removeEventListener('keydown',handleKey);area.style.touchAction=previousTouchAction;area.style.overscrollBehavior=previousOverscroll;}
   resetLocal();

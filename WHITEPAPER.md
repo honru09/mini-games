@@ -1,7 +1,7 @@
 # Mini Games Platform · 项目白皮书
 
-**版本：v3.3（2026-08-08 视觉商城 P0 收口与 Sticker Cartoon M0 冻结版）**
-**状态：6 款精选游戏 + Seat/Social/Profile v2 + Economy & Progression v1.0 + Gameplay Rule Authority v2 + Tournament/Replay/Metrics + 视觉商城素材 P0 已自动化验证**
+**版本：v3.4（2026-08-09 Production Readiness 工程基线版）**
+**状态：6 款精选游戏 + Direct Chat/Profile + Tetris Advanced Battle v3 + Supabase/Cluster 运维合同 + PWA + Honru cleanup 技术候选已自动化验证**
 **发布成熟度：AUTOMATED_VERIFIED；真实设备与真实网络闸门未执行，Release Candidate 为 BLOCKED**
 
 > 本文件是仓库内的公开技术总纲。完整排版版位于 `deliverables/`；实现事实以当前源码、测试和本文件为准。
@@ -26,7 +26,7 @@
 | `tetris` | 俄罗斯方块 | 2–4 | ✅ | ✅ | ✅ |
 | `xiangqi` | 象棋 | 2 | ✅ | ✅ | ✅ |
 
-平台能力包括 PIN 账号、设备自动登录、换机登录、💵 虚拟现金商城、排行榜、XP/等级/连胜、48 款 Avatar v2 与高级背景、三语言、六主题、好友/拉黑/举报、Presence 隐私、统一真人/AI/空 Seat、READY、公开/私密房、快速加入、掉线托管/房主转移、独立观众席、赛事编排、每日任务、Replay v1.1 和管理员 Metrics v2。
+平台能力包括用户名密码账号、旧 PIN 原 UID 迁移、一次性访客、设备自动登录、💵 虚拟现金商城、排行榜、XP/等级/连胜、48 款 Avatar v2 与高级背景、三语言、昼夜双主题、好友/拉黑/举报、正式好友一对一私聊、Presence 隐私、统一真人/AI/空 Seat、READY、公开/私密房、快速加入、掉线托管/房主转移、独立观众席、赛事编排、每日任务、Replay v1.1 和管理员 Metrics v2。
 
 ## 2. 架构
 
@@ -50,7 +50,7 @@ shared/rules/{tetris,xiangqi,monopoly}.js   Supabase profiles/history/reward_his
 
 - `public/index.html` 是生成物；改前端必须修改模板或 `public/src/` 后重新构建。
 - 服务端对 Tank 执行 `tank-authority-v1` 的 20Hz 位置/碰撞/炮弹/伤害/重生/排名权威模拟。
-- 默认新客户端协商 `tetris-rule-v2`、`xiangqi-rule-v2` 与 `monopoly-rule-v2`：客户端只提交单调 `seq` 动作，服务端调用无 DOM 的共享 Rule Core 验证、推进并广播完整状态/结果；`ENABLE_RULE_AUTHORITY_V2=0` 可紧急回退到 Tetris Battle Coordination、象棋棋钟与大富翁拍卖 v1。
+- 默认新客户端协商 `tetris-rule-v3`、`xiangqi-rule-v2` 与 `monopoly-rule-v2`：Tetris v3 增加 T-Spin/B2B/Combo/Perfect Clear 高级战斗计分与 12 行攻击封顶；旧 v2 严格客户端或 `TETRIS_GUIDELINE_SCORING=0` 回退 Tetris Battle Coordination，避免滚动发布字段冲突。
 - 五子棋和飞行棋仍以客户端规则校验、服务端顺序/玩家身份和稳定点快照为主，不能描述为完整 Server Rule Authority。
 - `move` 由服务端记录顺序、发送者编号和有限 moveLog；客户端仍会验证当前行动者与具体走法。
 - 开局按当前已加入人数，不要求房间达到容量上限。
@@ -76,8 +76,8 @@ DeepSeek Key 只存在于服务端环境变量。`qa/ai-games.js` 使用本地�
 
 ## 4. 账号、经济与数据
 
-- PIN 为 4–20 位字母数字；服务端保存版本化慢哈希。
-- 客户端只持久化服务端 session token，不保存 PIN。
+- 正式用户名为 4–20 位 ASCII 字母数字且至少各一个，大小写不敏感唯一；密码为 8–64 位可打印 ASCII，服务端使用随机盐 scrypt 慢哈希。
+- 旧 PIN 账号可绑定到用户名密码并保留原 UID、资产、战绩与外观；客户端只持久化服务端 session token，不保存密码或 PIN。
 - 权威字段：💵 余额、owned、XP、等级、连胜、按游戏胜场 `wins`、总胜场 `totalWins`、局数、成就与结算历史；胜场与余额完全独立。
 - Economy & Progression v1.0 由统一服务端 Reward Resolver 驱动：联机 1v1 胜/平/负为 `3/2/1💵` 与 `12/10/8 XP`，多人按名次为 `4/3/2/1💵` 与 `14/12/10/8 XP`。
 - AI 通过服务端票据与有效动作进度结算，胜/平/负为 `1/0/0💵` 与 `8/6/5 XP`，每日 AI 货币上限为 `3💵`。
@@ -85,7 +85,7 @@ DeepSeek Key 只存在于服务端环境变量。`qa/ai-games.js` 使用本地�
 - 每日任务进度由服务端从有效人机/联机结算派生，领取以 `taskKey + UTC date + claimId` 幂等写入经济流水；客户端不能直接加币。
 - `history` 保留兼容结算记录，`reward_history` 保存完整奖励明细与防刷依据，`economy_ledger` 审计每次 💵 增减，`analytics_events` 记录比赛和经济埋点。
 - Supabase 正式奖励通过 `apply_reward_v1` 按账号加锁并以 `result_id` 幂等，在单事务中更新档案、历史、奖励明细和可选经济流水；埋点仍独立写入。
-- Supabase schema、RLS、奖励/购买/AI 学习原子 RPC 和适配脚本已就绪；真实生产接入仍取决于 `SUPABASE_URL` 与仅服务端保存的 `service_role` secret，并需要真实迁移、并发、备份和回滚验收。
+- Supabase schema、RLS、奖励/购买/AI 学习/Direct Chat RPC，以及数据库租约、fencing token、持久事件游标和指标快照已就绪；生产脚本默认 dry-run，要求加密备份→事务迁移→RLS/并发验收→隔离恢复→非破坏回滚。真实执行仍取决于 DB URL 与仅服务端保存的 `service_role` secret。
 - 未配置 Supabase 时回退到 JSON；当前 Render 未挂载持久磁盘，因此不能把 JSON 回退描述为生产持久化已完成。
 - 当前 Render 按单实例运行；扩容前必须把 Reward Resolver 与 AI 学习 outbox 改为数据库内版本冲突重算、单写者或等价的一致性方案，不能让多个进程各自覆盖模型/档案。
 
@@ -173,8 +173,9 @@ node --experimental-websocket qa/ws-close-test.js
 - 安全、重连、结算、商城和 Supabase adapter 回归通过。
 - asset manifest 可解析，SVG/XML 合法，无孤儿路径，无旧货币显示。
 - 360px 与桌面、六主题、三语言、normal/reduced-motion 均可用。
+- 30 分钟生产正式好友 WebSocket 会话已通过：15 条消息、15 次已读、2 次重连、0 异常断开、P95 181ms；该证据不等同于浏览器 UI、真机或网络整形。
 - 自动化 PASS 不替代 Desktop Chrome/第二浏览器、Android、iPhone、Tablet 实机矩阵，也不替代 `tc/netem` 或等价真实网络整形。
-- 实机矩阵、真实网络、30 分钟 Synthetic Session 与真实 Supabase 验收完成前，发布状态必须保持 `BLOCKED`。
+- 实机矩阵、真实网络、真实 Supabase 与人工美术审批完成前，发布状态必须保持 `BLOCKED`。
 
 ## 7. 路线图
 
@@ -202,18 +203,19 @@ node --experimental-websocket qa/ws-close-test.js
 - [x] Tournament v1.1：六款 3–6 人创建、自动多桌、自愿弃权、管理员指定判负、赛事积分经济隔离。
 - [x] Metrics v2：管理员只读页面、脱敏历史/CSV/阈值/错误闭环、限频与访问审计。
 - [ ] 配置并验证真实 Supabase，完成 JSON 数据迁移、并发/RLS、备份和回滚演练。
-- [ ] 执行真实设备矩阵、真实网络整形和 30 分钟真实 Synthetic Session，解除 RC `BLOCKED`。
+- [x] 执行 30 分钟生产正式好友 WebSocket Synthetic Session；协议稳定性通过但不替代 UI/真机。
+- [ ] 执行真实设备矩阵与真实网络整形，解除对应 RC `BLOCKED`。
 
 ### P1
 
 - 先完成 `Pocket Tabletop Sticker` Art Bible 与 Golden Set；通过后按五子棋/飞行棋 → 其余四款 → Avatar/Persona/主题/社交顺序原子扩展完整美术包。
 - 旧 `commerceId`、owned/equipped、服务端价格和游戏 runtime ID 保持不变，仅递增 `artworkVersion`；每批必须含 source/runtime/poster/fallback/manifest/license/budget/pivot/event/QA。
 - 聊天、Feed、公会、处罚/申诉后台和赛季系统。
-- 高级延迟观战、Tetris T-Spin/B2B/Combo/Perfect Clear、跨实例长期 Metrics 与外部 Sentry。
+- 高级延迟观战、完整 Guideline 余项（T-Spin Mini/逐格 Drop 分等）、真实跨实例 Metrics 与外部遥测接收端验收。
 
 ### P2
 
-- PWA、微信小程序、App 与桌面发行适配。
+- PWA 基线已实现；微信小程序、原生 App 与桌面商店发行仍需开发者账号、证书、真机和审核。
 - 选择三款高复用游戏进行 GLB/Godot 试点，Web 继续保留 2D fallback。
 
 ## 8. 凭证与部署

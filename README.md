@@ -113,7 +113,7 @@ WebSocket 端点 `/ws`，所有消息为 JSON：
 | C→S | `move` / `game_state` | 回合制走子与稳定点快照；服务端记录有限 moveLog 并附带可信 `player`；Tank/Tetris 正式路径另用权威协议，旧 relay 仅兼容 |
 | C→S | `tank_input` | `tank-authority-v1` 单调输入序列；坐标、炮弹、伤害、重生和最终排名由 20Hz 服务端模拟决定 |
 | C→S | `tetris_lock_claim` / `tetris_ko_claim` / `tetris_state` | `tetris-battle-authority-v1` 落块/KO 申报与只读棋盘展示；目标、垃圾队列、KO/名次由服务端协调 |
-| C→S | `tetris_action` | `tetris-rule-v2` 单调输入；服务端共享 Rule Core 执行移动/旋转/Hold/Lock/Clear/Garbage/Top Out |
+| C→S | `tetris_action` | `tetris-rule-v3` 单调输入；服务端共享 Rule Core 执行移动/旋转/Hold/Lock/Clear/Garbage/Top Out，并权威计算 T-Spin/B2B/Combo/Perfect Clear；旧 v2 客户端回退 v1 Coordination |
 | C→S | `xiangqi_action` | `xiangqi-rule-v2` 的 `from/to/seq`；服务端验证九宫、河界、马腿、象眼、炮架、将帅照面、Check/Terminal 并推进棋钟 |
 | C→S | `monopoly_action` | `monopoly-rule-v2`；服务端 Seeded Dice、移动、现金、产权、租金、机会卡、拍卖、破产与名次 |
 | C→S | `monopoly_auction_open` / `monopoly_bid` / `monopoly_turn_end` | 大富翁实时拍卖、revision 出价、服务端截止与回合稳定点 |
@@ -136,7 +136,7 @@ WebSocket 端点 `/ws`，所有消息为 JSON：
 | S→C | `spectate_joined` / `spectator_error` / `match_result` | 观战初始快照、只读保护与最终结果 |
 | S→C | `tank_snapshot` / `tank_result` | Tank 权威状态、ack 和最终排名 |
 | S→C | `tetris_battle` / `tetris_garbage_due` / `tetris_ko` / `tetris_result` | Tetris Battle Coordination Authority 事件 |
-| S→C | `tetris_rule_state` / `tetris_rule_battle` | Tetris v2 完整规则状态、hash 与垃圾事件 |
+| S→C | `tetris_rule_state` / `tetris_rule_battle` | Tetris v3 Advanced Battle 完整规则状态、hash、计分与垃圾事件 |
 | S→C | `xiangqi_rule_state` / `xiangqi_result` | 象棋 v2 权威棋盘、棋钟、Check/Terminal 与结果 |
 | S→C | `monopoly_rule_state` / `monopoly_result` | 大富翁 v2 权威棋盘经济状态、Server RNG 与结果 |
 | S→C | `clock_state` / `clock_timeout` | 象棋服务端棋钟基准与超时结果；不代表服务端验证完整象棋规则 |
@@ -199,11 +199,12 @@ node scripts/render-deploy.js
 - 所有美术资源保留 CSS / Canvas / DOM Emoji / WebAudio 回退，资源加载失败不能阻塞大厅或开局。
 
 ### 数据库（Supabase）
-`supabase/schema.sql` 可重复执行建表/迁移，创建 `apply_reward_v1`、`apply_purchase_v1`、`apply_ai_learning_v1` 与 Direct Chat 发送/已读/分页 RPC，并为 `profiles`、奖励/经济/AI 表、Social Graph、`direct_messages`、`direct_message_reads` 启用 RLS；没有面向 `anon`/`authenticated` 的访问策略，浏览器不能直连这些表。
+`supabase/schema.sql` 可重复执行建表/迁移，创建奖励/购买/AI 学习/Direct Chat RPC，以及 `cluster_instances`、fencing lease、持久事件/游标和 `metrics_snapshots`；全部敏感表启用 RLS 并撤销 `anon`/`authenticated` 访问。
 
-1. 在 Supabase SQL Editor 执行 `supabase/schema.sql`。
-2. 将项目 URL 写入 `SUPABASE_URL`，将 **secret `service_role` key** 写入 Render 的 `SUPABASE_KEY`。不要使用 `anon`/publishable key；也绝不能把 service-role secret 放到前端、日志或仓库。
-3. 用同一组服务端凭证运行 `node scripts/supabase-status.js`，检查 REST 连通性、档案奖励状态字段、奖励/经济流水表和 AI 学习表。
+1. 设置只存在于本机进程的 `SUPABASE_DB_URL`，运行 `scripts/supabase-production-ops.ps1`；默认仅显示计划，`-Execute -Action migrate` 才会先加密备份、事务迁移并执行生产验收。
+2. 用隔离临时数据库运行 `restore-drill`，再运行真实并发/RLS 验收；`rollback` 只撤销本轮 Cluster RPC 并过期租约，不删除用户数据。
+3. 将项目 URL 与 secret `service_role` key 写入 Render 的 `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY`，运行 `node scripts/supabase-status.js`。浏览器绝不能接触 service-role 或 DB URL。
+4. 全部真实证据通过后才设置 `ENABLE_CLUSTER_COORDINATION=1`；否则 Render 保持单实例和现有 JSON fallback。
 
 `history` 是兼容结算流水：联机对局按每位参与者各写一行（同一 `match_id` 可有多行），AI 对局写一行；`result_id` 用于幂等去重。`reward_history` 保存资格、阻断原因、对手组合、基础与最终奖励、等级/连胜前后值和明细；`economy_ledger` 审计每次正式 💵 增减；`analytics_events` 保存比赛与奖励事件。
 
@@ -216,6 +217,14 @@ node scripts/render-deploy.js
 AI 学习模型与经验在 `apply_ai_learning_v1` 中按账号+游戏加锁，以 `result_id` 幂等并校验 revision；服务端 outbox 会在 Supabase 暂时不可用时排队。当前 Render 单实例且未挂载持久磁盘，JSON/outbox 不能替代真实 Supabase；真实项目仍需执行迁移、RLS、并发、备份和回滚验收。
 
 玩家私聊在无 Supabase 时使用本地 JSON 的 90 天/每会话 500 条/全局 50,000 条有界回退；启用 Supabase 后，发送必须先通过数据库内好友/Block/幂等事务并持久化成功才回执，已读游标只允许推进到本人真实收到的消息。消息正文不进入 Profile、排行榜、Replay、Analytics、普通日志或浏览器 `localStorage`。真实 Render 持久化仍以执行本次 schema 迁移并完成 staging 并发/备份回滚验收为前提。
+
+跨实例基线启用后使用数据库时间租约与 fencing token；Direct Chat 事件只发布消息 ID 和参与 UID，消费实例再从数据库取正文并重新校验有效 session。聚合 Metrics 可写 `metrics_snapshots` 并投递到显式 HTTPS 域名 allowlist；重定向、私网/回环、秘密字段与聊天正文均拒绝。没有真实迁移时这些功能保持关闭。
+
+30 分钟正式好友 WS 会话默认只连接本机：`npm run synthetic:30`。若明确测试生产 Render，必须同时传入生产 WS URL 并设置 `SYNTHETIC_PRODUCTION_CONFIRM=CREATE_PERSISTENT_QA_ACCOUNTS`；脚本会创建两个永久 QA 账号、好友关系和低频持久消息，因此不能作为无副作用冒烟误运行，也不能替代浏览器 UI 或真机验收。
+
+### PWA / 跨平台 Web
+
+`public/manifest.webmanifest` 与 `public/sw.js` 提供 Ghost Game 安装型 PWA：HTML network-first、版本化静态缓存和昼夜主题色；API、WebSocket、Authorization、token/session/message/chat 不缓存。这是桌面/移动 Web 安装基线，不等于微信小程序、原生 App 或商店发布。
 
 ## 开发原则
 
@@ -244,5 +253,6 @@ Playroom 的长期开发按项目级执行系统运行，而不是依赖单次�
 
 - 自动化：`npm test`、关键协议 5 次连续回归、10/25/50 逻辑并发房、1000 次生命周期内存、Timer Audit 均已通过。
 - 浏览器：本地 in-app Chromium 已完成当前 P0 的 1440/768/481/390/360 注册、商城、大厅、六封面、英/乌语言、overflow、44px 控件、单例与滚动锁验收，控制台无 warning/error；证据在 `deliverables/visual-qa/visual-commerce-p0-20260808/`。
-- 未执行：本轮 Chat/Profile 的本地浏览器矩阵（本机保存权限禁止自动化访问 localhost）、Android Chrome、iPhone Safari、Tablet、第二桌面浏览器、真实 `tc/netem`、30 分钟真实 Synthetic Session、真实 Supabase/RLS/并发/备份回滚。
+- 已执行：30 分钟生产正式好友 WebSocket 会话通过（15 条消息与已读、2 次重连、0 异常断开、P95 181ms）；逻辑 Chaos、完整 `npm test` 与 Quality Gates 通过。
+- 未执行：本轮 Chat/Profile 的当前浏览器矩阵（连接器需重启 Codex 后使用已配置 Node 24）、Android Chrome、iPhone Safari、Tablet、第二桌面浏览器、真实 `tc/netem`、真实 Supabase/RLS/并发/备份回滚。
 - 因真实设备发布闸门未完成，当前结论是 `AUTOMATED_VERIFIED`，Release Candidate 总状态仍为 `BLOCKED`，不能写 `PRODUCTION_READY`。

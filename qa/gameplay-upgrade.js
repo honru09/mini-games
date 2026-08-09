@@ -207,7 +207,7 @@ function run(){
   tetris.states=tetris.states.map((state,id)=>({...state,id,alive:true,incoming:[],score:0,lines:0,tetrisCount:0,garbageSent:0,garbageReceived:0,placement:0}));
   h.game.onRestore(tetris);h.game.queueGarbage(0,3,1,'cancel-test');h.game.onMove({piece:0,x:0,y:14,rot:1},0);
   const battle=h.game.snapshot();
-  assert('俄罗斯方块：Tetris 4 行先抵消 3 行 Incoming 再发送 1 行',battle.states[0].tetrisCount===1&&battle.states[0].incoming.length===0&&battle.states[0].garbageSent===1&&battle.states[1].incoming.reduce((sum,item)=>sum+item.lines,0)===1,JSON.stringify(battle.states.map(s=>({sent:s.garbageSent,incoming:s.incoming}))));
+  assert('俄罗斯方块：Perfect Clear Tetris 12 行先抵消 3 行 Incoming 再发送 9 行',battle.states[0].tetrisCount===1&&battle.states[0].perfectClears===1&&battle.states[0].incoming.length===0&&battle.states[0].garbageSent===9&&battle.states[1].incoming.reduce((sum,item)=>sum+item.lines,0)===9,JSON.stringify(battle.states.map(s=>({sent:s.garbageSent,incoming:s.incoming}))));
   assert('俄罗斯方块：Alive Ring 目标确定且 wells 保持 0/1',h.game.getTarget(0)===1&&h.game.getTarget(2)===0&&binaryWells(battle));
   h.game.setSpectators(true);const beforeTetris=JSON.stringify(h.game.snapshot().states[0].active);const left=findText(h.extra,'⬅');if(left)left.dispatch('click');
   assert('俄罗斯方块：Spectator 不能操作主井',JSON.stringify(h.game.snapshot().states[0].active)===beforeTetris);
@@ -274,15 +274,15 @@ function run(){
   authorityTetris.game.onAuthorityResult({matchId:authorityTetrisMatch,order:[0,1]});
   assert('Tetris Authority Client：Server Placement 不再提交客户端 claim',authorityTetris.game.snapshot().winner===0&&authorityTetris.results.length===0);authorityTetris.game.destroy();
 
-  const tetrisRuleMatch='qa-tetris-rule-v2-i18n',tetrisRuleStart=Date.now()-100;
+  const tetrisRuleMatch='qa-tetris-rule-v3-i18n',tetrisRuleStart=Date.now()-100;
   const tetrisRule=harness('tetris.js','gameTetris',2,{opts:{online:true,myIdx:0,isHost:true,getMatchId:()=>tetrisRuleMatch,
-    gameplayMeta:{protocol:'tetris-rule-v2',startAt:tetrisRuleStart,matchEndAt:tetrisRuleStart+300000,matchSeed:tetrisRuleMatch,rulesetVersion:'tetris-rule-v2'},sendTetrisAction(){}}});
+    gameplayMeta:{protocol:'tetris-rule-v3',startAt:tetrisRuleStart,matchEndAt:tetrisRuleStart+300000,matchSeed:tetrisRuleMatch,rulesetVersion:'tetris-rule-v3'},sendTetrisAction(){}}});
   const ruleApi=tetrisRule.context.TetrisRules,ruleStates=[0,1].map(player=>ruleApi.createInitialState({seed:tetrisRuleMatch,player}));
   ruleStates[1]=ruleApi.applyAction(ruleStates[1],{type:'garbage',lines:3,attackId:'qa-garbage'}).state;
-  const ruleSnapshot={protocol:'tetris-rule-v2',matchId:tetrisRuleMatch,startAt:tetrisRuleStart,matchEndAt:tetrisRuleStart+300000,matchSeed:tetrisRuleMatch,rulesetVersion:'tetris-rule-v2',revision:1,serverNow:Date.now(),
+  const ruleSnapshot={protocol:'tetris-rule-v3',matchId:tetrisRuleMatch,startAt:tetrisRuleStart,matchEndAt:tetrisRuleStart+300000,matchSeed:tetrisRuleMatch,rulesetVersion:'tetris-rule-v3',revision:1,serverNow:Date.now(),
     players:ruleStates.map((state,player)=>({player,seq:0,hash:'qa-'+player,state:JSON.parse(ruleApi.serialize(state)),incoming:[],alive:true,koTime:null,placement:0})),finished:false,order:null,inputCount:0};
   const ruleApplied=tetrisRule.game.onTetrisRuleState(ruleSnapshot),garbageEvent=findText(tetrisRule.area,'tetris_event_garbage(3)');
-  assert('Tetris Rule v2：Garbage 事件保留 lines 并使用现有本地化 key',ruleApplied===true&&tetrisRule.game.snapshot().states[1].lastEvent==='+3 GARBAGE'&&!!garbageEvent);
+  assert('Tetris Rule v3：Garbage 事件保留 lines 并使用现有本地化 key',ruleApplied===true&&tetrisRule.game.snapshot().states[1].lastEvent==='+3 GARBAGE'&&!!garbageEvent);
   tetrisRule.game.destroy();
 
   const authorityClockMatch='qa-clock-client';

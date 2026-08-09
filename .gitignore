@@ -2,6 +2,7 @@
 data/
 *.log
 .codex-tmp/
+.ops-backups/
 
 # 工具生成物与 Office 临时锁文件不进入版本库
 __pycache__/

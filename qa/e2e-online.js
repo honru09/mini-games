@@ -229,7 +229,7 @@ async function verifyTetrisRelay(host){
   assert('俄罗斯方块：联机双方显示完整七项触控操作',tetrisHostActions.length===7&&tetrisGuestActions.length===7);
   const tetrisMatchId=host.info().online.matchId;
   const tetrisProtocol=host.info().online.gameplayMeta&&host.info().online.gameplayMeta.protocol;
-  const fullRuleAuthority=tetrisProtocol==='tetris-rule-v2';
+  const fullRuleAuthority=tetrisProtocol==='tetris-rule-v3';
   const serverAuthority=fullRuleAuthority||tetrisProtocol==='tetris-battle-authority-v1';
   const tetrisInitialHost=host.info().game.snapshot(),tetrisInitialGuest=tetrisGuest.info().game.snapshot();
   assert('俄罗斯方块：同 matchId/玩家的 7-Bag 完全确定',tetrisInitialHost.bagSeed===tetrisMatchId&&tetrisInitialGuest.bagSeed===tetrisMatchId&&JSON.stringify(tetrisInitialHost.states.map(state=>state.queue))===JSON.stringify(tetrisInitialGuest.states.map(state=>state.queue)));
@@ -273,7 +273,7 @@ async function verifyTetrisRelay(host){
   assert('俄罗斯方块：重连保留 matchId 且权威快照/moveLog 收敛',tetrisGuest.info().online.matchId===tetrisMatchId&&JSON.stringify(tetrisGuest.info().game.snapshot().wells)===JSON.stringify(host.info().game.snapshot().wells));
 
   if(fullRuleAuthority){
-    assert('俄罗斯方块：全量 E2E 使用 tetris-rule-v2 默认主路径',host.info().online.gameplayMeta.protocol==='tetris-rule-v2'&&tetrisGuest.info().online.gameplayMeta.protocol==='tetris-rule-v2');
+    assert('俄罗斯方块：全量 E2E 使用 tetris-rule-v3 高级规则主路径',host.info().online.gameplayMeta.protocol==='tetris-rule-v3'&&tetrisGuest.info().online.gameplayMeta.protocol==='tetris-rule-v3');
     return tetrisGuest;
   }
 

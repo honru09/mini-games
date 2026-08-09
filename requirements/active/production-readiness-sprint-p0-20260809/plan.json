@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "task": "production-readiness-sprint-p0-20260809",
+  "status": "VERIFYING",
+  "parallelability": 1,
+  "steps": [
+    {"id":"PR-1","name":"冻结范围、合同、所有权与外部闸门","status":"completed","risk":"high"},
+    {"id":"PR-2","name":"Tetris Advanced Battle 高级计分与客户端兼容","status":"completed","dependsOn":["PR-1"],"tests":["qa/tetris-rule-core.js","qa/tetris-protocol-fallback-online.js","qa/rule-authority-online.js","qa/protocol-version.js"]},
+    {"id":"PR-3","name":"Supabase 生产运维、单写者、PubSub 与遥测持久层","status":"completed","dependsOn":["PR-1"],"tests":["qa/supabase-schema.js","qa/supabase-adapter.js","qa/production-readiness-contract.js"],"boundary":"真实 Supabase 与多实例仍在 PR-X"},
+    {"id":"PR-4","name":"PWA/跨平台 Web 基线","status":"completed","dependsOn":["PR-1"],"tests":["DOM","offline contract","asset budget"]},
+    {"id":"PR-5","name":"可执行的长会话与浏览器/视口/弱网矩阵","status":"completed","dependsOn":["PR-2","PR-3","PR-4"],"boundary":"30 分钟生产 WS 会话通过；当前浏览器连接、第二浏览器、真机和真实网络整形转入 PR-X"},
+    {"id":"PR-6","name":"Honru/M0 技术候选与人工 Reviewer B 决策包","status":"completed","dependsOn":["PR-1"],"tests":["alpha/hash/small-size","IP checklist","fallback"],"boundary":"技术候选完成，人工签字转入 PR-X"},
+    {"id":"PR-7","name":"完整回归、状态/日志/报告、推送默认关闭工程基线","status":"in_progress","dependsOn":["PR-2","PR-3","PR-4","PR-6"]},
+    {"id":"PR-X","name":"真实 Supabase/浏览器真机/Reviewer B/商店外部验收","status":"pending","dependsOn":["PR-5","PR-6","PR-7"],"external":true}
+  ],
+  "externalGates": [
+    "Supabase project URL/service-role/database URL or management access",
+    "independent human Reviewer B and user Golden Set approval",
+    "physical Android/iPhone/Tablet devices and second connected browser",
+    "store accounts/signing certificates for native distribution"
+  ],
+  "rollbackPoints": ["2213493b0f8f8f870c2bc4a65175da142ed02062","TETRIS_GUIDELINE_SCORING=0","cluster and telemetry env absent","all art flags absent"]
+}

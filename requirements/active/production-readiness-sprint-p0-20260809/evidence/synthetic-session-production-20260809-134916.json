@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "kind": "formal-friend-ws-synthetic-v1",
+  "url": "wss://mini-games-online.onrender.com/ws",
+  "durationMinutes": 30,
+  "startedAt": "2026-08-09T04:49:16.503Z",
+  "accountUsernames": [
+    "QaPrAmslbp713b154d5",
+    "QaPrBmslbp713b154d5"
+  ],
+  "accountUids": [
+    "u_737e6d270624",
+    "u_e4fd3def1a9c"
+  ],
+  "messagesSent": 15,
+  "messagesReceived": 15,
+  "readReceipts": 15,
+  "reconnects": 2,
+  "errors": [],
+  "unexpectedCloses": 0,
+  "ui": false,
+  "boundary": "Formal production accounts and WebSocket Direct Chat; not browser UI, second browser, physical device, or network shaping proof",
+  "endedAt": "2026-08-09T05:19:17.200Z",
+  "elapsedMs": 1800697,
+  "latency": {
+    "min": 126,
+    "max": 191,
+    "average": 142,
+    "p95": 181
+  },
+  "status": "PASS"
+}

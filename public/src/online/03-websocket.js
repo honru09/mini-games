@@ -39,7 +39,7 @@ const online = {
         uid: authAccount && authAccount.uid ? authAccount.uid : (typeof deviceUid !== 'undefined' ? deviceUid : null),
         token: authAccount && authAccount.authToken ? authAccount.authToken : null,
         proto: typeof PROTOCOL_VERSION !== 'undefined' ? PROTOCOL_VERSION : 2,
-        capabilities: ['tank-authority-v1','tetris-battle-authority-v1','tetris-rule-v2','spectator-room-v1','tournament-orchestrator-v1','xiangqi-clock-v1','xiangqi-rule-v2','monopoly-auction-v1','monopoly-rule-v2','game-cosmetic-presentation-v1','username-password-auth-v2','ephemeral-guest-v1','honru-companion-v1','direct-chat-v1'],
+        capabilities: ['tank-authority-v1','tetris-battle-authority-v1','tetris-rule-v3','spectator-room-v1','tournament-orchestrator-v1','xiangqi-clock-v1','xiangqi-rule-v2','monopoly-auction-v1','monopoly-rule-v2','game-cosmetic-presentation-v1','username-password-auth-v2','ephemeral-guest-v1','honru-companion-v1','direct-chat-v1'],
       } });
       this.send({ type: 'lobby' });
       const needsRegister = authAccount && authAccount.uid && authPin && authAccount.registered === false;

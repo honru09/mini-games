@@ -1,6 +1,6 @@
 # Gameplay V2 Shared Protocol 设计（第二阶段历史设计）
 
-> 第三阶段提示：本文件保留 v1 兼容协议的设计依据。默认新客户端已在其上增量协商 `tetris-rule-v2`、`xiangqi-rule-v2`、`monopoly-rule-v2`，赛事也已接通自动真实房间和单盘服务端结果；当前注册表见 `PROTOCOL_REGISTRY.md`。
+> 第三阶段提示：本文件保留 v1 兼容协议的设计依据。默认新客户端现协商 `tetris-rule-v3`（高级战斗计分）、`xiangqi-rule-v2`、`monopoly-rule-v2`；旧 Tetris v2 客户端回退 v1 Coordination。赛事也已接通自动真实房间和单盘服务端结果；当前注册表见 `PROTOCOL_REGISTRY.md`。
 
 > 实施状态：V1 已接入服务端、前端与专项 QA；本文描述当前主路径及仍保留的真实边界，不再把旧 host relay 当作正式路径。
 
@@ -69,6 +69,6 @@
 ## 9. Reward 与 AI 学习边界
 
 - Gameplay Authority 只产生可信状态、排序或超时结果；正式 💵/XP/等级/连胜/胜场仍统一交给 `server/reward-engine.js` 的 Reward Resolver，客户端不得按协议事件自行加奖。
-- Tournament 的 3/1/0 赛事积分独立于正式经济；赛事面板当前手工上报每桌结果，自动建桌和普通 Match 结果自动回传尚未接线。
+- Tournament 的 3/1/0 赛事积分独立于正式经济；`tournament-orchestrator-v1.1` 已自动建真实房、分配席位、接收单盘服务端结果并推进下一轮，生产赛季与跨实例编排仍未完成。
 - `personal-linear-v2` 只学习服务端票据绑定的有效人机局，并按账号 × 游戏隔离；胜局强化、败局反事实修正、平局中性反馈，无效局只审计。
 - JSON 是本地/单实例回退；Supabase `apply_reward_v1` / `apply_ai_learning_v1` 的真实迁移、RLS 与并发尚未验收，完成版本冲突重算或单写者改造前保持 Render 单实例。

@@ -3,7 +3,7 @@
 const PROTOCOL_VERSIONS=Object.freeze({
   tank:'tank-authority-v1',
   tetrisCoordination:'tetris-battle-authority-v1',
-  tetrisRules:'tetris-rule-v2',
+  tetrisRules:'tetris-rule-v3',
   spectator:'spectator-room-v1',
   tournament:'tournament-orchestrator-v1',
   xiangqiClock:'xiangqi-clock-v1',

@@ -38,6 +38,7 @@ mini-games-online/
 │   │   ├── shop/        # 04-auth / 05-profile / 06-shop
 │   │   └── ui/          # 07-roster（档案/排行榜/结算）
 │   ├── locales/         # i18n 翻译文件（zh-CN / en-US / uk-UA）
+│   ├── manifest.webmanifest / sw.js # PWA 安装与安全离线壳层
 │   └── assets/          # 品牌、UI、游戏美术与 manifest；必须保留程序化 fallback
 ├── server/index.js      # 零依赖 Node 服务：静态文件 + 手写 WebSocket(/ws) + /api/ai + /api/companion + Supabase
 ├── server/auth-credentials.js # 用户名规范、随机盐 scrypt 密码哈希与恒定工作量验证
@@ -45,6 +46,7 @@ mini-games-online/
 ├── server/reward-engine.js # Economy & Progression v1.0 唯一奖励配置、等级曲线与纯计算层
 ├── server/ai-strategy-skills.js # 六款 AI 专项知识包（运行时不联网）
 ├── server/ai-learning.js # personal-linear-v2 玩家×游戏持续学习
+├── server/cluster-coordinator.js # 可选 Supabase 租约、持久事件、跨实例 Chat 引用与脱敏遥测
 ├── server/gameplay/     # Tank、三套 Rule Authority、赛事、协议、指标与兼容适配器
 ├── shared/rules/        # Tetris / Xiangqi / Monopoly 无 DOM 共享纯规则核心
 ├── scripts/             # 运维脚本
@@ -52,12 +54,14 @@ mini-games-online/
 │   ├── render-env.js    # 写 Render 环境变量
 │   ├── render-deploy.js # 手动触发 Render 部署
 │   ├── supabase-status.js # 检查 Supabase 连通性与迁移字段
+│   ├── supabase-production-ops.ps1 # 默认 dry-run 的备份/迁移/验收/恢复/非破坏回滚
+│   ├── long-session-smoke.js # 正式好友 WS 长会话与重连证据
 │   └── ws-live-test.js  # 线上 WebSocket 冒烟
 ├── qa/                  # 测试
 │   ├── dom-smoke.js      # 前端冒烟
 │   ├── ai-games.js       # 6 款 AI 合法选择、回退与状态机回归
 │   ├── reward-system.js  # Reward Config、等级曲线、防刷与人机/联机双模式奖励回归
-│   ├── rule-authority-online.js # 三套 v2 真实 WebSocket 动作/状态/错误/重连
+│   ├── rule-authority-online.js # Tetris v3 + 象棋/大富翁 v2 动作/状态/错误/重连/滚动兼容
 │   ├── tournament-auto-online.js # 自动建房、结果回传与下一轮生命周期
 │   ├── game-cosmetic-profile.js # 公开装备合同与私有字段隔离
 │   ├── e2e-online.js     # 端到端联机
@@ -106,6 +110,7 @@ node qa/xiangqi-clock.js
 node qa/monopoly-auction.js
 node qa/reward-system.js        # 奖励与成长纯服务端回归
 node qa/supabase-schema.js      # SQL 表、RLS 与原子 RPC 静态回归
+node qa/production-readiness-contract.js # Cluster/Telemetry/PWA/Production Ops/美术审批边界
 node --experimental-websocket qa/security-online.js
 node --experimental-websocket qa/reconnect-online.js
 node --experimental-websocket qa/supabase-adapter.js
@@ -122,7 +127,7 @@ node server/index.js
 ## 5. 架构与关键设计（改代码前必读）
 
 ### 联机
-- 五子棋/飞行棋仍是服务端顺序与身份校验 + 客户端规则/稳定快照；Tank 使用 `tank-authority-v1` 服务端模拟；Tetris/象棋/大富翁默认分别协商 `tetris-rule-v2`、`xiangqi-rule-v2`、`monopoly-rule-v2` 共享 Rule Core 服务端权威，v1 只保留兼容回退。
+- 五子棋/飞行棋仍是服务端顺序与身份校验 + 客户端规则/稳定快照；Tank 使用 `tank-authority-v1` 服务端模拟；Tetris 默认协商 `tetris-rule-v3`（T-Spin/B2B/Combo/Perfect Clear Advanced Battle Score），象棋/大富翁协商各自 v2。旧 Tetris v2 客户端与 `TETRIS_GUIDELINE_SCORING=0` 均回退 v1 Coordination，避免严格字段白名单在滚动发布时拒绝新状态。
 - 连接必须先用服务端签发的 session token 鉴权；uid 本身不是凭证。
 - 对局开始时服务端下发一次性 `matchId`，保留有限 `moveLog`；异常掉线进入重连窗口，显式离开仍立即释放席位。
 - 服务端在实时广播和 `moveLog` 中附带可信 `player`；客户端只接受当前行动者的输入，大富翁提前结算另由服务端限制为房主。
@@ -194,6 +199,7 @@ node server/index.js
 - 任一方向 Block 阻断发送和历史并从摘要/未读排除；解除好友后历史只读；已读必须对应本人真实收到的入站 seq 且账号级单调推进。
 - 主动推送前重新校验 session token，已被五 token 上限淘汰或登出的旧 WebSocket 不得收到消息。
 - 本地 JSON 有界回退为 90 天/每会话 500/全局 50,000；Supabase 启用时发送先经过数据库好友/Block/幂等事务并持久化成功再回执。多实例与生产持久化仍以真实 Supabase 迁移/并发/备份验收为前提。
+- `ENABLE_CLUSTER_COORDINATION=1` 且真实 Supabase 迁移完成后，实例使用数据库时间租约与 fencing token；Direct Chat PubSub 只发布 message ID/参与 UID，其他实例再从数据库拉正文并重新校验有效 session。缺配置时保持现有单实例行为。
 
 ### 安全边界
 - `owned`、金币、XP、等级、连胜、胜场、局数、成就等权威字段不可由客户端 profile 消息写入；商城价格与扣款在服务端完成。
@@ -245,10 +251,14 @@ $env:DEEPSEEK_MODEL='deepseek-v4-pro'          # 可选；默认 deepseek-v4-fla
 $env:SUPABASE_URL='https://xxx.supabase.co'   # 可选
 $env:SUPABASE_KEY='sb_secret_...'              # 可选；必须是仅服务端保存的 service_role secret
 $env:METRICS_ADMIN_TOKEN='高熵随机值'           # 可选；管理员 Metrics API Bearer token
+$env:ENABLE_CLUSTER_COORDINATION='1'             # 仅在真实迁移/验收后开启
+$env:TELEMETRY_WEBHOOK_URL='https://...'         # 可选；必须 HTTPS
+$env:TELEMETRY_WEBHOOK_ALLOWLIST='telemetry.example.com' # 必须显式允许域名
+$env:TETRIS_GUIDELINE_SCORING='0'              # 仅紧急回退 Tetris v3；正常为 1
 node scripts/render-env.js
 ```
 
-Supabase 首次接入或升级时，在 SQL Editor 执行可重复迁移的 `supabase/schema.sql`，再运行 `node scripts/supabase-status.js`。Schema 已对 `profiles`、奖励/经济/AI 表、Social Graph 与 `direct_messages/direct_message_reads` 启用 RLS 且不开放 anon/authenticated policy，并创建奖励、购买、AI 学习与 Direct Chat 发送/已读/分页的 service-role RPC，因此服务端必须使用 `service_role` key；不要使用 anon/publishable key，也绝不能把 service-role secret 交给浏览器。没有真实凭证时可运行 `qa/supabase-adapter.js` 做本地 fake PostgREST 映射与幂等回归，但它不能替代真实 SQL、事务并发、连通性、备份回滚与 RLS 验收。
+Supabase 首次接入或升级优先用 `scripts/supabase-production-ops.ps1`：默认 dry-run，执行时先做加密/受限 ACL 备份，再事务迁移、运行 `production-acceptance.sql`；恢复演练只允许隔离目标，回滚脚本不删除用户数据。Schema 还包含 Cluster lease/event cursor/metrics snapshot。没有真实凭证时的静态/fake 回归不能替代真实 SQL、RLS、并发、备份、恢复与回滚。
 
 ### 凭证
 - 所有 token/Key 只存环境变量，绝不写入仓库。
@@ -293,14 +303,14 @@ Supabase 首次接入或升级时，在 SQL Editor 执行可重复迁移的 `sup
 - Gameplay Cosmetic 产品闭环：服务端定价/owned/装备校验、商城按游戏筛选、公开档案只返回装备 ID，六款游戏保留 fallback。
 - Daily Task / Replay / Metrics：服务端任务进度与 claimId 幂等领取；Replay v1.1 支持 7 天保留、公开延迟、分享/撤销和播放控制；Metrics v2 提供 Bearer 管理员只读页面、有界历史、CSV、阈值告警、脱敏错误闭环、限频与访问审计。
 - Direct Chat v1 + Profile 深度优化：好友私聊、离线留言、历史/未读/已读/幂等/Block/访客与 token 淘汰安全边界；Chat 默认玩家消息并保留 Honru 子页；个人主页完成身份、成长、六游戏战绩、成就、任务、社交、收藏和本人回放信息架构，专项与完整 `npm test` 通过。
+- Production Readiness 工程基线：Tetris `tetris-rule-v3` 高级战斗计分及旧 v2→v1 安全回退；Supabase 生产运维、集群租约/PubSub/脱敏遥测合同；带 192/512 PNG 与 Apple 图标的安装型 PWA 安全缓存；Honru cleanup v1 非运行时候选技术通过。30 分钟生产正式好友 WS 会话通过（15 条消息/已读、2 次重连、0 异常断开、P95 181ms）；真实凭证/人工/真机/真实网络闸门仍未通过。
 
 ⏳ 待办：
-1. 提供真实 Supabase 凭证并执行包含 Direct Chat 新表/RPC 的迁移、RLS/并发、备份与回滚验收（当前只通过 schema 静态与 fake adapter）
-2. 执行 Desktop Chrome/第二浏览器、Android、iPhone、Tablet 实机矩阵，以及真实 `tc/netem`/等价网络整形和 30 分钟 Synthetic Session；完成前 RC 保持 `BLOCKED`
-3. Tetris T-Spin/B2B/Combo/Perfect Clear、外部 Sentry/跨实例长期指标存储、高级延迟观战与文字/社交游戏
-4. 多实例部署前完成 Reward Resolver 与 AI 学习 outbox 的数据库版本冲突重算/单写者改造
-5. 平台扩展（微信小程序 / App / 桌面版）
-6. 按 `requirements/active/sticker-cartoon-golden-set-m0-20260808/` 执行 Art Bible v1、Design/Motion v3、Source Manifest v2、IP Review 与 Persona/Avatar/UI/五子棋/飞行棋 Golden Set；闸门通过前不批量生产
+1. 提供真实 Supabase DB URL/service-role，并实际执行迁移、浏览器角色 RLS、并发、加密备份、隔离恢复和非破坏回滚验收；通过前 Cluster/Telemetry 保持关闭且 Render 单实例。
+2. 重启 Codex 让浏览器连接器使用已配置的 Node 24，再执行当前 Desktop/手机/平板模拟；另需第二浏览器和 Android/iPhone/Tablet 真机、真实网络整形。
+3. 由独立自然人完成 Sticker/Honru 人工清稿、Reviewer B/IP Review 与用户 Golden Set 签字；通过前所有新美术保持默认关闭。
+4. 多实例生产扩容前完成真实 Supabase 并发与 Reward/AI 分布式 outbox 验收；配置并验证外部遥测接收端。
+5. 高级延迟观战、文字/社交游戏，以及需开发者账号/证书的微信小程序、原生 App 与商店发行。
 
 ## 8. 项目历程
 

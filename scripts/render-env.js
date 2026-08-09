@@ -1,5 +1,5 @@
 // 设置 Render 服务环境变量（可只设置其中几个）
-// 用法：RENDER_KEY=rnd_xxx [SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... DEEPSEEK_KEY=... METRICS_ADMIN_TOKEN=...] node scripts/render-env.js
+// 用法：RENDER_KEY=rnd_xxx [SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... ENABLE_CLUSTER_COORDINATION=1 TELEMETRY_WEBHOOK_URL=... TELEMETRY_WEBHOOK_ALLOWLIST=...] node scripts/render-env.js
 const https = require('https');
 
 const key = process.env.RENDER_KEY;
@@ -8,13 +8,23 @@ const supabaseUrl = (process.env.SUPABASE_URL || '').trim();
 const supabaseKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY || '').trim();
 const deepseekKey = (process.env.DEEPSEEK_KEY || '').trim();
 const metricsAdminToken = (process.env.METRICS_ADMIN_TOKEN || '').trim();
+const clusterEnabled = (process.env.ENABLE_CLUSTER_COORDINATION || '').trim();
+const telemetryUrl = (process.env.TELEMETRY_WEBHOOK_URL || '').trim();
+const telemetryToken = (process.env.TELEMETRY_WEBHOOK_TOKEN || '').trim();
+const telemetryAllowlist = (process.env.TELEMETRY_WEBHOOK_ALLOWLIST || '').trim();
+const tetrisScoring = (process.env.TETRIS_GUIDELINE_SCORING || '').trim();
 const REQUEST_TIMEOUT_MS = 15000;
 if (!key) {
   console.error('RENDER_KEY env missing');
   process.exit(1);
 }
-if (!supabaseUrl && !supabaseKey && !deepseekKey && !metricsAdminToken) {
-  console.error('请至少提供一个环境变量（SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY / DEEPSEEK_KEY / METRICS_ADMIN_TOKEN）');
+if (clusterEnabled && !/^[01]$/.test(clusterEnabled)) { console.error('ENABLE_CLUSTER_COORDINATION 只能是 0 或 1'); process.exit(1); }
+if (tetrisScoring && !/^[01]$/.test(tetrisScoring)) { console.error('TETRIS_GUIDELINE_SCORING 只能是 0 或 1'); process.exit(1); }
+if (telemetryUrl && !/^https:\/\//i.test(telemetryUrl)) { console.error('TELEMETRY_WEBHOOK_URL 必须使用 HTTPS'); process.exit(1); }
+if ((telemetryUrl || telemetryToken) && !telemetryAllowlist) { console.error('Telemetry URL/Token 需要同时提供 TELEMETRY_WEBHOOK_ALLOWLIST'); process.exit(1); }
+if (telemetryAllowlist && !telemetryAllowlist.split(',').every(host => /^[A-Za-z0-9.-]+$/.test(host.trim()) && !/^localhost$/i.test(host.trim()))) { console.error('TELEMETRY_WEBHOOK_ALLOWLIST 格式无效'); process.exit(1); }
+if (!supabaseUrl && !supabaseKey && !deepseekKey && !metricsAdminToken && !clusterEnabled && !telemetryUrl && !telemetryToken && !telemetryAllowlist && !tetrisScoring) {
+  console.error('请至少提供一个受支持的环境变量（Supabase / DeepSeek / Metrics / Cluster / Telemetry）。');
   process.exit(1);
 }
 
@@ -50,6 +60,11 @@ function req(method, path, body) {
       supabaseKey ? ['SUPABASE_SERVICE_ROLE_KEY', supabaseKey] : null,
       deepseekKey ? ['DEEPSEEK_KEY', deepseekKey] : null,
       metricsAdminToken ? ['METRICS_ADMIN_TOKEN', metricsAdminToken] : null,
+      clusterEnabled ? ['ENABLE_CLUSTER_COORDINATION', clusterEnabled] : null,
+      telemetryUrl ? ['TELEMETRY_WEBHOOK_URL', telemetryUrl] : null,
+      telemetryToken ? ['TELEMETRY_WEBHOOK_TOKEN', telemetryToken] : null,
+      telemetryAllowlist ? ['TELEMETRY_WEBHOOK_ALLOWLIST', telemetryAllowlist] : null,
+      tetrisScoring ? ['TETRIS_GUIDELINE_SCORING', tetrisScoring] : null,
     ].filter(Boolean);
     for (const [k, v] of vars){
       const r = await req('PUT', '/v1/services/' + SERVICE_ID + '/env-vars/' + encodeURIComponent(k), { value: v });

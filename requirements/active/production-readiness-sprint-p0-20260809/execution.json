@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "task": "production-readiness-sprint-p0-20260809",
+  "status": "VERIFYING",
+  "startedAt": "2026-08-09T13:04:00+09:00",
+  "updatedAt": "2026-08-09T14:25:00+09:00",
+  "steps": [
+    {"id":"PR-1","status":"completed","evidence":["requirement.md","contract.md","plan.json","ownership.json","SHARED_CHANGE_REQUEST.md"]},
+    {"id":"PR-2","status":"completed","evidence":["qa/tetris-rule-core.js","qa/tetris-protocol-fallback-online.js","qa/rule-authority-online.js","qa/protocol-version.js","npm test"]},
+    {"id":"PR-3","status":"completed","evidence":["supabase/schema.sql","supabase/production-acceptance.sql","scripts/supabase-production-ops.ps1","server/cluster-coordinator.js","qa/supabase-schema.js","qa/production-readiness-contract.js"]},
+    {"id":"PR-4","status":"completed","evidence":["public/manifest.webmanifest","public/sw.js","public/assets/brand/pwa/ghost-game-192.png","public/assets/brand/pwa/ghost-game-512.png","qa/production-readiness-contract.js"]},
+    {"id":"PR-5","status":"completed","evidence":["evidence/synthetic-session-production-20260809-134916.json","qa/network-chaos.js","evidence/browser-connector-recovery-20260809.md"],"boundary":"current browser/second browser/physical devices/real shaping blocked externally"},
+    {"id":"PR-6","status":"completed","evidence":["evidence/honru-cleanup-candidate-v1-audit.json","art-review/Reviewer-B-and-Golden-Set-packet.md"],"boundary":"human approvals remain blocked externally"},
+    {"id":"PR-7","status":"in_progress","evidence":["evidence/final-automated-verification-20260809.json"]}
+  ],
+  "blockedExternal": [
+    "Render has no Supabase environment keys and local process has no Supabase/database credentials",
+    "independent human Reviewer B is not present",
+    "physical mobile/tablet devices and store credentials are not connected",
+    "current Codex process must restart before Browser can use the configured Node 24 runtime"
+  ],
+  "notExecuted": [
+    "real Supabase migration/RLS/concurrency/backup/restore/rollback",
+    "current browser UI, second browser and physical device matrix",
+    "real network shaping",
+    "independent Reviewer B/IP/Golden Set/default-on approval",
+    "real multi-instance Reward/AI fencing and external telemetry receiver",
+    "native/miniprogram/store distribution"
+  ]
+}

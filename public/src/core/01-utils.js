@@ -102,6 +102,8 @@ function applyTheme(theme){
   if (document.documentElement && document.documentElement.setAttribute){
     document.documentElement.setAttribute('data-theme', theme);
   }
+  const themeColor=document.getElementById&&document.getElementById('pwa-theme-color');
+  if(themeColor)themeColor.setAttribute('content',theme==='dark'?'#0d1220':'#eef1f8');
   const btn = $('btn-theme');
   if (btn){
     const meta = themeMeta(theme);
