@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "task": "honru-runtime-integration-p2-20260809",
+  "recordedAt": "2026-08-09T09:19:00+09:00",
+  "baselineCommit": "937c6d3c90dfd517dfb0b3834eb2180096109d65",
+  "featureFlagsDefaultEnabled": false,
+  "assets": {
+    "states": 9,
+    "format": "1254x1254 static alpha WebP",
+    "actualBytes": 372796,
+    "budgetBytes": 524288,
+    "fallback": "P-002-HONRU-MASCOT-V1"
+  },
+  "checks": {
+    "npmRunQualityGates": "pass",
+    "npmTest": "pass (132.7 seconds, final post-fix run)",
+    "honruRuntimeContract": "pass (33 assertions)",
+    "assetManifestV2": "pass",
+    "assetLibraryAudit": "pass",
+    "ghostShellContract": "pass",
+    "domSmoke": "pass",
+    "aiGames": "pass",
+    "gameplayUpgrade": "pass",
+    "buildDrift": "pass"
+  },
+  "verifiedBoundaries": [
+    "dual flags strictly equal string 1",
+    "manifest allowlist and local versioned path",
+    "decode failure and flag-revocation fallback",
+    "replay/restart/destroy/showHub suppression and cleanup",
+    "high-frequency cooldown and terminal priority",
+    "viewer win/loss/draw and spectator-neutral result mapping",
+    "six-game snapshot, protocol, replay, AI and reward isolation"
+  ],
+  "productionReady": false
+}

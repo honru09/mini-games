@@ -50,6 +50,63 @@
       "feature_flag": "mg_companion_honru_v1"
     },
     {
+      "asset_id": "P-HONRU-STATES-V1",
+      "runtime_id": "honru",
+      "artwork_version": 1,
+      "runtime_path": "public/assets/brand/honru/states-v1/honru-idle-v1.webp",
+      "variants": {
+        "idle": "public/assets/brand/honru/states-v1/honru-idle-v1.webp",
+        "thinking": "public/assets/brand/honru/states-v1/honru-thinking-v1.webp",
+        "surprised": "public/assets/brand/honru/states-v1/honru-surprised-v1.webp",
+        "win": "public/assets/brand/honru/states-v1/honru-win-v1.webp",
+        "lose": "public/assets/brand/honru/states-v1/honru-lose-v1.webp",
+        "recover": "public/assets/brand/honru/states-v1/honru-recover-v1.webp",
+        "waiting-invite": "public/assets/brand/honru/states-v1/honru-waiting-invite-v1.webp",
+        "check-in": "public/assets/brand/honru/states-v1/honru-check-in-v1.webp",
+        "playful": "public/assets/brand/honru/states-v1/honru-playful-v1.webp"
+      },
+      "logical_size": "44/64/96/192 CSS px",
+      "pixel_size": "1254x1254 alpha WebP; runtime display <=192px",
+      "status": "ready",
+      "actual_bytes": 372796,
+      "byte_budget": 524288,
+      "fallback_asset_id": "P-002-HONRU-MASCOT-V1",
+      "fallback": "public/assets/brand/honru-mascot-v1.svg or no reaction node",
+      "load": "current state on demand; never preload all states",
+      "a11y": "装饰性情绪反应；游戏状态和文字由可读 HTML 提供",
+      "license": "project-owned-ai-generated",
+      "source": "art-source/brand/ghost-game/honru/states-v1",
+      "integrity": "sha256:4848ad3f295cf0732a1c47268e1b077bf6b085861e76bdc024c1306383bbdb01",
+      "variant_integrity": {
+        "idle": "sha256:4848ad3f295cf0732a1c47268e1b077bf6b085861e76bdc024c1306383bbdb01",
+        "thinking": "sha256:ddbb994aba43e5f65cb06b7683d7b93cf6256e6317781026fbe89b00bbfbd005",
+        "surprised": "sha256:f37e800d9dc71940954f2b1e1a02cd362e1ad4af21ba424f0a866bac02aaa744",
+        "win": "sha256:b89ebc0ff072ac8e0cf5e689bb52f0700cf1a4965ea7f47592543f4b455761bc",
+        "lose": "sha256:0b70201847e34a6a1bfe85b851ec62dc60b9ff49503c047b20cafd2349467945",
+        "recover": "sha256:81c19afd5fff044bdb898064365b6b6382f2d0922bd59302ea26d36d11fccb0b",
+        "waiting-invite": "sha256:2d37a33808256e21e26f94b261475163857b0f10c341dd26b28f950fce2845cc",
+        "check-in": "sha256:5a6aa7a3f2006b4090ab1de3ce58854aec13ae0075015e939ee346c3f48e562b",
+        "playful": "sha256:475c777830db09a5e22ab380ee7d62c60295f858df37b18e740d6ebbcc54f8b1"
+      },
+      "variant_bytes": {
+        "idle": 40424,
+        "thinking": 39372,
+        "surprised": 40204,
+        "win": 46688,
+        "lose": 37930,
+        "recover": 40002,
+        "waiting-invite": 44554,
+        "check-in": 42506,
+        "playful": 41116
+      },
+      "feature_flags": {
+        "operator": "all",
+        "enabled_value": "1",
+        "default_enabled": false,
+        "ids": ["mg_art_honru_states_v1", "mg_art_honru_game_reactions_v1"]
+      }
+    },
+    {
       "asset_id": "P-003",
       "runtime_id": "platform",
       "runtime_path": "public/assets/ui/currency_cash.svg",

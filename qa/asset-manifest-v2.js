@@ -29,13 +29,14 @@ function read24(buffer, offset){
 function webpInfo(file){
   const buffer = fs.readFileSync(file);
   if (buffer.toString('ascii', 0, 4) !== 'RIFF' || buffer.toString('ascii', 8, 12) !== 'WEBP') throw new Error('not WebP: ' + file);
-  let offset = 12, width = 0, height = 0, animated = false;
+  let offset = 12, width = 0, height = 0, animated = false, alpha = false;
   while (offset + 8 <= buffer.length){
     const type = buffer.toString('ascii', offset, offset + 4);
     const length = buffer.readUInt32LE(offset + 4);
     const data = offset + 8;
     if (type === 'VP8X' && length >= 10){
       animated = !!(buffer[data] & 0x02);
+      alpha = !!(buffer[data] & 0x10);
       width = read24(buffer, data + 4) + 1;
       height = read24(buffer, data + 7) + 1;
     } else if (type === 'VP8 ' && !width && length >= 10){
@@ -47,9 +48,10 @@ function webpInfo(file){
       height = ((bits >> 14) & 0x3fff) + 1;
     }
     if (type === 'ANIM') animated = true;
+    if (type === 'ALPH') alpha = true;
     offset = data + length + (length % 2);
   }
-  return { width, height, animated, bytes:buffer.length };
+  return { width, height, animated, alpha, bytes:buffer.length };
 }
 
 check('Premium Background catalog 固定 12 个商品', catalog.items.length === 12);
@@ -123,6 +125,21 @@ check('M0 双闸门只接受显式 1 且异常默认关闭', /STICKER_ART_MASTER
 check('M0 路径只由 runtime manifest 稳定 asset ID 解析', !/games\/gomoku\/sticker-v1\/gomoku-board-surface-v1\.svg/.test(assetsSource) && /fetch\(assetUrl\('manifest'\)/.test(assetsSource) && /asset\.asset_id === assetId/.test(assetsSource) && assetsSource.includes("const expectedPrefix = 'public/assets/games/' + id + '/'") && /sticker-v\[1-9\]/.test(assetsSource));
 check('M0 Manifest、加载或 decode 失败只回退表现层', /response && response\.ok \? response\.json\(\) : null/.test(assetsSource) && /probe\.decode\(\)/.test(gomokuSource) && /stickerArtState = 'fallback'; applyPresentation\(\); draw\(\);/.test(gomokuSource) && !/stickerArt(?:Active|State|Requested)[\s\S]{0,80}(?:snapshot|sendMove|onProgress)/.test(gomokuSource));
 check('M0 静态底材无新增动画、计时器或持续重绘', !/<(?:animate|animateTransform|set)\b/i.test(stickerGomokuSvg) && !/requestAnimationFrame|setInterval/.test((gomokuSource.match(/function initStickerSurface\(\)[\s\S]*?\n  }/) || [''])[0]));
+const honruStates = ['idle','thinking','surprised','win','lose','recover','waiting-invite','check-in','playful'];
+const honruRuntime = manifest.assets.find(asset => asset.asset_id === 'P-HONRU-STATES-V1');
+const honruFlagContract = {operator:'all',enabled_value:'1',default_enabled:false,ids:['mg_art_honru_states_v1','mg_art_honru_game_reactions_v1']};
+const honruFiles = honruStates.map(state => honruRuntime && honruRuntime.variants && repoAbsolute(honruRuntime.variants[state]));
+const honruDirectory = path.join(ROOT,'public','assets','brand','honru','states-v1');
+check('Honru 九状态 Manifest 使用稳定 ID、版本、预算和默认关闭双闸门', !!honruRuntime && honruRuntime.runtime_id==='honru' && honruRuntime.artwork_version===1 && honruRuntime.status==='ready' && honruRuntime.actual_bytes===372796 && honruRuntime.byte_budget===512*1024 && JSON.stringify(honruRuntime.feature_flags)===JSON.stringify(honruFlagContract) && JSON.stringify(Object.keys(honruRuntime.variants))===JSON.stringify(honruStates));
+check('Honru 九状态目录仅含登记的普通 WebP 文件且无越界', honruFiles.every(file=>file&&fs.existsSync(file)&&fs.lstatSync(file).isFile()&&!fs.lstatSync(file).isSymbolicLink()&&fs.realpathSync(file).startsWith(fs.realpathSync(path.join(ROOT,'public','assets'))+path.sep)) && JSON.stringify(fs.readdirSync(honruDirectory).sort())===JSON.stringify(honruStates.map(state=>'honru-'+state+'-v1.webp').sort()));
+check('Honru 九状态均为 1254×1254 静态 Alpha WebP', honruFiles.every(file=>{const info=webpInfo(file);return info.width===1254&&info.height===1254&&info.alpha&&!info.animated;}));
+check('Honru 九状态逐文件字节、总预算和 SHA-256 一致', honruStates.every((state,index)=>{const file=honruFiles[index],bytes=fs.statSync(file).size,hash=crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');return honruRuntime.variant_bytes[state]===bytes&&honruRuntime.variant_integrity[state]==='sha256:'+hash;}) && honruFiles.reduce((sum,file)=>sum+fs.statSync(file).size,0)===honruRuntime.actual_bytes && honruRuntime.actual_bytes<=honruRuntime.byte_budget && honruRuntime.integrity===honruRuntime.variant_integrity.idle);
+const honruV1 = manifest.assets.find(asset => asset.asset_id === 'P-002-HONRU-MASCOT-V1');
+check('Honru 状态组失败回退到冻结 v1 SVG', !!honruV1 && honruRuntime.fallback_asset_id==='P-002-HONRU-MASCOT-V1' && honruRuntime.fallback.includes('honru-mascot-v1.svg') && honruV1.integrity==='sha256:42c6442efc3d86ef6d939d936bff3c83a59c46c63002fa817ea4551da3a2de64');
+const honruFlagSource=(assetsSource.match(/function honruStatesEnabled\(\)[\s\S]*?\n}/)||[''])[0];
+const honruResolverSource=(assetsSource.match(/async function resolveHonruStateUrl\(stateId\)[\s\S]*?\n}/)||[''])[0];
+check('Honru 双闸门仅接受显式 1 且异常默认关闭',/HONRU_STATES_MASTER_FLAG\) === '1'/.test(honruFlagSource)&&/HONRU_GAME_REACTIONS_FLAG\) === '1'/.test(honruFlagSource)&&/catch \(error\) \{\s*return false;/.test(honruFlagSource));
+check('Honru 状态路径由 Manifest allowlist 按需解析且不预载整组',/HONRU_STATE_ID_SET\.has\(state\)/.test(honruResolverSource)&&/asset\.asset_id === HONRU_STATE_ASSET_ID/.test(honruResolverSource)&&/expectedPath/.test(honruResolverSource)&&/states-v1/.test(honruResolverSource)&&!/Promise\.all|forEach\([^)]*resolveHonruStateUrl/.test(honruResolverSource));
 const collectionPreviewSource = (shopSource.match(/function previewCollection\(item\)[\s\S]*?\n  function render\(/) || [''])[0];
 check('Collection Try-On 同时预览头像、框、背景与名称效果且不触发购买', /avatarCanvas\(parts\.avatarId/.test(collectionPreviewSource) && /frame-ring/.test(collectionPreviewSource) && /nameFxNode\(previewAccount/.test(collectionPreviewSource) && /applyPremiumBackground\(hero,item\.id/.test(collectionPreviewSource) && !/requestPurchase\(/.test(collectionPreviewSource));
 

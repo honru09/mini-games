@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "task": "honru-runtime-integration-p2-20260809",
+  "recordedAt": "2026-08-09T09:19:00+09:00",
+  "browser": "Codex in-app Browser",
+  "target": "http://localhost:8080/",
+  "requestedMatrix": {
+    "widths": [360, 390, 768, 1024, 1440],
+    "themes": ["light", "dark"],
+    "languages": ["zh-CN", "en-US", "uk-UA"],
+    "combinations": 30
+  },
+  "executed": 0,
+  "passed": 0,
+  "status": "NOT_EXECUTED",
+  "reason": "The in-app Browser permission request for localhost was declined; browser safety policy forbids alternate-browser or raw-CDP circumvention.",
+  "automatedFallbackEvidence": [
+    "qa/ghost-shell-contract.js",
+    "qa/ui-responsive-contract.js",
+    "qa/dom-smoke.js",
+    "qa/honru-runtime-contract.js"
+  ],
+  "productionReady": false
+}

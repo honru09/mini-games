@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-08-09T03:06:00+09:00",
+  "updatedAt": "2026-08-09T08:51:00+09:00",
   "storage": {
     "mode": "local-only",
     "remoteProvider": null,
@@ -11,7 +11,7 @@
     {
       "id": "production-asset-manifest",
       "path": "public/assets/manifests/asset_manifest.json",
-      "sha256": "9a900385b96778eda7743af67262430d2dbe933da7690000918573400caef599"
+      "sha256": "46a8e47db25ce0f7fff70e84cd206d0310248114a983435e4dc157d94100b674"
     }
   ],
   "collections": [
@@ -285,6 +285,34 @@
         "art-source/brand/ghost-game/honru/states-v1/derived/honru-playful-flat-draft-v1-96px.png",
         "art-source/brand/ghost-game/honru/states-v1/derived/honru-playful-flat-draft-v1-64px.png",
         "art-source/brand/ghost-game/honru/states-v1/derived/honru-playful-flat-draft-v1-44px.png"
+      ],
+      "promptPath": "art-source/brand/ghost-game/honru/states-v1/PROMPT_AND_PROVENANCE_v1.md",
+      "model": "codex-built-in-imagegen-runtime-managed",
+      "remoteObjectKey": null
+    },
+    {
+      "id": "P-HONRU-STATES-V1",
+      "category": "brand/honru/state",
+      "assetType": "character-expression-runtime-preview",
+      "sourceType": "generated",
+      "sourcePath": "art-source/brand/ghost-game/honru/states-v1/preview-honru-expression-kit-draft-v1.png",
+      "sourceSha256": "8fd43dd7fb325f0d82624dac48fb8549fbdee4d3b2f9969b93ce91f58b4a5cc9",
+      "license": "project-owned-ai-generated",
+      "author": "OpenAI Codex for Ghost Game",
+      "status": "integrated-local-only",
+      "dimensions": { "width": 660, "height": 750 },
+      "previewPath": "art-source/brand/ghost-game/honru/states-v1/preview-honru-expression-kit-draft-v1.png",
+      "previewSha256": "8fd43dd7fb325f0d82624dac48fb8549fbdee4d3b2f9969b93ce91f58b4a5cc9",
+      "runtimePaths": [
+        "public/assets/brand/honru/states-v1/honru-idle-v1.webp",
+        "public/assets/brand/honru/states-v1/honru-thinking-v1.webp",
+        "public/assets/brand/honru/states-v1/honru-surprised-v1.webp",
+        "public/assets/brand/honru/states-v1/honru-win-v1.webp",
+        "public/assets/brand/honru/states-v1/honru-lose-v1.webp",
+        "public/assets/brand/honru/states-v1/honru-recover-v1.webp",
+        "public/assets/brand/honru/states-v1/honru-waiting-invite-v1.webp",
+        "public/assets/brand/honru/states-v1/honru-check-in-v1.webp",
+        "public/assets/brand/honru/states-v1/honru-playful-v1.webp"
       ],
       "promptPath": "art-source/brand/ghost-game/honru/states-v1/PROMPT_AND_PROVENANCE_v1.md",
       "model": "codex-built-in-imagegen-runtime-managed",

@@ -114,6 +114,9 @@ function aiSpeak(persona, kind) {
   const q = t('ai_persona_' + persona.id + '_' + kind + '_' + (index + 1));
   toast(t('ai_persona_speech', persona.icon, personaName(persona), q));
   sfx('pop');
+  if (kind === 'think') {
+    try { if (typeof triggerHonruGameReaction === 'function') triggerHonruGameReaction('think', { source:'ai-turn' }); } catch {}
+  }
 }
 
 /* AI 对手信息（用于「最近一起玩」记录） */

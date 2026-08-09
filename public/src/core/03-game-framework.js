@@ -17,6 +17,13 @@ function createGameInstance(id, area, extra, playerCount, opts) {
   opts = opts || {};
   opts.destroyed = false;
   const raw = factory(area, extra, playerCount, opts);
+  const clearPresentation = () => {
+    try { if (typeof clearHonruGameReaction === 'function') clearHonruGameReaction(); } catch {}
+  };
+  const callWithPresentationReset = fn => (...args) => {
+    clearPresentation();
+    return fn.apply(raw, args);
+  };
 
   const instance = {
     id: id,
@@ -47,20 +54,22 @@ function createGameInstance(id, area, extra, playerCount, opts) {
       return false;
     },
     restart() {
+      clearPresentation();
       if (raw.reset) raw.reset();
       else if (raw.resetLocal) raw.resetLocal();
       else if (raw.restart) raw.restart();
     },
     destroy() {
       opts.destroyed = true;
+      clearPresentation();
       if (raw.destroy) raw.destroy();
       // 清理 DOM（可选，由调用方决定是否清空 area/extra）
     },
 
     // ---- 兼容别名（旧代码仍可用） ----
-    reset: raw.reset || raw.resetLocal || (() => {}),
+    reset: callWithPresentationReset(raw.reset || raw.resetLocal || (() => {})),
     onMove: raw.onMove || (() => {}),
-    onRestart: raw.onRestart || raw.resetLocal || raw.reset || (() => {}),
+    onRestart: callWithPresentationReset(raw.onRestart || raw.resetLocal || raw.reset || (() => {})),
     snapshot: raw.snapshot || raw.serialize || (() => null),
   };
 

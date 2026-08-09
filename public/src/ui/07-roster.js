@@ -825,6 +825,9 @@ function formatRewardSummary(reward){
 }
 function showRewardBreakdown(reward){
   if (!reward || typeof document === 'undefined' || !document.body) return;
+  try {
+    if (typeof setHonruResultReaction === 'function') setHonruResultReaction(reward.result, { source:'reward', spectator:!!(online&&online.isSpectator) });
+  } catch {}
   const old = document.querySelector && document.querySelector('.reward-breakdown-overlay');
   if (old && old.remove) old.remove();
   const overlay = el('div', 'overlay reward-breakdown-overlay');
@@ -886,6 +889,7 @@ function applyGameResult(results, resultContext){
   if (!aiMode) return;
   if (aiMode){
     const outcome = resultForSlot(results, 0);
+    try { if (typeof setHonruResultReaction === 'function') setHonruResultReaction(outcome, { source:'solo-result', spectator:false }); } catch {}
     if (outcome === 'loss') aiSpeak(currentPersona, 'win');
     else if (outcome === 'win') aiSpeak(currentPersona, 'lose');
     if (account){
@@ -906,6 +910,7 @@ function applyGameResult(results, resultContext){
 }
 
 function showHub(){
+  if (typeof clearHonruGameReaction === 'function') clearHonruGameReaction();
   const preserveOnlineGame = !!(online && online.game && currentGame && currentGameId === online.game);
   if (!preserveOnlineGame && currentGame && typeof currentGame.destroy === 'function') currentGame.destroy();
   $('screen-hub').classList.remove('hidden');
@@ -928,6 +933,7 @@ function showGame(id){
     if (endBtn) endBtn.classList.remove('hidden');
     return;
   }
+  if (typeof clearHonruGameReaction === 'function') clearHonruGameReaction();
   if (currentGame && typeof currentGame.destroy === 'function') currentGame.destroy();
   $('screen-hub').classList.add('hidden');
   $('screen-game').classList.remove('hidden');

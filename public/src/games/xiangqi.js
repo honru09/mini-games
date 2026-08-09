@@ -478,7 +478,9 @@ function gameXiangqi(area, extra, n, opts){
   function render(){
     const w = area.clientWidth || 520;
     const S = Math.min(w, 560);
-    area.innerHTML = '';
+    Array.from(area.children || []).forEach(node => {
+      if (node && node.id !== 'honru-game-reaction' && typeof node.remove === 'function') node.remove();
+    });
     const wrap = el('div','xiangqi-wrap');
     const boardEl = el('div','xiangqi-board');
     boardEl.style.width = S + 'px'; boardEl.style.height = S * ROWS / COLS + 'px';

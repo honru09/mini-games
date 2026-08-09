@@ -280,6 +280,7 @@ Supabase 首次接入或升级时，在 SQL Editor 执行可重复迁移的 `sup
 - Tank/Tetris 闪屏修复：稳定 DOM 渲染树、keyed 节点增量更新、destroy/reset 定时器清理和节点身份回归
 - 第三阶段自动化巩固：10/25/50 逻辑并发、1000 生命周期内存、Timer Audit、逻辑 Chaos 与关键协议连续回归
 - 六款 AI 专项知识包、`personal-linear-v2` 个人持续学习、胜/负反事实更新、平局经验和 Supabase 原子学习 RPC
+- Honru Runtime P2 默认关闭纵切：九状态 Alpha WebP、Manifest/Catalog 双闸门、签到/聊天/邀请/局内反馈/真实胜负映射、replay/重开/销毁/解码竞态隔离与 33 项专项 QA；登录页黑夜 Logo 已修复。人工/IP/真实设备闸门通过前不得默认开启。
 - Seat/Social/Profile v2 已进入 main：真人/AI/空席、READY、AI Controller、公开/私密房、观战、房主转移、好友/拉黑/举报、Presence 隐私和 Profile v2。
 - Gameplay Cosmetic 产品闭环：服务端定价/owned/装备校验、商城按游戏筛选、公开档案只返回装备 ID，六款游戏保留 fallback。
 - Daily Task / Replay / Metrics：服务端任务进度与 claimId 幂等领取；Replay v1.1 支持 7 天保留、公开延迟、分享/撤销和播放控制；Metrics v2 提供 Bearer 管理员只读页面、有界历史、CSV、阈值告警、脱敏错误闭环、限频与访问审计。

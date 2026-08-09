@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "task": "honru-runtime-integration-p2-20260809",
+  "state": "VERIFYING",
+  "startedAt": "2026-08-09T03:10:00+09:00",
+  "updatedAt": "2026-08-09T09:19:00+09:00",
+  "verifiedCommit": null,
+  "releasedCommit": null,
+  "progress": {
+    "recon": {"status":"completed","evidence":["deep-research-report (1).md","AGENTS/README/PROJECT_STATUS","login CSS/asset/game hook audit"]},
+    "freeze": {"status":"completed","evidence":["requirement.md","contract.md","plan.json","ownership.json","acceptance.md"]},
+    "runtimePreviewAssets": {"status":"verified","evidence":["public/assets/brand/honru/states-v1","public/assets/manifests/asset_manifest.json","qa/asset-manifest-v2.js"]},
+    "loginLogoFix": {"status":"verified_static","evidence":["public/index-template.html","qa/ghost-shell-contract.js"]},
+    "sharedReactionHook": {"status":"verified","evidence":["public/src/core/01-utils.js","public/src/core/02-app-shell.js","public/src/core/03-game-framework.js","public/src/core/06-assets.js","qa/honru-runtime-contract.js"]},
+    "platformStateMap": {"status":"verified","evidence":["public/src/core/02-app-shell.js","public/src/ui/07-roster.js","qa/honru-runtime-contract.js"]},
+    "sixGameVerticalSlice": {"status":"verified","evidence":["public/src/core/01-utils.js","public/src/games/ludo.js","public/src/games/xiangqi.js","qa/honru-runtime-contract.js","qa/ai-games.js","qa/gameplay-upgrade.js"]},
+    "verification": {"status":"partial","evidence":["requirements/active/honru-runtime-integration-p2-20260809/evidence/automated-verification-202608090919.json","requirements/active/honru-runtime-integration-p2-20260809/evidence/browser-visual-qa-202608090919.json"]},
+    "release": {"status":"pending","evidence":[]}
+  },
+  "notExecuted": ["local 30-combination browser matrix: in-app browser permission denied","second desktop browser","human Art Bible/IP review","real Android/iPhone/Tablet","real Supabase/RLS/concurrency/backup/rollback","external remote asset upload"],
+  "blocked": ["default-on visual release requires human Art Bible/IP review and real-device matrix"]
+}

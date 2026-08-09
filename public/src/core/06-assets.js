@@ -65,6 +65,11 @@ const STICKER_GAME_ART = Object.freeze({
     assets: Object.freeze({ board:'G-02-STICKER-BOARD-SURFACE-V1' }),
   }),
 });
+const HONRU_STATES_MASTER_FLAG = 'mg_art_honru_states_v1';
+const HONRU_GAME_REACTIONS_FLAG = 'mg_art_honru_game_reactions_v1';
+const HONRU_STATE_ASSET_ID = 'P-HONRU-STATES-V1';
+const HONRU_STATE_IDS = Object.freeze(['idle','thinking','surprised','win','lose','recover','waiting-invite','check-in','playful']);
+const HONRU_STATE_ID_SET = new Set(HONRU_STATE_IDS);
 let runtimeAssetManifestPromise = null;
 
 function assetUrl(key){
@@ -142,6 +147,15 @@ function stickerArtEnabled(id){
   }
 }
 
+function honruStatesEnabled(){
+  try {
+    return localStorage.getItem(HONRU_STATES_MASTER_FLAG) === '1' &&
+      localStorage.getItem(HONRU_GAME_REACTIONS_FLAG) === '1';
+  } catch (error) {
+    return false;
+  }
+}
+
 async function loadRuntimeAssetManifest(){
   if (!runtimeAssetManifestPromise){
     runtimeAssetManifestPromise = (typeof fetch === 'function'
@@ -166,6 +180,27 @@ async function resolveStickerArtUrl(id, role){
   const path = String(item.runtime_path || '');
   const expectedPrefix = 'public/assets/games/' + id + '/';
   if (!path.startsWith(expectedPrefix) || !/^public\/assets\/games\/[a-z0-9-]+\/sticker-v[1-9]\d*\/[a-z0-9-]+\.svg$/.test(path)) { runtimeAssetManifestPromise = null; return ''; }
+  return assetUrl(path.slice('public/assets/'.length));
+}
+
+async function resolveHonruStateUrl(stateId){
+  const state = String(stateId || '');
+  if (!HONRU_STATE_ID_SET.has(state) || !honruStatesEnabled()) return '';
+  const manifest = await loadRuntimeAssetManifest();
+  const item = manifest && Array.isArray(manifest.assets)
+    ? manifest.assets.find(asset => asset && asset.asset_id === HONRU_STATE_ASSET_ID)
+    : null;
+  const flags = item && item.feature_flags;
+  const expectedFlags = [HONRU_STATES_MASTER_FLAG, HONRU_GAME_REACTIONS_FLAG];
+  const path = String(item && item.variants && item.variants[state] || '');
+  const expectedPath = 'public/assets/brand/honru/states-v1/honru-' + state + '-v1.webp';
+  if (!item || item.runtime_id !== 'honru' || item.status !== 'ready' ||
+      !flags || flags.operator !== 'all' || flags.enabled_value !== '1' ||
+      flags.default_enabled !== false || JSON.stringify(flags.ids) !== JSON.stringify(expectedFlags) ||
+      path !== expectedPath || !/^public\/assets\/brand\/honru\/states-v1\/honru-[a-z0-9-]+-v1\.webp$/.test(path)) {
+    runtimeAssetManifestPromise = null;
+    return '';
+  }
   return assetUrl(path.slice('public/assets/'.length));
 }
 

@@ -1437,6 +1437,7 @@ body.authenticated #app{opacity:1;transform:none}
 .ghost-brand-button{border:0;background:transparent;color:var(--text-primary);padding:0;text-align:left;cursor:pointer}
 .brand .brand-icon{width:38px;height:38px}.brand .brand-tag{max-width:210px}
 html[data-theme="dark"] .brand-icon img,html[data-theme="dark"] .hero-ghost-cluster img{filter:invert(1)}
+html[data-theme="dark"] .ghost-auth-brand-logo img{filter:brightness(0) invert(1)}
 .desktop-app-nav{display:flex;align-items:center;gap:5px;padding:4px;border:1px solid var(--ghost-line);border-radius:999px;background:rgba(127,127,127,.06)}
 .app-nav-button{min-height:38px;padding:8px 14px;border:0;border-radius:999px;background:transparent;color:var(--text-secondary);font:inherit;font-weight:650;cursor:pointer;transition:background var(--dur-base),color var(--dur-base),transform var(--dur-fast)}
 .app-nav-button:hover{color:var(--text-primary)}.app-nav-button:active{transform:scale(.96)}
@@ -1461,6 +1462,8 @@ html[data-theme="dark"] .brand-icon img,html[data-theme="dark"] .hero-ghost-clus
 .companion-layout{display:grid;grid-template-columns:minmax(260px,.72fr) minmax(0,1.28fr);gap:16px}.companion-stage{text-align:center}.companion-mascot-wrap{position:relative;max-width:310px;margin:0 auto}.companion-mascot-wrap img{width:100%;aspect-ratio:1;object-fit:contain;filter:drop-shadow(0 20px 28px rgba(0,0,0,.16));animation:honruFloat 3.4s ease-in-out infinite}.companion-mood{position:absolute;right:4%;bottom:10%;padding:5px 10px;border-radius:99px;background:var(--text-primary);color:var(--bg-card-solid);font-size:11px;font-weight:750}.companion-privacy{font-size:11px!important;margin-top:14px!important}.companion-chat{display:flex;flex-direction:column;min-height:520px}.companion-messages{flex:1;display:flex;flex-direction:column;gap:10px;min-height:260px;max-height:480px;overflow:auto;padding:4px}.companion-message{max-width:82%;padding:11px 13px;border-radius:16px;background:rgba(127,127,127,.09);white-space:pre-wrap;overflow-wrap:anywhere}.companion-message.user{align-self:flex-end;background:var(--text-primary);color:var(--bg-card-solid)}.companion-message.honru{align-self:flex-start;border:1px solid var(--ghost-line)}.companion-form{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:14px}.companion-suggestions{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}.companion-suggestions .btn{font-size:12px}
 .ghost-profile-overview{display:grid;grid-template-columns:1.15fr .85fr;gap:16px}.ghost-profile-card,.ghost-profile-actions{min-height:260px}.ghost-profile-actions{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.ghost-profile-action{min-height:112px;display:flex;flex-direction:column;align-items:flex-start!important;justify-content:flex-end!important;text-align:left;font-size:16px}.ghost-profile-action span{font-size:12px;color:var(--text-secondary)}
 .honru-dock{position:fixed;right:18px;bottom:18px;z-index:180}.honru-dock button{position:relative;width:94px;height:94px;padding:0;border:0;background:transparent;cursor:pointer}.honru-dock img{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 12px 20px rgba(0,0,0,.22));transition:transform .22s var(--ease-spring)}.honru-dock button:hover img{transform:translateY(-5px) rotate(2deg)}.honru-dock.pet img{animation:honruPet .55s var(--ease-spring)}@keyframes honruPet{0%,100%{transform:none}35%{transform:scale(.88) rotate(-5deg)}70%{transform:scale(1.08) rotate(4deg)}}.honru-speech{position:absolute;right:82%;top:0;width:max-content;max-width:190px;padding:8px 11px;border:1px solid var(--ghost-line);border-radius:14px 14px 3px 14px;background:var(--ghost-glass-strong);backdrop-filter:blur(18px);color:var(--text-primary);font-size:12px;box-shadow:var(--elev-2)}
+.honru-game-reaction{position:absolute;right:max(8px,env(safe-area-inset-right,0px));bottom:max(8px,env(safe-area-inset-bottom,0px));z-index:210;width:clamp(76px,10vw,124px);aspect-ratio:1;display:grid;place-items:center;padding:6px;border:3px solid #211923;border-radius:28px;background:rgba(255,249,242,.94);box-shadow:5px 7px 0 rgba(33,25,35,.28);pointer-events:none}#board-area>.honru-game-reaction{animation:honruGameReact .42s var(--ease-spring) both}.honru-game-reaction img{width:100%;height:100%;object-fit:contain}.honru-game-reaction.honru-state-win,.honru-game-reaction.honru-state-playful{transform-origin:70% 80%}@keyframes honruGameReact{0%{opacity:0;transform:translateY(18px) scale(.72) rotate(-5deg)}65%{opacity:1;transform:translateY(-4px) scale(1.06) rotate(2deg)}100%{opacity:1;transform:none}}
+html[data-theme="dark"] .honru-game-reaction{background:rgba(255,249,242,.96);box-shadow:5px 7px 0 rgba(255,255,255,.18)}
 body.game-active .app-header,body.game-active .mobile-app-nav,body.game-active .honru-dock{display:none!important}
 .ghost-auth-page{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;padding:22px;overflow:auto;background:transparent;backdrop-filter:none}.ghost-auth-shell{width:min(1080px,100%);display:grid;grid-template-columns:minmax(280px,1fr) minmax(340px,470px);align-items:center;gap:clamp(26px,7vw,92px)}.ghost-auth-brand{padding:26px;color:var(--text-primary)}.ghost-auth-brand-logo{display:flex;align-items:center;gap:14px;font-size:clamp(28px,4vw,46px);font-weight:850;letter-spacing:-.04em}.ghost-auth-brand-logo img{width:72px;height:72px}.ghost-auth-brand h1{max-width:650px;margin:28px 0 14px;font-size:clamp(42px,6vw,78px);line-height:.96;letter-spacing:-.06em}.ghost-auth-brand p{max-width:520px;font-size:17px;color:var(--text-secondary)}.ghost-auth-toolbar{display:flex;gap:7px;margin-top:24px}.ghost-auth-toolbar .btn{min-height:42px}.ghost-auth-card{width:100%;max-height:none;padding:24px;border:1px solid var(--ghost-line);border-radius:28px;background:var(--ghost-glass-strong);backdrop-filter:blur(30px) saturate(145%);box-shadow:0 32px 90px rgba(3,5,9,.2)}.ghost-auth-tabs{display:grid;grid-template-columns:repeat(2,1fr);gap:5px;padding:4px;border-radius:14px;background:rgba(127,127,127,.08);margin-bottom:20px}.ghost-auth-tabs button{border:0;border-radius:11px;padding:10px;background:transparent;color:var(--text-secondary);font-weight:700}.ghost-auth-tabs button[aria-selected="true"]{background:var(--text-primary);color:var(--bg-card-solid)}.ghost-auth-card .auth-hero{background:transparent;border:0;padding:0;margin:0 0 18px}.ghost-auth-card .auth-login-body,.ghost-auth-card .auth-details-panel{padding:0;border:0;background:transparent}.ghost-auth-card .auth-actions{display:grid;grid-template-columns:1fr;margin-top:16px}.ghost-auth-card .auth-actions .btn{width:100%;min-height:46px}.auth-inline-status{min-height:18px;margin-top:4px;font-size:11px;color:var(--text-secondary)}.auth-inline-status.available{color:var(--success)}.auth-inline-status.error{color:var(--danger)}.auth-guest-note{padding:11px;border:1px solid var(--ghost-line);border-radius:13px;background:rgba(127,127,127,.06);font-size:12px;color:var(--text-secondary)}.auth-connect-state{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--text-secondary)}.auth-connect-state::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--warning)}.auth-connect-state.connected::before{background:var(--success)}
 .sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
@@ -1474,9 +1477,9 @@ html[data-theme="dark"] .profile-hero.bg-5,html[data-theme="light"] .profile-her
 html[data-theme="dark"] .profile-hero.bg-6,html[data-theme="light"] .profile-hero.bg-6{background:linear-gradient(135deg,#1e293b,#334155);color:#e2e8f0}
 @media(max-width:900px){.desktop-app-nav{order:3;width:100%;justify-content:center}.app-header{flex-wrap:wrap}.hero-slide{grid-template-columns:1fr .72fr}.home-dashboard{grid-template-columns:1fr 1fr}.home-welcome{grid-column:1/-1}.ghost-auth-shell{gap:24px}.ghost-auth-brand h1{font-size:52px}}
 @media(max-width:640px){
-  :root{--ghost-nav-height:74px}#app{padding:10px 10px calc(var(--ghost-nav-height) + 22px)}.app-header{position:relative;top:auto;min-height:54px;padding:7px 9px;border-radius:17px;margin-bottom:10px}.brand .brand-icon{width:34px;height:34px}.brand-tag,.desktop-app-nav{display:none}.header-actions .btn{min-width:42px;padding:6px}.mobile-app-nav{position:fixed;left:8px;right:8px;bottom:calc(8px + env(safe-area-inset-bottom,0px));z-index:500;display:grid;grid-template-columns:repeat(4,1fr);padding:6px;border:1px solid var(--ghost-line);border-radius:20px;background:var(--ghost-glass-strong);backdrop-filter:blur(28px) saturate(145%);box-shadow:0 18px 50px rgba(3,5,9,.28)}.mobile-app-nav .app-nav-button{min-width:0;min-height:52px;padding:5px 2px;display:flex;flex-direction:column;gap:1px;font-size:10px}.mobile-app-nav .app-nav-button>span:first-child{font-size:20px;line-height:1}.hero-carousel{min-height:560px;border-radius:25px}.hero-slide{grid-template-columns:1fr;grid-template-rows:auto 190px;align-content:center;padding:26px 20px 50px}.hero-copy h1,.hero-copy h2{font-size:42px}.hero-copy p{font-size:14px}.hero-honru{width:210px;grid-row:2;justify-self:end}.hero-orbit{width:190px;grid-row:2}.hero-orbit span{width:48px;height:48px;border-radius:15px;font-size:20px}.hero-ghost-cluster{grid-row:2}.hero-pagination{left:20px;bottom:18px}.home-dashboard{grid-template-columns:1fr}.home-welcome{grid-column:auto}.companion-layout,.ghost-profile-overview{grid-template-columns:1fr}.companion-stage{order:2}.companion-chat{min-height:430px}.honru-dock{display:none}.ghost-auth-page{place-items:start center;padding:10px}.ghost-auth-shell{grid-template-columns:1fr;gap:8px}.ghost-auth-brand{padding:12px 8px}.ghost-auth-brand-logo img{width:48px;height:48px}.ghost-auth-brand-logo{font-size:26px}.ghost-auth-brand h1{font-size:40px;margin:14px 0 8px}.ghost-auth-brand p{font-size:13px}.ghost-auth-toolbar{margin-top:10px}.ghost-auth-card{padding:18px;border-radius:22px}.ghost-profile-actions{grid-template-columns:1fr 1fr}.route-heading{margin:22px 4px 14px}.route-heading h1{font-size:42px}
+  :root{--ghost-nav-height:74px}#app{padding:10px 10px calc(var(--ghost-nav-height) + 22px)}.app-header{position:relative;top:auto;min-height:54px;padding:7px 9px;border-radius:17px;margin-bottom:10px}.brand .brand-icon{width:34px;height:34px}.brand-tag,.desktop-app-nav{display:none}.header-actions .btn{min-width:42px;padding:6px}.mobile-app-nav{position:fixed;left:8px;right:8px;bottom:calc(8px + env(safe-area-inset-bottom,0px));z-index:500;display:grid;grid-template-columns:repeat(4,1fr);padding:6px;border:1px solid var(--ghost-line);border-radius:20px;background:var(--ghost-glass-strong);backdrop-filter:blur(28px) saturate(145%);box-shadow:0 18px 50px rgba(3,5,9,.28)}.mobile-app-nav .app-nav-button{min-width:0;min-height:52px;padding:5px 2px;display:flex;flex-direction:column;gap:1px;font-size:10px}.mobile-app-nav .app-nav-button>span:first-child{font-size:20px;line-height:1}.hero-carousel{min-height:560px;border-radius:25px}.hero-slide{grid-template-columns:1fr;grid-template-rows:auto 190px;align-content:center;padding:26px 20px 50px}.hero-copy h1,.hero-copy h2{font-size:42px}.hero-copy p{font-size:14px}.hero-honru{width:210px;grid-row:2;justify-self:end}.hero-orbit{width:190px;grid-row:2}.hero-orbit span{width:48px;height:48px;border-radius:15px;font-size:20px}.hero-ghost-cluster{grid-row:2}.hero-pagination{left:20px;bottom:18px}.home-dashboard{grid-template-columns:1fr}.home-welcome{grid-column:auto}.companion-layout,.ghost-profile-overview{grid-template-columns:1fr}.companion-stage{order:2}.companion-chat{min-height:430px}.honru-dock{display:none}.honru-game-reaction{right:10px;bottom:10px;width:76px;border-width:2px;border-radius:21px;box-shadow:3px 4px 0 rgba(33,25,35,.25)}.ghost-auth-page{place-items:start center;padding:10px}.ghost-auth-shell{grid-template-columns:1fr;gap:8px}.ghost-auth-brand{padding:12px 8px}.ghost-auth-brand-logo img{width:48px;height:48px}.ghost-auth-brand-logo{font-size:26px}.ghost-auth-brand h1{font-size:40px;margin:14px 0 8px}.ghost-auth-brand p{font-size:13px}.ghost-auth-toolbar{margin-top:10px}.ghost-auth-card{padding:18px;border-radius:22px}.ghost-profile-actions{grid-template-columns:1fr 1fr}.route-heading{margin:22px 4px 14px}.route-heading h1{font-size:42px}
 }
-@media(prefers-reduced-motion:reduce){.ambient-stars,.ambient-clouds,.hero-honru,.companion-mascot-wrap img,.hero-orbit,.hero-orbit span{animation:none!important}.hero-slide{transition:none}}
+@media(prefers-reduced-motion:reduce){.ambient-stars,.ambient-clouds,.hero-honru,.companion-mascot-wrap img,.hero-orbit,.hero-orbit span,.honru-game-reaction{animation:none!important}.hero-slide{transition:none}}
 
 </style>
 </head>
@@ -2121,7 +2124,7 @@ function haptic(kind){
   } catch {}
 }
 /* 分级反馈：关键操作重反馈，普通操作轻反馈 */
-function playFeedback(kind){
+function playFeedback(kind, context){
   const fx = {
     tap:     { sfx: 'click',  haptic: 'light' },
     move:    { sfx: 'move',   haptic: 'light' },
@@ -2132,6 +2135,9 @@ function playFeedback(kind){
     lose:    { sfx: 'lose',   haptic: 'lose' },
   }[kind] || { sfx: 'click', haptic: 'light' };
   sfx(fx.sfx); haptic(fx.haptic);
+  try {
+    if (typeof triggerHonruGameReaction === 'function') triggerHonruGameReaction(kind, context);
+  } catch {}
 }
 if (typeof document !== 'undefined' && document.addEventListener){
   document.addEventListener('click', function(e){
@@ -2612,13 +2618,17 @@ function showVictoryOverlay(area, opts) {
   const again = el('button', 'btn btn-primary victory-btn', t('come_back'));
   again.addEventListener('click', () => {
     ov.remove();
+    try { if (typeof clearHonruGameReaction === 'function') clearHonruGameReaction(); } catch {}
     if (opts.onRestart) opts.onRestart();
   });
   btnRow.appendChild(again);
   
   if (opts.onInvite) {
     const invite = el('button', 'btn victory-btn', t('invite_player'));
-    invite.addEventListener('click', opts.onInvite);
+    invite.addEventListener('click', () => {
+      if (typeof setHonruPlatformReaction === 'function') setHonruPlatformReaction('waiting-invite');
+      opts.onInvite();
+    });
     btnRow.appendChild(invite);
   }
   
@@ -2756,6 +2766,11 @@ const STICKER_GAME_ART = Object.freeze({
     assets: Object.freeze({ board:'G-02-STICKER-BOARD-SURFACE-V1' }),
   }),
 });
+const HONRU_STATES_MASTER_FLAG = 'mg_art_honru_states_v1';
+const HONRU_GAME_REACTIONS_FLAG = 'mg_art_honru_game_reactions_v1';
+const HONRU_STATE_ASSET_ID = 'P-HONRU-STATES-V1';
+const HONRU_STATE_IDS = Object.freeze(['idle','thinking','surprised','win','lose','recover','waiting-invite','check-in','playful']);
+const HONRU_STATE_ID_SET = new Set(HONRU_STATE_IDS);
 let runtimeAssetManifestPromise = null;
 
 function assetUrl(key){
@@ -2833,6 +2848,15 @@ function stickerArtEnabled(id){
   }
 }
 
+function honruStatesEnabled(){
+  try {
+    return localStorage.getItem(HONRU_STATES_MASTER_FLAG) === '1' &&
+      localStorage.getItem(HONRU_GAME_REACTIONS_FLAG) === '1';
+  } catch (error) {
+    return false;
+  }
+}
+
 async function loadRuntimeAssetManifest(){
   if (!runtimeAssetManifestPromise){
     runtimeAssetManifestPromise = (typeof fetch === 'function'
@@ -2857,6 +2881,27 @@ async function resolveStickerArtUrl(id, role){
   const path = String(item.runtime_path || '');
   const expectedPrefix = 'public/assets/games/' + id + '/';
   if (!path.startsWith(expectedPrefix) || !/^public\/assets\/games\/[a-z0-9-]+\/sticker-v[1-9]\d*\/[a-z0-9-]+\.svg$/.test(path)) { runtimeAssetManifestPromise = null; return ''; }
+  return assetUrl(path.slice('public/assets/'.length));
+}
+
+async function resolveHonruStateUrl(stateId){
+  const state = String(stateId || '');
+  if (!HONRU_STATE_ID_SET.has(state) || !honruStatesEnabled()) return '';
+  const manifest = await loadRuntimeAssetManifest();
+  const item = manifest && Array.isArray(manifest.assets)
+    ? manifest.assets.find(asset => asset && asset.asset_id === HONRU_STATE_ASSET_ID)
+    : null;
+  const flags = item && item.feature_flags;
+  const expectedFlags = [HONRU_STATES_MASTER_FLAG, HONRU_GAME_REACTIONS_FLAG];
+  const path = String(item && item.variants && item.variants[state] || '');
+  const expectedPath = 'public/assets/brand/honru/states-v1/honru-' + state + '-v1.webp';
+  if (!item || item.runtime_id !== 'honru' || item.status !== 'ready' ||
+      !flags || flags.operator !== 'all' || flags.enabled_value !== '1' ||
+      flags.default_enabled !== false || JSON.stringify(flags.ids) !== JSON.stringify(expectedFlags) ||
+      path !== expectedPath || !/^public\/assets\/brand\/honru\/states-v1\/honru-[a-z0-9-]+-v1\.webp$/.test(path)) {
+    runtimeAssetManifestPromise = null;
+    return '';
+  }
   return assetUrl(path.slice('public/assets/'.length));
 }
 
@@ -3130,6 +3175,126 @@ let ghostAppRoute = 'home';
 let ghostHeroIndex = 0;
 let ghostHeroTimer = null;
 let ghostCompanionHistory = [];
+let honruGameReactionTimer = null;
+let honruGameReactionSequence = 0;
+let honruGameReactionLifecycle = 0;
+let honruGameReactionPriority = -1;
+let honruGameReactionState = '';
+let honruGameReactionActiveUntil = 0;
+const honruGameReactionLastAt = Object.create(null);
+let honruPlatformReactionTimer = null;
+let honruPlatformReactionSequence = 0;
+const HONRU_FEEDBACK_STATE = Object.freeze({
+  tap:'idle', move:'idle', place:'surprised', shoot:'playful', capture:'playful',
+  score:'playful', win:'win', lose:'lose', draw:'recover', think:'thinking', waiting:'waiting-invite',
+  invite:'waiting-invite', checkin:'check-in', recover:'recover',
+});
+const HONRU_STATE_PRIORITY = Object.freeze({
+  idle:0, thinking:1, 'waiting-invite':1, 'check-in':1, recover:1,
+  surprised:2, playful:2, win:4, lose:4,
+});
+const HONRU_STATE_COOLDOWN = Object.freeze({
+  idle:900, thinking:4500, 'waiting-invite':1800, 'check-in':1800, recover:1800,
+  surprised:850, playful:700, win:4000, lose:4000,
+});
+
+function honruFeedbackState(kind){
+  const value=String(kind||'idle');
+  return HONRU_FEEDBACK_STATE[value] || (typeof HONRU_STATE_ID_SET!=='undefined'&&HONRU_STATE_ID_SET.has(value)?value:'idle');
+}
+function honruFallbackUrl(){
+  return typeof assetUrl==='function' ? assetUrl('brand/honru-mascot-v1.svg') : 'assets/brand/honru-mascot-v1.svg';
+}
+function applyHonruStateImage(img,state,valid){
+  if(!img || typeof resolveHonruStateUrl!=='function')return Promise.resolve(false);
+  const fallback=img.dataset.honruFallbackSrc||img.getAttribute('src')||honruFallbackUrl();
+  img.dataset.honruFallbackSrc=fallback;
+  const restore=()=>{
+    if(valid&&!valid())return false;
+    img.onerror=null;img.src=fallback;img.dataset.honruState='fallback';return false;
+  };
+  return resolveHonruStateUrl(state).then(url=>{
+    if(!url || !honruStatesEnabled() || (valid&&!valid()))return restore();
+    const activate=()=>{
+      if(valid&&!valid())return false;
+      if(!honruStatesEnabled())return restore();
+      img.onerror=()=>{img.onerror=null;img.src=fallback;img.dataset.honruState='fallback';};
+      img.src=url;img.dataset.honruState=state;return true;
+    };
+    const probe=document.createElement('img');probe.decoding='async';
+    if(typeof probe.decode==='function'){
+      probe.src=url;
+      try{return Promise.resolve(probe.decode()).then(activate,restore);}catch{return restore();}
+    }
+    return new Promise(resolve=>{probe.onload=()=>resolve(activate());probe.onerror=()=>resolve(restore());probe.src=url;});
+  }).catch(restore);
+}
+function removeHonruGameReactionNode(resetPriority){
+  honruGameReactionSequence++;
+  if(honruGameReactionTimer){clearTimeout(honruGameReactionTimer);honruGameReactionTimer=null;}
+  const node=$('honru-game-reaction');if(node)node.remove();
+  if(resetPriority!==false){honruGameReactionPriority=-1;honruGameReactionState='';honruGameReactionActiveUntil=0;}
+}
+function clearHonruGameReaction(){
+  honruGameReactionLifecycle++;
+  removeHonruGameReactionNode(true);
+}
+function honruGameReactionAllowed(context){
+  if(typeof honruStatesEnabled!=='function'||!honruStatesEnabled()||typeof document==='undefined'||!document.body)return false;
+  if(document.hidden||!document.body.classList.contains('game-active'))return false;
+  if(context&&context.replay)return false;
+  if(typeof online!=='undefined'&&online&&online._replaying)return false;
+  return true;
+}
+function mountHonruGameReaction(kind,context,lifecycle){
+  if(lifecycle!==honruGameReactionLifecycle||!honruGameReactionAllowed(context))return false;
+  const area=$('board-area');if(!area)return false;
+  const state=honruFeedbackState(kind),terminal=!!(context&&context.terminal),priority=terminal?4:(HONRU_STATE_PRIORITY[state]||0),now=Date.now();
+  const cooldown=HONRU_STATE_COOLDOWN[state]||0,last=honruGameReactionLastAt[state]||0;
+  if(now<honruGameReactionActiveUntil&&priority<honruGameReactionPriority)return false;
+  if(now-last<cooldown&&priority<=honruGameReactionPriority)return false;
+  removeHonruGameReactionNode(false);
+  honruGameReactionPriority=priority;honruGameReactionState=state;
+  const duration=(terminal||state==='win'||state==='lose')?(prefersReducedMotion()?1800:2600):(prefersReducedMotion()?1100:1700);
+  honruGameReactionActiveUntil=now+duration;honruGameReactionLastAt[state]=now;
+  const seq=++honruGameReactionSequence;
+  const node=el('div','honru-game-reaction honru-state-'+state);node.id='honru-game-reaction';node.dataset.honruState=state;node.setAttribute('aria-hidden','true');
+  const img=document.createElement('img');img.alt='';img.src=honruFallbackUrl();img.decoding='async';node.appendChild(img);area.appendChild(node);
+  applyHonruStateImage(img,state,()=>lifecycle===honruGameReactionLifecycle&&seq===honruGameReactionSequence&&node.isConnected&&honruGameReactionAllowed(context));
+  honruGameReactionTimer=setTimeout(()=>{
+    if(lifecycle===honruGameReactionLifecycle&&seq===honruGameReactionSequence)removeHonruGameReactionNode(true);
+  },duration);
+  return true;
+}
+function triggerHonruGameReaction(kind,context){
+  if(!honruGameReactionAllowed(context))return false;
+  const lifecycle=honruGameReactionLifecycle;
+  const run=()=>{try{mountHonruGameReaction(kind,context,lifecycle);}catch{}};
+  if(typeof queueMicrotask==='function')queueMicrotask(run);else Promise.resolve().then(run).catch(()=>{});
+  return true;
+}
+function setHonruResultReaction(outcome,context){
+  if(context&&context.spectator)return false;
+  if(!['win','loss','draw'].includes(outcome))return false;
+  const kind=outcome==='win'?'win':outcome==='draw'?'draw':'lose';
+  const resultContext={source:context&&context.source||'result',spectator:false,terminal:true,outcome};
+  if(typeof document!=='undefined'&&document.body&&document.body.classList.contains('game-active'))return triggerHonruGameReaction(kind,resultContext);
+  return setHonruPlatformReaction(kind);
+}
+function setHonruPlatformReaction(kind){
+  if(typeof honruStatesEnabled!=='function'||!honruStatesEnabled()||typeof document==='undefined'||document.hidden)return false;
+  const state=honruFeedbackState(kind),seq=++honruPlatformReactionSequence;
+  if(honruPlatformReactionTimer){clearTimeout(honruPlatformReactionTimer);honruPlatformReactionTimer=null;}
+  const images=[...document.querySelectorAll('.companion-mascot-wrap img,#btn-honru-dock img')];
+  images.forEach(img=>applyHonruStateImage(img,state,()=>seq===honruPlatformReactionSequence&&img.isConnected));
+  honruPlatformReactionTimer=setTimeout(()=>{
+    if(seq!==honruPlatformReactionSequence)return;
+    const next=++honruPlatformReactionSequence;
+    images.filter(img=>img.isConnected).forEach(img=>applyHonruStateImage(img,'idle',()=>next===honruPlatformReactionSequence&&img.isConnected));
+    honruPlatformReactionTimer=null;
+  },prefersReducedMotion()?1400:2300);
+  return images.length>0;
+}
 
 function routeFromHash(){
   const match = /^#\/(home|games|chat|profile)(?:$|[?&])/.exec(String(typeof location!=='undefined'&&location.hash || ''));
@@ -3227,6 +3392,7 @@ async function sendCompanionMessage(message){
   ghostCompanionHistory.push({role:'user',content:message});
   ghostCompanionHistory=ghostCompanionHistory.slice(-6);
   const input=$('companion-input'),form=$('companion-form');if(input)input.value='';if(form)form.classList.add('loading');
+  setHonruPlatformReaction('thinking');
   try{
     const server=resolveServer(),url=(server?server.replace(/\/+$/,''):'')+'/api/companion';
     const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),6500);
@@ -3237,17 +3403,20 @@ async function sendCompanionMessage(message){
     addCompanionMessage('honru',reply);ghostCompanionHistory.push({role:'assistant',content:reply});ghostCompanionHistory=ghostCompanionHistory.slice(-6);
     const mood=$('companion-mood');if(mood)mood.textContent=t('honru_mood_'+String(data.mood||'neutral'));
     const speech=$('honru-speech');if(speech)speech.textContent=reply.slice(0,42);
-  }catch{addCompanionMessage('honru',t('companion_offline_reply'));}
+    setHonruPlatformReaction('recover');
+  }catch{addCompanionMessage('honru',t('companion_offline_reply'));setHonruPlatformReaction('recover');}
   finally{if(form)form.classList.remove('loading');}
 }
 function petHonru(){
   const dock=$('honru-dock');if(dock){dock.classList.remove('pet');void dock.offsetWidth;dock.classList.add('pet');setTimeout(()=>dock.classList.remove('pet'),650);}
   if (online && online.connected && online._authenticated) online.send({type:'companion_checkin',payload:{actionId:'pet-'+Date.now().toString(36)}});
   else toast(t('honru_pet_local'));
+  setHonruPlatformReaction('check-in');
 }
 function handleCompanionCheckin(payload){
   const speech=$('honru-speech');if(speech)speech.textContent=t(payload&&payload.already?'honru_checkin_again':'honru_checkin_success');
   toast(t(payload&&payload.already?'honru_checkin_again':'honru_checkin_success'));
+  setHonruPlatformReaction(payload&&payload.already?'idle':'check-in');
 }
 function enterGhostApp(options){
   document.body.classList.remove('ghost-shell-booting','auth-required');document.body.classList.add('authenticated');
@@ -3257,6 +3426,7 @@ function enterGhostApp(options){
   renderGhostHome();renderGhostProfile();
 }
 function requireGhostAuth(mode){
+  clearHonruGameReaction();
   document.body.classList.remove('ghost-shell-booting','authenticated');document.body.classList.add('auth-required');
   const app=$('app');if(app){app.inert=true;app.hidden=true;app.setAttribute('aria-hidden','true');}
   if (typeof openAuthModal==='function') openAuthModal(mode||'login');
@@ -3291,6 +3461,13 @@ function createGameInstance(id, area, extra, playerCount, opts) {
   opts = opts || {};
   opts.destroyed = false;
   const raw = factory(area, extra, playerCount, opts);
+  const clearPresentation = () => {
+    try { if (typeof clearHonruGameReaction === 'function') clearHonruGameReaction(); } catch {}
+  };
+  const callWithPresentationReset = fn => (...args) => {
+    clearPresentation();
+    return fn.apply(raw, args);
+  };
 
   const instance = {
     id: id,
@@ -3321,20 +3498,22 @@ function createGameInstance(id, area, extra, playerCount, opts) {
       return false;
     },
     restart() {
+      clearPresentation();
       if (raw.reset) raw.reset();
       else if (raw.resetLocal) raw.resetLocal();
       else if (raw.restart) raw.restart();
     },
     destroy() {
       opts.destroyed = true;
+      clearPresentation();
       if (raw.destroy) raw.destroy();
       // 清理 DOM（可选，由调用方决定是否清空 area/extra）
     },
 
     // ---- 兼容别名（旧代码仍可用） ----
-    reset: raw.reset || raw.resetLocal || (() => {}),
+    reset: callWithPresentationReset(raw.reset || raw.resetLocal || (() => {})),
     onMove: raw.onMove || (() => {}),
-    onRestart: raw.onRestart || raw.resetLocal || raw.reset || (() => {}),
+    onRestart: callWithPresentationReset(raw.onRestart || raw.resetLocal || raw.reset || (() => {})),
     snapshot: raw.snapshot || raw.serialize || (() => null),
   };
 
@@ -3701,6 +3880,9 @@ function aiSpeak(persona, kind) {
   const q = t('ai_persona_' + persona.id + '_' + kind + '_' + (index + 1));
   toast(t('ai_persona_speech', persona.icon, personaName(persona), q));
   sfx('pop');
+  if (kind === 'think') {
+    try { if (typeof triggerHonruGameReaction === 'function') triggerHonruGameReaction('think', { source:'ai-turn' }); } catch {}
+  }
 }
 
 /* AI 对手信息（用于「最近一起玩」记录） */
@@ -5171,7 +5353,9 @@ function setAuthUsernameStatus(payload){
 function authToolbar(){
   const toolbar=el('div','ghost-auth-toolbar');
   [{code:'zh-CN',label:'中'},{code:'en-US',label:'EN'},{code:'uk-UA',label:'УК'}].forEach(item=>{const b=elRaw('button','btn',item.label);b.type='button';b.dataset.langCode=item.code;b.classList.toggle('btn-primary',currentLang===item.code);b.addEventListener('click',async()=>{if(await setLanguage(item.code)){if(authModalEl)openAuthModal(authModalEl.dataset.mode||'login');}});toolbar.appendChild(b);});
-  const theme=el('button','btn',getTheme()==='dark'?'☀':'☾');theme.type='button';theme.setAttribute('aria-label',t('theme'));theme.addEventListener('click',()=>{const next=getTheme()==='dark'?'light':'dark';applyTheme(next);try{localStorage.setItem('mg_theme',next);}catch{}});toolbar.appendChild(theme);return toolbar;
+  const theme=el('button','btn');theme.type='button';
+  const syncTheme=()=>{theme.textContent=getTheme()==='dark'?'☀':'☾';const label=t('theme');theme.setAttribute('aria-label',label);theme.title=label;};
+  theme.addEventListener('click',()=>{const next=getTheme()==='dark'?'light':'dark';applyTheme(next);try{localStorage.setItem('mg_theme',next);}catch{}syncTheme();});syncTheme();toolbar.appendChild(theme);return toolbar;
 }
 function authTabs(mode,render){
   const tabs=el('div','ghost-auth-tabs');
@@ -6461,6 +6645,9 @@ function formatRewardSummary(reward){
 }
 function showRewardBreakdown(reward){
   if (!reward || typeof document === 'undefined' || !document.body) return;
+  try {
+    if (typeof setHonruResultReaction === 'function') setHonruResultReaction(reward.result, { source:'reward', spectator:!!(online&&online.isSpectator) });
+  } catch {}
   const old = document.querySelector && document.querySelector('.reward-breakdown-overlay');
   if (old && old.remove) old.remove();
   const overlay = el('div', 'overlay reward-breakdown-overlay');
@@ -6522,6 +6709,7 @@ function applyGameResult(results, resultContext){
   if (!aiMode) return;
   if (aiMode){
     const outcome = resultForSlot(results, 0);
+    try { if (typeof setHonruResultReaction === 'function') setHonruResultReaction(outcome, { source:'solo-result', spectator:false }); } catch {}
     if (outcome === 'loss') aiSpeak(currentPersona, 'win');
     else if (outcome === 'win') aiSpeak(currentPersona, 'lose');
     if (account){
@@ -6542,6 +6730,7 @@ function applyGameResult(results, resultContext){
 }
 
 function showHub(){
+  if (typeof clearHonruGameReaction === 'function') clearHonruGameReaction();
   const preserveOnlineGame = !!(online && online.game && currentGame && currentGameId === online.game);
   if (!preserveOnlineGame && currentGame && typeof currentGame.destroy === 'function') currentGame.destroy();
   $('screen-hub').classList.remove('hidden');
@@ -6564,6 +6753,7 @@ function showGame(id){
     if (endBtn) endBtn.classList.remove('hidden');
     return;
   }
+  if (typeof clearHonruGameReaction === 'function') clearHonruGameReaction();
   if (currentGame && typeof currentGame.destroy === 'function') currentGame.destroy();
   $('screen-hub').classList.add('hidden');
   $('screen-game').classList.remove('hidden');
@@ -8022,7 +8212,6 @@ function gameLudo(area, extra, n, opts){
     return true;
   }
   function pick(pid, ti){
-    playFeedback('move');
     if (spectator || over || phase !== 'pick' || pid !== curPid()) return;
     if (opts.isReplaying && opts.isReplaying()) return;
     if (opts.online && curIdx !== opts.myIdx) return;
@@ -8060,6 +8249,7 @@ function gameLudo(area, extra, n, opts){
       });
       if (captured){ captures += captured; toast(t('ludo_captured',captured)); }
     }
+    playFeedback(capturedTokens.length ? 'capture' : (wasBase ? 'place' : 'move'));
     if (arr.every(v => v === HOME)){
       over = true; winner = pid; finishedAt = Date.now(); area.style.touchAction = 'auto';
       const order = pids.map((p2, i) => i).sort((a, b) => {
@@ -11122,7 +11312,9 @@ function gameXiangqi(area, extra, n, opts){
   function render(){
     const w = area.clientWidth || 520;
     const S = Math.min(w, 560);
-    area.innerHTML = '';
+    Array.from(area.children || []).forEach(node => {
+      if (node && node.id !== 'honru-game-reaction' && typeof node.remove === 'function') node.remove();
+    });
     const wrap = el('div','xiangqi-wrap');
     const boardEl = el('div','xiangqi-board');
     boardEl.style.width = S + 'px'; boardEl.style.height = S * ROWS / COLS + 'px';

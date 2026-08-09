@@ -1,5 +1,5 @@
 'use strict';
-const fs=require('fs'),path=require('path');const root=path.join(__dirname,'..');const template=fs.readFileSync(path.join(root,'public','index-template.html'),'utf8'),utils=fs.readFileSync(path.join(root,'public','src','core','01-utils.js'),'utf8'),shell=fs.readFileSync(path.join(root,'public','src','core','02-app-shell.js'),'utf8'),roster=fs.readFileSync(path.join(root,'public','src','ui','07-roster.js'),'utf8');let fails=0;function check(name,value){console.log((value?'PASS':'FAIL')+'  '+name);if(!value)fails++;}
+const fs=require('fs'),path=require('path');const root=path.join(__dirname,'..');const template=fs.readFileSync(path.join(root,'public','index-template.html'),'utf8'),utils=fs.readFileSync(path.join(root,'public','src','core','01-utils.js'),'utf8'),shell=fs.readFileSync(path.join(root,'public','src','core','02-app-shell.js'),'utf8'),auth=fs.readFileSync(path.join(root,'public','src','shop','04-auth.js'),'utf8'),roster=fs.readFileSync(path.join(root,'public','src','ui','07-roster.js'),'utf8'),mark=fs.readFileSync(path.join(root,'public','assets','brand','ghost-game-mark.svg'),'utf8');let fails=0;function check(name,value){console.log((value?'PASS':'FAIL')+'  '+name);if(!value)fails++;}
 const routes=[...template.matchAll(/<section[^>]*data-app-route="(home|games|chat|profile)"/g)].map(match=>match[1]);
 check('四区路由各有唯一页面',routes.sort().join(',')==='chat,games,home,profile');
 check('手机导航完整映射四区',['home','games','chat','profile'].every(route=>new RegExp('mobile-app-nav[\\s\\S]*data-app-route-target="'+route+'"').test(template)));
@@ -10,8 +10,12 @@ check('游戏中暂停品牌外壳高密度动效',/body\.game-active \.ambient-
 check('reduced-motion 停止场景和 Honru 动画',/@media\(prefers-reduced-motion:reduce\)[^]*ambient-stars[^]*animation:none/.test(template));
 check('个人背景由固定昼夜覆盖保持商品外观',/个人购买背景不再随平台昼夜主题/.test(template)&&/html\[data-theme="dark"\] \.profile-hero\.bg-6/.test(template));
 check('Ghost Game 标志与 Honru 运行时资产存在',fs.existsSync(path.join(root,'public','assets','brand','ghost-game-mark.svg'))&&fs.existsSync(path.join(root,'public','assets','brand','honru-mascot-v1.svg')));
+check('登录页使用 Ghost Game 单色外链标志',/ghost-auth-brand-logo[\s\S]*ghost-game-mark\.svg/.test(auth)&&/fill="currentColor"/.test(mark));
+check('黑夜主题显式反转登录页外链 SVG Logo',/html\[data-theme="dark"\]\s+\.ghost-auth-brand-logo img\s*\{[^}]*filter\s*:\s*brightness\(0\)\s+invert\(1\)/.test(template));
+check('登录页主题按钮切换后同步图标与可访问名称',/const syncTheme=.*theme\.textContent=getTheme\(\)===['"]dark['"]\?['"]☀['"]:['"]☾['"][\s\S]*theme\.setAttribute\(['"]aria-label['"][\s\S]*syncTheme\(\)/.test(auth));
 check('登录前独立 Page 使 App inert',/modal-backdrop auth-backdrop ghost-auth-page/.test(fs.readFileSync(path.join(root,'public','src','shop','04-auth.js'),'utf8'))&&/app\.inert=true/.test(shell));
 check('显式退出重新进入独立认证 Page 且不泄漏旧 App',/function completeLocalLogout[\s\S]*typeof requireGhostAuth === 'function'[\s\S]*requireGhostAuth\('login'\)/.test(roster));
 check('聊天文本使用 elRaw 而非 innerHTML',/elRaw\('div','companion-message/.test(shell));
 check('手机以 Chat 底栏替代 Honru 浮层并避免遮挡内容',/\.home-welcome\{grid-column:auto\}/.test(template)&&/\.honru-dock\{display:none\}/.test(template)&&/mobile-app-nav[\s\S]*data-app-route-target="chat"/.test(template));
+check('Honru 局内反应受双闸门控制且 reduced-motion 静态降级',/mg_art_honru_states_v1/.test(fs.readFileSync(path.join(root,'public','src','core','06-assets.js'),'utf8'))&&/mg_art_honru_game_reactions_v1/.test(fs.readFileSync(path.join(root,'public','src','core','06-assets.js'),'utf8'))&&/\.honru-game-reaction/.test(template)&&/@media\(prefers-reduced-motion:reduce\)[^]*honru-game-reaction/.test(template));
 if(fails){console.log('GHOST_SHELL_CONTRACT_FAILURES='+fails);process.exit(1);}console.log('GHOST_SHELL_CONTRACT_ALL_PASS');

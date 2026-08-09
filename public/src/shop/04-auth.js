@@ -27,7 +27,9 @@ function setAuthUsernameStatus(payload){
 function authToolbar(){
   const toolbar=el('div','ghost-auth-toolbar');
   [{code:'zh-CN',label:'中'},{code:'en-US',label:'EN'},{code:'uk-UA',label:'УК'}].forEach(item=>{const b=elRaw('button','btn',item.label);b.type='button';b.dataset.langCode=item.code;b.classList.toggle('btn-primary',currentLang===item.code);b.addEventListener('click',async()=>{if(await setLanguage(item.code)){if(authModalEl)openAuthModal(authModalEl.dataset.mode||'login');}});toolbar.appendChild(b);});
-  const theme=el('button','btn',getTheme()==='dark'?'☀':'☾');theme.type='button';theme.setAttribute('aria-label',t('theme'));theme.addEventListener('click',()=>{const next=getTheme()==='dark'?'light':'dark';applyTheme(next);try{localStorage.setItem('mg_theme',next);}catch{}});toolbar.appendChild(theme);return toolbar;
+  const theme=el('button','btn');theme.type='button';
+  const syncTheme=()=>{theme.textContent=getTheme()==='dark'?'☀':'☾';const label=t('theme');theme.setAttribute('aria-label',label);theme.title=label;};
+  theme.addEventListener('click',()=>{const next=getTheme()==='dark'?'light':'dark';applyTheme(next);try{localStorage.setItem('mg_theme',next);}catch{}syncTheme();});syncTheme();toolbar.appendChild(theme);return toolbar;
 }
 function authTabs(mode,render){
   const tabs=el('div','ghost-auth-tabs');

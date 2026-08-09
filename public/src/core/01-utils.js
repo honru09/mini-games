@@ -65,7 +65,7 @@ function haptic(kind){
   } catch {}
 }
 /* 分级反馈：关键操作重反馈，普通操作轻反馈 */
-function playFeedback(kind){
+function playFeedback(kind, context){
   const fx = {
     tap:     { sfx: 'click',  haptic: 'light' },
     move:    { sfx: 'move',   haptic: 'light' },
@@ -76,6 +76,9 @@ function playFeedback(kind){
     lose:    { sfx: 'lose',   haptic: 'lose' },
   }[kind] || { sfx: 'click', haptic: 'light' };
   sfx(fx.sfx); haptic(fx.haptic);
+  try {
+    if (typeof triggerHonruGameReaction === 'function') triggerHonruGameReaction(kind, context);
+  } catch {}
 }
 if (typeof document !== 'undefined' && document.addEventListener){
   document.addEventListener('click', function(e){
@@ -556,13 +559,17 @@ function showVictoryOverlay(area, opts) {
   const again = el('button', 'btn btn-primary victory-btn', t('come_back'));
   again.addEventListener('click', () => {
     ov.remove();
+    try { if (typeof clearHonruGameReaction === 'function') clearHonruGameReaction(); } catch {}
     if (opts.onRestart) opts.onRestart();
   });
   btnRow.appendChild(again);
   
   if (opts.onInvite) {
     const invite = el('button', 'btn victory-btn', t('invite_player'));
-    invite.addEventListener('click', opts.onInvite);
+    invite.addEventListener('click', () => {
+      if (typeof setHonruPlatformReaction === 'function') setHonruPlatformReaction('waiting-invite');
+      opts.onInvite();
+    });
     btnRow.appendChild(invite);
   }
   

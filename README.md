@@ -191,6 +191,7 @@ node scripts/render-deploy.js
 - 注册与商城完成产品级重排：48 款 Avatar v2（12 免费/36 商城）、单一滚动容器、五档响应式、主预览/试穿、单例弹层、服务端价格对齐和三语言商品/辅助文本。
 - `asset-library/` 是本地 provenance sidecar，分别校验目录与许可证哈希；`asset_manifest.json` 仍是唯一运行时机器事实源。未冻结对象存储提供商、许可、生命周期与凭证前不上传外部桶。
 - `Pocket Tabletop Sticker × Expressive Sticker Cartoon` M0 已进入 Draft：Art Bible v1、Facial Kit 16×3、Design/Motion、Source Manifest v2、Teacher 八状态与四 Avatar Alpha 源、Core UI 状态板、精确五子棋 15×15/五连和飞行棋 52 格/每方四机规格均已落地并通过 `test:sticker-art`。生成式规则错误稿已排除；人工清稿、IP 双人审查、运行时集成和 Golden Set 人工决议仍未执行，所有新旗标默认关闭。
+- Honru 九状态已有默认关闭的 P2 运行时预览：只有 `mg_art_honru_states_v1=1` 与 `mg_art_honru_game_reactions_v1=1` 同时存在时才加载当前状态 WebP；失败回退 v1，不进入规则、AI、联机、Replay 或奖励。人工/IP/真实设备验收前不得默认开启。
 - 所有美术资源保留 CSS / Canvas / DOM Emoji / WebAudio 回退，资源加载失败不能阻塞大厅或开局。
 
 ### 数据库（Supabase）

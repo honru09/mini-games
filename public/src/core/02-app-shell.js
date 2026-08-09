@@ -114,6 +114,126 @@ let ghostAppRoute = 'home';
 let ghostHeroIndex = 0;
 let ghostHeroTimer = null;
 let ghostCompanionHistory = [];
+let honruGameReactionTimer = null;
+let honruGameReactionSequence = 0;
+let honruGameReactionLifecycle = 0;
+let honruGameReactionPriority = -1;
+let honruGameReactionState = '';
+let honruGameReactionActiveUntil = 0;
+const honruGameReactionLastAt = Object.create(null);
+let honruPlatformReactionTimer = null;
+let honruPlatformReactionSequence = 0;
+const HONRU_FEEDBACK_STATE = Object.freeze({
+  tap:'idle', move:'idle', place:'surprised', shoot:'playful', capture:'playful',
+  score:'playful', win:'win', lose:'lose', draw:'recover', think:'thinking', waiting:'waiting-invite',
+  invite:'waiting-invite', checkin:'check-in', recover:'recover',
+});
+const HONRU_STATE_PRIORITY = Object.freeze({
+  idle:0, thinking:1, 'waiting-invite':1, 'check-in':1, recover:1,
+  surprised:2, playful:2, win:4, lose:4,
+});
+const HONRU_STATE_COOLDOWN = Object.freeze({
+  idle:900, thinking:4500, 'waiting-invite':1800, 'check-in':1800, recover:1800,
+  surprised:850, playful:700, win:4000, lose:4000,
+});
+
+function honruFeedbackState(kind){
+  const value=String(kind||'idle');
+  return HONRU_FEEDBACK_STATE[value] || (typeof HONRU_STATE_ID_SET!=='undefined'&&HONRU_STATE_ID_SET.has(value)?value:'idle');
+}
+function honruFallbackUrl(){
+  return typeof assetUrl==='function' ? assetUrl('brand/honru-mascot-v1.svg') : 'assets/brand/honru-mascot-v1.svg';
+}
+function applyHonruStateImage(img,state,valid){
+  if(!img || typeof resolveHonruStateUrl!=='function')return Promise.resolve(false);
+  const fallback=img.dataset.honruFallbackSrc||img.getAttribute('src')||honruFallbackUrl();
+  img.dataset.honruFallbackSrc=fallback;
+  const restore=()=>{
+    if(valid&&!valid())return false;
+    img.onerror=null;img.src=fallback;img.dataset.honruState='fallback';return false;
+  };
+  return resolveHonruStateUrl(state).then(url=>{
+    if(!url || !honruStatesEnabled() || (valid&&!valid()))return restore();
+    const activate=()=>{
+      if(valid&&!valid())return false;
+      if(!honruStatesEnabled())return restore();
+      img.onerror=()=>{img.onerror=null;img.src=fallback;img.dataset.honruState='fallback';};
+      img.src=url;img.dataset.honruState=state;return true;
+    };
+    const probe=document.createElement('img');probe.decoding='async';
+    if(typeof probe.decode==='function'){
+      probe.src=url;
+      try{return Promise.resolve(probe.decode()).then(activate,restore);}catch{return restore();}
+    }
+    return new Promise(resolve=>{probe.onload=()=>resolve(activate());probe.onerror=()=>resolve(restore());probe.src=url;});
+  }).catch(restore);
+}
+function removeHonruGameReactionNode(resetPriority){
+  honruGameReactionSequence++;
+  if(honruGameReactionTimer){clearTimeout(honruGameReactionTimer);honruGameReactionTimer=null;}
+  const node=$('honru-game-reaction');if(node)node.remove();
+  if(resetPriority!==false){honruGameReactionPriority=-1;honruGameReactionState='';honruGameReactionActiveUntil=0;}
+}
+function clearHonruGameReaction(){
+  honruGameReactionLifecycle++;
+  removeHonruGameReactionNode(true);
+}
+function honruGameReactionAllowed(context){
+  if(typeof honruStatesEnabled!=='function'||!honruStatesEnabled()||typeof document==='undefined'||!document.body)return false;
+  if(document.hidden||!document.body.classList.contains('game-active'))return false;
+  if(context&&context.replay)return false;
+  if(typeof online!=='undefined'&&online&&online._replaying)return false;
+  return true;
+}
+function mountHonruGameReaction(kind,context,lifecycle){
+  if(lifecycle!==honruGameReactionLifecycle||!honruGameReactionAllowed(context))return false;
+  const area=$('board-area');if(!area)return false;
+  const state=honruFeedbackState(kind),terminal=!!(context&&context.terminal),priority=terminal?4:(HONRU_STATE_PRIORITY[state]||0),now=Date.now();
+  const cooldown=HONRU_STATE_COOLDOWN[state]||0,last=honruGameReactionLastAt[state]||0;
+  if(now<honruGameReactionActiveUntil&&priority<honruGameReactionPriority)return false;
+  if(now-last<cooldown&&priority<=honruGameReactionPriority)return false;
+  removeHonruGameReactionNode(false);
+  honruGameReactionPriority=priority;honruGameReactionState=state;
+  const duration=(terminal||state==='win'||state==='lose')?(prefersReducedMotion()?1800:2600):(prefersReducedMotion()?1100:1700);
+  honruGameReactionActiveUntil=now+duration;honruGameReactionLastAt[state]=now;
+  const seq=++honruGameReactionSequence;
+  const node=el('div','honru-game-reaction honru-state-'+state);node.id='honru-game-reaction';node.dataset.honruState=state;node.setAttribute('aria-hidden','true');
+  const img=document.createElement('img');img.alt='';img.src=honruFallbackUrl();img.decoding='async';node.appendChild(img);area.appendChild(node);
+  applyHonruStateImage(img,state,()=>lifecycle===honruGameReactionLifecycle&&seq===honruGameReactionSequence&&node.isConnected&&honruGameReactionAllowed(context));
+  honruGameReactionTimer=setTimeout(()=>{
+    if(lifecycle===honruGameReactionLifecycle&&seq===honruGameReactionSequence)removeHonruGameReactionNode(true);
+  },duration);
+  return true;
+}
+function triggerHonruGameReaction(kind,context){
+  if(!honruGameReactionAllowed(context))return false;
+  const lifecycle=honruGameReactionLifecycle;
+  const run=()=>{try{mountHonruGameReaction(kind,context,lifecycle);}catch{}};
+  if(typeof queueMicrotask==='function')queueMicrotask(run);else Promise.resolve().then(run).catch(()=>{});
+  return true;
+}
+function setHonruResultReaction(outcome,context){
+  if(context&&context.spectator)return false;
+  if(!['win','loss','draw'].includes(outcome))return false;
+  const kind=outcome==='win'?'win':outcome==='draw'?'draw':'lose';
+  const resultContext={source:context&&context.source||'result',spectator:false,terminal:true,outcome};
+  if(typeof document!=='undefined'&&document.body&&document.body.classList.contains('game-active'))return triggerHonruGameReaction(kind,resultContext);
+  return setHonruPlatformReaction(kind);
+}
+function setHonruPlatformReaction(kind){
+  if(typeof honruStatesEnabled!=='function'||!honruStatesEnabled()||typeof document==='undefined'||document.hidden)return false;
+  const state=honruFeedbackState(kind),seq=++honruPlatformReactionSequence;
+  if(honruPlatformReactionTimer){clearTimeout(honruPlatformReactionTimer);honruPlatformReactionTimer=null;}
+  const images=[...document.querySelectorAll('.companion-mascot-wrap img,#btn-honru-dock img')];
+  images.forEach(img=>applyHonruStateImage(img,state,()=>seq===honruPlatformReactionSequence&&img.isConnected));
+  honruPlatformReactionTimer=setTimeout(()=>{
+    if(seq!==honruPlatformReactionSequence)return;
+    const next=++honruPlatformReactionSequence;
+    images.filter(img=>img.isConnected).forEach(img=>applyHonruStateImage(img,'idle',()=>next===honruPlatformReactionSequence&&img.isConnected));
+    honruPlatformReactionTimer=null;
+  },prefersReducedMotion()?1400:2300);
+  return images.length>0;
+}
 
 function routeFromHash(){
   const match = /^#\/(home|games|chat|profile)(?:$|[?&])/.exec(String(typeof location!=='undefined'&&location.hash || ''));
@@ -211,6 +331,7 @@ async function sendCompanionMessage(message){
   ghostCompanionHistory.push({role:'user',content:message});
   ghostCompanionHistory=ghostCompanionHistory.slice(-6);
   const input=$('companion-input'),form=$('companion-form');if(input)input.value='';if(form)form.classList.add('loading');
+  setHonruPlatformReaction('thinking');
   try{
     const server=resolveServer(),url=(server?server.replace(/\/+$/,''):'')+'/api/companion';
     const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),6500);
@@ -221,17 +342,20 @@ async function sendCompanionMessage(message){
     addCompanionMessage('honru',reply);ghostCompanionHistory.push({role:'assistant',content:reply});ghostCompanionHistory=ghostCompanionHistory.slice(-6);
     const mood=$('companion-mood');if(mood)mood.textContent=t('honru_mood_'+String(data.mood||'neutral'));
     const speech=$('honru-speech');if(speech)speech.textContent=reply.slice(0,42);
-  }catch{addCompanionMessage('honru',t('companion_offline_reply'));}
+    setHonruPlatformReaction('recover');
+  }catch{addCompanionMessage('honru',t('companion_offline_reply'));setHonruPlatformReaction('recover');}
   finally{if(form)form.classList.remove('loading');}
 }
 function petHonru(){
   const dock=$('honru-dock');if(dock){dock.classList.remove('pet');void dock.offsetWidth;dock.classList.add('pet');setTimeout(()=>dock.classList.remove('pet'),650);}
   if (online && online.connected && online._authenticated) online.send({type:'companion_checkin',payload:{actionId:'pet-'+Date.now().toString(36)}});
   else toast(t('honru_pet_local'));
+  setHonruPlatformReaction('check-in');
 }
 function handleCompanionCheckin(payload){
   const speech=$('honru-speech');if(speech)speech.textContent=t(payload&&payload.already?'honru_checkin_again':'honru_checkin_success');
   toast(t(payload&&payload.already?'honru_checkin_again':'honru_checkin_success'));
+  setHonruPlatformReaction(payload&&payload.already?'idle':'check-in');
 }
 function enterGhostApp(options){
   document.body.classList.remove('ghost-shell-booting','auth-required');document.body.classList.add('authenticated');
@@ -241,6 +365,7 @@ function enterGhostApp(options){
   renderGhostHome();renderGhostProfile();
 }
 function requireGhostAuth(mode){
+  clearHonruGameReaction();
   document.body.classList.remove('ghost-shell-booting','authenticated');document.body.classList.add('auth-required');
   const app=$('app');if(app){app.inert=true;app.hidden=true;app.setAttribute('aria-hidden','true');}
   if (typeof openAuthModal==='function') openAuthModal(mode||'login');

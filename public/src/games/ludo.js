@@ -438,7 +438,6 @@ function gameLudo(area, extra, n, opts){
     return true;
   }
   function pick(pid, ti){
-    playFeedback('move');
     if (spectator || over || phase !== 'pick' || pid !== curPid()) return;
     if (opts.isReplaying && opts.isReplaying()) return;
     if (opts.online && curIdx !== opts.myIdx) return;
@@ -476,6 +475,7 @@ function gameLudo(area, extra, n, opts){
       });
       if (captured){ captures += captured; toast(t('ludo_captured',captured)); }
     }
+    playFeedback(capturedTokens.length ? 'capture' : (wasBase ? 'place' : 'move'));
     if (arr.every(v => v === HOME)){
       over = true; winner = pid; finishedAt = Date.now(); area.style.touchAction = 'auto';
       const order = pids.map((p2, i) => i).sort((a, b) => {
