@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
   "project": "Ghost Game / Mini Games Platform",
-  "updatedAt": "2026-08-09T14:25:00+09:00",
-  "lastVerifiedCommit": "94ae9771745c08ae33aac800a06575400a4650f4",
-  "lastReleasedCommit": "94ae9771745c08ae33aac800a06575400a4650f4",
+  "updatedAt": "2026-08-09T14:37:00+09:00",
+  "lastVerifiedCommit": "0c507ab1611a04d01351bd655ce536556d128b8d",
+  "lastReleasedCommit": "0c507ab1611a04d01351bd655ce536556d128b8d",
   "stateVocabulary": ["planned", "partial", "implemented", "verified", "production-ready", "not_executed", "blocked"],
   "releaseCandidate": {
     "status": "blocked",

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "task": "production-readiness-sprint-p0-20260809",
-  "status": "VERIFYING",
+  "status": "ACCEPTED",
   "parallelability": 1,
   "steps": [
     {"id":"PR-1","name":"冻结范围、合同、所有权与外部闸门","status":"completed","risk":"high"},
@@ -10,7 +10,7 @@
     {"id":"PR-4","name":"PWA/跨平台 Web 基线","status":"completed","dependsOn":["PR-1"],"tests":["DOM","offline contract","asset budget"]},
     {"id":"PR-5","name":"可执行的长会话与浏览器/视口/弱网矩阵","status":"completed","dependsOn":["PR-2","PR-3","PR-4"],"boundary":"30 分钟生产 WS 会话通过；当前浏览器连接、第二浏览器、真机和真实网络整形转入 PR-X"},
     {"id":"PR-6","name":"Honru/M0 技术候选与人工 Reviewer B 决策包","status":"completed","dependsOn":["PR-1"],"tests":["alpha/hash/small-size","IP checklist","fallback"],"boundary":"技术候选完成，人工签字转入 PR-X"},
-    {"id":"PR-7","name":"完整回归、状态/日志/报告、推送默认关闭工程基线","status":"in_progress","dependsOn":["PR-2","PR-3","PR-4","PR-6"]},
+    {"id":"PR-7","name":"完整回归、状态/日志/报告、推送默认关闭工程基线","status":"completed","dependsOn":["PR-2","PR-3","PR-4","PR-6"]},
     {"id":"PR-X","name":"真实 Supabase/浏览器真机/Reviewer B/商店外部验收","status":"pending","dependsOn":["PR-5","PR-6","PR-7"],"external":true}
   ],
   "externalGates": [

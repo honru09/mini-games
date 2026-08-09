@@ -43,3 +43,4 @@
 - 2026-08-09 09:19｜修复登录页黑夜 Logo、主题按钮可访问名称、Honru 解码/撤旗标/replay/节流/终局语义/生命周期；调整飞行棋合法反馈与象棋重绘保留，并同步构建、文档和项目状态。
 - 2026-08-09 10:31｜将 Chat 默认页从 Honru 改为玩家消息并保留 Honru 独立子页；深度重构个人主页为身份/成长/六游戏战绩/成就/任务/社交/收藏/本人回放；修复账号缓存隔离与失效 token 主动推送，同步三语言、协议、构建、文档和项目状态。
 - 2026-08-09 12:43｜将 Honru P2、Direct Chat v1 与深度 Profile 快进发布至 GitHub main/Pages/Render；同步任务状态、项目状态、回滚点，并修正赛事与聊天旧审计文档漂移。
+- 2026-08-09 14:37｜Tetris 升级为 `tetris-rule-v3` Advanced Battle（T-Spin/B2B/Combo/Perfect Clear）并保留旧 v2/紧急开关回退；Direct Chat 接入默认关闭的跨实例 ID-only 事件；同步三语言、协议、文档和构建产物，发布 `0c507ab` 至 Render/Pages。

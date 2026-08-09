@@ -15,5 +15,8 @@
 | Independent human Reviewer B / IP decision | BLOCKED_EXTERNAL | signed review record |
 | PWA install/offline/update baseline | VERIFIED_LOCAL | manifest/SW/192+512 PNG/Apple icon/DOM/offline contract |
 | Native/miniprogram/store release | BLOCKED_EXTERNAL | accounts/certificates/store evidence |
+| Default-off engineering baseline release | RELEASED | commit `0c507ab`; Render live; Pages workflow success; HTTP/WS smoke PASS |
 
 自动化、模拟设备或 Codex 审查不得替代标为 `BLOCKED_EXTERNAL` 的真实证据。
+
+工程任务已收口为 `ACCEPTED`；Release Candidate 总状态仍为 `BLOCKED_EXTERNAL`，两者不得混淆。

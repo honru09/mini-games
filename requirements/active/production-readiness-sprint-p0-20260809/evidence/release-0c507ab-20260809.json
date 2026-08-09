@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-08-09T14:37:00+09:00",
+  "commit": "0c507ab1611a04d01351bd655ce536556d128b8d",
+  "rollbackCommit": "2213493b0f8f8f870c2bc4a65175da142ed02062",
+  "branch": "main",
+  "render": {
+    "deployId": "dep-d9s11mdbedkc73claakg",
+    "status": "live",
+    "url": "https://mini-games-online.onrender.com",
+    "httpMarkers": ["manifest.webmanifest", "ghost-game-512.png", "ghost-game-shell-v2-20260809", "tetris-rule-v3"],
+    "websocketSmoke": "PASS"
+  },
+  "pages": {
+    "workflowRunId": 31296973496,
+    "workflowUrl": "https://github.com/honru09/mini-games/actions/runs/31296973496",
+    "conclusion": "success",
+    "url": "https://honru09.github.io/mini-games/",
+    "httpMarkers": ["manifest.webmanifest", "ghost-game-512.png", "ghost-game-shell-v2-20260809", "tetris-rule-v3"]
+  },
+  "releaseCandidate": "BLOCKED_EXTERNAL",
+  "notExecuted": ["real Supabase", "current/second browser and physical devices", "real network shaping", "human art approval", "real multi-instance fencing", "native/miniprogram stores"]
+}

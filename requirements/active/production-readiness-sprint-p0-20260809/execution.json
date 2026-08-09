@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
   "task": "production-readiness-sprint-p0-20260809",
-  "status": "VERIFYING",
+  "status": "ACCEPTED",
   "startedAt": "2026-08-09T13:04:00+09:00",
-  "updatedAt": "2026-08-09T14:25:00+09:00",
+  "updatedAt": "2026-08-09T14:37:00+09:00",
   "steps": [
     {"id":"PR-1","status":"completed","evidence":["requirement.md","contract.md","plan.json","ownership.json","SHARED_CHANGE_REQUEST.md"]},
     {"id":"PR-2","status":"completed","evidence":["qa/tetris-rule-core.js","qa/tetris-protocol-fallback-online.js","qa/rule-authority-online.js","qa/protocol-version.js","npm test"]},
@@ -11,7 +11,7 @@
     {"id":"PR-4","status":"completed","evidence":["public/manifest.webmanifest","public/sw.js","public/assets/brand/pwa/ghost-game-192.png","public/assets/brand/pwa/ghost-game-512.png","qa/production-readiness-contract.js"]},
     {"id":"PR-5","status":"completed","evidence":["evidence/synthetic-session-production-20260809-134916.json","qa/network-chaos.js","evidence/browser-connector-recovery-20260809.md"],"boundary":"current browser/second browser/physical devices/real shaping blocked externally"},
     {"id":"PR-6","status":"completed","evidence":["evidence/honru-cleanup-candidate-v1-audit.json","art-review/Reviewer-B-and-Golden-Set-packet.md"],"boundary":"human approvals remain blocked externally"},
-    {"id":"PR-7","status":"in_progress","evidence":["evidence/final-automated-verification-20260809.json"]}
+    {"id":"PR-7","status":"completed","evidence":["evidence/final-automated-verification-20260809.json","evidence/release-0c507ab-20260809.json","../../../简易报告/Production-Readiness-P0工程基线发布收口-202608091437.md"]}
   ],
   "blockedExternal": [
     "Render has no Supabase environment keys and local process has no Supabase/database credentials",
