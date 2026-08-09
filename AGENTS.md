@@ -307,7 +307,7 @@ Supabase 首次接入或升级优先用 `scripts/supabase-production-ops.ps1`：
 - Daily Task / Replay / Metrics：服务端任务进度与 claimId 幂等领取；Replay v1.1 支持 7 天保留、公开延迟、分享/撤销和播放控制；Metrics v2 提供 Bearer 管理员只读页面、有界历史、CSV、阈值告警、脱敏错误闭环、限频与访问审计。
 - Direct Chat v1 + Profile 深度优化：好友私聊、离线留言、历史/未读/已读/幂等/Block/访客与 token 淘汰安全边界；Chat 只保留玩家消息，旧 Honru 深链归一到 `#/chat`；个人主页完成身份、成长、六游戏战绩、成就、任务、社交、收藏和本人回放信息架构，专项与完整 `npm test` 通过。
 - Production Readiness 工程基线：Tetris `tetris-rule-v3` 高级战斗计分及旧 v2→v1 安全回退；Supabase 生产运维、集群租约/PubSub/脱敏遥测合同；带 192/512 PNG 与 Apple 图标的安装型 PWA 安全缓存；Honru cleanup v1 非运行时候选技术通过。30 分钟生产正式好友 WS 会话通过（15 条消息/已读、2 次重连、0 异常断开、P95 181ms）；真实凭证/人工/真机/真实网络闸门仍未通过。
-- Game Stage + Tabletop Wave A：六款默认进入统一 Header/真实 Seat Rail/Arena/Command Tray，Cream/Ink 代码原生底材与核心实体覆盖 `52/100`；严格 `mg_art_tabletop_wave_a='0'` 回退旧表现。Honru 助手聊天 UI 已删除，玩家私聊与签到保留；Tetris 手机 Arena 单列且七项触控 ≥44px。Quality Gates、完整 `npm test` 与本地桌面/390px 浏览器验收通过。
+- Game Stage + Tabletop Wave A：六款默认进入统一 Header/真实 Seat Rail/Arena/Command Tray，Cream/Ink 代码原生底材与核心实体覆盖 `52/100`；严格 `mg_art_tabletop_wave_a='0'` 回退旧表现。Honru 助手聊天 UI 与死样式已删除，玩家私聊与签到保留；Tetris 手机 Arena 单列且七项触控 ≥44px。提交 `7fc6601` 已发布到 Pages/Render，Quality Gates、完整 `npm test`、生产 WS、本地桌面/390px 与线上 1280px 浏览器验收通过。
 
 ⏳ 待办：
 1. 提供真实 Supabase DB URL/service-role，并实际执行迁移、浏览器角色 RLS、并发、加密备份、隔离恢复和非破坏回滚验收；通过前 Cluster/Telemetry 保持关闭且 Render 单实例。

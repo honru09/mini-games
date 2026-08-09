@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "task": "game-stage-art-expansion-p0-20260809",
-  "status": "REQUIREMENT_FROZEN",
+  "status": "ACCEPTED",
   "parallelability": 1,
   "steps": [
     {"id":"GSA-1","name":"Recon、覆盖矩阵、合同与所有权冻结","status":"completed","risk":"high"},
@@ -9,7 +9,7 @@
     {"id":"GSA-3","name":"Tabletop Art Runtime 与六款局内 Wave A","status":"completed","dependsOn":["GSA-1"],"owner":"gameplay"},
     {"id":"GSA-4","name":"Master 集成 build/online hook/package 与生成产物","status":"completed","dependsOn":["GSA-2","GSA-3"],"owner":"master"},
     {"id":"GSA-5","name":"专项、i18n、DOM、Gameplay、E2E、完整回归与视觉证据","status":"completed","dependsOn":["GSA-4"],"owner":"qaRelease"},
-    {"id":"GSA-6","name":"文档、状态、三日志、报告、推送与部署","status":"in_progress","dependsOn":["GSA-5"],"owner":"master"}
+    {"id":"GSA-6","name":"文档、状态、三日志、报告、推送与部署","status":"completed","dependsOn":["GSA-5"],"owner":"master","evidence":["7fc6601e43df912a596dba671c9edcd8bfccf6a7","evidence/release-7fc6601-20260809.json"]}
   ],
   "rollbackPoints": ["2d91254c3bf82efb7033452b4c80cc044799e7e2","mg_art_tabletop_wave_a=0","existing game fallbacks"],
   "externalGates": ["independent Reviewer B/IP approval for frozen image assets","physical Android/iPhone/Tablet and second browser"]

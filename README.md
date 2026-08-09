@@ -261,5 +261,6 @@ Playroom 的长期开发按项目级执行系统运行，而不是依赖单次�
 - 浏览器：本地 in-app Chromium 已完成当前 P0 的 1440/768/481/390/360 注册、商城、大厅、六封面、英/乌语言、overflow、44px 控件、单例与滚动锁验收，控制台无 warning/error；证据在 `deliverables/visual-qa/visual-commerce-p0-20260808/`。
 - 已执行：30 分钟生产正式好友 WebSocket 会话通过（15 条消息与已读、2 次重连、0 异常断开、P95 181ms）；逻辑 Chaos、完整 `npm test` 与 Quality Gates 通过。
 - 已执行：本轮本地 in-app Chromium 默认桌面/390px 的 Auth/Home/Games/Chat/Profile、五子棋/Tetris、light/dark、overflow/44px/控制台矩阵。
+- 已执行：Game Stage + Tabletop Wave A 提交 `7fc6601` 已发布到 Pages/Render；两端 HTTP 内容一致，生产 WS 与线上 Chromium 登录前/访客/六游戏/AI 五子棋 Stage 抽查通过。
 - 未执行：Android Chrome、iPhone Safari、真实 Tablet、第二桌面浏览器、真实 `tc/netem`、真实 Supabase/RLS/并发/备份回滚。
 - 因真实设备发布闸门未完成，当前结论是 `AUTOMATED_VERIFIED`，Release Candidate 总状态仍为 `BLOCKED`，不能写 `PRODUCTION_READY`。

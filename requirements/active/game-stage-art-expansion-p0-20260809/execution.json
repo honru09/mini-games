@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
   "task": "game-stage-art-expansion-p0-20260809",
-  "state": "VERIFIED_RELEASE_PENDING",
+  "state": "ACCEPTED_RELEASED",
   "startedAt": "2026-08-09T15:00:00+09:00",
-  "updatedAt": "2026-08-09T18:35:00+09:00",
+  "updatedAt": "2026-08-09T19:05:00+09:00",
   "progress": {
     "recon": {"status":"completed","evidence":["three gpt-5.6-terra max read-only audits","user reference images"]},
     "freeze": {"status":"completed","evidence":["requirement.md","contract.md","plan.json","ownership.json","acceptance.md","SHARED_CHANGE_REQUEST.md"]},
@@ -11,7 +11,7 @@
     "gameplayArt": {"status":"verified","evidence":["qa/tabletop-art-runtime.js","qa/dom-smoke.js"]},
     "integration": {"status":"verified","evidence":["scripts/build.js","public/index.html","qa/game-stage-contract.js"]},
     "verification": {"status":"verified","evidence":["npm run quality:gates","npm test","evidence/browser-visual-qa-202608091835.md"]},
-    "release": {"status":"pending"}
+    "release": {"status":"released","evidence":["7fc6601e43df912a596dba671c9edcd8bfccf6a7","evidence/release-7fc6601-20260809.json","../../../简易报告/GameStage与TabletopWaveA线上发布收口-202608091905.md"]}
   },
   "notExecuted": ["second desktop browser","physical Android/iPhone/Tablet","real network shaping","independent Reviewer B/IP approval"],
   "blocked": []

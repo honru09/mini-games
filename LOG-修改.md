@@ -45,3 +45,4 @@
 - 2026-08-09 12:43｜将 Honru P2、Direct Chat v1 与深度 Profile 快进发布至 GitHub main/Pages/Render；同步任务状态、项目状态、回滚点，并修正赛事与聊天旧审计文档漂移。
 - 2026-08-09 14:37｜Tetris 升级为 `tetris-rule-v3` Advanced Battle（T-Spin/B2B/Combo/Perfect Clear）并保留旧 v2/紧急开关回退；Direct Chat 接入默认关闭的跨实例 ID-only 事件；同步三语言、协议、文档和构建产物，发布 `0c507ab` 至 Render/Pages。
 - 2026-08-09 18:35｜重构六款局内为纸板桌游舞台，实时同步房主/本人/AI/READY/离线/观战状态；修正席位 `false` 泄漏、重排误标和 Tetris 手机横向滚动，移除个人主页元叙事文案并保留简洁标题。
+- 2026-08-09 19:05｜将 Game Stage/Tabletop Wave A 状态更新为已验收发布，推送 `7fc6601` 至 main/Pages/Render，并同步项目状态、任务计划、三日志、README/AGENTS 与发布报告。

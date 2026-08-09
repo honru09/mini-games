@@ -24,3 +24,12 @@
 - 浏览器发现并纠正：席位 `false` 泄漏、UID/重排瞬态误标、Tetris 390px 内部横向滚动与触控尺寸。
 - `NOT_EXECUTED`：第二桌面浏览器、Android/iPhone/Tablet 真机、真实网络整形、独立 Reviewer B/IP/Golden Set。M0/P1/P2 未审批资源继续默认关闭。
 - 当前为 `VERIFIED_RELEASE_PENDING`；线上部署完成前不写 `ACCEPTED/RELEASED`。
+
+## 线上发布结果（2026-08-09 19:05 +09:00）
+
+- 功能提交 `7fc6601e43df912a596dba671c9edcd8bfccf6a7` 已推送 `main`。
+- Render 部署 `dep-d9s4u0v40ujc73cka1tg` 为 `live`，GitHub Pages workflow `31307142193` 为 `success`。
+- Pages 与 Render 均 HTTP 200、包含 `game-stage-command` / `tabletop-art-runtime-wave-a`，且没有 Honru Chat/Form DOM；两端正文逐字节一致，与本地构建规范化换行后 SHA-256 均为 `0db35a5aa57605c2e61ea03be83ce38edc77a4930426b02f03ffdf6f15b8e770`。
+- 生产 WebSocket 冒烟通过双人 READY/落子同步与 4 人房三人开局/结算/结束本局。
+- 线上 in-app Chromium `1280×720` 完成登录前 Page、一次性访客、六游戏、AI 五子棋 Stage/Wave A/无横溢/0 console warning-error 抽查。
+- 当前任务状态为 `ACCEPTED_RELEASED`；总 RC 仍因真实 Supabase、真机/第二浏览器/真实网络和独立人工美术审批保持 `BLOCKED_EXTERNAL`。
