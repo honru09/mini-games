@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "task": "player-chat-profile-p0-20260809",
+  "verifiedAt": "2026-08-09T10:31:00+09:00",
+  "status": "PASS",
+  "commands": [
+    {"command":"node qa/player-chat-contract.js","status":"pass"},
+    {"command":"node --experimental-websocket qa/player-chat-online.js","status":"pass","assertions":15},
+    {"command":"node qa/profile-route-contract.js","status":"pass","assertions":10},
+    {"command":"node --experimental-websocket qa/social-graph.js","status":"pass"},
+    {"command":"node --experimental-websocket qa/security-online.js","status":"pass"},
+    {"command":"node --experimental-websocket qa/reconnect-online.js","status":"pass"},
+    {"command":"node qa/supabase-schema.js","status":"pass"},
+    {"command":"node --experimental-websocket qa/supabase-adapter.js","status":"pass","assertions":26},
+    {"command":"node --experimental-websocket qa/game-cosmetic-profile.js","status":"pass"},
+    {"command":"node --experimental-websocket qa/daily-tasks.js","status":"pass"},
+    {"command":"node --experimental-websocket qa/replay-sharing.js","status":"pass"},
+    {"command":"npm run test:i18n","status":"pass","localeKeys":1238},
+    {"command":"npm run quality:gates","status":"pass","result":"QUALITY_GATES_FAST_ALL_PASS"},
+    {"command":"npm test","status":"pass","durationSeconds":119.8}
+  ],
+  "notExecuted": [
+    "real Supabase migration/RLS/concurrency/backup/rollback",
+    "360/390/768/1024/1440 visual matrix",
+    "second desktop browser and real devices",
+    "online GitHub Pages/Render smoke"
+  ]
+}

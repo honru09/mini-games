@@ -15,6 +15,7 @@
 | `tournament-orchestrator-v1.1` | create/consent/start、self-forfeit；管理员 target recovery | state、match assignment、bye、forfeited/recovered | Server pairing + real room + result adapter | pairing/binding/result guard；uid-bound target；participant reconnect | participant 只能弃权自己；管理员必须明确 targetUid；赛事不进入普通经济/胜场 | `qa/tournament.js`、`qa/tournament-auto-room.js`、`qa/tournament-auto-online.js`、`qa/tournament-recovery-online.js` |
 | `replay-v1.1` | list/get/share/unshare | metadata、bounded move log、一次性明文分享令牌 | Server privacy/expiry guard | 7 天过期；公开延迟；分享只持久化哈希且可撤销 | 原始 ID 不绕过延迟/私密权限；非参与者不能创建分享 | `qa/daily-tasks.js`、`qa/replay-sharing.js` |
 | `game-cosmetic-presentation-v1` | Profile equipped IDs | started/rejoined/spectator presentation | Public presentation only | `cosmeticSchemaVersion=1`；unknown ID fallback | 不广播 owned/price/balance/purchase | `qa/game-cosmetic-profile.js` |
+| `direct-chat-v1` | `chat_list/history/send/read` | `chat_state/history/message/send_ok/read_ok/error` | Server identity、friend/block、ID/seq/time authority | `(senderUid,clientMessageId)`；账号级单调已读；重连拉摘要/历史 | 访客、陌生人、Block、越权历史、伪造身份、超长/冲突 ID 拒绝；旧客户端忽略 | `qa/player-chat-contract.js`、`qa/player-chat-online.js` |
 
 ## Capability 与错误
 

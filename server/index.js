@@ -966,6 +966,8 @@ async function sbLoadProfiles(){
     await retryPendingRewardSync();
     await sbLoadAILearningModels();
     await retryPendingAILearningSync();
+    await sbLoadSocialGraph();
+    await sbLoadDirectChat();
     console.log('已从 Supabase 加载 ' + Object.keys(users).length + ' 位玩家');
   } catch (e) {
     recordOperationalError('supabase_profile_load',e);console.error('加载 Supabase 数据失败（继续使用本地数据）:', e.message);
@@ -1324,6 +1326,7 @@ function emptyDB(){
     users: {}, history: [], rewardHistory: [], economyLedger: [], events: [], replays: [], metricsHistory: [], opsIncidents: [],
     pendingRewardSync: [], aiLearning: normalizeAILearningStore(), pendingAILearningSync: [],
     friendRequests: [], friendships: [], blocks: [], reports: [],
+    chatMessages: [], chatReads: {}, nextChatSeq: '0',
   };
 }
 let db = emptyDB();
@@ -1348,6 +1351,9 @@ function loadDB(){
       friendships: Array.isArray(parsed.friendships) ? parsed.friendships : [],
       blocks: Array.isArray(parsed.blocks) ? parsed.blocks : [],
       reports: Array.isArray(parsed.reports) ? parsed.reports : [],
+      chatMessages: Array.isArray(parsed.chatMessages) ? parsed.chatMessages : [],
+      chatReads: parsed.chatReads && typeof parsed.chatReads === 'object' && !Array.isArray(parsed.chatReads) ? parsed.chatReads : {},
+      nextChatSeq: String(parsed.nextChatSeq || '0'),
     };
   } catch { db = emptyDB(); }
   db.pendingRewardSync = db.pendingRewardSync.filter(item => item && item.uid && item.row && item.row.resultId).slice(-10000);
@@ -1357,6 +1363,7 @@ function loadDB(){
   db.friendships = db.friendships.filter(row => row && row.id && row.aUid && row.bUid && row.aUid !== row.bUid).slice(-50000);
   db.blocks = db.blocks.filter(row => row && row.id && row.blockerUid && row.blockedUid && row.blockerUid !== row.blockedUid).slice(-50000);
   db.reports = db.reports.filter(row => row && row.id && row.reporterUid && row.targetUid && row.reason).slice(-50000);
+  normalizeChatStore();
   db.metricsHistory = (db.metricsHistory || []).map(safeGameplayMetricsSnapshot).slice(-METRICS_HISTORY_LIMIT);
   db.opsIncidents = (db.opsIncidents || []).filter(item=>item&&/^[a-f0-9]{16}$/.test(String(item.fingerprint||''))&&item.context&&item.kind).slice(-500);
   for (const [uid, u] of Object.entries(db.users)){
@@ -1420,6 +1427,7 @@ function saveDB(){
     metricsHistory:db.metricsHistory||[],opsIncidents:db.opsIncidents||[],
     pendingRewardSync, aiLearning: db.aiLearning, pendingAILearningSync,
     friendRequests: db.friendRequests || [], friendships: db.friendships || [], blocks: db.blocks || [], reports: db.reports || [],
+    chatMessages: db.chatMessages || [], chatReads: db.chatReads || {}, nextChatSeq: db.nextChatSeq || '0',
   }, null, 2));
   fs.renameSync(tmp, DB_FILE);
 }
@@ -1437,6 +1445,7 @@ function trimAuditData(){
   if (db.friendships.length > 50000) db.friendships = db.friendships.slice(-25000);
   if (db.blocks.length > 50000) db.blocks = db.blocks.slice(-25000);
   if (db.reports.length > 50000) db.reports = db.reports.slice(-25000);
+  trimChatData();
 }
 function recordAnalytics(event, meta = {}){
   const row = {
@@ -2032,6 +2041,7 @@ function publicProfileObj(u, viewerUid){
 const SOCIAL_REQUEST_MAX_PER_DAY = 100;
 const SOCIAL_REPORT_MAX_PER_DAY = 30;
 const SOCIAL_REASONS = new Set(['harassment', 'inappropriate_name', 'cheating', 'spam', 'other']);
+const SOCIAL_CONTEXT_TYPES = new Set(['profile','room','match','social','tournament']);
 function socialId(prefix){ return prefix + '_' + crypto.randomBytes(10).toString('base64url'); }
 function socialPair(aUid, bUid){
   const pair = [String(aUid || ''), String(bUid || '')].sort();
@@ -2074,7 +2084,12 @@ function socialState(uid){
     counts:{ friends:friends.length, incoming:incoming.length, outgoing:outgoing.length, blocked:blocked.length } };
 }
 function socialSessions(uid, fn){
-  for (const session of sessions) if (session.uid === uid && session.alive) fn(session);
+  const user = db.users[uid];
+  for (const session of sessions){
+    if (session.uid !== uid || !session.alive) continue;
+    if (!user || !userHasTokenHash(user, session.tokenHash)) { session.close(); continue; }
+    fn(session);
+  }
 }
 function sendSocialState(uid){
   const payload = socialState(uid);
@@ -2142,7 +2157,7 @@ function socialFriendRequestAction(session, payload){
     const pair = socialPair(row.fromUid, row.toUid);
     if (!socialFriendship(row.fromUid, row.toUid)) db.friendships.push({ id:pair.id, ...pair, createdAt:Date.now() });
     saveDB(); syncSocialRows('friendRequests', [row]); syncSocialRows('friendships', db.friendships.filter(item => item.id === pair.id));
-    socialOk(session, '已添加好友', { action:'accepted' }); sendSocialState(row.fromUid); return;
+    socialOk(session, '已添加好友', { action:'accepted' }); sendSocialState(row.fromUid); sendChatState(row.fromUid); sendChatState(row.toUid); return;
   }
   if (action === 'decline' && isIncoming){ row.status='declined'; row.updatedAt=Date.now(); saveDB(); syncSocialRows('friendRequests',[row]); socialOk(session,'已忽略好友请求',{action:'declined'}); sendSocialState(row.fromUid); return; }
   if (action === 'cancel' && isOutgoing){ row.status='cancelled'; row.updatedAt=Date.now(); saveDB(); syncSocialRows('friendRequests',[row]); socialOk(session,'已取消好友请求',{action:'cancelled'}); sendSocialState(row.toUid); return; }
@@ -2155,7 +2170,7 @@ function socialRemoveFriend(session, targetUid){
   const before = db.friendships.length;
   db.friendships = db.friendships.filter(row => row.id !== pair.id);
   if (db.friendships.length === before) return socialError(session, '你们还不是好友', 'not_friends');
-  saveDB(); deleteSocialRemote('friendships', pair.id); socialOk(session, '已移除好友', { action:'removed' }); sendSocialState(target.uid);
+  saveDB(); deleteSocialRemote('friendships', pair.id); socialOk(session, '已移除好友', { action:'removed' }); sendSocialState(target.uid); sendChatState(session.uid); sendChatState(target.uid);
 }
 function socialBlock(session, targetUid){
   const target = socialTarget(session.uid, targetUid);
@@ -2167,14 +2182,14 @@ function socialBlock(session, targetUid){
   db.friendRequests = db.friendRequests.filter(row => !removedRequests.includes(row));
   const row = { id:socialId('blk'), blockerUid:session.uid, blockedUid:target.uid, targetSnapshot:{ uid:target.uid, name:target.name, avatar:target.avatar }, createdAt:Date.now() };
   db.blocks.push(row); syncSocialRows('blocks',[row]); deleteSocialRemote('friendships',pair.id); removedRequests.forEach(request => deleteSocialRemote('friend_requests',request.id)); saveDB();
-  socialOk(session, '已屏蔽该玩家', { action:'blocked' }); sendSocialState(target.uid);
+  socialOk(session, '已屏蔽该玩家', { action:'blocked' }); sendSocialState(target.uid); sendChatState(session.uid); sendChatState(target.uid);
 }
 function socialUnblock(session, targetUid){
   const target = String(targetUid || '').trim();
   const removed = db.blocks.filter(row => row.blockerUid === session.uid && row.blockedUid === target);
   db.blocks = db.blocks.filter(row => !(row.blockerUid === session.uid && row.blockedUid === target));
   if (!removed.length) return socialError(session, '该玩家不在屏蔽列表', 'not_blocked');
-  saveDB(); removed.forEach(row => deleteSocialRemote('blocks',row.id)); socialOk(session, '已取消屏蔽', { action:'unblocked' });
+  saveDB(); removed.forEach(row => deleteSocialRemote('blocks',row.id)); socialOk(session, '已取消屏蔽', { action:'unblocked' }); sendChatState(session.uid); sendChatState(target);
 }
 function socialReport(session, payload){
   const target = socialTarget(session.uid, payload && payload.targetUid);
@@ -2182,7 +2197,8 @@ function socialReport(session, payload){
   const reason = String(payload && payload.reason || '');
   if (!SOCIAL_REASONS.has(reason)) return socialError(session, '举报原因无效', 'invalid_reason');
   if (socialDailyCount(db.reports || [], session.uid, 'reporterUid') >= SOCIAL_REPORT_MAX_PER_DAY) return socialError(session, '今日举报次数已达上限', 'rate_limited');
-  const contextType = sanitizePlainText(payload && payload.contextType, 24) || 'profile';
+  const requestedContextType=sanitizePlainText(payload&&payload.contextType,24)||'profile';
+  const contextType=SOCIAL_CONTEXT_TYPES.has(requestedContextType)?requestedContextType:'profile';
   const contextId = sanitizePlainText(payload && payload.contextId, 80);
   const recentEventIds = Array.isArray(payload && payload.recentEventIds) ? payload.recentEventIds.map(v => sanitizePlainText(v,80)).filter(Boolean).slice(0,20) : [];
   const duplicate = db.reports.find(row => row && row.reporterUid === session.uid && row.targetUid === target.uid && row.reason === reason && row.contextId === contextId && Date.now() - Number(row.createdAt || 0) < 600000);
@@ -2193,6 +2209,276 @@ function socialReport(session, payload){
   socialOk(session, '举报已记录，我们会核查相关信息', { action:'reported', reportId:row.id });
 }
 function socialAllowedBetween(aUid, bUid){ return !!aUid && !!bUid && aUid !== bUid && !socialBlockedBetween(aUid, bUid); }
+
+/* ---------------- Direct Chat v1（正式好友一对一纯文本私聊） ---------------- */
+const CHAT_MAX_MESSAGES = 50000;
+const CHAT_MAX_PER_CONVERSATION = 500;
+const CHAT_MAX_AGE_MS = 90 * 86400000;
+const CHAT_CLIENT_ID_RE = /^[A-Za-z0-9._:-]{12,80}$/;
+const chatRateBuckets = new Map();
+function chatSeq(value){
+  const raw=String(value===undefined||value===null?'0':value);
+  if(!/^\d{1,30}$/.test(raw))return'0';
+  try{return BigInt(raw).toString();}catch{return'0';}
+}
+function chatSeqCompare(a,b){
+  const aa=BigInt(chatSeq(a)),bb=BigInt(chatSeq(b));
+  return aa<bb?-1:aa>bb?1:0;
+}
+function nextChatSeq(){
+  db.nextChatSeq=(BigInt(chatSeq(db.nextChatSeq))+1n).toString();
+  return db.nextChatSeq;
+}
+function chatConversation(aUid,bUid){
+  const pair=socialPair(aUid,bUid);
+  return {id:'dm:'+pair.id,aUid:pair.aUid,bUid:pair.bUid};
+}
+function chatPeerUid(conversationId,uid){
+  const prefix='dm:';
+  if(!String(conversationId||'').startsWith(prefix))return'';
+  const pair=String(conversationId).slice(prefix.length).split('|');
+  if(pair.length!==2)return'';
+  if(pair[0]===uid)return pair[1];
+  if(pair[1]===uid)return pair[0];
+  return'';
+}
+function normalizeChatText(input){
+  let text=String(input===undefined||input===null?'':input).normalize('NFC').replace(/\r\n?/g,'\n');
+  text=text.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F\u202A-\u202E\u2066-\u2069]/g,'').trim();
+  return text;
+}
+function validChatText(text){
+  const count=[...text].length;
+  if(!count)return{ok:false,reason:'empty_message'};
+  if(count>500||Buffer.byteLength(text,'utf8')>2000)return{ok:false,reason:'message_too_long'};
+  return{ok:true};
+}
+function normalizeChatMessage(row){
+  if(!row||typeof row!=='object')return null;
+  const senderUid=String(row.senderUid||''),recipientUid=String(row.recipientUid||'');
+  if(!senderUid||!recipientUid||senderUid===recipientUid)return null;
+  const conversation=chatConversation(senderUid,recipientUid);
+  const seq=chatSeq(row.seq);
+  const id=String(row.id||'');
+  const clientMessageId=String(row.clientMessageId||'');
+  const text=normalizeChatText(row.text);
+  const valid=validChatText(text);
+  if(!id||seq==='0'||!CHAT_CLIENT_ID_RE.test(clientMessageId)||!valid.ok)return null;
+  const createdAt=Number(row.createdAt)||Date.now();
+  return{id,conversationId:conversation.id,seq,senderUid,recipientUid,clientMessageId,text,createdAt};
+}
+function normalizeChatRead(row,key){
+  if(!row||typeof row!=='object')return null;
+  const conversationId=String(row.conversationId||'');
+  const uid=String(row.uid||''),peerUid=String(row.peerUid||'');
+  if(!uid||!peerUid||uid===peerUid||chatConversation(uid,peerUid).id!==conversationId)return null;
+  return{conversationId,uid,peerUid,lastReadSeq:chatSeq(row.lastReadSeq),updatedAt:Number(row.updatedAt)||0,key:key||conversationId+'|'+uid};
+}
+function trimChatData(){
+  const cutoff=Date.now()-CHAT_MAX_AGE_MS,byConversation=new Map(),seenIds=new Set(),seenClient=new Set();
+  for(const raw of Array.isArray(db.chatMessages)?db.chatMessages:[]){
+    const row=normalizeChatMessage(raw);
+    if(!row||row.createdAt<cutoff||seenIds.has(row.id))continue;
+    const clientKey=row.senderUid+'|'+row.clientMessageId;
+    if(seenClient.has(clientKey))continue;
+    seenIds.add(row.id);seenClient.add(clientKey);
+    if(!byConversation.has(row.conversationId))byConversation.set(row.conversationId,[]);
+    byConversation.get(row.conversationId).push(row);
+  }
+  const retained=[];
+  for(const rows of byConversation.values()){
+    rows.sort((a,b)=>chatSeqCompare(a.seq,b.seq));
+    retained.push(...rows.slice(-CHAT_MAX_PER_CONVERSATION));
+  }
+  retained.sort((a,b)=>chatSeqCompare(a.seq,b.seq));
+  db.chatMessages=retained.slice(-CHAT_MAX_MESSAGES);
+  const reads={};
+  for(const [key,value] of Object.entries(db.chatReads&&typeof db.chatReads==='object'?db.chatReads:{})){
+    const row=normalizeChatRead(value,key);if(row)reads[row.conversationId+'|'+row.uid]=row;
+  }
+  db.chatReads=reads;
+  const max=db.chatMessages.reduce((value,row)=>chatSeqCompare(row.seq,value)>0?row.seq:value,chatSeq(db.nextChatSeq));
+  db.nextChatSeq=max;
+}
+function normalizeChatStore(){ trimChatData(); }
+function chatReadKey(conversationId,uid){return conversationId+'|'+uid;}
+function chatReadState(conversationId,uid,peerUid){
+  return db.chatReads[chatReadKey(conversationId,uid)]||{conversationId,uid,peerUid,lastReadSeq:'0',updatedAt:0};
+}
+function chatMessagesFor(conversationId){
+  return db.chatMessages.filter(row=>row.conversationId===conversationId).sort((a,b)=>chatSeqCompare(a.seq,b.seq));
+}
+function chatHasHistory(aUid,bUid){
+  const id=chatConversation(aUid,bUid).id;
+  return db.chatMessages.some(row=>row.conversationId===id);
+}
+function chatCanRead(aUid,bUid){
+  return !socialBlockedBetween(aUid,bUid)&&(!!socialFriendship(aUid,bUid)||chatHasHistory(aUid,bUid));
+}
+function chatPublicPeer(viewerUid,peerUid){
+  const profile=socialPublicEntry(viewerUid,peerUid);
+  return profile?{uid:profile.uid,name:profile.name,avatar:profile.avatar,frame:profile.frame,effect:profile.effect,background:profile.background,nameFx:profile.nameFx,lang:profile.lang,presence:profile.presence,relationship:profile.relationship}:null;
+}
+function chatUnreadCount(uid,peerUid){
+  const conversation=chatConversation(uid,peerUid),read=chatReadState(conversation.id,uid,peerUid).lastReadSeq;
+  return db.chatMessages.filter(row=>row.conversationId===conversation.id&&row.recipientUid===uid&&chatSeqCompare(row.seq,read)>0).length;
+}
+function chatConversationSummary(uid,peerUid){
+  if(!db.users[peerUid]||db.users[peerUid].ephemeral||socialBlockedBetween(uid,peerUid))return null;
+  const conversation=chatConversation(uid,peerUid),messages=chatMessagesFor(conversation.id),last=messages[messages.length-1]||null;
+  const read=chatReadState(conversation.id,uid,peerUid),peerRead=chatReadState(conversation.id,peerUid,uid);
+  return{conversationId:conversation.id,peer:chatPublicPeer(uid,peerUid),lastMessage:last?chatMessagePayload(last):null,
+    unreadCount:chatUnreadCount(uid,peerUid),readThroughSeq:read.lastReadSeq,peerReadThroughSeq:peerRead.lastReadSeq};
+}
+function chatState(uid,limit){
+  const peerIds=new Set();
+  for(const row of db.friendships||[]){if(row.aUid===uid)peerIds.add(row.bUid);else if(row.bUid===uid)peerIds.add(row.aUid);}
+  for(const row of db.chatMessages||[]){if(row.senderUid===uid)peerIds.add(row.recipientUid);else if(row.recipientUid===uid)peerIds.add(row.senderUid);}
+  const conversations=[...peerIds].map(peerUid=>chatConversationSummary(uid,peerUid)).filter(item=>item&&item.peer)
+    .sort((a,b)=>Number(b.lastMessage&&b.lastMessage.createdAt||0)-Number(a.lastMessage&&a.lastMessage.createdAt||0)||String(a.peer.name||'').localeCompare(String(b.peer.name||'')))
+    .slice(0,Math.max(1,Math.min(100,Number(limit)||50)));
+  return{version:'1.0',conversations,unreadTotal:conversations.reduce((sum,item)=>sum+item.unreadCount,0)};
+}
+function chatMessagePayload(row){
+  return{id:row.id,seq:chatSeq(row.seq),senderUid:row.senderUid,recipientUid:row.recipientUid,text:row.text,createdAt:row.createdAt};
+}
+function chatError(session,action,reason,clientMessageId,retryAfter){
+  session.sendText(JSON.stringify({type:'chat_error',payload:{action:String(action||''),reason:String(reason||'server_unavailable'),
+    ...(clientMessageId?{clientMessageId:String(clientMessageId)}:{}),...(retryAfter?{retryAfter:Number(retryAfter)}:{})}}));
+}
+function chatUser(session,action,clientMessageId){
+  const user=session.uid&&db.users[session.uid];
+  if(!user||!userHasTokenHash(user,session.tokenHash)){chatError(session,action,'not_authenticated',clientMessageId);return null;}
+  if(user.ephemeral){chatError(session,action,'guest_forbidden',clientMessageId);return null;}
+  return user;
+}
+function chatValidSessions(uid,fn){socialSessions(uid,fn);}
+function sendChatState(uid){
+  const payload=chatState(uid);
+  chatValidSessions(uid,session=>session.sendText(JSON.stringify({type:'chat_state',payload})));
+}
+function consumeChatRate(key,limit,windowMs){
+  const now=Date.now(),cutoff=now-windowMs;
+  let list=chatRateBuckets.get(key)||[];list=list.filter(value=>value>cutoff);
+  if(list.length>=limit){chatRateBuckets.set(key,list);return Math.max(1,Math.ceil((list[0]+windowMs-now)/1000));}
+  list.push(now);chatRateBuckets.set(key,list);return 0;
+}
+function chatQueryAllowed(uid,action){return !consumeChatRate('query:'+uid+':'+action,60,60000);}
+function chatSendRetry(uid,peerUid){
+  return consumeChatRate('send10:'+uid,8,10000)||consumeChatRate('send60:'+uid,30,60000)||
+    consumeChatRate('pair60:'+chatConversation(uid,peerUid).id,30,60000)||consumeChatRate('send24:'+uid,500,86400000);
+}
+function directMessageFromDb(row){
+  if(!row||typeof row!=='object')return null;
+  return normalizeChatMessage({id:row.id,conversationId:row.conversation_id,seq:row.seq,senderUid:row.sender_uid,recipientUid:row.recipient_uid,
+    clientMessageId:row.client_message_id,text:row.body,createdAt:Date.parse(row.created_at)||Date.now()});
+}
+async function persistDirectMessage(candidate){
+  const local=db.chatMessages.find(row=>row.senderUid===candidate.senderUid&&row.clientMessageId===candidate.clientMessageId);
+  if(local)return{row:local,duplicate:true,conflict:local.recipientUid!==candidate.recipientUid||local.text!==candidate.text};
+  if(!useSupabase){candidate.seq=nextChatSeq();db.chatMessages.push(candidate);trimChatData();saveDB();return{row:candidate,duplicate:false,conflict:false};}
+  const pair=chatConversation(candidate.senderUid,candidate.recipientUid);
+  const result=await sbFetch('rpc/send_direct_message_v1',{method:'POST',body:JSON.stringify({
+    p_id:candidate.id,p_conversation_id:pair.id,p_a_uid:pair.aUid,p_b_uid:pair.bUid,p_sender_uid:candidate.senderUid,
+    p_recipient_uid:candidate.recipientUid,p_client_message_id:candidate.clientMessageId,p_body:candidate.text,
+  })});
+  if(result&&result.allowed===false)return{unavailable:true,reason:String(result.reason||'conversation_unavailable')};
+  const row=directMessageFromDb(result&&result.message);if(!row)throw new Error('direct_message_insert_empty');
+  if(!db.chatMessages.some(item=>item.id===row.id))db.chatMessages.push(row);
+  if(chatSeqCompare(row.seq,db.nextChatSeq)>0)db.nextChatSeq=row.seq;trimChatData();saveDB();
+  return{row,duplicate:!!(result&&result.duplicate),conflict:!!(result&&result.conflict)};
+}
+async function persistChatRead(row){
+  if(useSupabase){
+    const result=await sbFetch('rpc/apply_direct_message_read_v1',{method:'POST',body:JSON.stringify({p_conversation_id:row.conversationId,p_uid:row.uid,p_peer_uid:row.peerUid,p_last_read_seq:row.lastReadSeq})});
+    if(result&&result.lastReadSeq)row.lastReadSeq=chatSeq(result.lastReadSeq);
+  }
+  row.updatedAt=Date.now();db.chatReads[chatReadKey(row.conversationId,row.uid)]=row;saveDB();return row;
+}
+async function sbLoadDirectChat(){
+  if(!useSupabase)return;
+  try{
+    const messages=[],pageSize=1000;
+    for(let offset=0;offset<CHAT_MAX_MESSAGES;offset+=pageSize){
+      const rows=await sbFetch('rpc/list_direct_messages_v1',{method:'POST',body:JSON.stringify({p_limit:pageSize,p_offset:offset})});const page=Array.isArray(rows)?rows:[];
+      messages.push(...page.map(directMessageFromDb).filter(Boolean));if(page.length<pageSize)break;
+    }
+    const reads=[];
+    for(let offset=0;offset<100000;offset+=pageSize){const rows=await sbFetch('rpc/list_direct_message_reads_v1',{method:'POST',body:JSON.stringify({p_limit:pageSize,p_offset:offset})});const page=Array.isArray(rows)?rows:[];reads.push(...page);if(page.length<pageSize)break;}
+    db.chatMessages=messages;
+    db.chatReads=Object.fromEntries((Array.isArray(reads)?reads:[]).map(row=>{const value=normalizeChatRead({conversationId:row.conversation_id,uid:row.uid,peerUid:row.peer_uid,lastReadSeq:row.last_read_seq,updatedAt:Date.parse(row.updated_at)||0});return value?[chatReadKey(value.conversationId,value.uid),value]:null;}).filter(Boolean));
+    normalizeChatStore();saveDB();
+  }catch(error){recordOperationalError('supabase_direct_chat_load',error);console.error('加载 Supabase 私聊数据失败（私聊保持不可用直到迁移或服务恢复）:',error.message);}
+}
+async function sbLoadSocialGraph(){
+  if(!useSupabase)return;
+  try{
+    const [requests,friendships,blocks,reports]=await Promise.all([
+      sbFetch('friend_requests?select=*&status=eq.pending&limit=50000'),
+      sbFetch('friendships?select=*&limit=50000'),
+      sbFetch('blocks?select=*&limit=50000'),
+      sbFetch('reports?select=*&order=created_at.desc&limit=50000'),
+    ]);
+    db.friendRequests=(Array.isArray(requests)?requests:[]).map(row=>({id:row.id,fromUid:row.from_uid,toUid:row.to_uid,status:row.status,createdAt:Date.parse(row.created_at)||0,updatedAt:Date.parse(row.updated_at)||0}));
+    db.friendships=(Array.isArray(friendships)?friendships:[]).map(row=>({id:row.id,aUid:row.a_uid,bUid:row.b_uid,createdAt:Date.parse(row.created_at)||0}));
+    db.blocks=(Array.isArray(blocks)?blocks:[]).map(row=>({id:row.id,blockerUid:row.blocker_uid,blockedUid:row.blocked_uid,targetSnapshot:row.target_snapshot||{},createdAt:Date.parse(row.created_at)||0}));
+    db.reports=(Array.isArray(reports)?reports:[]).map(row=>({id:row.id,reporterUid:row.reporter_uid,targetUid:row.target_uid,reason:row.reason,contextType:row.context_type||'profile',contextId:row.context_id||'',matchId:row.match_id||'',recentEventIds:Array.isArray(row.recent_event_ids)?row.recent_event_ids:[],targetSnapshot:row.target_snapshot||{},status:row.status||'open',createdAt:Date.parse(row.created_at)||0}));
+    saveDB();
+  }catch(error){recordOperationalError('supabase_social_load',error);console.error('加载 Supabase 社交图谱失败（继续使用本地缓存）:',error.message);}
+}
+async function handleChatList(session,payload){
+  const user=chatUser(session,'chat_list');if(!user)return;
+  if(!chatQueryAllowed(user.uid,'list'))return chatError(session,'chat_list','rate_limited','',5);
+  session.sendText(JSON.stringify({type:'chat_state',payload:chatState(user.uid,payload&&payload.limit)}));
+}
+async function handleChatHistory(session,payload){
+  const user=chatUser(session,'chat_history');if(!user)return;
+  if(!chatQueryAllowed(user.uid,'history'))return chatError(session,'chat_history','rate_limited','',5);
+  const peerUid=String(payload&&payload.peerUid||''),peer=db.users[peerUid];
+  if(!peer||peer.ephemeral||peerUid===user.uid)return chatError(session,'chat_history','invalid_target');
+  if(!chatCanRead(user.uid,peerUid))return chatError(session,'chat_history','conversation_unavailable');
+  const beforeRaw=payload&&payload.beforeSeq, before=beforeRaw===undefined||beforeRaw===null||beforeRaw===''?null:chatSeq(beforeRaw);
+  if(before==='0')return chatError(session,'chat_history','invalid_cursor');
+  const limit=Math.max(1,Math.min(50,Number(payload&&payload.limit)||30)),conversation=chatConversation(user.uid,peerUid);
+  let rows=chatMessagesFor(conversation.id);if(before)rows=rows.filter(row=>chatSeqCompare(row.seq,before)<0);
+  const page=rows.slice(-limit),read=chatReadState(conversation.id,user.uid,peerUid),peerRead=chatReadState(conversation.id,peerUid,user.uid);
+  session.sendText(JSON.stringify({type:'chat_history',payload:{conversationId:conversation.id,peer:chatPublicPeer(user.uid,peerUid),messages:page.map(chatMessagePayload),
+    hasMore:rows.length>page.length,nextBeforeSeq:rows.length>page.length&&page.length?page[0].seq:null,readThroughSeq:read.lastReadSeq,peerReadThroughSeq:peerRead.lastReadSeq}}));
+}
+async function handleChatSend(session,payload){
+  const peerUid=String(payload&&payload.peerUid||''),clientMessageId=String(payload&&payload.clientMessageId||''),peer=db.users[peerUid];
+  const user=chatUser(session,'chat_send',clientMessageId);if(!user)return;
+  if(!peer||peer.ephemeral||peerUid===user.uid)return chatError(session,'chat_send','invalid_target',clientMessageId);
+  if(!CHAT_CLIENT_ID_RE.test(clientMessageId))return chatError(session,'chat_send','invalid_client_message_id',clientMessageId);
+  const text=normalizeChatText(payload&&payload.text),valid=validChatText(text);if(!valid.ok)return chatError(session,'chat_send',valid.reason,clientMessageId);
+  if(!socialFriendship(user.uid,peerUid)||socialBlockedBetween(user.uid,peerUid))return chatError(session,'chat_send','conversation_unavailable',clientMessageId);
+  const retryAfter=chatSendRetry(user.uid,peerUid);if(retryAfter)return chatError(session,'chat_send','rate_limited',clientMessageId,retryAfter);
+  const conversation=chatConversation(user.uid,peerUid),candidate={id:socialId('msg'),conversationId:conversation.id,seq:'0',senderUid:user.uid,recipientUid:peerUid,clientMessageId,text,createdAt:Date.now()};
+  let persisted;try{persisted=await persistDirectMessage(candidate);}catch(error){recordOperationalError('direct_chat_persist',error);return chatError(session,'chat_send','server_unavailable',clientMessageId,3);}
+  if(persisted.unavailable)return chatError(session,'chat_send',persisted.reason||'conversation_unavailable',clientMessageId);
+  if(persisted.conflict)return chatError(session,'chat_send','idempotency_conflict',clientMessageId);
+  const message=chatMessagePayload(persisted.row);
+  session.sendText(JSON.stringify({type:'chat_send_ok',payload:{clientMessageId,messageId:message.id,seq:message.seq,message,duplicate:!!persisted.duplicate}}));
+  chatValidSessions(user.uid,target=>{if(target!==session)target.sendText(JSON.stringify({type:'chat_message',payload:{conversationId:conversation.id,message,
+    unreadCount:chatUnreadCount(user.uid,peerUid),duplicate:!!persisted.duplicate}}));});
+  chatValidSessions(peerUid,target=>target.sendText(JSON.stringify({type:'chat_message',payload:{conversationId:conversation.id,message,
+    unreadCount:chatUnreadCount(peerUid,user.uid),duplicate:!!persisted.duplicate}})));
+  sendChatState(user.uid);sendChatState(peerUid);
+}
+async function handleChatRead(session,payload){
+  const user=chatUser(session,'chat_read');if(!user)return;
+  if(!chatQueryAllowed(user.uid,'read'))return chatError(session,'chat_read','rate_limited','',5);
+  const peerUid=String(payload&&payload.peerUid||''),peer=db.users[peerUid],throughSeq=chatSeq(payload&&payload.throughSeq);
+  if(!peer||peer.ephemeral||peerUid===user.uid)return chatError(session,'chat_read','invalid_target');
+  if(!chatCanRead(user.uid,peerUid))return chatError(session,'chat_read','conversation_unavailable');
+  const conversation=chatConversation(user.uid,peerUid),received=chatMessagesFor(conversation.id).filter(row=>row.recipientUid===user.uid&&chatSeqCompare(row.seq,throughSeq)<=0);
+  if(throughSeq==='0'||!received.some(row=>row.seq===throughSeq))return chatError(session,'chat_read','message_not_found');
+  const current=chatReadState(conversation.id,user.uid,peerUid);if(chatSeqCompare(throughSeq,current.lastReadSeq)>0)current.lastReadSeq=throughSeq;
+  try{await persistChatRead(current);}catch(error){recordOperationalError('direct_chat_read_persist',error);return chatError(session,'chat_read','server_unavailable','',3);}
+  const response={conversationId:conversation.id,readerUid:user.uid,throughSeq:current.lastReadSeq,readAt:current.updatedAt};
+  for(const uid of [user.uid,peerUid])chatValidSessions(uid,target=>target.sendText(JSON.stringify({type:'chat_read_ok',payload:response})));
+  sendChatState(user.uid);sendChatState(peerUid);
+}
 
 function normalizeOwned(o){
   const base = { avatars: Array.from({ length: 30 }, (_, i) => i).concat([100,101,108,109,116,117,124,125,132,133,140,141]), frames: [0], effects: [0], backgrounds: [0], game_cosmetics: [] };
@@ -3443,7 +3729,7 @@ class Session {
         rewardVersion: REWARD_CONFIG.version,
         capabilities: ['reward_breakdown','ai_reward_ticket','replay-v1.1','tournament-orchestrator-v1.1',...gameplayCapabilities(),
           'tank_authority_v1','tetris_battle_authority_v1','spectator_room_v1','tournament_orchestrator_v1','xiangqi_clock_v1','monopoly_auction_v1','game_cosmetic_presentation_v1',
-          'ai_decision_confirm_v1','seat_protocol_v2','ready_v1','ai_seat_v1','room_visibility_v1','social_graph_v1'],
+          'ai_decision_confirm_v1','seat_protocol_v2','ready_v1','ai_seat_v1','room_visibility_v1','social_graph_v1','direct-chat-v1'],
       }));
       if (this.uid) tryResumeSession(this);
       broadcastLeaderboard();
@@ -3761,6 +4047,18 @@ class Session {
       const today=dayKey(),already=user.companionCheckinDay===today;
       if(!already){user.companionCheckinDay=today;saveDB();if(!user.ephemeral)sbSyncAuthProfile(user);}
       this.sendText(JSON.stringify({type:'companion_checkin_ok',payload:{day:today,already,ephemeral:!!user.ephemeral}}));return;
+    }
+    if(type==='chat_list'){
+      handleChatList(this,payload).catch(error=>{recordOperationalError('direct_chat_list',error);chatError(this,'chat_list','server_unavailable','',3);});return;
+    }
+    if(type==='chat_history'){
+      handleChatHistory(this,payload).catch(error=>{recordOperationalError('direct_chat_history',error);chatError(this,'chat_history','server_unavailable','',3);});return;
+    }
+    if(type==='chat_send'){
+      handleChatSend(this,payload).catch(error=>{recordOperationalError('direct_chat_send',error);chatError(this,'chat_send','server_unavailable',payload&&payload.clientMessageId,3);});return;
+    }
+    if(type==='chat_read'){
+      handleChatRead(this,payload).catch(error=>{recordOperationalError('direct_chat_read',error);chatError(this,'chat_read','server_unavailable','',3);});return;
     }
     if (type === 'social_get'){
       if (!this.requirePersistentUser()) return;

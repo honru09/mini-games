@@ -1,0 +1,27 @@
+{
+  "status": "VERIFIED_LOCAL_BLOCKED_RELEASE",
+  "startedAt": "2026-08-09T09:35:00+09:00",
+  "updatedAt": "2026-08-09T10:31:00+09:00",
+  "steps": [
+    {"id":"P0-1","status":"completed","evidence":["requirement.md","contract.md","acceptance.md","SHARED_CHANGE_REQUEST.md"]},
+    {"id":"P0-2","status":"completed","evidence":["server/index.js","supabase/schema.sql","qa/player-chat-online.js","qa/supabase-schema.js"]},
+    {"id":"P0-3","status":"completed","evidence":["public/index-template.html","public/src/core/02-app-shell.js","public/src/online/03-websocket.js","qa/player-chat-contract.js"]},
+    {"id":"P0-4","status":"completed","evidence":["public/src/core/02-app-shell.js","public/src/shop/05-profile.js","qa/profile-route-contract.js"]},
+    {"id":"P0-5","status":"completed","evidence":["evidence/automated-verification-202608091031.json","npm run quality:gates","npm test"]},
+    {"id":"P0-6","status":"partial","evidence":["evidence/browser-visual-qa-202608091031.md","简易报告/玩家私聊与个人主页深度优化本地收口-202608091031.md"]}
+  ],
+  "blocked": [
+    "真实 Supabase 凭证未提供",
+    "GitHub/Render 443 网络不可达",
+    "本地浏览器连接器权限此前被拒绝",
+    "真实设备和网络整形未执行"
+  ],
+  "skipped": [],
+  "evidence": [
+    "evidence/automated-verification-202608091031.json",
+    "evidence/browser-visual-qa-202608091031.md",
+    "qa/player-chat-contract.js",
+    "qa/player-chat-online.js",
+    "qa/profile-route-contract.js"
+  ]
+}

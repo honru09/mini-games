@@ -176,6 +176,46 @@ create table if not exists reports (
 );
 create index if not exists idx_reports_target_created on reports (target_uid, created_at desc);
 
+-- Direct Chat v1：消息正文只允许服务端 service_role 访问；浏览器永不直连。
+create table if not exists direct_messages (
+  seq bigserial primary key,
+  id text not null unique,
+  conversation_id text not null,
+  a_uid text not null references profiles(uid) on delete cascade,
+  b_uid text not null references profiles(uid) on delete cascade,
+  sender_uid text not null references profiles(uid) on delete cascade,
+  recipient_uid text not null references profiles(uid) on delete cascade,
+  client_message_id text not null,
+  body text not null,
+  created_at timestamptz not null default now(),
+  check (a_uid < b_uid),
+  check (sender_uid <> recipient_uid),
+  check (sender_uid in (a_uid, b_uid) and recipient_uid in (a_uid, b_uid)),
+  check (conversation_id = 'dm:' || a_uid || '|' || b_uid),
+  check (char_length(body) between 1 and 500),
+  check (octet_length(body) <= 2000)
+);
+create unique index if not exists idx_direct_messages_sender_client
+  on direct_messages (sender_uid, client_message_id);
+create index if not exists idx_direct_messages_conversation_seq
+  on direct_messages (conversation_id, seq desc);
+create index if not exists idx_direct_messages_recipient_seq
+  on direct_messages (recipient_uid, seq desc);
+
+create table if not exists direct_message_reads (
+  conversation_id text not null,
+  uid text not null references profiles(uid) on delete cascade,
+  peer_uid text not null references profiles(uid) on delete cascade,
+  last_read_seq bigint not null default 0,
+  updated_at timestamptz not null default now(),
+  primary key (conversation_id, uid),
+  check (uid <> peer_uid),
+  check (conversation_id = 'dm:' || least(uid, peer_uid) || '|' || greatest(uid, peer_uid)),
+  check (last_read_seq >= 0)
+);
+create index if not exists idx_direct_message_reads_uid_updated
+  on direct_message_reads (uid, updated_at desc);
+
 -- 个性化 AI 持续学习模型：每位玩家、每款游戏独立，避免一个客户端污染全局 AI。
 -- weights/stats/mistakes 使用 JSONB，允许在不改表结构的前提下增加游戏特征、技能版本和训练统计。
 create table if not exists ai_learning_models (
@@ -654,6 +694,161 @@ $$;
 revoke all on function apply_ai_learning_v1(jsonb, text, jsonb) from public, anon, authenticated;
 grant execute on function apply_ai_learning_v1(jsonb, text, jsonb) to service_role;
 
+create or replace function direct_message_payload_v1(p_row direct_messages) returns jsonb
+language sql
+stable
+set search_path = public
+as $$
+  select jsonb_build_object(
+    'id', (p_row).id,
+    'seq', (p_row).seq::text,
+    'conversation_id', (p_row).conversation_id,
+    'sender_uid', (p_row).sender_uid,
+    'recipient_uid', (p_row).recipient_uid,
+    'client_message_id', (p_row).client_message_id,
+    'body', (p_row).body,
+    'created_at', (p_row).created_at
+  );
+$$;
+
+revoke all on function direct_message_payload_v1(direct_messages) from public, anon, authenticated;
+
+create or replace function send_direct_message_v1(
+  p_id text,
+  p_conversation_id text,
+  p_a_uid text,
+  p_b_uid text,
+  p_sender_uid text,
+  p_recipient_uid text,
+  p_client_message_id text,
+  p_body text
+) returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_existing direct_messages%rowtype;
+  v_row direct_messages%rowtype;
+begin
+  select * into v_existing from direct_messages
+    where sender_uid = p_sender_uid and client_message_id = p_client_message_id;
+  if found then
+    return jsonb_build_object(
+      'duplicate', true,
+      'conflict', v_existing.recipient_uid <> p_recipient_uid or v_existing.body <> p_body,
+      'message', direct_message_payload_v1(v_existing)
+    );
+  end if;
+
+  if p_sender_uid = p_recipient_uid
+     or p_a_uid >= p_b_uid
+     or p_conversation_id <> 'dm:' || p_a_uid || '|' || p_b_uid
+     or not (p_sender_uid in (p_a_uid, p_b_uid) and p_recipient_uid in (p_a_uid, p_b_uid))
+     or not exists (select 1 from friendships where a_uid = p_a_uid and b_uid = p_b_uid)
+     or exists (select 1 from blocks where blocker_uid in (p_a_uid, p_b_uid) and blocked_uid in (p_a_uid, p_b_uid)) then
+    return jsonb_build_object('allowed', false, 'reason', 'conversation_unavailable');
+  end if;
+
+  insert into direct_messages(id, conversation_id, a_uid, b_uid, sender_uid, recipient_uid, client_message_id, body)
+    values(p_id, p_conversation_id, p_a_uid, p_b_uid, p_sender_uid, p_recipient_uid, p_client_message_id, p_body)
+    returning * into v_row;
+  return jsonb_build_object('allowed', true, 'duplicate', false, 'conflict', false, 'message', direct_message_payload_v1(v_row));
+exception when unique_violation then
+  select * into v_existing from direct_messages
+    where sender_uid = p_sender_uid and client_message_id = p_client_message_id;
+  if found then
+    return jsonb_build_object(
+      'duplicate', true,
+      'conflict', v_existing.recipient_uid <> p_recipient_uid or v_existing.body <> p_body,
+      'message', direct_message_payload_v1(v_existing)
+    );
+  end if;
+  raise;
+end;
+$$;
+
+revoke all on function send_direct_message_v1(text, text, text, text, text, text, text, text) from public, anon, authenticated;
+grant execute on function send_direct_message_v1(text, text, text, text, text, text, text, text) to service_role;
+
+create or replace function apply_direct_message_read_v1(
+  p_conversation_id text,
+  p_uid text,
+  p_peer_uid text,
+  p_last_read_seq bigint
+) returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_seq bigint;
+begin
+  if p_uid = p_peer_uid
+     or p_conversation_id <> 'dm:' || least(p_uid, p_peer_uid) || '|' || greatest(p_uid, p_peer_uid)
+     or p_last_read_seq < 1
+     or not exists (
+       select 1 from direct_messages
+       where conversation_id = p_conversation_id
+         and recipient_uid = p_uid
+         and seq = p_last_read_seq
+     ) then
+    raise exception 'invalid_direct_message_read';
+  end if;
+  insert into direct_message_reads(conversation_id, uid, peer_uid, last_read_seq, updated_at)
+    values(p_conversation_id, p_uid, p_peer_uid, p_last_read_seq, now())
+  on conflict (conversation_id, uid) do update
+    set last_read_seq = greatest(direct_message_reads.last_read_seq, excluded.last_read_seq),
+        peer_uid = excluded.peer_uid,
+        updated_at = now()
+  returning last_read_seq into v_seq;
+  return jsonb_build_object('conversationId', p_conversation_id, 'uid', p_uid, 'lastReadSeq', v_seq::text);
+end;
+$$;
+
+revoke all on function apply_direct_message_read_v1(text, text, text, bigint) from public, anon, authenticated;
+grant execute on function apply_direct_message_read_v1(text, text, text, bigint) to service_role;
+
+create or replace function list_direct_messages_v1(p_limit integer, p_offset integer) returns jsonb
+language sql
+security definer
+set search_path = public
+as $$
+  select coalesce(jsonb_agg(direct_message_payload_v1(row_value) order by row_value.seq desc), '[]'::jsonb)
+  from (
+    select * from direct_messages
+    order by seq desc
+    limit greatest(1, least(coalesce(p_limit, 1000), 1000))
+    offset greatest(0, coalesce(p_offset, 0))
+  ) row_value;
+$$;
+
+revoke all on function list_direct_messages_v1(integer, integer) from public, anon, authenticated;
+grant execute on function list_direct_messages_v1(integer, integer) to service_role;
+
+create or replace function list_direct_message_reads_v1(p_limit integer, p_offset integer) returns jsonb
+language sql
+security definer
+set search_path = public
+as $$
+  select coalesce(jsonb_agg(jsonb_build_object(
+    'conversation_id', row_value.conversation_id,
+    'uid', row_value.uid,
+    'peer_uid', row_value.peer_uid,
+    'last_read_seq', row_value.last_read_seq::text,
+    'updated_at', row_value.updated_at
+  ) order by row_value.updated_at desc), '[]'::jsonb)
+  from (
+    select * from direct_message_reads
+    order by updated_at desc
+    limit greatest(1, least(coalesce(p_limit, 1000), 1000))
+    offset greatest(0, coalesce(p_offset, 0))
+  ) row_value;
+$$;
+
+revoke all on function list_direct_message_reads_v1(integer, integer) from public, anon, authenticated;
+grant execute on function list_direct_message_reads_v1(integer, integer) to service_role;
+
 -- 服务端是唯一数据库访问方。启用 RLS 且不创建 anon/authenticated policy，
 -- 浏览器端即使拿到公开项目地址也不能读取账号、令牌哈希或结算数据。
 -- Node 服务必须使用仅保存在 Render 的 service_role secret；service_role 会绕过 RLS。
@@ -668,6 +863,8 @@ alter table friend_requests enable row level security;
 alter table friendships enable row level security;
 alter table blocks enable row level security;
 alter table reports enable row level security;
+alter table direct_messages enable row level security;
+alter table direct_message_reads enable row level security;
 revoke all on table profiles from anon, authenticated;
 revoke all on table history from anon, authenticated;
 revoke all on table reward_history from anon, authenticated;
@@ -679,11 +876,14 @@ revoke all on table friend_requests from public, anon, authenticated;
 revoke all on table friendships from public, anon, authenticated;
 revoke all on table blocks from public, anon, authenticated;
 revoke all on table reports from public, anon, authenticated;
+revoke all on table direct_messages from public, anon, authenticated;
+revoke all on table direct_message_reads from public, anon, authenticated;
 revoke all on sequence history_id_seq from anon, authenticated;
 revoke all on sequence reward_history_id_seq from anon, authenticated;
 revoke all on sequence economy_ledger_id_seq from anon, authenticated;
 revoke all on sequence analytics_events_id_seq from anon, authenticated;
 revoke all on sequence ai_learning_experiences_id_seq from anon, authenticated;
+revoke all on sequence direct_messages_seq_seq from public, anon, authenticated;
 
 -- 常用管理查询（供日后在 Dashboard 使用）
 -- 1) 全球总榜：select name, coins, total, played from profiles order by coins desc;

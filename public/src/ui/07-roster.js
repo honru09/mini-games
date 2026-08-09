@@ -454,6 +454,7 @@ function completeLocalLogout(showLogin){
     online._soloClaimsLoaded = false;
     online.displayedRewardIds = [];
     online.rewardVersion = null;
+    if (typeof online.resetAccountCaches === 'function') online.resetAccountCaches();
     if (typeof online.resetState === 'function') online.resetState();
     online._authenticated = false;
   }

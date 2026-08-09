@@ -9,7 +9,7 @@
 - 关系、屏蔽与举报均由服务端权威维护；客户端只提交意图，不能自报关系状态。
 - Friend、Block、Report 同一阶段上线。Block 必须立即阻断继续骚扰，Report 只进入人工核查，不自动处罚。
 - Presence 由服务端根据连接、房间状态和隐私偏好计算；隐身不能通过排行榜、玩家列表或房间大厅旁路泄露。
-- v1 不包含聊天、Feed、公会、推荐算法、自动处罚或未成年人社交扩展。
+- Social Graph v1 本身不包含聊天、Feed、公会、推荐算法、自动处罚或未成年人社交扩展；好友关系现由独立、可回滚的 `direct-chat-v1` 消费，其冻结合同位于 `requirements/active/player-chat-profile-p0-20260809/contract.md`。
 
 ## 2. WebSocket 消息
 

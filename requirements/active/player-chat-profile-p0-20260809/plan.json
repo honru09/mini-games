@@ -1,0 +1,40 @@
+{
+  "status": "VERIFIED_LOCAL",
+  "parallelability": 1,
+  "dependencies": [
+    "social_graph_v1",
+    "username-password-auth-v2",
+    "ephemeral-guest-v1",
+    "honru-companion-v1"
+  ],
+  "steps": [
+    {"id":"P0-1","name":"冻结需求、协议、安全与验收","status":"completed"},
+    {"id":"P0-2","name":"实现服务端 direct-chat-v1 与本地/Supabase 持久化","status":"completed"},
+    {"id":"P0-3","name":"实现 Chat 玩家消息主界面与 Honru 子页","status":"completed"},
+    {"id":"P0-4","name":"实现 Profile 深度信息架构","status":"completed"},
+    {"id":"P0-5","name":"专项/安全/响应式/i18n/完整回归","status":"completed"},
+    {"id":"P0-6","name":"视觉 QA、文档日志与发布","status":"partial"}
+  ],
+  "risks": [
+    "server/index.js 与 03-websocket.js 为高风险共享入口",
+    "Render 无持久磁盘时必须依赖真实 Supabase 才能声称生产持久化",
+    "消息正文存在 XSS、隐私、越权读取与日志泄漏风险",
+    "工作区现有 Honru P2 未提交改动必须完整保留"
+  ],
+  "tests": [
+    "qa/player-chat-contract.js",
+    "qa/player-chat-online.js",
+    "qa/security-online.js",
+    "qa/reconnect-online.js",
+    "qa/social-graph.js",
+    "qa/supabase-schema.js",
+    "qa/supabase-adapter.js",
+    "qa/ui-responsive-contract.js",
+    "qa/i18n-coverage.js",
+    "qa/i18n-runtime.js",
+    "qa/dom-smoke.js",
+    "npm run quality:gates",
+    "npm test"
+  ],
+  "rollback": "隐藏 direct-chat-v1 capability/面板并停止处理 chat_*；保留增量数据表，旧 Social/Honru/Profile 行为继续可用。"
+}

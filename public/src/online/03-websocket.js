@@ -8,6 +8,8 @@ const online = {
   socialState: { version:'1.0', friends:[], incoming:[], outgoing:[], blocked:[], counts:{ friends:0, incoming:0, outgoing:0, blocked:0 } },
   dailyTasks: null, isAdmin:false,
   replays: [], _sharedReplayRequested:false,
+  chatState: { version:'1.0', conversations:[], unreadTotal:0 },
+  chatHistory: {}, chatHistoryMeta:{}, chatPending: new Map(), chatDrafts:new Map(), chatActivePeerUid:null, cacheOwnerUid:null,
   socialTab:'friends',
   defaultServer: 'https://mini-games-online.onrender.com',
   connect(){
@@ -37,7 +39,7 @@ const online = {
         uid: authAccount && authAccount.uid ? authAccount.uid : (typeof deviceUid !== 'undefined' ? deviceUid : null),
         token: authAccount && authAccount.authToken ? authAccount.authToken : null,
         proto: typeof PROTOCOL_VERSION !== 'undefined' ? PROTOCOL_VERSION : 2,
-        capabilities: ['tank-authority-v1','tetris-battle-authority-v1','tetris-rule-v2','spectator-room-v1','tournament-orchestrator-v1','xiangqi-clock-v1','xiangqi-rule-v2','monopoly-auction-v1','monopoly-rule-v2','game-cosmetic-presentation-v1','username-password-auth-v2','ephemeral-guest-v1','honru-companion-v1'],
+        capabilities: ['tank-authority-v1','tetris-battle-authority-v1','tetris-rule-v2','spectator-room-v1','tournament-orchestrator-v1','xiangqi-clock-v1','xiangqi-rule-v2','monopoly-auction-v1','monopoly-rule-v2','game-cosmetic-presentation-v1','username-password-auth-v2','ephemeral-guest-v1','honru-companion-v1','direct-chat-v1'],
       } });
       this.send({ type: 'lobby' });
       const needsRegister = authAccount && authAccount.uid && authPin && authAccount.registered === false;
@@ -270,6 +272,35 @@ const online = {
   spectateRoom(room){ this.send({ type:'spectate', payload:{ room } }); },
   setReady(ready){ this.send({ type:'ready', payload:{ ready:ready !== false } }); },
   requestSocial(){ if (this.connected && this._authenticated) this.send({ type:'social_get' }); },
+  prepareAccountScopedState(uid){
+    uid=String(uid||'');
+    if(this.cacheOwnerUid&&this.cacheOwnerUid!==uid)this.resetAccountCaches();
+    this.cacheOwnerUid=uid||null;
+  },
+  resetAccountCaches(){
+    this.socialState={version:'1.0',friends:[],incoming:[],outgoing:[],blocked:[],counts:{friends:0,incoming:0,outgoing:0,blocked:0}};
+    this.dailyTasks=null;this.replays=[];this._sharedReplayRequested=false;
+    this.chatState={version:'1.0',conversations:[],unreadTotal:0};this.chatHistory={};this.chatHistoryMeta={};this.chatPending=new Map();this.chatDrafts=new Map();this.chatActivePeerUid=null;this.cacheOwnerUid=null;
+    if(typeof renderSocialRail==='function')renderSocialRail();
+    if(typeof renderPlayerChat==='function')renderPlayerChat();
+    if(typeof updateChatUnreadBadge==='function')updateChatUnreadBadge();
+  },
+  requestChatList(limit){if(this.connected&&this._authenticated)this.send({type:'chat_list',payload:{limit:Number(limit)||50}});},
+  requestChatHistory(peerUid,beforeSeq){
+    if(!this.connected||!this._authenticated||!peerUid)return false;
+    this.send({type:'chat_history',payload:{peerUid:String(peerUid),...(beforeSeq?{beforeSeq:String(beforeSeq)}:{}),limit:30}});return true;
+  },
+  sendChatMessage(peerUid,text,clientMessageId){
+    if(!this.connected||!this._authenticated||!peerUid)return null;
+    const id=String(clientMessageId||('chat_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,14)));
+    this.chatPending.set(id,{peerUid:String(peerUid),text:String(text||''),createdAt:Date.now(),status:'sending'});
+    this.send({type:'chat_send',payload:{peerUid:String(peerUid),clientMessageId:id,text:String(text||'')}});
+    return id;
+  },
+  markChatRead(peerUid,throughSeq){
+    if(!this.connected||!this._authenticated||!peerUid||!throughSeq)return false;
+    this.send({type:'chat_read',payload:{peerUid:String(peerUid),throughSeq:String(throughSeq)}});return true;
+  },
   friendRequest(uid){ this.send({ type:'friend_request', payload:{ toUid:String(uid || '') } }); },
   friendRequestAction(action, requestId){ this.send({ type:'friend_request_action', payload:{ action, requestId:String(requestId || '') } }); },
   removeFriend(uid){ this.send({ type:'friend_remove', payload:{ uid:String(uid || '') } }); },
@@ -379,6 +410,10 @@ const online = {
           this.flushPendingResultClaim();
           this.flushSoloMatch();
           this.requestSocial();
+          this.prepareAccountScopedState(account&&account.uid);
+          this.requestChatList();
+          this.requestDailyTasks();
+          this.requestReplays();
           this.requestSharedReplayFromUrl();
         } else if (account && account.authToken){
           toast(t('session_expired'));
@@ -391,6 +426,7 @@ const online = {
       case 'social_state':
         this.socialState = msg.payload || this.socialState;
         if (typeof renderSocialRail === 'function') renderSocialRail();
+        if(typeof renderGhostProfile==='function')renderGhostProfile();
         break;
       case 'social_ok':
         if (msg.msg) toast(translateServerMessage(msg.msg,msg.reason||(msg.payload&&msg.payload.reason),'operation_success'));
@@ -398,6 +434,46 @@ const online = {
         break;
       case 'social_error':
         toast(translateServerMessage(msg.msg,msg.reason||(msg.payload&&msg.payload.reason),'operation_failed'));
+        break;
+      case 'chat_state':
+        this.chatState=msg.payload||{version:'1.0',conversations:[],unreadTotal:0};
+        if(typeof renderPlayerChat==='function')renderPlayerChat();
+        if(typeof updateChatUnreadBadge==='function')updateChatUnreadBadge();
+        break;
+      case 'chat_history':
+        {
+          const payload=msg.payload||{},peerUid=payload.peer&&payload.peer.uid;
+          if(peerUid){
+            const current=Array.isArray(this.chatHistory[peerUid])?this.chatHistory[peerUid]:[];
+            const merged=[...(payload.messages||[]),...current],byId=new Map();merged.forEach(item=>{if(item&&item.id)byId.set(item.id,item);});
+            this.chatHistory[peerUid]=[...byId.values()].sort((a,b)=>String(a.seq).localeCompare(String(b.seq),undefined,{numeric:true}));
+            if(payload.messages&&payload.messages.length){const received=[...payload.messages].reverse().find(item=>item.recipientUid===account.uid);if(received)this.markChatRead(peerUid,received.seq);}
+          }
+          if(typeof handlePlayerChatHistory==='function')handlePlayerChatHistory(payload);
+          if(typeof renderPlayerChat==='function')renderPlayerChat();
+        }
+        break;
+      case 'chat_message':
+        {
+          const payload=msg.payload||{},message=payload.message||{},peerUid=message.senderUid===account.uid?message.recipientUid:message.senderUid;
+          if(peerUid&&message.id){const rows=Array.isArray(this.chatHistory[peerUid])?this.chatHistory[peerUid]:[];if(!rows.some(item=>item.id===message.id))rows.push(message);this.chatHistory[peerUid]=rows.sort((a,b)=>String(a.seq).localeCompare(String(b.seq),undefined,{numeric:true}));}
+          if(typeof handlePlayerChatMessage==='function')handlePlayerChatMessage(payload);
+          this.requestChatList();
+        }
+        break;
+      case 'chat_send_ok':
+        if(msg.payload&&msg.payload.clientMessageId)this.chatPending.delete(msg.payload.clientMessageId);
+        if(typeof handlePlayerChatSendAck==='function')handlePlayerChatSendAck(msg.payload||{});
+        this.requestChatList();
+        break;
+      case 'chat_read_ok':
+        if(typeof handlePlayerChatRead==='function')handlePlayerChatRead(msg.payload||{});
+        this.requestChatList();
+        break;
+      case 'chat_error':
+        if(msg.payload&&msg.payload.clientMessageId&&this.chatPending.has(msg.payload.clientMessageId))this.chatPending.get(msg.payload.clientMessageId).status='failed';
+        if(typeof handlePlayerChatError==='function')handlePlayerChatError(msg.payload||{});
+        else toast(t('chat_error_generic'));
         break;
       case 'rejoined':
         {
@@ -633,6 +709,7 @@ const online = {
             updateAccountProfile(profile);
             renderMe();
             if (typeof renderSocialRail === 'function') renderSocialRail();
+            if(typeof renderGhostProfile==='function')renderGhostProfile();
           }
         }
         break;
@@ -641,11 +718,13 @@ const online = {
         this.dailyTasks = msg.payload || null;
         if (msg.payload && msg.payload.profile && account && msg.payload.profile.uid === account.uid) updateAccountProfile(msg.payload.profile);
         if (typeof renderMyCard === 'function') renderMyCard();
+        if(typeof renderGhostProfile==='function')renderGhostProfile();
         if (msg.type === 'daily_task_claimed') toast(t('daily_task_claimed_toast',msg.payload.reward || 0));
         break;
       case 'replay_list':
         this.replays = msg.payload && Array.isArray(msg.payload.items) ? msg.payload.items : [];
         renderReplayList(this.replays);
+        if(typeof renderGhostProfile==='function')renderGhostProfile();
         break;
       case 'replay_data':
         renderReplayPlayer(msg.payload || null);
@@ -665,6 +744,7 @@ const online = {
           const profile = payload.profile || msg.profile || (payload.uid && (payload.name !== undefined || payload.avatar !== undefined) ? payload : null);
           const uid = payload.uid || (profile && profile.uid);
           if (profile && uid){
+            this.prepareAccountScopedState(uid);
             const token = msg.token || payload.token;
             if (!account || account.uid !== uid) account = Object.assign({},profile,{device:deviceFingerprint(),registered:true});
             if (token){ account.authToken = token; delete account.pin; }
@@ -679,6 +759,7 @@ const online = {
             this.flushPendingResultClaim();
             this.flushSoloMatch();
             this.requestSocial();
+            this.requestChatList();
             this.requestDailyTasks();
             this.requestReplays();
             if (typeof syncProfiles === 'function') syncProfiles();
@@ -695,6 +776,7 @@ const online = {
           const profile = payload.profile || msg.profile || (payload.uid && (payload.name !== undefined || payload.avatar !== undefined) ? payload : null);
           const uid = payload.uid || (profile && profile.uid);
           if (profile && uid){
+            this.prepareAccountScopedState(uid);
             const token = msg.token || payload.token;
             account = Object.assign({}, profile, { device: deviceFingerprint(), registered: true });
             if (token){ account.authToken = token; delete account.pin; }
@@ -704,6 +786,7 @@ const online = {
             this.flushPendingResultClaim();
             this.flushSoloMatch();
             this.requestSocial();
+            this.requestChatList();
             this.requestDailyTasks();
             this.requestReplays();
             if (typeof syncProfiles === 'function') syncProfiles();
@@ -717,7 +800,7 @@ const online = {
       case 'guest_logged_in':
         {
           const payload=msg.payload||{},profile=payload.profile||null,uid=payload.uid||(profile&&profile.uid),token=msg.token||payload.token;
-          if(profile&&uid&&token){account=Object.assign({},profile,{uid,authToken:token,device:deviceFingerprint(),registered:true,ephemeral:true,accountKind:'guest'});deviceUid=uid;this._authenticated=true;updateAccountProfile(profile);saveAccount();renderMe();renderLeaderboard();if(authModalEl){authModalEl.remove();authModalEl=null;}toast(t('guest_login_success'));if(typeof enterGhostApp==='function')enterGhostApp();}
+          if(profile&&uid&&token){this.prepareAccountScopedState(uid);account=Object.assign({},profile,{uid,authToken:token,device:deviceFingerprint(),registered:true,ephemeral:true,accountKind:'guest'});deviceUid=uid;this._authenticated=true;updateAccountProfile(profile);saveAccount();renderMe();renderLeaderboard();if(authModalEl){authModalEl.remove();authModalEl=null;}toast(t('guest_login_success'));if(typeof enterGhostApp==='function')enterGhostApp();}
         }
         break;
       case 'username_status':
@@ -751,6 +834,7 @@ const online = {
           if (typeof refreshOpenShop === 'function') refreshOpenShop();
           if (typeof renderMe === 'function') renderMe();
           if (typeof renderMyCard === 'function') renderMyCard();
+          if(typeof renderGhostProfile==='function')renderGhostProfile();
           toast(translateServerMessage(payload.msg||msg.msg,payload.reason||msg.reason,'purchase_success'));
         }
         break;
@@ -780,6 +864,7 @@ const online = {
             updateAccountProfile(profile);
             if (typeof renderMe === 'function') renderMe();
             if (typeof renderLeaderboard === 'function') renderLeaderboard();
+            if(typeof renderGhostProfile==='function')renderGhostProfile();
           }
           const rewardId = String(payload.resultId || (resultMatchId ? resultMatchId + ':' + this.player : ''));
           if (payload.reward && (!rewardId || !this.displayedRewardIds.includes(rewardId))){
@@ -1230,14 +1315,14 @@ function openSocialActions(profile,context){
   if(relation==='none')add(t('social_add_friend'),'btn-primary','user-plus',()=>online.friendRequest(profile.uid));
   if(relation==='outgoing'){const req=(online.socialState.outgoing||[]).find(item=>item.user&&item.user.uid===profile.uid);if(req)add(t('social_cancel'),'','user-minus',()=>online.friendRequestAction('cancel',req.id));}
   if(relation==='incoming'){const req=(online.socialState.incoming||[]).find(item=>item.user&&item.user.uid===profile.uid);if(req){add(t('social_accept'),'btn-primary','user-plus',()=>online.friendRequestAction('accept',req.id));add(t('social_decline'),'','user-minus',()=>online.friendRequestAction('decline',req.id));}}
-  if(relation==='friends'){if(profile.online)add(t('social_invite_room'),'btn-primary','door-open',()=>inviteUser(profile.uid));add(t('social_remove'),'','user-minus',()=>online.removeFriend(profile.uid));}
+  if(relation==='friends'){add(t('chat_message_action'),'btn-primary','user',()=>openPlayerConversation(profile.uid));if(profile.online)add(t('social_invite_room'),'','door-open',()=>inviteUser(profile.uid));add(t('social_remove'),'','user-minus',()=>online.removeFriend(profile.uid));}
   if(relation!=='blocked')add(t('social_block'),'social-danger','shield-alert',()=>online.blockUser(profile.uid));else add(t('social_unblock'),'','shield',()=>online.unblockUser(profile.uid));
   add(t('social_report'),'social-danger','flag',()=>openReportUserModal(profile,context));const close=el('button','btn',t('close'));close.addEventListener('click',()=>bd.remove());card.appendChild(close);bd.appendChild(card);bd.addEventListener('click',event=>{if(event.target===bd)bd.remove();});document.body.appendChild(bd);
 }
 function socialRow(profile,relationship,request){
   const row=el('div','social-row'),avatar=el('span','lb-av');avatar.appendChild(avatarStageNode(profile,24));avatar.addEventListener('click',()=>openProfileModal(profile.uid));row.appendChild(avatar);const copy=el('div','social-copy');copy.appendChild(el('div','social-name',profile.name||t('social_player')));copy.appendChild(el('div','social-meta',presenceLabel(profile.presence||(profile.online?'online':'offline'))+(relationship==='friends'?' · '+t('social_friend'):'')));row.appendChild(copy);const actions=el('div','social-actions');
   if(request&&relationship==='incoming'){const accept=el('button','btn btn-primary');setButtonIcon(accept,'user-plus',t('social_accept'));accept.addEventListener('click',()=>online.friendRequestAction('accept',request.id));actions.appendChild(accept);const decline=el('button','btn');setButtonIcon(decline,'user-minus',t('social_decline'));decline.addEventListener('click',()=>online.friendRequestAction('decline',request.id));actions.appendChild(decline);}
-  else if(relationship==='none'){const add=el('button','btn');setButtonIcon(add,'user-plus',t('social_add_friend'));add.addEventListener('click',()=>online.friendRequest(profile.uid));actions.appendChild(add);}else if(relationship==='outgoing')actions.appendChild(el('span','social-meta',t('social_pending')));else if(relationship==='friends'&&profile.online){const invite=el('button','btn');setButtonIcon(invite,'door-open',t('social_invite_room'));invite.addEventListener('click',()=>inviteUser(profile.uid));actions.appendChild(invite);}
+  else if(relationship==='none'){const add=el('button','btn');setButtonIcon(add,'user-plus',t('social_add_friend'));add.addEventListener('click',()=>online.friendRequest(profile.uid));actions.appendChild(add);}else if(relationship==='outgoing')actions.appendChild(el('span','social-meta',t('social_pending')));else if(relationship==='friends'){const message=el('button','btn');setButtonIcon(message,'user',t('chat_message_action'));message.addEventListener('click',()=>openPlayerConversation(profile.uid));actions.appendChild(message);if(profile.online){const invite=el('button','btn');setButtonIcon(invite,'door-open',t('social_invite_room'));invite.addEventListener('click',()=>inviteUser(profile.uid));actions.appendChild(invite);}}
   const more=el('button','btn');setButtonIcon(more,'ellipsis','',{ariaLabel:t('social_more_actions',profile.name||t('social_player'))});more.addEventListener('click',()=>openSocialActions(profile,{type:'social',id:profile.uid}));actions.appendChild(more);row.appendChild(actions);return row;
 }
 function openBlockedUsers(){

@@ -111,6 +111,9 @@ function getTheme() {
 /* ================= Ghost Game 四区应用外壳 ================= */
 const GHOST_APP_ROUTES = ['home','games','chat','profile'];
 let ghostAppRoute = 'home';
+let ghostChatView = 'players';
+let chatLastConversationFocus = null;
+let ghostProfileBackgroundNode = null;
 let ghostHeroIndex = 0;
 let ghostHeroTimer = null;
 let ghostCompanionHistory = [];
@@ -239,6 +242,24 @@ function routeFromHash(){
   const match = /^#\/(home|games|chat|profile)(?:$|[?&])/.exec(String(typeof location!=='undefined'&&location.hash || ''));
   return match ? match[1] : 'home';
 }
+function chatViewFromHash(){
+  const hash=String(typeof location!=='undefined'&&location.hash||'');
+  return /(?:\?|&)view=honru(?:&|$)/.test(hash)?'honru':'players';
+}
+function setChatView(view,options){
+  view=view==='honru'?'honru':'players';
+  ghostChatView=view;
+  document.querySelectorAll('[data-chat-view]').forEach(node=>node.classList.toggle('hidden',node.getAttribute('data-chat-view')!==view));
+  document.querySelectorAll('[data-chat-view-target]').forEach(node=>node.setAttribute('aria-selected',String(node.getAttribute('data-chat-view-target')===view)));
+  const title=$('chat-route-title'),intro=$('chat-route-intro');
+  if(title)title.textContent=t(view==='honru'?'chat_honru_title':'chat_title');
+  if(intro)intro.textContent=t(view==='honru'?'chat_honru_intro':'chat_intro');
+  if(view==='honru')ensureHonruWelcome();else{renderPlayerChat();if(online&&online.connected&&online._authenticated)online.requestChatList();}
+  if(!(options&&options.silentHash)&&typeof history!=='undefined'){
+    const next=view==='honru'?'#/chat?view=honru':'#/chat';
+    if(location.hash!==next){const method=options&&options.replace?'replaceState':'pushState';if(typeof history[method]==='function')history[method](null,'',next);}
+  }
+}
 function setAppRoute(route, options){
   route = GHOST_APP_ROUTES.includes(route) ? route : 'home';
   if (!account && typeof openAuthModal === 'function') { openAuthModal(route === 'profile' ? 'login' : 'login'); return; }
@@ -250,14 +271,14 @@ function setAppRoute(route, options){
     if (active) node.setAttribute('aria-current','page'); else node.removeAttribute('aria-current');
   });
   if (!(options && options.silentHash)){
-    const next = '#/' + route;
+    const next = route==='chat'&&options&&options.chatView==='honru'?'#/chat?view=honru':'#/' + route;
     if (typeof location!=='undefined'&&location.hash !== next&&typeof history!=='undefined'){
       const method=options&&options.replace?'replaceState':'pushState';if(typeof history[method]==='function')history[method](null,'',next);
     }
   }
   if (route === 'home') renderGhostHome();
   if (route === 'profile') renderGhostProfile();
-  if (route === 'chat') ensureHonruWelcome();
+  if (route === 'chat') setChatView(options&&options.chatView||(options&&options.silentHash?chatViewFromHash():'players'),{silentHash:true});
   resetGhostHeroTimer();
 }
 function renderGhostHome(){
@@ -274,29 +295,170 @@ function renderGhostHome(){
     rows.forEach(parts => { const row=el('div','home-status-line'); row.appendChild(el('span',null,parts[0])); row.appendChild(el('strong',null,parts[1])); live.appendChild(row); });
   }
 }
+function chatRawNode(tag,className,text){
+  const node=typeof elRaw==='function'?elRaw(tag,className||null,String(text===undefined||text===null?'':text)):el(tag,className||null,String(text===undefined||text===null?'':text));
+  node.setAttribute('data-i18n-raw','');return node;
+}
+function chatTimeLabel(value){
+  const date=new Date(Number(value)||Date.now());
+  try{return new Intl.DateTimeFormat(currentLang,{hour:'2-digit',minute:'2-digit'}).format(date);}catch{return date.toLocaleTimeString().slice(0,5);}
+}
+function chatConversationByPeer(peerUid){
+  const state=typeof online!=='undefined'&&online.chatState||{};
+  return (state.conversations||[]).find(item=>item&&item.peer&&item.peer.uid===peerUid)||null;
+}
+function updateChatUnreadBadge(){
+  const count=Math.max(0,Number(typeof online!=='undefined'&&online.chatState&&online.chatState.unreadTotal)||0);
+  document.querySelectorAll('[data-chat-unread]').forEach(node=>{node.textContent=count>99?'99+':String(count);node.classList.toggle('hidden',!count);});
+}
+function chatEmptyNode(titleKey,bodyKey,action){
+  const wrap=el('div','chat-empty'),copy=el('div');copy.appendChild(el('strong',null,t(titleKey)));copy.appendChild(el('span',null,t(bodyKey)));
+  if(action){const button=el('button','btn btn-primary',t(action.label));button.addEventListener('click',action.run);copy.appendChild(button);}
+  wrap.appendChild(copy);return wrap;
+}
+function openPlayerConversation(peerUid){
+  peerUid=String(peerUid||'');if(!peerUid)return false;
+  if(typeof online==='undefined')return false;
+  online.chatActivePeerUid=peerUid;
+  setAppRoute('chat',{chatView:'players'});
+  const shell=$('player-chat-shell');if(shell)shell.classList.add('thread-open');
+  online.requestChatHistory(peerUid);
+  renderPlayerChat();
+  requestAnimationFrame(()=>{const title=$('chat-thread-title');if(title)title.focus();});
+  return true;
+}
+function renderPlayerChat(){
+  const list=$('chat-conversation-list'),messages=$('chat-thread-messages'),input=$('chat-input'),send=$('btn-chat-send'),note=$('chat-composer-note');
+  if(!list||!messages||typeof online==='undefined')return;
+  const connection=$('chat-connection'),listStatus=$('chat-list-status');
+  if(connection)connection.classList.toggle('connected',!!(online.connected&&online._authenticated));
+  if(listStatus)listStatus.textContent=t(online.connected&&online._authenticated?'chat_connected':'chat_disconnected');
+  list.innerHTML='';
+  const isGuest=!!(account&&account.ephemeral);
+  const conversations=online.chatState&&Array.isArray(online.chatState.conversations)?online.chatState.conversations:[];
+  if(!account||isGuest){
+    list.appendChild(chatEmptyNode(isGuest?'chat_guest_title':'chat_login_title',isGuest?'chat_guest_body':'chat_login_body',isGuest?null:{label:'login',run:()=>openAuthModal('login')}));
+  }else if(!conversations.length){
+    const hasFriends=!!(online.socialState&&online.socialState.counts&&online.socialState.counts.friends);
+    list.appendChild(chatEmptyNode(hasFriends?'chat_no_conversations_title':'chat_no_friends_title',hasFriends?'chat_no_conversations_body':'chat_no_friends_body',{label:'nav_games',run:()=>setAppRoute('games')}));
+  }else{
+    conversations.forEach(item=>{
+      const peer=item.peer||{},row=el('button','chat-conversation-row');row.type='button';row.dataset.peerUid=peer.uid||'';row.setAttribute('data-i18n-raw','');
+      if(peer.uid===online.chatActivePeerUid)row.setAttribute('aria-current','true');
+      const avatar=avatarStageNode(peer,40);avatar.setAttribute('aria-hidden','true');row.appendChild(avatar);
+      const copy=el('span','chat-conversation-copy');copy.appendChild(chatRawNode('span','chat-conversation-name',peer.name||t('social_player')));
+      copy.appendChild(chatRawNode('span','chat-conversation-preview',item.lastMessage&&item.lastMessage.text||t('chat_start_conversation')));row.appendChild(copy);
+      const meta=el('span','chat-conversation-meta');if(item.lastMessage)meta.appendChild(el('span',null,chatTimeLabel(item.lastMessage.createdAt)));
+      if(Number(item.unreadCount)>0)meta.appendChild(el('span','chat-unread',String(Math.min(99,Number(item.unreadCount)))));row.appendChild(meta);
+      row.addEventListener('click',()=>{chatLastConversationFocus=peer.uid;openPlayerConversation(peer.uid);});list.appendChild(row);
+    });
+  }
+  updateChatUnreadBadge();
+  const peerUid=online.chatActivePeerUid,summary=peerUid&&chatConversationByPeer(peerUid),peer=summary&&summary.peer;
+  const title=$('chat-thread-title'),presence=$('chat-thread-presence'),avatarHolder=$('chat-thread-avatar'),profileButton=$('btn-chat-profile');
+  if(!peer){
+    if(title)title.textContent=t(isGuest?'chat_guest_title':'chat_select_title');if(presence)presence.textContent=t(isGuest?'chat_guest_body':'chat_select_hint');
+    if(avatarHolder)avatarHolder.innerHTML='';if(profileButton)profileButton.classList.add('hidden');messages.innerHTML='';messages.appendChild(chatEmptyNode(isGuest?'chat_guest_title':'chat_select_title',isGuest?'chat_guest_body':'chat_select_hint'));
+    if(input)input.disabled=true;if(send)send.disabled=true;if(note)note.textContent=t(isGuest?'chat_guest_body':'chat_select_first');return;
+  }
+  if(title){title.textContent=peer.name||t('social_player');title.setAttribute('data-i18n-raw','');}
+  if(presence)presence.textContent=(typeof presenceLabel==='function'?presenceLabel(peer.presence||'offline'):String(peer.presence||''))+' · '+t(peer.relationship==='friends'?'social_friend':'chat_history_read_only');
+  if(avatarHolder){avatarHolder.innerHTML='';avatarHolder.appendChild(avatarStageNode(peer,38));}
+  if(profileButton){profileButton.classList.remove('hidden');profileButton.onclick=()=>openProfileModal(peer.uid);}
+  const rows=Array.isArray(online.chatHistory[peerUid])?online.chatHistory[peerUid]:[],pending=[...online.chatPending.entries()].filter(([,item])=>item.peerUid===peerUid);
+  messages.setAttribute('aria-live','off');messages.innerHTML='';
+  const meta=online.chatHistoryMeta&&online.chatHistoryMeta[peerUid];
+  if(meta&&meta.hasMore){const older=el('button','btn',t('chat_load_older'));older.addEventListener('click',()=>online.requestChatHistory(peerUid,meta.nextBeforeSeq));messages.appendChild(older);}
+  if(!rows.length&&!pending.length)messages.appendChild(chatEmptyNode('chat_no_messages_title','chat_no_messages_body'));
+  rows.forEach(message=>{
+    const mine=account&&message.senderUid===account.uid,bubble=chatRawNode('div','chat-message'+(mine?' mine':''),message.text);bubble.dataset.messageId=message.id||'';
+    const read=mine&&summary&&String(summary.peerReadThroughSeq||'0').localeCompare(String(message.seq||'0'),undefined,{numeric:true})>=0;
+    bubble.appendChild(el('span','chat-message-meta',chatTimeLabel(message.createdAt)+(mine?' · '+t(read?'chat_read':'chat_sent'):'')));messages.appendChild(bubble);
+  });
+  pending.forEach(([id,item])=>{if(rows.some(row=>row.id===item.messageId))return;const bubble=chatRawNode('div','chat-message mine pending',item.text);const retry=el('button','chat-message-meta',t(item.status==='failed'?'chat_retry':'chat_sending'));retry.disabled=item.status!=='failed';if(item.status==='failed')retry.addEventListener('click',()=>{online.sendChatMessage(item.peerUid,item.text,id);renderPlayerChat();});bubble.appendChild(retry);messages.appendChild(bubble);});
+  const canSend=!!(online.connected&&online._authenticated&&!isGuest&&peer.relationship==='friends');
+  if(input){input.disabled=!canSend;const draft=online.chatDrafts.get(peerUid)||'';if(document.activeElement!==input)input.value=draft;input.placeholder=t(canSend?'chat_placeholder':online.connected?'chat_read_only_placeholder':'chat_offline_placeholder');}
+  if(send)send.disabled=!canSend;if(note)note.textContent=t(canSend?'chat_enter_hint':online.connected?'chat_history_read_only':'chat_disconnected_read_only');
+  messages.scrollTop=messages.scrollHeight;requestAnimationFrame(()=>messages.setAttribute('aria-live','polite'));
+}
+function handlePlayerChatHistory(payload){
+  const peerUid=payload&&payload.peer&&payload.peer.uid;if(!peerUid)return;
+  online.chatHistoryMeta=online.chatHistoryMeta||{};online.chatHistoryMeta[peerUid]={hasMore:!!payload.hasMore,nextBeforeSeq:payload.nextBeforeSeq||null};renderPlayerChat();
+}
+function handlePlayerChatMessage(payload){
+  const message=payload&&payload.message||{},peerUid=message.senderUid===account.uid?message.recipientUid:message.senderUid;
+  if(peerUid===online.chatActivePeerUid&&ghostAppRoute==='chat'&&ghostChatView==='players'&&message.recipientUid===account.uid)online.markChatRead(peerUid,message.seq);
+  renderPlayerChat();
+}
+function handlePlayerChatSendAck(payload){
+  const message=payload&&payload.message,clientId=payload&&payload.clientMessageId;if(message){const peerUid=message.recipientUid===account.uid?message.senderUid:message.recipientUid,rows=online.chatHistory[peerUid]||[];if(!rows.some(item=>item.id===message.id))rows.push(message);online.chatHistory[peerUid]=rows;online.chatDrafts.delete(peerUid);const input=$('chat-input');if(input&&peerUid===online.chatActivePeerUid)input.value='';}
+  if(clientId)online.chatPending.delete(clientId);renderPlayerChat();
+}
+function handlePlayerChatRead(){renderPlayerChat();}
+function handlePlayerChatError(payload){
+  const reason=String(payload&&payload.reason||'server_unavailable'),key='chat_error_'+reason;
+  toast(t(key)===key?t('chat_error_generic'):t(key));renderPlayerChat();
+}
+function initPlayerChat(){
+  document.querySelectorAll('[data-chat-view-target]').forEach(button=>button.addEventListener('click',()=>setChatView(button.getAttribute('data-chat-view-target'))));
+  const refresh=$('btn-chat-refresh');if(refresh)refresh.addEventListener('click',()=>online.requestChatList());
+  const back=$('btn-chat-back');if(back)back.addEventListener('click',()=>{const shell=$('player-chat-shell');if(shell)shell.classList.remove('thread-open');online.chatActivePeerUid=null;renderPlayerChat();requestAnimationFrame(()=>{const row=document.querySelector('.chat-conversation-row[data-peer-uid="'+String(chatLastConversationFocus||'').replace(/"/g,'')+'"]');if(row)row.focus();});});
+  const input=$('chat-input');if(input){input.addEventListener('input',()=>{if(online.chatActivePeerUid)online.chatDrafts.set(online.chatActivePeerUid,input.value);input.style.height='auto';input.style.height=Math.min(132,input.scrollHeight)+'px';});input.addEventListener('keydown',event=>{if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();const form=$('chat-composer');if(form)form.requestSubmit();}});}
+  const form=$('chat-composer');if(form)form.addEventListener('submit',event=>{event.preventDefault();const peerUid=online.chatActivePeerUid,text=String(($('chat-input')||{}).value||'');if(!peerUid||!text.trim())return;online.sendChatMessage(peerUid,text);renderPlayerChat();});
+  renderPlayerChat();updateChatUnreadBadge();
+}
 function renderGhostProfile(){
   const root = $('ghost-profile-overview');
   if (!root || !account) return;
+  if(ghostProfileBackgroundNode&&typeof releasePremiumBackground==='function')releasePremiumBackground(ghostProfileBackgroundNode);
   root.innerHTML = '';
-  const card = el('section','home-glass-card ghost-profile-card');
-  const stage = el('div','profile-hero bg-' + Number(account.background || 0));
-  stage.appendChild(avatarStageNode(account,112));
-  stage.appendChild(nameFxNode(account,account.name + ' ' + langFlag(account.lang || currentLang)));
-  stage.appendChild(el('div','pmeta',t(account.ephemeral ? 'guest_account_badge' : 'profile_level_line',account.level || 1,account.xp || 0)));
-  card.appendChild(stage);
-  const stats=el('div','profile-stats');
-  [t('profile_balance',account.coins||0),t('profile_total_games',account.total||0),t('profile_total_wins',account.totalWins||0)].forEach(value=>stats.appendChild(el('span','stat-chip',value)));
-  card.appendChild(stats);
-  root.appendChild(card);
-  const actions = el('section','ghost-profile-actions');
-  const defs = [
-    ['profile_edit_title','profile_route_edit_hint',()=>openProfileEditor(account.uid)],
-    ['shop_title','profile_route_shop_hint',()=>account.ephemeral?toast(t('guest_persistence_disabled')):openShop()],
-    ['daily_tasks_title','profile_route_tasks_hint',()=>openProfileModal(account.uid)],
-    ['logout','profile_route_logout_hint',()=>logoutAccount()],
-  ];
-  defs.forEach(([label,hint,fn])=>{const b=el('button','btn home-glass-card ghost-profile-action');b.appendChild(el('strong',null,t(label)));b.appendChild(el('span',null,t(hint)));b.addEventListener('click',fn);actions.appendChild(b);});
-  root.appendChild(actions);
+  const level=Math.max(1,Number(account.level)||1),xpProgress=account.xpProgress&&typeof account.xpProgress==='object'?account.xpProgress:null;
+  const xpCurrent=Math.max(0,Number(xpProgress&&xpProgress.current)||0),xpRequired=Math.max(1,Number(xpProgress&&xpProgress.required)||1),xpPercent=Math.max(0,Math.min(100,Math.round(xpCurrent/xpRequired*100)));
+  const total=Math.max(0,Number(account.total)||0),totalWins=Math.max(0,Number(account.totalWins)||0),winRate=total?Math.round(totalWins/total*100):null;
+  const games=(typeof GAME_KEYS!=='undefined'?GAME_KEYS:Object.keys(GAMES)).filter(id=>GAMES[id]);
+  const unlocked=new Set(Array.isArray(account.achievements)?account.achievements:[]),titleInfo=typeof titleFor==='function'?titleFor(level):{icon:'✦',nameKey:'social_title_1'};
+
+  const hero=el('section','profile-route-hero profile-hero bg-'+Number(account.background||0));ghostProfileBackgroundNode=hero;
+  if(typeof applyPremiumBackground==='function')applyPremiumBackground(hero,account.background||0,'profile');
+  const heroScrim=el('div','profile-route-hero-scrim'),identity=el('div','profile-route-identity');identity.appendChild(avatarStageNode(account,108));
+  const identityCopy=el('div','profile-route-identity-copy'),name=el('div','profile-route-name');name.appendChild(nameFxNode(account,account.name||t('default_player_name')));name.appendChild(el('span','profile-lang-flag',langFlag(account.lang||currentLang)));identityCopy.appendChild(name);
+  identityCopy.appendChild(el('div','profile-route-title',titleInfo.icon+' '+(titleInfo.nameKey?t(titleInfo.nameKey):'')+' · '+t(account.ephemeral?'guest_account_badge':'profile_level_short',level)));
+  const presenceText=typeof profilePresenceLabel==='function'?profilePresenceLabel(account.presence||'offline'):String(account.presence||'');
+  identityCopy.appendChild(el('div','profile-route-presence',presenceText+(account.countryRegion&&typeof profileRegionLabel==='function'?' · '+profileRegionLabel(account.countryRegion):'')));
+  if(account.signature)identityCopy.appendChild(chatRawNode('p','profile-route-signature','“'+String(account.signature).slice(0,80)+'”'));
+  const showcase=typeof profileShowcaseText==='function'?profileShowcaseText(account):'';if(showcase)identityCopy.appendChild(el('div','profile-route-showcase',showcase));
+  identity.appendChild(identityCopy);heroScrim.appendChild(identity);
+  const heroActions=el('div','profile-route-hero-actions');[['edit_profile',()=>openProfileEditor(account.uid),'btn-primary'],['shop',()=>account.ephemeral?toast(t('guest_persistence_disabled')):openShop(),'']].forEach(([key,fn,cls])=>{const button=el('button','btn '+cls,t(key));button.addEventListener('click',fn);heroActions.appendChild(button);});heroScrim.appendChild(heroActions);hero.appendChild(heroScrim);root.appendChild(hero);
+
+  const growth=el('section','home-glass-card profile-growth-card');
+  const growthHead=el('div','profile-section-head');growthHead.appendChild(el('div',null,t('profile_growth_title')));growthHead.appendChild(el('span',null,t('profile_xp_progress',xpCurrent,xpRequired)));growth.appendChild(growthHead);
+  const progress=el('div','profile-xp-progress');progress.setAttribute('role','progressbar');progress.setAttribute('aria-label',t('profile_xp_aria'));progress.setAttribute('aria-valuemin','0');progress.setAttribute('aria-valuemax',String(xpRequired));progress.setAttribute('aria-valuenow',String(xpCurrent));const fill=el('span');fill.style.width=xpPercent+'%';progress.appendChild(fill);growth.appendChild(progress);
+  const stats=el('div','profile-route-stats');[
+    ['profile_stat_level',String(level)],['profile_stat_games',String(total)],['profile_stat_wins',String(totalWins)],['profile_stat_win_rate',winRate===null?'—':winRate+'%'],['profile_stat_streak',String(account.streak||0)],['profile_stat_best_streak',String(account.bestStreak||0)],['profile_stat_achievements',unlocked.size+'/'+(typeof ACHIEVEMENTS!=='undefined'?ACHIEVEMENTS.length:8)],['profile_stat_balance',String(account.coins||0)+'💵'],
+  ].forEach(([key,value])=>{const item=el('div','profile-route-stat');item.appendChild(el('strong',null,value));item.appendChild(el('span',null,t(key)));stats.appendChild(item);});growth.appendChild(stats);root.appendChild(growth);
+
+  const content=el('div','profile-route-content'),main=el('div','profile-route-main'),side=el('aside','profile-route-side');
+  const gameSection=el('section','home-glass-card profile-route-section');const gameHead=el('div','profile-section-head');gameHead.appendChild(el('h2',null,t('profile_games_title')));gameHead.appendChild(el('span',null,t('profile_games_subtitle')));gameSection.appendChild(gameHead);
+  const gameGrid=el('div','profile-game-grid');games.forEach(id=>{const played=Math.max(0,Number(account.played&&account.played[id])||0),wins=Math.max(0,Number(account.wins&&account.wins[id])||0),rate=played?Math.round(wins/played*100):null,card=el('button','profile-game-card');card.type='button';card.addEventListener('click',()=>setAppRoute('games'));card.appendChild(el('span','profile-game-icon',GAMES[id].icon||'🎮'));const copy=el('span');copy.appendChild(el('strong',null,GAMES[id].name||t(GAMES[id].nameKey)));copy.appendChild(el('small',null,t('profile_game_record',played,wins,rate===null?'—':rate+'%')));card.appendChild(copy);gameGrid.appendChild(card);});gameSection.appendChild(gameGrid);main.appendChild(gameSection);
+
+  const achievementSection=el('section','home-glass-card profile-route-section');const achievementHead=el('div','profile-section-head');achievementHead.appendChild(el('h2',null,t('profile_achievements_title')));const viewAll=el('button','btn',t('profile_view_all'));viewAll.addEventListener('click',()=>openAchievementsModal());achievementHead.appendChild(viewAll);achievementSection.appendChild(achievementHead);
+  const achievementGrid=el('div','profile-achievement-grid');(typeof ACHIEVEMENTS!=='undefined'?ACHIEVEMENTS:[]).forEach(item=>{const earned=unlocked.has(item.id),card=el('div','profile-achievement'+(earned?' unlocked':' locked'));card.appendChild(el('span','profile-achievement-icon',item.icon));const copy=el('span');copy.appendChild(el('strong',null,t(item.nameKey)));copy.appendChild(el('small',null,t(earned?'profile_achievement_unlocked':'profile_achievement_locked')));card.appendChild(copy);achievementGrid.appendChild(card);});achievementSection.appendChild(achievementGrid);main.appendChild(achievementSection);
+
+  const taskSection=el('section','home-glass-card profile-route-section');const taskHead=el('div','profile-section-head');taskHead.appendChild(el('h2',null,t('daily_tasks_title')));taskHead.appendChild(el('span',null,t('profile_tasks_today')));taskSection.appendChild(taskHead);
+  const serverTasks=online&&online.dailyTasks&&Array.isArray(online.dailyTasks.tasks)?online.dailyTasks.tasks:[],taskMeta=new Map((typeof DAILY_TASKS!=='undefined'?DAILY_TASKS:[]).map(item=>[item.id,item]));
+  const taskList=el('div','profile-task-list');if(!serverTasks.length)taskList.appendChild(el('div','profile-compact-empty',t(online&&online.connected?'profile_tasks_loading':'profile_tasks_offline')));serverTasks.forEach(task=>{const meta=taskMeta.get(task.id)||{},row=el('div','profile-task-row'+(task.claimed?' completed':''));row.appendChild(el('span','profile-task-icon',meta.icon||'✦'));const copy=el('div');copy.appendChild(el('strong',null,t(meta.nameKey||'daily_tasks_title')));copy.appendChild(el('small',null,String(task.progress||0)+' / '+String(task.target||0)));row.appendChild(copy);if(task.claimed)row.appendChild(el('span','profile-task-state',t('profile_task_claimed')));else if(Number(task.progress)>=Number(task.target)){const claim=el('button','btn btn-primary',t('daily_task_claim',task.reward||0));claim.disabled=!!account.ephemeral;claim.addEventListener('click',()=>online.claimDailyTask(task.id));row.appendChild(claim);}taskList.appendChild(row);});taskSection.appendChild(taskList);side.appendChild(taskSection);
+
+  const socialSection=el('section','home-glass-card profile-route-section');const socialHead=el('div','profile-section-head');socialHead.appendChild(el('h2',null,t('profile_social_title')));socialHead.appendChild(el('span',null,t('profile_friend_summary',online&&online.socialState&&online.socialState.counts&&online.socialState.counts.friends||0,(online&&online.socialState&&online.socialState.friends||[]).filter(item=>item.presence&&item.presence!=='offline').length)));socialSection.appendChild(socialHead);
+  const people=el('div','profile-people-list'),friends=(online&&online.socialState&&online.socialState.friends||[]).slice(0,4);friends.forEach(friend=>{const row=el('button','profile-person-row');row.type='button';row.appendChild(avatarStageNode(friend,34));const copy=el('span');copy.appendChild(chatRawNode('strong',null,friend.name||t('social_player')));copy.appendChild(el('small',null,typeof presenceLabel==='function'?presenceLabel(friend.presence||'offline'):''));row.appendChild(copy);row.addEventListener('click',()=>openPlayerConversation(friend.uid));people.appendChild(row);});
+  const friendIds=new Set(friends.map(item=>item.uid)),mates=typeof recentPlaymates==='function'?recentPlaymates(account,4):[];mates.filter(item=>!friendIds.has(item.uid)).slice(0,2).forEach(mate=>{const row=el('button','profile-person-row');row.type='button';row.appendChild(el('span','profile-person-fallback','◎'));const copy=el('span');copy.appendChild(chatRawNode('strong',null,mate.name||t('social_player')));copy.appendChild(el('small',null,t('profile_played_together',mate.count||0)));row.appendChild(copy);row.addEventListener('click',()=>openProfileModal(mate.uid));people.appendChild(row);});if(!people.childNodes.length)people.appendChild(el('div','profile-compact-empty',t('profile_social_empty')));socialSection.appendChild(people);side.appendChild(socialSection);
+
+  const collectionSection=el('section','home-glass-card profile-route-section');const collectionHead=el('div','profile-section-head');collectionHead.appendChild(el('h2',null,t('profile_collection_title')));const shopButton=el('button','btn',t('shop'));shopButton.addEventListener('click',()=>account.ephemeral?toast(t('guest_persistence_disabled')):openShop());collectionHead.appendChild(shopButton);collectionSection.appendChild(collectionHead);
+  const owned=account.owned||{},collectionGrid=el('div','profile-collection-grid');[['profile_collection_avatars',(owned.avatars||[]).length],['profile_collection_frames',(owned.frames||[]).length],['profile_collection_effects',(owned.effects||[]).length],['profile_collection_backgrounds',(owned.backgrounds||[]).length],['profile_collection_game_cosmetics',(owned.game_cosmetics||[]).length]].forEach(([key,count])=>{const item=el('div','profile-collection-item');item.appendChild(el('strong',null,String(count)));item.appendChild(el('span',null,t(key)));collectionGrid.appendChild(item);});collectionSection.appendChild(collectionGrid);side.appendChild(collectionSection);
+
+  const replaySection=el('section','home-glass-card profile-route-section');const replayHead=el('div','profile-section-head');replayHead.appendChild(el('h2',null,t('profile_replays_title')));replayHead.appendChild(el('span',null,t('profile_replays_retention')));replaySection.appendChild(replayHead);const ownReplays=(online&&Array.isArray(online.replays)?online.replays:[]).filter(item=>item&&item.canShare===true).slice(0,3),replayList=el('div','profile-replay-list');ownReplays.forEach(item=>{const row=el('button','profile-replay-row');row.type='button';row.appendChild(el('span',null,GAMES[item.game]&&GAMES[item.game].icon||'🎮'));row.appendChild(el('strong',null,GAMES[item.game]&&(GAMES[item.game].name||t(GAMES[item.game].nameKey))||item.game));row.appendChild(el('small',null,t('replay_events',item.eventCount||0)));row.addEventListener('click',()=>online.requestReplay(item.replayId));replayList.appendChild(row);});if(!ownReplays.length)replayList.appendChild(el('div','profile-compact-empty',t('profile_replays_empty')));replaySection.appendChild(replayList);side.appendChild(replaySection);
+  content.appendChild(main);content.appendChild(side);root.appendChild(content);
+
+  const footer=el('section','profile-route-footer');const edit=el('button','btn',t('edit_profile'));edit.addEventListener('click',()=>openProfileEditor(account.uid));footer.appendChild(edit);const logout=el('button','btn',t(account.ephemeral?'profile_guest_logout':'logout'));logout.addEventListener('click',logoutAccount);footer.appendChild(logout);root.appendChild(footer);
 }
 function setGhostHero(index){
   const slides=[...document.querySelectorAll('[data-hero-slide]')];
@@ -373,11 +535,12 @@ function requireGhostAuth(mode){
 function initGhostShell(){
   document.querySelectorAll('[data-app-route-target]').forEach(node=>node.addEventListener('click',()=>setAppRoute(node.getAttribute('data-app-route-target'))));
   document.querySelectorAll('[data-hero-dot]').forEach(node=>node.addEventListener('click',()=>{setGhostHero(node.getAttribute('data-hero-dot'));resetGhostHeroTimer();}));
-  const homeHonru=$('btn-home-honru');if(homeHonru)homeHonru.addEventListener('click',()=>setAppRoute('chat'));
-  const dockButton=$('btn-honru-dock');if(dockButton)dockButton.addEventListener('click',()=>{petHonru();setAppRoute('chat');});
+  const homeHonru=$('btn-home-honru');if(homeHonru)homeHonru.addEventListener('click',()=>setAppRoute('chat',{chatView:'honru'}));
+  const dockButton=$('btn-honru-dock');if(dockButton)dockButton.addEventListener('click',()=>{petHonru();setAppRoute('chat',{chatView:'honru'});});
   const pet=$('btn-companion-pet');if(pet)pet.addEventListener('click',petHonru);
   const form=$('companion-form');if(form)form.addEventListener('submit',event=>{event.preventDefault();sendCompanionMessage(($('companion-input')||{}).value||'');});
   document.querySelectorAll('[data-companion-prompt]').forEach(node=>node.addEventListener('click',()=>sendCompanionMessage(companionPromptText(node.getAttribute('data-companion-prompt')))));
-  if(window&&typeof window.addEventListener==='function')window.addEventListener('hashchange',()=>{const route=routeFromHash();if(GHOST_APP_ROUTES.includes(route)&&route!==ghostAppRoute)setAppRoute(route,{silentHash:true});});
+  initPlayerChat();
+  if(window&&typeof window.addEventListener==='function')window.addEventListener('hashchange',()=>{const route=routeFromHash();if(GHOST_APP_ROUTES.includes(route)&&(route!==ghostAppRoute||route==='chat'))setAppRoute(route,{silentHash:true});});
   setGhostHero(0);resetGhostHeroTimer();
 }

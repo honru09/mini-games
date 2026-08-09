@@ -123,6 +123,12 @@ function renderProfilePopup(p, isMe){
     links.appendChild(logout);
   } else {
     const relation = typeof socialRelationshipFor === 'function' ? socialRelationshipFor(p.uid) : 'none';
+    if (relation === 'friends' && typeof openPlayerConversation === 'function'){
+      const message = el('button','btn btn-primary');
+      setButtonIcon(message, 'user', t('chat_message_action'));
+      message.addEventListener('click', () => { closeProfile(); openPlayerConversation(p.uid); });
+      links.appendChild(message);
+    }
     const label = relation === 'friends' ? t('social_friend') : relation === 'outgoing' ? t('social_pending') : relation === 'incoming' ? t('social_requests') : t('social_add_friend');
     const social = el('button','btn' + ((relation === 'none' || relation === 'incoming') ? ' btn-primary' : ''));
     setButtonIcon(social, relation === 'friends' ? 'users' : 'user-plus', label);

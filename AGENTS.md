@@ -187,6 +187,14 @@ node server/index.js
 - `POST /api/companion` 要求 Bearer token，并复用 Origin、请求体、并发、速率与超时边界；聊天原文不落库。
 - 无 Key、超时或上游错误使用三语本地回退；没有可信来源时不得伪造天气或新闻。
 
+### 玩家私聊（direct-chat-v1）
+- Chat 默认子页是玩家消息，Honru 为独立 `#/chat?view=honru` 子页；正式账号仅能与当前好友发送一对一纯文本消息，访客禁止持久私聊。
+- `chat_list/chat_history/chat_send/chat_read` 与 `chat_state/chat_history/chat_message/chat_send_ok/chat_read_ok/chat_error` 成对维护；sender、conversation、message ID、十进制字符串 seq 与时间由服务端权威签发。
+- `(senderUid,clientMessageId)` 发送幂等；正文 NFC/控制符净化后限 500 Unicode/2000 UTF-8 bytes，只用 `textContent` + `data-i18n-raw` 渲染，不进入日志、Analytics、Replay、Profile、排行榜或 localStorage。
+- 任一方向 Block 阻断发送和历史并从摘要/未读排除；解除好友后历史只读；已读必须对应本人真实收到的入站 seq 且账号级单调推进。
+- 主动推送前重新校验 session token，已被五 token 上限淘汰或登出的旧 WebSocket 不得收到消息。
+- 本地 JSON 有界回退为 90 天/每会话 500/全局 50,000；Supabase 启用时发送先经过数据库好友/Block/幂等事务并持久化成功再回执。多实例与生产持久化仍以真实 Supabase 迁移/并发/备份验收为前提。
+
 ### 安全边界
 - `owned`、金币、XP、等级、连胜、胜场、局数、成就等权威字段不可由客户端 profile 消息写入；商城价格与扣款在服务端完成。
 - `/api/ai` 要求 Bearer token，并限制 Origin、请求体、并发和速率。
@@ -240,7 +248,7 @@ $env:METRICS_ADMIN_TOKEN='高熵随机值'           # 可选；管理员 Metric
 node scripts/render-env.js
 ```
 
-Supabase 首次接入或升级时，在 SQL Editor 执行可重复迁移的 `supabase/schema.sql`，再运行 `node scripts/supabase-status.js`。Schema 已对 `profiles` / `history` / `reward_history` / `economy_ledger` / `analytics_events` / `ai_learning_models` / `ai_learning_experiences` 启用 RLS 且不开放 anon/authenticated policy，`profiles` 含 `wins/total_wins`、`solo_rate`、首胜、AI 日上限和 XP 曲线版本字段，并创建 `apply_reward_v1`、`apply_purchase_v1`、`apply_ai_learning_v1` 单事务 RPC，因此服务端必须使用 `service_role` key；不要使用 anon/publishable key，也绝不能把 service-role secret 交给浏览器。没有真实凭证时可运行 `qa/supabase-adapter.js` 做本地 fake PostgREST 映射与幂等回归，但它不能替代真实 SQL、事务并发、连通性、备份回滚与 RLS 验收。
+Supabase 首次接入或升级时，在 SQL Editor 执行可重复迁移的 `supabase/schema.sql`，再运行 `node scripts/supabase-status.js`。Schema 已对 `profiles`、奖励/经济/AI 表、Social Graph 与 `direct_messages/direct_message_reads` 启用 RLS 且不开放 anon/authenticated policy，并创建奖励、购买、AI 学习与 Direct Chat 发送/已读/分页的 service-role RPC，因此服务端必须使用 `service_role` key；不要使用 anon/publishable key，也绝不能把 service-role secret 交给浏览器。没有真实凭证时可运行 `qa/supabase-adapter.js` 做本地 fake PostgREST 映射与幂等回归，但它不能替代真实 SQL、事务并发、连通性、备份回滚与 RLS 验收。
 
 ### 凭证
 - 所有 token/Key 只存环境变量，绝不写入仓库。
@@ -284,9 +292,10 @@ Supabase 首次接入或升级时，在 SQL Editor 执行可重复迁移的 `sup
 - Seat/Social/Profile v2 已进入 main：真人/AI/空席、READY、AI Controller、公开/私密房、观战、房主转移、好友/拉黑/举报、Presence 隐私和 Profile v2。
 - Gameplay Cosmetic 产品闭环：服务端定价/owned/装备校验、商城按游戏筛选、公开档案只返回装备 ID，六款游戏保留 fallback。
 - Daily Task / Replay / Metrics：服务端任务进度与 claimId 幂等领取；Replay v1.1 支持 7 天保留、公开延迟、分享/撤销和播放控制；Metrics v2 提供 Bearer 管理员只读页面、有界历史、CSV、阈值告警、脱敏错误闭环、限频与访问审计。
+- Direct Chat v1 + Profile 深度优化：好友私聊、离线留言、历史/未读/已读/幂等/Block/访客与 token 淘汰安全边界；Chat 默认玩家消息并保留 Honru 子页；个人主页完成身份、成长、六游戏战绩、成就、任务、社交、收藏和本人回放信息架构，专项与完整 `npm test` 通过。
 
 ⏳ 待办：
-1. 提供真实 Supabase 凭证并执行迁移、RLS/并发、备份与回滚验收（当前只通过 fake adapter）
+1. 提供真实 Supabase 凭证并执行包含 Direct Chat 新表/RPC 的迁移、RLS/并发、备份与回滚验收（当前只通过 schema 静态与 fake adapter）
 2. 执行 Desktop Chrome/第二浏览器、Android、iPhone、Tablet 实机矩阵，以及真实 `tc/netem`/等价网络整形和 30 分钟 Synthetic Session；完成前 RC 保持 `BLOCKED`
 3. Tetris T-Spin/B2B/Combo/Perfect Clear、外部 Sentry/跨实例长期指标存储、高级延迟观战与文字/社交游戏
 4. 多实例部署前完成 Reward Resolver 与 AI 学习 outbox 的数据库版本冲突重算/单写者改造

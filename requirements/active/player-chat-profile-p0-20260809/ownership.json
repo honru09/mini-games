@@ -1,0 +1,31 @@
+{
+  "builder": "master",
+  "owned": [
+    "requirements/active/player-chat-profile-p0-20260809/**",
+    "qa/player-chat-contract.js",
+    "qa/player-chat-online.js"
+  ],
+  "sharedDependencies": [
+    "server/index.js",
+    "public/src/online/03-websocket.js",
+    "public/src/core/02-app-shell.js",
+    "public/src/shop/05-profile.js",
+    "public/index-template.html",
+    "public/locales/*.json",
+    "supabase/schema.sql",
+    "package.json",
+    "PROJECT_STATUS.json",
+    "README.md",
+    "AGENTS.md"
+  ],
+  "forbidden": [
+    "server/reward-engine.js",
+    "shared/rules/**",
+    "server/gameplay/**",
+    "public/src/games/**",
+    "public/src/08-registry.js"
+  ],
+  "sharedChangeRequests": [
+    "SHARED_CHANGE_REQUEST.md"
+  ]
+}

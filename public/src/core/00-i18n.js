@@ -406,6 +406,8 @@ async function setLanguage(lang) {
   if (typeof renderGhostHome === 'function') renderGhostHome();
   if (typeof renderGhostProfile === 'function') renderGhostProfile();
   if (typeof renderSocialRail === 'function') renderSocialRail();
+  if (typeof renderPlayerChat === 'function') renderPlayerChat();
+  if (typeof setChatView === 'function' && typeof ghostAppRoute !== 'undefined' && ghostAppRoute === 'chat') setChatView(typeof ghostChatView !== 'undefined' ? ghostChatView : 'players', { silentHash:true });
   if (online.room) renderRoomPanel();
   if (currentGame && typeof currentGame.onLanguageChange === 'function') currentGame.onLanguageChange(currentLang);
   if (online.connected && account && account.uid) {

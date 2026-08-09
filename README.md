@@ -20,7 +20,9 @@
 - ✨ **个性化**：动态头像框（8 款含流光/烈焰/彩虹/赛博脉冲）、闪名（4 种特效）、动态档案背景（星空/樱花/赛博矩阵/海浪）、等级进度条
 - 🔐 **用户名密码账号**：用户名大小写不敏感唯一，密码使用随机盐 scrypt 慢哈希；旧 PIN 账号可原 UID 迁移
 - 👻 **一次性访客**：服务端签发临时身份；退出立即删号，不进入持久库、排行榜、永久购买或持续 AI 学习
+- 📨 **玩家私聊**：正式好友一对一纯文本消息、离线留言、历史分页、账号级未读/已读、多会话同步；Block/访客/越权读取与伪造身份由服务端拒绝
 - 💬 **Honru 助手**：每日抚摸签到、三语言短对话与离线安全回退；聊天原文不落库，不伪造实时天气或新闻
+- 🪪 **深度个人主页**：身份背景、等级 XP、六游戏战绩、连胜、成就、任务、好友/最近同玩、收藏与本人近 7 日回放统一展示
 - 🛍️ **💵 商城**：头像 / 头像框 / 动态特效 / 个人背景 / 六款游戏外观（游戏外观购买与装备由服务端权威校验）
 - 🎭 **AI 角色化**：5 个性格各异的 AI 对手，表达风格不同；强制胜/防守和本地强策略不会被人格覆盖
 - 🧠 **AI 持续学习**：按“账号 × 游戏”独立模型；对局中记录近优候选，胜局强化、败局反事实修正、平局保留中性经验，JSON 与 Supabase 原子恢复
@@ -101,6 +103,7 @@ WebSocket 端点 `/ws`，所有消息为 JSON：
 | C→S | `register` / `login` / `logout` | `authVersion:2` 创建/登录用户名密码账号并撤销当前 token；旧 PIN 消息保留兼容 |
 | C→S | `username_check` / `legacy_bind` / `guest_login` | 实时查重、把旧 PIN 账号原 UID 绑定到用户名密码、创建一次性访客 |
 | C→S | `companion_checkin` | Honru 每日签到；按账号与日期幂等 |
+| C→S | `chat_list` / `chat_history` / `chat_send` / `chat_read` | `direct-chat-v1`：正式好友私聊摘要、排他游标历史、`clientMessageId` 幂等发送与账号级单调已读；访客/陌生人/Block/越权读取由服务端拒绝 |
 | C→S | `profile_get` / `profile` | 查询档案；仅修改 name/lang、本人平台外观与白名单 `gameCosmetics` 装备，不能写金币、owned、XP、胜场、局数等权威字段 |
 | C→S | `create` / `join` / `leave` | 创建、加入、主动离开房间或观众席 |
 | C→S | `spectate_join` / `spectate_leave` | 进入/离开独立观众席；不占玩家位、不能发送游戏输入 |
@@ -121,6 +124,7 @@ WebSocket 端点 `/ws`，所有消息为 JSON：
 | C→S | `purchase` | 服务端按商品目录和余额原子购买（requestId 幂等） |
 | S→C | `hello_ack` / `registered` / `logged_in` / `logged_out` / `auth_error` | 认证状态、稳定错误 reason 与服务端签发 token |
 | S→C | `username_status` / `guest_logged_in` / `companion_checkin_ok` | 查重结果、临时访客身份与 Honru 签到幂等结果 |
+| S→C | `chat_state` / `chat_history` / `chat_message` / `chat_send_ok` / `chat_read_ok` / `chat_error` | 服务端权威消息 ID、十进制字符串 seq、时间、发送者、未读/已读与稳定错误 reason；正文只发给会话参与者 |
 | S→C | `lobby` | 可加入的等待房与可观战的进行中房间列表 |
 | S→C | `created` / `joined` / `room_update` / `started` | 加房结果、房间实时状态和开局信息（含 `matchId`） |
 | S→C | `player_reassigned` | 有成员离房并压紧席位后，通知仍在房间中的客户端更新玩家索引 |
@@ -195,7 +199,7 @@ node scripts/render-deploy.js
 - 所有美术资源保留 CSS / Canvas / DOM Emoji / WebAudio 回退，资源加载失败不能阻塞大厅或开局。
 
 ### 数据库（Supabase）
-`supabase/schema.sql` 可重复执行建表/迁移，创建 `apply_reward_v1`、`apply_purchase_v1`、`apply_ai_learning_v1` 原子 RPC，并为 `profiles`、`history`、`reward_history`、`economy_ledger`、`analytics_events`、`ai_learning_models`、`ai_learning_experiences` 启用 RLS；没有面向 `anon`/`authenticated` 的访问策略，浏览器不能直连这些表。
+`supabase/schema.sql` 可重复执行建表/迁移，创建 `apply_reward_v1`、`apply_purchase_v1`、`apply_ai_learning_v1` 与 Direct Chat 发送/已读/分页 RPC，并为 `profiles`、奖励/经济/AI 表、Social Graph、`direct_messages`、`direct_message_reads` 启用 RLS；没有面向 `anon`/`authenticated` 的访问策略，浏览器不能直连这些表。
 
 1. 在 Supabase SQL Editor 执行 `supabase/schema.sql`。
 2. 将项目 URL 写入 `SUPABASE_URL`，将 **secret `service_role` key** 写入 Render 的 `SUPABASE_KEY`。不要使用 `anon`/publishable key；也绝不能把 service-role secret 放到前端、日志或仓库。
@@ -210,6 +214,8 @@ node scripts/render-deploy.js
 `profiles.solo_rate` 保存服务端维护的人机结算频控时间戳，首胜日期与 AI 日货币累计也只由服务端更新，均不属于客户端可写档案字段。正式奖励会先写入本地 outbox；Supabase 事务短暂失败后会以相同 `result_id` 自动重试，`applied` 或匹配 `resultId` 的 `duplicate` 都是成功终态。当前 Render 单实例且未挂载持久磁盘，outbox 只能覆盖进程存活期/正常重启场景，不能替代真实 Supabase；扩容多实例前还必须把 Reward Resolver 迁移为数据库内权威计算或增加版本冲突重算。没有真实 Supabase 凭证时，可运行 `node --experimental-websocket qa/supabase-adapter.js`，用本地 fake PostgREST 验证字段映射、单事务 RPC payload、幂等重试和空库迁移行为；它不能替代真实项目的 SQL、并发、连通性与 RLS 验收。
 
 AI 学习模型与经验在 `apply_ai_learning_v1` 中按账号+游戏加锁，以 `result_id` 幂等并校验 revision；服务端 outbox 会在 Supabase 暂时不可用时排队。当前 Render 单实例且未挂载持久磁盘，JSON/outbox 不能替代真实 Supabase；真实项目仍需执行迁移、RLS、并发、备份和回滚验收。
+
+玩家私聊在无 Supabase 时使用本地 JSON 的 90 天/每会话 500 条/全局 50,000 条有界回退；启用 Supabase 后，发送必须先通过数据库内好友/Block/幂等事务并持久化成功才回执，已读游标只允许推进到本人真实收到的消息。消息正文不进入 Profile、排行榜、Replay、Analytics、普通日志或浏览器 `localStorage`。真实 Render 持久化仍以执行本次 schema 迁移并完成 staging 并发/备份回滚验收为前提。
 
 ## 开发原则
 
@@ -238,5 +244,5 @@ Playroom 的长期开发按项目级执行系统运行，而不是依赖单次�
 
 - 自动化：`npm test`、关键协议 5 次连续回归、10/25/50 逻辑并发房、1000 次生命周期内存、Timer Audit 均已通过。
 - 浏览器：本地 in-app Chromium 已完成当前 P0 的 1440/768/481/390/360 注册、商城、大厅、六封面、英/乌语言、overflow、44px 控件、单例与滚动锁验收，控制台无 warning/error；证据在 `deliverables/visual-qa/visual-commerce-p0-20260808/`。
-- 未执行：Android Chrome、iPhone Safari、Tablet、第二桌面浏览器、真实 `tc/netem`、30 分钟真实 Synthetic Session、真实 Supabase/RLS/并发/备份回滚。
+- 未执行：本轮 Chat/Profile 的本地浏览器矩阵（本机保存权限禁止自动化访问 localhost）、Android Chrome、iPhone Safari、Tablet、第二桌面浏览器、真实 `tc/netem`、30 分钟真实 Synthetic Session、真实 Supabase/RLS/并发/备份回滚。
 - 因真实设备发布闸门未完成，当前结论是 `AUTOMATED_VERIFIED`，Release Candidate 总状态仍为 `BLOCKED`，不能写 `PRODUCTION_READY`。
