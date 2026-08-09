@@ -46,7 +46,7 @@
 - 赛事状态独立于 game state：waiting→round_ready→round_playing→round_complete→finished。
 - 3–4 人 Round Robin；5+ 三轮 Swiss，避免重复、每人最多一次 Bye。
 - 赛事积分 3/1/0，与 💵/XP 完全无关。
-- 第一版提供服务端编排/恢复/结果接口和同步面板；每桌单盘仍需手工创建普通双人 Match，尚未自动绑定结果。
+- 本节保留 V1 设计基线；当前 `tournament-orchestrator-v1.1` 已完成全员同意后自动建真实房、席位分配、单盘服务端结果回传、自动推进下一轮、Bye 与重连恢复。生产赛季、跨实例编排和高级延迟观战仍未完成。
 
 ## 6. Xiangqi Clock
 
