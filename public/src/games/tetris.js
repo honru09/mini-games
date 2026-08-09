@@ -468,6 +468,7 @@ function gameTetris(area, extra, n, opts){
 
   function createWellView(mini){
     const root=el('div','tetris-well'+(mini?' mini-board':' main-board'));root.style.touchAction='none';
+    if(typeof markTabletopSurface==='function')markTabletopSurface(root,'tetris-well',{variant:mini?'mini':'main'});
     return{root,mini,locked:new Map(),ghost:[],active:[],ko:null,assetUrl:''};
   }
   function setCellPosition(node,item,cell){node.style.display='block';node.style.left=item.x*cell+'px';node.style.top=item.y*cell+'px';node.style.width=cell+'px';node.style.height=cell+'px';}
@@ -481,14 +482,22 @@ function gameTetris(area, extra, n, opts){
     well.style.width=width+'px';well.style.height=height+'px';
     if(well.style&&typeof well.style.setProperty==='function')well.style.setProperty('--tetris-cell-size',cell+'px');else well.style['--tetris-cell-size']=cell+'px';
     const playerCosmetic=cosmetic.players&&cosmetic.players[state.id]||{},background=playerCosmetic.background||cosmetic.background,block=playerCosmetic.block||cosmetic.block;
-    const artEnabled=typeof gameArtEnabled==='function'&&gameArtEnabled('tetris');well.classList.toggle('game-art-v1',artEnabled);
-    if(artEnabled){const url=gameArtUrl('tetris','board');if(url!==view.assetUrl){setAssetCssUrl(well,'--game-board-art',url);view.assetUrl=url;}well.style.backgroundImage='';}
+    const tabletop=typeof tabletopArtEnabled==='function'&&tabletopArtEnabled();
+    if(typeof markTabletopSurface==='function')markTabletopSurface(well,'tetris-well',{variant:(mini?'mini-':'main-')+background});
+    const artEnabled=!tabletop&&typeof gameArtEnabled==='function'&&gameArtEnabled('tetris');well.classList.toggle('game-art-v1',artEnabled);
+    if(tabletop){
+      view.assetUrl='';
+      if(well.style&&typeof well.style.removeProperty==='function')well.style.removeProperty('--game-board-art');
+      else if(well.style)well.style['--game-board-art']='none';
+      well.style.backgroundImage='linear-gradient(rgba(33,25,35,.11) 1px,transparent 1px),linear-gradient(90deg,rgba(33,25,35,.11) 1px,transparent 1px),linear-gradient(135deg,#FFF9F2,#E7D3A7)';
+    }else if(artEnabled){const url=gameArtUrl('tetris','board');if(url!==view.assetUrl){setAssetCssUrl(well,'--game-board-art',url);view.assetUrl=url;}well.style.backgroundImage='';}
     else{view.assetUrl='';well.style.backgroundImage=background==='grid'?'linear-gradient(rgba(34,211,238,.12) 1px,transparent 1px),linear-gradient(90deg,rgba(34,211,238,.12) 1px,transparent 1px)':'';}
     const occupied=new Set();
     for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(state.well[r][c]){
       const key=r+':'+c,kind=(r*COLS+c)%7;occupied.add(key);let node=view.locked.get(key);
       if(!node){node=el('div','tetris-cell');view.locked.set(key,node);well.appendChild(node);}
       node.className='tetris-cell is-locked kind-'+kind;setCellPosition(node,{x:c,y:r},cell);node.style.backgroundColor=COLORS[kind];node.style.boxShadow=block==='neon'?'inset 0 0 '+(cell*.35)+'px #fff,0 0 '+(cell*.35)+'px '+COLORS[kind]:'';
+      if(node.style&&typeof node.style.setProperty==='function')node.style.setProperty('--tt-tetris-cosmetic-shadow',block==='neon'?'0 0 '+(cell*.35)+'px '+COLORS[kind]:'0 0 transparent');
     }
     for(const [key,node] of view.locked)if(!occupied.has(key)){removeRenderNode(node);view.locked.delete(key);}
     const activeCells=[],ghostCells=[];

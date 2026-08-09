@@ -21,7 +21,8 @@
 - 🔐 **用户名密码账号**：用户名大小写不敏感唯一，密码使用随机盐 scrypt 慢哈希；旧 PIN 账号可原 UID 迁移
 - 👻 **一次性访客**：服务端签发临时身份；退出立即删号，不进入持久库、排行榜、永久购买或持续 AI 学习
 - 📨 **玩家私聊**：正式好友一对一纯文本消息、离线留言、历史分页、账号级未读/已读、多会话同步；Block/访客/越权读取与伪造身份由服务端拒绝
-- 💬 **Honru 助手**：每日抚摸签到、三语言短对话与离线安全回退；聊天原文不落库，不伪造实时天气或新闻
+- 👻 **Honru 品牌角色**：保留每日签到、品牌形象与默认关闭的局内反应；前端助手聊天框已移除，Chat 专注玩家私聊
+- 🎲 **沉浸式 Game Stage**：六款游戏共用真实 Seat Rail、Arena 与 Command Tray；默认 Pocket Tabletop Wave A 覆盖棋盘/战场和核心实体
 - 🪪 **深度个人主页**：身份背景、等级 XP、六游戏战绩、连胜、成就、任务、好友/最近同玩、收藏与本人近 7 日回放统一展示
 - 🛍️ **💵 商城**：头像 / 头像框 / 动态特效 / 个人背景 / 六款游戏外观（游戏外观购买与装备由服务端权威校验）
 - 🎭 **AI 角色化**：5 个性格各异的 AI 对手，表达风格不同；强制胜/防守和本地强策略不会被人格覆盖
@@ -59,6 +60,8 @@ node server/index.js
 node scripts/build.js
 npm run test:i18n
 node qa/dom-smoke.js
+node qa/game-stage-contract.js
+node qa/tabletop-art-runtime.js
 node qa/ai-games.js
 node qa/ai-strength.js
 node qa/ai-learning.js
@@ -192,10 +195,13 @@ node scripts/render-deploy.js
 - 六款游戏都已接入 640×360 / 320×180 响应式大厅封面；五子棋与俄罗斯方块从旧版升级，飞行棋、大富翁、坦克和象棋补齐封面。当前六图是可回滚的软 3D 过渡批次，不等同于最终游戏包或 Sticker Cartoon Golden Set。
 - 五子棋木纹 Canvas 与俄罗斯方块玻璃井两个旧纵切继续保留，规则、快照、AI 与联机协议不包含美术状态。
 - 两款纵切可分别用 `mg_art_gomoku_v1`、`mg_art_tetris_v1` 本地 flag 回滚；关闭只影响绘制层，不改变规则、快照或联机协议。
+- Game Stage + Tabletop Wave A 已默认启用：共用 Stage/Seat/Command 与六款底材/核心实体按冻结矩阵达到 `52/100`；只有 `mg_art_tabletop_wave_a='0'` 才回退旧表现。
+- 手机 Tetris 将主井与对手预览改为单列/自适应网格，Arena 不再横向滚动，七项操作保持至少 `44×44px`。
 - 注册与商城完成产品级重排：48 款 Avatar v2（12 免费/36 商城）、单一滚动容器、五档响应式、主预览/试穿、单例弹层、服务端价格对齐和三语言商品/辅助文本。
 - `asset-library/` 是本地 provenance sidecar，分别校验目录与许可证哈希；`asset_manifest.json` 仍是唯一运行时机器事实源。未冻结对象存储提供商、许可、生命周期与凭证前不上传外部桶。
 - `Pocket Tabletop Sticker × Expressive Sticker Cartoon` M0 已进入 Draft：Art Bible v1、Facial Kit 16×3、Design/Motion、Source Manifest v2、Teacher 八状态与四 Avatar Alpha 源、Core UI 状态板、精确五子棋 15×15/五连和飞行棋 52 格/每方四机规格均已落地并通过 `test:sticker-art`。生成式规则错误稿已排除；人工清稿、IP 双人审查、运行时集成和 Golden Set 人工决议仍未执行，所有新旗标默认关闭。
 - Honru 九状态已有默认关闭的 P2 运行时预览：只有 `mg_art_honru_states_v1=1` 与 `mg_art_honru_game_reactions_v1=1` 同时存在时才加载当前状态 WebP；失败回退 v1，不进入规则、AI、联机、Replay 或奖励。人工/IP/真实设备验收前不得默认开启。
+- `/api/companion` 与净化/限流/离线回退继续作为后端兼容和安全边界，但当前产品前端没有 Honru 对话入口；`#/chat?view=honru` 会归一到玩家消息。
 - 所有美术资源保留 CSS / Canvas / DOM Emoji / WebAudio 回退，资源加载失败不能阻塞大厅或开局。
 
 ### 数据库（Supabase）
@@ -254,5 +260,6 @@ Playroom 的长期开发按项目级执行系统运行，而不是依赖单次�
 - 自动化：`npm test`、关键协议 5 次连续回归、10/25/50 逻辑并发房、1000 次生命周期内存、Timer Audit 均已通过。
 - 浏览器：本地 in-app Chromium 已完成当前 P0 的 1440/768/481/390/360 注册、商城、大厅、六封面、英/乌语言、overflow、44px 控件、单例与滚动锁验收，控制台无 warning/error；证据在 `deliverables/visual-qa/visual-commerce-p0-20260808/`。
 - 已执行：30 分钟生产正式好友 WebSocket 会话通过（15 条消息与已读、2 次重连、0 异常断开、P95 181ms）；逻辑 Chaos、完整 `npm test` 与 Quality Gates 通过。
-- 未执行：本轮 Chat/Profile 的当前浏览器矩阵（连接器需重启 Codex 后使用已配置 Node 24）、Android Chrome、iPhone Safari、Tablet、第二桌面浏览器、真实 `tc/netem`、真实 Supabase/RLS/并发/备份回滚。
+- 已执行：本轮本地 in-app Chromium 默认桌面/390px 的 Auth/Home/Games/Chat/Profile、五子棋/Tetris、light/dark、overflow/44px/控制台矩阵。
+- 未执行：Android Chrome、iPhone Safari、真实 Tablet、第二桌面浏览器、真实 `tc/netem`、真实 Supabase/RLS/并发/备份回滚。
 - 因真实设备发布闸门未完成，当前结论是 `AUTOMATED_VERIFIED`，Release Candidate 总状态仍为 `BLOCKED`，不能写 `PRODUCTION_READY`。

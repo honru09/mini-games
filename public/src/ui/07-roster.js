@@ -930,6 +930,7 @@ function showGame(id){
     $('screen-hub').classList.add('hidden');
     $('screen-game').classList.remove('hidden');
     document.body.classList.add('game-active');
+    if (typeof renderGameStage === 'function') renderGameStage({ gameId:id });
     const endBtn = $('btn-end-game');
     if (endBtn) endBtn.classList.remove('hidden');
     return;
@@ -942,6 +943,9 @@ function showGame(id){
   const meta = GAMES[id];
   $('game-title').textContent = meta.icon + ' ' + meta.name;
   currentGameId = id;
+  // The instance owns turn authority.  Leave the Stage neutral until its first
+  // renderPlayers() call rather than guessing that the local seat is active.
+  if (typeof renderGameStage === 'function') renderGameStage({ reset:true, gameId:id, activeIdx:null });
   const area = $('board-area'), extra = $('game-extra');
   area.innerHTML = ''; extra.innerHTML = '';
   const inOnline = !!(online.connected && online.game);
@@ -994,6 +998,7 @@ function showGame(id){
     }
   }
   currentGame = createGameInstance(id, area, extra, playerCount, opts);
+  if (typeof renderGameStage === 'function') renderGameStage({ gameId:id });
   const endBtn = $('btn-end-game');
   if (endBtn) endBtn.classList.toggle('hidden', !inOnline);
 }
@@ -1029,6 +1034,10 @@ function openRoomSetup(selectedGame){
 }
 
 function renderPlayers(activeIdx, infos, bankrupts, colors){
+  if (typeof renderGameStage === 'function'){
+    renderGameStage({ activeIdx, infos:infos || null, bankrupts:bankrupts || null, colors:colors || null });
+    return;
+  }
   const bar = $('player-bar');
   bar.innerHTML = '';
   for (let i=0;i<playerCount;i++){

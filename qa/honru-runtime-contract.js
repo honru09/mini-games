@@ -8,6 +8,7 @@ const vm = require('vm');
 
 const ROOT = path.join(__dirname, '..');
 const read = rel => fs.readFileSync(path.join(ROOT, rel), 'utf8');
+const TEMPLATE = read('public/index-template.html');
 const ASSETS = read('public/src/core/06-assets.js');
 const SHELL = read('public/src/core/02-app-shell.js');
 const UTILS = read('public/src/core/01-utils.js');
@@ -211,6 +212,10 @@ function gameplayHarness(file, factory, count){
 const tick = () => new Promise(resolve => setImmediate(resolve));
 
 async function run(){
+  check('Honru 仅保留品牌、签到与局内反应，前端不再提供助手聊天',
+    !/id="(?:chat-tab-honru|honru-chat-view|honru-dock|companion-form|companion-input)"|btn-home-honru/.test(TEMPLATE) &&
+    /function petHonru\(\)[\s\S]*?type:'companion_checkin'/.test(SHELL) &&
+    !/\/api\/companion|sendCompanion|renderCompanion/.test(SHELL));
   const runtime = runtimeHarness();
   const enabled = () => vm.runInContext('honruStatesEnabled()', runtime.context);
   const resolveState = state => { runtime.context.__state = state; return vm.runInContext('resolveHonruStateUrl(__state)', runtime.context); };

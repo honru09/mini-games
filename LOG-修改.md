@@ -44,3 +44,4 @@
 - 2026-08-09 10:31｜将 Chat 默认页从 Honru 改为玩家消息并保留 Honru 独立子页；深度重构个人主页为身份/成长/六游戏战绩/成就/任务/社交/收藏/本人回放；修复账号缓存隔离与失效 token 主动推送，同步三语言、协议、构建、文档和项目状态。
 - 2026-08-09 12:43｜将 Honru P2、Direct Chat v1 与深度 Profile 快进发布至 GitHub main/Pages/Render；同步任务状态、项目状态、回滚点，并修正赛事与聊天旧审计文档漂移。
 - 2026-08-09 14:37｜Tetris 升级为 `tetris-rule-v3` Advanced Battle（T-Spin/B2B/Combo/Perfect Clear）并保留旧 v2/紧急开关回退；Direct Chat 接入默认关闭的跨实例 ID-only 事件；同步三语言、协议、文档和构建产物，发布 `0c507ab` 至 Render/Pages。
+- 2026-08-09 18:35｜重构六款局内为纸板桌游舞台，实时同步房主/本人/AI/READY/离线/观战状态；修正席位 `false` 泄漏、重排误标和 Tetris 手机横向滚动，移除个人主页元叙事文案并保留简洁标题。

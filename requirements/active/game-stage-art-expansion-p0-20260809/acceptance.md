@@ -1,0 +1,26 @@
+# Game Stage + Tabletop Art Wave A Acceptance
+
+| Gate | Required result |
+|---|---|
+| Visual coverage | 默认可见运行时覆盖固定矩阵达到 `52/100`，六款均计入底材和核心实体 |
+| Game Stage | 六款均有 Header、Seat Rail、Arena、Command Tray，重复刷新不产生重复 ID/监听 |
+| Online seats | 显示真实昵称/头像/Host/AI/READY/offline/current/spectator；只读取既有状态 |
+| Local/AI seats | 使用实例玩家数与当前玩家，不伪造在线 UID/房主状态 |
+| Art rollback | `mg_art_tabletop_wave_a=0` 回退旧表现；规则/快照/坐标完全相同 |
+| Honru Chat removal | 无 Chat 子页、首页对话入口、Dock、表单、快捷问题；旧 hash 归一到玩家消息 |
+| Preserved Honru | 签到协议、安全后端兼容、品牌资产与可选局内反应仍通过原边界测试 |
+| Copy cleanup | `profile_route_intro` 展示段和 `profile_kicker` 不再出现在 UI |
+| i18n | 三份 locale key 同构，英/乌无中文或裸 key，连续切换通过 |
+| Responsive | 360/390/768/1024/1440 无横溢、控制无遮挡、触控 ≥44px、safe-area/reduced-motion 生效 |
+| Gameplay | 六款初始化、AI、权威规则、重连、观战、E2E、奖励不回归 |
+| Build | `public/index.html` 由 build 生成且无漂移 |
+| External truth | 不把模拟浏览器写成真机，不把 code-native Wave A 写成 M0/Honru 人工/IP 批准 |
+
+## 发布前验收结果（2026-08-09 18:35 +09:00）
+
+- `52/100` 默认可见覆盖矩阵完成：共用 Stage 16、六底材 18、六核心实体 18。
+- `npm run quality:gates` 11.351 秒全通过；完整 `npm test` 130.370 秒全通过；构建前后 `public/index.html` SHA-256 一致。
+- 本地 in-app Chromium 已检查默认桌面与 `390×844`：五子棋/Tetris、light/dark、Profile、玩家 Chat、无页面横溢、Tetris Arena 无内部横溢、7 个按钮最小 44px、控制台无 warning/error。
+- 浏览器发现并纠正：席位 `false` 泄漏、UID/重排瞬态误标、Tetris 390px 内部横向滚动与触控尺寸。
+- `NOT_EXECUTED`：第二桌面浏览器、Android/iPhone/Tablet 真机、真实网络整形、独立 Reviewer B/IP/Golden Set。M0/P1/P2 未审批资源继续默认关闭。
+- 当前为 `VERIFIED_RELEASE_PENDING`；线上部署完成前不写 `ACCEPTED/RELEASED`。

@@ -256,6 +256,7 @@ function gameGomoku(area, extra, n, opts){
   }
   const canvas = document.createElement('canvas');
   canvas.className = 'board-canvas gomoku-board';
+  const tabletopMode = () => typeof tabletopArtEnabled === 'function' && tabletopArtEnabled();
   const legacyArtEnabled = gameArtEnabled('gomoku');
   const stickerArtRequested = typeof stickerArtEnabled === 'function' && stickerArtEnabled('gomoku');
   let stickerArtActive = false, stickerArtState = stickerArtRequested ? 'loading' : 'disabled', stickerAssetProbe = null, stickerAssetUrl = '';
@@ -268,22 +269,33 @@ function gameGomoku(area, extra, n, opts){
     else if (canvas.style) canvas.style['--game-board-art'] = 'none';
   }
   function applyPresentation(){
+    const tabletop = tabletopMode();
+    if (typeof markTabletopSurface === 'function') markTabletopSurface(canvas, 'gomoku-board', { variant: boardTheme });
     canvas.dataset.boardTheme = boardTheme;
     canvas.dataset.pieceSkin = cosmetic.default;
     canvas.dataset.stickerArt = stickerArtState;
-    if (boardTheme === 'grass'){
+    if (tabletop){
+      canvas.classList.remove('game-art-v1'); canvas.classList.remove('game-art-sticker-v1'); clearBoardAsset();
+      canvas.dataset.tabletopArt = 'wave-a';
+      canvas.style.backgroundColor = '#F3E5C4';
+      canvas.style.backgroundImage = 'linear-gradient(135deg,rgba(255,249,242,.86),rgba(243,229,196,.93))';
+    } else if (boardTheme === 'grass'){
+      delete canvas.dataset.tabletopArt;
       canvas.classList.remove('game-art-v1'); canvas.classList.remove('game-art-sticker-v1');
       canvas.style.backgroundColor = '#86a96b';
       canvas.style.backgroundImage = 'radial-gradient(circle at 20% 15%,rgba(255,255,255,.24),transparent 34%),repeating-linear-gradient(105deg,rgba(35,92,45,.13) 0 2px,transparent 2px 7px),linear-gradient(#9fc17f,#668e57)';
     } else if (stickerArtActive) {
+      delete canvas.dataset.tabletopArt;
       canvas.classList.add('game-art-v1'); canvas.classList.add('game-art-sticker-v1');
       setAssetCssUrl(canvas, '--game-board-art', stickerAssetUrl);
       canvas.style.backgroundColor = '#F1B640'; canvas.style.backgroundImage = '';
     } else if (legacyArtEnabled) {
+      delete canvas.dataset.tabletopArt;
       canvas.classList.add('game-art-v1'); canvas.classList.remove('game-art-sticker-v1');
       setAssetCssUrl(canvas, '--game-board-art', gameArtUrl('gomoku', 'board'));
       canvas.style.backgroundColor = '#d7a153'; canvas.style.backgroundImage = '';
     } else {
+      delete canvas.dataset.tabletopArt;
       canvas.classList.remove('game-art-v1'); canvas.classList.remove('game-art-sticker-v1'); clearBoardAsset();
       canvas.style.backgroundColor = '#e6c58b';
       canvas.style.backgroundImage = 'linear-gradient(100deg,rgba(105,63,22,.12),transparent 35%,rgba(105,63,22,.08))';
@@ -307,10 +319,13 @@ function gameGomoku(area, extra, n, opts){
     }
   }
   function draw(){
-    const stickerMode = stickerArtActive && boardTheme === 'classic';
+    const tabletop = tabletopMode();
+    if (!tabletop && canvas.dataset.tabletopArt === 'wave-a') applyPresentation();
+    if (typeof markTabletopSurface === 'function') markTabletopSurface(canvas, 'gomoku-board', { variant: boardTheme });
+    const stickerMode = tabletop || (stickerArtActive && boardTheme === 'classic');
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, LOGICAL, LOGICAL);
-    ctx.strokeStyle = boardTheme === 'grass' ? 'rgba(30,61,31,.72)' : (stickerMode ? '#443443' : (legacyArtEnabled ? 'rgba(76,43,15,.68)' : '#8a6638'));
+    ctx.strokeStyle = tabletop ? '#443443' : (boardTheme === 'grass' ? 'rgba(30,61,31,.72)' : (stickerMode ? '#443443' : (legacyArtEnabled ? 'rgba(76,43,15,.68)' : '#8a6638')));
     ctx.lineWidth = stickerMode ? 3.2 : 1; ctx.lineCap = stickerMode ? 'round' : 'butt';
     for (let i=0;i<N;i++){
       ctx.beginPath(); ctx.moveTo(PAD + i*CELL, PAD); ctx.lineTo(PAD + i*CELL, PAD + (N-1)*CELL); ctx.stroke();
@@ -520,7 +535,7 @@ function gameGomoku(area, extra, n, opts){
     if (value && value.presentation){ boardTheme = value.presentation.boardTheme === 'grass' ? 'grass' : 'classic'; cosmetic = normalizeCosmetic(value.presentation.cosmetic); }
     applyPresentation(); draw(); renderPlayers(cur, null); return true;
   }
-  initStickerSurface();
+  if (!tabletopMode()) initStickerSurface();
   resetLocal();
   return {
     reset, onMove: opts.onMove, onRestart: resetLocal, snapshot, onRestore,

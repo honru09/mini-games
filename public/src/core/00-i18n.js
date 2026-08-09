@@ -410,6 +410,7 @@ async function setLanguage(lang) {
   if (typeof setChatView === 'function' && typeof ghostAppRoute !== 'undefined' && ghostAppRoute === 'chat') setChatView(typeof ghostChatView !== 'undefined' ? ghostChatView : 'players', { silentHash:true });
   if (online.room) renderRoomPanel();
   if (currentGame && typeof currentGame.onLanguageChange === 'function') currentGame.onLanguageChange(currentLang);
+  if (typeof renderGameStage === 'function') renderGameStage();
   if (online.connected && account && account.uid) {
     online.send({ type:'profile', payload: { uid: account.uid, name: account.name, avatar: account.avatar, lang:currentLang } });
   }

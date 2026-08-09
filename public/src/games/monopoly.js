@@ -315,7 +315,11 @@ function gameMonopoly(area, extra, n, opts){
     const w = area.clientWidth || 520;
     S = Math.min(w, 540);
     board.style.width = S + 'px'; board.style.height = S + 'px';
-    board.style.background = boardTheme === 'grass'
+    const tabletop = typeof tabletopArtEnabled === 'function' && tabletopArtEnabled();
+    if (typeof markTabletopSurface === 'function') markTabletopSurface(board, 'monopoly-board', { variant: boardTheme });
+    board.style.background = tabletop
+      ? 'radial-gradient(circle at 35% 26%,rgba(255,255,255,.76),transparent 26%),linear-gradient(135deg,#FFF9F2,#F3E5C4)'
+      : boardTheme === 'grass'
       ? 'radial-gradient(circle at 50% 45%,rgba(255,255,255,.82),rgba(236,253,245,.72) 42%,rgba(22,101,52,.34)),repeating-linear-gradient(105deg,#5f9f55 0 5px,#4f8e49 5px 9px)'
       : 'radial-gradient(circle at 50% 45%,rgba(255,255,255,.92),rgba(255,247,237,.88) 48%,rgba(146,64,14,.24)),repeating-linear-gradient(90deg,#c99b6b 0 8px,#b98555 8px 16px)';
     board.innerHTML = '';

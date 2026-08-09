@@ -15,7 +15,10 @@ check('黑夜主题显式反转登录页外链 SVG Logo',/html\[data-theme="dark
 check('登录页主题按钮切换后同步图标与可访问名称',/const syncTheme=.*theme\.textContent=getTheme\(\)===['"]dark['"]\?['"]☀['"]:['"]☾['"][\s\S]*theme\.setAttribute\(['"]aria-label['"][\s\S]*syncTheme\(\)/.test(auth));
 check('登录前独立 Page 使 App inert',/modal-backdrop auth-backdrop ghost-auth-page/.test(fs.readFileSync(path.join(root,'public','src','shop','04-auth.js'),'utf8'))&&/app\.inert=true/.test(shell));
 check('显式退出重新进入独立认证 Page 且不泄漏旧 App',/function completeLocalLogout[\s\S]*typeof requireGhostAuth === 'function'[\s\S]*requireGhostAuth\('login'\)/.test(roster));
-check('聊天文本使用 elRaw 而非 innerHTML',/elRaw\('div','companion-message/.test(shell));
-check('手机以 Chat 底栏替代 Honru 浮层并避免遮挡内容',/\.home-welcome\{grid-column:auto\}/.test(template)&&/\.honru-dock\{display:none\}/.test(template)&&/mobile-app-nav[\s\S]*data-app-route-target="chat"/.test(template));
+check('玩家私聊文本使用 elRaw 而非 innerHTML',/function chatRawNode/.test(shell)&&/chatRawNode\('div','chat-message/.test(shell)&&!/chat-message[^\n]*innerHTML\s*=/.test(shell));
+check('Honru 助手聊天 UI 与首页入口已移除，签到保留',!/id="(?:chat-tab-honru|honru-chat-view|honru-dock|companion-form|companion-input)"|btn-home-honru/.test(template)&&/function petHonru\([\s\S]*companion_checkin/.test(shell));
+check('手机以 Chat 底栏避免遮挡内容',/\.home-welcome\{grid-column:auto\}/.test(template)&&/mobile-app-nav[\s\S]*data-app-route-target="chat"/.test(template));
+check('个人主页不再渲染元叙事引导语',!/data-i18n="profile_(?:kicker|route_intro)"/.test(template)&&!/"profile_(?:kicker|route_intro)"\s*:/.test(fs.readFileSync(path.join(root,'public','locales','zh-CN.json'),'utf8')));
+check('个人主页保留简洁的本地化页面标题',/ghost-profile-route"[^>]*>[\s\S]*?profile-route-heading[\s\S]*?<h1[^>]*data-i18n="nav_profile"/.test(template));
 check('Honru 局内反应受双闸门控制且 reduced-motion 静态降级',/mg_art_honru_states_v1/.test(fs.readFileSync(path.join(root,'public','src','core','06-assets.js'),'utf8'))&&/mg_art_honru_game_reactions_v1/.test(fs.readFileSync(path.join(root,'public','src','core','06-assets.js'),'utf8'))&&/\.honru-game-reaction/.test(template)&&/@media\(prefers-reduced-motion:reduce\)[^]*honru-game-reaction/.test(template));
 if(fails){console.log('GHOST_SHELL_CONTRACT_FAILURES='+fails);process.exit(1);}console.log('GHOST_SHELL_CONTRACT_ALL_PASS');

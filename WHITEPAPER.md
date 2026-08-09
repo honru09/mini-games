@@ -101,6 +101,7 @@ DeepSeek Key 只存在于服务端环境变量。`qa/ai-games.js` 使用本地�
 - `public/src/core/06-assets.js`：稳定资源路径、现金组件和加载失败 fallback。
 - `G-02/G-07/G-08/G-09/G-11/G-06-COVER`：六款游戏均有 640×360 / 320×180 响应式大厅封面、lazy/srcset、完整性哈希与 Emoji fallback。
 - `G-02-BOARD-SURFACE / G-11-WELL-SURFACE`：五子棋木纹 Canvas 与俄罗斯方块玻璃井两个旧纵切继续保留。
+- `Game Stage + Tabletop Wave A`：六款共用 Header/真实 Seat Rail/Arena/Command Tray，代码原生 Cream/Ink 底材与核心实体默认覆盖 `52/100`；严格 `mg_art_tabletop_wave_a='0'` 回退旧表现。
 - `art-source/`：保留六张封面高分辨率母图与可复现 Prompt；`public/assets/` 只保存运行时 WebP。
 - `asset-library/`：记录 provenance、来源、许可、目录/许可证独立哈希、Prompt/模型、预览与未来对象键；它是 sidecar，不替代生产 manifest。
 
@@ -121,6 +122,8 @@ DeepSeek Key 只存在于服务端环境变量。`qa/ai-games.js` 使用本地�
 4. `mg_art_gomoku_v1` 与 `mg_art_tetris_v1` 可独立关闭；规则、快照、AI 和联机消息不含美术状态。
 5. 注册与商城已覆盖 48 款 Avatar v2、主预览/试穿、服务端价格对齐、单例弹层、滚动锁和 1440/768/481/390/360 响应式。
 6. 当前六封面是可回滚的软 3D 过渡版，不作为 `Pocket Tabletop Sticker` 最终风格验收结论。
+7. 六款 Game Stage/Tabletop Wave A 已默认接入且不读取规则/快照/奖励；390px Tetris 改为单列预览、Arena 无内部横溢、七项控制至少 44px。
+8. Honru 前端助手聊天 UI 已删除；玩家私聊是 Chat 唯一产品入口，签到、品牌资产、后端兼容和默认关闭局内反应继续保留。
 
 下一批严格执行新报告：先 Art Bible v1、Design System v3、Motion System v1 和 Source Manifest v2；再用 1 Persona×8 状态、4 Avatar、核心 UI、五子棋与飞行棋完整纵切组成 Golden Set，并完成 IP Similarity Review。Golden Set 未通过前不得批量重绘 48 Avatar 或其余游戏。资源制作不改变已完成的规则、AI、商品 ID、奖励或权威协议。
 
@@ -189,6 +192,8 @@ node --experimental-websocket qa/ws-close-test.js
 - [x] 建立本地素材库 provenance sidecar、Schema 子集验证、目录/许可证独立哈希和六封面交叉审计。
 - [x] 冻结 `Pocket Tabletop Sticker` M0：Art Bible、Design/Motion、Source Manifest、Golden Set 与 IP Review；当前过渡封面不冒充最终风格。
 - [x] 完成 M0 Draft 源：Teacher 八状态与四 Avatar Alpha、Core UI HTML/CSS 状态板、精确五子棋 15×15/五连、飞行棋 52 格/每方四机/四剪影；Source Manifest 固定 hash/provenance，生成式规则错误稿不进入当前源路径。
+- [x] 完成默认可见 Game Stage + Tabletop Wave A：共用 Stage 16、六底材 18、六核心实体 18，总覆盖 `52/100`；M0/P1/P2 审批闸门保持独立。
+- [x] 删除 Honru 助手 Chat/Dock/表单并保留玩家私聊与签到；完成 Tetris 360/390px 单列预览和 44px 操作适配。
 - [ ] 完成 Teacher/Avatar 人工清稿、IP 双人审查、六主题×三语×五宽运行时集成验收与 Golden Set 人工决议；完成前全部 M0 旗标默认关闭。
 - [x] 实施 Economy & Progression v1.0：联机/AI 权威结算隔离、有效局、防刷、独立胜场、`apply_reward_v1` 单事务落库、奖励流水与 Reward Breakdown UI。
 - [x] 实施 Gameplay Shared Protocol V1：Tank Authority、Tetris Battle Coordination、Spectator Room、Tournament Orchestrator、Xiangqi Clock、Monopoly Auction。

@@ -5,8 +5,10 @@ const read=file=>fs.readFileSync(path.join(ROOT,file),'utf8');
 const template=read('public/index-template.html'),shell=read('public/src/core/02-app-shell.js'),online=read('public/src/online/03-websocket.js'),server=read('server/index.js'),schema=read('supabase/schema.sql');
 let fail=0;function check(name,ok){console.log((ok?'PASS  ':'FAIL  ')+name);if(!ok)fail++;}
 check('Chat 默认标题是玩家消息而非 Honru',/id="chat-route-title"[^>]*data-i18n="chat_title"/.test(template)&&/"chat_title": "玩家消息"/.test(read('public/locales/zh-CN.json')));
-check('Honru 保留为 Chat 独立子页',/data-chat-view="honru"/.test(template)&&/#\/chat\?view=honru/.test(shell));
-check('主页 Honru 与 Dock 直接进入 Honru 子页',/btn-home-honru[\s\S]{0,200}chatView:'honru'/.test(shell)&&/btn-honru-dock[\s\S]{0,200}chatView:'honru'/.test(shell));
+check('Honru 助手 Chat 子页、首页入口、Dock 与表单已删除',!/data-chat-view="honru"|id="honru-chat-view"|id="chat-tab-honru"|btn-home-honru|btn-honru-dock|id="companion-(?:form|input)"/.test(template+shell));
+check('旧 Honru Chat 深链与未知视图统一到玩家消息',/function chatViewFromHash\(\)\{\s*return 'players';\s*\}/.test(shell)&&/const next='#\/chat'/.test(shell)&&/ghostChatView='players'/.test(shell));
+check('前端不再有 companion 对话历史、欢迎语或发送逻辑',!/sendCompanion|renderCompanion|companionMessages|companionWelcome|\/api\/companion/.test(shell));
+check('Honru 签到协议仍保留且不与玩家私聊耦合',/function petHonru\(\)[\s\S]*?type:'companion_checkin'/.test(shell)&&/function handleCompanionCheckin/.test(shell));
 check('玩家消息桌面双栏与手机主从布局存在',/grid-template-columns:minmax\(250px,320px\)/.test(template)&&/player-chat-shell:not\(\.thread-open\)/.test(template)&&/100dvh/.test(template));
 check('输入区支持 500 字、Enter 与 Shift+Enter',/id="chat-input"[\s\S]{0,180}maxlength="500"/.test(template)&&/event\.key==='Enter'&&!event\.shiftKey/.test(shell));
 check('消息正文使用 textContent 路径并标记原文',/function chatRawNode/.test(shell)&&/data-i18n-raw/.test(shell)&&!/chat-message[^\n]*innerHTML\s*=/.test(shell));

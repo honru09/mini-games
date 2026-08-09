@@ -14,7 +14,7 @@
 两种玩法：**人机对战**（六款本地强策略 + DeepSeek 近优裁决）、
 **联机对战**（WebSocket 房间 + 游戏大厅 + 邀请 + 在线状态 + 全球排行榜）。
 含 **用户名密码账号 + 旧 PIN 迁移 + 一次性访客**、**💵 商城**、**三语言 i18n**（zh-CN / en-US / uk-UA）、
-**昼夜双主题**、Home/Games/Chat/Profile 四区外壳与原创助手 **Honru**。
+**昼夜双主题**、Home/Games/Chat/Profile 四区外壳、原创品牌角色 **Honru** 与六款统一 Game Stage。
 
 ## 2. 线上地址与仓库
 
@@ -84,6 +84,8 @@ node server/index.js            # http://localhost:8080
 # 2) 测试
 npm run test:i18n              # 三语言唯一 key、占位符、动态切换与界面泄漏检查
 node qa/dom-smoke.js            # 前端冒烟
+node qa/game-stage-contract.js  # 对局舞台、Seat Rail、Tetris 手机布局
+node qa/tabletop-art-runtime.js # 六款 Wave A 与严格 0 回滚
 node qa/ai-games.js             # 6 款人机状态机
 node qa/ai-strength.js          # 六款战术强度与候选特征
 node qa/ai-learning.js          # 个人持续学习纯单元回归
@@ -191,9 +193,10 @@ node server/index.js
 - `companion_checkin/companion_checkin_ok` 按账号与日期幂等；访客签到只存在内存。
 - `POST /api/companion` 要求 Bearer token，并复用 Origin、请求体、并发、速率与超时边界；聊天原文不落库。
 - 无 Key、超时或上游错误使用三语本地回退；没有可信来源时不得伪造天气或新闻。
+- 当前前端不再提供 Honru Chat 子页、Dock、表单或快捷问题；后端接口只作为兼容/安全边界保留，签到与默认关闭的局内反应不受影响。
 
 ### 玩家私聊（direct-chat-v1）
-- Chat 默认子页是玩家消息，Honru 为独立 `#/chat?view=honru` 子页；正式账号仅能与当前好友发送一对一纯文本消息，访客禁止持久私聊。
+- Chat 只提供玩家消息；旧 `#/chat?view=honru` 与未知 view 归一到 `#/chat`。正式账号仅能与当前好友发送一对一纯文本消息，访客禁止持久私聊。
 - `chat_list/chat_history/chat_send/chat_read` 与 `chat_state/chat_history/chat_message/chat_send_ok/chat_read_ok/chat_error` 成对维护；sender、conversation、message ID、十进制字符串 seq 与时间由服务端权威签发。
 - `(senderUid,clientMessageId)` 发送幂等；正文 NFC/控制符净化后限 500 Unicode/2000 UTF-8 bytes，只用 `textContent` + `data-i18n-raw` 渲染，不进入日志、Analytics、Replay、Profile、排行榜或 localStorage。
 - 任一方向 Block 阻断发送和历史并从摘要/未读排除；解除好友后历史只读；已读必须对应本人真实收到的入站 seq 且账号级单调推进。
@@ -302,13 +305,14 @@ Supabase 首次接入或升级优先用 `scripts/supabase-production-ops.ps1`：
 - Seat/Social/Profile v2 已进入 main：真人/AI/空席、READY、AI Controller、公开/私密房、观战、房主转移、好友/拉黑/举报、Presence 隐私和 Profile v2。
 - Gameplay Cosmetic 产品闭环：服务端定价/owned/装备校验、商城按游戏筛选、公开档案只返回装备 ID，六款游戏保留 fallback。
 - Daily Task / Replay / Metrics：服务端任务进度与 claimId 幂等领取；Replay v1.1 支持 7 天保留、公开延迟、分享/撤销和播放控制；Metrics v2 提供 Bearer 管理员只读页面、有界历史、CSV、阈值告警、脱敏错误闭环、限频与访问审计。
-- Direct Chat v1 + Profile 深度优化：好友私聊、离线留言、历史/未读/已读/幂等/Block/访客与 token 淘汰安全边界；Chat 默认玩家消息并保留 Honru 子页；个人主页完成身份、成长、六游戏战绩、成就、任务、社交、收藏和本人回放信息架构，专项与完整 `npm test` 通过。
+- Direct Chat v1 + Profile 深度优化：好友私聊、离线留言、历史/未读/已读/幂等/Block/访客与 token 淘汰安全边界；Chat 只保留玩家消息，旧 Honru 深链归一到 `#/chat`；个人主页完成身份、成长、六游戏战绩、成就、任务、社交、收藏和本人回放信息架构，专项与完整 `npm test` 通过。
 - Production Readiness 工程基线：Tetris `tetris-rule-v3` 高级战斗计分及旧 v2→v1 安全回退；Supabase 生产运维、集群租约/PubSub/脱敏遥测合同；带 192/512 PNG 与 Apple 图标的安装型 PWA 安全缓存；Honru cleanup v1 非运行时候选技术通过。30 分钟生产正式好友 WS 会话通过（15 条消息/已读、2 次重连、0 异常断开、P95 181ms）；真实凭证/人工/真机/真实网络闸门仍未通过。
+- Game Stage + Tabletop Wave A：六款默认进入统一 Header/真实 Seat Rail/Arena/Command Tray，Cream/Ink 代码原生底材与核心实体覆盖 `52/100`；严格 `mg_art_tabletop_wave_a='0'` 回退旧表现。Honru 助手聊天 UI 已删除，玩家私聊与签到保留；Tetris 手机 Arena 单列且七项触控 ≥44px。Quality Gates、完整 `npm test` 与本地桌面/390px 浏览器验收通过。
 
 ⏳ 待办：
 1. 提供真实 Supabase DB URL/service-role，并实际执行迁移、浏览器角色 RLS、并发、加密备份、隔离恢复和非破坏回滚验收；通过前 Cluster/Telemetry 保持关闭且 Render 单实例。
-2. 重启 Codex 让浏览器连接器使用已配置的 Node 24，再执行当前 Desktop/手机/平板模拟；另需第二浏览器和 Android/iPhone/Tablet 真机、真实网络整形。
-3. 由独立自然人完成 Sticker/Honru 人工清稿、Reviewer B/IP Review 与用户 Golden Set 签字；通过前所有新美术保持默认关闭。
+2. 当前 in-app 浏览器连接已恢复并完成本轮桌面/390px 模拟；仍需第二浏览器和 Android/iPhone/Tablet 真机、真实网络整形。
+3. 由独立自然人完成 Sticker/Honru 人工清稿、Reviewer B/IP Review 与用户 Golden Set 签字；通过前 M0/P1/P2 未审批位图/SVG 继续默认关闭。代码原生 Wave A 默认开启不代表这些资源已获批。
 4. 多实例生产扩容前完成真实 Supabase 并发与 Reward/AI 分布式 outbox 验收；配置并验证外部遥测接收端。
 5. 高级延迟观战、文字/社交游戏，以及需开发者账号/证书的微信小程序、原生 App 与商店发行。
 

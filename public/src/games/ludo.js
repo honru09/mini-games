@@ -247,10 +247,14 @@ function gameLudo(area, extra, n, opts){
     const w = area.clientWidth || 520;
     S = Math.min(w, 540);
     board.style.width = S + 'px'; board.style.height = S + 'px';
+    const tabletop = typeof tabletopArtEnabled === 'function' && tabletopArtEnabled();
+    if (typeof markTabletopSurface === 'function') markTabletopSurface(board, 'ludo-board', { variant: boardTheme });
     board.dataset.boardTheme = boardTheme;
     board.dataset.baseSkin = cosmetic.base;
     board.dataset.pieceSkin = cosmetic.piece;
-    board.style.background = boardTheme === 'grass'
+    board.style.background = tabletop
+      ? 'radial-gradient(circle at 28% 20%,rgba(255,255,255,.72),transparent 24%),linear-gradient(135deg,#FFF9F2,#F3E5C4)'
+      : boardTheme === 'grass'
       ? 'radial-gradient(circle at 50% 45%,rgba(255,255,255,.30),transparent 36%),repeating-linear-gradient(110deg,rgba(40,99,48,.12) 0 2px,transparent 2px 8px),linear-gradient(#a7c985,#668f58)'
       : 'var(--card)';
     board.innerHTML = '';

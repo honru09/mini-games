@@ -364,6 +364,7 @@ const online = {
           return;
         }
         renderRoomPanel();
+        if (typeof renderGameStage === 'function') renderGameStage();
         if (this.pendingGame){ const game=this.pendingGame; this.pendingGame=null; this.selectGame(game); }
         break;
       case 'spectating':
@@ -373,6 +374,7 @@ const online = {
           this.game=p.started?p.game:null;this.matchId=p.matchId||null;this.gameplayMeta=p.gameplay||null;this.presentationMeta=p.presentation||null;
           this.status(t('spectating_room',p.room || ''));renderRoomPanel();
           if (this.game){ startOnlineGame(this.game,p.size); this.replayMoveLog(p.moveLog || []); }
+          if (typeof renderGameStage === 'function') renderGameStage();
         }
         break;
       case 'spectate_joined':
@@ -394,6 +396,7 @@ const online = {
             if(p.auctionSnapshot&&currentGame&&currentGame.onAuctionEvent)currentGame.onAuctionEvent('auction_state',p.auctionSnapshot);
             if(p.finalResult){this.lastMatchResult=p.finalResult;toast(t('match_already_finished'));}
           }
+          if (typeof renderGameStage === 'function') renderGameStage();
         }
         break;
       case 'lobby':
@@ -510,6 +513,7 @@ const online = {
           } else {
             this.status(t('room_restored', this.room));
           }
+          if (typeof renderGameStage === 'function') renderGameStage();
           this.flushPendingResultClaim();
         }
         break;
@@ -522,8 +526,13 @@ const online = {
       case 'peer_status':
         {
           const p = msg.payload || {};
+          const seat = this.roomInfo && Array.isArray(this.roomInfo.seats)
+            ? this.roomInfo.seats.find(item => item && Number(item.seatId) === Number(p.player))
+            : null;
+          if (seat && seat.type === 'human') seat.online = !!p.online;
           if (p.online) this.status(t('reconnect_peer_back', (p.player || 0) + 1));
           else this.status(t('reconnect_peer_wait', (p.player || 0) + 1));
+          if (typeof renderGameStage === 'function') renderGameStage();
         }
         break;
       case 'reconnect_expired':
@@ -539,8 +548,12 @@ const online = {
         {
           const p = msg.payload || {};
           this.isHost = Number(p.player) === Number(this.player);
+          if (this.roomInfo && Array.isArray(this.roomInfo.seats) && Number.isInteger(Number(p.player))){
+            this.roomInfo.seats.forEach(seat => { if (seat) seat.host = Number(seat.seatId) === Number(p.player); });
+          }
           if (this.isHost) toast(t('host_transferred'));
           renderRoomPanel();
+          if (typeof renderGameStage === 'function') renderGameStage();
         }
         break;
       case 'player_reassigned':
@@ -548,6 +561,8 @@ const online = {
           const p = msg.payload || {};
           if (Number.isInteger(p.player)) this.player = p.player;
           renderRoomPanel();
+          // compactRoomPlayers() broadcasts the authoritative room_update next.
+          // Keep the existing rail until its matching seats payload arrives.
         }
         break;
       case 'invite':

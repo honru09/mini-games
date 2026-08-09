@@ -76,8 +76,11 @@ function makeEl(tag){
     set(v){ classes.clear(); String(v).split(/\s+/).filter(Boolean).forEach(c => classes.add(c)); },
   });
   e.classList = {
-    add: c => classes.add(c),
-    remove: c => classes.delete(c),
+    // Native DOMTokenList accepts multiple tokens. Wave A deliberately marks a
+    // surface with its shared and release classes in one call, so the smoke DOM
+    // must model that browser contract rather than silently dropping the latter.
+    add: (...items) => items.forEach(c => classes.add(c)),
+    remove: (...items) => items.forEach(c => classes.delete(c)),
     toggle: (c, force) => {
       const on = force === undefined ? !classes.has(c) : !!force;
       if (on) classes.add(c); else classes.delete(c);
@@ -274,18 +277,39 @@ async function main(){
   check('asset manifest 的 asset ID 唯一', new Set(manifestIds).size === manifestIds.length);
   check('asset manifest 的 integrated 文件全部存在', integratedPaths.every(file => file.startsWith('public/assets/') && fs.existsSync(path.join(ROOT, ...file.split('/')))));
 
+  // Wave A is default-on and deliberately takes precedence over frozen M0.
+  // Establish that live presentation path first; every M0/legacy assertion below
+  // then explicitly opts out so it continues to exercise its own rollback contract.
+  localStorage.removeItem('mg_art_tabletop_wave_a');
   localStorage.removeItem('mg_art_sticker_m0_v1');
   localStorage.removeItem('mg_art_gomoku_sticker_v1');
+  localStorage.removeItem('mg_art_gomoku_v1');
+  G.playerCount = 2; G.showGame('gomoku');
+  const tabletopDefaultCanvas = area().children[0];
+  check('Tabletop Wave A 默认启用 Cream/Ink 五子棋桌面且规则层仍由 Canvas 绘制',
+    tabletopDefaultCanvas && tabletopDefaultCanvas.tagName === 'CANVAS' &&
+    tabletopDefaultCanvas.classList.contains('tabletop-art-surface') &&
+    tabletopDefaultCanvas.classList.contains('tabletop-art-wave-a') &&
+    tabletopDefaultCanvas.dataset.tabletopSurface === 'wave-a' &&
+    tabletopDefaultCanvas.dataset.tabletopKind === 'gomoku-board' &&
+    tabletopDefaultCanvas.dataset.tabletopArt === 'wave-a' &&
+    tabletopDefaultCanvas.style.backgroundColor === '#F3E5C4' &&
+    !tabletopDefaultCanvas.classList.contains('game-art-v1'));
+
+  // Frozen M0 must still be able to prove its strict dual gate and all legacy
+  // fallbacks. Wave A uses one exact opt-out value, rather than becoming a
+  // hidden third M0 flag.
+  localStorage.setItem('mg_art_tabletop_wave_a','0');
   G.playerCount = 2; G.showGame('gomoku');
   let stickerCanvas = area().children[0];
-  check('M0 五子棋双闸门默认关闭并保留旧木纹', stickerCanvas.dataset.stickerArt === 'disabled' && stickerCanvas.classList.contains('game-art-v1') && !stickerCanvas.classList.contains('game-art-sticker-v1') && !stickerCanvas._stickerAssetProbe);
+  check('M0 五子棋双闸门默认关闭，Wave A 退出后保留旧木纹', stickerCanvas.dataset.stickerArt === 'disabled' && stickerCanvas.classList.contains('game-art-v1') && !stickerCanvas.classList.contains('game-art-sticker-v1') && !stickerCanvas._stickerAssetProbe);
   localStorage.setItem('mg_art_gomoku_sticker_v1','1'); G.showGame('gomoku'); stickerCanvas=area().children[0];
   check('M0 五子棋只有分闸门时仍关闭', stickerCanvas.dataset.stickerArt === 'disabled' && !stickerCanvas._stickerAssetProbe);
   localStorage.removeItem('mg_art_gomoku_sticker_v1'); localStorage.setItem('mg_art_sticker_m0_v1','1'); G.showGame('gomoku'); stickerCanvas=area().children[0];
   check('M0 五子棋只有总闸门时仍关闭', stickerCanvas.dataset.stickerArt === 'disabled' && !stickerCanvas._stickerAssetProbe);
   localStorage.setItem('mg_art_gomoku_sticker_v1','true'); G.showGame('gomoku'); stickerCanvas=area().children[0];
   check('M0 五子棋非严格 1 值不会误开', stickerCanvas.dataset.stickerArt === 'disabled' && !stickerCanvas._stickerAssetProbe);
-  const originalGetItem = localStorage.getItem; localStorage.getItem=()=>{ throw new Error('storage fixture'); }; G.showGame('gomoku'); stickerCanvas=area().children[0]; localStorage.getItem=originalGetItem;
+  const originalGetItem = localStorage.getItem; localStorage.getItem=key=>{ if (key === 'mg_art_tabletop_wave_a') return '0'; throw new Error('storage fixture'); }; G.showGame('gomoku'); stickerCanvas=area().children[0]; localStorage.getItem=originalGetItem;
   check('M0 localStorage 异常时默认关闭并保留旧回退', stickerCanvas.dataset.stickerArt === 'disabled' && stickerCanvas.classList.contains('game-art-v1') && !stickerCanvas._stickerAssetProbe);
   localStorage.setItem('mg_art_gomoku_sticker_v1','1');
   assetManifestMode='404'; G.showGame('gomoku'); stickerCanvas=area().children[0]; await sleep(10);
@@ -338,13 +362,17 @@ async function main(){
   stickerCanvas.dispatch('click',{clientX:(22+7*34),clientY:(22+7*34)});
   check('M0 资源失败期间仍可在中心合法落子', G.game.snapshot().hist.length === 1 && JSON.stringify(G.game.snapshot().hist[0]) === JSON.stringify([7,7]));
   localStorage.removeItem('mg_art_sticker_m0_v1'); localStorage.removeItem('mg_art_gomoku_sticker_v1'); localStorage.removeItem('mg_art_gomoku_v1'); assetManifestMode='ok';
+  G.showGame('gomoku');
+  const tabletopRollbackCanvas = area().children[0];
+  check('Tabletop Wave A 严格关闭后恢复旧木纹 Canvas', tabletopRollbackCanvas && tabletopRollbackCanvas.classList.contains('game-art-v1') && !tabletopRollbackCanvas.classList.contains('tabletop-art-wave-a') && !tabletopRollbackCanvas.dataset.tabletopSurface && !tabletopRollbackCanvas.dataset.tabletopArt);
+  localStorage.removeItem('mg_art_tabletop_wave_a');
 
   localStorage.setItem('mg_art_gomoku_v1', '0');
   G.renderHub();
   const rollbackGomokuCard = $('game-grid').children.find(card => card.dataset.gameId === 'gomoku');
   G.playerCount = 2; G.showGame('gomoku');
   check('五子棋 feature flag 关闭后回退 Emoji 大厅卡', rollbackGomokuCard && !rollbackGomokuCard.classList.contains('has-cover'));
-  check('五子棋 feature flag 关闭后仍可开局', area().children[0] && !area().children[0].classList.contains('game-art-v1'));
+  check('五子棋旧美术 feature flag 关闭后仍可由默认 Wave A 开局', area().children[0] && area().children[0].classList.contains('tabletop-art-wave-a') && !area().children[0].classList.contains('game-art-v1'));
   localStorage.removeItem('mg_art_gomoku_v1');
   G.renderHub();
 
@@ -370,11 +398,19 @@ async function main(){
   }
 
   G.playerCount = 2; G.showGame('gomoku');
-  check('五子棋 Canvas 接入木纹底材且规则层仍由 Canvas 绘制', area().children[0].classList.contains('game-art-v1'));
+  const gomokuTabletopCanvas = area().children[0];
+  check('五子棋默认接入 Tabletop Cream/Ink Canvas，规则层仍由 Canvas 绘制', gomokuTabletopCanvas && gomokuTabletopCanvas.tagName === 'CANVAS' && gomokuTabletopCanvas.classList.contains('tabletop-art-wave-a') && gomokuTabletopCanvas.dataset.tabletopKind === 'gomoku-board' && gomokuTabletopCanvas.dataset.tabletopArt === 'wave-a' && gomokuTabletopCanvas.style.backgroundColor === '#F3E5C4' && !gomokuTabletopCanvas.classList.contains('game-art-v1'));
 
   G.playerCount = 2; G.showGame('tetris');
+  const tetrisLayout = area().querySelector('.tetris-battle-layout');
+  const tetrisMainWell = area().querySelector('.main-board');
+  const tetrisActions = $('game-extra').querySelector('.tetris-actions');
+  const tetrisInitialSnapshot = G.game.snapshot();
+  check('俄罗斯方块本地舞台保留七项触控操作与 18x10 初始快照', tetrisActions && tetrisActions.children.length === 7 && tetrisInitialSnapshot.wells.every(well => well.length === 18 && well.every(row => row.length === 10)));
+  G.game.onRestore(tetrisInitialSnapshot);
+  check('俄罗斯方块状态恢复不替换布局、主井与操作节点', area().querySelector('.tetris-battle-layout') === tetrisLayout && area().querySelector('.main-board') === tetrisMainWell && $('game-extra').querySelector('.tetris-actions') === tetrisActions);
   let tetrisWell = area().querySelector('.tetris-well');
-  check('俄罗斯方块 DOM 井接入玻璃底材与 CSS 精确网格', tetrisWell && tetrisWell.classList.contains('game-art-v1'));
+  check('俄罗斯方块默认接入 Tabletop Cream/Ink 纸质井与 CSS 精确网格', tetrisWell && tetrisWell.classList.contains('tabletop-art-wave-a') && tetrisWell.dataset.tabletopSurface === 'wave-a' && tetrisWell.dataset.tabletopKind === 'tetris-well' && String(tetrisWell.style.backgroundImage || '').includes('rgba(33,25,35,.11)') && !tetrisWell.classList.contains('game-art-v1'));
   G.game.onMove({ piece: 0, x: 0, y: 17, rot: 0 }, 0);
   const tetrisSnapshot = G.game.snapshot();
   const tetrisValues = new Set(tetrisSnapshot.wells.flat(2));
@@ -382,11 +418,16 @@ async function main(){
   const tetrisSnapshotText = JSON.stringify(tetrisSnapshot);
   check('俄罗斯方块快照不写入美术状态', !/(cosmetic|blockSkin|backgroundSkin|presentation)/i.test(tetrisSnapshotText));
 
+  localStorage.setItem('mg_art_tabletop_wave_a', '0');
+  G.showGame('tetris');
+  tetrisWell = area().querySelector('.tetris-well');
+  check('Tabletop Wave A 严格关闭后恢复俄罗斯方块旧玻璃井', tetrisWell && tetrisWell.classList.contains('game-art-v1') && !tetrisWell.classList.contains('tabletop-art-wave-a') && !tetrisWell.dataset.tabletopSurface);
+
   localStorage.setItem('mg_art_tetris_v1', '0');
   G.showGame('tetris');
   tetrisWell = area().querySelector('.tetris-well');
   check('俄罗斯方块 feature flag 关闭后仍可开局并使用 CSS fallback', tetrisWell && !tetrisWell.classList.contains('game-art-v1'));
-  localStorage.removeItem('mg_art_tetris_v1');
+  localStorage.removeItem('mg_art_tetris_v1'); localStorage.removeItem('mg_art_tabletop_wave_a');
 
   /* 不支持的人数组合应被拦截 */
   G.playerCount = 3;
@@ -423,9 +464,11 @@ async function main(){
   check('飞行棋：完成一次起飞/移动', moved);
   check('飞行棋：轨道 52 格', ludoBoard.querySelectorAll('.tcell').length === 52);
   check('飞行棋：移动后骰子按钮重新可用', moved && !diceBtn.disabled);
-  const chipDots = $('player-bar').children.map(c => c.children[0].style.background);
-  check('飞行棋：4 人时玩家颜色正确（红/蓝/绿/黄）',
-    chipDots[0] === '#e5484d' && chipDots[1] === '#3b82f6' && chipDots[2] === '#22a06b' && chipDots[3] === '#f59e0b');
+  const stageSeatColors = $('player-bar').children.map(c => c.style['--stage-seat-color']);
+  const ludoBaseColors = ludoBoard.querySelectorAll('.ludo-base').map(base => base.style.borderColor);
+  check('飞行棋：4 人红/蓝/绿/黄保留在赛桌玩家栏与基地',
+    stageSeatColors[0] === '#e5484d' && stageSeatColors[1] === '#3b82f6' && stageSeatColors[2] === '#22a06b' && stageSeatColors[3] === '#f59e0b' &&
+    ludoBaseColors[0] === '#e5484d' && ludoBaseColors[1] === '#3b82f6' && ludoBaseColors[2] === '#22a06b' && ludoBaseColors[3] === '#f59e0b');
 
   /* 迷你大富翁：走 5 回合不报错 */
   G.playerCount = 3; G.showGame('monopoly');

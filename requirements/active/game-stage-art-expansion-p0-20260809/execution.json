@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "task": "game-stage-art-expansion-p0-20260809",
+  "state": "VERIFIED_RELEASE_PENDING",
+  "startedAt": "2026-08-09T15:00:00+09:00",
+  "updatedAt": "2026-08-09T18:35:00+09:00",
+  "progress": {
+    "recon": {"status":"completed","evidence":["three gpt-5.6-terra max read-only audits","user reference images"]},
+    "freeze": {"status":"completed","evidence":["requirement.md","contract.md","plan.json","ownership.json","acceptance.md","SHARED_CHANGE_REQUEST.md"]},
+    "uiMotion": {"status":"verified","evidence":["qa/game-stage-contract.js","qa/player-chat-contract.js","qa/ghost-shell-contract.js"]},
+    "gameplayArt": {"status":"verified","evidence":["qa/tabletop-art-runtime.js","qa/dom-smoke.js"]},
+    "integration": {"status":"verified","evidence":["scripts/build.js","public/index.html","qa/game-stage-contract.js"]},
+    "verification": {"status":"verified","evidence":["npm run quality:gates","npm test","evidence/browser-visual-qa-202608091835.md"]},
+    "release": {"status":"pending"}
+  },
+  "notExecuted": ["second desktop browser","physical Android/iPhone/Tablet","real network shaping","independent Reviewer B/IP approval"],
+  "blocked": []
+}

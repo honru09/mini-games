@@ -41,3 +41,4 @@
 - 2026-08-09 10:31｜新增 Direct Chat v1 好友私聊、离线留言、历史/未读/已读/幂等/安全边界、Supabase 消息与已读 RPC、三语言响应式 UI，以及玩家聊天/Profile 三套专项 QA 和本地收口报告。
 - 2026-08-09 12:43｜新增 `94ae977` 的 Render/Pages/HTTP/WS 线上发布证据与玩家私聊、个人主页、Honru P2 线上收口简易报告。
 - 2026-08-09 14:37｜新增 Supabase 生产迁移/验收/加密备份/隔离恢复/非破坏回滚工具链、Cluster lease/PubSub/遥测基线、PWA 192/512 图标与安全离线壳层、Honru cleanup 技术候选及 Production Readiness 证据/简易报告。
+- 2026-08-09 18:35｜新增六款默认可见 Pocket Tabletop Wave A、共用 Game Stage/真实 Seat Rail/Command Tray、两项专项 QA 与本地浏览器视觉证据，默认美术覆盖达到 52/100。

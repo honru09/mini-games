@@ -483,6 +483,8 @@ function gameXiangqi(area, extra, n, opts){
     });
     const wrap = el('div','xiangqi-wrap');
     const boardEl = el('div','xiangqi-board');
+    const tabletop = typeof tabletopArtEnabled === 'function' && tabletopArtEnabled();
+    if (typeof markTabletopSurface === 'function') markTabletopSurface(boardEl, 'xiangqi-board', { variant: boardTheme });
     boardEl.style.width = S + 'px'; boardEl.style.height = S * ROWS / COLS + 'px';
     boardEl.style.touchAction = 'none'; boardEl.style.overscrollBehavior = 'contain';
     const cs = S / COLS;
@@ -493,7 +495,14 @@ function gameXiangqi(area, extra, n, opts){
     boardEl.appendChild(cv);
     const ctx = cv.getContext('2d');
     ctx.setTransform(dpr,0,0,dpr,0,0);
-    if (boardTheme === 'grass'){
+    if (tabletop){
+      const grassPaper = boardTheme === 'grass';
+      const paper = ctx.createLinearGradient ? ctx.createLinearGradient(0,0,S,S*ROWS/COLS) : null;
+      if (paper && paper.addColorStop){
+        paper.addColorStop(0,grassPaper?'#F7F9E7':'#FFF9F2'); paper.addColorStop(.58,grassPaper?'#D7E8B6':'#F3E5C4'); paper.addColorStop(1,grassPaper?'#A7C27C':'#E7C57F'); ctx.fillStyle = paper;
+      } else ctx.fillStyle = grassPaper ? '#D7E8B6' : '#F3E5C4';
+      ctx.strokeStyle = grassPaper ? '#3A5E3B' : '#443443';
+    } else if (boardTheme === 'grass'){
       const grass = ctx.createLinearGradient ? ctx.createLinearGradient(0,0,S,S*ROWS/COLS) : null;
       if (grass && grass.addColorStop){ grass.addColorStop(0,'#dff3c8'); grass.addColorStop(1,'#94c973'); ctx.fillStyle = grass; }
       else ctx.fillStyle = '#b7d995';
@@ -504,7 +513,7 @@ function gameXiangqi(area, extra, n, opts){
       else ctx.fillStyle = '#e9c79a';
       ctx.strokeStyle = '#8a5a2b';
     }
-    ctx.fillRect(0,0,S,S*ROWS/COLS); ctx.lineWidth = 1.4;
+    ctx.fillRect(0,0,S,S*ROWS/COLS); ctx.lineWidth = tabletop ? 2.25 : 1.4; ctx.lineCap = tabletop ? 'round' : 'butt'; ctx.lineJoin = tabletop ? 'round' : 'miter';
     const pad = cs/2;
     for (let c = 0; c < COLS; c++){
       ctx.beginPath(); ctx.moveTo(pad + c*cs, pad); ctx.lineTo(pad + c*cs, S - pad); ctx.stroke();
@@ -537,16 +546,27 @@ function gameXiangqi(area, extra, n, opts){
         const x = pad + c*cs, y = pad + r*cs;
         const skin = pieceSkin(piece.p);
         ctx.beginPath(); ctx.arc(x, y, cs*0.42, 0, Math.PI*2);
-        ctx.fillStyle = skin === 'jade'
-          ? (piece.p === 0 ? '#d1fae5' : '#cffafe')
-          : (piece.p === 0 ? '#fde2d3' : '#d9e6f2');
-        ctx.fill();
-        ctx.strokeStyle = skin === 'jade'
-          ? (piece.p === 0 ? '#b91c1c' : '#164e63')
-          : (piece.p === 0 ? '#b23a1f' : '#1f4e79');
-        ctx.lineWidth = skin === 'jade' ? 2.2 : 1.6; ctx.stroke();
+        if (tabletop){
+          const jade = skin === 'jade';
+          const base = jade ? (piece.p === 0 ? '#E2F4E6' : '#DDF4F2') : (piece.p === 0 ? '#FFF0E9' : '#EDF6F4');
+          const shade = jade ? (piece.p === 0 ? '#8FBE9C' : '#80B8BE') : (piece.p === 0 ? '#E99A7B' : '#82AAB3');
+          ctx.save();
+          ctx.shadowColor = 'rgba(33,25,35,.22)'; ctx.shadowBlur = 0; ctx.shadowOffsetX = Math.max(1,cs*.07); ctx.shadowOffsetY = Math.max(1.5,cs*.1);
+          ctx.fillStyle = base; ctx.fill(); ctx.strokeStyle = '#211923'; ctx.lineWidth = Math.max(2,cs*.07); ctx.stroke(); ctx.restore();
+          ctx.save(); ctx.beginPath(); ctx.arc(x,y,cs*.385,0,Math.PI*2); ctx.clip(); ctx.globalAlpha=.52; ctx.fillStyle=shade; ctx.fillRect(x,y,cs*.48,cs*.48); ctx.restore();
+          ctx.fillStyle='#FFF9F2'; ctx.beginPath(); ctx.arc(x-cs*.14,y-cs*.16,cs*.07,0,Math.PI*2); ctx.fill();
+        } else {
+          ctx.fillStyle = skin === 'jade'
+            ? (piece.p === 0 ? '#d1fae5' : '#cffafe')
+            : (piece.p === 0 ? '#fde2d3' : '#d9e6f2');
+          ctx.fill();
+          ctx.strokeStyle = skin === 'jade'
+            ? (piece.p === 0 ? '#b91c1c' : '#164e63')
+            : (piece.p === 0 ? '#b23a1f' : '#1f4e79');
+          ctx.lineWidth = skin === 'jade' ? 2.2 : 1.6; ctx.stroke();
+        }
         const label = xiangqiPieceName(piece);
-        ctx.fillStyle = piece.p === 0 ? '#b23a1f' : '#1f4e79';
+        ctx.fillStyle = piece.p === 0 ? (tabletop ? (skin === 'jade' ? '#A23D37' : '#B85245') : '#b23a1f') : (tabletop ? (skin === 'jade' ? '#1F6570' : '#315D78') : '#1f4e79');
         ctx.font = 'bold ' + (cs*0.5) + 'px sans-serif';
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.fillText(label, x, y + 1);

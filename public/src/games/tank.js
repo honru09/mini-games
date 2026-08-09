@@ -615,7 +615,12 @@ function gameTank(area, extra, n, opts){
     const width = Math.min(area.clientWidth || 560, 620), cell = width/W, height = cell*H;
     const board=ensureRenderTree();
     board.className='tank-board realtime-arena season-'+season;
-    board.style.width = width+'px'; board.style.height = height+'px'; board.style.background = seasonBackground();
+    const tabletop = typeof tabletopArtEnabled === 'function' && tabletopArtEnabled();
+    if (typeof markTabletopSurface === 'function') markTabletopSurface(board, 'tank-arena', { variant: season });
+    board.style.width = width+'px'; board.style.height = height+'px';
+    board.style.background = tabletop
+      ? 'radial-gradient(circle at 22% 16%,rgba(255,255,255,.35),transparent 22%),linear-gradient(135deg,#74b985,#3b7b62)'
+      : seasonBackground();
     const staticItems=[];for(let r=0;r<H;r++)for(let c=0;c<W;c++)if(grid[r][c])staticItems.push({r,c,type:grid[r][c]});
     syncRenderMap(renderNodes.staticCells,staticItems,item=>item.r+':'+item.c,
       item=>{const node=el('div','tank-cell');node.style.zIndex='1';board.appendChild(node);return node;},

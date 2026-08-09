@@ -116,7 +116,7 @@ let chatLastConversationFocus = null;
 let ghostProfileBackgroundNode = null;
 let ghostHeroIndex = 0;
 let ghostHeroTimer = null;
-let ghostCompanionHistory = [];
+let ghostGameStageState = { gameId:null, activeIdx:null, infos:null, bankrupts:null, colors:null };
 let honruGameReactionTimer = null;
 let honruGameReactionSequence = 0;
 let honruGameReactionLifecycle = 0;
@@ -227,7 +227,8 @@ function setHonruPlatformReaction(kind){
   if(typeof honruStatesEnabled!=='function'||!honruStatesEnabled()||typeof document==='undefined'||document.hidden)return false;
   const state=honruFeedbackState(kind),seq=++honruPlatformReactionSequence;
   if(honruPlatformReactionTimer){clearTimeout(honruPlatformReactionTimer);honruPlatformReactionTimer=null;}
-  const images=[...document.querySelectorAll('.companion-mascot-wrap img,#btn-honru-dock img')];
+  // Honru 的可选局内反应没有聊天页或浮层依赖；这里仅保留未来品牌展示位的安全兼容。
+  const images=[...document.querySelectorAll('[data-honru-brand-state] img')];
   images.forEach(img=>applyHonruStateImage(img,state,()=>seq===honruPlatformReactionSequence&&img.isConnected));
   honruPlatformReactionTimer=setTimeout(()=>{
     if(seq!==honruPlatformReactionSequence)return;
@@ -238,26 +239,164 @@ function setHonruPlatformReaction(kind){
   return images.length>0;
 }
 
+/* ================= Game Stage（纯呈现，不写入房间/规则状态） ================= */
+const GAME_STAGE_FALLBACK_COLORS = ['#e75a4d','#4c89e8','#e6b43d','#55a86f','#8e6ad8'];
+function gameStageLocalized(key,...args){
+  const value=typeof t==='function'?t(key,...args):key;
+  return value===key&&args.length?key+' '+args.join(' '):value;
+}
+function gameStageName(gameId){
+  const meta=typeof GAMES!=='undefined'&&GAMES&&GAMES[gameId];
+  if(!meta)return String(gameId||'');
+  return meta.nameKey?gameStageLocalized(meta.nameKey):String(meta.name||gameId);
+}
+function gameStageIsOnline(){
+  return !!(typeof online!=='undefined'&&online&&(online.game||online.spectatorRoom||online.isSpectator));
+}
+function gameStageSeatModels(){
+  const onlineState=typeof online!=='undefined'&&online?online:null;
+  const roomSeats=onlineState&&onlineState.roomInfo&&Array.isArray(onlineState.roomInfo.seats)?onlineState.roomInfo.seats:[];
+  if(gameStageIsOnline()&&roomSeats.length)return roomSeats.map(seat=>seat&&typeof seat==='object'?seat:null).filter(Boolean);
+  const count=Math.max(2,Number(typeof playerCount!=='undefined'&&playerCount)||2);
+  const ownName=typeof account!=='undefined'&&account&&(account.name||account.username);
+  return Array.from({length:count},(_,seatId)=>({
+    seatId,type:seatId>0&&typeof aiMode!=='undefined'&&aiMode?'ai':'human',
+    userId:seatId===0&&typeof account!=='undefined'&&account?account.uid||null:null,
+    nickname:seatId===0&&ownName?ownName:gameStageLocalized('player_number',seatId+1),
+    avatar:seatId===0&&typeof account!=='undefined'&&account?account.avatar||0:(seatId>0&&typeof aiMode!=='undefined'&&aiMode?141:0),
+    ready:true,host:false,online:true,aiDifficulty:'normal',aiPersona:null,controllerUid:null,
+  }));
+}
+function gameStageMakeBadge(key,modifier){
+  const badge=el('span','game-stage-badge'+(modifier?' '+modifier:''),gameStageLocalized(key));
+  badge.setAttribute('data-stage-label',key);badge.setAttribute('data-i18n',key);
+  return badge;
+}
+function gameStageAvatar(seat){
+  const profile={uid:seat.userId||'',name:seat.nickname||'',avatar:Number(seat.avatar)||0,frame:0,effect:0};
+  if(typeof avatarStageNode==='function'){
+    const avatar=avatarStageNode(profile,34,'game-stage-avatar');avatar.setAttribute('aria-hidden','true');return avatar;
+  }
+  return el('span','game-stage-avatar-fallback',seat.type==='ai'?'✦':'●');
+}
+function gameStageSeatNode(seat,index,state){
+  const seatId=Number.isInteger(Number(seat.seatId))?Number(seat.seatId):index;
+  // `null` means the game has not supplied an authoritative turn yet.  Do not
+  // coerce it to 0: doing so would briefly label seat 0 as the current player.
+  const rawActive=state&&state.activeIdx;
+  const active=rawActive!==null&&rawActive!==undefined&&String(rawActive).trim()!==''&&Number.isInteger(Number(rawActive))&&Number(rawActive)===seatId;
+  const onlineState=typeof online!=='undefined'&&online?online:null;
+  // A room may briefly retain a stale `online.player` during reassignment or
+  // restoration. When both authoritative identities are available, never let
+  // that legacy index override the UID match. Only a fully identity-less
+  // legacy payload may use the index fallback.
+  const accountUid=typeof account!=='undefined'&&account&&account.uid!==undefined&&account.uid!==null?String(account.uid):'';
+  const seatUid=seat&&seat.userId!==undefined&&seat.userId!==null?String(seat.userId):'';
+  const hasIdentityPair=!!(accountUid&&seatUid);
+  const identityMissingBoth=!accountUid&&!seatUid;
+  const mine=!!(onlineState&&!onlineState.isSpectator&&(hasIdentityPair?seatUid===accountUid:identityMissingBoth&&Number(onlineState.player)===seatId))||(!gameStageIsOnline()&&seatId===0);
+  const isAI=seat.type==='ai',isEmpty=seat.type==='empty',isReady=!isEmpty&&!!seat.ready;
+  const isOffline=!isEmpty&&!isAI&&seat.online===false;
+  const isBankrupt=Array.isArray(state.bankrupts)&&!!state.bankrupts[seatId];
+  const card=el('article','pchip game-stage-seat');
+  card.dataset.seatKey=String(seatId);card.dataset.seatType=isAI?'ai':isEmpty?'empty':'human';
+  card.dataset.seatCurrent=String(active);card.dataset.seatMine=String(mine);card.dataset.seatHost=String(!!seat.host);
+  card.dataset.seatReady=String(isReady);card.dataset.seatOnline=String(!isOffline&&!isEmpty);card.dataset.seatBankrupt=String(isBankrupt);
+  card.classList.toggle('is-current',active);card.classList.toggle('is-mine',mine);card.classList.toggle('is-host',!!seat.host);
+  card.classList.toggle('is-ai',isAI);card.classList.toggle('is-ready',isReady);card.classList.toggle('is-offline',isOffline);card.classList.toggle('is-empty',isEmpty);card.classList.toggle('is-bankrupt',isBankrupt);
+  const color=Array.isArray(state.colors)&&state.colors[seatId]||GAME_STAGE_FALLBACK_COLORS[seatId%GAME_STAGE_FALLBACK_COLORS.length];
+  if(/^#[0-9a-f]{3,8}$/i.test(String(color))){
+    if(card.style&&typeof card.style.setProperty==='function')card.style.setProperty('--stage-seat-color',color);
+    else if(card.style)card.style['--stage-seat-color']=color;
+  }
+  if(isEmpty){
+    card.appendChild(el('span','game-stage-seat-empty-mark','＋'));
+    const emptyLabel=el('strong','game-stage-seat-name',gameStageLocalized('empty_seat'));emptyLabel.setAttribute('data-i18n','empty_seat');card.appendChild(emptyLabel);
+    return card;
+  }
+  card.appendChild(gameStageAvatar(seat));
+  const copy=el('div','game-stage-seat-copy');
+  const label=el('strong','game-stage-seat-name',seat.nickname||gameStageLocalized(isAI?'stage_ai_player':'player_number',seatId+1));
+  if(seat.nickname)label.setAttribute('data-i18n-raw','');
+  copy.appendChild(label);
+  const badges=el('span','game-stage-badges');
+  if(mine)badges.appendChild(gameStageMakeBadge('stage_you','mine'));
+  if(seat.host)badges.appendChild(gameStageMakeBadge('stage_host','host'));
+  if(isAI)badges.appendChild(gameStageMakeBadge('stage_ai','ai'));
+  if(isReady)badges.appendChild(gameStageMakeBadge('ready','ready'));
+  if(isOffline)badges.appendChild(gameStageMakeBadge('offline','offline'));
+  if(isBankrupt)badges.appendChild(gameStageMakeBadge('stage_bankrupt','bankrupt'));
+  if(active)badges.appendChild(gameStageMakeBadge('stage_current_turn','turn'));
+  copy.appendChild(badges);
+  // `infos` is an optional, per-seat array supplied by the current game. Do
+  // not use `Array.isArray(...) && value` here: a missing/non-array value
+  // evaluates to boolean `false`, which would otherwise become visible text.
+  const infos=state&&Array.isArray(state.infos)?state.infos:null;
+  const info=infos===null?undefined:infos[seatId];
+  if(info!==undefined&&info!==null&&String(info)){
+    const detail=el('small','game-stage-seat-detail',String(info));
+    if(typeof setLocalizedText==='function')setLocalizedText(detail,String(info));
+    copy.appendChild(detail);
+  }else if(isAI&&seat.aiPersona){
+    const detail=el('small','game-stage-seat-detail',String(seat.aiPersona));detail.setAttribute('data-i18n-raw','');copy.appendChild(detail);
+  }
+  card.appendChild(copy);
+  const stateLabels=[];
+  if(mine)stateLabels.push(gameStageLocalized('stage_you'));
+  if(seat.host)stateLabels.push(gameStageLocalized('stage_host'));
+  if(isAI)stateLabels.push(gameStageLocalized('stage_ai'));
+  if(active)stateLabels.push(gameStageLocalized('stage_current_turn'));
+  card.setAttribute('aria-label',[seat.nickname||gameStageLocalized('player_number',seatId+1),...stateLabels].filter(Boolean).join(' · '));
+  return card;
+}
+function renderGameStage(nextState){
+  const stage=$('screen-game');if(!stage)return false;
+  const next=nextState&&typeof nextState==='object'?nextState:{};
+  if(next.reset)ghostGameStageState={gameId:null,activeIdx:null,infos:null,bankrupts:null,colors:null};
+  ['gameId','activeIdx','infos','bankrupts','colors'].forEach(key=>{if(Object.prototype.hasOwnProperty.call(next,key))ghostGameStageState[key]=next[key];});
+  const onlineState=typeof online!=='undefined'&&online?online:null;
+  const gameId=ghostGameStageState.gameId||typeof currentGameId!=='undefined'&&currentGameId||onlineState&&onlineState.game||'';
+  if(gameId)ghostGameStageState.gameId=gameId;
+  stage.dataset.stageGame=String(gameId||'');
+  stage.classList.toggle('arena-first',gameId==='tank'||gameId==='tetris');
+  const watching=!!(onlineState&&(onlineState.isSpectator||onlineState.spectatorRoom));
+  stage.classList.toggle('stage-spectator',watching);
+  const title=$('game-title');if(title&&gameId)title.textContent=gameStageName(gameId);
+  const mode=$('game-stage-mode');
+  const modeKey=watching?'stage_spectating':gameStageIsOnline()?'stage_online_match':typeof aiMode!=='undefined'&&aiMode?'stage_ai_match':'stage_local_match';
+  if(mode){mode.setAttribute('data-i18n',modeKey);mode.textContent=gameStageLocalized(modeKey);}
+  const spectators=$('game-stage-spectators'),count=Math.max(0,Number(onlineState&&onlineState.roomInfo&&onlineState.roomInfo.spectatorCount)||0);
+  if(spectators){spectators.classList.toggle('hidden',!count);spectators.textContent=gameStageLocalized('stage_spectator_count',count);}
+  const rail=$('player-bar');if(!rail)return true;
+  rail.innerHTML='';rail.setAttribute('data-stage-seat-count','0');
+  const seats=gameStageSeatModels();
+  seats.forEach((seat,index)=>rail.appendChild(gameStageSeatNode(seat,index,ghostGameStageState)));
+  if(watching){
+    const observer=el('article','pchip game-stage-seat game-stage-observer');observer.dataset.seatType='spectator';
+    observer.appendChild(el('span','game-stage-observer-mark','◌'));observer.appendChild(el('strong','game-stage-seat-name',gameStageLocalized('stage_spectating')));
+    observer.appendChild(gameStageMakeBadge('spectator_readonly','spectator'));rail.appendChild(observer);
+  }
+  rail.setAttribute('data-stage-seat-count',String(seats.length));
+  return true;
+}
+
 function routeFromHash(){
   const match = /^#\/(home|games|chat|profile)(?:$|[?&])/.exec(String(typeof location!=='undefined'&&location.hash || ''));
   return match ? match[1] : 'home';
 }
 function chatViewFromHash(){
-  const hash=String(typeof location!=='undefined'&&location.hash||'');
-  return /(?:\?|&)view=honru(?:&|$)/.test(hash)?'honru':'players';
+  return 'players';
 }
 function setChatView(view,options){
-  view=view==='honru'?'honru':'players';
-  ghostChatView=view;
-  document.querySelectorAll('[data-chat-view]').forEach(node=>node.classList.toggle('hidden',node.getAttribute('data-chat-view')!==view));
-  document.querySelectorAll('[data-chat-view-target]').forEach(node=>node.setAttribute('aria-selected',String(node.getAttribute('data-chat-view-target')===view)));
+  // 旧 #/chat?view=honru 和未知 view 一律收敛到真实玩家私聊，避免遗留深链访问已移除的助手界面。
+  ghostChatView='players';
   const title=$('chat-route-title'),intro=$('chat-route-intro');
-  if(title)title.textContent=t(view==='honru'?'chat_honru_title':'chat_title');
-  if(intro)intro.textContent=t(view==='honru'?'chat_honru_intro':'chat_intro');
-  if(view==='honru')ensureHonruWelcome();else{renderPlayerChat();if(online&&online.connected&&online._authenticated)online.requestChatList();}
-  if(!(options&&options.silentHash)&&typeof history!=='undefined'){
-    const next=view==='honru'?'#/chat?view=honru':'#/chat';
-    if(location.hash!==next){const method=options&&options.replace?'replaceState':'pushState';if(typeof history[method]==='function')history[method](null,'',next);}
+  if(title)title.textContent=t('chat_title');
+  if(intro)intro.textContent=t('chat_intro');
+  renderPlayerChat();if(online&&online.connected&&online._authenticated)online.requestChatList();
+  if(typeof history!=='undefined'){
+    const next='#/chat';
+    if(location.hash!==next){const method=options&&options.silentHash||options&&options.replace?'replaceState':'pushState';if(typeof history[method]==='function')history[method](null,'',next);}
   }
 }
 function setAppRoute(route, options){
@@ -271,14 +410,14 @@ function setAppRoute(route, options){
     if (active) node.setAttribute('aria-current','page'); else node.removeAttribute('aria-current');
   });
   if (!(options && options.silentHash)){
-    const next = route==='chat'&&options&&options.chatView==='honru'?'#/chat?view=honru':'#/' + route;
+    const next = '#/' + route;
     if (typeof location!=='undefined'&&location.hash !== next&&typeof history!=='undefined'){
       const method=options&&options.replace?'replaceState':'pushState';if(typeof history[method]==='function')history[method](null,'',next);
     }
   }
   if (route === 'home') renderGhostHome();
   if (route === 'profile') renderGhostProfile();
-  if (route === 'chat') setChatView(options&&options.chatView||(options&&options.silentHash?chatViewFromHash():'players'),{silentHash:true});
+  if (route === 'chat') setChatView('players',{silentHash:true});
   resetGhostHeroTimer();
 }
 function renderGhostHome(){
@@ -400,7 +539,6 @@ function handlePlayerChatError(payload){
   toast(t(key)===key?t('chat_error_generic'):t(key));renderPlayerChat();
 }
 function initPlayerChat(){
-  document.querySelectorAll('[data-chat-view-target]').forEach(button=>button.addEventListener('click',()=>setChatView(button.getAttribute('data-chat-view-target'))));
   const refresh=$('btn-chat-refresh');if(refresh)refresh.addEventListener('click',()=>online.requestChatList());
   const back=$('btn-chat-back');if(back)back.addEventListener('click',()=>{const shell=$('player-chat-shell');if(shell)shell.classList.remove('thread-open');online.chatActivePeerUid=null;renderPlayerChat();requestAnimationFrame(()=>{const row=document.querySelector('.chat-conversation-row[data-peer-uid="'+String(chatLastConversationFocus||'').replace(/"/g,'')+'"]');if(row)row.focus();});});
   const input=$('chat-input');if(input){input.addEventListener('input',()=>{if(online.chatActivePeerUid)online.chatDrafts.set(online.chatActivePeerUid,input.value);input.style.height='auto';input.style.height=Math.min(132,input.scrollHeight)+'px';});input.addEventListener('keydown',event=>{if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();const form=$('chat-composer');if(form)form.requestSubmit();}});}
@@ -472,50 +610,12 @@ function resetGhostHeroTimer(){
   if (ghostAppRoute !== 'home' || prefersReducedMotion()) return;
   ghostHeroTimer=setInterval(()=>{if(!document.hidden)setGhostHero(ghostHeroIndex+1);},6500);
 }
-function addCompanionMessage(role,text){
-  const list=$('companion-messages');
-  if (!list) return;
-  const node=elRaw('div','companion-message '+(role==='user'?'user':'honru'),String(text||''));
-  list.appendChild(node);list.scrollTop=list.scrollHeight;
-}
-function ensureHonruWelcome(){
-  const list=$('companion-messages');
-  if (list && !list.childNodes.length) addCompanionMessage('honru',t('honru_welcome_line'));
-}
-function companionPromptText(kind){
-  return t(kind==='mood'?'companion_prompt_mood':kind==='news'?'companion_prompt_news':'companion_prompt_game');
-}
-async function sendCompanionMessage(message){
-  message=String(message||'');
-  if (!message.trim()) return;
-  if (!account || !account.authToken){toast(t('need_server_login'));return;}
-  addCompanionMessage('user',message);
-  ghostCompanionHistory.push({role:'user',content:message});
-  ghostCompanionHistory=ghostCompanionHistory.slice(-6);
-  const input=$('companion-input'),form=$('companion-form');if(input)input.value='';if(form)form.classList.add('loading');
-  setHonruPlatformReaction('thinking');
-  try{
-    const server=resolveServer(),url=(server?server.replace(/\/+$/,''):'')+'/api/companion';
-    const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),6500);
-    const response=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+account.authToken},body:JSON.stringify({message,locale:currentLang,history:ghostCompanionHistory.slice(0,-1)}),signal:controller.signal});
-    clearTimeout(timer);
-    const data=await response.json().catch(()=>({}));
-    const reply=String(data.reply||t('companion_offline_reply'));
-    addCompanionMessage('honru',reply);ghostCompanionHistory.push({role:'assistant',content:reply});ghostCompanionHistory=ghostCompanionHistory.slice(-6);
-    const mood=$('companion-mood');if(mood)mood.textContent=t('honru_mood_'+String(data.mood||'neutral'));
-    const speech=$('honru-speech');if(speech)speech.textContent=reply.slice(0,42);
-    setHonruPlatformReaction('recover');
-  }catch{addCompanionMessage('honru',t('companion_offline_reply'));setHonruPlatformReaction('recover');}
-  finally{if(form)form.classList.remove('loading');}
-}
 function petHonru(){
-  const dock=$('honru-dock');if(dock){dock.classList.remove('pet');void dock.offsetWidth;dock.classList.add('pet');setTimeout(()=>dock.classList.remove('pet'),650);}
   if (online && online.connected && online._authenticated) online.send({type:'companion_checkin',payload:{actionId:'pet-'+Date.now().toString(36)}});
   else toast(t('honru_pet_local'));
   setHonruPlatformReaction('check-in');
 }
 function handleCompanionCheckin(payload){
-  const speech=$('honru-speech');if(speech)speech.textContent=t(payload&&payload.already?'honru_checkin_again':'honru_checkin_success');
   toast(t(payload&&payload.already?'honru_checkin_again':'honru_checkin_success'));
   setHonruPlatformReaction(payload&&payload.already?'idle':'check-in');
 }
@@ -535,11 +635,7 @@ function requireGhostAuth(mode){
 function initGhostShell(){
   document.querySelectorAll('[data-app-route-target]').forEach(node=>node.addEventListener('click',()=>setAppRoute(node.getAttribute('data-app-route-target'))));
   document.querySelectorAll('[data-hero-dot]').forEach(node=>node.addEventListener('click',()=>{setGhostHero(node.getAttribute('data-hero-dot'));resetGhostHeroTimer();}));
-  const homeHonru=$('btn-home-honru');if(homeHonru)homeHonru.addEventListener('click',()=>setAppRoute('chat',{chatView:'honru'}));
-  const dockButton=$('btn-honru-dock');if(dockButton)dockButton.addEventListener('click',()=>{petHonru();setAppRoute('chat',{chatView:'honru'});});
-  const pet=$('btn-companion-pet');if(pet)pet.addEventListener('click',petHonru);
-  const form=$('companion-form');if(form)form.addEventListener('submit',event=>{event.preventDefault();sendCompanionMessage(($('companion-input')||{}).value||'');});
-  document.querySelectorAll('[data-companion-prompt]').forEach(node=>node.addEventListener('click',()=>sendCompanionMessage(companionPromptText(node.getAttribute('data-companion-prompt')))));
+  const checkin=$('btn-home-checkin');if(checkin)checkin.addEventListener('click',petHonru);
   initPlayerChat();
   if(window&&typeof window.addEventListener==='function')window.addEventListener('hashchange',()=>{const route=routeFromHash();if(GHOST_APP_ROUTES.includes(route)&&(route!==ghostAppRoute||route==='chat'))setAppRoute(route,{silentHash:true});});
   setGhostHero(0);resetGhostHeroTimer();

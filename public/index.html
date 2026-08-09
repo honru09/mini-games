@@ -1438,7 +1438,7 @@ html[data-theme="dark"] .ambient-clouds{display:none}
 body.game-active .ambient-scene{opacity:.08}
 #app{max-width:1280px;padding:18px clamp(14px,3vw,36px) 52px;transition:opacity .42s var(--ease-enter),transform .42s var(--ease-enter)}
 body.ghost-shell-booting #app,body.auth-required #app{opacity:0;transform:scale(.985);pointer-events:none;user-select:none}
-body.auth-required .honru-dock,body.auth-required .mobile-app-nav{display:none!important}
+body.auth-required .mobile-app-nav{display:none!important}
 body.authenticated #app{opacity:1;transform:none}
 .app-header{position:sticky;top:10px;z-index:120;min-height:62px;padding:9px 12px;margin-bottom:22px;border:1px solid var(--ghost-line);border-radius:20px;background:var(--ghost-glass);backdrop-filter:blur(24px) saturate(140%);-webkit-backdrop-filter:blur(24px) saturate(140%);box-shadow:0 16px 44px rgba(4,7,12,.10)}
 .ghost-brand-button{border:0;background:transparent;color:var(--text-primary);padding:0;text-align:left;cursor:pointer}
@@ -1466,14 +1466,12 @@ html[data-theme="dark"] .ghost-auth-brand-logo img{filter:brightness(0) invert(1
 .hero-pagination{position:absolute;left:clamp(28px,6vw,76px);bottom:22px;z-index:5;display:flex;gap:8px}.hero-pagination button{width:30px;height:5px;padding:0;border:0;border-radius:99px;background:var(--text-secondary);opacity:.28;transition:width .25s,opacity .25s}.hero-pagination button[aria-selected="true"]{width:54px;opacity:1;background:var(--text-primary)}
 .home-dashboard{display:grid;grid-template-columns:1.35fr .85fr .8fr;gap:14px;margin-top:14px}.home-glass-card{border:1px solid var(--ghost-line);border-radius:24px;background:var(--ghost-glass);backdrop-filter:blur(22px) saturate(130%);-webkit-backdrop-filter:blur(22px) saturate(130%);box-shadow:0 16px 46px rgba(4,7,12,.09);padding:22px}.home-glass-card h2{margin:7px 0 8px}.home-glass-card p{margin:0;color:var(--text-secondary)}.home-card-actions{display:flex;gap:8px;margin-top:18px}.home-live-status{display:grid;gap:8px;margin-top:12px}.home-status-line{display:flex;justify-content:space-between;gap:12px}.home-mini-games{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}.home-mini-games span{display:grid;place-items:center;min-height:54px;border:1px solid var(--ghost-line);border-radius:16px;background:rgba(127,127,127,.06);font-size:24px}
 .route-heading{max-width:800px;margin:38px 0 20px}.route-heading h1{font-size:clamp(36px,5vw,64px);line-height:1;margin:8px 0 10px;letter-spacing:-.045em}.route-heading p{font-size:17px;color:var(--text-secondary)}
-.companion-layout{display:grid;grid-template-columns:minmax(260px,.72fr) minmax(0,1.28fr);gap:16px}.companion-stage{text-align:center}.companion-mascot-wrap{position:relative;max-width:310px;margin:0 auto}.companion-mascot-wrap img{width:100%;aspect-ratio:1;object-fit:contain;filter:drop-shadow(0 20px 28px rgba(0,0,0,.16));animation:honruFloat 3.4s ease-in-out infinite}.companion-mood{position:absolute;right:4%;bottom:10%;padding:5px 10px;border-radius:99px;background:var(--text-primary);color:var(--bg-card-solid);font-size:11px;font-weight:750}.companion-privacy{font-size:11px!important;margin-top:14px!important}.companion-chat{display:flex;flex-direction:column;min-height:520px}.companion-messages{flex:1;display:flex;flex-direction:column;gap:10px;min-height:260px;max-height:480px;overflow:auto;padding:4px}.companion-message{max-width:82%;padding:11px 13px;border-radius:16px;background:rgba(127,127,127,.09);white-space:pre-wrap;overflow-wrap:anywhere}.companion-message.user{align-self:flex-end;background:var(--text-primary);color:var(--bg-card-solid)}.companion-message.honru{align-self:flex-start;border:1px solid var(--ghost-line)}.companion-form{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:14px}.companion-suggestions{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}.companion-suggestions .btn{font-size:12px}
-.chat-view-tabs{display:inline-flex;gap:5px;padding:5px;margin:-6px 0 16px;border:1px solid var(--ghost-line);border-radius:16px;background:rgba(127,127,127,.06)}.chat-view-tabs .btn{min-height:44px;border-color:transparent}.chat-view-tabs .btn[aria-selected="true"]{background:var(--text-primary);color:var(--bg-card-solid)}.chat-nav-badge{display:inline-grid;place-items:center;min-width:19px;height:19px;margin-left:5px;padding:0 5px;border-radius:99px;background:var(--danger);color:#fff;font-size:10px;font-weight:800}.player-chat-shell{display:grid;grid-template-columns:minmax(250px,320px) minmax(0,1fr);gap:14px;min-height:620px}.chat-conversations,.chat-thread{padding:0;overflow:hidden}.chat-conversations{display:flex;flex-direction:column}.chat-panel-head,.chat-thread-head{display:flex;align-items:center;gap:10px;min-height:70px;padding:14px 16px;border-bottom:1px solid var(--ghost-line)}.chat-panel-head>div,.chat-thread-identity{min-width:0;flex:1}.chat-panel-head h2,.chat-thread-identity strong{display:block;margin:0;font-size:16px}.chat-panel-head p,.chat-thread-identity span{display:block;margin:3px 0 0;color:var(--text-secondary);font-size:11px}.chat-connection{width:9px;height:9px;border-radius:50%;background:var(--warning)}.chat-connection.connected{background:var(--success)}.chat-conversation-list{flex:1;overflow:auto;padding:8px}.chat-conversation-row{position:relative;width:100%;min-height:72px;display:grid;grid-template-columns:48px minmax(0,1fr) auto;align-items:center;gap:10px;padding:9px;border:0;border-radius:16px;background:transparent;color:var(--text-primary);text-align:left;cursor:pointer}.chat-conversation-row:hover,.chat-conversation-row[aria-current="true"]{background:rgba(127,127,127,.09)}.chat-conversation-copy{min-width:0}.chat-conversation-name,.chat-conversation-preview{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.chat-conversation-name{font-weight:750}.chat-conversation-preview{margin-top:3px;color:var(--text-secondary);font-size:11px}.chat-conversation-meta{align-self:stretch;display:flex;flex-direction:column;align-items:flex-end;justify-content:center;gap:6px;color:var(--text-secondary);font-size:10px}.chat-unread{display:grid;place-items:center;min-width:21px;height:21px;padding:0 6px;border-radius:99px;background:var(--text-primary);color:var(--bg-card-solid);font-weight:800}.chat-empty{display:grid;place-items:center;min-height:220px;padding:28px;text-align:center;color:var(--text-secondary)}.chat-empty strong{display:block;margin-bottom:7px;color:var(--text-primary);font-size:17px}.chat-thread{display:flex;flex-direction:column;min-width:0}.chat-thread-back{display:none}.chat-thread-messages{flex:1;display:flex;flex-direction:column;gap:7px;min-height:350px;max-height:520px;overflow:auto;padding:18px}.chat-day-label{align-self:center;margin:8px 0;color:var(--text-secondary);font-size:10px}.chat-message{max-width:min(76%,560px);padding:10px 13px;border:1px solid var(--ghost-line);border-radius:17px 17px 17px 5px;background:rgba(127,127,127,.07);white-space:pre-wrap;overflow-wrap:anywhere;animation:chatMessageIn var(--dur-fast) var(--ease-enter) both}.chat-message.mine{align-self:flex-end;border-radius:17px 17px 5px 17px;background:var(--text-primary);color:var(--bg-card-solid)}.chat-message-meta{display:block;margin-top:5px;font-size:9px;opacity:.65;text-align:right}.chat-composer{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:9px;padding:12px 14px;border-top:1px solid var(--ghost-line);background:var(--ghost-glass-strong)}.chat-composer textarea{width:100%;min-height:44px;max-height:132px;resize:none;overflow:auto}.chat-composer .btn{min-width:76px;min-height:44px}.chat-composer-note{grid-column:1/-1;min-height:14px;color:var(--text-secondary);font-size:10px}.chat-thread-placeholder{flex:1}.chat-guest-gate{min-height:430px}.chat-guest-gate .btn{margin-top:14px}@keyframes chatMessageIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.chat-nav-badge{display:inline-grid;place-items:center;min-width:19px;height:19px;margin-left:5px;padding:0 5px;border-radius:99px;background:var(--danger);color:#fff;font-size:10px;font-weight:800}.player-chat-shell{display:grid;grid-template-columns:minmax(250px,320px) minmax(0,1fr);gap:14px;min-height:620px}.chat-conversations,.chat-thread{padding:0;overflow:hidden}.chat-conversations{display:flex;flex-direction:column}.chat-panel-head,.chat-thread-head{display:flex;align-items:center;gap:10px;min-height:70px;padding:14px 16px;border-bottom:1px solid var(--ghost-line)}.chat-panel-head>div,.chat-thread-identity{min-width:0;flex:1}.chat-panel-head h2,.chat-thread-identity strong{display:block;margin:0;font-size:16px}.chat-panel-head p,.chat-thread-identity span{display:block;margin:3px 0 0;color:var(--text-secondary);font-size:11px}.chat-connection{width:9px;height:9px;border-radius:50%;background:var(--warning)}.chat-connection.connected{background:var(--success)}.chat-conversation-list{flex:1;overflow:auto;padding:8px}.chat-conversation-row{position:relative;width:100%;min-height:72px;display:grid;grid-template-columns:48px minmax(0,1fr) auto;align-items:center;gap:10px;padding:9px;border:0;border-radius:16px;background:transparent;color:var(--text-primary);text-align:left;cursor:pointer}.chat-conversation-row:hover,.chat-conversation-row[aria-current="true"]{background:rgba(127,127,127,.09)}.chat-conversation-copy{min-width:0}.chat-conversation-name,.chat-conversation-preview{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.chat-conversation-name{font-weight:750}.chat-conversation-preview{margin-top:3px;color:var(--text-secondary);font-size:11px}.chat-conversation-meta{align-self:stretch;display:flex;flex-direction:column;align-items:flex-end;justify-content:center;gap:6px;color:var(--text-secondary);font-size:10px}.chat-unread{display:grid;place-items:center;min-width:21px;height:21px;padding:0 6px;border-radius:99px;background:var(--text-primary);color:var(--bg-card-solid);font-weight:800}.chat-empty{display:grid;place-items:center;min-height:220px;padding:28px;text-align:center;color:var(--text-secondary)}.chat-empty strong{display:block;margin-bottom:7px;color:var(--text-primary);font-size:17px}.chat-thread{display:flex;flex-direction:column;min-width:0}.chat-thread-back{display:none}.chat-thread-messages{flex:1;display:flex;flex-direction:column;gap:7px;min-height:350px;max-height:520px;overflow:auto;padding:18px}.chat-day-label{align-self:center;margin:8px 0;color:var(--text-secondary);font-size:10px}.chat-message{max-width:min(76%,560px);padding:10px 13px;border:1px solid var(--ghost-line);border-radius:17px 17px 17px 5px;background:rgba(127,127,127,.07);white-space:pre-wrap;overflow-wrap:anywhere;animation:chatMessageIn var(--dur-fast) var(--ease-enter) both}.chat-message.mine{align-self:flex-end;border-radius:17px 17px 5px 17px;background:var(--text-primary);color:var(--bg-card-solid)}.chat-message-meta{display:block;margin-top:5px;font-size:9px;opacity:.65;text-align:right}.chat-composer{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:9px;padding:12px 14px;border-top:1px solid var(--ghost-line);background:var(--ghost-glass-strong)}.chat-composer textarea{width:100%;min-height:44px;max-height:132px;resize:none;overflow:auto}.chat-composer .btn{min-width:76px;min-height:44px}.chat-composer-note{grid-column:1/-1;min-height:14px;color:var(--text-secondary);font-size:10px}.chat-thread-placeholder{flex:1}.chat-guest-gate{min-height:430px}.chat-guest-gate .btn{margin-top:14px}@keyframes chatMessageIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 .ghost-profile-overview{display:grid;grid-template-columns:1.15fr .85fr;gap:16px}.ghost-profile-card,.ghost-profile-actions{min-height:260px}.ghost-profile-actions{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.ghost-profile-action{min-height:112px;display:flex;flex-direction:column;align-items:flex-start!important;justify-content:flex-end!important;text-align:left;font-size:16px}.ghost-profile-action span{font-size:12px;color:var(--text-secondary)}
 .ghost-profile-overview{display:flex;flex-direction:column;gap:14px}.profile-route-hero{position:relative;min-height:310px;overflow:hidden;border-radius:30px;box-shadow:var(--elev-3);isolation:isolate}.profile-route-hero-scrim{position:absolute;inset:0;z-index:2;display:flex;align-items:flex-end;justify-content:space-between;gap:20px;padding:clamp(22px,4vw,42px);background:linear-gradient(90deg,rgba(4,7,14,.82),rgba(4,7,14,.42) 58%,rgba(4,7,14,.16));color:#fff}.profile-route-identity{display:flex;align-items:center;gap:20px;min-width:0}.profile-route-identity-copy{min-width:0}.profile-route-name{display:flex;align-items:center;gap:9px;font-size:clamp(27px,4vw,44px);font-weight:850;line-height:1;letter-spacing:-.035em}.profile-lang-flag{font-size:21px}.profile-route-title,.profile-route-presence{margin-top:8px;color:rgba(255,255,255,.78);font-size:13px}.profile-route-signature{max-width:600px;margin:11px 0 0;color:#fff;font-size:15px}.profile-route-showcase{display:inline-flex;margin-top:11px;padding:6px 10px;border:1px solid rgba(255,255,255,.28);border-radius:99px;background:rgba(0,0,0,.2);font-size:11px}.profile-route-hero-actions{display:flex;gap:8px;align-self:flex-end}.profile-growth-card{padding:18px 22px}.profile-section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}.profile-section-head h2,.profile-section-head>div{margin:0;font-size:17px}.profile-section-head>span{color:var(--text-secondary);font-size:11px;text-align:right}.profile-xp-progress{height:10px;overflow:hidden;border-radius:99px;background:rgba(127,127,127,.14)}.profile-xp-progress>span{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--accent),#8b5cf6);transition:width var(--dur-slow) var(--ease-enter)}.profile-route-stats{display:grid;grid-template-columns:repeat(8,1fr);gap:8px;margin-top:14px}.profile-route-stat{min-width:0;padding:11px 8px;border:1px solid var(--ghost-line);border-radius:15px;background:rgba(127,127,127,.05);text-align:center}.profile-route-stat strong{display:block;font-size:17px}.profile-route-stat span{display:block;margin-top:3px;color:var(--text-secondary);font-size:10px}.profile-route-content{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(300px,.72fr);gap:14px}.profile-route-main,.profile-route-side{display:flex;flex-direction:column;gap:14px;min-width:0}.profile-route-section{padding:18px}.profile-game-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}.profile-game-card{min-height:92px;display:flex;align-items:center;gap:11px;padding:12px;border:1px solid var(--ghost-line);border-radius:18px;background:rgba(127,127,127,.05);color:var(--text-primary);text-align:left;cursor:pointer;transition:transform var(--dur-fast),background var(--dur-fast)}.profile-game-card:hover{transform:translateY(-2px);background:rgba(127,127,127,.1)}.profile-game-icon{display:grid;place-items:center;width:42px;height:42px;border-radius:14px;background:rgba(127,127,127,.1);font-size:24px}.profile-game-card>span:last-child{min-width:0}.profile-game-card strong,.profile-game-card small{display:block}.profile-game-card small{margin-top:5px;color:var(--text-secondary);font-size:10px}.profile-achievement-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.profile-achievement{display:flex;align-items:center;gap:10px;min-height:70px;padding:10px;border:1px solid var(--ghost-line);border-radius:16px;background:rgba(127,127,127,.04)}.profile-achievement.locked{opacity:.48;filter:grayscale(.7)}.profile-achievement.unlocked{background:linear-gradient(135deg,rgba(245,158,11,.13),rgba(139,92,246,.08))}.profile-achievement-icon{font-size:25px}.profile-achievement strong,.profile-achievement small{display:block}.profile-achievement small{margin-top:3px;color:var(--text-secondary);font-size:10px}.profile-task-list,.profile-people-list,.profile-replay-list{display:flex;flex-direction:column;gap:7px}.profile-task-row{display:grid;grid-template-columns:34px minmax(0,1fr) auto;align-items:center;gap:8px;padding:9px;border:1px solid var(--ghost-line);border-radius:14px}.profile-task-row.completed{opacity:.65}.profile-task-icon{font-size:20px}.profile-task-row strong,.profile-task-row small{display:block}.profile-task-row small{color:var(--text-secondary);font-size:10px}.profile-task-state{font-size:10px;color:var(--success)}.profile-person-row,.profile-replay-row{width:100%;min-height:52px;display:flex;align-items:center;gap:9px;padding:7px;border:0;border-radius:13px;background:rgba(127,127,127,.05);color:var(--text-primary);text-align:left;cursor:pointer}.profile-person-row>span:last-child{min-width:0;flex:1}.profile-person-row strong,.profile-person-row small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.profile-person-row small,.profile-replay-row small{color:var(--text-secondary);font-size:10px}.profile-person-fallback{display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:rgba(127,127,127,.1)}.profile-replay-row strong{flex:1}.profile-collection-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:7px}.profile-collection-item{padding:10px;border:1px solid var(--ghost-line);border-radius:14px;background:rgba(127,127,127,.04)}.profile-collection-item strong,.profile-collection-item span{display:block}.profile-collection-item strong{font-size:18px}.profile-collection-item span{margin-top:3px;color:var(--text-secondary);font-size:10px}.profile-compact-empty{padding:18px;text-align:center;color:var(--text-secondary);font-size:11px}.profile-route-footer{display:flex;justify-content:space-between;gap:8px;padding:4px 0 12px}.profile-route-footer .btn:last-child{color:var(--danger)}
-.honru-dock{position:fixed;right:18px;bottom:18px;z-index:180}.honru-dock button{position:relative;width:94px;height:94px;padding:0;border:0;background:transparent;cursor:pointer}.honru-dock img{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 12px 20px rgba(0,0,0,.22));transition:transform .22s var(--ease-spring)}.honru-dock button:hover img{transform:translateY(-5px) rotate(2deg)}.honru-dock.pet img{animation:honruPet .55s var(--ease-spring)}@keyframes honruPet{0%,100%{transform:none}35%{transform:scale(.88) rotate(-5deg)}70%{transform:scale(1.08) rotate(4deg)}}.honru-speech{position:absolute;right:82%;top:0;width:max-content;max-width:190px;padding:8px 11px;border:1px solid var(--ghost-line);border-radius:14px 14px 3px 14px;background:var(--ghost-glass-strong);backdrop-filter:blur(18px);color:var(--text-primary);font-size:12px;box-shadow:var(--elev-2)}
 .honru-game-reaction{position:absolute;right:max(8px,env(safe-area-inset-right,0px));bottom:max(8px,env(safe-area-inset-bottom,0px));z-index:210;width:clamp(76px,10vw,124px);aspect-ratio:1;display:grid;place-items:center;padding:6px;border:3px solid #211923;border-radius:28px;background:rgba(255,249,242,.94);box-shadow:5px 7px 0 rgba(33,25,35,.28);pointer-events:none}#board-area>.honru-game-reaction{animation:honruGameReact .42s var(--ease-spring) both}.honru-game-reaction img{width:100%;height:100%;object-fit:contain}.honru-game-reaction.honru-state-win,.honru-game-reaction.honru-state-playful{transform-origin:70% 80%}@keyframes honruGameReact{0%{opacity:0;transform:translateY(18px) scale(.72) rotate(-5deg)}65%{opacity:1;transform:translateY(-4px) scale(1.06) rotate(2deg)}100%{opacity:1;transform:none}}
 html[data-theme="dark"] .honru-game-reaction{background:rgba(255,249,242,.96);box-shadow:5px 7px 0 rgba(255,255,255,.18)}
-body.game-active .app-header,body.game-active .mobile-app-nav,body.game-active .honru-dock{display:none!important}
+body.game-active .app-header,body.game-active .mobile-app-nav{display:none!important}
 .ghost-auth-page{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;padding:22px;overflow:auto;background:transparent;backdrop-filter:none}.ghost-auth-shell{width:min(1080px,100%);display:grid;grid-template-columns:minmax(280px,1fr) minmax(340px,470px);align-items:center;gap:clamp(26px,7vw,92px)}.ghost-auth-brand{padding:26px;color:var(--text-primary)}.ghost-auth-brand-logo{display:flex;align-items:center;gap:14px;font-size:clamp(28px,4vw,46px);font-weight:850;letter-spacing:-.04em}.ghost-auth-brand-logo img{width:72px;height:72px}.ghost-auth-brand h1{max-width:650px;margin:28px 0 14px;font-size:clamp(42px,6vw,78px);line-height:.96;letter-spacing:-.06em}.ghost-auth-brand p{max-width:520px;font-size:17px;color:var(--text-secondary)}.ghost-auth-toolbar{display:flex;gap:7px;margin-top:24px}.ghost-auth-toolbar .btn{min-height:42px}.ghost-auth-card{width:100%;max-height:none;padding:24px;border:1px solid var(--ghost-line);border-radius:28px;background:var(--ghost-glass-strong);backdrop-filter:blur(30px) saturate(145%);box-shadow:0 32px 90px rgba(3,5,9,.2)}.ghost-auth-tabs{display:grid;grid-template-columns:repeat(2,1fr);gap:5px;padding:4px;border-radius:14px;background:rgba(127,127,127,.08);margin-bottom:20px}.ghost-auth-tabs button{border:0;border-radius:11px;padding:10px;background:transparent;color:var(--text-secondary);font-weight:700}.ghost-auth-tabs button[aria-selected="true"]{background:var(--text-primary);color:var(--bg-card-solid)}.ghost-auth-card .auth-hero{background:transparent;border:0;padding:0;margin:0 0 18px}.ghost-auth-card .auth-login-body,.ghost-auth-card .auth-details-panel{padding:0;border:0;background:transparent}.ghost-auth-card .auth-actions{display:grid;grid-template-columns:1fr;margin-top:16px}.ghost-auth-card .auth-actions .btn{width:100%;min-height:46px}.auth-inline-status{min-height:18px;margin-top:4px;font-size:11px;color:var(--text-secondary)}.auth-inline-status.available{color:var(--success)}.auth-inline-status.error{color:var(--danger)}.auth-guest-note{padding:11px;border:1px solid var(--ghost-line);border-radius:13px;background:rgba(127,127,127,.06);font-size:12px;color:var(--text-secondary)}.auth-connect-state{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--text-secondary)}.auth-connect-state::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--warning)}.auth-connect-state.connected::before{background:var(--success)}
 .sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
 /* 个人购买背景不再随平台昼夜主题重新着色。 */
@@ -1484,12 +1482,26 @@ html[data-theme="dark"] .profile-hero.bg-3,html[data-theme="light"] .profile-her
 html[data-theme="dark"] .profile-hero.bg-4,html[data-theme="light"] .profile-hero.bg-4{background:linear-gradient(135deg,#dcfce7,#86efac);color:#1d2433}
 html[data-theme="dark"] .profile-hero.bg-5,html[data-theme="light"] .profile-hero.bg-5{background:linear-gradient(135deg,#fce7f3,#f9a8d4);color:#1d2433}
 html[data-theme="dark"] .profile-hero.bg-6,html[data-theme="light"] .profile-hero.bg-6{background:linear-gradient(135deg,#1e293b,#334155);color:#e2e8f0}
+/* ================= Ghost Game Stage / Pocket Tabletop Wave A ================= */
+#screen-game.game-stage{--stage-paper:#fff4d9;--stage-paper-deep:#f2d9a8;--stage-cream:#fffaf0;--stage-ink:#211923;--stage-line:#2b2025;--stage-shadow:#9a7358;position:relative;isolation:isolate;max-width:1440px;margin:0 auto;padding:clamp(12px,2.4vw,30px);border:3px solid var(--stage-line);border-radius:30px;background:radial-gradient(circle at 18% 12%,rgba(255,255,255,.92),transparent 24%),radial-gradient(circle at 80% 88%,rgba(231,190,119,.27),transparent 34%),repeating-linear-gradient(0deg,rgba(72,45,30,.025) 0 1px,transparent 1px 5px),var(--stage-paper);color:var(--stage-ink);box-shadow:0 4px 0 var(--stage-shadow),0 24px 55px rgba(22,14,18,.24);overflow:hidden}
+html[data-theme="dark"] #screen-game.game-stage{--stage-paper:#f5e7c8;--stage-paper-deep:#d6b982;--stage-cream:#fff9eb;--stage-shadow:#574334;box-shadow:0 4px 0 var(--stage-shadow),0 30px 70px rgba(0,0,0,.55)}
+#screen-game.game-stage::before{content:"";position:absolute;inset:9px;border:1px solid rgba(43,32,37,.24);border-radius:22px;pointer-events:none;z-index:-1}
+.game-stage-header{position:relative;z-index:1;min-height:72px;margin:0 0 14px!important;padding:10px 12px!important;border:2px solid var(--stage-line)!important;border-radius:20px!important;background:linear-gradient(150deg,rgba(255,255,255,.9),rgba(255,244,217,.82))!important;box-shadow:0 4px 0 rgba(43,32,37,.22),0 12px 22px rgba(75,47,28,.12)!important;color:var(--stage-ink)}
+.game-stage-header h2{margin:0!important;background:none!important;color:var(--stage-ink)!important;-webkit-text-fill-color:var(--stage-ink);font-size:clamp(18px,2.4vw,25px)!important;letter-spacing:-.025em}.game-stage-title-wrap{min-width:0;display:grid;gap:2px}.game-stage-mode{display:inline-flex;width:max-content;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:3px 8px;border:1px solid var(--stage-line);border-radius:99px;background:var(--stage-ink);color:var(--stage-cream);font-size:10px;font-weight:850;letter-spacing:.11em;text-transform:uppercase}
+#screen-game.game-stage .btn{border-color:var(--stage-line);background:rgba(255,255,255,.72);color:var(--stage-ink);box-shadow:0 2px 0 rgba(43,32,37,.2)}#screen-game.game-stage .btn:hover{background:#fffdf7;transform:translateY(-1px)}#screen-game.game-stage .btn:active{transform:translateY(1px);box-shadow:none}#screen-game.game-stage .btn.btn-primary{border-color:var(--stage-line);background:var(--stage-ink);color:var(--stage-cream)}
+.game-stage-seats{position:relative;z-index:1;display:flex;align-items:center;gap:10px;margin:0 0 14px}.game-stage-seats .player-bar{flex:1;display:flex;flex-wrap:wrap;justify-content:center;gap:9px;margin:0}.game-stage-seat{position:relative;min-width:min(216px,100%);max-width:300px;align-items:center;gap:8px;padding:8px 10px!important;border:2px solid var(--stage-line)!important;border-radius:17px!important;background:linear-gradient(145deg,var(--stage-cream),var(--stage-paper))!important;color:var(--stage-ink)!important;box-shadow:0 3px 0 rgba(43,32,37,.24),0 10px 18px rgba(75,47,28,.10)!important;transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}.game-stage-seat.is-current{transform:translateY(-3px);border-color:var(--stage-seat-color,#e75a4d)!important;box-shadow:0 5px 0 var(--stage-seat-color,#e75a4d),0 13px 22px rgba(75,47,28,.18)!important}.game-stage-seat.is-mine::after{content:"";position:absolute;inset:4px;border:1px solid var(--stage-seat-color,#4c89e8);border-radius:12px;pointer-events:none}.game-stage-seat.is-offline{filter:saturate(.36);opacity:.72}.game-stage-seat.is-empty{min-width:116px;justify-content:center;border-style:dashed!important;box-shadow:0 2px 0 rgba(43,32,37,.14)!important;opacity:.7}.game-stage-seat-empty-mark{font-size:20px;font-weight:850}.game-stage-seat-copy{display:grid;min-width:0;gap:3px}.game-stage-seat-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px}.game-stage-seat-detail{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:rgba(43,32,37,.68);font-size:10px}.game-stage-badges{display:flex;flex-wrap:wrap;gap:4px}.game-stage-badge{display:inline-flex;align-items:center;min-height:16px;padding:1px 5px;border:1px solid rgba(43,32,37,.3);border-radius:99px;background:rgba(255,255,255,.58);color:var(--stage-ink);font-size:8px;font-weight:850;letter-spacing:.04em;line-height:1.2;text-transform:uppercase}.game-stage-badge.mine{background:#4c89e8;color:#fff;border-color:#244f98}.game-stage-badge.host{background:#e6b43d;border-color:#805e0e}.game-stage-badge.ai{background:#8e6ad8;color:#fff;border-color:#51328a}.game-stage-badge.turn{background:#e75a4d;color:#fff;border-color:#9f2f29}.game-stage-badge.offline{background:#a7a1a0;color:#fff;border-color:#6d6767}.game-stage-avatar{flex:none;position:relative;z-index:1}.game-stage-avatar-fallback,.game-stage-observer-mark{display:grid;place-items:center;flex:none;width:34px;height:34px;border:2px solid var(--stage-line);border-radius:12px;background:var(--stage-paper-deep);font-weight:900}.game-stage-observer{min-width:156px}.game-stage-spectators{flex:none;padding:6px 9px;border:1px solid var(--stage-line);border-radius:99px;background:rgba(255,255,255,.52);font-size:11px;font-weight:750;white-space:nowrap}
+.game-stage-main{display:grid;grid-template-columns:minmax(0,1fr) minmax(250px,320px);align-items:start;gap:16px}.game-stage-arena{min-width:0;min-height:420px;align-items:flex-start!important;padding:clamp(10px,2.1vw,22px);overflow:auto;border:2px solid var(--stage-line);border-radius:24px;background:linear-gradient(145deg,rgba(255,255,255,.66),rgba(241,210,153,.42));box-shadow:inset 0 0 0 3px rgba(255,255,255,.38),0 5px 0 rgba(43,32,37,.24),0 18px 30px rgba(75,47,28,.12)}.game-stage-arena>*{max-width:100%;flex:none}.game-stage-command{position:sticky;top:12px;display:flex;flex-direction:column;gap:10px;min-width:0;padding:13px;border:2px solid var(--stage-line);border-radius:22px;background:linear-gradient(160deg,var(--stage-cream),var(--stage-paper-deep));box-shadow:0 5px 0 rgba(43,32,37,.24),0 16px 28px rgba(75,47,28,.13);color:var(--stage-ink)}.game-stage-command-title{margin:0;padding-bottom:8px;border-bottom:1px solid rgba(43,32,37,.24);font-size:11px;font-weight:900;letter-spacing:.13em;text-transform:uppercase}.game-stage-command .status-bar,.game-stage-command #online-banner{margin:0!important;border:1px solid var(--stage-line)!important;background:rgba(255,255,255,.62)!important;color:var(--stage-ink)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.72)}.game-stage-command .game-extra{display:flex;flex-direction:column;align-items:stretch;gap:10px;margin:0!important}.game-stage-command .game-extra>*{max-width:100%}.game-stage-command .money-row,.game-stage-command .tetris-battle-hud,.game-stage-command .xiangqi-clock-hud,.game-stage-command .xiangqi-captured-hud,.game-stage-command .tank-arena-hud{border:1px solid rgba(43,32,37,.26);border-radius:14px;background:rgba(255,255,255,.46);padding:8px;color:var(--stage-ink)}.game-stage-command .tetris-actions,.game-stage-command .tank-realtime-controls{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}.game-stage-command .tank-realtime-controls{gap:18px!important}.game-stage.arena-first .game-stage-main{grid-template-columns:minmax(0,1fr) minmax(270px,340px)}.game-stage.arena-first .game-stage-arena{min-height:500px}
+.game-stage-seat.is-ready:not(.is-offline)::before{content:"";position:absolute;top:7px;right:8px;width:7px;height:7px;border-radius:50%;background:#55a86f;box-shadow:0 0 0 2px var(--stage-cream)}.game-stage-seat.is-bankrupt{filter:saturate(.55);opacity:.7}.game-stage-badge.bankrupt{background:#625c61;color:#fff;border-color:#39343a}.game-stage-seat[data-seat-current="true"]{scroll-margin-inline:12px}
+@media(max-width:980px){.game-stage-main,.game-stage.arena-first .game-stage-main{grid-template-columns:minmax(0,1fr) minmax(230px,280px)}.game-stage-seat{min-width:min(190px,100%)}}
+@media(max-width:720px){#screen-game.game-stage{margin:0 -2px;padding:10px;border-radius:22px}.game-stage-main,.game-stage.arena-first .game-stage-main{grid-template-columns:minmax(0,1fr);gap:12px}.game-stage-command{position:static}.game-stage-arena,.game-stage.arena-first .game-stage-arena{min-height:0;padding:10px;border-radius:18px}.game-stage-seats{align-items:flex-start}.game-stage-seats .player-bar{justify-content:flex-start;flex-wrap:nowrap;overflow:auto;padding:4px 2px 8px;scroll-snap-type:x proximity}.game-stage-seat{flex:0 0 min(210px,78vw);scroll-snap-align:start}.game-stage-seat.is-empty{flex-basis:116px}.game-stage-spectators{margin-top:4px}.game-stage-command{border-radius:18px}.game-stage-command .game-extra{align-items:center}.game-stage-command .tank-realtime-controls{width:100%;padding-bottom:env(safe-area-inset-bottom,0px)}#screen-game.game-stage .tetris-battle-layout{display:grid!important;grid-template-columns:minmax(0,1fr)!important;width:100%;min-width:0;justify-items:stretch}#screen-game.game-stage .tetris-player-main{display:grid;width:100%;min-width:0;justify-items:center}#screen-game.game-stage .tetris-player-main .tetris-score,#screen-game.game-stage .tetris-player-main .tetris-next{width:100%;text-align:center}#screen-game.game-stage .tetris-next{white-space:normal;overflow-wrap:anywhere}#screen-game.game-stage .tetris-opponents{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:8px;width:100%;min-width:0;align-items:start}#screen-game.game-stage .tetris-mini-card{box-sizing:border-box;min-width:0;margin-bottom:0!important}#screen-game.game-stage .tetris-mini-card .mini-board{margin-inline:auto}#screen-game.game-stage .tetris-compact-status{grid-column:1 / -1;min-width:0}#screen-game.game-stage .tetris-actions{width:100%}#screen-game.game-stage .tetris-actions .btn{min-width:44px;min-height:44px;flex:1 1 44px}}
+@media(max-width:480px){.game-stage-header{grid-template-columns:auto minmax(0,1fr)!important;grid-template-areas:"back title" "actions actions"}.game-stage-header .game-stage-title-wrap{grid-area:title}.game-stage-header .top-actions{grid-area:actions}.game-stage-header .top-actions .btn{min-height:44px}.game-stage-mode{font-size:9px}.game-stage-command{padding:11px}.game-stage-seat{flex-basis:min(196px,78vw)}}
+@media(prefers-reduced-motion:reduce){.game-stage-seat{transition:none}.game-stage-seat.is-current{transform:none}}
 @media(max-width:900px){.desktop-app-nav{order:3;width:100%;justify-content:center}.app-header{flex-wrap:wrap}.hero-slide{grid-template-columns:1fr .72fr}.home-dashboard{grid-template-columns:1fr 1fr}.home-welcome{grid-column:1/-1}.ghost-auth-shell{gap:24px}.ghost-auth-brand h1{font-size:52px}.profile-route-stats{grid-template-columns:repeat(4,1fr)}.profile-route-content{grid-template-columns:1fr}.profile-route-side{display:grid;grid-template-columns:repeat(2,1fr)}.profile-route-side .profile-route-section:last-child{grid-column:1/-1}}
 @media(max-width:640px){
-  :root{--ghost-nav-height:74px}#app{padding:10px 10px calc(var(--ghost-nav-height) + 22px)}.app-header{position:relative;top:auto;min-height:54px;padding:7px 9px;border-radius:17px;margin-bottom:10px}.brand .brand-icon{width:34px;height:34px}.brand-tag,.desktop-app-nav{display:none}.header-actions .btn{min-width:42px;padding:6px}.mobile-app-nav{position:fixed;left:8px;right:8px;bottom:calc(8px + env(safe-area-inset-bottom,0px));z-index:500;display:grid;grid-template-columns:repeat(4,1fr);padding:6px;border:1px solid var(--ghost-line);border-radius:20px;background:var(--ghost-glass-strong);backdrop-filter:blur(28px) saturate(145%);box-shadow:0 18px 50px rgba(3,5,9,.28)}.mobile-app-nav .app-nav-button{min-width:0;min-height:52px;padding:5px 2px;display:flex;flex-direction:column;gap:1px;font-size:10px}.mobile-app-nav .app-nav-button>span:first-child{font-size:20px;line-height:1}.hero-carousel{min-height:560px;border-radius:25px}.hero-slide{grid-template-columns:1fr;grid-template-rows:auto 190px;align-content:center;padding:26px 20px 50px}.hero-copy h1,.hero-copy h2{font-size:42px}.hero-copy p{font-size:14px}.hero-honru{width:210px;grid-row:2;justify-self:end}.hero-orbit{width:190px;grid-row:2}.hero-orbit span{width:48px;height:48px;border-radius:15px;font-size:20px}.hero-ghost-cluster{grid-row:2}.hero-pagination{left:20px;bottom:18px}.home-dashboard{grid-template-columns:1fr}.home-welcome{grid-column:auto}.companion-layout,.ghost-profile-overview{grid-template-columns:1fr}.companion-stage{order:2}.companion-chat{min-height:430px}.honru-dock{display:none}.honru-game-reaction{right:10px;bottom:10px;width:76px;border-width:2px;border-radius:21px;box-shadow:3px 4px 0 rgba(33,25,35,.25)}.ghost-auth-page{place-items:start center;padding:10px}.ghost-auth-shell{grid-template-columns:1fr;gap:8px}.ghost-auth-brand{padding:12px 8px}.ghost-auth-brand-logo img{width:48px;height:48px}.ghost-auth-brand-logo{font-size:26px}.ghost-auth-brand h1{font-size:40px;margin:14px 0 8px}.ghost-auth-brand p{font-size:13px}.ghost-auth-toolbar{margin-top:10px}.ghost-auth-card{padding:18px;border-radius:22px}.ghost-profile-actions{grid-template-columns:1fr 1fr}.route-heading{margin:22px 4px 14px}.route-heading h1{font-size:42px}.player-chat-shell{display:block;min-height:calc(100dvh - 230px)}.chat-conversations,.chat-thread{min-height:calc(100dvh - 230px)}.player-chat-shell:not(.thread-open) .chat-thread{display:none}.player-chat-shell.thread-open .chat-conversations{display:none}.chat-thread-back{display:inline-flex}.chat-thread-messages{max-height:none;min-height:calc(100dvh - 390px)}.chat-composer{position:sticky;bottom:calc(var(--ghost-nav-height) + env(safe-area-inset-bottom,0px));z-index:2}.chat-view-tabs{display:grid;grid-template-columns:1fr 1fr;width:100%}
+  :root{--ghost-nav-height:74px}#app{padding:10px 10px calc(var(--ghost-nav-height) + 22px)}.app-header{position:relative;top:auto;min-height:54px;padding:7px 9px;border-radius:17px;margin-bottom:10px}.brand .brand-icon{width:34px;height:34px}.brand-tag,.desktop-app-nav{display:none}.header-actions .btn{min-width:42px;padding:6px}.mobile-app-nav{position:fixed;left:8px;right:8px;bottom:calc(8px + env(safe-area-inset-bottom,0px));z-index:500;display:grid;grid-template-columns:repeat(4,1fr);padding:6px;border:1px solid var(--ghost-line);border-radius:20px;background:var(--ghost-glass-strong);backdrop-filter:blur(28px) saturate(145%);box-shadow:0 18px 50px rgba(3,5,9,.28)}.mobile-app-nav .app-nav-button{min-width:0;min-height:52px;padding:5px 2px;display:flex;flex-direction:column;gap:1px;font-size:10px}.mobile-app-nav .app-nav-button>span:first-child{font-size:20px;line-height:1}.hero-carousel{min-height:560px;border-radius:25px}.hero-slide{grid-template-columns:1fr;grid-template-rows:auto 190px;align-content:center;padding:26px 20px 50px}.hero-copy h1,.hero-copy h2{font-size:42px}.hero-copy p{font-size:14px}.hero-honru{width:210px;grid-row:2;justify-self:end}.hero-orbit{width:190px;grid-row:2}.hero-orbit span{width:48px;height:48px;border-radius:15px;font-size:20px}.hero-ghost-cluster{grid-row:2}.hero-pagination{left:20px;bottom:18px}.home-dashboard{grid-template-columns:1fr}.home-welcome{grid-column:auto}.ghost-profile-overview{grid-template-columns:1fr}.honru-game-reaction{right:10px;bottom:10px;width:76px;border-width:2px;border-radius:21px;box-shadow:3px 4px 0 rgba(33,25,35,.25)}.ghost-auth-page{place-items:start center;padding:10px}.ghost-auth-shell{grid-template-columns:1fr;gap:8px}.ghost-auth-brand{padding:12px 8px}.ghost-auth-brand-logo img{width:48px;height:48px}.ghost-auth-brand-logo{font-size:26px}.ghost-auth-brand h1{font-size:40px;margin:14px 0 8px}.ghost-auth-brand p{font-size:13px}.ghost-auth-toolbar{margin-top:10px}.ghost-auth-card{padding:18px;border-radius:22px}.ghost-profile-actions{grid-template-columns:1fr 1fr}.route-heading{margin:22px 4px 14px}.route-heading h1{font-size:42px}.player-chat-shell{display:block;min-height:calc(100dvh - 230px)}.chat-conversations,.chat-thread{min-height:calc(100dvh - 230px)}.player-chat-shell:not(.thread-open) .chat-thread{display:none}.player-chat-shell.thread-open .chat-conversations{display:none}.chat-thread-back{display:inline-flex}.chat-thread-messages{max-height:none;min-height:calc(100dvh - 390px)}.chat-composer{position:sticky;bottom:calc(var(--ghost-nav-height) + env(safe-area-inset-bottom,0px));z-index:2}
 }
 @media(max-width:640px){.profile-route-hero{min-height:420px;border-radius:24px}.profile-route-hero-scrim{align-items:stretch;justify-content:flex-end;flex-direction:column;padding:22px;background:linear-gradient(0deg,rgba(4,7,14,.88),rgba(4,7,14,.2))}.profile-route-identity{align-items:flex-end;gap:13px}.profile-route-name{font-size:27px}.profile-route-signature{font-size:13px}.profile-route-hero-actions{align-self:stretch}.profile-route-hero-actions .btn{flex:1}.profile-growth-card{padding:16px}.profile-route-stats{grid-template-columns:repeat(2,1fr)}.profile-game-grid{grid-template-columns:repeat(2,1fr)}.profile-game-card{min-height:82px;padding:9px}.profile-game-icon{width:36px;height:36px;font-size:20px}.profile-achievement-grid{grid-template-columns:1fr}.profile-route-side{display:flex}.profile-route-content{gap:10px}.profile-route-main,.profile-route-side{gap:10px}.profile-route-footer{padding-bottom:calc(var(--ghost-nav-height) + env(safe-area-inset-bottom,0px))}}
-@media(prefers-reduced-motion:reduce){.ambient-stars,.ambient-clouds,.hero-honru,.companion-mascot-wrap img,.hero-orbit,.hero-orbit span,.honru-game-reaction,.app-route,.chat-message{animation:none!important}.hero-slide{transition:none}}
+@media(prefers-reduced-motion:reduce){.ambient-stars,.ambient-clouds,.hero-honru,.hero-orbit,.hero-orbit span,.honru-game-reaction,.app-route,.chat-message{animation:none!important}.hero-slide{transition:none}}
 
 </style>
 </head>
@@ -1527,7 +1539,7 @@ html[data-theme="dark"] .profile-hero.bg-6,html[data-theme="light"] .profile-her
         <div class="hero-pagination" role="tablist" data-i18n-aria-label="home_carousel_pages"><button type="button" aria-selected="true" data-hero-dot="0"></button><button type="button" aria-selected="false" data-hero-dot="1"></button><button type="button" aria-selected="false" data-hero-dot="2"></button></div>
       </section>
       <section class="home-dashboard">
-        <article class="home-glass-card home-welcome"><span class="home-card-label" data-i18n="home_today">今天</span><h2 id="home-welcome-title" data-i18n="home_welcome_guest">准备好开始了吗？</h2><p id="home-welcome-copy" data-i18n="home_welcome_copy">选择一款游戏，或让 Honru 帮你决定。</p><div class="home-card-actions"><button type="button" class="btn btn-primary" data-app-route-target="games" data-i18n="nav_games">游戏</button><button type="button" class="btn" id="btn-home-honru" data-i18n="home_talk_honru">和 Honru 聊聊</button></div></article>
+        <article class="home-glass-card home-welcome"><span class="home-card-label" data-i18n="home_today">今天</span><h2 id="home-welcome-title" data-i18n="home_welcome_guest">准备好开始了吗？</h2><p id="home-welcome-copy" data-i18n="home_welcome_copy">选择一款游戏，或创建一个房间直接开局。</p><div class="home-card-actions"><button type="button" class="btn btn-primary" data-app-route-target="games" data-i18n="nav_games">游戏</button><button type="button" class="btn" id="btn-home-checkin" data-i18n="home_daily_checkin">今日签到</button></div></article>
         <article class="home-glass-card home-status-card"><span class="home-card-label" data-i18n="home_live_status">实时状态</span><div id="home-live-status" class="home-live-status"></div></article>
         <article class="home-glass-card home-games-preview"><span class="home-card-label" data-i18n="home_six_games">六款精选</span><div class="home-mini-games" aria-hidden="true"><span>⚫</span><span>✈️</span><span>🏙️</span><span>🛡️</span><span>🧱</span><span>♞</span></div></article>
       </section>
@@ -1604,8 +1616,7 @@ html[data-theme="dark"] .profile-hero.bg-6,html[data-theme="light"] .profile-her
     </section>
     <section class="app-route hidden ghost-chat-route" data-app-route="chat">
       <div class="route-heading"><span data-i18n="chat_kicker">GHOST LINK</span><h1 id="chat-route-title" data-i18n="chat_title">玩家消息</h1><p id="chat-route-intro" data-i18n="chat_intro">和好友保持联系，离线时也可以留言。</p></div>
-      <div class="chat-view-tabs" role="tablist" data-i18n-aria-label="chat_tabs_aria"><button type="button" class="btn" id="chat-tab-players" role="tab" aria-selected="true" data-chat-view-target="players" data-i18n="chat_players_tab">玩家消息</button><button type="button" class="btn" id="chat-tab-honru" role="tab" aria-selected="false" data-chat-view-target="honru" data-i18n="chat_honru_tab">Honru 助手</button></div>
-      <section id="player-chat-view" data-chat-view="players">
+      <section id="player-chat-view">
         <div id="player-chat-shell" class="player-chat-shell">
           <aside class="chat-conversations home-glass-card" aria-labelledby="chat-conversations-title">
             <div class="chat-panel-head"><span id="chat-connection" class="chat-connection" aria-hidden="true"></span><div><h2 id="chat-conversations-title" data-i18n="chat_conversations">会话</h2><p id="chat-list-status" data-i18n="chat_loading">正在同步消息…</p></div><button type="button" class="btn" id="btn-chat-refresh" data-i18n-title="refresh" data-i18n-aria-label="refresh">↻</button></div>
@@ -1618,37 +1629,38 @@ html[data-theme="dark"] .profile-hero.bg-6,html[data-theme="light"] .profile-her
           </section>
         </div>
       </section>
-      <section id="honru-chat-view" class="hidden" data-chat-view="honru">
-        <div class="companion-layout">
-          <section class="companion-stage home-glass-card"><div class="companion-mascot-wrap"><img src="assets/brand/honru-mascot-v1.svg" alt="Honru" data-i18n-alt="honru_alt"><span class="companion-mood" id="companion-mood" data-i18n="honru_mood_neutral">平静</span></div><button type="button" class="btn" id="btn-companion-pet" data-i18n="honru_pet">摸摸 Honru · 今日签到</button><p class="companion-privacy" data-i18n="companion_privacy">聊天会发送给 DeepSeek，但 Ghost Game 不保存聊天原文。请勿输入密码或敏感信息。</p></section>
-          <section class="companion-chat home-glass-card"><div class="companion-messages" id="companion-messages" role="log" aria-live="polite"></div><form class="companion-form" id="companion-form"><label class="sr-only" for="companion-input" data-i18n="companion_input_label">给 Honru 发消息</label><input id="companion-input" class="nick-input" maxlength="500" autocomplete="off" data-i18n-placeholder="companion_placeholder"><button type="submit" class="btn btn-primary" data-i18n="send">发送</button></form><div class="companion-suggestions"><button type="button" class="btn btn-ghost" data-companion-prompt="mood" data-i18n="companion_prompt_mood">我今天有点累</button><button type="button" class="btn btn-ghost" data-companion-prompt="game" data-i18n="companion_prompt_game">帮我选个游戏</button><button type="button" class="btn btn-ghost" data-companion-prompt="news" data-i18n="companion_prompt_news">最近有什么新闻？</button></div></section>
-        </div>
-      </section>
     </section>
     <section class="app-route hidden ghost-profile-route" data-app-route="profile">
-      <div class="route-heading"><span data-i18n="profile_kicker">PLAYER IDENTITY</span><h1 data-i18n="nav_profile">主页</h1><p data-i18n="profile_route_intro">你的身份、成长与收藏，保持独立于昼夜主题。</p></div>
+      <div class="route-heading profile-route-heading"><h1 data-i18n="nav_profile">主页</h1></div>
       <div id="ghost-profile-overview" class="ghost-profile-overview"></div>
     </section>
   </section>
 
-  <section id="screen-game" class="hidden">
-    <div class="game-top">
+  <section id="screen-game" class="hidden game-stage" aria-label="Game stage" data-i18n-aria-label="stage_aria">
+    <header id="game-stage-header" class="game-top game-stage-header">
       <button type="button" class="btn btn-ghost" id="btn-back"></button>
-      <h2 id="game-title"></h2>
+      <div class="game-stage-title-wrap"><span id="game-stage-mode" class="game-stage-mode" data-i18n="stage_local_match">本地对局</span><h2 id="game-title"></h2></div>
       <div class="top-actions">
         <button type="button" class="btn hidden" id="btn-end-game" data-i18n-title="end_game"></button>
         <button type="button" class="btn" id="btn-rules"></button>
         <button type="button" class="btn" id="btn-restart"></button>
       </div>
+    </header>
+    <section id="game-stage-seats" class="game-stage-seats" data-i18n-aria-label="stage_seats_aria">
+      <div id="player-bar" class="player-bar"></div>
+      <span id="game-stage-spectators" class="game-stage-spectators hidden"></span>
+    </section>
+    <div id="game-stage-main" class="game-stage-main">
+      <div id="board-area" class="board-area game-stage-arena"></div>
+      <aside id="game-stage-command" class="game-stage-command" data-i18n-aria-label="stage_command_aria">
+        <h3 class="game-stage-command-title" data-i18n="stage_command">对局操作</h3>
+        <div id="status-bar" class="status-bar"></div>
+        <div id="online-banner" class="hidden"></div>
+        <div id="game-extra" class="game-extra"></div>
+      </aside>
     </div>
-    <div id="player-bar" class="player-bar"></div>
-    <div id="status-bar" class="status-bar"></div>
-    <div id="online-banner" class="hidden"></div>
-    <div id="board-area" class="board-area"></div>
-    <div id="game-extra" class="game-extra"></div>
   </section>
 </div>
-<aside class="honru-dock" id="honru-dock"><button type="button" id="btn-honru-dock" data-i18n-aria-label="honru_open_chat"><img src="assets/brand/honru-mascot-v1.svg" alt="Honru" data-i18n-alt="honru_alt"><span class="honru-speech" id="honru-speech" data-i18n="honru_idle_line">要来一局吗？</span></button></aside>
 <nav class="mobile-app-nav" aria-label="主导航" data-i18n-aria-label="app_nav_aria">
   <button type="button" class="app-nav-button" data-app-route-target="home"><span aria-hidden="true">⌂</span><span data-i18n="nav_home">首页</span></button>
   <button type="button" class="app-nav-button" data-app-route-target="games"><span aria-hidden="true">✦</span><span data-i18n="nav_games">游戏</span></button>
@@ -2071,6 +2083,7 @@ async function setLanguage(lang) {
   if (typeof setChatView === 'function' && typeof ghostAppRoute !== 'undefined' && ghostAppRoute === 'chat') setChatView(typeof ghostChatView !== 'undefined' ? ghostChatView : 'players', { silentHash:true });
   if (online.room) renderRoomPanel();
   if (currentGame && typeof currentGame.onLanguageChange === 'function') currentGame.onLanguageChange(currentLang);
+  if (typeof renderGameStage === 'function') renderGameStage();
   if (online.connected && account && account.uid) {
     online.send({ type:'profile', payload: { uid: account.uid, name: account.name, avatar: account.avatar, lang:currentLang } });
   }
@@ -3207,7 +3220,7 @@ let chatLastConversationFocus = null;
 let ghostProfileBackgroundNode = null;
 let ghostHeroIndex = 0;
 let ghostHeroTimer = null;
-let ghostCompanionHistory = [];
+let ghostGameStageState = { gameId:null, activeIdx:null, infos:null, bankrupts:null, colors:null };
 let honruGameReactionTimer = null;
 let honruGameReactionSequence = 0;
 let honruGameReactionLifecycle = 0;
@@ -3318,7 +3331,8 @@ function setHonruPlatformReaction(kind){
   if(typeof honruStatesEnabled!=='function'||!honruStatesEnabled()||typeof document==='undefined'||document.hidden)return false;
   const state=honruFeedbackState(kind),seq=++honruPlatformReactionSequence;
   if(honruPlatformReactionTimer){clearTimeout(honruPlatformReactionTimer);honruPlatformReactionTimer=null;}
-  const images=[...document.querySelectorAll('.companion-mascot-wrap img,#btn-honru-dock img')];
+  // Honru 的可选局内反应没有聊天页或浮层依赖；这里仅保留未来品牌展示位的安全兼容。
+  const images=[...document.querySelectorAll('[data-honru-brand-state] img')];
   images.forEach(img=>applyHonruStateImage(img,state,()=>seq===honruPlatformReactionSequence&&img.isConnected));
   honruPlatformReactionTimer=setTimeout(()=>{
     if(seq!==honruPlatformReactionSequence)return;
@@ -3329,26 +3343,164 @@ function setHonruPlatformReaction(kind){
   return images.length>0;
 }
 
+/* ================= Game Stage（纯呈现，不写入房间/规则状态） ================= */
+const GAME_STAGE_FALLBACK_COLORS = ['#e75a4d','#4c89e8','#e6b43d','#55a86f','#8e6ad8'];
+function gameStageLocalized(key,...args){
+  const value=typeof t==='function'?t(key,...args):key;
+  return value===key&&args.length?key+' '+args.join(' '):value;
+}
+function gameStageName(gameId){
+  const meta=typeof GAMES!=='undefined'&&GAMES&&GAMES[gameId];
+  if(!meta)return String(gameId||'');
+  return meta.nameKey?gameStageLocalized(meta.nameKey):String(meta.name||gameId);
+}
+function gameStageIsOnline(){
+  return !!(typeof online!=='undefined'&&online&&(online.game||online.spectatorRoom||online.isSpectator));
+}
+function gameStageSeatModels(){
+  const onlineState=typeof online!=='undefined'&&online?online:null;
+  const roomSeats=onlineState&&onlineState.roomInfo&&Array.isArray(onlineState.roomInfo.seats)?onlineState.roomInfo.seats:[];
+  if(gameStageIsOnline()&&roomSeats.length)return roomSeats.map(seat=>seat&&typeof seat==='object'?seat:null).filter(Boolean);
+  const count=Math.max(2,Number(typeof playerCount!=='undefined'&&playerCount)||2);
+  const ownName=typeof account!=='undefined'&&account&&(account.name||account.username);
+  return Array.from({length:count},(_,seatId)=>({
+    seatId,type:seatId>0&&typeof aiMode!=='undefined'&&aiMode?'ai':'human',
+    userId:seatId===0&&typeof account!=='undefined'&&account?account.uid||null:null,
+    nickname:seatId===0&&ownName?ownName:gameStageLocalized('player_number',seatId+1),
+    avatar:seatId===0&&typeof account!=='undefined'&&account?account.avatar||0:(seatId>0&&typeof aiMode!=='undefined'&&aiMode?141:0),
+    ready:true,host:false,online:true,aiDifficulty:'normal',aiPersona:null,controllerUid:null,
+  }));
+}
+function gameStageMakeBadge(key,modifier){
+  const badge=el('span','game-stage-badge'+(modifier?' '+modifier:''),gameStageLocalized(key));
+  badge.setAttribute('data-stage-label',key);badge.setAttribute('data-i18n',key);
+  return badge;
+}
+function gameStageAvatar(seat){
+  const profile={uid:seat.userId||'',name:seat.nickname||'',avatar:Number(seat.avatar)||0,frame:0,effect:0};
+  if(typeof avatarStageNode==='function'){
+    const avatar=avatarStageNode(profile,34,'game-stage-avatar');avatar.setAttribute('aria-hidden','true');return avatar;
+  }
+  return el('span','game-stage-avatar-fallback',seat.type==='ai'?'✦':'●');
+}
+function gameStageSeatNode(seat,index,state){
+  const seatId=Number.isInteger(Number(seat.seatId))?Number(seat.seatId):index;
+  // `null` means the game has not supplied an authoritative turn yet.  Do not
+  // coerce it to 0: doing so would briefly label seat 0 as the current player.
+  const rawActive=state&&state.activeIdx;
+  const active=rawActive!==null&&rawActive!==undefined&&String(rawActive).trim()!==''&&Number.isInteger(Number(rawActive))&&Number(rawActive)===seatId;
+  const onlineState=typeof online!=='undefined'&&online?online:null;
+  // A room may briefly retain a stale `online.player` during reassignment or
+  // restoration. When both authoritative identities are available, never let
+  // that legacy index override the UID match. Only a fully identity-less
+  // legacy payload may use the index fallback.
+  const accountUid=typeof account!=='undefined'&&account&&account.uid!==undefined&&account.uid!==null?String(account.uid):'';
+  const seatUid=seat&&seat.userId!==undefined&&seat.userId!==null?String(seat.userId):'';
+  const hasIdentityPair=!!(accountUid&&seatUid);
+  const identityMissingBoth=!accountUid&&!seatUid;
+  const mine=!!(onlineState&&!onlineState.isSpectator&&(hasIdentityPair?seatUid===accountUid:identityMissingBoth&&Number(onlineState.player)===seatId))||(!gameStageIsOnline()&&seatId===0);
+  const isAI=seat.type==='ai',isEmpty=seat.type==='empty',isReady=!isEmpty&&!!seat.ready;
+  const isOffline=!isEmpty&&!isAI&&seat.online===false;
+  const isBankrupt=Array.isArray(state.bankrupts)&&!!state.bankrupts[seatId];
+  const card=el('article','pchip game-stage-seat');
+  card.dataset.seatKey=String(seatId);card.dataset.seatType=isAI?'ai':isEmpty?'empty':'human';
+  card.dataset.seatCurrent=String(active);card.dataset.seatMine=String(mine);card.dataset.seatHost=String(!!seat.host);
+  card.dataset.seatReady=String(isReady);card.dataset.seatOnline=String(!isOffline&&!isEmpty);card.dataset.seatBankrupt=String(isBankrupt);
+  card.classList.toggle('is-current',active);card.classList.toggle('is-mine',mine);card.classList.toggle('is-host',!!seat.host);
+  card.classList.toggle('is-ai',isAI);card.classList.toggle('is-ready',isReady);card.classList.toggle('is-offline',isOffline);card.classList.toggle('is-empty',isEmpty);card.classList.toggle('is-bankrupt',isBankrupt);
+  const color=Array.isArray(state.colors)&&state.colors[seatId]||GAME_STAGE_FALLBACK_COLORS[seatId%GAME_STAGE_FALLBACK_COLORS.length];
+  if(/^#[0-9a-f]{3,8}$/i.test(String(color))){
+    if(card.style&&typeof card.style.setProperty==='function')card.style.setProperty('--stage-seat-color',color);
+    else if(card.style)card.style['--stage-seat-color']=color;
+  }
+  if(isEmpty){
+    card.appendChild(el('span','game-stage-seat-empty-mark','＋'));
+    const emptyLabel=el('strong','game-stage-seat-name',gameStageLocalized('empty_seat'));emptyLabel.setAttribute('data-i18n','empty_seat');card.appendChild(emptyLabel);
+    return card;
+  }
+  card.appendChild(gameStageAvatar(seat));
+  const copy=el('div','game-stage-seat-copy');
+  const label=el('strong','game-stage-seat-name',seat.nickname||gameStageLocalized(isAI?'stage_ai_player':'player_number',seatId+1));
+  if(seat.nickname)label.setAttribute('data-i18n-raw','');
+  copy.appendChild(label);
+  const badges=el('span','game-stage-badges');
+  if(mine)badges.appendChild(gameStageMakeBadge('stage_you','mine'));
+  if(seat.host)badges.appendChild(gameStageMakeBadge('stage_host','host'));
+  if(isAI)badges.appendChild(gameStageMakeBadge('stage_ai','ai'));
+  if(isReady)badges.appendChild(gameStageMakeBadge('ready','ready'));
+  if(isOffline)badges.appendChild(gameStageMakeBadge('offline','offline'));
+  if(isBankrupt)badges.appendChild(gameStageMakeBadge('stage_bankrupt','bankrupt'));
+  if(active)badges.appendChild(gameStageMakeBadge('stage_current_turn','turn'));
+  copy.appendChild(badges);
+  // `infos` is an optional, per-seat array supplied by the current game. Do
+  // not use `Array.isArray(...) && value` here: a missing/non-array value
+  // evaluates to boolean `false`, which would otherwise become visible text.
+  const infos=state&&Array.isArray(state.infos)?state.infos:null;
+  const info=infos===null?undefined:infos[seatId];
+  if(info!==undefined&&info!==null&&String(info)){
+    const detail=el('small','game-stage-seat-detail',String(info));
+    if(typeof setLocalizedText==='function')setLocalizedText(detail,String(info));
+    copy.appendChild(detail);
+  }else if(isAI&&seat.aiPersona){
+    const detail=el('small','game-stage-seat-detail',String(seat.aiPersona));detail.setAttribute('data-i18n-raw','');copy.appendChild(detail);
+  }
+  card.appendChild(copy);
+  const stateLabels=[];
+  if(mine)stateLabels.push(gameStageLocalized('stage_you'));
+  if(seat.host)stateLabels.push(gameStageLocalized('stage_host'));
+  if(isAI)stateLabels.push(gameStageLocalized('stage_ai'));
+  if(active)stateLabels.push(gameStageLocalized('stage_current_turn'));
+  card.setAttribute('aria-label',[seat.nickname||gameStageLocalized('player_number',seatId+1),...stateLabels].filter(Boolean).join(' · '));
+  return card;
+}
+function renderGameStage(nextState){
+  const stage=$('screen-game');if(!stage)return false;
+  const next=nextState&&typeof nextState==='object'?nextState:{};
+  if(next.reset)ghostGameStageState={gameId:null,activeIdx:null,infos:null,bankrupts:null,colors:null};
+  ['gameId','activeIdx','infos','bankrupts','colors'].forEach(key=>{if(Object.prototype.hasOwnProperty.call(next,key))ghostGameStageState[key]=next[key];});
+  const onlineState=typeof online!=='undefined'&&online?online:null;
+  const gameId=ghostGameStageState.gameId||typeof currentGameId!=='undefined'&&currentGameId||onlineState&&onlineState.game||'';
+  if(gameId)ghostGameStageState.gameId=gameId;
+  stage.dataset.stageGame=String(gameId||'');
+  stage.classList.toggle('arena-first',gameId==='tank'||gameId==='tetris');
+  const watching=!!(onlineState&&(onlineState.isSpectator||onlineState.spectatorRoom));
+  stage.classList.toggle('stage-spectator',watching);
+  const title=$('game-title');if(title&&gameId)title.textContent=gameStageName(gameId);
+  const mode=$('game-stage-mode');
+  const modeKey=watching?'stage_spectating':gameStageIsOnline()?'stage_online_match':typeof aiMode!=='undefined'&&aiMode?'stage_ai_match':'stage_local_match';
+  if(mode){mode.setAttribute('data-i18n',modeKey);mode.textContent=gameStageLocalized(modeKey);}
+  const spectators=$('game-stage-spectators'),count=Math.max(0,Number(onlineState&&onlineState.roomInfo&&onlineState.roomInfo.spectatorCount)||0);
+  if(spectators){spectators.classList.toggle('hidden',!count);spectators.textContent=gameStageLocalized('stage_spectator_count',count);}
+  const rail=$('player-bar');if(!rail)return true;
+  rail.innerHTML='';rail.setAttribute('data-stage-seat-count','0');
+  const seats=gameStageSeatModels();
+  seats.forEach((seat,index)=>rail.appendChild(gameStageSeatNode(seat,index,ghostGameStageState)));
+  if(watching){
+    const observer=el('article','pchip game-stage-seat game-stage-observer');observer.dataset.seatType='spectator';
+    observer.appendChild(el('span','game-stage-observer-mark','◌'));observer.appendChild(el('strong','game-stage-seat-name',gameStageLocalized('stage_spectating')));
+    observer.appendChild(gameStageMakeBadge('spectator_readonly','spectator'));rail.appendChild(observer);
+  }
+  rail.setAttribute('data-stage-seat-count',String(seats.length));
+  return true;
+}
+
 function routeFromHash(){
   const match = /^#\/(home|games|chat|profile)(?:$|[?&])/.exec(String(typeof location!=='undefined'&&location.hash || ''));
   return match ? match[1] : 'home';
 }
 function chatViewFromHash(){
-  const hash=String(typeof location!=='undefined'&&location.hash||'');
-  return /(?:\?|&)view=honru(?:&|$)/.test(hash)?'honru':'players';
+  return 'players';
 }
 function setChatView(view,options){
-  view=view==='honru'?'honru':'players';
-  ghostChatView=view;
-  document.querySelectorAll('[data-chat-view]').forEach(node=>node.classList.toggle('hidden',node.getAttribute('data-chat-view')!==view));
-  document.querySelectorAll('[data-chat-view-target]').forEach(node=>node.setAttribute('aria-selected',String(node.getAttribute('data-chat-view-target')===view)));
+  // 旧 #/chat?view=honru 和未知 view 一律收敛到真实玩家私聊，避免遗留深链访问已移除的助手界面。
+  ghostChatView='players';
   const title=$('chat-route-title'),intro=$('chat-route-intro');
-  if(title)title.textContent=t(view==='honru'?'chat_honru_title':'chat_title');
-  if(intro)intro.textContent=t(view==='honru'?'chat_honru_intro':'chat_intro');
-  if(view==='honru')ensureHonruWelcome();else{renderPlayerChat();if(online&&online.connected&&online._authenticated)online.requestChatList();}
-  if(!(options&&options.silentHash)&&typeof history!=='undefined'){
-    const next=view==='honru'?'#/chat?view=honru':'#/chat';
-    if(location.hash!==next){const method=options&&options.replace?'replaceState':'pushState';if(typeof history[method]==='function')history[method](null,'',next);}
+  if(title)title.textContent=t('chat_title');
+  if(intro)intro.textContent=t('chat_intro');
+  renderPlayerChat();if(online&&online.connected&&online._authenticated)online.requestChatList();
+  if(typeof history!=='undefined'){
+    const next='#/chat';
+    if(location.hash!==next){const method=options&&options.silentHash||options&&options.replace?'replaceState':'pushState';if(typeof history[method]==='function')history[method](null,'',next);}
   }
 }
 function setAppRoute(route, options){
@@ -3362,14 +3514,14 @@ function setAppRoute(route, options){
     if (active) node.setAttribute('aria-current','page'); else node.removeAttribute('aria-current');
   });
   if (!(options && options.silentHash)){
-    const next = route==='chat'&&options&&options.chatView==='honru'?'#/chat?view=honru':'#/' + route;
+    const next = '#/' + route;
     if (typeof location!=='undefined'&&location.hash !== next&&typeof history!=='undefined'){
       const method=options&&options.replace?'replaceState':'pushState';if(typeof history[method]==='function')history[method](null,'',next);
     }
   }
   if (route === 'home') renderGhostHome();
   if (route === 'profile') renderGhostProfile();
-  if (route === 'chat') setChatView(options&&options.chatView||(options&&options.silentHash?chatViewFromHash():'players'),{silentHash:true});
+  if (route === 'chat') setChatView('players',{silentHash:true});
   resetGhostHeroTimer();
 }
 function renderGhostHome(){
@@ -3491,7 +3643,6 @@ function handlePlayerChatError(payload){
   toast(t(key)===key?t('chat_error_generic'):t(key));renderPlayerChat();
 }
 function initPlayerChat(){
-  document.querySelectorAll('[data-chat-view-target]').forEach(button=>button.addEventListener('click',()=>setChatView(button.getAttribute('data-chat-view-target'))));
   const refresh=$('btn-chat-refresh');if(refresh)refresh.addEventListener('click',()=>online.requestChatList());
   const back=$('btn-chat-back');if(back)back.addEventListener('click',()=>{const shell=$('player-chat-shell');if(shell)shell.classList.remove('thread-open');online.chatActivePeerUid=null;renderPlayerChat();requestAnimationFrame(()=>{const row=document.querySelector('.chat-conversation-row[data-peer-uid="'+String(chatLastConversationFocus||'').replace(/"/g,'')+'"]');if(row)row.focus();});});
   const input=$('chat-input');if(input){input.addEventListener('input',()=>{if(online.chatActivePeerUid)online.chatDrafts.set(online.chatActivePeerUid,input.value);input.style.height='auto';input.style.height=Math.min(132,input.scrollHeight)+'px';});input.addEventListener('keydown',event=>{if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();const form=$('chat-composer');if(form)form.requestSubmit();}});}
@@ -3563,50 +3714,12 @@ function resetGhostHeroTimer(){
   if (ghostAppRoute !== 'home' || prefersReducedMotion()) return;
   ghostHeroTimer=setInterval(()=>{if(!document.hidden)setGhostHero(ghostHeroIndex+1);},6500);
 }
-function addCompanionMessage(role,text){
-  const list=$('companion-messages');
-  if (!list) return;
-  const node=elRaw('div','companion-message '+(role==='user'?'user':'honru'),String(text||''));
-  list.appendChild(node);list.scrollTop=list.scrollHeight;
-}
-function ensureHonruWelcome(){
-  const list=$('companion-messages');
-  if (list && !list.childNodes.length) addCompanionMessage('honru',t('honru_welcome_line'));
-}
-function companionPromptText(kind){
-  return t(kind==='mood'?'companion_prompt_mood':kind==='news'?'companion_prompt_news':'companion_prompt_game');
-}
-async function sendCompanionMessage(message){
-  message=String(message||'');
-  if (!message.trim()) return;
-  if (!account || !account.authToken){toast(t('need_server_login'));return;}
-  addCompanionMessage('user',message);
-  ghostCompanionHistory.push({role:'user',content:message});
-  ghostCompanionHistory=ghostCompanionHistory.slice(-6);
-  const input=$('companion-input'),form=$('companion-form');if(input)input.value='';if(form)form.classList.add('loading');
-  setHonruPlatformReaction('thinking');
-  try{
-    const server=resolveServer(),url=(server?server.replace(/\/+$/,''):'')+'/api/companion';
-    const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),6500);
-    const response=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+account.authToken},body:JSON.stringify({message,locale:currentLang,history:ghostCompanionHistory.slice(0,-1)}),signal:controller.signal});
-    clearTimeout(timer);
-    const data=await response.json().catch(()=>({}));
-    const reply=String(data.reply||t('companion_offline_reply'));
-    addCompanionMessage('honru',reply);ghostCompanionHistory.push({role:'assistant',content:reply});ghostCompanionHistory=ghostCompanionHistory.slice(-6);
-    const mood=$('companion-mood');if(mood)mood.textContent=t('honru_mood_'+String(data.mood||'neutral'));
-    const speech=$('honru-speech');if(speech)speech.textContent=reply.slice(0,42);
-    setHonruPlatformReaction('recover');
-  }catch{addCompanionMessage('honru',t('companion_offline_reply'));setHonruPlatformReaction('recover');}
-  finally{if(form)form.classList.remove('loading');}
-}
 function petHonru(){
-  const dock=$('honru-dock');if(dock){dock.classList.remove('pet');void dock.offsetWidth;dock.classList.add('pet');setTimeout(()=>dock.classList.remove('pet'),650);}
   if (online && online.connected && online._authenticated) online.send({type:'companion_checkin',payload:{actionId:'pet-'+Date.now().toString(36)}});
   else toast(t('honru_pet_local'));
   setHonruPlatformReaction('check-in');
 }
 function handleCompanionCheckin(payload){
-  const speech=$('honru-speech');if(speech)speech.textContent=t(payload&&payload.already?'honru_checkin_again':'honru_checkin_success');
   toast(t(payload&&payload.already?'honru_checkin_again':'honru_checkin_success'));
   setHonruPlatformReaction(payload&&payload.already?'idle':'check-in');
 }
@@ -3626,11 +3739,7 @@ function requireGhostAuth(mode){
 function initGhostShell(){
   document.querySelectorAll('[data-app-route-target]').forEach(node=>node.addEventListener('click',()=>setAppRoute(node.getAttribute('data-app-route-target'))));
   document.querySelectorAll('[data-hero-dot]').forEach(node=>node.addEventListener('click',()=>{setGhostHero(node.getAttribute('data-hero-dot'));resetGhostHeroTimer();}));
-  const homeHonru=$('btn-home-honru');if(homeHonru)homeHonru.addEventListener('click',()=>setAppRoute('chat',{chatView:'honru'}));
-  const dockButton=$('btn-honru-dock');if(dockButton)dockButton.addEventListener('click',()=>{petHonru();setAppRoute('chat',{chatView:'honru'});});
-  const pet=$('btn-companion-pet');if(pet)pet.addEventListener('click',petHonru);
-  const form=$('companion-form');if(form)form.addEventListener('submit',event=>{event.preventDefault();sendCompanionMessage(($('companion-input')||{}).value||'');});
-  document.querySelectorAll('[data-companion-prompt]').forEach(node=>node.addEventListener('click',()=>sendCompanionMessage(companionPromptText(node.getAttribute('data-companion-prompt')))));
+  const checkin=$('btn-home-checkin');if(checkin)checkin.addEventListener('click',petHonru);
   initPlayerChat();
   if(window&&typeof window.addEventListener==='function')window.addEventListener('hashchange',()=>{const route=routeFromHash();if(GHOST_APP_ROUTES.includes(route)&&(route!==ghostAppRoute||route==='chat'))setAppRoute(route,{silentHash:true});});
   setGhostHero(0);resetGhostHeroTimer();
@@ -4495,6 +4604,7 @@ const online = {
           return;
         }
         renderRoomPanel();
+        if (typeof renderGameStage === 'function') renderGameStage();
         if (this.pendingGame){ const game=this.pendingGame; this.pendingGame=null; this.selectGame(game); }
         break;
       case 'spectating':
@@ -4504,6 +4614,7 @@ const online = {
           this.game=p.started?p.game:null;this.matchId=p.matchId||null;this.gameplayMeta=p.gameplay||null;this.presentationMeta=p.presentation||null;
           this.status(t('spectating_room',p.room || ''));renderRoomPanel();
           if (this.game){ startOnlineGame(this.game,p.size); this.replayMoveLog(p.moveLog || []); }
+          if (typeof renderGameStage === 'function') renderGameStage();
         }
         break;
       case 'spectate_joined':
@@ -4525,6 +4636,7 @@ const online = {
             if(p.auctionSnapshot&&currentGame&&currentGame.onAuctionEvent)currentGame.onAuctionEvent('auction_state',p.auctionSnapshot);
             if(p.finalResult){this.lastMatchResult=p.finalResult;toast(t('match_already_finished'));}
           }
+          if (typeof renderGameStage === 'function') renderGameStage();
         }
         break;
       case 'lobby':
@@ -4641,6 +4753,7 @@ const online = {
           } else {
             this.status(t('room_restored', this.room));
           }
+          if (typeof renderGameStage === 'function') renderGameStage();
           this.flushPendingResultClaim();
         }
         break;
@@ -4653,8 +4766,13 @@ const online = {
       case 'peer_status':
         {
           const p = msg.payload || {};
+          const seat = this.roomInfo && Array.isArray(this.roomInfo.seats)
+            ? this.roomInfo.seats.find(item => item && Number(item.seatId) === Number(p.player))
+            : null;
+          if (seat && seat.type === 'human') seat.online = !!p.online;
           if (p.online) this.status(t('reconnect_peer_back', (p.player || 0) + 1));
           else this.status(t('reconnect_peer_wait', (p.player || 0) + 1));
+          if (typeof renderGameStage === 'function') renderGameStage();
         }
         break;
       case 'reconnect_expired':
@@ -4670,8 +4788,12 @@ const online = {
         {
           const p = msg.payload || {};
           this.isHost = Number(p.player) === Number(this.player);
+          if (this.roomInfo && Array.isArray(this.roomInfo.seats) && Number.isInteger(Number(p.player))){
+            this.roomInfo.seats.forEach(seat => { if (seat) seat.host = Number(seat.seatId) === Number(p.player); });
+          }
           if (this.isHost) toast(t('host_transferred'));
           renderRoomPanel();
+          if (typeof renderGameStage === 'function') renderGameStage();
         }
         break;
       case 'player_reassigned':
@@ -4679,6 +4801,8 @@ const online = {
           const p = msg.payload || {};
           if (Number.isInteger(p.player)) this.player = p.player;
           renderRoomPanel();
+          // compactRoomPlayers() broadcasts the authoritative room_update next.
+          // Keep the existing rail until its matching seats payload arrives.
         }
         break;
       case 'invite':
@@ -7034,6 +7158,7 @@ function showGame(id){
     $('screen-hub').classList.add('hidden');
     $('screen-game').classList.remove('hidden');
     document.body.classList.add('game-active');
+    if (typeof renderGameStage === 'function') renderGameStage({ gameId:id });
     const endBtn = $('btn-end-game');
     if (endBtn) endBtn.classList.remove('hidden');
     return;
@@ -7046,6 +7171,9 @@ function showGame(id){
   const meta = GAMES[id];
   $('game-title').textContent = meta.icon + ' ' + meta.name;
   currentGameId = id;
+  // The instance owns turn authority.  Leave the Stage neutral until its first
+  // renderPlayers() call rather than guessing that the local seat is active.
+  if (typeof renderGameStage === 'function') renderGameStage({ reset:true, gameId:id, activeIdx:null });
   const area = $('board-area'), extra = $('game-extra');
   area.innerHTML = ''; extra.innerHTML = '';
   const inOnline = !!(online.connected && online.game);
@@ -7098,6 +7226,7 @@ function showGame(id){
     }
   }
   currentGame = createGameInstance(id, area, extra, playerCount, opts);
+  if (typeof renderGameStage === 'function') renderGameStage({ gameId:id });
   const endBtn = $('btn-end-game');
   if (endBtn) endBtn.classList.toggle('hidden', !inOnline);
 }
@@ -7133,6 +7262,10 @@ function openRoomSetup(selectedGame){
 }
 
 function renderPlayers(activeIdx, infos, bankrupts, colors){
+  if (typeof renderGameStage === 'function'){
+    renderGameStage({ activeIdx, infos:infos || null, bankrupts:bankrupts || null, colors:colors || null });
+    return;
+  }
   const bar = $('player-bar');
   bar.innerHTML = '';
   for (let i=0;i<playerCount;i++){
@@ -7585,6 +7718,284 @@ function parseHash(){
 
   return{PROTOCOL,CELLS,CHANCE,START_MONEY,MAX_ROUND,createInitialState,validateAction,applyAction,getLegalActions,isTerminal,getResult,serialize,deserialize,hashState,netWorth,placement,rentOf};
 });
+/* ================= Pocket Tabletop Wave A (presentation-only) ================= */
+/*
+ * This module intentionally owns no game state.  It only adds a reversible class
+ * and data attributes to the existing DOM surfaces so the rule, snapshot, AI and
+ * network layers remain byte-for-byte unaware of the visual treatment.
+ */
+(function tabletopArtRuntime(global){
+  'use strict';
+
+  const STORAGE_KEY = 'mg_art_tabletop_wave_a';
+  const STYLE_ID = 'tabletop-art-runtime-wave-a';
+  const SURFACE_CLASS = 'tabletop-art-surface';
+  const WAVE_CLASS = 'tabletop-art-wave-a';
+  let stylesAttached = false;
+  const STYLE_TEXT = `
+    /* Original Pocket Tabletop palette: Ink / Paper / Cream. */
+    .${SURFACE_CLASS}.${WAVE_CLASS}{
+      --tt-ink:#211923;
+      --tt-ink-soft:#443443;
+      --tt-paper:#FFF9F2;
+      --tt-cream:#F3E5C4;
+      --tt-shadow:rgba(33,25,35,.22);
+      --tt-highlight:rgba(255,255,255,.62);
+      isolation:isolate;
+    }
+    .${SURFACE_CLASS}.${WAVE_CLASS}[data-tabletop-kind="gomoku-board"],
+    .${SURFACE_CLASS}.${WAVE_CLASS}[data-tabletop-kind="ludo-board"],
+    .${SURFACE_CLASS}.${WAVE_CLASS}[data-tabletop-kind="monopoly-board"],
+    .${SURFACE_CLASS}.${WAVE_CLASS}[data-tabletop-kind="tank-arena"],
+    .${SURFACE_CLASS}.${WAVE_CLASS}[data-tabletop-kind="tetris-well"],
+    .${SURFACE_CLASS}.${WAVE_CLASS}[data-tabletop-kind="xiangqi-board"]{
+      outline:clamp(3px,.55vw,7px) solid var(--tt-ink);
+      outline-offset:0;
+      border-radius:clamp(12px,2.8vw,24px);
+      box-shadow:0 4px 0 var(--tt-ink), 10px 15px 0 var(--tt-shadow);
+      background-color:var(--tt-cream) !important;
+      background-image:linear-gradient(135deg,rgba(255,249,242,.92),rgba(243,229,196,.94)) !important;
+      background-origin:border-box;
+      background-clip:padding-box;
+    }
+    .${SURFACE_CLASS}.${WAVE_CLASS}[data-tabletop-kind="gomoku-board"]{
+      background-image:linear-gradient(135deg,rgba(255,249,242,.86),rgba(243,229,196,.93)),linear-gradient(90deg,rgba(130,81,63,.07) 1px,transparent 1px) !important;
+    }
+    .${SURFACE_CLASS}.${WAVE_CLASS}[data-tabletop-kind="gomoku-board"][data-tabletop-variant="grass"]{
+      background-color:#C9DCAD !important;
+      background-image:linear-gradient(135deg,rgba(250,252,232,.92),rgba(183,211,137,.94)),linear-gradient(90deg,rgba(54,86,52,.07) 1px,transparent 1px) !important;
+    }
+    .${SURFACE_CLASS}.${WAVE_CLASS}[data-tabletop-kind="ludo-board"]{
+      background-image:radial-gradient(circle at 28% 20%,rgba(255,255,255,.72),transparent 24%),linear-gradient(135deg,#FFF9F2,#F3E5C4) !important;
+    }
+    .${SURFACE_CLASS}.${WAVE_CLASS}[data-tabletop-kind="ludo-board"][data-tabletop-variant="grass"]{
+      background-color:#C9DCAD !important;
+      background-image:radial-gradient(circle at 28% 20%,rgba(255,255,255,.72),transparent 24%),linear-gradient(135deg,#F7F9E7,#B7D389) !important;
+    }
+    .${SURFACE_CLASS}.${WAVE_CLASS}[data-tabletop-kind="monopoly-board"]{
+      background-image:radial-gradient(circle at 35% 26%,rgba(255,255,255,.76),transparent 26%),linear-gradient(135deg,#FFF9F2,#F3E5C4) !important;
+    }
+    .${SURFACE_CLASS}.${WAVE_CLASS}[data-tabletop-kind="monopoly-board"][data-tabletop-variant="grass"]{
+      background-color:#C9DCAD !important;
+      background-image:radial-gradient(circle at 35% 26%,rgba(255,255,255,.76),transparent 26%),linear-gradient(135deg,#F7F9E7,#B7D389) !important;
+    }
+    .${SURFACE_CLASS}.${WAVE_CLASS}[data-tabletop-kind="tank-arena"]{
+      background-image:radial-gradient(circle at 22% 16%,rgba(255,255,255,.35),transparent 22%),linear-gradient(135deg,#74b985,#3b7b62) !important;
+    }
+    .${SURFACE_CLASS}.${WAVE_CLASS}[data-tabletop-kind="tank-arena"][data-tabletop-variant="autumn"]{background-image:radial-gradient(circle at 22% 16%,rgba(255,249,242,.5),transparent 22%),linear-gradient(135deg,#e5b56a,#9b643f) !important;}
+    .${SURFACE_CLASS}.${WAVE_CLASS}[data-tabletop-kind="tank-arena"][data-tabletop-variant="winter"]{background-image:radial-gradient(circle at 22% 16%,rgba(255,255,255,.72),transparent 24%),linear-gradient(135deg,#d9edf3,#82a8b5) !important;}
+    .${SURFACE_CLASS}.${WAVE_CLASS}[data-tabletop-kind="tank-arena"][data-tabletop-variant="summer"]{background-image:radial-gradient(circle at 22% 16%,rgba(255,244,163,.52),transparent 23%),linear-gradient(135deg,#79b86c,#3e7e50) !important;}
+    .${SURFACE_CLASS}.${WAVE_CLASS}[data-tabletop-kind="tetris-well"]{
+      background-image:linear-gradient(rgba(33,25,35,.11) 1px,transparent 1px),linear-gradient(90deg,rgba(33,25,35,.11) 1px,transparent 1px),linear-gradient(135deg,#FFF9F2,#E7D3A7) !important;
+      background-size:var(--tetris-cell-size,24px) var(--tetris-cell-size,24px),var(--tetris-cell-size,24px) var(--tetris-cell-size,24px),auto !important;
+      overflow:hidden;
+    }
+    .${SURFACE_CLASS}.${WAVE_CLASS}[data-tabletop-kind="tetris-well"][data-tabletop-variant$="-grid"]{
+      background-color:#DCECF2 !important;
+      background-image:linear-gradient(rgba(39,105,128,.16) 1px,transparent 1px),linear-gradient(90deg,rgba(39,105,128,.16) 1px,transparent 1px),linear-gradient(135deg,#F2FBFC,#B8D8E3) !important;
+    }
+    .${SURFACE_CLASS}.${WAVE_CLASS}[data-tabletop-kind="xiangqi-board"]{background-image:linear-gradient(135deg,#FFF9F2,#E8C989) !important;}
+    .${SURFACE_CLASS}.${WAVE_CLASS}[data-tabletop-kind="xiangqi-board"][data-tabletop-variant="grass"]{background-color:#C9DCAD !important;background-image:linear-gradient(135deg,#F7F9E7,#B7D389) !important;}
+
+    .${SURFACE_CLASS}.${WAVE_CLASS}[data-tabletop-kind="ludo-board"] .tcell,
+    .${SURFACE_CLASS}.${WAVE_CLASS}[data-tabletop-kind="ludo-board"] .hcell{
+      outline:2px solid var(--tt-ink);
+      border-radius:34%;
+      box-shadow:2px 3px 0 rgba(33,25,35,.16),inset 2px 2px 0 rgba(255,255,255,.58);
+      background:rgba(255,249,242,.84);
+    }
+    .${SURFACE_CLASS}.${WAVE_CLASS}[data-tabletop-kind="ludo-board"] .ludo-base{
+      outline:3px solid var(--tt-ink);
+      border-radius:24% !important;
+      background:linear-gradient(145deg,rgba(255,255,255,.54),var(--ludo-player-soft,#F3E5C4)) !important;
+      box-shadow:3px 5px 0 var(--tt-shadow),inset 3px 3px 0 rgba(255,255,255,.5);
+    }
+    .${SURFACE_CLASS}.${WAVE_CLASS}[data-tabletop-kind="ludo-board"] .slot{
+      outline:2px solid var(--tt-ink);
+      background:rgba(255,249,242,.72);
+    }
+    .${SURFACE_CLASS}.${WAVE_CLASS}[data-tabletop-kind="ludo-board"] .tok{
+      outline:2px solid var(--tt-ink);
+      border-radius:42% 42% 48% 48% !important;
+      box-shadow:2px 3px 0 var(--tt-shadow),inset 2px 2px 0 rgba(255,255,255,.56);
+      filter:saturate(.92);
+      overflow:visible;
+    }
+    .${SURFACE_CLASS}.${WAVE_CLASS}[data-tabletop-kind="ludo-board"] .tok::before{
+      content:'';
+      position:absolute;
+      width:30%;height:30%;left:17%;top:13%;
+      border-radius:50%;background:var(--tt-highlight);
+      pointer-events:none;
+    }
+    .${SURFACE_CLASS}.${WAVE_CLASS}[data-tabletop-kind="ludo-board"] .tok:not([data-piece-skin="jet"])::after{
+      content:'✦';
+      position:absolute;inset:50% auto auto 50%;
+      transform:translate(-50%,-52%);
+      color:var(--tt-paper);font-size:.62em;line-height:1;
+      text-shadow:0 1px 0 var(--tt-ink-soft);
+      pointer-events:none;
+    }
+    .${SURFACE_CLASS}.${WAVE_CLASS}[data-tabletop-kind="ludo-board"] .ludo-center{
+      outline:3px solid var(--tt-ink);
+      border-radius:42% !important;
+      background:linear-gradient(145deg,#FFF9F2,#F1B640) !important;
+      box-shadow:3px 5px 0 var(--tt-shadow);
+    }
+
+    .${SURFACE_CLASS}.${WAVE_CLASS}[data-tabletop-kind="monopoly-board"] .m-cell{
+      outline:2px solid var(--tt-ink);
+      border-radius:13px !important;
+      background:linear-gradient(145deg,#FFF9F2,#F3E5C4) !important;
+      box-shadow:2px 3px 0 var(--tt-shadow),inset 2px 2px 0 rgba(255,255,255,.62);
+      color:var(--tt-ink) !important;
+    }
+    .${SURFACE_CLASS}.${WAVE_CLASS}[data-tabletop-kind="monopoly-board"] .m-cell .stripe{
+      outline:2px solid var(--tt-ink);
+      border-radius:8px 8px 0 0;
+    }
+    .${SURFACE_CLASS}.${WAVE_CLASS}[data-tabletop-kind="monopoly-board"] .m-marker{
+      outline:2px solid var(--tt-ink);
+      border-radius:42% !important;
+      box-shadow:2px 3px 0 var(--tt-shadow),inset 2px 2px 0 rgba(255,255,255,.58);
+      color:var(--tt-ink) !important;
+      display:grid;
+      place-items:center;
+      font-size:clamp(13px,2.2vw,20px);
+      text-shadow:0 1px 0 var(--tt-highlight);
+    }
+    .${SURFACE_CLASS}.${WAVE_CLASS}[data-tabletop-kind="monopoly-board"] .m-center{
+      outline:3px solid var(--tt-ink);
+      border-radius:22px !important;
+      background:linear-gradient(145deg,rgba(255,249,242,.98),rgba(241,182,64,.78)) !important;
+      box-shadow:4px 6px 0 var(--tt-shadow),inset 3px 3px 0 rgba(255,255,255,.58);
+    }
+
+    .${SURFACE_CLASS}.${WAVE_CLASS}[data-tabletop-kind="tank-arena"] .tank-cell{
+      outline:1px solid var(--tt-ink);
+    }
+    .${SURFACE_CLASS}.${WAVE_CLASS}[data-tabletop-kind="tank-arena"] .tank-cell.brick{
+      background:linear-gradient(145deg,#d99064,#9c4e42) !important;
+      border-radius:16%;
+      box-shadow:inset 2px 2px 0 rgba(255,249,242,.4),1px 2px 0 rgba(33,25,35,.26);
+    }
+    .${SURFACE_CLASS}.${WAVE_CLASS}[data-tabletop-kind="tank-arena"] .tank-cell.steel{
+      background:linear-gradient(145deg,#d6e2e3,#78969c) !important;
+      border-radius:16%;
+      box-shadow:inset 2px 2px 0 rgba(255,255,255,.68),1px 2px 0 rgba(33,25,35,.26);
+    }
+    .${SURFACE_CLASS}.${WAVE_CLASS}[data-tabletop-kind="tank-arena"] .arena-tank{
+      outline:2px solid var(--tt-ink);
+      border-radius:34% 34% 40% 40%;
+      background:linear-gradient(145deg,#FFF9F2,#F1B640) !important;
+      box-shadow:2px 3px 0 var(--tt-shadow),inset 2px 2px 0 rgba(255,255,255,.62);
+      color:var(--tt-ink) !important;
+    }
+    .${SURFACE_CLASS}.${WAVE_CLASS}[data-tabletop-kind="tank-arena"] .arena-tank .tank-icon{
+      filter:none;
+      display:grid;place-items:center;
+      width:72%;height:72%;border-radius:45%;
+      background:linear-gradient(145deg,var(--tt-paper),rgba(241,182,64,.62));
+      box-shadow:inset 1px 1px 0 var(--tt-highlight);
+    }
+    .${SURFACE_CLASS}.${WAVE_CLASS}[data-tabletop-kind="tank-arena"] .tank-projectile{
+      border-radius:50%;
+      filter:drop-shadow(1px 2px 0 rgba(33,25,35,.36));
+      text-shadow:none;
+    }
+
+    .${SURFACE_CLASS}.${WAVE_CLASS}[data-tabletop-kind="tetris-well"] .tetris-cell{
+      outline:2px solid var(--tt-ink);
+      border-radius:22%;
+      box-shadow:inset 2px 2px 0 rgba(255,255,255,.52),2px 3px 0 rgba(33,25,35,.24),var(--tt-tetris-cosmetic-shadow,0 0 transparent) !important;
+      background-clip:padding-box;
+    }
+    .${SURFACE_CLASS}.${WAVE_CLASS}[data-tabletop-kind="tetris-well"] .tetris-cell.ghost{
+      background:rgba(255,249,242,.35) !important;
+      box-shadow:none !important;
+      border-style:dashed !important;
+    }
+    .${SURFACE_CLASS}.${WAVE_CLASS}[data-tabletop-kind="tetris-well"] .tetris-ko{background:rgba(33,25,35,.78) !important;}
+    .${SURFACE_CLASS}.${WAVE_CLASS}[data-tabletop-kind="xiangqi-board"] .xiangqi-motion-piece{
+      outline:2px solid var(--tt-ink);
+      background:linear-gradient(145deg,#FFF9F2,#F3E5C4) !important;
+      box-shadow:2px 3px 0 var(--tt-shadow),inset 2px 2px 0 rgba(255,255,255,.62) !important;
+      color:var(--tt-ink) !important;
+    }
+
+    @media (prefers-reduced-motion:reduce){
+      .${SURFACE_CLASS}.${WAVE_CLASS},
+      .${SURFACE_CLASS}.${WAVE_CLASS} *{animation:none !important;transition:none !important;scroll-behavior:auto !important;}
+    }
+  `;
+
+  function tabletopArtEnabled(){
+    try {
+      const storage = global && global.localStorage;
+      return !storage || storage.getItem(STORAGE_KEY) !== '0';
+    } catch (error) {
+      // Storage may be unavailable in private/sandboxed contexts. Wave A is opt-out,
+      // so an unreadable value deliberately remains enabled.
+      return true;
+    }
+  }
+
+  function ensureTabletopArtStyles(){
+    const documentRef = global && global.document;
+    if (!documentRef || typeof documentRef.createElement !== 'function') return false;
+    if (typeof documentRef.getElementById === 'function' && documentRef.getElementById(STYLE_ID)) return true;
+    if (stylesAttached) return true;
+    const target = documentRef.head || documentRef.documentElement || documentRef.body;
+    if (!target || typeof target.appendChild !== 'function') return false;
+    const style = documentRef.createElement('style');
+    style.id = STYLE_ID;
+    style.textContent = STYLE_TEXT;
+    if (style.dataset) style.dataset.tabletopArtRuntime = 'wave-a';
+    try {
+      target.appendChild(style);
+    } catch (error) {
+      // A restrictive embedded WebView/CSP must never make game setup fail.
+      // The caller can still render its existing CSS/Canvas fallback surface.
+      return false;
+    }
+    stylesAttached = true;
+    return true;
+  }
+
+  function removeTabletopSurface(node){
+    if (!node) return node;
+    if (node.classList && typeof node.classList.remove === 'function'){
+      node.classList.remove(SURFACE_CLASS, WAVE_CLASS);
+    }
+    if (node.dataset){
+      delete node.dataset.tabletopSurface;
+      delete node.dataset.tabletopKind;
+      delete node.dataset.tabletopVariant;
+    }
+    return node;
+  }
+
+  function markTabletopSurface(node, kind, options){
+    if (!node) return node;
+    if (!tabletopArtEnabled()) return removeTabletopSurface(node);
+    ensureTabletopArtStyles();
+    if (node.classList && typeof node.classList.add === 'function'){
+      node.classList.add(SURFACE_CLASS, WAVE_CLASS);
+    }
+    if (node.dataset){
+      node.dataset.tabletopSurface = 'wave-a';
+      node.dataset.tabletopKind = String(kind || 'surface');
+      if (options && options.variant !== undefined && options.variant !== null) node.dataset.tabletopVariant = String(options.variant);
+      else delete node.dataset.tabletopVariant;
+    }
+    return node;
+  }
+
+  global.tabletopArtEnabled = tabletopArtEnabled;
+  global.ensureTabletopArtStyles = ensureTabletopArtStyles;
+  global.markTabletopSurface = markTabletopSurface;
+  global.removeTabletopSurface = removeTabletopSurface;
+})(typeof globalThis !== 'undefined' ? globalThis : this);
 /* ================= 五子棋 ================= */
 function checkGomokuWin(grid, r, c){
   const N = grid.length, p = grid[r][c];
@@ -7843,6 +8254,7 @@ function gameGomoku(area, extra, n, opts){
   }
   const canvas = document.createElement('canvas');
   canvas.className = 'board-canvas gomoku-board';
+  const tabletopMode = () => typeof tabletopArtEnabled === 'function' && tabletopArtEnabled();
   const legacyArtEnabled = gameArtEnabled('gomoku');
   const stickerArtRequested = typeof stickerArtEnabled === 'function' && stickerArtEnabled('gomoku');
   let stickerArtActive = false, stickerArtState = stickerArtRequested ? 'loading' : 'disabled', stickerAssetProbe = null, stickerAssetUrl = '';
@@ -7855,22 +8267,33 @@ function gameGomoku(area, extra, n, opts){
     else if (canvas.style) canvas.style['--game-board-art'] = 'none';
   }
   function applyPresentation(){
+    const tabletop = tabletopMode();
+    if (typeof markTabletopSurface === 'function') markTabletopSurface(canvas, 'gomoku-board', { variant: boardTheme });
     canvas.dataset.boardTheme = boardTheme;
     canvas.dataset.pieceSkin = cosmetic.default;
     canvas.dataset.stickerArt = stickerArtState;
-    if (boardTheme === 'grass'){
+    if (tabletop){
+      canvas.classList.remove('game-art-v1'); canvas.classList.remove('game-art-sticker-v1'); clearBoardAsset();
+      canvas.dataset.tabletopArt = 'wave-a';
+      canvas.style.backgroundColor = '#F3E5C4';
+      canvas.style.backgroundImage = 'linear-gradient(135deg,rgba(255,249,242,.86),rgba(243,229,196,.93))';
+    } else if (boardTheme === 'grass'){
+      delete canvas.dataset.tabletopArt;
       canvas.classList.remove('game-art-v1'); canvas.classList.remove('game-art-sticker-v1');
       canvas.style.backgroundColor = '#86a96b';
       canvas.style.backgroundImage = 'radial-gradient(circle at 20% 15%,rgba(255,255,255,.24),transparent 34%),repeating-linear-gradient(105deg,rgba(35,92,45,.13) 0 2px,transparent 2px 7px),linear-gradient(#9fc17f,#668e57)';
     } else if (stickerArtActive) {
+      delete canvas.dataset.tabletopArt;
       canvas.classList.add('game-art-v1'); canvas.classList.add('game-art-sticker-v1');
       setAssetCssUrl(canvas, '--game-board-art', stickerAssetUrl);
       canvas.style.backgroundColor = '#F1B640'; canvas.style.backgroundImage = '';
     } else if (legacyArtEnabled) {
+      delete canvas.dataset.tabletopArt;
       canvas.classList.add('game-art-v1'); canvas.classList.remove('game-art-sticker-v1');
       setAssetCssUrl(canvas, '--game-board-art', gameArtUrl('gomoku', 'board'));
       canvas.style.backgroundColor = '#d7a153'; canvas.style.backgroundImage = '';
     } else {
+      delete canvas.dataset.tabletopArt;
       canvas.classList.remove('game-art-v1'); canvas.classList.remove('game-art-sticker-v1'); clearBoardAsset();
       canvas.style.backgroundColor = '#e6c58b';
       canvas.style.backgroundImage = 'linear-gradient(100deg,rgba(105,63,22,.12),transparent 35%,rgba(105,63,22,.08))';
@@ -7894,10 +8317,13 @@ function gameGomoku(area, extra, n, opts){
     }
   }
   function draw(){
-    const stickerMode = stickerArtActive && boardTheme === 'classic';
+    const tabletop = tabletopMode();
+    if (!tabletop && canvas.dataset.tabletopArt === 'wave-a') applyPresentation();
+    if (typeof markTabletopSurface === 'function') markTabletopSurface(canvas, 'gomoku-board', { variant: boardTheme });
+    const stickerMode = tabletop || (stickerArtActive && boardTheme === 'classic');
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, LOGICAL, LOGICAL);
-    ctx.strokeStyle = boardTheme === 'grass' ? 'rgba(30,61,31,.72)' : (stickerMode ? '#443443' : (legacyArtEnabled ? 'rgba(76,43,15,.68)' : '#8a6638'));
+    ctx.strokeStyle = tabletop ? '#443443' : (boardTheme === 'grass' ? 'rgba(30,61,31,.72)' : (stickerMode ? '#443443' : (legacyArtEnabled ? 'rgba(76,43,15,.68)' : '#8a6638')));
     ctx.lineWidth = stickerMode ? 3.2 : 1; ctx.lineCap = stickerMode ? 'round' : 'butt';
     for (let i=0;i<N;i++){
       ctx.beginPath(); ctx.moveTo(PAD + i*CELL, PAD); ctx.lineTo(PAD + i*CELL, PAD + (N-1)*CELL); ctx.stroke();
@@ -8107,7 +8533,7 @@ function gameGomoku(area, extra, n, opts){
     if (value && value.presentation){ boardTheme = value.presentation.boardTheme === 'grass' ? 'grass' : 'classic'; cosmetic = normalizeCosmetic(value.presentation.cosmetic); }
     applyPresentation(); draw(); renderPlayers(cur, null); return true;
   }
-  initStickerSurface();
+  if (!tabletopMode()) initStickerSurface();
   resetLocal();
   return {
     reset, onMove: opts.onMove, onRestart: resetLocal, snapshot, onRestore,
@@ -8365,10 +8791,14 @@ function gameLudo(area, extra, n, opts){
     const w = area.clientWidth || 520;
     S = Math.min(w, 540);
     board.style.width = S + 'px'; board.style.height = S + 'px';
+    const tabletop = typeof tabletopArtEnabled === 'function' && tabletopArtEnabled();
+    if (typeof markTabletopSurface === 'function') markTabletopSurface(board, 'ludo-board', { variant: boardTheme });
     board.dataset.boardTheme = boardTheme;
     board.dataset.baseSkin = cosmetic.base;
     board.dataset.pieceSkin = cosmetic.piece;
-    board.style.background = boardTheme === 'grass'
+    board.style.background = tabletop
+      ? 'radial-gradient(circle at 28% 20%,rgba(255,255,255,.72),transparent 24%),linear-gradient(135deg,#FFF9F2,#F3E5C4)'
+      : boardTheme === 'grass'
       ? 'radial-gradient(circle at 50% 45%,rgba(255,255,255,.30),transparent 36%),repeating-linear-gradient(110deg,rgba(40,99,48,.12) 0 2px,transparent 2px 8px),linear-gradient(#a7c985,#668f58)'
       : 'var(--card)';
     board.innerHTML = '';
@@ -9093,7 +9523,11 @@ function gameMonopoly(area, extra, n, opts){
     const w = area.clientWidth || 520;
     S = Math.min(w, 540);
     board.style.width = S + 'px'; board.style.height = S + 'px';
-    board.style.background = boardTheme === 'grass'
+    const tabletop = typeof tabletopArtEnabled === 'function' && tabletopArtEnabled();
+    if (typeof markTabletopSurface === 'function') markTabletopSurface(board, 'monopoly-board', { variant: boardTheme });
+    board.style.background = tabletop
+      ? 'radial-gradient(circle at 35% 26%,rgba(255,255,255,.76),transparent 26%),linear-gradient(135deg,#FFF9F2,#F3E5C4)'
+      : boardTheme === 'grass'
       ? 'radial-gradient(circle at 50% 45%,rgba(255,255,255,.82),rgba(236,253,245,.72) 42%,rgba(22,101,52,.34)),repeating-linear-gradient(105deg,#5f9f55 0 5px,#4f8e49 5px 9px)'
       : 'radial-gradient(circle at 50% 45%,rgba(255,255,255,.92),rgba(255,247,237,.88) 48%,rgba(146,64,14,.24)),repeating-linear-gradient(90deg,#c99b6b 0 8px,#b98555 8px 16px)';
     board.innerHTML = '';
@@ -10250,7 +10684,12 @@ function gameTank(area, extra, n, opts){
     const width = Math.min(area.clientWidth || 560, 620), cell = width/W, height = cell*H;
     const board=ensureRenderTree();
     board.className='tank-board realtime-arena season-'+season;
-    board.style.width = width+'px'; board.style.height = height+'px'; board.style.background = seasonBackground();
+    const tabletop = typeof tabletopArtEnabled === 'function' && tabletopArtEnabled();
+    if (typeof markTabletopSurface === 'function') markTabletopSurface(board, 'tank-arena', { variant: season });
+    board.style.width = width+'px'; board.style.height = height+'px';
+    board.style.background = tabletop
+      ? 'radial-gradient(circle at 22% 16%,rgba(255,255,255,.35),transparent 22%),linear-gradient(135deg,#74b985,#3b7b62)'
+      : seasonBackground();
     const staticItems=[];for(let r=0;r<H;r++)for(let c=0;c<W;c++)if(grid[r][c])staticItems.push({r,c,type:grid[r][c]});
     syncRenderMap(renderNodes.staticCells,staticItems,item=>item.r+':'+item.c,
       item=>{const node=el('div','tank-cell');node.style.zIndex='1';board.appendChild(node);return node;},
@@ -10926,6 +11365,7 @@ function gameTetris(area, extra, n, opts){
 
   function createWellView(mini){
     const root=el('div','tetris-well'+(mini?' mini-board':' main-board'));root.style.touchAction='none';
+    if(typeof markTabletopSurface==='function')markTabletopSurface(root,'tetris-well',{variant:mini?'mini':'main'});
     return{root,mini,locked:new Map(),ghost:[],active:[],ko:null,assetUrl:''};
   }
   function setCellPosition(node,item,cell){node.style.display='block';node.style.left=item.x*cell+'px';node.style.top=item.y*cell+'px';node.style.width=cell+'px';node.style.height=cell+'px';}
@@ -10939,14 +11379,22 @@ function gameTetris(area, extra, n, opts){
     well.style.width=width+'px';well.style.height=height+'px';
     if(well.style&&typeof well.style.setProperty==='function')well.style.setProperty('--tetris-cell-size',cell+'px');else well.style['--tetris-cell-size']=cell+'px';
     const playerCosmetic=cosmetic.players&&cosmetic.players[state.id]||{},background=playerCosmetic.background||cosmetic.background,block=playerCosmetic.block||cosmetic.block;
-    const artEnabled=typeof gameArtEnabled==='function'&&gameArtEnabled('tetris');well.classList.toggle('game-art-v1',artEnabled);
-    if(artEnabled){const url=gameArtUrl('tetris','board');if(url!==view.assetUrl){setAssetCssUrl(well,'--game-board-art',url);view.assetUrl=url;}well.style.backgroundImage='';}
+    const tabletop=typeof tabletopArtEnabled==='function'&&tabletopArtEnabled();
+    if(typeof markTabletopSurface==='function')markTabletopSurface(well,'tetris-well',{variant:(mini?'mini-':'main-')+background});
+    const artEnabled=!tabletop&&typeof gameArtEnabled==='function'&&gameArtEnabled('tetris');well.classList.toggle('game-art-v1',artEnabled);
+    if(tabletop){
+      view.assetUrl='';
+      if(well.style&&typeof well.style.removeProperty==='function')well.style.removeProperty('--game-board-art');
+      else if(well.style)well.style['--game-board-art']='none';
+      well.style.backgroundImage='linear-gradient(rgba(33,25,35,.11) 1px,transparent 1px),linear-gradient(90deg,rgba(33,25,35,.11) 1px,transparent 1px),linear-gradient(135deg,#FFF9F2,#E7D3A7)';
+    }else if(artEnabled){const url=gameArtUrl('tetris','board');if(url!==view.assetUrl){setAssetCssUrl(well,'--game-board-art',url);view.assetUrl=url;}well.style.backgroundImage='';}
     else{view.assetUrl='';well.style.backgroundImage=background==='grid'?'linear-gradient(rgba(34,211,238,.12) 1px,transparent 1px),linear-gradient(90deg,rgba(34,211,238,.12) 1px,transparent 1px)':'';}
     const occupied=new Set();
     for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(state.well[r][c]){
       const key=r+':'+c,kind=(r*COLS+c)%7;occupied.add(key);let node=view.locked.get(key);
       if(!node){node=el('div','tetris-cell');view.locked.set(key,node);well.appendChild(node);}
       node.className='tetris-cell is-locked kind-'+kind;setCellPosition(node,{x:c,y:r},cell);node.style.backgroundColor=COLORS[kind];node.style.boxShadow=block==='neon'?'inset 0 0 '+(cell*.35)+'px #fff,0 0 '+(cell*.35)+'px '+COLORS[kind]:'';
+      if(node.style&&typeof node.style.setProperty==='function')node.style.setProperty('--tt-tetris-cosmetic-shadow',block==='neon'?'0 0 '+(cell*.35)+'px '+COLORS[kind]:'0 0 transparent');
     }
     for(const [key,node] of view.locked)if(!occupied.has(key)){removeRenderNode(node);view.locked.delete(key);}
     const activeCells=[],ghostCells=[];
@@ -11673,6 +12121,8 @@ function gameXiangqi(area, extra, n, opts){
     });
     const wrap = el('div','xiangqi-wrap');
     const boardEl = el('div','xiangqi-board');
+    const tabletop = typeof tabletopArtEnabled === 'function' && tabletopArtEnabled();
+    if (typeof markTabletopSurface === 'function') markTabletopSurface(boardEl, 'xiangqi-board', { variant: boardTheme });
     boardEl.style.width = S + 'px'; boardEl.style.height = S * ROWS / COLS + 'px';
     boardEl.style.touchAction = 'none'; boardEl.style.overscrollBehavior = 'contain';
     const cs = S / COLS;
@@ -11683,7 +12133,14 @@ function gameXiangqi(area, extra, n, opts){
     boardEl.appendChild(cv);
     const ctx = cv.getContext('2d');
     ctx.setTransform(dpr,0,0,dpr,0,0);
-    if (boardTheme === 'grass'){
+    if (tabletop){
+      const grassPaper = boardTheme === 'grass';
+      const paper = ctx.createLinearGradient ? ctx.createLinearGradient(0,0,S,S*ROWS/COLS) : null;
+      if (paper && paper.addColorStop){
+        paper.addColorStop(0,grassPaper?'#F7F9E7':'#FFF9F2'); paper.addColorStop(.58,grassPaper?'#D7E8B6':'#F3E5C4'); paper.addColorStop(1,grassPaper?'#A7C27C':'#E7C57F'); ctx.fillStyle = paper;
+      } else ctx.fillStyle = grassPaper ? '#D7E8B6' : '#F3E5C4';
+      ctx.strokeStyle = grassPaper ? '#3A5E3B' : '#443443';
+    } else if (boardTheme === 'grass'){
       const grass = ctx.createLinearGradient ? ctx.createLinearGradient(0,0,S,S*ROWS/COLS) : null;
       if (grass && grass.addColorStop){ grass.addColorStop(0,'#dff3c8'); grass.addColorStop(1,'#94c973'); ctx.fillStyle = grass; }
       else ctx.fillStyle = '#b7d995';
@@ -11694,7 +12151,7 @@ function gameXiangqi(area, extra, n, opts){
       else ctx.fillStyle = '#e9c79a';
       ctx.strokeStyle = '#8a5a2b';
     }
-    ctx.fillRect(0,0,S,S*ROWS/COLS); ctx.lineWidth = 1.4;
+    ctx.fillRect(0,0,S,S*ROWS/COLS); ctx.lineWidth = tabletop ? 2.25 : 1.4; ctx.lineCap = tabletop ? 'round' : 'butt'; ctx.lineJoin = tabletop ? 'round' : 'miter';
     const pad = cs/2;
     for (let c = 0; c < COLS; c++){
       ctx.beginPath(); ctx.moveTo(pad + c*cs, pad); ctx.lineTo(pad + c*cs, S - pad); ctx.stroke();
@@ -11727,16 +12184,27 @@ function gameXiangqi(area, extra, n, opts){
         const x = pad + c*cs, y = pad + r*cs;
         const skin = pieceSkin(piece.p);
         ctx.beginPath(); ctx.arc(x, y, cs*0.42, 0, Math.PI*2);
-        ctx.fillStyle = skin === 'jade'
-          ? (piece.p === 0 ? '#d1fae5' : '#cffafe')
-          : (piece.p === 0 ? '#fde2d3' : '#d9e6f2');
-        ctx.fill();
-        ctx.strokeStyle = skin === 'jade'
-          ? (piece.p === 0 ? '#b91c1c' : '#164e63')
-          : (piece.p === 0 ? '#b23a1f' : '#1f4e79');
-        ctx.lineWidth = skin === 'jade' ? 2.2 : 1.6; ctx.stroke();
+        if (tabletop){
+          const jade = skin === 'jade';
+          const base = jade ? (piece.p === 0 ? '#E2F4E6' : '#DDF4F2') : (piece.p === 0 ? '#FFF0E9' : '#EDF6F4');
+          const shade = jade ? (piece.p === 0 ? '#8FBE9C' : '#80B8BE') : (piece.p === 0 ? '#E99A7B' : '#82AAB3');
+          ctx.save();
+          ctx.shadowColor = 'rgba(33,25,35,.22)'; ctx.shadowBlur = 0; ctx.shadowOffsetX = Math.max(1,cs*.07); ctx.shadowOffsetY = Math.max(1.5,cs*.1);
+          ctx.fillStyle = base; ctx.fill(); ctx.strokeStyle = '#211923'; ctx.lineWidth = Math.max(2,cs*.07); ctx.stroke(); ctx.restore();
+          ctx.save(); ctx.beginPath(); ctx.arc(x,y,cs*.385,0,Math.PI*2); ctx.clip(); ctx.globalAlpha=.52; ctx.fillStyle=shade; ctx.fillRect(x,y,cs*.48,cs*.48); ctx.restore();
+          ctx.fillStyle='#FFF9F2'; ctx.beginPath(); ctx.arc(x-cs*.14,y-cs*.16,cs*.07,0,Math.PI*2); ctx.fill();
+        } else {
+          ctx.fillStyle = skin === 'jade'
+            ? (piece.p === 0 ? '#d1fae5' : '#cffafe')
+            : (piece.p === 0 ? '#fde2d3' : '#d9e6f2');
+          ctx.fill();
+          ctx.strokeStyle = skin === 'jade'
+            ? (piece.p === 0 ? '#b91c1c' : '#164e63')
+            : (piece.p === 0 ? '#b23a1f' : '#1f4e79');
+          ctx.lineWidth = skin === 'jade' ? 2.2 : 1.6; ctx.stroke();
+        }
         const label = xiangqiPieceName(piece);
-        ctx.fillStyle = piece.p === 0 ? '#b23a1f' : '#1f4e79';
+        ctx.fillStyle = piece.p === 0 ? (tabletop ? (skin === 'jade' ? '#A23D37' : '#B85245') : '#b23a1f') : (tabletop ? (skin === 'jade' ? '#1F6570' : '#315D78') : '#1f4e79');
         ctx.font = 'bold ' + (cs*0.5) + 'px sans-serif';
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.fillText(label, x, y + 1);

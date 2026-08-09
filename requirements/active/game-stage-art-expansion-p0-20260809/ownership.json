@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "task": "game-stage-art-expansion-p0-20260809",
+  "owners": {
+    "uiMotion": [
+      "public/index-template.html",
+      "public/src/core/02-app-shell.js",
+      "public/src/ui/07-roster.js",
+      "public/locales/zh-CN.json",
+      "public/locales/en-US.json",
+      "public/locales/uk-UA.json",
+      "qa/game-stage-contract.js",
+      "qa/player-chat-contract.js",
+      "qa/ghost-shell-contract.js",
+      "qa/honru-runtime-contract.js"
+    ],
+    "gameplay": [
+      "public/src/games/00-tabletop-art-runtime.js",
+      "public/src/games/gomoku.js",
+      "public/src/games/ludo.js",
+      "public/src/games/monopoly.js",
+      "public/src/games/tank.js",
+      "public/src/games/tetris.js",
+      "public/src/games/xiangqi.js",
+      "qa/tabletop-art-runtime.js"
+    ],
+    "master": [
+      "scripts/build.js",
+      "public/src/online/03-websocket.js",
+      "public/index.html",
+      "package.json",
+      "PROJECT_STATUS.json",
+      "README.md",
+      "AGENTS.md",
+      "WHITEPAPER.md",
+      "LOG-新增.md",
+      "LOG-修改.md",
+      "LOG-删除.md",
+      "简易报告/**"
+    ]
+  },
+  "forbidden": [
+    "server/index.js",
+    "server/reward-engine.js",
+    "shared/rules/**",
+    "server/gameplay/**",
+    "supabase/schema.sql",
+    "public/assets/manifests/asset_manifest.json default-on changes for frozen drafts",
+    "credential files"
+  ]
+}

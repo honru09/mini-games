@@ -27,6 +27,7 @@ const MODULES = [
   '../../shared/rules/tetris.js',
   '../../shared/rules/xiangqi.js',
   '../../shared/rules/monopoly.js',
+  'games/00-tabletop-art-runtime.js',
   'games/gomoku.js',
   'games/ludo.js',
   'games/monopoly.js',
