@@ -150,3 +150,4 @@
 - 2026-08-11 00:04｜修改服务端测试管理员集成、赛事外部控制面、前端私有投影、Render 环境写入顺序和 Blueprint；修正好友 payload、沙盒能力名、participants 广播及 sender-excluded 测试语义。
 - 2026-08-11 00:04｜修改 WebSocket `room_update`：仅接受当前房间/观战/恢复目标的同 ID 更新，防止离房后的排队旧消息阻塞下一次建房。完整 `npm test` 148.1 秒、连续三轮 E2E、双构建 SHA-256 `52CE07C2185B9EDC8A34D374BA15A270B2FC9F7643CC0539E967E622A307A828` 通过。
 - 2026-08-11 00:04｜需求台账更新为 234 项（93 verified、28 implemented、37 partial、57 planned、19 blocked）、42 个覆盖组；重新生成 20260811 总报告和六分类报告，并同步 PROJECT_STATUS、AGENTS、README、WHITEPAPER 与简报索引。
+- 2026-08-11 00:51｜修改 `scripts/build.js` 为跨平台统一 LF 生成物；修改 Render/服务端测试管理员配置、沙盒房间设置和局内社交结算生命周期；修正 PROJECT_STATUS 总体状态为 `BLOCKED`、20260811 报告入口和 Tournament UI 已隐藏事实。Quality Gates、管理员合同/在线/安全、Social Match、Match Chat、完整 `npm test` 167.7 秒和双构建 SHA-256 `E8B8D37C66D8843B61F040EAF5028995A5EBF5E30FDD6ABFF6036AB84EDE304E` 全部通过。

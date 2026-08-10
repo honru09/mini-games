@@ -128,3 +128,4 @@
 - 2026-08-10 19:06｜新增 Shop Purchase Feedback P0 active task、状态机合同、专项 QA、三语言购买状态、协议注册表、验证证据和《ShopPurchaseFeedback-P0购买状态收口》简报。
 - 2026-08-11 00:04｜新增隔离式测试管理员 P0：`server/test-admin.js`、四类专项/安全 QA、active task、Render `sync:false` 声明、TECH-053 台账项与中文简报；提供私有无限 G Coins、MAX、当前目录全拥有和显式能力白名单，真实凭证不写入仓库。
 - 2026-08-11 00:04｜新增离房后旧 `room_update` 不得复活旧房间的客户端生命周期回归；修复后连续三轮 E2E 全通过。
+- 2026-08-11 00:51｜新增测试管理员共享 UID 校验 helper、沙盒设置不可翻转回归、结算后局内聊天/表达拒绝及观众延迟取消回归；新增 Supabase 管理员远端引导 fail-closed 静态合同。

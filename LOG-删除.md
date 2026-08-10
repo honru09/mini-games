@@ -101,3 +101,4 @@
 - 2026-08-10 18:36｜最终收口无新增删除；仍完整保留旧 P-003、源稿、fallback、账户余额与经济流水兼容路径。
 - 2026-08-10 19:06｜Shop Purchase Feedback P0 无功能或数据删除；未删除旧购买消息类型、商品、价格、owned、requestId 历史、经济流水、Supabase 回退或任何美术资产。
 - 2026-08-11 00:04｜本批无功能、数据、游戏、规则、协议、正式经济、社交消息、美术资源或 fallback 删除；未审批 Sticker/Honru/ART-036 素材继续保留并保持 reference-only/default-off。测试管理员关闭只需设置 `TEST_ADMIN_ENABLED=0`，不删除账号数据。
+- 2026-08-11 00:51｜本次无功能、数据、素材或 fallback 删除；仅移除构建脚本 UTF-8 BOM/平台换行漂移，并在结算时删除本局临时聊天/表达内存与待投递计时器，正式 Direct Chat、Replay、奖励、AI 学习和历史数据不受影响。
