@@ -263,6 +263,7 @@ class TournamentGuard {
     const tournamentId = stringId(request.tournamentId);
     const ownerUid = stringId(request.ownerUid);
     const gameId = stringId(request.gameId);
+    const allowExternalOwner = request.allowExternalOwner === true;
     const rawParticipants = Array.isArray(request.participants) ? request.participants.map(stringId) : [];
     const participants = uniqueStrings(request.participants);
     if (!tournamentId || !/^[A-Za-z0-9_-]{4,120}$/.test(tournamentId)) return reason('invalid_tournament_id');
@@ -270,7 +271,7 @@ class TournamentGuard {
     if (!ownerUid || !gameId) return reason('invalid_tournament');
     if (!this.gameWhitelist.has(gameId)) return reason('game_not_allowed');
     if (participants.length < 3 || participants.length > this.maxParticipants) return reason('participant_limit');
-    if (rawParticipants.length !== participants.length || !participants.includes(ownerUid)) return reason('invalid_participants');
+    if (rawParticipants.length !== participants.length || (allowExternalOwner ? participants.includes(ownerUid) : !participants.includes(ownerUid))) return reason('invalid_participants');
     if (this._ownerCount(ownerUid,now) >= this.maxPerOwner) return reason('owner_capacity');
     if (this._activeCount(now) >= this.maxActive) return reason('tournament_capacity');
     const ttl = Math.min(this.maxLifetimeMs, Math.max(1000, Number(request.ttlMs) || this.ttlMs));
@@ -278,7 +279,8 @@ class TournamentGuard {
     const entry = {
       tournamentId,ownerUid,gameId,participants,createdAt:now,lastActivityAt:now,
       expiresAt:now + ttl,hardExpiresAt:now + hardTtl,status:'waiting',
-      consents:new Map(participants.map(uid => [uid,uid === ownerUid])),
+      externalOwner:allowExternalOwner,
+      consents:new Map(participants.map(uid => [uid,allowExternalOwner ? false : uid === ownerUid])),
       pairings:new Map(),bindings:new Map(),authorizedResults:new Set(),revision:0,
     };
     this.entries.set(tournamentId,entry);
@@ -396,7 +398,7 @@ class TournamentGuard {
     const mapValues = map => [...map.values()].map(item => ({...item,players:item.players && item.players.slice()}));
     return {
       protocol:this.protocol,tournamentId:entry.tournamentId,ownerUid:entry.ownerUid,gameId:entry.gameId,
-      participants:entry.participants.slice(),status:entry.status,createdAt:entry.createdAt,lastActivityAt:entry.lastActivityAt,
+      participants:entry.participants.slice(),externalOwner:entry.externalOwner===true,status:entry.status,createdAt:entry.createdAt,lastActivityAt:entry.lastActivityAt,
       expiresAt:entry.expiresAt,hardExpiresAt:entry.hardExpiresAt,revision:entry.revision,
       consents:Object.fromEntries(entry.consents),pairings:mapValues(entry.pairings),bindings:mapValues(entry.bindings),
     };

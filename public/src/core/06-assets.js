@@ -1,6 +1,11 @@
 /* ================= 美术资源运行时（P0） ================= */
 const ASSET_ROOT = 'assets/';
+// `coins`/`currency` remain the protocol and persistence field names.  The
+// brand-facing label is deliberately separate so a naming refresh never
+// changes economy authority or old clients.
 const CURRENCY = '💵';
+const CURRENCY_NAME = 'G Coins';
+const CURRENCY_ASSET_ID = 'P-003';
 const ASSET_CATALOG = Object.freeze({
   brandMark: 'brand/ghost-game-mark.svg',
   brandWordmark: 'brand/ghost-game-wordmark.svg',
@@ -225,39 +230,79 @@ function premiumStaticAsset(item, context){
   return item.desktop || item.staticFallback;
 }
 
-function setPremiumBackgroundImage(element, item, path){
-  element.style.backgroundImage = 'linear-gradient(' + item.overlay + ',' + item.overlay + '),url("' + assetUrl(path) + '")';
+function setPremiumBackgroundImage(element, item, path, fallbackPath){
+  const fallbackLayer = fallbackPath && fallbackPath !== path ? ',url("' + assetUrl(fallbackPath) + '")' : '';
+  element.style.backgroundImage = 'linear-gradient(' + item.overlay + ',' + item.overlay + '),url("' + assetUrl(path) + '")' + fallbackLayer;
 }
 
 function releasePremiumBackground(element){
-  if (!element || typeof element._premiumBackgroundCleanup !== 'function') return;
-  element._premiumBackgroundCleanup();
+  if (!element) return;
+  if (typeof element._premiumBackgroundCleanup === 'function') element._premiumBackgroundCleanup();
   element._premiumBackgroundCleanup = null;
+  delete element._premiumBackgroundPlayback;
 }
 
-function applyPremiumBackground(element, id, context){
+function setPremiumBackgroundPlayback(element, shouldPlay){
+  const playback = element && element._premiumBackgroundPlayback;
+  return playback && typeof playback.setPlayback === 'function'
+    ? playback.setPlayback(shouldPlay)
+    : false;
+}
+
+function applyPremiumBackground(element, id, context, options){
   releasePremiumBackground(element);
   const item = premiumBackgroundMeta(id);
   if (!item) return false;
   const useContext = context || 'profile';
+  const opts = options || {};
   const fallback = premiumStaticAsset(item, useContext);
+  const poster = item.animated ? item.poster : fallback;
   element.classList.add('premium-background', 'premium-bg-' + item.textTone);
   element.dataset.backgroundId = String(item.id);
   element.dataset.backgroundAnimated = item.animated ? 'true' : 'false';
-  setPremiumBackgroundImage(element, item, item.animated ? item.poster : fallback);
+  setPremiumBackgroundImage(element, item, poster);
   let visible = true;
   let active = false;
   let observer = null;
+  const playbackListeners = new Set();
   const mayAnimate = item.animated && !prefersReducedMotion() && useContext !== 'shop-grid';
+  let playbackRequested = Object.prototype.hasOwnProperty.call(opts, 'autoplay') ? !!opts.autoplay : true;
+  let lastPlaybackState = null;
+  const emitPlaybackState = force => {
+    const pageVisible = typeof document === 'undefined' || !document.hidden;
+    const state = Object.freeze({ active, requested:playbackRequested, disabled:!mayAnimate, visible, pageVisible });
+    if (!force && lastPlaybackState && lastPlaybackState.active === state.active && lastPlaybackState.requested === state.requested && lastPlaybackState.disabled === state.disabled && lastPlaybackState.visible === state.visible && lastPlaybackState.pageVisible === state.pageVisible) return;
+    lastPlaybackState = state;
+    if (typeof opts.onPlaybackStateChange === 'function') { try { opts.onPlaybackStateChange(state); } catch {} }
+    playbackListeners.forEach(listener => { try { listener(state); } catch {} });
+  };
   const sync = () => {
     const pageVisible = typeof document === 'undefined' || !document.hidden;
-    const next = !!(mayAnimate && visible && pageVisible);
-    if (next === active) return;
-    active = next;
-    setPremiumBackgroundImage(element, item, active ? item.asset : fallback);
-    element.dataset.animationActive = active ? 'true' : 'false';
+    const next = !!(mayAnimate && playbackRequested && visible && pageVisible);
+    if (next !== active){
+      active = next;
+      setPremiumBackgroundImage(element, item, active ? item.asset : poster, poster);
+      element.dataset.animationActive = active ? 'true' : 'false';
+    }
+    emitPlaybackState(false);
+  };
+  const setPlayback = shouldPlay => {
+    if (!mayAnimate){
+      playbackRequested = false;
+      element.dataset.playbackRequested = 'false';
+      element.dataset.playbackDisabled = 'true';
+      sync();
+      return false;
+    }
+    playbackRequested = !!shouldPlay;
+    element.dataset.playbackRequested = playbackRequested ? 'true' : 'false';
+    sync();
+    return true;
   };
   const onVisibility = () => sync();
+  element.dataset.animationActive = 'false';
+  element.dataset.playbackRequested = playbackRequested ? 'true' : 'false';
+  element.dataset.playbackDisabled = mayAnimate ? 'false' : 'true';
   if (mayAnimate && typeof IntersectionObserver !== 'undefined'){
     visible = false;
     observer = new IntersectionObserver(entries => {
@@ -270,6 +315,16 @@ function applyPremiumBackground(element, id, context){
   if (mayAnimate && typeof document !== 'undefined' && document.addEventListener){
     document.addEventListener('visibilitychange', onVisibility);
   }
+  element._premiumBackgroundPlayback = {
+    setPlayback,
+    sync,
+    subscribe(listener){
+      if (typeof listener !== 'function') return () => {};
+      playbackListeners.add(listener);
+      try { listener(lastPlaybackState || { active, requested:playbackRequested, disabled:!mayAnimate, visible, pageVisible:typeof document === 'undefined' || !document.hidden }); } catch {}
+      return () => playbackListeners.delete(listener);
+    },
+  };
   sync();
   element._premiumBackgroundCleanup = () => {
     if (observer) observer.disconnect();
@@ -277,8 +332,12 @@ function applyPremiumBackground(element, id, context){
       document.removeEventListener('visibilitychange', onVisibility);
     }
     active = false;
-    setPremiumBackgroundImage(element, item, fallback);
+    playbackRequested = false;
+    setPremiumBackgroundImage(element, item, poster);
     element.dataset.animationActive = 'false';
+    element.dataset.playbackRequested = 'false';
+    playbackListeners.clear();
+    delete element._premiumBackgroundPlayback;
   };
   return true;
 }
@@ -287,18 +346,48 @@ function backgroundPosterNode(item, options){
   const opts = options || {};
   const wrap = el('div', 'background-poster' + (item.animated ? ' is-animated' : ''));
   const img = document.createElement('img');
-  img.src = assetUrl(item.poster);
   img.alt = '';
   img.loading = 'lazy';
   img.decoding = 'async';
   const fallback = el('span', 'background-poster-fallback', 'BG');
+  let requestedSource = '';
+  let requestedKind = '';
+  const posterPath = item.poster || item.staticFallback || item.desktop || '';
+  const staticFallbackPath = item.staticFallback || item.desktop || posterPath;
+  const setSource = path => {
+    requestedSource = assetUrl(path);
+    requestedKind = path === item.asset ? 'animated' : (path === staticFallbackPath ? 'fallback' : 'poster');
+    img.dataset.requestedSource = requestedSource;
+    img.style.display = '';
+    wrap.classList.remove('asset-ready', 'asset-failed');
+    img.src = requestedSource;
+  };
   wrap.appendChild(img);
   wrap.appendChild(fallback);
-  img.addEventListener('load', () => wrap.classList.add('asset-ready'));
-  img.addEventListener('error', () => { img.style.display = 'none'; wrap.classList.add('asset-failed'); });
+  img.addEventListener('load', () => {
+    if (img.getAttribute('src') !== requestedSource) return;
+    img.style.display = '';
+    wrap.classList.remove('asset-failed');
+    wrap.classList.add('asset-ready');
+  });
+  img.addEventListener('error', () => {
+    if (img.getAttribute('src') !== requestedSource) return;
+    if (requestedKind === 'animated' && posterPath && requestedSource !== assetUrl(posterPath)) {
+      setSource(posterPath);
+      return;
+    }
+    if (requestedKind === 'poster' && staticFallbackPath && requestedSource !== assetUrl(staticFallbackPath)) {
+      setSource(staticFallbackPath);
+      return;
+    }
+    img.style.display = 'none';
+    wrap.classList.remove('asset-ready');
+    wrap.classList.add('asset-failed');
+  });
+  setSource(posterPath);
   if (opts.hoverPreview && item.animated){
-    const start = () => { if (!prefersReducedMotion()) img.src = assetUrl(item.asset); };
-    const stop = () => { img.src = assetUrl(item.poster); };
+    const start = () => { if (!prefersReducedMotion()) setSource(item.asset); };
+    const stop = () => { setSource(posterPath); };
     wrap.addEventListener('mouseenter', start);
     wrap.addEventListener('focusin', start);
     wrap.addEventListener('mouseleave', stop);
@@ -345,6 +434,108 @@ function currencyIcon(sizeClass){
   wrap.appendChild(img);
   wrap.appendChild(fallback);
   return wrap;
+}
+
+function currencyName(){
+  try {
+    const localized = typeof t === 'function' ? String(t('currency_name') || '') : '';
+    return localized && localized !== 'currency_name' ? localized : CURRENCY_NAME;
+  } catch { return CURRENCY_NAME; }
+}
+
+function currencyAmountText(value, options){
+  const amount = Number(value);
+  if (!Number.isFinite(amount)) return '0 ' + currencyName();
+  const normalized = Math.trunc(amount);
+  const signed = !!(options && options.signed);
+  const prefix = signed && normalized > 0 ? '+' : '';
+  return prefix + normalized + ' ' + currencyName();
+}
+
+/*
+ * Test-admin presentation is deliberately a private-profile concern.  These
+ * helpers only change what the currently signed-in account sees; they never
+ * create capabilities, alter ownership, or send a mutation.  The server still
+ * decides whether the four-part descriptor is present.
+ */
+function testAdminPresentation(profile){
+  const source = profile && typeof profile === 'object' ? profile : null;
+  const direct = !!(source &&
+    source.isTestAdmin === true &&
+    source.testRole === 'test_admin' &&
+    source.currencyMode === 'unlimited' &&
+    source.progressionMode === 'max');
+  // Compatibility with the first private projection shape. This is only a
+  // display check; it never grants or forwards any capability to the client.
+  const nested = source && source.testAdmin && typeof source.testAdmin === 'object' && !Array.isArray(source.testAdmin) ? source.testAdmin : null;
+  const capabilities = nested && Array.isArray(nested.capabilities) ? new Set(nested.capabilities.map(String)) : null;
+  const nestedActive = !!(nested && nested.sandbox === true && nested.virtualAssets === true && capabilities &&
+    ['test_admin_profile','test_admin_unlimited_currency','test_admin_all_catalog_items','test_admin_sandbox_match'].every(value => capabilities.has(value)));
+  return { active: direct || nestedActive };
+}
+
+function isTestAdminPrivateAccount(profile){
+  return testAdminPresentation(profile).active;
+}
+
+function hasTestAdminPrivateProjection(profile){
+  if (!profile || typeof profile !== 'object') return false;
+  return ['isTestAdmin','testRole','currencyMode','progressionMode','testAdmin'].some(key => Object.prototype.hasOwnProperty.call(profile,key));
+}
+
+function testAdminCurrencyText(profile, options){
+  if (isTestAdminPrivateAccount(profile)) return t('test_admin_currency_unlimited');
+  return currencyAmountText(profile && profile.coins, options);
+}
+
+function testAdminLevelShortText(profile, level){
+  return isTestAdminPrivateAccount(profile) ? t('test_admin_level_short') : t('level_short',level);
+}
+
+function testAdminLevelBracketText(profile, level){
+  return isTestAdminPrivateAccount(profile) ? t('test_admin_level_bracket') : t('level_bracket',level);
+}
+
+function testAdminLevelValue(profile, level){
+  return isTestAdminPrivateAccount(profile) ? t('test_admin_level_value') : String(level);
+}
+
+function testAdminGrowthText(profile, current, required){
+  return isTestAdminPrivateAccount(profile) ? t('test_admin_growth_max') : t('profile_xp_progress',current,required);
+}
+
+function appendTestAdminBadge(parent, profile, variant){
+  if (!parent || !isTestAdminPrivateAccount(profile)) return null;
+  const badge = el('span','test-admin-badge' + (variant ? ' test-admin-badge--' + variant : ''),t('test_admin_badge'));
+  badge.setAttribute('title',t('test_admin_badge_aria'));
+  badge.setAttribute('aria-label',t('test_admin_badge_aria'));
+  return parent.appendChild(badge);
+}
+
+function applyTestAdminPrivateProjection(target, profile){
+  if (!target || typeof target !== 'object') return target;
+  const active = isTestAdminPrivateAccount(profile);
+  target.isTestAdmin = active;
+  target.testRole = active ? 'test_admin' : '';
+  target.currencyMode = active ? 'unlimited' : '';
+  target.progressionMode = active ? 'max' : '';
+  // Capabilities are server-only control-plane data. The UI does not need to
+  // retain them and must never turn a cached/local value into a privilege.
+  delete target.testAdmin;
+  delete target.capabilities;
+  return target;
+}
+
+function stripTestAdminPrivateProjection(profile){
+  if (!profile || typeof profile !== 'object') return profile;
+  const safe = { ...profile };
+  delete safe.isTestAdmin;
+  delete safe.testRole;
+  delete safe.currencyMode;
+  delete safe.progressionMode;
+  delete safe.testAdmin;
+  delete safe.capabilities;
+  return safe;
 }
 
 function initAssetFallbacks(){

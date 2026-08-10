@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "taskId": "home-active-match-return-p0-20260810",
+  "write": {
+    "home": ["public/src/core/02-app-shell.js", "public/index-template.html", "public/locales/zh-CN.json", "public/locales/en-US.json", "public/locales/uk-UA.json"],
+    "lifecycle": ["public/src/ui/07-roster.js"],
+    "qa": ["qa/home-active-match-return-contract.js", "package.json"],
+    "generated": ["public/index.html"]
+  },
+  "forbidden": ["server/**", "public/src/online/**", "shared/rules/**", "server/reward-engine.js", "server/ai-*", "supabase/**", "public/assets/**", "art-source/**"]
+}

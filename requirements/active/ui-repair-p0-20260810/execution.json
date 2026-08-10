@@ -1,0 +1,22 @@
+{
+  "status": "IMPLEMENTED_WITH_BROWSER_LIMITATION",
+  "startedAt": "2026-08-10T10:35:00+09:00",
+  "updatedAt": "2026-08-10T11:15:00+09:00",
+  "steps": [
+    {"id":"UIR-1","status":"completed"},
+    {"id":"UIR-2","status":"completed"},
+    {"id":"UIR-3","status":"completed"},
+    {"id":"UIR-4","status":"completed"},
+    {"id":"UIR-5","status":"partial"},
+    {"id":"UIR-6","status":"completed"}
+  ],
+  "blocked": [],
+  "skipped": [],
+  "evidence": [
+    "qa/ui-identity-preview-contract.js",
+    "requirements/active/ui-repair-p0-20260810/evidence/browser-qa-20260810.md",
+    "npm run quality:gates",
+    "npm test",
+    "public/index.html sha256 53E8A2D3E0FDAE352525C4B5441C229FBF9AE29D52A9B6BB7958C8274527456A"
+  ]
+}

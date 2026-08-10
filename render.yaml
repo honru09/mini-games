@@ -21,6 +21,15 @@ services:
         sync: false
       - key: DEEPSEEK_KEY
         sync: false
+      # 测试管理员只由服务端环境变量精确绑定；值必须在 Dashboard/API 中单独写入，禁止进入仓库。
+      - key: TEST_ADMIN_ENABLED
+        sync: false
+      - key: TEST_ADMIN_UID
+        sync: false
+      - key: TEST_ADMIN_USERNAME
+        sync: false
+      - key: TEST_ADMIN_PASSWORD
+        sync: false
       - key: ENABLE_CLUSTER_COORDINATION
         value: "0"
       - key: TETRIS_GUIDELINE_SCORING

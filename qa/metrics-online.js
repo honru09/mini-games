@@ -1,9 +1,11 @@
 'use strict';
 const fs=require('fs'),path=require('path'),http=require('http'),{spawn}=require('child_process');
-const ROOT=path.join(__dirname,'..'),PORT=Number(process.env.METRICS_PORT)||8188,DATA=fs.mkdtempSync(path.join(ROOT,'data','metrics-')),sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+const ROOT=path.join(__dirname,'..'),DATA=fs.mkdtempSync(path.join(ROOT,'data','metrics-')),sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));let PORT=Number(process.env.METRICS_PORT)||0;
 const failures=[];function check(name,value,detail){console.log((value?'PASS':'FAIL')+'  '+name+(value||!detail?'':' :: '+detail));if(!value)failures.push(name);}
 function request(target,headers={}){return new Promise((resolve,reject)=>{const req=http.request({host:'127.0.0.1',port:PORT,path:target,headers},res=>{const chunks=[];res.on('data',chunk=>chunks.push(chunk));res.on('end',()=>resolve({status:res.statusCode,headers:res.headers,body:Buffer.concat(chunks)}));});req.on('error',reject);req.end();});}
+function freePort(){return new Promise((resolve,reject)=>{const probe=http.createServer();probe.once('error',reject);probe.listen(0,'127.0.0.1',()=>{const address=probe.address(),port=address&&address.port;probe.close(error=>error?reject(error):resolve(port));});});}
 async function main(){
+  if(!PORT)PORT=await freePort();
   const token='metrics-test-token-123456789',server=spawn(process.execPath,[path.join(ROOT,'server','index.js')],{env:{...process.env,PORT:String(PORT),DATA_DIR:DATA,NODE_ENV:'test',METRICS_ADMIN_TOKEN:token,SUPABASE_URL:'',SUPABASE_KEY:''},stdio:['ignore','pipe','pipe']});let output='';server.stdout.on('data',data=>output+=data);server.stderr.on('data',data=>output+=data);
   try{
     for(let i=0;i<100&&!output.includes('已启动');i++)await sleep(50);if(!output.includes('已启动'))throw new Error('server start failed '+output);

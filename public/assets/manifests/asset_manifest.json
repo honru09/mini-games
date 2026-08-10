@@ -115,7 +115,7 @@
       "status": "integrated",
       "fallback": "💵",
       "load": "initial",
-      "a11y": "平台虚拟现金；不代表真实法币或可提现余额",
+      "a11y": "G Coins；仅限 Ghost Game 平台内使用，不代表真实法币、不可提现或转赠",
       "license": "project-owned"
     },
     {

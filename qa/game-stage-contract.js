@@ -12,7 +12,10 @@ const shell=read('public/src/core/02-app-shell.js');
 const roster=read('public/src/ui/07-roster.js');
 const onlineSource=read('public/src/online/03-websocket.js');
 const server=read('server/index.js');
-const stageSource=shell.slice(shell.indexOf('const GAME_STAGE_FALLBACK_COLORS'),shell.indexOf('function routeFromHash()'));
+// The stage renderer is followed by the independent P1 room-chat renderer.
+// Keep this presentation-only contract scoped to the stage module so chat's
+// requestAnimationFrame/history code cannot look like a Stage violation.
+const stageSource=shell.slice(shell.indexOf('const GAME_STAGE_FALLBACK_COLORS'),shell.indexOf('const matchChatUi='));
 let fails=0;
 function check(name,value,detail){console.log((value?'PASS  ':'FAIL  ')+name+(value||!detail?'':' :: '+detail));if(!value)fails++;}
 
@@ -23,9 +26,9 @@ check('Arena-first、手机单列、安全区与 reduced-motion 样式存在',/\
 const mobileStageCss=(template.match(/@media\(max-width:720px\)\{([\s\S]*?)\}\s*@media\(max-width:480px\)/)||[])[1]||'';
 check('Tetris 手机舞台覆盖内联双列并保持主井居中、Next 可换行与对手自适应网格',/\.tetris-battle-layout\{[^}]*grid-template-columns:minmax\(0,1fr\)!important/.test(mobileStageCss)&&/\.tetris-player-main\{[^}]*width:100%[^}]*justify-items:center/.test(mobileStageCss)&&/\.tetris-next\{[^}]*white-space:normal[^}]*overflow-wrap:anywhere/.test(mobileStageCss)&&/\.tetris-opponents\{[^}]*repeat\(auto-fit,minmax\(96px,1fr\)\)/.test(mobileStageCss));
 check('Tetris 手机迷你卡、紧凑状态与七项操作保留可触达布局',/\.tetris-mini-card\{[^}]*box-sizing:border-box[^}]*min-width:0/.test(mobileStageCss)&&/\.mini-board\{[^}]*margin-inline:auto/.test(mobileStageCss)&&/\.tetris-compact-status\{[^}]*grid-column:1\s*\/\s*-1/.test(mobileStageCss)&&/\.tetris-actions\{[^}]*width:100%/.test(mobileStageCss)&&/\.tetris-actions \.btn\{[^}]*min-width:44px[^}]*min-height:44px/.test(mobileStageCss)&&!/\.tetris-battle-layout\{[^}]*overflow:hidden/.test(mobileStageCss));
-check('Stage 只读取已有 roomInfo.seats，不写协议/本地持久化/计时器',/roomInfo&&Array\.isArray\(onlineState\.roomInfo\.seats\)/.test(stageSource)&&!/online\.send\(|localStorage\.|setInterval\(|requestAnimationFrame\(/.test(stageSource));
+check('Stage 身份只读 roomInfo.seats，表达经专用 API 且不直写协议或常驻循环',/roomInfo&&Array\.isArray\(onlineState\.roomInfo\.seats\)/.test(stageSource)&&/online\.sendMatchExpression\(/.test(stageSource)&&!/online\.send\(|setInterval\(|requestAnimationFrame\(/.test(stageSource));
 const publicSeatSource=server.slice(server.indexOf('function publicSeat('),server.indexOf('function roomHostPayload('));
-check('Stage 读取的 Seat 字段与服务端 publicSeat 合同一致',['seatId','type','userId','nickname','avatar','ready','host','online','aiDifficulty','aiPersona','controllerUid'].every(key=>new RegExp('\\b'+key+'\\b').test(publicSeatSource)));
+check('Stage 读取的 Seat 字段与服务端 publicSeat 合同一致',['seatId','type','userId','nickname','avatar','frame','effect','nameFx','lang','ready','host','online','aiDifficulty','aiPersona','controllerUid'].every(key=>new RegExp('\\b'+key+'\\b').test(publicSeatSource)));
 check('Seat 使用稳定 key 与状态 data/class，昵称标记为原文',/dataset\.seatKey/.test(shell)&&/dataset\.seatCurrent/.test(shell)&&/dataset\.seatReady/.test(shell)&&/dataset\.seatOnline/.test(shell)&&/dataset\.seatBankrupt/.test(shell)&&/data-i18n-raw/.test(shell));
 check('返回、房主结束与观战只读既有语义仍在',/function showHub\([\s\S]*?preserveOnlineGame/.test(roster)&&/!online\.isHost/.test(roster)&&/spectator:\s*online\.isSpectator/.test(roster));
 check('showGame 与各游戏 player rail 刷新接入 Stage',/function showGame\([\s\S]*?renderGameStage/.test(roster)&&/function renderPlayers\([\s\S]*?renderGameStage/.test(roster));

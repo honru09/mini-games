@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "taskId": "profile-compare-p1-20260810",
+  "status": "completed_local",
+  "steps": [
+    {"id":"contract","status":"completed","owner":"Master"},
+    {"id":"server-projection","status":"completed","owner":"Master"},
+    {"id":"client-lifecycle","status":"completed","owner":"Master"},
+    {"id":"online-security","status":"completed","owner":"Master"},
+    {"id":"regression-docs","status":"completed","owner":"Master"}
+  ],
+  "release": "local-only"
+}

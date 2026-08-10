@@ -1,0 +1,13 @@
+{
+  "status":"PARTIAL_AWAITING_HUMAN_REVIEW",
+  "dependencies":["requirements/active/tank-controls-p0-20260810","requirements/active/game-stage-art-expansion-p0-20260809"],
+  "steps":[
+    {"id":"TANKART-1","task":"冻结原创风格、四套皮肤、地图/基地交付与审批合同","status":"completed"},
+    {"id":"TANKART-2","task":"使用最高质量图像模型生成 source-only 概念稿并保存 provenance","status":"completed"},
+    {"id":"TANKART-3","task":"人工清稿、Reviewer B、IP Review、Golden Set 与运行时接入评审","status":"pending"},
+    {"id":"TANKART-4","task":"通过审批后再独立建立 runtime flag/manifest/回退 QA","status":"pending"}
+  ],
+  "risks":["生成图出现 AI 痕迹或商业 IP 相似性","材质细节遮挡游戏可读性","未审批资源误进入 manifest","透明边缘/暗黑主题/多尺寸派生质量不足"],
+  "tests":["scripts/asset-library-audit.js","qa/asset-manifest-v2.js","qa/tabletop-art-runtime.js","qa/dom-smoke.js","人工可见对比与 Reviewer B/IP/Golden Set"],
+  "rollback":"源稿不进入运行时；丢弃候选只需保留 rejected provenance，不改现有 Tank 表现或用户数据。"
+}

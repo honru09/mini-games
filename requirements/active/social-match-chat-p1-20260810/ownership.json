@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "taskId": "social-match-chat-p1-20260810",
+  "owners": {
+    "serverProtocol": ["server/index.js"],
+    "clientProtocol": ["public/src/online/03-websocket.js"],
+    "presentation": ["public/src/core/02-app-shell.js", "public/index-template.html", "public/locales/*"],
+    "qaDocs": ["qa/match-chat-contract.js", "qa/match-chat-online.js", "requirements/PROTOCOL_REGISTRY.md", "README.md", "package.json"]
+  },
+  "forbidden": ["shared/rules/**", "server/reward-engine.js", "server/ai-learning.js", "supabase/**", "art-source/**", "public/assets/manifests/asset_manifest.json"]
+}

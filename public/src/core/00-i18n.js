@@ -130,6 +130,7 @@ const SERVER_MESSAGE_KEYS = {
   'PIN 只能使用字母和数字，长度 4-20 位':'pin_invalid',
   'PIN 只能包含字母和数字，长度 4-20 位':'pin_invalid',
   '余额不足，请完成有效对局获取 💵':'shop_insufficient',
+  'G Coins 余额不足，请完成有效对局获取 G Coins':'shop_insufficient',
   '余额不足，先去赢几局吧':'shop_insufficient',
   '只有房主可以提前结算':'host_only_settle',
   '房间不存在':'server_room_not_found',

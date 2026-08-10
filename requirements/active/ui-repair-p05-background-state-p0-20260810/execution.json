@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "taskId": "ui-repair-p05-background-state-p0-20260810",
+  "status": "completed_local",
+  "completed": [
+    "background failure/playback implementation",
+    "master review and dynamic VM regression",
+    "specialized, quality-gate and full regression",
+    "status/report/log synchronization"
+  ],
+  "pending": ["second desktop browser", "Android/iPhone/Tablet", "real network shaping", "browser reduced-motion evidence", "user release command"],
+  "verification": {
+    "specialized": ["node qa/ui-identity-preview-contract.js", "npm run test:shop-contract"],
+    "quality": ["node scripts/build.js", "node qa/dom-smoke.js", "npm run quality:gates", "git diff --check"],
+    "full": "npm test (110.4s, exit 0)",
+    "buildBytes": 915127,
+    "buildSha256": "1A4D1DD87F3AFB89B13436B20E8B488B3A021698B996AF393D084E5206E61D1D"
+  },
+  "externalGates": ["second desktop browser", "Android/iPhone/Tablet", "real network shaping", "browser reduced-motion evidence"],
+  "published": false
+}

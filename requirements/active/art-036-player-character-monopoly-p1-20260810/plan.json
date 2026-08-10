@@ -1,0 +1,11 @@
+{
+  "status":"REQUIREMENT_FROZEN",
+  "steps":[
+    {"id":"ART36-1","task":"冻结角色/Monopoly source-only contract 与审批矩阵","status":"completed"},
+    {"id":"ART36-2","task":"最高质量模型生成角色与实体棋盘方向源稿","status":"completed"},
+    {"id":"ART36-3","task":"素材库 reference-only 登记、哈希与审计","status":"completed"},
+    {"id":"ART36-4","task":"人工清稿/Reviewer B/IP/Golden Set 与 runtime 接入","status":"blocked"}
+  ],
+  "dependencies":["SOC-031","ECO-029"],
+  "forbidden":["public/assets","asset_manifest runtime entries","player-character schema changes","Monopoly rules/authority","shop/equip mutation","Supabase schema","commit/push/deploy"]
+}

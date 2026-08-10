@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "taskId": "ui-repair-p04-profile-social-p0-20260810",
+  "status": "completed_local",
+  "completed": ["read-only code audit", "scope and ownership freeze"],
+  "pending": ["external browser/device/network gates", "user release command"],
+  "externalGates": ["second desktop browser", "Android/iPhone/Tablet", "real network shaping", "browser reduced-motion evidence"],
+  "published": false
+}

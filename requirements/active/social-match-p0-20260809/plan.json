@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "task": "social-match-p0-20260809",
+  "state": "LOCAL_ACCEPTED_AWAITING_RELEASE_COMMAND",
+  "steps": [
+    {"id":"P0","name":"Recon and contract freeze","status":"completed","dependsOn":[],"risk":"high","tests":["read-only recon","contract review"],"rollback":"remove active task only"},
+    {"id":"P1","name":"Server identity and match-expression authority","status":"completed","dependsOn":["P0"],"risk":"high","tests":["qa/social-match-online.js","qa/security-online.js","qa/reconnect-online.js"],"rollback":"remove capability/messages and public seat fields"},
+    {"id":"P2","name":"Client protocol pairing and cache cleanup","status":"completed","dependsOn":["P1"],"risk":"high","tests":["qa/social-match-contract.js","qa/e2e-online.js"],"rollback":"remove capability/send/receive pairing"},
+    {"id":"P3","name":"PlayerIdentity, profile entry and expression UI","status":"completed","dependsOn":["P2"],"risk":"medium","tests":["qa/social-match-contract.js","qa/game-stage-contract.js","qa/immersive-game-shell.js","qa/dom-smoke.js"],"rollback":"hide panel and restore current Seat renderer"},
+    {"id":"P4","name":"Three-language, responsive and reduced-motion QA","status":"completed","dependsOn":["P3"],"risk":"medium","tests":["npm run test:i18n","qa/ui-responsive-contract.js","in-app browser matrix"],"rollback":"feature capability disabled"},
+    {"id":"P5","name":"Full regression, ledger and local acceptance","status":"completed","dependsOn":["P4"],"risk":"high","tests":["npm run quality:gates","npm test","two build hashes","npm run test:progress-ledger","git diff --check"],"rollback":"revert scoped Social Match files only"}
+  ],
+  "releasePolicy": "local-only; no commit, push, GitHub Pages or Render without explicit user release command"
+}

@@ -21,6 +21,7 @@ function gameGomoku(area, extra, n, opts){
   let cosmetic = normalizeCosmetic(opts.cosmetic);
   let spectator = !!opts.spectator, spectators = [], activePlayers = [0, 1];
   let startedAt = Date.now(), finishedAt = 0, ghost = null;
+  let moveImpact = null, impactTimer = null;
   let aiPending = false, aiEpoch = 0;
   const previousTouchAction = area.style.touchAction || '';
   const previousOverscroll = area.style.overscrollBehavior || '';
@@ -318,10 +319,46 @@ function gameGomoku(area, extra, n, opts){
       ctx.beginPath(); ctx.arc(x, y, radius - 3.5, 0, Math.PI*2); ctx.stroke();
     }
   }
+  function clearMoveImpact(){
+    if (impactTimer){ clearTimeout(impactTimer); impactTimer = null; }
+    moveImpact = null;
+  }
+  function triggerMoveImpact(r,c){
+    clearMoveImpact();
+    const startedAt = Date.now(), reduced = prefersReducedMotion();
+    moveImpact = { r, c, startedAt, reduced, expiresAt: reduced ? Infinity : startedAt + 680 };
+    if (reduced) return;
+    const tick = () => {
+      if (opts.destroyed || !moveImpact) return;
+      if (Date.now() >= moveImpact.expiresAt){ clearMoveImpact(); draw(); return; }
+      draw(); impactTimer = setTimeout(tick, 50);
+    };
+    impactTimer = setTimeout(tick, 16);
+  }
+  function drawMoveImpact(){
+    if (!moveImpact) return;
+    const view = gomokuViewCell(moveImpact.r, moveImpact.c), x = PAD + view[1]*CELL, y = PAD + view[0]*CELL;
+    const elapsed = Math.max(0, Date.now() - moveImpact.startedAt);
+    const progress = moveImpact.reduced ? 0 : Math.min(1, elapsed / Math.max(1, moveImpact.expiresAt - moveImpact.startedAt));
+    const alpha = moveImpact.reduced ? .72 : Math.max(0, .82 * (1 - progress));
+    ctx.save(); ctx.globalAlpha = alpha; ctx.strokeStyle = '#211923'; ctx.lineWidth = moveImpact.reduced ? 2.4 : 2.8; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.arc(x, y, CELL * (.48 + progress * .68), 0, Math.PI*2); ctx.stroke();
+    if (!moveImpact.reduced){
+      for (let i=0;i<8;i++){
+        const angle = i * Math.PI / 4, inner = CELL * (.62 + progress * .34), outer = CELL * (1.02 + progress * .28);
+        ctx.beginPath(); ctx.moveTo(x + Math.cos(angle)*inner, y + Math.sin(angle)*inner); ctx.lineTo(x + Math.cos(angle)*outer, y + Math.sin(angle)*outer); ctx.stroke();
+      }
+    }
+    ctx.restore();
+  }
+  function gomokuViewTurns(){return opts.online&&!spectator&&Number(opts.myIdx)===1?2:0;}
+  function gomokuViewCell(r,c){return typeof TabletopPerspective!=='undefined'&&TabletopPerspective?TabletopPerspective.squareCell(N,r,c,gomokuViewTurns()):[r,c];}
+  function gomokuLogicalCell(r,c){return typeof TabletopPerspective!=='undefined'&&TabletopPerspective?TabletopPerspective.squareCell(N,r,c,gomokuViewTurns()):[r,c];}
   function draw(){
     const tabletop = tabletopMode();
     if (!tabletop && canvas.dataset.tabletopArt === 'wave-a') applyPresentation();
     if (typeof markTabletopSurface === 'function') markTabletopSurface(canvas, 'gomoku-board', { variant: boardTheme });
+    canvas.dataset.viewQuarterTurns = String(gomokuViewTurns());
     const stickerMode = tabletop || (stickerArtActive && boardTheme === 'classic');
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, LOGICAL, LOGICAL);
@@ -337,7 +374,7 @@ function gameGomoku(area, extra, n, opts){
     }
     for (let r=0;r<N;r++) for (let c=0;c<N;c++){
       if (grid[r][c] === -1) continue;
-      const x = PAD + c*CELL, y = PAD + r*CELL;
+      const view = gomokuViewCell(r,c), x = PAD + view[1]*CELL, y = PAD + view[0]*CELL;
       const skin = pieceSkin(grid[r][c]);
       if (stickerMode){ drawStickerStone(x, y, grid[r][c], skin); continue; }
       const stone = ctx.createRadialGradient(x-CELL*.14, y-CELL*.16, CELL*.05, x, y, CELL*.44);
@@ -358,25 +395,24 @@ function gameGomoku(area, extra, n, opts){
       ctx.beginPath(); ctx.arc(x, y, CELL*0.39, 0, Math.PI*2); ctx.stroke();
     }
     if (last){
-      const x = PAD + last[1]*CELL, y = PAD + last[0]*CELL;
+      const lastView = gomokuViewCell(last[0],last[1]), x = PAD + lastView[1]*CELL, y = PAD + lastView[0]*CELL;
       ctx.strokeStyle = stickerMode ? '#EF665F' : (grid[last[0]][last[1]] === 1 ? '#111827' : '#fff'); ctx.lineWidth = stickerMode ? 3 : 2;
       ctx.beginPath();
-      if (stickerMode){
-        const mark = CELL*.2; ctx.moveTo(x-mark,y-mark); ctx.lineTo(x+mark,y-mark); ctx.lineTo(x+mark,y+mark); ctx.lineTo(x-mark,y+mark); ctx.closePath();
-      } else ctx.arc(x, y, CELL*0.18, 0, Math.PI*2);
-      if (stickerMode){ ctx.strokeStyle='#211923'; ctx.lineWidth=5; ctx.stroke(); ctx.strokeStyle='#EF665F'; ctx.lineWidth=2.5; }
-      ctx.stroke();
+      ctx.arc(x, y, CELL * (stickerMode ? .12 : .18), 0, Math.PI*2);
+      if (stickerMode) { ctx.fillStyle = '#EF665F'; ctx.fill(); } else ctx.stroke();
     }
     if (ghost && !spectator && !over && grid[ghost[0]][ghost[1]] === -1){
       ctx.save(); ctx.globalAlpha = stickerMode ? .5 : .36; ctx.fillStyle = cur === 0 ? '#211923' : '#FFF9F2';
       ctx.strokeStyle = stickerMode ? '#443443' : ctx.fillStyle; ctx.lineWidth = stickerMode ? 2 : 1;
       if (stickerMode && typeof ctx.setLineDash === 'function') ctx.setLineDash([5,4]);
-      ctx.beginPath(); ctx.arc(PAD + ghost[1]*CELL, PAD + ghost[0]*CELL, CELL*.4, 0, Math.PI*2);
+      const ghostView=gomokuViewCell(ghost[0],ghost[1]);
+      ctx.beginPath(); ctx.arc(PAD + ghostView[1]*CELL, PAD + ghostView[0]*CELL, CELL*.4, 0, Math.PI*2);
       if (stickerMode) ctx.stroke(); else ctx.fill(); ctx.restore();
     }
     if (winLine.length){
       const first = winLine[0], end = winLine[winLine.length - 1];
-      let x1 = PAD + first[1]*CELL, y1 = PAD + first[0]*CELL, x2 = PAD + end[1]*CELL, y2 = PAD + end[0]*CELL;
+      const firstView=gomokuViewCell(first[0],first[1]),endView=gomokuViewCell(end[0],end[1]);
+      let x1 = PAD + firstView[1]*CELL, y1 = PAD + firstView[0]*CELL, x2 = PAD + endView[1]*CELL, y2 = PAD + endView[0]*CELL;
       if (stickerMode){
         const dx=x2-x1,dy=y2-y1,length=Math.hypot(dx,dy)||1,offset=CELL*.48;
         x1 += -dy/length*offset; y1 += dx/length*offset; x2 += -dy/length*offset; y2 += dx/length*offset;
@@ -386,6 +422,7 @@ function gameGomoku(area, extra, n, opts){
       else { ctx.strokeStyle='#facc15'; ctx.lineWidth=5; }
       ctx.stroke();
     }
+    drawMoveImpact();
     updateHud();
   }
   function initStickerSurface(){
@@ -425,12 +462,13 @@ function gameGomoku(area, extra, n, opts){
     const rect = canvas.getBoundingClientRect();
     const x = (e.clientX - rect.left) / rect.width * LOGICAL;
     const y = (e.clientY - rect.top) / rect.height * LOGICAL;
-    return [Math.round((y - PAD) / CELL), Math.round((x - PAD) / CELL)];
+    const view=[Math.round((y - PAD) / CELL), Math.round((x - PAD) / CELL)];
+    return gomokuLogicalCell(view[0],view[1]);
   }
   canvas.addEventListener('mousemove', e => {
     if (spectator || over || (opts.online && cur !== opts.myIdx) || (opts.ai && opts.ai.has(cur))) return;
     const [r, c] = pointerCell(e);
-    ghost = r >= 0 && r < N && c >= 0 && c < N && grid[r][c] === -1 ? [r, c] : null;
+    ghost = Number.isInteger(r) && Number.isInteger(c) && r >= 0 && r < N && c >= 0 && c < N && grid[r][c] === -1 ? [r, c] : null;
     draw();
   });
   canvas.addEventListener('mouseleave', () => { if (ghost){ ghost = null; draw(); } });
@@ -439,7 +477,7 @@ function gameGomoku(area, extra, n, opts){
     if (opts.online && cur !== opts.myIdx) return;
     if (opts.ai && opts.ai.has(cur)) return;
     const [r, c] = pointerCell(e);
-    if (r < 0 || r >= N || c < 0 || c >= N) return;
+    if (!Number.isInteger(r) || !Number.isInteger(c) || r < 0 || r >= N || c < 0 || c >= N) return;
     if (grid[r][c] !== -1) return;
     if (opts.onProgress) opts.onProgress([r, c]);
     if (opts.online) opts.sendMove([r, c]);
@@ -452,6 +490,7 @@ function gameGomoku(area, extra, n, opts){
     aiEpoch++;
     playFeedback('place');
     grid[r][c] = cur; last = [r,c]; hist.push([r,c]);
+    triggerMoveImpact(r,c);
     if (checkGomokuWin(grid, r, c)){
       over = true; finishedAt = Date.now(); winLine = winningCells(r, c); ghost = null; area.style.touchAction = 'auto';
       if (opts.onEnd) opts.onEnd([
@@ -508,6 +547,7 @@ function gameGomoku(area, extra, n, opts){
     aiEpoch++;
     grid = Array.from({length:N}, () => Array(N).fill(-1));
     cur = 0; over = false; hist = []; last = null; winLine = []; ghost = null; aiPending = false; startedAt = Date.now(); finishedAt = 0;
+    clearMoveImpact();
     area.style.touchAction = spectator ? 'auto' : 'none';
     applyPresentation();
     draw(); renderPlayers(0, null);
@@ -532,6 +572,7 @@ function gameGomoku(area, extra, n, opts){
     state.hist.forEach((move, index) => { if (Array.isArray(move) && move.length === 2 && grid[move[0]] && grid[move[0]][move[1]] === -1){ grid[move[0]][move[1]] = index % 2; hist.push([move[0], move[1]]); } });
     cur = Number(state.cur) === 1 ? 1 : 0; over = !!state.over; last = Array.isArray(state.last) ? state.last.slice(0, 2) : (hist.length ? hist[hist.length - 1].slice() : null);
     winLine = over && last ? winningCells(last[0], last[1]) : [];
+    clearMoveImpact();
     if (value && value.presentation){ boardTheme = value.presentation.boardTheme === 'grass' ? 'grass' : 'classic'; cosmetic = normalizeCosmetic(value.presentation.cosmetic); }
     applyPresentation(); draw(); renderPlayers(cur, null); return true;
   }
@@ -541,6 +582,6 @@ function gameGomoku(area, extra, n, opts){
     reset, onMove: opts.onMove, onRestart: resetLocal, snapshot, onRestore,
     serialize: () => ({ state: snapshot(), presentation: { boardTheme, cosmetic:{default:cosmetic.default,players:{...cosmetic.players}} }, stats: getMatchStats() }),
     setBoardTheme, setCosmetic, renderCosmetic: setCosmetic, setSpectators, startMatch, reportGameResult, getMatchStats,
-    destroy: () => { opts.destroyed = true; stickerAssetProbe = null; aiEpoch++; aiPending = false; area.style.touchAction = previousTouchAction; area.style.overscrollBehavior = previousOverscroll; },
+    destroy: () => { opts.destroyed = true; stickerAssetProbe = null; aiEpoch++; aiPending = false; clearMoveImpact(); area.style.touchAction = previousTouchAction; area.style.overscrollBehavior = previousOverscroll; },
   };
 }

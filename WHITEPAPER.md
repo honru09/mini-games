@@ -1,7 +1,7 @@
 # Mini Games Platform · 项目白皮书
 
-**版本：v3.4（2026-08-09 Production Readiness 工程基线版）**
-**状态：6 款精选游戏 + Direct Chat/Profile + Tetris Advanced Battle v3 + Supabase/Cluster 运维合同 + PWA + Honru cleanup 技术候选已自动化验证**
+**版本：v3.5（2026-08-10 产品愿景与需求治理融合版）**
+**状态：6 款精选游戏 + 沉浸式 Game Shell + Social Match P0 + Direct Chat/Profile + Tetris Advanced Battle v3 + Supabase/Cluster 运维合同 + PWA 已自动化验证；UI Repair P0 进入本地主线**
 **发布成熟度：AUTOMATED_VERIFIED；真实设备与真实网络闸门未执行，Release Candidate 为 BLOCKED**
 
 > 本文件是仓库内的公开技术总纲。完整排版版位于 `deliverables/`；实现事实以当前源码、测试和本文件为准。
@@ -15,6 +15,13 @@
 - 技术：零 npm 运行依赖；前端模板 + JS 模块构建成单页；Node 静态服务、手写 WebSocket、DeepSeek 代理、可选 Supabase。
 - 线上：GitHub Pages 前端 + Render 后端。
 
+### 产品核心排序与长期愿景
+
+- **互动第一，社交第二，个性化是共同基石。** 头像、头像框、背景、闪名和未来虚拟形象共同构成玩家在平台中的身份；这些身份必须能在房间、对局、聊天、Profile 和回放等真实交互里被看见，而不是只存在于商城清单。
+- 经典游戏保留可识别的规则核心。Ghost Game 的差异化目标约为体验层的 10%：本地近端视角、实体桌游质感、角色参与、克制的漫画反馈、社交表达和可关闭的特色事件；任何规则变化都必须另立合同并验证公平、AI、联机、Replay 和 Authority。
+- 当前先把六款游戏做成视觉、互动、个性化、联机、安全和内容治理模板。长期再建设“地区 → 国家 → 特色小游戏”的全球目录；中国、日本、韩国、美国、亚洲、欧洲等只是未来内容元数据方向，不是当前新增游戏承诺。
+- 产品名称为 **Ghost Game**。首页与登录后的价值表达应强调快速进入、经典游戏的新体验、真实玩家互动和可展示的成长，不再以“六款精选游戏联机对战”作为主品牌标语。
+
 ## 1. 产品基线
 
 | runtime_id | 游戏 | 人数 | AI | 联机 | AI Seat |
@@ -26,7 +33,7 @@
 | `tetris` | 俄罗斯方块 | 2–4 | ✅ | ✅ | ✅ |
 | `xiangqi` | 象棋 | 2 | ✅ | ✅ | ✅ |
 
-平台能力包括用户名密码账号、旧 PIN 原 UID 迁移、一次性访客、设备自动登录、💵 虚拟现金商城、排行榜、XP/等级/连胜、48 款 Avatar v2 与高级背景、三语言、昼夜双主题、好友/拉黑/举报、正式好友一对一私聊、Presence 隐私、统一真人/AI/空 Seat、READY、公开/私密房、快速加入、掉线托管/房主转移、独立观众席、赛事编排、每日任务、Replay v1.1 和管理员 Metrics v2。
+平台能力包括用户名密码账号、旧 PIN 原 UID 迁移、一次性访客、设备自动登录、💵 虚拟现金商城、排行榜、XP/等级/连胜、48 款 Avatar v2 与高级背景、三语言、昼夜双主题、好友/拉黑/举报、正式好友一对一私聊、Presence 隐私、统一真人/AI/空 Seat、READY、公开/私密房、快速加入、掉线托管/房主转移、独立观众席、每日任务、Replay v1.1 和管理员 Metrics v2。赛事编排代码与协议继续保留；普通玩家的赛事创建、打开和自动弹窗入口已由 `UI-034` / UI Repair P0.2 默认隐藏，仅服务端授权的测试管理员可见受控入口。
 
 ## 2. 架构
 
@@ -57,7 +64,7 @@ shared/rules/{tetris,xiangqi,monopoly}.js   Supabase profiles/history/reward_his
 - 真人离房会按 Seat v2 规则结束或保留当前局、压紧席位并迁移 AI Controller；房主离开时转移房主并保留真人会话，不再无条件关闭房间。
 - 联机结果需要同一 `matchId` 下所有参与者提交一致 claim；AI 结果必须使用服务端签发的 `matchId/resultId` 票据、有效动作进度、去重和频控。
 - 独立 Spectator Seat 支持中途加入、快照、重进、人数上限和服务端只读隔离。
-- `tournament-orchestrator-v1.1` 支持 3–4 人循环赛及 5+ 人三轮瑞士制，并接通 3–6 人独立选择、六款游戏、真实房间自动创建、玩家席位、服务端结果、自动下一轮、Bye、重连、参与者自愿弃权和管理员明确目标恢复；赛事积分不进入普通 💵、XP 或胜场。
+- `tournament-orchestrator-v1.1` 支持 3–4 人循环赛及 5+ 人三轮瑞士制，并接通 3–6 人独立选择、六款游戏、真实房间自动创建、玩家席位、服务端结果、自动下一轮、Bye、重连、参与者自愿弃权和管理员明确目标恢复；赛事积分不进入普通 💵、XP 或胜场。产品将它作为备份保留；普通 UI 的发现、创建、打开和自动弹窗已由 `UI-034` 默认隐藏，受控测试入口按服务端管理员能力开放。
 - Replay v1.1 保存 7 天版本化动作流，支持列表、播放/暂停、跳转、0.5–4×、公开房延迟 5 分钟、参与者分享/撤销；服务端只持久化分享令牌哈希。
 - Metrics v2 通过 `METRICS_ADMIN_TOKEN` Bearer 鉴权提供脱敏快照、有界历史、CSV、阈值告警、脱敏错误聚合和访问审计；`/admin-metrics.html` 不持久化令牌。
 - Profile 只向比赛 presentation 暴露白名单 `gameCosmetics` 装备 ID 和 `cosmeticSchemaVersion=1`；owned、余额、价格与购买记录保持私有，未知 ID 回退默认。
@@ -97,7 +104,9 @@ DeepSeek Key 只存在于服务端环境变量。`qa/ai-games.js` 使用本地�
 
 - `P-001-MARK`：Header 与 Hero 使用的 Playroom 品牌 SVG。
 - `P-001-WORDMARK`：可用于分享卡和后续商店物料的字标 SVG。
-- `P-003`：平台虚拟现金 SVG，商城、排行榜、档案与结算统一显示 💵。
+- `P-003`：G Coins 平台货币 SVG，商城、排行榜、档案与结算统一显示 G Coins；旧 `💵` 仅作加载失败 fallback，内部 `coins`/`currency` 字段保持兼容。
+- Shop Purchase Feedback P0 在不改变价格/扣款/owned 权威的前提下，为现有 `purchase_ok/error` 增加 `requestId/category/id` 关联回显；客户端按账号与商品绑定单笔 pending，以可访问 live status 展示成功、失败和超时，并丢弃错配/迟到状态。滚动发布必须先后端再前端。
+- Test Admin P0 采用环境变量精确绑定、启动期 fail-closed、scrypt 引导与显式能力白名单。无限 G Coins、MAX 等级和全目录拥有均为私有虚拟投影；测试局、赛事控制、公开发现、持久社交、正式奖励/账本、Replay、AI 学习、Analytics 与 outbox 具有独立隔离合同，不能作为生产经济旁路。
 - `public/src/core/06-assets.js`：稳定资源路径、现金组件和加载失败 fallback。
 - `G-02/G-07/G-08/G-09/G-11/G-06-COVER`：六款游戏均有 640×360 / 320×180 响应式大厅封面、lazy/srcset、完整性哈希与 Emoji fallback。
 - `G-02-BOARD-SURFACE / G-11-WELL-SURFACE`：五子棋木纹 Canvas 与俄罗斯方块玻璃井两个旧纵切继续保留。
@@ -123,7 +132,7 @@ DeepSeek Key 只存在于服务端环境变量。`qa/ai-games.js` 使用本地�
 5. 注册与商城已覆盖 48 款 Avatar v2、主预览/试穿、服务端价格对齐、单例弹层、滚动锁和 1440/768/481/390/360 响应式。
 6. 当前六封面是可回滚的软 3D 过渡版，不作为 `Pocket Tabletop Sticker` 最终风格验收结论。
 7. 六款 Game Stage/Tabletop Wave A 已默认接入且不读取规则/快照/奖励；390px Tetris 改为单列预览、Arena 无内部横溢、七项控制至少 44px。
-8. Honru 前端助手聊天 UI 已删除；玩家私聊是 Chat 唯一产品入口，签到、品牌资产、后端兼容和默认关闭局内反应继续保留。
+8. Honru 前端助手聊天 UI 已删除；玩家私聊是 Chat 唯一产品入口，签到、品牌资产、后端兼容和默认关闭局内反应继续保留。系统空态与玩家原文分层，语言切换不会冻结“开始对话”等系统提示。
 
 下一批严格执行新报告：先 Art Bible v1、Design System v3、Motion System v1 和 Source Manifest v2；再用 1 Persona×8 状态、4 Avatar、核心 UI、五子棋与飞行棋完整纵切组成 Golden Set，并完成 IP Similarity Review。Golden Set 未通过前不得批量重绘 48 Avatar 或其余游戏。资源制作不改变已完成的规则、AI、商品 ID、奖励或权威协议。
 
@@ -206,14 +215,26 @@ node --experimental-websocket qa/ws-close-test.js
 - [x] Daily Task：服务端进度、领取幂等和经济流水。
 - [x] Replay v1.1：7 天记录、播放器、延迟公开、分享令牌哈希和撤销。
 - [x] Tournament v1.1：六款 3–6 人创建、自动多桌、自愿弃权、管理员指定判负、赛事积分经济隔离。
+- [x] 普通玩家入口默认隐藏 Tournament 的创建、打开和自动弹窗；保留服务端、协议、数据、受控入口与专项测试。
 - [x] Metrics v2：管理员只读页面、脱敏历史/CSV/阈值/错误闭环、限频与访问审计。
+- [x] Social Match P0：局内公开身份入口、十个稳定 Emoji ID、六个快捷语 ID、目标投掷、头像旁气泡，以及服务端权威身份、eventId 幂等、频控、双向 Block、逐接收者过滤、观众/访客/AI 发送拒绝；表达保持临时态，不进入 Replay、奖励、AI 学习、Analytics 或数据库；能力按 WebSocket 连接级保存，同一连接内会话失效/注销/房间重置不丢失，真实断开才清空。
 - [ ] 配置并验证真实 Supabase，完成 JSON 数据迁移、并发/RLS、备份和回滚演练。
 - [x] 执行 30 分钟生产正式好友 WebSocket Synthetic Session；协议稳定性通过但不替代 UI/真机。
 - [ ] 执行真实设备矩阵与真实网络整形，解除对应 RC `BLOCKED`。
 
 ### P1
 
+- `Player Character P0 / SOC-031` 已本地实现并完成回归：独立于 Honru/Logo/Avatar/Frame/Background/NameFx 的 `player-character-v1` 深模块集中规范化固定角色与 slot 白名单；旧账号、访客、AI、观众、Profile、Room Seat、重连均使用确定性安全投影，客户端不能写入角色字段，Supabase 不要求新增列。Social Match Seat 合同已同步 `playerCharacter` 公开字段，完整 `npm test` 通过。UI-037/GAME-045 已进一步落地代码原生角色位置表现、连续 revision/transition Adapter 与完整 Monopoly 状态矩阵；ART-036 角色/大富翁正式美术、ECO-029 收藏装备事务及外部设备/真实 Supabase 门禁仍按依赖顺序待执行。
+- `ART-036` 已进入 source-only accepted：最高质量 `gpt-image-2` 生成玩家角色五姿态与大富翁 24 格实体棋盘方向板，G-14/G-15 仅登记 `reference-only`；实际棋盘输出为 1254×1254 已记录。人工清稿、Reviewer B、IP Similarity Review、Golden Set 以及后续 runtime 接入仍是硬闸门，不能把方向稿当成已上线美术。
+- `ECO-029` 已完成 contract-only 纯适配器：默认 `player_character` catalog 为空，集中约束 owned/equipped、服务端 price resolver、requestId 幂等与公开隐私投影；8 组专项 QA 通过。现有 Supabase `apply_purchase_v1` 尚无该类别，因此正式商品、扣币、装备、商城 UI、并发/RLS/备份/回滚仍未执行，禁止借道现有 Avatar/Game Cosmetic 类别。
+- UI-037/GAME-045 的本地 fallback 仅消费已存在的服务端 `monopoly-rule-v2` 快照和根级 transition；首次帧、重连、观战、乱序与跳 revision 直接定位，只有连续合法 move 才生成有限步进计划。`MonopolyUiState` 统一状态栏、拍卖倒计时与机会卡可访问 dialog，交易仍明确不可用且不伪造流程。当前 renderer 仍是既有 CSS/DOM `♟/🚗`，ART-036 的 G-14/G-15 方向板保持 `reference-only`，不得进入 Manifest 或 `public/assets`。
+
 - 先完成 `Pocket Tabletop Sticker` Art Bible 与 Golden Set；通过后按五子棋/飞行棋 → 其余四款 → Avatar/Persona/主题/社交顺序原子扩展完整美术包。
+- 先做五子棋/飞行棋 `Tabletop Presentation M1`：唯一规则坐标保持不变，每个客户端把本人映射到 A 近端；加入实体斜视棋盘、镜头入场、棋子/飞机移动、克制墨线冲击、2/3/4 人镜头和领奖台，并提供 reduced-motion 与旧表现回滚。
+- `Tank Controls P0` 已完成本地实现：移动端八扇区/斜向摇杆、方向键降级、独立多指开火、键盘映射、触觉可选和失焦/销毁释放；只复用既有 Tank Authority 输入字段，未改服务端规则。Tank 皮肤/地图/基地视觉仍另立 ART-035；`Player Character + Monopoly P0` 继续独立定义虚拟形象合同和服务端位置同步行走纵切。
+- `Tank Art P1` 已完成最高质量 `gpt-image-2` source-only 概念板与 provenance：四套黑白实体桌游材质坦克（纸板、玉石/黑石、晶体、克制科技）及一块竞技场 inset；初稿因徽记/旗帜/伪文字被拒绝，清理版通过负责人初审后以 `reference-only` 留存。人工清稿、Reviewer B、IP Similarity Review、用户 Golden Set 和后续 runtime 双闸门仍未执行，生产表现继续使用既有 fallback，且不改 Tank Controls/Authority/规则/协议。
+- `Social Match P1` 负责局内自由文字聊天、未读、中央历史、头像身份行、举报与静音；它与 Direct Chat、当前大表情协议彼此独立。十枚 Honru 内联 Emoji 属于 ART-024/025 + SOC-017 的人工审批轨道，只能在审批后替换/扩展表现，不阻塞基础文字能力。
+- `Progression Identity P1` 基于服务端权威胜场建立每款游戏 1/10/50/100/1000 胜场称号和徽章阶梯。
 - 旧 `commerceId`、owned/equipped、服务端价格和游戏 runtime ID 保持不变，仅递增 `artworkVersion`；每批必须含 source/runtime/poster/fallback/manifest/license/budget/pivot/event/QA。
 - 聊天、Feed、公会、处罚/申诉后台和赛季系统。
 - 高级延迟观战、完整 Guideline 余项（T-Spin Mini/逐格 Drop 分等）、真实跨实例 Metrics 与外部遥测接收端验收。
@@ -241,3 +262,47 @@ Playroom 后续工程执行采用项目级 Skills、需求冻结、文件所有�
 
 视觉动效统一由 `MOTION_TOKENS.json` 和现有 CSS 令牌驱动，平台层保持可读、快速和稳定，玩家层承载个性化表现；不因视觉参考强行迁移技术栈，
 也不自动安装未经审计的第三方 Skill。
+
+## 10. 产品需求治理与分轨路线图
+
+2026-08-09 起，`requirements/PRODUCT_REQUIREMENTS_LEDGER.json` 作为唯一原子需求台账。2026-08-11 快照为 234 项，分为美术与品牌、界面与交互、游戏与局内体验、社交与玩家关系、经济成长与商业化、技术数据 AI 与跨平台六条工作流。Schema v2 保存 62 个来源入口、121 个显式依赖节点/235 条无环依赖、六种验收口径，以及联合覆盖全部 234 项的 42 个历史/当前请求主题组。总入口为 `简易报告/项目总需求进度报告-20260811.md`，六份分类报告由 `scripts/generate-progress-reports.js` 自动生成。
+
+沉浸式 Game Shell P0 已完成本地验收：fixed `100dvh`、五个稳定插槽、页面滚动/输入隔离、内部滚动、焦点/滚动恢复，以及 Rules/Victory/Reward 三类可访问 dialog；1440×900、1024×768、390×844、844×390 四档浏览器证据、22 项弹层动态合同、完整 `npm test` 和构建幂等均通过。
+
+Social Match P0 也已完成本地验收：Seat 公开身份、真人 Profile 入口、Command Slot 表达盘、十个稳定 Emoji/六个快捷语、目标与本地静音、三气泡队列和 reduced-motion；服务端完成权威签发、幂等、频控、Block、观众/访客/AI 边界，表达严格排除出持久化与对局权威链。四档浏览器、专项在线 QA、Quality Gates、完整 `npm test` 与双构建 SHA-256 均通过。原创 Honru Emoji 与投掷动画资产、自由文本房聊仍留给 Art M1 / SOC-019；该批次尚未提交、推送或部署。
+
+UI Repair P0.1 已完成本地实现：头像图片与 Canvas 统一圆形裁切、Frame/Effect 层级，环绕特效只旋转装饰环；商城使用真实身份组合预览，Premium Background 使用真实 animated WebP、poster、播放/暂停、失败 fallback、离屏/页面隐藏清理和 reduced-motion 降级。专项、三语、响应式、Quality Gates、完整 `npm test` 与双构建 Hash 已通过，1280×720 双主题三语浏览器行为已验证；其 Header/Modal 层级缺陷已由 P0.2 解决。
+
+UI Repair P0.2 已完成本地验收：平台层级冻结为 Header `120`、Mobile Nav `220`、Modal `900`、Auth `11000`、Toast `12000`；创建/加入/浏览重构为可访问 Room Launchpad 和服务端事实驱动 Lobby；待选游戏必须绑定本次成功创建的房间，观众与玩家均不会重复看到当前房；普通账号不会显示赛事创建、打开或自动弹窗，登录/换号后重新由 `hello_ack.admin` 授权；三语品牌承诺改为“随时开局，一起成长”及其英乌等价表达。1440×900、1024×768、390×844、844×390、双主题、三语、两标签等待/进行中/观战、专项、Quality Gates、完整 `npm test` 与双构建 Hash 已通过。浏览器 reduced-motion、独立第二桌面浏览器、真机和真实网络整形仍未执行；该批次未提交、推送或部署。
+- Tank Controls P0 已完成本地实现与自动化验收：Pointer Capture 八扇区/斜向摇杆与跟手反馈、D-pad 无障碍降级、独立多指开火、WASD/方向键/Space、blur/visibility/pointercancel/lostcapture/destroy 释放和 44px/safe-area/reduced-motion 适配；relay/authority 输入对象、seq、服务端位置/弹道/结算不变。专项 Tank Controls、Tank Authority、Gameplay Upgrade、联机 E2E、三语、DOM、响应式、Immersive Shell、Quality Gates、完整 `npm test` 通过；localhost 浏览器因已保存权限未能访问，第二浏览器、真机和真实网络整形仍未执行；该批次未提交、推送或部署。
+
+2026-08-10 长需求已按来源完整入账，新增明确轨道包括：报告分层归档、UI Repair P0、Social Match P1、五子棋/飞行棋 Tabletop Presentation M1、Tank Controls P0、Player Character + Monopoly P0、Progression Identity P1 与 Global Catalog Foundation。后续按该依赖顺序逐批执行；每个 active task 只承担一个主要领域，不把美术、游戏规则、社交协议、经济与生产基础设施杂糅修改。
+
+固定范围继续是六款精选游戏及人机/联机两种正式玩法。旧 11 款、三模式范围已被替代；井字棋、弹珠跳棋、斗兽棋、国际跳棋、贪吃蛇等不恢复。Logo 与 Honru 正式角色分离，美术 M0/P1/P2 在人工清稿、Reviewer B、IP Review、真机矩阵和用户 Golden Set 决议前继续默认关闭。
+
+图片生成必须优先最高质量图像模型与最高质量参数。只有在冻结 Prompt、参考、尺寸、Alpha 与风格合同下，高阶模型和 `gpt-5.6-terra max` 输出经人工可见对比达到实质等价，才允许下放批量生成。
+
+UI Repair P0.3–P0.9 已完成本地收口：P0.3–P0.8 覆盖 Chat 原文边界、公开 Profile/社交弹层、Premium Background、访客 affordance 与商城真实试穿/密度。P0.9 为既有 `direct-chat-v1` 增加表现状态：会话刷新/连接 live status、aria-busy、未读语义、历史加载/日期分隔、加载旧页滚动锚点、真实断线 pending 清理和移动安全区；服务器消息类型、好友/Block/访客权限、正文净化、Supabase 与持久化不变。主负责人审核修正了锚点提前消费和断线 loading 两个边界；Chat 专项、旧合同、线上 Direct Chat、Social Match 生命周期、三语言、DOM、完整 `npm test`（113.2 秒）通过，最终构建为 924691 bytes，SHA-256 `1E00C59C0C6E5FA197BD7C4DB2EA60795897A5CB2992340863FF5F78199133F5`。localhost 可见复核被保存权限阻断，外部设备/网络闸门仍开放；本批次未提交、推送或部署。
+
+Social Match P1 已在本地实现 `match-chat-v1`：客户端只提交 `matchId/messageId/text`，服务器权威签发 sender、席位、时间与协议，执行 NFC/控制符净化、160 字/640 bytes/4 行限制、messageId 幂等、10 秒/60 秒/单局频控、逐接收者 Block 与观众延迟只读。每局最近 50 条只存在房间内存；Game Stage 提供中央历史、未读、输入、头像旁短气泡、举报和本地静音，重渲染保留当前局内内存草稿，生命周期清理消息、草稿、未读和 timer。正文不进入 moveLog、Replay、奖励、AI、Analytics、数据库、localStorage 或普通日志。主负责人修正旧 Social Match/Game Stage 静态合同误扫相邻模块及新消息导致草稿丢失的问题；专项、旧协议和完整 `npm test`（142.6 秒）均通过，双次构建一致，输出 923629 characters、物理文件 937519 bytes、SHA-256 `1A709832AD0320518DB9E944AEEA70BD508231FF56FF6BCF2B88B7436694C305`。外部设备、真实网络、可见 reduced-motion 与 Honru Emoji 人工审批仍开放；未提交、推送或部署。
+
+Home Engagement P0 已完成本地纵切：首页新增语义化三步引导，正式账号按既有 `played` 稳定推荐游戏并显示 level/streak 轻量目标，访客/空档案使用独立 fallback；推荐入口进入 Games 后聚焦对应卡片，正式账号成长入口进入 Profile，访客入口明确写“开始第一局”。全部新增文案进入三语言，桌面/平板/手机布局继承双主题令牌；没有增加服务端状态、经济数值、游戏规则、AI、Replay、数据库或未审批美术。好友比较、稀有收藏差距、装备目标和真正可恢复对局仍需独立隐私/经济/恢复合同。专项动态矩阵、三语言、DOM、Ghost Shell、响应式和完整 `npm test`（131.5 秒）通过；双次构建一致，输出 927995 characters、物理文件 942085 bytes、SHA-256 `7980FEDB5222444C42AA7DC3540EE000F353D85ACB0A0316920B417E9903919B`。未提交、推送或部署。下一条无外部阻塞主线为 Tabletop Presentation M1。
+Tabletop Presentation M1 第一纵切已完成本地实现：新增唯一可逆 `TabletopPerspective`，五子棋第二席使用 180° 近端视角，飞行棋按本人 2/3/4 人逻辑阵营旋转基地、轨道、终点和移动位置；协议、规则、快照、Replay、奖励、AI 和观众公共视角保持标准坐标。主负责人修正 E2E 屏幕坐标尺寸/视角映射，并修正棋盘外坐标夹边漏洞。专项、Tabletop Wave A、AI、Gameplay、连续默认参数 E2E 与完整 `npm test` 通过；双构建输出 930449 characters、物理文件 944539 bytes、SHA-256 `CCA3CAB3193F2A75922B78D6A626716FFA92B012C063A68F4D5D489815F0D301` 一致。localhost 可见复核被机器保存权限阻断；下一步是独立 Action Presentation 批次，动作表现、第二浏览器、真机、真实网络、可见 reduced-motion 和人工美术审批仍未完成。未提交、推送或部署。
+Tabletop Presentation M1 的代码原生动作/收尾已继续完成：五子棋以 680ms 墨线环/放射冲击替换红色最后一步方框，并在 reduced-motion 下保留静态强调；飞行棋既有标准路径起飞/移动/碰撞/终点反馈经本地视角几何复核；五子棋/飞行棋有 520ms 轻透视入场且 reduced-motion 完全禁用。Shared Victory Overlay 增加可选命名有序排名台，飞行棋从既有 `placement` 显示 2/3/4 人三语名次，不改其他游戏的弹层生命周期。专项、三语、Overlay 动态、Gameplay、DOM 和完整 `npm test`（118 秒）通过；双构建输出 934153 characters、物理 948243 bytes、SHA-256 `7FE8BC67E7D8E4B2C4356EB655C569E746787C851525CA30ACE4CAA7917C2FF6` 一致。localhost 仍被保存权限阻断，正式材质/角色/动作资源与外部设备/网络/人工审批仍开放；未提交、推送或部署。
+Progression Identity P1 已完成本地实现：六款游戏分别使用 `1/10/50/100/1000` 胜场五级阶梯，共 30 个差异化三语称号；服务端只从权威 `u.wins` 生成只读 `mastery`，旧账号无需数据库迁移或补授予任务，相同胜场投影天然幂等。本人主页显示当前称号、首胜/下一档目标，公开 Profile 显示已解锁称号；负数、小数、超大数、不可转换值、继承字段、未知游戏和客户端伪造均有安全回归。主负责人补修排行榜缓存绕过权威 Profile 请求及 Windows Metrics 固定端口碰撞。专项、安全联机、三语言、响应式、DOM 与完整 `npm test`（132.2 秒）通过；双构建输出 937242 characters、物理 951343 bytes、SHA-256 `41C9F1A26C050C7F3705C5DD0422567C0F6D219E630B99D57E4AD7D967E34142` 一致。未修改 Reward、Supabase、规则、协议、AI、Replay 或未审批美术；外部浏览器/真机可见验收和正式图片徽章审批仍开放，未提交、推送或部署。
+下一条本地独立主线转为 `ECO-017/UI-025 Profile P1`：在已有成长、六款战绩、好友、任务、收藏和本人回放信息架构上继续做可见目标、收藏差距和受控比较；不新增好友隐私泄漏、不绕过商城权威、不提前接入未审批角色图片。
+Profile Journey P1 已完成其中安全的第一纵切：主页新增最近称号、成就进度和收藏规模三张只读目标卡，分别复用 Games、成就和商城入口。好友比较不可直接复用公开 `profile_get`，必须先定义正式好友、双向 Block 与窄化字段投影；稀有度也不能从商品价格推断。当前仍未提交、推送或部署。
+
+Profile Compare P1 已完成第二纵切：`profile_compare` 仅接受正式账号对当前好友的请求，每次读取前重新验证好友关系与双向 Block；服务端只投影身份、等级、总局数/胜场、六款权威胜场及派生称号、成就数量，并以 `requestId + targetUid` 绑定回执。客户端在换号、真实断线、取消和迟到响应时清理请求，桌面为双列、手机为单列，沿用统一焦点/Esc/背景关闭/滚动锁。三账号在线回归、三语言、DOM、Profile/Social、完整 `npm test`（118.1 秒）和双构建哈希均通过；公开 `profile_get`、Reward、商城价格、Supabase、规则、AI、Replay 与美术未改。下一本地主线为旧 Profile 编辑器/成就弹层 a11y；稀有度继续等待独立治理目录。未提交、推送或部署。
+
+Profile Modal A11y P1 已完成第三纵切：资料编辑器和成就弹层复用共享 dialog helper 与 owner 滚动锁，昵称输入/关闭按钮作为初始焦点，Tab/Shift+Tab、Escape、背景、保存/取消/关闭都进入同一幂等关闭路径，并恢复发起控件焦点。局部 CSS 提供 `100dvh` 内部滚动、44px 控件和手机宽度；主审补充断言并移除会覆盖响应式规则的成就卡 460px 内联宽度。完整 `npm test`（122.5 秒）和双构建哈希通过。下一本地主线为收藏稀有度不可变展示目录；不按价格推断，不改商城权威。未提交、推送或部署。
+
+Collection Rarity Catalog P1 已完成第四纵切：纯 `CollectionRarityCatalog` 以五类稳定 ID 显式编目 150 项资产，固定 Starter/Uncommon/Rare/Epic 四档，不读取价格、金币、购买或奖励字段。本人 Profile 只从本地 `account.owned` 派生编目进度/分布，商城卡读取单项标签；公开 Profile、好友比较和 WebSocket 不接入 owned。主审补齐默认免费 avatar 0–29 与 frame/effect/background 0，避免新账号误报 33 件“未编目”。完整 `npm test`（114.2 秒）与双构建哈希通过；未提交、推送或部署。
+
+Home Engagement P1 已完成本地安全聚合纵切：仅正式账号可在首页看到在线好友数、本人收藏编目进度和既有成长方向的可关闭脉冲，三个动作只复用 Profile、Chat、Shop；访客/未登录不读取或展示该私有聚合。关闭偏好以每账号固定 `localStorage` key 保存、本地日期为 value，storage 失败安全退化，主审已补跨日期有界存储回归。没有 server、protocol、economy、purchase、rules、AI、Replay、Supabase 或 art 变化，也不显示余额、owned ID、价格、购买记录或好友明细。首次完整链在邀请房间一次性超时，随后单独 E2E（53.7 秒）和后续完整 `npm test`（179.7 秒）通过；双构建一致为 968233 characters / 982494 bytes / SHA-256 `4A861DD2F6763FE4AFA4640E7F6AEC7418A0DC9E4EAD52BD41831C0988E43C37`。UI-010/ECO-023 保持 `partial`，因为真正可恢复对局仍须另立权威恢复合同；未提交、推送或部署。
+
+Home Identity P1 已完成本地只读纵切：在既有 `#home-engagement-pulse` 内，仅正式账号展示现有 `avatarStageNode` 的 56px 头像/头像框/特效组合、raw 昵称和三语 `Lv.N`，继续沿用本人收藏 X/Y 以及 Profile/Chat/Shop 入口。访客和未登录路径在读取 `owned` 或调用身份 helper 前短路；catalog 缺失安全降级；不展示 coins、XP、价格、owned ID、购买记录、角色 slot、未审批图片或任何新 mutation。红测预期 8 项失败后转绿，专项、Home P0/P1、收藏目录、称号、Identity Preview、Profile Route、i18n、DOM、响应式、Ghost Shell、pretest、Quality Gates 与完整 `npm test`（120.7 秒）通过；双构建一致为 971303 characters / 985572 bytes / SHA-256 `963DEAEFC5B46621ACCE9B713444D3F3B7F5DC41C775990CD87BE36E501D69FF`。UI-011 仍为 `partial`，G Coins 获得路径、角色服装/商城/背景和外部人工/设备门禁另行处理；下一主线只可定义为当前仍有效对局的同实例返回入口。
+
+Home Active Match Return P0 已完成本地纵切：Home 仅在 WebSocket 已连接/认证、非观众、真人席位、同一 `currentGame/currentGameId/online.game/matchId` 且未结算时显示“返回当前对局”。按钮在点击时重新校验 matchId，只调用既有 `showGame()` 同实例 fast path；stale click、结算、离房、过期、reset、replay/reconnect 和异常 seat 均 fail-closed。`showHub()` 只在当前路由为 Home 时重渲染卡片，使生命周期变化立即反映；没有新服务器消息、resume 请求、localStorage、结算、奖励、Replay、经济、规则、AI、Supabase 或美术变化。主审修正旧 Home VM 合同未加载新 helper 的兼容回归；完整 `npm test`（199.8 秒）通过，双构建一致为 974130 characters / 988467 bytes / SHA-256 `8ECE8C16D5AE051DE59A31D9FA14949FF607675504059BC26BD050BE505F81E8`。该能力明确不是跨设备、跨重启或持久恢复；未提交、推送或部署。
+
+发布采用显式指令制度：用户未在当前任务明确要求“推送 / 输出线上 / 部署”时，只能完成本地实现与验收，不得执行 commit、git push、GitHub Pages 或 Render 发布。

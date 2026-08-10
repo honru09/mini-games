@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-08-09T08:51:00+09:00",
+  "updatedAt": "2026-08-10T07:18:00+09:00",
   "storage": {
     "mode": "local-only",
     "remoteProvider": null,
@@ -11,7 +11,7 @@
     {
       "id": "production-asset-manifest",
       "path": "public/assets/manifests/asset_manifest.json",
-      "sha256": "46a8e47db25ce0f7fff70e84cd206d0310248114a983435e4dc157d94100b674"
+      "sha256": "a2d1ce5a68ed73607045fcc45a1fdf93cafeb1ac3048608c18baf78b71cdf268"
     }
   ],
   "collections": [
@@ -466,6 +466,96 @@
       "runtimePaths": ["public/assets/ui/game_covers/game_xiangqi.webp", "public/assets/ui/game_covers/game_xiangqi_320.webp"],
       "promptPath": "art-source/prompts/lobby-cover-family-v2-20260808.md",
       "model": "codex-built-in-imagegen-runtime-managed",
+      "remoteObjectKey": null
+    },
+    {
+      "id": "G-12-TANK-ART-P1-CLEAN",
+      "category": "game/tank",
+      "assetType": "tank-art-direction-board-candidate",
+      "sourceType": "generated",
+      "sourcePath": "art-source/games/tank/tank-art-p1-20260810/tank-style-board-clean-draft-v2.png",
+      "sourceSha256": "9eeab1b34b5014f66983026e9245dbc28ec7c8a48b6b11b4cb20267b0cf914e7",
+      "license": "project-owned-ai-generated",
+      "author": "OpenAI Codex for Ghost Game",
+      "status": "reference-only",
+      "dimensions": { "width": 1536, "height": 1024 },
+      "previewPath": "art-source/games/tank/tank-art-p1-20260810/tank-style-board-clean-draft-v2.png",
+      "previewSha256": "9eeab1b34b5014f66983026e9245dbc28ec7c8a48b6b11b4cb20267b0cf914e7",
+      "runtimePaths": ["art-source/games/tank/tank-art-p1-20260810/tank-style-board-clean-draft-v2.png"],
+      "promptPath": "art-source/games/tank/tank-art-p1-20260810/PROMPT_AND_PROVENANCE.md",
+      "model": "gpt-image-2-built-in-runtime-managed",
+      "remoteObjectKey": null
+    },
+    {
+      "id": "G-13-TANK-ART-P1-REJECTED",
+      "category": "game/tank",
+      "assetType": "tank-art-direction-board-rejected-candidate",
+      "sourceType": "generated",
+      "sourcePath": "art-source/games/tank/tank-art-p1-20260810/rejected/tank-style-board-draft-v1-symbol-noise.png",
+      "sourceSha256": "4e4dfa8fdc94afb643dffd3b1059272a3037da4375902652129fa79e3347fd2e",
+      "license": "project-owned-ai-generated",
+      "author": "OpenAI Codex for Ghost Game",
+      "status": "reference-only",
+      "dimensions": { "width": 1536, "height": 1024 },
+      "previewPath": "art-source/games/tank/tank-art-p1-20260810/rejected/tank-style-board-draft-v1-symbol-noise.png",
+      "previewSha256": "4e4dfa8fdc94afb643dffd3b1059272a3037da4375902652129fa79e3347fd2e",
+      "runtimePaths": ["art-source/games/tank/tank-art-p1-20260810/rejected/tank-style-board-draft-v1-symbol-noise.png"],
+      "promptPath": "art-source/games/tank/tank-art-p1-20260810/PROMPT_AND_PROVENANCE.md",
+      "model": "gpt-image-2-built-in-runtime-managed",
+      "remoteObjectKey": null
+    },
+    {
+      "id": "G-14-PLAYER-CHARACTER-ART-036",
+      "category": "platform/player-character",
+      "assetType": "player-character-direction-board-candidate",
+      "sourceType": "generated",
+      "sourcePath": "art-source/player-character/art-036-player-character-monopoly-p1-20260810/player-character-direction-board-draft-v1.png",
+      "sourceSha256": "048606e833d7c7bd7cdb8b213fc1be32895f41181b620ac9a02e6249f683b153",
+      "license": "project-owned-ai-generated",
+      "author": "OpenAI Codex for Ghost Game",
+      "status": "reference-only",
+      "dimensions": { "width": 1536, "height": 1024 },
+      "previewPath": "art-source/player-character/art-036-player-character-monopoly-p1-20260810/player-character-direction-board-draft-v1.png",
+      "previewSha256": "048606e833d7c7bd7cdb8b213fc1be32895f41181b620ac9a02e6249f683b153",
+      "runtimePaths": ["art-source/player-character/art-036-player-character-monopoly-p1-20260810/player-character-direction-board-draft-v1.png"],
+      "promptPath": "art-source/player-character/art-036-player-character-monopoly-p1-20260810/PROMPT_AND_PROVENANCE.md",
+      "model": "gpt-image-2-built-in-runtime-managed",
+      "remoteObjectKey": null
+    },
+    {
+      "id": "G-15-MONOPOLY-ART-036",
+      "category": "game/monopoly",
+      "assetType": "monopoly-tabletop-direction-board-candidate",
+      "sourceType": "generated",
+      "sourcePath": "art-source/games/monopoly/art-036-player-character-monopoly-p1-20260810/monopoly-tabletop-direction-board-draft-v1.png",
+      "sourceSha256": "09569c0e5b239cd5aecace3d6180ad8e2779e0bf9f3592dc26d1c6db9ff65195",
+      "license": "project-owned-ai-generated",
+      "author": "OpenAI Codex for Ghost Game",
+      "status": "reference-only",
+      "dimensions": { "width": 1254, "height": 1254 },
+      "previewPath": "art-source/games/monopoly/art-036-player-character-monopoly-p1-20260810/monopoly-tabletop-direction-board-draft-v1.png",
+      "previewSha256": "09569c0e5b239cd5aecace3d6180ad8e2779e0bf9f3592dc26d1c6db9ff65195",
+      "runtimePaths": ["art-source/games/monopoly/art-036-player-character-monopoly-p1-20260810/monopoly-tabletop-direction-board-draft-v1.png"],
+      "promptPath": "art-source/player-character/art-036-player-character-monopoly-p1-20260810/PROMPT_AND_PROVENANCE.md",
+      "model": "gpt-image-2-built-in-runtime-managed",
+      "remoteObjectKey": null
+    },
+    {
+      "id": "ART-026-GCOINS-SOURCE-CHROMA-V1",
+      "category": "platform/currency",
+      "assetType": "currency-icon-source-candidate",
+      "sourceType": "generated",
+      "sourcePath": "art-source/brand/ghost-game/currency/gcoins-p0-20260810/gcoins-source-chroma-v1.png",
+      "sourceSha256": "9d6d8870329b04b5a136f66449498656b7601bee15afbdabc2a73eaa030919ad",
+      "license": "project-owned-ai-generated",
+      "author": "OpenAI Codex for Ghost Game",
+      "status": "reference-only",
+      "dimensions": { "width": 1254, "height": 1254 },
+      "previewPath": "art-source/brand/ghost-game/currency/gcoins-p0-20260810/gcoins-source-chroma-v1.png",
+      "previewSha256": "9d6d8870329b04b5a136f66449498656b7601bee15afbdabc2a73eaa030919ad",
+      "runtimePaths": ["art-source/brand/ghost-game/currency/gcoins-p0-20260810/gcoins-source-chroma-v1.png"],
+      "promptPath": "art-source/brand/ghost-game/currency/gcoins-p0-20260810/PROMPT_AND_PROVENANCE.md",
+      "model": "highest-quality-built-in-imagegen-runtime-managed",
       "remoteObjectKey": null
     }
   ]

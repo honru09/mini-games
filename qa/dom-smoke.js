@@ -9,6 +9,7 @@ const MANIFEST_PATH = path.join(ROOT, 'public', 'assets', 'manifests', 'asset_ma
 const html = fs.readFileSync(HTML_PATH, 'utf8');
 const script = html.match(/<script>([\s\S]*)<\/script>/)[1];
 const assetManifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf8'));
+const zhLocale = JSON.parse(fs.readFileSync(path.join(ROOT, 'public', 'locales', 'zh-CN.json'), 'utf8'));
 
 /* ---------- DOM 桩 ---------- */
 function makeCtxProxy(){
@@ -208,7 +209,8 @@ async function main(){
   /* 大厅渲染 */
   const initialTitle = html.match(/<title[^>]*data-i18n=["']app_title["'][^>]*>([^<]*)<\/title>/i);
   check('首屏静态标题与中文词典一致且不泄漏已删除玩法',
-    !!initialTitle && initialTitle[1].trim() === '小游戏合集');
+    !!initialTitle && initialTitle[1].trim() === zhLocale.app_title &&
+    !/(弹珠|跳棋|斗兽棋|贪吃蛇|井字棋)/.test(initialTitle[1]));
   check('大厅渲染 6 张精选游戏卡', $('game-grid').children.length === 6);
   check('运行时只注册 6 个精选游戏 ID',
     JSON.stringify(Object.keys(G.GAMES)) === JSON.stringify(['gomoku','ludo','monopoly','tank','tetris','xiangqi']));

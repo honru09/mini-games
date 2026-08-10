@@ -1,0 +1,39 @@
+{
+  "status": "LOCAL_ACCEPTED",
+  "parallelability": 1,
+  "dependencies": [
+    "requirements/active/immersive-game-shell-p0-20260809",
+    "requirements/active/game-stage-art-expansion-p0-20260809",
+    "GAME-013 tank-authority-v1"
+  ],
+  "steps": [
+    {"id":"TANKC-1","task":"只读 Recon、需求/协议/测试矩阵与冻结合同","status":"completed"},
+    {"id":"TANKC-2","task":"新增 Tank Controls DOM/CSS/三语与 Pointer/D-pad/键盘实现","status":"completed"},
+    {"id":"TANKC-3","task":"新增输入释放、并发开火、八方向、序列/回放专项 QA","status":"completed"},
+    {"id":"TANKC-4","task":"构建并运行专项、i18n、DOM、响应式、联机、Quality Gates 与完整 npm test","status":"completed"},
+    {"id":"TANKC-5","task":"主负责人审核代码差异、兼容性、边界、证据与台账日志","status":"completed"}
+  ],
+  "risks": [
+    "Pointer/click 双路径导致重复开火",
+    "释放摇杆误清并行键盘或开火输入",
+    "pointer capture/blur/visibility 缺失导致输入卡住",
+    "新增三语文案或 CSS 破坏生成漂移、响应式和旧 DOM 合同",
+    "八方向只改变客户端布尔输入，不能误改 Authority 协议",
+    "移动端系统级边缘返回手势无法由网页完全禁止"
+  ],
+  "tests": [
+    "node qa/tank-controls.js",
+    "node qa/tank-authority.js",
+    "node qa/gameplay-upgrade.js",
+    "npm run test:i18n",
+    "node qa/dom-smoke.js",
+    "node qa/ui-responsive-contract.js",
+    "node qa/immersive-game-shell.js",
+    "node --experimental-websocket qa/e2e-online.js",
+    "npm run quality:gates",
+    "npm test",
+    "double build SHA-256",
+    "local in-app browser four viewport/theme/locale smoke"
+  ],
+  "rollback": "撤销 Tank Controls P0 的 tank.js、模板样式、三语与 QA，重新执行 node scripts/build.js；server/gameplay、协议、规则、奖励、数据库和用户数据无需迁移。"
+}

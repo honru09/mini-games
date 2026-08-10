@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "task": "player-character-economy-p1-20260810",
+  "status": "CONTRACT_ONLY_ACCEPTED",
+  "parallelability": 2,
+  "dependencies": ["ECO-007", "ECO-008", "ECO-009", "ECO-025", "SOC-031"],
+  "steps": [
+    {"id":"ECO29-1","name":"审计现有价格/owned/equipped/requestId 与 Supabase 类别边界","status":"completed","risk":"high","tests":["read-only source audit"],"rollback":"none"},
+    {"id":"ECO29-2","name":"冻结角色经济私有形状、slot 白名单、公开投影与失败矩阵","status":"completed","risk":"high","tests":["contract review"],"rollback":"remove active contract directory"},
+    {"id":"ECO29-3","name":"实现无副作用纯适配器与专项合同测试","status":"completed","risk":"medium","tests":["qa/player-character-economy-contract.js"],"rollback":"remove new module and test"},
+    {"id":"ECO29-4","name":"Master 评审共享购买/RPC 接入请求","status":"pending","risk":"high","tests":["future security-online","future supabase-adapter"],"rollback":"keep catalog disabled"},
+    {"id":"ECO29-5","name":"本地验收与证据收口","status":"completed","risk":"medium","tests":["node qa/player-character-economy-contract.js","git diff --check"],"rollback":"contract-only state"}
+  ],
+  "risks": [
+    "Supabase apply_purchase_v1 没有 player_character 类别；贸然接入会造成线上购买失败或本地/远端分叉",
+    "把角色商品借道 avatars/game_cosmetics 会破坏商品语义、owned 隔离和旧客户端兼容",
+    "公开 projection 泄露 owned/price 或把角色 slot 读入规则路径",
+    "旧账号、访客、并发和重复 requestId 的迁移/幂等边界",
+    "未审批 ART-036 资源导致 runtimeId 与 commerceId 提前冻结错误"
+  ],
+  "tests": ["qa/player-character-economy-contract.js", "node --check server/player-character-economy.js", "git diff --check"],
+  "rollback": "保持默认 active catalog 为空；移除纯适配器不会改变现有商城、player-character-v1 或 profile/seat 投影。"
+}

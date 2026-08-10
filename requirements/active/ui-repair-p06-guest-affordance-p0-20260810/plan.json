@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "taskId": "ui-repair-p06-guest-affordance-p0-20260810",
+  "status": "completed_local",
+  "steps": [
+    {"id":"audit","status":"completed","owner":"Terra Max read-only audit + Master"},
+    {"id":"implementation","status":"completed","owner":"Master"},
+    {"id":"review","status":"completed","owner":"Master"},
+    {"id":"verification","status":"completed","owner":"Master"},
+    {"id":"reports","status":"completed","owner":"Master"}
+  ],
+  "release": "local-only"
+}

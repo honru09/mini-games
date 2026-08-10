@@ -229,8 +229,11 @@ function gameLudo(area, extra, n, opts){
   function cellOf(pid, t){ return (START[pid] + t) % TRACK; }
   function geometry(){
     const c = S/2, R = S*0.40;
+    const viewPid=opts.online&&!spectator&&Number.isInteger(Number(opts.myIdx))?pids[Number(opts.myIdx)]:null;
+    const viewQuarterTurns=typeof TabletopPerspective!=='undefined'&&TabletopPerspective&&viewPid!==null?TabletopPerspective.nearQuarterTurns(viewPid):0;
+    const viewPoint=(x,y)=>typeof TabletopPerspective!=='undefined'&&TabletopPerspective?TabletopPerspective.quarterPoint(S,x,y,viewQuarterTurns):[x,y];
     const ang = i => (-90 + i * 360/TRACK) * Math.PI/180;
-    const tpos = i => [c + R*Math.cos(ang(i)), c + R*Math.sin(ang(i))];
+    const tpos = i => {const raw=[c + R*Math.cos(ang(i)), c + R*Math.sin(ang(i))];return viewPoint(raw[0],raw[1]);};
     const colPos = (pid, k) => {
       const [ex,ey] = tpos((START[pid] - 1 + TRACK) % TRACK);
       const t = (k+1)/5;
@@ -239,9 +242,9 @@ function gameLudo(area, extra, n, opts){
     const basePos = pid => {
       const m = S*0.035, b = S*0.19;
       const corners = [[m,m],[S-m-b,m],[S-m-b,S-m-b],[m,S-m-b]];
-      return corners[pid];
+      const corner=corners[pid],center=viewPoint(corner[0]+b/2,corner[1]+b/2);return [center[0]-b/2,center[1]-b/2];
     };
-    return { c, tpos, colPos, basePos };
+    return { c, tpos, colPos, basePos, viewQuarterTurns };
   }
   function renderBoard(){
     const w = area.clientWidth || 520;
@@ -259,6 +262,7 @@ function gameLudo(area, extra, n, opts){
       : 'var(--card)';
     board.innerHTML = '';
     const g = geometry();
+    board.dataset.viewQuarterTurns = String(g.viewQuarterTurns);
     const cellSize = Math.max(20, Math.min(30, S*0.056));
     const tokSize = cellSize * 0.52;
     // 轨道格
@@ -388,9 +392,12 @@ function gameLudo(area, extra, n, opts){
     // 结束覆盖层
     if (over){
       const winnerName = t('player_number',pids.indexOf(winner)+1);
+      const placement = getMatchStats().placement;
       showVictoryOverlay(area, {
         winner: pids.indexOf(winner), winnerName: winnerName,
-        emoji: '🏆', subtitle: t('ludo_all_home'), coins: 1, onRestart: reset
+        emoji: '🏆', subtitle: t('ludo_all_home'), coins: 1,
+        podium: placement.map((rank,index) => ({ rank, name:t('player_number',index+1), color:PLAYER_COLORS[pids[index]] })),
+        onRestart: reset
       });
     }
     const infos = pids.map(pid => {

@@ -1,0 +1,9 @@
+{
+  "status":"IMPLEMENTED_LOCAL",
+  "startedAt":"2026-08-10T06:25:00+09:00",
+  "updatedAt":"2026-08-10T07:20:00+09:00",
+  "steps":[{"id":"PC-1","status":"completed"},{"id":"PC-2","status":"completed"},{"id":"PC-3","status":"completed"},{"id":"PC-4","status":"completed"}],
+  "blocked":[],
+  "skipped":["art generation/runtime art","commerce/equip mutations","Monopoly visual walk","commit/push/deploy"],
+  "evidence":["server/player-character.js","qa/player-character-contract.js","node --experimental-websocket qa/player-character-contract.js","node --experimental-websocket qa/game-cosmetic-profile.js","node --experimental-websocket qa/room-seats.js","node --experimental-websocket qa/security-online.js","node --experimental-websocket qa/reconnect-online.js","node --experimental-websocket qa/e2e-online.js","node qa/social-match-contract.js","node --experimental-websocket qa/social-match-online.js","npm run test:i18n","node qa/dom-smoke.js","npm run quality:gates","npm run test:progress-ledger","npm test"]
+}

@@ -1,0 +1,75 @@
+{
+  "status": "REQUIREMENT_FROZEN_CODE_FALLBACK_IMPLEMENTED",
+  "task": "game-045-monopoly-character-consumer-p1-20260810",
+  "scope": "contract-only; no runtime code, assets, tests, ledger, report, log, commit, push, or deployment changes",
+  "dependencies": {
+    "required": ["GAME-012", "SOC-031", "ART-036"],
+    "conditional": [
+      {"id": "ECO-029", "when": "角色商品、owned/equipped 或正式商城目录要参与角色表现"},
+      {"id": "UI-037", "when": "将同一权威快照接入完整大富翁 UI 状态矩阵"}
+    ],
+    "artGate": ["manual_cleanup", "reviewer_b", "ip_similarity_review", "user_golden_set", "runtime_manifest_and_budget_qa"]
+  },
+  "steps": [
+    {
+      "id": "GAME45-1",
+      "task": "审阅 Rule Core、Authority、客户端 Monopoly、Player Character、ART-036、运行时 Manifest 与 fallback",
+      "status": "completed",
+      "risk": "medium"
+    },
+    {
+      "id": "GAME45-2",
+      "task": "冻结权威位置到行走、待机、破产、结算的深 Module Interface、Seam 与严格 fallback",
+      "status": "completed",
+      "risk": "high"
+    },
+    {
+      "id": "GAME45-2a",
+      "task": "主负责人实现不读取未审批资源的代码原生位置/角色 fallback consumer 与纯专项回归",
+      "status": "completed",
+      "risk": "medium"
+    },
+    {
+      "id": "GAME45-3",
+      "task": "新增未来实现前的 shared change request，并确定 Monopoly client/QA/manifest/i18n 的文件所有权",
+      "status": "completed",
+      "risk": "high"
+    },
+    {
+      "id": "GAME45-4",
+      "task": "实现纯 PresentationPlan Module 与当前 marker fallback Adapter；接入连续权威 revision，不改 Rule Core",
+      "status": "completed",
+      "risk": "high"
+    },
+    {
+      "id": "GAME45-5",
+      "task": "在获批资产存在后，新增默认关闭的 runtime Adapter、Manifest 条目和资源/性能/a11y 回退",
+      "status": "planned",
+      "risk": "high",
+      "blockedBy": ["GAME45-4", "all artGate"]
+    },
+    {
+      "id": "GAME45-6",
+      "task": "联动 UI-037 并完成专项、完整、浏览器和真实设备/网络验收",
+      "status": "partial_local_state_matrix_complete",
+      "risk": "high",
+      "blockedBy": ["GAME45-4", "UI-037", "second browser and real-device gates"]
+    }
+  ],
+  "futureTests": [
+    "新增纯 PresentationPlan 合同测试：match/revision/stateHash、合法/非法 move、环形 24 格、reconnect、spectator、destroy、unknown playerCharacter 和 immutable fallback",
+    "扩展 monopoly rule authority 在线回归：真实 transition 与新渲染计划对齐，不影响 RNG/拍卖/结果/重复 seq",
+    "扩展 game-stage/immersive shell/DOM smoke：overlay 不遮挡操作、三语言、双主题、桌面/平板/手机横竖屏、reduced-motion",
+    "运行时美术接入后新增 Manifest/hash/bytes/decode-failure/offscreen/fallback QA，并运行 npm run quality:gates 与 npm test",
+    "第二浏览器、Android、iPhone、Tablet 与真实网络整形验收"
+  ],
+  "risks": [
+    "把客户端 visualPos 或骰子动画误当规则位置，造成伪同步或输入阻塞",
+    "重连/观战补播旧路径，导致用户看见与权威快照不一致的角色位置",
+    "从公共 Seat 外泄 owned、价格、余额或 credential 字段",
+    "未审批 ART-036 draft 被错误引入 public/assets 或默认旗标",
+    "角色 overlay 覆盖中心 Roll、购买、拍卖或移动端 44px 控件",
+    "UI-037 与 GAME-045 各自维护一套 phase/倒计时，形成浅 Module 和双真相"
+  ],
+  "rollback": "本批没有运行时代码或资产。未来实现若需回滚，只关闭新增且默认关闭的角色表现旗标/删除新 Adapter，保留现有 m-marker、CSS/DOM Monopoly board、Rule Core、Authority、Seat、Profile、奖励和 Replay。"
+}

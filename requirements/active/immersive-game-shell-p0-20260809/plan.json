@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "task": "immersive-game-shell-p0-20260809",
+  "status": "ACCEPTED",
+  "parallelability": 0,
+  "steps": [
+    {"id":"IGS-1","name":"Recon、需求、合同、所有权与回滚冻结","status":"completed","risk":"high"},
+    {"id":"IGS-2","name":"建立 Shell 稳定插槽、视口 CSS 与全端安全区布局","status":"completed","dependsOn":["IGS-1"],"owner":"uiMotion","risk":"high"},
+    {"id":"IGS-3","name":"实现进入/退出、页面滚动锁、焦点边界与输入让行","status":"completed","dependsOn":["IGS-2"],"owner":"uiMotion","risk":"high"},
+    {"id":"IGS-4","name":"接入 showGame/showHub/认证退出并生成 public/index.html","status":"completed","dependsOn":["IGS-3"],"owner":"master","risk":"high"},
+    {"id":"IGS-5","name":"新增专项合同 QA 并运行 Game Stage/DOM/i18n/E2E/完整回归","status":"completed","dependsOn":["IGS-4"],"owner":"qaRelease","risk":"high"},
+    {"id":"IGS-6","name":"本地 Chromium 桌面/平板/手机横竖屏视觉与交互验收","status":"completed","dependsOn":["IGS-5"],"owner":"qaRelease","risk":"medium"},
+    {"id":"IGS-7","name":"同步台账、七报告、状态、文档、三日志并本地收口","status":"completed","dependsOn":["IGS-6"],"owner":"master","risk":"medium"}
+  ],
+  "tests": [
+    "node qa/immersive-game-shell.js",
+    "node qa/overlay-dialog-accessibility.js",
+    "node qa/game-stage-contract.js",
+    "node qa/ui-responsive-contract.js",
+    "node qa/dom-smoke.js",
+    "npm run test:i18n",
+    "node --experimental-websocket qa/e2e-online.js",
+    "npm run quality:gates",
+    "npm test",
+    "node scripts/build.js twice with stable hash",
+    "local browser desktop/tablet/mobile portrait/landscape"
+  ],
+  "rollbackPoints": [
+    "remove game shell controller and showGame/showHub hooks",
+    "remove fixed viewport CSS and data-game-shell-slot attributes",
+    "remove empty overlay slot",
+    "rebuild public/index.html from preserved template/source"
+  ],
+  "releasePolicy": "LOCAL_ACCEPTED_AWAITING_RELEASE_COMMAND; no commit/push/deploy without a later explicit user command"
+}

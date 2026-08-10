@@ -283,6 +283,9 @@ const GAME_KEYS = Object.keys(GAMES);
 const LS_ROSTER = 'mg_roster';
 const LS_ACCOUNT = 'mg_account';
 const SS_GUEST_ACCOUNT = 'mg_guest_account';
+const PLAYER_CHARACTER_SCHEMA = 'player-character-v1';
+const PLAYER_CHARACTER_SLOTS = Object.freeze(['body','face','hair','top','bottom','footwear','accessory']);
+const PLAYER_CHARACTER_ID_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
 let roster = [];
 let account = null;
 let pendingAuthPin = null;
@@ -290,6 +293,52 @@ let deviceUid = null;
 let lastServerLB = null;
 let lbFilter = 'all';
 let authModalEl = null;
+
+// The server is the sole authority. The client only caches the public shape
+// and drops malformed/private fields before local presentation state retains it.
+function readPlayerCharacterPresentation(value){
+  try {
+    if (!value || typeof value !== 'object' || Array.isArray(value) || value.schemaVersion !== PLAYER_CHARACTER_SCHEMA || !value.slots || typeof value.slots !== 'object' || Array.isArray(value.slots)) return null;
+    if (typeof value.characterId !== 'string' || !PLAYER_CHARACTER_ID_RE.test(value.characterId)) return null;
+    const slots = {};
+    for (const slot of PLAYER_CHARACTER_SLOTS){
+      if (typeof value.slots[slot] !== 'string' || !PLAYER_CHARACTER_ID_RE.test(value.slots[slot])) return null;
+      slots[slot] = value.slots[slot];
+    }
+    return { schemaVersion:PLAYER_CHARACTER_SCHEMA, characterId:value.characterId, slots };
+  } catch { return null; }
+}
+function cacheServerProfilePresentation(profile){
+  if (!profile || typeof profile !== 'object' || !profile.uid) return;
+  const uid = String(profile.uid);
+  let target = roster.find(item => item && item.uid === uid);
+  const isEphemeral = profile.ephemeral === true;
+  if (!target){
+    target = { uid, name:String(profile.name || ''), avatar:Number(profile.avatar) || 0, coins:Number(profile.coins) || 0, played:profile.played || {}, total:Number(profile.total) || 0, ephemeral:isEphemeral };
+    roster.unshift(target);
+  }
+  if (profile.name !== undefined) target.name = String(profile.name || '').slice(0, 12);
+  if (profile.avatar !== undefined) target.avatar = Number(profile.avatar) || 0;
+  if (profile.background !== undefined) target.background = Number(profile.background) || 0;
+  if (profile.frame !== undefined) target.frame = Number(profile.frame) || 0;
+  if (profile.effect !== undefined) target.effect = Number(profile.effect) || 0;
+  if (profile.nameFx !== undefined) target.nameFx = Number(profile.nameFx) || 0;
+  if (profile.lang !== undefined) target.lang = ['zh-CN','en-US','uk-UA'].includes(profile.lang) ? profile.lang : 'zh-CN';
+  const playerCharacter = readPlayerCharacterPresentation(profile.playerCharacter);
+  if (playerCharacter) target.playerCharacter = playerCharacter;
+  else if (!Object.prototype.hasOwnProperty.call(target, 'playerCharacter')) target.playerCharacter = null;
+  if (!isEphemeral) saveRoster();
+  return target;
+}
+function cacheRoomPlayerCharacters(roomInfo){
+  const seats = roomInfo && Array.isArray(roomInfo.seats) ? roomInfo.seats : [];
+  seats.forEach(seat => {
+    if (!seat || seat.type !== 'human' || !seat.userId) return;
+    // Do not create/persist an unknown room guest; an existing row is safe to merge.
+    const target = roster.find(item => item && item.uid === String(seat.userId));
+    if (target) cacheServerProfilePresentation({ uid:seat.userId, name:seat.nickname, avatar:seat.avatar, frame:seat.frame, effect:seat.effect, nameFx:seat.nameFx, lang:seat.lang, playerCharacter:seat.playerCharacter });
+  });
+}
 
 function deviceFingerprint(){
   let s = '';
@@ -318,17 +367,25 @@ function loadRoster(){
     roster = raw ? JSON.parse(raw) : [];
   } catch { roster = []; }
   if (!Array.isArray(roster)) roster = [];
+  // A test-admin row is only a local rendering aid for the current private
+  // session. Drop any stale marker before exposing the roster to public UI.
+  roster = roster.filter(item => item && item.privateOnly !== true);
   roster.forEach(p => {
     if (p.coins === undefined) p.coins = p.points ? 1 : 0;
     delete p.points;
     if (!p.played) p.played = {};
     if (!p.total) p.total = 0;
+    p.playerCharacter = readPlayerCharacterPresentation(p.playerCharacter);
   });
   try {
     const raw = localStorage.getItem(LS_ACCOUNT);
     account = raw ? JSON.parse(raw) : null;
+    // Test-admin display metadata must be re-issued by the server for each
+    // authenticated session. Never revive it from browser storage.
+    if (account && typeof stripTestAdminPrivateProjection === 'function') account = stripTestAdminPrivateProjection(account);
     if (account && !account.lang) account.lang = 'zh-CN';
     if (account && Object.prototype.hasOwnProperty.call(account, 'pin')) delete account.pin;
+    if (account) account.playerCharacter = readPlayerCharacterPresentation(account.playerCharacter);
     if (account && account.registered === false && !account.authToken){
       account = null;
       try { localStorage.removeItem(LS_ACCOUNT); } catch {}
@@ -337,19 +394,22 @@ function loadRoster(){
   if (!account){
     try { const guestRaw=sessionStorage.getItem(SS_GUEST_ACCOUNT);account=guestRaw?JSON.parse(guestRaw):null; } catch { account=null; }
   }
+  if (account && typeof stripTestAdminPrivateProjection === 'function') account = stripTestAdminPrivateProjection(account);
+  if (account) account.playerCharacter = readPlayerCharacterPresentation(account.playerCharacter);
   if (account && account.uid && account.device === deviceFingerprint()){
     deviceUid = account.uid;
     const me = roster.find(p => p.uid === account.uid);
-    if (!me) roster.unshift({ uid: account.uid, name: account.name, avatar: account.avatar, coins: account.coins || 0, played: account.played || {}, total: account.total || 0 });
+    if (!me) roster.unshift({ uid: account.uid, name: account.name, avatar: account.avatar, coins: account.coins || 0, played: account.played || {}, total: account.total || 0, playerCharacter:account.playerCharacter || null });
   } else {
     deviceUid = null;
   }
   try { localStorage.setItem('mg_uid', deviceUid || ''); } catch {}
 }
-function saveRoster(){ try { localStorage.setItem(LS_ROSTER, JSON.stringify(roster.filter(item=>!item.ephemeral))); } catch {} }
+function saveRoster(){ try { localStorage.setItem(LS_ROSTER, JSON.stringify(roster.filter(item=>!item.ephemeral&&item.privateOnly!==true))); } catch {} }
 function saveAccount(){
   try {
-    const safe = account && typeof account === 'object' ? { ...account } : account;
+    let safe = account && typeof account === 'object' ? { ...account } : account;
+    if (safe && typeof stripTestAdminPrivateProjection === 'function') safe = stripTestAdminPrivateProjection(safe);
     if (safe && Object.prototype.hasOwnProperty.call(safe, 'pin')) delete safe.pin;
     if (safe && safe.ephemeral){
       localStorage.removeItem(LS_ACCOUNT);
@@ -393,13 +453,13 @@ function registerAccount(name, pin, avatar, background, frame, effect){
     background: Number.isInteger(background) ? Math.max(0, background) : 0,
     frame: Number.isInteger(frame) ? Math.max(0, frame) : 0,
     effect: Number.isInteger(effect) ? Math.max(0, effect) : 0,
-    owned: defaultOwned(), coins: 0, played: {}, total: 0, device: deviceFingerprint(), nameFx: 0, gameCosmetics: {}, cosmeticSchemaVersion: 1,
+    owned: defaultOwned(), coins: 0, played: {}, total: 0, device: deviceFingerprint(), nameFx: 0, gameCosmetics: {}, cosmeticSchemaVersion: 1, playerCharacter: null,
     registered: false, signature: '', countryRegion: '', genderTag: 'hidden',
     presencePreference: 'joinable', presenceVisibility: 'everyone', showcase: null,
   };
   const me = roster.find(p => p.uid === uid);
   if (me){ me.name = name; me.avatar = account.avatar; }
-  else roster.unshift({ uid, name, avatar: account.avatar, coins: 0, played: {}, total: 0 });
+  else roster.unshift({ uid, name, avatar: account.avatar, coins: 0, played: {}, total: 0, playerCharacter: null });
   deviceUid = uid;
   saveRoster(); saveAccount();
   if (online.connected){
@@ -446,6 +506,7 @@ function logoutAccount(){
 }
 function completeLocalLogout(showLogin){
   pendingAuthPin = null;
+  if (typeof clearShopPurchaseFeedback === 'function') clearShopPurchaseFeedback({silent:true});
   if (online){
     if (typeof online.clearPendingResultClaim === 'function') online.clearPendingResultClaim();
     if (typeof online.saveSoloClaims === 'function') online.saveSoloClaims();
@@ -476,6 +537,9 @@ function completeLocalLogout(showLogin){
 function updateAccountProfile(p){
   if (!account) return;
   account.uid = p.uid; account.name = p.name; account.avatar = p.avatar;
+  const playerCharacter = readPlayerCharacterPresentation(p.playerCharacter);
+  if (playerCharacter) account.playerCharacter = playerCharacter;
+  else if (!Object.prototype.hasOwnProperty.call(account, 'playerCharacter')) account.playerCharacter = null;
   account.background = p.background || 0; account.frame = p.frame || 0; account.effect = p.effect || 0;
   account.owned = p.owned || defaultOwned(); account.coins = p.coins || 0;
   account.gameCosmetics = p.gameCosmetics || account.gameCosmetics || {};
@@ -486,8 +550,8 @@ function updateAccountProfile(p){
   account.xpProgress = p.xpProgress || null;
   account.played = p.played || {}; account.total = p.total || 0; account.wins = p.wins || {}; account.totalWins = p.totalWins || 0; account.lang = p.lang || account.lang || 'zh-CN';
   const me = roster.find(x => x.uid === p.uid);
-  if (me){ me.name = p.name; me.avatar = p.avatar; me.coins = p.coins || 0; me.xp = p.xp || 0; me.level = p.level || 1; me.streak = p.streak || 0; me.bestStreak = p.bestStreak || 0; me.played = p.played || {}; me.total = p.total || 0; me.wins = p.wins || {}; me.totalWins = p.totalWins || 0; }
-  else roster.unshift({ uid: p.uid, name: p.name, avatar: p.avatar, coins: p.coins || 0, played: p.played || {}, total: p.total || 0, wins: p.wins || {}, totalWins: p.totalWins || 0 });
+  if (me){ me.name = p.name; me.avatar = p.avatar; me.coins = p.coins || 0; me.xp = p.xp || 0; me.level = p.level || 1; me.streak = p.streak || 0; me.bestStreak = p.bestStreak || 0; me.played = p.played || {}; me.total = p.total || 0; me.wins = p.wins || {}; me.totalWins = p.totalWins || 0; me.playerCharacter = account.playerCharacter || null; }
+  else roster.unshift({ uid: p.uid, name: p.name, avatar: p.avatar, coins: p.coins || 0, played: p.played || {}, total: p.total || 0, wins: p.wins || {}, totalWins: p.totalWins || 0, playerCharacter: account.playerCharacter || null });
   deviceUid = p.uid;
   account.nameFx = p.nameFx || 0;
   account.achievements = p.achievements || [];
@@ -503,6 +567,19 @@ function updateAccountProfile(p){
   account.authVersion = p.authVersion || account.authVersion || '';
   account.ephemeral = p.ephemeral === true || account.ephemeral === true;
   account.accountKind = p.accountKind || (account.ephemeral ? 'guest' : 'member');
+  // Some legacy/partial profile replies omit private test metadata. Keep the
+  // last server-issued view for those replies; an explicit projection (even a
+  // false one) always replaces it.
+  if (typeof applyTestAdminPrivateProjection === 'function' &&
+      (typeof hasTestAdminPrivateProjection !== 'function' || hasTestAdminPrivateProjection(p))) {
+    applyTestAdminPrivateProjection(account,p);
+  }
+  const privateTestAdmin=typeof isTestAdminPrivateAccount === 'function' && isTestAdminPrivateAccount(account);
+  const currentRosterEntry=roster.find(item => item && item.uid === p.uid);
+  if (currentRosterEntry){
+    if (privateTestAdmin) currentRosterEntry.privateOnly=true;
+    else delete currentRosterEntry.privateOnly;
+  }
   saveRoster(); saveAccount();
 }
 function renderMe(){
@@ -523,14 +600,16 @@ function renderMe(){
   av.appendChild(avatarStageNode(account, 26));
   btn.appendChild(av);
   btn.appendChild(nameFxNode(account, account.name + ' ' + langFlag(account.lang || currentLang)));
+  if (typeof appendTestAdminBadge === 'function') appendTestAdminBadge(btn,account,'header');
   const lv = account.level || levelFromXp(account.xp || 0);
   const title = titleFor(lv);
   btn.appendChild(el('span','me-title', title.icon + ' ' + socialTitleName(title)));
-  const lvBadge = el('span','level-badge', t('level_short',lv));
+  const lvBadge = el('span','level-badge', typeof testAdminLevelShortText === 'function' ? testAdminLevelShortText(account,lv) : t('level_short',lv));
   btn.appendChild(lvBadge);
   const coinLine = el('span','coin-line');
   coinLine.appendChild(currencyIcon());
-  coinLine.appendChild(el('span','me-pts', t('compact_account_stats', account.coins || 0, account.total || 0)));
+  const balance = typeof testAdminCurrencyText === 'function' ? testAdminCurrencyText(account) : (account.coins || 0);
+  coinLine.appendChild(el('span','me-pts', t('compact_account_stats', balance, account.total || 0)));
   btn.appendChild(coinLine);
   renderMyCard();
   if (online.connected){
@@ -545,8 +624,16 @@ function openProfileEditor(uid){
   let name = editing.name;
   let avatar = editing.avatar;
   let background = editingMe ? (account.background || 0) : 0;
-  const bd = el('div','modal-backdrop');
-  const card = el('div','modal-card');
+  const bd = el('div','modal-backdrop profile-editor-modal');
+  const card = el('div','modal-card profile-editor-card');
+  // All exit paths (save, cancel, Escape and backdrop) share the helper's
+  // idempotent close function. The fallback keeps the lock balanced when a
+  // legacy host does not expose the shared helper yet.
+  let closeEditor = () => {
+    if (typeof releaseModalScrollLock === 'function') releaseModalScrollLock(bd);
+    if (bd && typeof bd.remove === 'function' && bd.isConnected !== false) { bd.remove(); return true; }
+    return false;
+  };
   card.appendChild(el('h3', null,t('profile_edit_title')));
   const input = el('input','nick-input');
   input.type = 'text';
@@ -573,7 +660,7 @@ function openProfileEditor(uid){
       opt.appendChild(avatarCanvas(i, 26));
       opt.setAttribute('aria-label', t('profile_avatar_aria',i+1));
       if (locked){
-        opt.appendChild(el('span','avatar-lock','🔒' + (avatarPrice(i) ? CURRENCY + avatarPrice(i) : '')));
+        opt.appendChild(el('span','avatar-lock','🔒' + (avatarPrice(i) ? (typeof currencyAmountText === 'function' ? currencyAmountText(avatarPrice(i)) : CURRENCY + avatarPrice(i)) : '')));
         opt.addEventListener('click', () => {
           const meta = avatarMeta(i);
           toast(t('auth_avatar_locked',meta ? shopItemName('avatars',meta) : t('shop_tab_avatars'),CURRENCY,meta ? meta.price : 0));
@@ -604,13 +691,19 @@ function openProfileEditor(uid){
   if (editingMe){
     card.appendChild(el('div','lb-note',t('profile_background')));
     const bgGrid = el('div','bg-grid');
+    bgGrid.setAttribute('role','radiogroup');
+    bgGrid.setAttribute('aria-label',t('profile_background'));
     SHOP.backgrounds.filter(b => b.id >= 7 || ownItem(account, 'backgrounds', b.id)).forEach(b => {
-      const sw = el('div','bg-swatch' + (b.id === background ? ' selected' : '') + ' ' + b.cls);
+      const sw = el('button','bg-swatch' + (b.id === background ? ' selected' : '') + ' ' + b.cls);
+      sw.type = 'button';
+      sw.setAttribute('role','radio');
+      sw.setAttribute('aria-checked',String(b.id === background));
+      sw.setAttribute('aria-label',shopItemName('backgrounds',b));
       sw.title = shopItemName('backgrounds',b);
       sw.addEventListener('click', () => {
         if (!ownItem(account, 'backgrounds', b.id)){ toast(t('shop_item_requires_purchase',shopItemName('backgrounds',b))); return; }
         background = b.id;
-        bgGrid.querySelectorAll('.bg-swatch').forEach(x => x.classList.toggle('selected', x === sw));
+        bgGrid.querySelectorAll('.bg-swatch').forEach(x => {const selected=x===sw;x.classList.toggle('selected',selected);x.setAttribute('aria-checked',String(selected));});
       });
       bgGrid.appendChild(sw);
     });
@@ -714,24 +807,32 @@ function openProfileEditor(uid){
     }
     saveRoster();
     syncProfiles();
-    bd.remove();
+    closeEditor();
     renderMe(); renderLeaderboard();
     toast(t('profile_saved',finalName));
   });
   const cancel = el('button','btn',t('cancel'));
-  cancel.addEventListener('click', () => bd.remove());
+  cancel.type = 'button';
+  cancel.addEventListener('click', () => closeEditor());
   card.appendChild(save);
   card.appendChild(cancel);
   bd.appendChild(card);
-  bd.addEventListener('click', e => { if (e.target === bd) bd.remove(); });
+  acquireModalScrollLock(bd);
   document.body.appendChild(bd);
-  setTimeout(() => input.focus(), 0);
+  if (typeof setupAccessibleOverlayDialog === 'function') {
+    closeEditor = setupAccessibleOverlayDialog(bd, card, input, t('profile_edit_title'), () => {
+      releaseModalScrollLock(bd);
+    });
+  } else {
+    bd.addEventListener('click', e => { if (e.target === bd) closeEditor(); });
+  }
 }
 function localLeaderboard(){
-  const list = roster.map(p => ({ uid:p.uid, name:p.name, avatar:p.avatar, coins:p.coins || 0, xp:p.xp || 0, level:p.level || 1, streak:p.streak || 0, bestStreak:p.bestStreak || 0, played:p.played || {}, total:p.total || 0, online:p.uid === deviceUid && online.connected }))
+  const visibleRoster=roster.filter(p => p && p.privateOnly !== true);
+  const list = visibleRoster.map(p => ({ uid:p.uid, name:p.name, avatar:p.avatar, coins:p.coins || 0, xp:p.xp || 0, level:p.level || 1, streak:p.streak || 0, bestStreak:p.bestStreak || 0, played:p.played || {}, total:p.total || 0, online:p.uid === deviceUid && online.connected }))
     .sort((a,b) => (b.coins - a.coins) || (b.total - a.total) || String(a.name).localeCompare(String(b.name)))
     .slice(0, 50);
-  return { list, total: roster.length };
+  return { list, total: visibleRoster.length };
 }
 function renderLeaderboard(){
   const data = online.connected && lastServerLB ? lastServerLB : localLeaderboard();
@@ -747,17 +848,16 @@ function renderLeaderboard(){
   list.slice(0, 10).forEach((u, i) => {
     const row = el('div','lb-row' + (u.uid === deviceUid ? ' me' : ''));
     row.appendChild(el('span','lb-rank', String(i + 1)));
-    const av = el('span','lb-av');
+    const av = el('button','game-stage-avatar-button lb-av');
+    av.type = 'button';
+    av.setAttribute('aria-label',t('room_host_profile_aria',u.name||t('social_player')));
     av.appendChild(avatarStageNode(u, 22));
-    av.style.cursor = 'pointer';
-  av.addEventListener('click', e => { if (e && e.stopPropagation) e.stopPropagation(); openProfileModal(u.uid); });
+    av.addEventListener('click', () => openProfileModal(u.uid));
     row.appendChild(av);
     const nameWrap = el('span','lb-name');
     const lv = u.level || (u.xp ? levelFromXp(u.xp) : 1);
     nameWrap.appendChild(nameFxNode(u, u.name));
     nameWrap.appendChild(el('span', null, (lv > 1 ? t('level_bracket',lv) : '') + ' ' + (u.lang ? langFlag(u.lang) : '')));
-    row.style.cursor = 'pointer';
-    row.addEventListener('click', () => openProfileModal(u.uid));
     row.appendChild(nameWrap);
     if (u.online) row.appendChild(el('span','online-dot',''));
     const g = u.played || {};
@@ -822,7 +922,8 @@ function signedReward(value, suffix){
 }
 function formatRewardSummary(reward){
   if (!reward || reward.eligible === false) return t('reward_blocked_summary');
-  return t('reward_total_summary', signedReward(reward.currency, CURRENCY), signedReward(reward.xp, ' XP'));
+  const currencySuffix = typeof currencyName === 'function' ? currencyName() : CURRENCY;
+  return t('reward_total_summary', signedReward(reward.currency, ' ' + currencySuffix), signedReward(reward.xp, ' XP'));
 }
 function showRewardBreakdown(reward){
   if (!reward || typeof document === 'undefined' || !document.body) return;
@@ -830,7 +931,8 @@ function showRewardBreakdown(reward){
     if (typeof setHonruResultReaction === 'function') setHonruResultReaction(reward.result, { source:'reward', spectator:!!(online&&online.isSpectator) });
   } catch {}
   const old = document.querySelector && document.querySelector('.reward-breakdown-overlay');
-  if (old && old.remove) old.remove();
+  if (old && typeof old.__accessibleDialogClose === 'function') old.__accessibleDialogClose();
+  else if (old && old.remove) old.remove();
   const overlay = el('div', 'overlay reward-breakdown-overlay');
   const card = el('section', 'overlay-card reward-breakdown-card');
   card.setAttribute('role', 'dialog');
@@ -838,13 +940,14 @@ function showRewardBreakdown(reward){
   const multiplayerPlace = reward.eligible !== false && Number(reward.participantCount) > 2 && Number(reward.placement) > 1;
   const titleKey = reward.eligible === false ? 'reward_title_no_contest' :
     (multiplayerPlace ? 'reward_title_place' : (reward.result === 'win' ? 'reward_title_win' : (reward.result === 'draw' ? 'reward_title_draw' : 'reward_title_loss')));
-  card.appendChild(el('h3', 'reward-breakdown-title', multiplayerPlace ? t(titleKey, reward.placement) : t(titleKey)));
+  const heading = el('h3', 'reward-breakdown-title', multiplayerPlace ? t(titleKey, reward.placement) : t(titleKey));
+  card.appendChild(heading);
   const list = el('div', 'reward-breakdown-list');
   (Array.isArray(reward.breakdown) ? reward.breakdown : []).forEach(item => {
     const row = el('div', 'reward-breakdown-row');
     row.appendChild(el('span', 'reward-breakdown-label', rewardReasonLabel(item)));
     const values = el('span', 'reward-breakdown-values');
-    const currency = signedReward(item.currency, CURRENCY);
+    const currency = signedReward(item.currency, ' ' + (typeof currencyName === 'function' ? currencyName() : CURRENCY));
     const xp = signedReward(item.xp, ' XP');
     values.textContent = [currency, xp].filter(Boolean).join(' · ') || '0';
     row.appendChild(values);
@@ -853,18 +956,19 @@ function showRewardBreakdown(reward){
   card.appendChild(list);
   const total = el('div', 'reward-breakdown-total');
   total.appendChild(el('strong', null, t('reward_total')));
-  total.appendChild(el('span', null, [signedReward(reward.currency, CURRENCY) || '0' + CURRENCY, signedReward(reward.xp, ' XP') || '0 XP'].join(' · ')));
+  const currencySuffix = typeof currencyName === 'function' ? currencyName() : CURRENCY;
+  total.appendChild(el('span', null, [signedReward(reward.currency, ' ' + currencySuffix) || '0 ' + currencySuffix, signedReward(reward.xp, ' XP') || '0 XP'].join(' · ')));
   card.appendChild(total);
   if (Number(reward.levelAfter) > Number(reward.levelBefore)){
     card.appendChild(el('p', 'reward-level-up', t('reward_level_up', reward.levelBefore, reward.levelAfter)));
   }
   const close = el('button', 'btn btn-primary reward-breakdown-close', t('reward_close'));
-  close.addEventListener('click', () => overlay.remove());
+  let closeOverlay = () => { if (overlay.remove) overlay.remove(); return true; };
+  close.addEventListener('click', () => closeOverlay());
   card.appendChild(close);
   overlay.appendChild(card);
-  overlay.addEventListener('click', event => { if (event.target === overlay) overlay.remove(); });
   document.body.appendChild(overlay);
-  if (close.focus) close.focus();
+  closeOverlay = setupAccessibleOverlayDialog(overlay, card, close, heading.textContent);
 }
 function applyGameResult(results, resultContext){
   if (!results || !results.length) return;
@@ -913,10 +1017,14 @@ function applyGameResult(results, resultContext){
 function showHub(){
   if (typeof clearHonruGameReaction === 'function') clearHonruGameReaction();
   const preserveOnlineGame = !!(online && online.game && currentGame && currentGameId === online.game);
-  if (!preserveOnlineGame && currentGame && typeof currentGame.destroy === 'function') currentGame.destroy();
+  if (!preserveOnlineGame){
+    if (typeof closeVictoryOverlay === 'function') closeVictoryOverlay($('board-area'));
+    if (currentGame && typeof currentGame.destroy === 'function') currentGame.destroy();
+  }
   $('screen-hub').classList.remove('hidden');
   $('screen-game').classList.add('hidden');
-  document.body.classList.remove('game-active');
+  if (typeof exitImmersiveGameShell === 'function') exitImmersiveGameShell();
+  else document.body.classList.remove('game-active');
   if (!preserveOnlineGame){
     currentGame = null;
     currentGameId = null;
@@ -924,22 +1032,26 @@ function showHub(){
   const endBtn = $('btn-end-game');
   if (endBtn) endBtn.classList.add('hidden');
   if (online.room || online.spectatorRoom) renderRoomPanel();
+  if (typeof ghostAppRoute !== 'undefined' && ghostAppRoute === 'home' && typeof renderGhostHome === 'function') renderGhostHome();
 }
 function showGame(id){
   if (online && online.game === id && currentGame && currentGameId === id){
-    $('screen-hub').classList.add('hidden');
     $('screen-game').classList.remove('hidden');
-    document.body.classList.add('game-active');
+    if (typeof enterImmersiveGameShell === 'function') enterImmersiveGameShell(id);
+    else document.body.classList.add('game-active');
+    $('screen-hub').classList.add('hidden');
     if (typeof renderGameStage === 'function') renderGameStage({ gameId:id });
     const endBtn = $('btn-end-game');
     if (endBtn) endBtn.classList.remove('hidden');
     return;
   }
   if (typeof clearHonruGameReaction === 'function') clearHonruGameReaction();
+  if (typeof closeVictoryOverlay === 'function') closeVictoryOverlay($('board-area'));
   if (currentGame && typeof currentGame.destroy === 'function') currentGame.destroy();
-  $('screen-hub').classList.add('hidden');
   $('screen-game').classList.remove('hidden');
-  document.body.classList.add('game-active');
+  if (typeof enterImmersiveGameShell === 'function') enterImmersiveGameShell(id);
+  else document.body.classList.add('game-active');
+  $('screen-hub').classList.add('hidden');
   const meta = GAMES[id];
   $('game-title').textContent = meta.icon + ' ' + meta.name;
   currentGameId = id;
@@ -976,6 +1088,7 @@ function showGame(id){
       sendXiangqiAction: p => online.sendXiangqiAction(p),
       sendRestart: () => online.sendRestart(),
       isReplaying: () => !!online._replaying,
+      getPublicSeats: () => online.roomInfo && Array.isArray(online.roomInfo.seats) ? online.roomInfo.seats : [],
       onMove: null,
       onRestart: null,
       onEnd: results => applyGameResult(results, { online: true, game: id }),
@@ -1024,13 +1137,89 @@ function openAISetup(id){
   const row=el('div','count-group');for(let total=Math.max(2,meta.min);total<=meta.max;total++){const btn=el('button','btn'+(total===Math.max(2,meta.min)?' btn-primary':''),t('ai_count',total-1));btn.addEventListener('click',()=>{playerCount=total;aiMode=true;bd.remove();showGame(id);});row.appendChild(btn);}card.appendChild(row);
   const cancel=el('button','btn',t('cancel'));cancel.addEventListener('click',()=>bd.remove());card.appendChild(cancel);bd.appendChild(card);bd.addEventListener('click',e=>{if(e.target===bd)bd.remove();});document.body.appendChild(bd);
 }
+let activeRoomLaunchpad = null;
+let activeRoomLaunchpadClose = null;
+function closeRoomLaunchpad(){
+  if (typeof activeRoomLaunchpadClose === 'function'){
+    activeRoomLaunchpadClose();
+    return;
+  }
+  if (activeRoomLaunchpad){
+    releaseModalScrollLock(activeRoomLaunchpad);
+    activeRoomLaunchpad.remove();
+  }
+  activeRoomLaunchpad = null;
+  activeRoomLaunchpadClose = null;
+}
 function openRoomSetup(selectedGame){
   if(!account){openAuthModal();return;}
-  const meta=selectedGame&&GAMES[selectedGame],bd=el('div','modal-backdrop'),card=el('div','modal-card');card.appendChild(el('h3',null,t('room_setup_title')));card.appendChild(el('p','lb-note',meta?t('room_setup_game',meta.name):t('room_setup_hint')));
-  let capacity=Math.max(2,meta?meta.min:2),visibility='public',allowSpectators=true;const caps=el('div','count-group');for(let n=2;n<=(meta?meta.max:5);n++){const b=el('button','btn'+(n===capacity?' btn-primary':''),t('seat_count',n));b.addEventListener('click',()=>{capacity=n;caps.querySelectorAll('.btn').forEach(x=>x.classList.toggle('btn-primary',x===b));});caps.appendChild(b);}card.appendChild(caps);
-  const vis=document.createElement('select');vis.className='nick-input';[['public',t('room_public')],['private',t('room_private')]].forEach(([v,label])=>{const o=document.createElement('option');o.value=v;o.textContent=label;vis.appendChild(o);});vis.addEventListener('change',()=>visibility=vis.value);card.appendChild(vis);
-  const label=el('label','lb-note');const check=document.createElement('input');check.type='checkbox';check.checked=true;check.addEventListener('change',()=>allowSpectators=check.checked);label.appendChild(check);label.appendChild(document.createTextNode(' '+t('allow_spectators')));card.appendChild(label);
-  const create=el('button','btn btn-primary',t('create_room'));create.addEventListener('click',()=>{online.pendingGame=selectedGame||null;bd.remove();online.create({capacity,visibility,allowSpectators});});card.appendChild(create);const cancel=el('button','btn',t('cancel'));cancel.addEventListener('click',()=>bd.remove());card.appendChild(cancel);bd.appendChild(card);bd.addEventListener('click',e=>{if(e.target===bd)bd.remove();});document.body.appendChild(bd);
+  closeRoomLaunchpad();
+  const bd=el('div','modal-backdrop room-launchpad-modal'),card=el('section','modal-card room-launchpad-card');
+  activeRoomLaunchpad=bd;
+  let gameId=selectedGame&&GAMES[selectedGame]?selectedGame:null;
+  let capacity=gameId?Math.max(GAMES[gameId].min,2):2,visibility='public',allowSpectators=true;
+  const title=el('h3',null,t('room_setup_title')),hint=el('p','lb-note',t('room_setup_hint'));
+  card.appendChild(title);card.appendChild(hint);
+  const status=el('p','room-launchpad-status');status.setAttribute('role','status');status.setAttribute('aria-live','polite');card.appendChild(status);
+  const content=el('div','room-launchpad-content'),setupFieldset=document.createElement('fieldset');setupFieldset.className='room-launchpad-section';
+  const gameLegend=document.createElement('legend');gameLegend.textContent=t('room_setup_game_label');setupFieldset.appendChild(gameLegend);
+  const selectedGameCopy=el('p','room-launchpad-selected-game');setupFieldset.appendChild(selectedGameCopy);
+  const gameChoices=el('div','room-launchpad-game-grid');gameChoices.setAttribute('role','radiogroup');gameChoices.setAttribute('aria-label',t('room_setup_game_label'));setupFieldset.appendChild(gameChoices);
+  const capacityFieldset=document.createElement('fieldset');capacityFieldset.className='room-launchpad-section';const capacityLegend=document.createElement('legend');capacityLegend.textContent=t('room_setup_capacity_label');capacityFieldset.appendChild(capacityLegend);
+  const capacities=el('div','room-launchpad-capacity');capacities.setAttribute('role','group');capacities.setAttribute('aria-label',t('room_setup_capacity_label'));capacityFieldset.appendChild(capacities);
+  const visibilityFieldset=document.createElement('fieldset');visibilityFieldset.className='room-launchpad-section';const visibilityLegend=document.createElement('legend');visibilityLegend.textContent=t('room_setup_visibility_label');visibilityFieldset.appendChild(visibilityLegend);
+  const visibilityChoices=el('div','room-launchpad-segments');visibilityChoices.setAttribute('role','group');visibilityChoices.setAttribute('aria-label',t('room_setup_visibility_label'));visibilityFieldset.appendChild(visibilityChoices);
+  const spectatorFieldset=document.createElement('fieldset');spectatorFieldset.className='room-launchpad-section';const spectatorLegend=document.createElement('legend');spectatorLegend.textContent=t('room_setup_spectators_label');spectatorFieldset.appendChild(spectatorLegend);
+  const spectatorRow=el('label','room-launchpad-toggle-row');const spectatorToggle=document.createElement('input');spectatorToggle.type='checkbox';spectatorToggle.checked=true;spectatorToggle.addEventListener('change',()=>{allowSpectators=spectatorToggle.checked;});spectatorRow.appendChild(spectatorToggle);spectatorRow.appendChild(el('span',null,t('allow_spectators')));spectatorFieldset.appendChild(spectatorRow);
+  const create=el('button','btn btn-primary room-launchpad-create',t('room_setup_create_action'));create.type='button';
+  const setStatus=(message,invalid)=>{status.textContent=message||'';status.toggleAttribute('data-invalid',!!invalid);};
+  const selectedName=()=>gameId&&GAMES[gameId]?t(GAMES[gameId].nameKey):'';
+  const renderGameChoices=()=>{
+    gameChoices.textContent='';
+    Object.keys(GAMES).forEach(id=>{
+      const meta=GAMES[id],choice=el('button','room-launchpad-game-choice'+(id===gameId?' is-selected':''));choice.type='button';choice.setAttribute('role','radio');choice.setAttribute('aria-checked',String(id===gameId));choice.dataset.gameId=id;
+      choice.appendChild(el('span','room-launchpad-game-icon',meta.icon));choice.appendChild(el('strong',null,t(meta.nameKey)));choice.appendChild(el('small',null,t('players_range',meta.min,meta.max)));
+      choice.addEventListener('click',()=>{gameId=id;const selectedMeta=GAMES[gameId];capacity=Math.max(selectedMeta.min,Math.min(selectedMeta.max,capacity));setStatus('');renderGameChoices();renderCapacity();renderSelectedGame();});gameChoices.appendChild(choice);
+    });
+  };
+  const renderSelectedGame=()=>{
+    const name=selectedName();selectedGameCopy.textContent=name?t('room_setup_selected_game',name):t('room_setup_game_required');selectedGameCopy.toggleAttribute('data-invalid',!name);create.disabled=!name;
+  };
+  const renderCapacity=()=>{
+    capacities.textContent='';const meta=gameId&&GAMES[gameId];
+    if(!meta){capacities.appendChild(el('p','lb-note',t('room_setup_game_required')));return;}
+    capacity=Math.max(meta.min,Math.min(meta.max,capacity));
+    for(let n=meta.min;n<=meta.max;n++){
+      const button=el('button','btn room-launchpad-capacity-choice'+(n===capacity?' btn-primary':''),t('seat_count',n));button.type='button';button.setAttribute('aria-pressed',String(n===capacity));button.addEventListener('click',()=>{capacity=n;renderCapacity();});capacities.appendChild(button);
+    }
+  };
+  [['public','room_public'],['private','room_private']].forEach(([value,key])=>{
+    const button=el('button','btn room-launchpad-segment'+(value===visibility?' btn-primary':''),t(key));button.type='button';button.setAttribute('aria-pressed',String(value===visibility));button.addEventListener('click',()=>{visibility=value;visibilityChoices.querySelectorAll('button').forEach(node=>{const active=node===button;node.classList.toggle('btn-primary',active);node.setAttribute('aria-pressed',String(active));});});visibilityChoices.appendChild(button);
+  });
+  create.addEventListener('click',()=>{
+    if(online.room&&!online.isSpectator){
+      online.pendingGame=null;
+      online.pendingGameRoom=null;
+      toast(t('server_already_in_room'));
+      return;
+    }
+    const meta=gameId&&GAMES[gameId];
+    if(!meta){setStatus(t('room_setup_game_required'),true);const first=gameChoices.querySelector('button');if(first)first.focus();return;}
+    capacity=Math.max(meta.min,Math.min(meta.max,capacity));
+    online.pendingGame=gameId;
+    closeRoomLaunchpad();
+    online.create({capacity,visibility,allowSpectators});
+  });
+  content.appendChild(setupFieldset);content.appendChild(capacityFieldset);content.appendChild(visibilityFieldset);content.appendChild(spectatorFieldset);
+  const joinFieldset=document.createElement('fieldset');joinFieldset.className='room-launchpad-section room-launchpad-join-section';const joinLegend=document.createElement('legend');joinLegend.textContent=t('room_join_code_label');joinFieldset.appendChild(joinLegend);
+  const joinHint=el('p','lb-note',t('room_join_code_hint'));joinFieldset.appendChild(joinHint);
+  const joinForm=document.createElement('form');joinForm.className='room-launchpad-code-form';joinForm.noValidate=true;const code=document.createElement('input');code.type='text';code.className='nick-input';code.autocomplete='off';code.autocapitalize='characters';code.spellcheck=false;code.inputMode='text';code.maxLength=6;code.pattern='[A-HJKMNP-Z2-9]{6}';code.setAttribute('aria-label',t('room_join_code_label'));code.setAttribute('placeholder',t('private_room_code'));joinForm.appendChild(code);
+  const join=el('button','btn room-launchpad-join',t('join_room'));join.type='submit';joinForm.appendChild(join);joinForm.addEventListener('submit',event=>{event.preventDefault();const value=String(code.value||'').trim().toUpperCase().replace(/[^A-HJKMNP-Z2-9]/g,'').slice(0,6);code.value=value;if(value.length!==6){code.setAttribute('aria-invalid','true');setStatus(t('room_code_required'),true);code.focus();return;}code.removeAttribute('aria-invalid');closeRoomLaunchpad();online.join(value);});joinFieldset.appendChild(joinForm);content.appendChild(joinFieldset);card.appendChild(content);
+  const actions=el('div','room-launchpad-actions');actions.appendChild(create);const browse=el('button','btn',t('browse_rooms'));browse.type='button';browse.addEventListener('click',()=>{closeRoomLaunchpad();const lobby=$('lobby-panel');if(lobby){lobby.scrollIntoView({behavior:'smooth',block:'start'});try{lobby.focus({preventScroll:true});}catch{}}});actions.appendChild(browse);const cancel=el('button','btn',t('cancel'));cancel.type='button';cancel.addEventListener('click',closeRoomLaunchpad);actions.appendChild(cancel);card.appendChild(actions);
+  renderGameChoices();renderCapacity();renderSelectedGame();
+  bd.appendChild(card);acquireModalScrollLock(bd);document.body.appendChild(bd);
+  const initial=gameId&&gameChoices.querySelector('[data-game-id="'+gameId+'"]')||gameChoices.querySelector('button')||code;
+  activeRoomLaunchpadClose=setupAccessibleOverlayDialog(bd,card,initial,t('room_setup_title'),()=>{releaseModalScrollLock(bd);if(activeRoomLaunchpad===bd){activeRoomLaunchpad=null;activeRoomLaunchpadClose=null;}});
 }
 
 function renderPlayers(activeIdx, infos, bankrupts, colors){
@@ -1147,8 +1336,8 @@ if (typeof document !== 'undefined'){
   });
   const quickJoin=$('btn-quick-join'); if(quickJoin)quickJoin.addEventListener('click',()=>online.quickJoin(null));
   const createRoom=$('btn-create-room'); if(createRoom)createRoom.addEventListener('click',()=>openRoomSetup());
-  const browseRooms=$('btn-browse-rooms'); if(browseRooms)browseRooms.addEventListener('click',()=>{ const node=$('lobby-panel'); if(node&&node.scrollIntoView)node.scrollIntoView({behavior:'smooth',block:'center'}); });
-  const joinCode=$('btn-join-code'); if(joinCode)joinCode.addEventListener('click',()=>online.join(($('join-room-code')||{}).value||''));
+  const browseRooms=$('btn-browse-rooms'); if(browseRooms)browseRooms.addEventListener('click',()=>{ const node=$('lobby-panel'); if(node&&node.scrollIntoView){node.scrollIntoView({behavior:'smooth',block:'start'});try{node.focus({preventScroll:true});}catch{}} });
+  const joinPrivate=$('btn-join-private'); if(joinPrivate)joinPrivate.addEventListener('click',()=>openRoomSetup());
   const settingsBtn = $('btn-settings-page');
   if (settingsBtn) settingsBtn.addEventListener('click', openSettingsPage);
   $('btn-me').addEventListener('click', () => openProfileModal(deviceUid));

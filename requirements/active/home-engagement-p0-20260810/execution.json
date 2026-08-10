@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "taskId": "home-engagement-p0-20260810",
+  "status": "completed_local",
+  "startedAt": "2026-08-10T11:47:00+09:00",
+  "updatedAt": "2026-08-10T12:14:10+09:00",
+  "completed": [
+    "semantic three-step onboarding",
+    "existing-profile recommendation",
+    "level and streak goal card",
+    "guest-safe labels and routes",
+    "recommended game-card focus",
+    "three-language responsive contract",
+    "static and dynamic home regression"
+  ],
+  "verification": {
+    "specialized": ["node qa/home-engagement-contract.js", "npm run test:i18n", "node qa/dom-smoke.js", "node qa/ghost-shell-contract.js", "node qa/ui-responsive-contract.js"],
+    "e2eRerun": "node --experimental-websocket qa/e2e-online.js passed after one non-reproducing invitation-room timeout",
+    "full": "npm test (131.5s, exit 0 after final recommendation-label/focus refinement)",
+    "buildBytes": 927995,
+    "physicalFileBytes": 942085,
+    "buildSha256": "7980FEDB5222444C42AA7DC3540EE000F353D85ACB0A0316920B417E9903919B",
+    "doubleBuildIdentical": true
+  },
+  "pending": ["second desktop browser", "Android/iPhone/Tablet", "real network shaping", "visible browser reduced-motion", "user release command"],
+  "boundary": "client-only home presentation; no server, economy authority, rule, AI, Replay, database or art approval change",
+  "published": false
+}

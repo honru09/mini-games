@@ -1,0 +1,74 @@
+{
+  "status": "LOCAL_STATE_MATRIX_IMPLEMENTED_ART_DEVICE_GATED",
+  "parallelability": 1,
+  "scope": ["UI-037", "GAME-045"],
+  "dependencies": [
+    "GAME-012 monopoly-rule-v2 (verified)",
+    "SOC-031 player-character-v1 public projection (implemented)",
+    "ART-036 source-only review gates (partial / blocking runtime art)",
+    "ECO-029 contract-only economy (partial / blocking commerce wiring)",
+    "immersive-game-shell-p0-20260809"
+  ],
+  "steps": [
+    {
+      "id": "UI037-1",
+      "task": "只读审阅台账、进度报告、角色 Module、经济 Module、Game Framework、Monopoly renderer、Authority 与 WebSocket 消费点",
+      "status": "completed"
+    },
+    {
+      "id": "UI037-2",
+      "task": "冻结 Module / Interface / Seam / Adapter、权威位置消费、Seat 映射、角色公开投影与 fallback 合同",
+      "status": "completed"
+    },
+    {
+      "id": "UI037-3",
+      "task": "冻结进入到结算的状态矩阵、交易未实现处理、i18n/a11y/reduced-motion/响应式验收边界",
+      "status": "completed"
+    },
+    {
+      "id": "UI037-3a",
+      "task": "主负责人实现只读代码原生角色表现投影与严格 fallback；不接入未审批 ART-036、不改变规则或权威",
+      "status": "completed"
+    },
+    {
+      "id": "UI037-4",
+      "task": "实施代码原生 Authority/状态 Adapter、完整可见状态矩阵、三语、机会卡 dialog、44px/reduced-motion 与专项 QA",
+      "status": "completed"
+    },
+    {
+      "id": "UI037-4a",
+      "task": "人工 ART-036 审批后实施正式角色/棋盘 renderer、Manifest、性能预算与视觉回退；ECO-029 正式经济仅在出售/装备角色时需要",
+      "status": "blocked_external_gates"
+    },
+    {
+      "id": "UI037-5",
+      "task": "执行四档浏览器、第二浏览器、Android/iPhone/Tablet、reduced-motion、真实网络整形及发布前验证",
+      "status": "blocked_external_devices"
+    }
+  ],
+  "risks": [
+    "将 root-level transition 在 WebSocket 转发中丢弃，导致客户端错误猜测走格",
+    "把重连/观战快照当成连续动画历史，造成位置或支付重放",
+    "Seat 重新压紧后以昵称或旧索引显示错玩家的角色",
+    "把 player-character 的公开 Slot 与 tokenSkin 或商城 owned/equipped 混为一类",
+    "未审批 ART-036 方向稿或 reference-only 素材意外进入 public/assets / manifest",
+    "客户端倒计时自行结算拍卖，或视觉状态影响 Authority/奖励/Replay",
+    "新增 UI 文案、动效、dialog 或触控布局破坏三语、a11y、手机横竖屏和 Game Shell"
+  ],
+  "implementationOwnershipToAssignLater": [
+    "public/src/online/03-websocket.js (AuthorityEnvelopeAdapter only)",
+    "public/src/games/monopoly.js (MonopolyPresentationAdapter + renderer integration)",
+    "public/src/ui/07-roster.js only if the public projection reader needs a shared seam",
+    "public/index-template.html and three locale files only if new static UI exists",
+    "qa/ui-037-monopoly-presentation.js plus affected existing authority/online/i18n/DOM checks"
+  ],
+  "forbiddenUntilSeparateApproval": [
+    "server authority or shared Monopoly rules changes",
+    "player_character purchase/equip/catalog activation",
+    "Supabase schema/RPC/RLS/backup/rollback changes",
+    "ART-036 runtime asset/manifest changes",
+    "Replay/reward/AI/analytics mutations",
+    "commit, push, Pages or Render deployment"
+  ],
+  "rollback": "本合同批没有运行时代码、数据或构建产物。未来实施若需回滚，只撤销其专属 presentation Adapter、renderer、样式、locale 和 QA，重新执行 node scripts/build.js；不回滚 Authority、用户资产、规则或数据库。"
+}

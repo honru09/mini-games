@@ -796,6 +796,9 @@ async function runAccountAndProfileTests(wsUrl){
       level: 99,
       total: 999999,
       played: { gomoku: 999999 },
+      wins: { gomoku: 999999 },
+      totalWins: 999999,
+      mastery: { byGame: { gomoku: { current: { nameKey: 'forged' } } } },
       pin_hash: hackedPinHash,
       owned: { avatars: [55], frames: [8], effects: [4], backgrounds: [10] },
     },
@@ -864,6 +867,10 @@ async function runResultAndPurchaseTests(context){
     '服务端购买头像 30',
   );
   check('合法商城购买成功', purchaseResponse.type === 'purchase_ok', JSON.stringify(purchaseResponse));
+  check('purchase 回执关联服务端确认的 requestId/category/id',
+    purchaseResponse.payload && purchaseResponse.payload.requestId === requestId &&
+      purchaseResponse.payload.category === 'avatars' && purchaseResponse.payload.id === 30,
+    JSON.stringify(purchaseResponse.payload));
   const afterPurchase = await getProfile(authA, context.a.uid);
   check('purchase 忽略伪造 price 并按服务端定价扣 💵10',
     Number(beforePurchase.coins || 0) - Number(afterPurchase.coins || 0) === 10,

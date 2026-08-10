@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "taskId": "tabletop-presentation-m1-action-20260810",
+  "status": "implemented_local_pending_external_visual",
+  "steps": [
+    {"id":"contract","status":"completed","owner":"Master"},
+    {"id":"gomoku-impact","status":"completed","owner":"Master"},
+    {"id":"ludo-path-review","status":"completed","owner":"Master"},
+    {"id":"regression","status":"completed","owner":"Master"},
+    {"id":"docs","status":"completed","owner":"Master"}
+  ],
+  "release": "local-only"
+}

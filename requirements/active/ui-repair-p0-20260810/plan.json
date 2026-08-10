@@ -1,0 +1,36 @@
+{
+  "status": "IMPLEMENTED",
+  "parallelability": 2,
+  "dependencies": [
+    "requirements/active/requirements-governance-p0-20260810",
+    "requirements/active/visual-commerce-assets-p0-20260808",
+    "requirements/active/player-chat-profile-p0-20260809"
+  ],
+  "steps": [
+    {"id":"UIR-1","task":"新增失败测试，锁定 Avatar 媒体一致性、非旋转头像与背景播放合同","status":"completed"},
+    {"id":"UIR-2","task":"统一 Canvas/img 裁切、frame/effect CSS 和 effect-4 装饰环","status":"completed"},
+    {"id":"UIR-3","task":"扩展 premium background 显式播放/暂停生命周期","status":"completed"},
+    {"id":"UIR-4","task":"重构商城身份组合与动态背景预览、键盘选择语义","status":"completed"},
+    {"id":"UIR-5","task":"同步三语、构建、专项/完整测试和四档浏览器验收","status":"partial"},
+    {"id":"UIR-6","task":"主负责人审核 Terra 差异、修正遗漏并同步台账/报告/日志","status":"completed"}
+  ],
+  "risks": [
+    "全局 Avatar CSS 影响登录、Seat、排行榜、聊天和 Profile 多入口",
+    "背景预览反复切换导致 observer/listener 泄漏",
+    "动态 WebP 在低端设备过度消耗 CPU",
+    "商品卡键盘选择与内部购买按钮冲突",
+    "三语新增 key 或生成产物漂移"
+  ],
+  "tests": [
+    "node qa/ui-identity-preview-contract.js",
+    "node qa/shop-contract.js",
+    "node qa/ui-responsive-contract.js",
+    "npm run test:i18n",
+    "node qa/dom-smoke.js",
+    "node scripts/build.js",
+    "npm run quality:gates",
+    "npm test",
+    "1440x900 / 1024x768 / 390x844 / 844x390 browser matrix"
+  ],
+  "rollback": "撤销本批 CSS、premium playback API、商城预览与 locale/QA；重新构建 public/index.html。现有商品、资产、Profile、购买与 fallback 数据完全不迁移。"
+}

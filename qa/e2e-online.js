@@ -1,6 +1,7 @@
 // 端到端联机测试：真实 WebSocket 服务端 + 两个隔离的前端实例（DOM 桩）
 'use strict';
 const fs = require('fs');
+const net = require('net');
 const path = require('path');
 const vm = require('vm');
 const { spawn } = require('child_process');
@@ -8,7 +9,8 @@ const { spawn } = require('child_process');
 const ROOT = path.join(__dirname, '..');
 const HTML_PATH = path.join(ROOT, 'public', 'index.html');
 const SERVER = path.join(ROOT, 'server', 'index.js');
-const PORT = Number(process.env.E2E_PORT) || 8099;
+const requestedPort = Number(process.env.E2E_PORT);
+let PORT = Number.isInteger(requestedPort) && requestedPort > 0 ? requestedPort : null;
 const MONOPOLY_STEPS = Math.max(4, Math.min(20, Number(process.env.E2E_MONOPOLY_STEPS) || 20));
 fs.mkdirSync(path.join(ROOT, 'data'), { recursive: true });
 const TEST_ROOT = fs.mkdtempSync(path.join(ROOT, 'data', 'e2e-'));
@@ -20,6 +22,66 @@ fs.writeFileSync(tmp, script);
 const allEnvs = [];
 let serverOut = '';
 let activeServer = null;
+
+function reserveLocalPort(){
+  return new Promise((resolve, reject) => {
+    const probe = net.createServer();
+    const fail = error => {
+      try { probe.close(); } catch {}
+      reject(error);
+    };
+    probe.once('error', fail);
+    probe.listen({ host:'127.0.0.1', port:0, exclusive:true }, () => {
+      probe.removeListener('error', fail);
+      const address = probe.address();
+      const port = address && typeof address === 'object' ? Number(address.port) : 0;
+      probe.close(error => error ? reject(error) : resolve(port));
+    });
+  });
+}
+
+function childExited(child){
+  return !child || child.exitCode !== null || child.signalCode !== null;
+}
+
+async function waitForOwnedServer(server){
+  try {
+    await waitFor({ label:'server' }, async () => {
+      if (childExited(server)) return false;
+      try {
+        const http = require('http');
+        const served = await new Promise(resolve => {
+          http.get('http://127.0.0.1:' + PORT + '/', response => {
+            resolve(response.statusCode === 200);
+            response.resume();
+          }).on('error', () => resolve(false));
+        });
+        return served && serverOut.includes('http://localhost:' + PORT);
+      } catch {
+        return false;
+      }
+    }, '服务端就绪', 8000);
+  } catch {
+    const detail = serverOut.trim().slice(-1200);
+    throw new Error('E2E 子服务未在端口 ' + PORT + ' 成功就绪' + (detail ? ': ' + detail : ''));
+  }
+}
+
+async function stopOwnedServer(server){
+  if (childExited(server)) return;
+  await new Promise(resolve => {
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      clearTimeout(timeout);
+      resolve();
+    };
+    const timeout = setTimeout(finish, 5000);
+    server.once('exit', finish);
+    try { server.kill(); } catch { finish(); }
+  });
+}
 
 /* ---------- DOM 桩（每个实例一套） ---------- */
 function makeCtxProxy(){
@@ -293,30 +355,32 @@ async function verifyTetrisRelay(host){
 
 async function verifyTankAuthorityOnline(host){
   const tankGuest=(await setupOnlineGame(host,'tank','guest-tank')).guest;
-  const tankHostActions=host.$('game-extra').querySelector('.tank-realtime-controls').children;
-  const tankGuestActions=tankGuest.$('game-extra').querySelector('.tank-realtime-controls').children;
-  assert('坦克大战：联机双方显示摇杆和开炮控件',tankHostActions.length===2&&tankGuestActions.length===2);
+  const tankHostControls=host.$('game-extra').querySelector('.tank-realtime-controls');
+  const tankGuestControls=tankGuest.$('game-extra').querySelector('.tank-realtime-controls');
+  const tankHostJoystick=tankHostControls.querySelector('.tank-joystick'),tankGuestJoystick=tankGuestControls.querySelector('.tank-joystick');
+  const tankHostFire=tankHostControls.querySelector('.tank-fire'),tankGuestFire=tankGuestControls.querySelector('.tank-fire');
+  assert('坦克大战：联机双方显示八方向摇杆、降级按键和独立开炮控件',!!tankHostJoystick&&!!tankGuestJoystick&&!!tankHostControls.querySelector('.tank-dpad')&&!!tankGuestControls.querySelector('.tank-dpad')&&!!tankHostFire&&!!tankGuestFire);
   assert('坦克大战：正式联机启用服务端权威协议',host.info().game.getRelayState().protocol==='tank-authority-v1'&&tankGuest.info().game.getRelayState().protocol==='tank-authority-v1');
   const hostProfile=host.info().roster.find(p=>p.uid===host.info().deviceUid),guestProfile=tankGuest.info().roster.find(p=>p.uid===tankGuest.info().deviceUid);
   const before={hostCoins:hostProfile.coins,hostTotal:hostProfile.total,hostPlayed:hostProfile.played.tank||0,
     hostReward:hostProfile.dailyFirstWinDate===new Date().toISOString().slice(0,10)?3:5,
     guestCoins:guestProfile.coins,guestTotal:guestProfile.total,guestPlayed:guestProfile.played.tank||0,
     guestReward:guestProfile.dailyFirstWinDate===new Date().toISOString().slice(0,10)?3:5};
-  const input=async(actor,observer,controls,x,y,key,label)=>{
+  const input=async(actor,observer,joystick,x,y,key,label)=>{
     const slot=actor.info().online.player,beforePress=observer.info().game.getRelayState().lastInputSeq[slot];
-    controls[0].dispatch('pointerdown',{clientX:x,clientY:y,buttons:1});
+    joystick.dispatch('pointerdown',{clientX:x,clientY:y,buttons:1});
     await waitFor(observer,()=>observer.info().game.getRelayState().lastInputSeq[slot]>beforePress,label+'按下',5000);
     assert('坦克大战：'+label+'映射到可信玩家槽位',observer.info().game.snapshot().tanks[slot].input[key]===true);
-    const beforeRelease=observer.info().game.getRelayState().lastInputSeq[slot];controls[0].dispatch('pointerup');
+    const beforeRelease=observer.info().game.getRelayState().lastInputSeq[slot];joystick.dispatch('pointerup');
     await waitFor(observer,()=>observer.info().game.getRelayState().lastInputSeq[slot]>beforeRelease,label+'释放',5000);
     assert('坦克大战：'+label+'释放状态同步',observer.info().game.snapshot().tanks[slot].input[key]===false);
   };
-  await input(tankGuest,host,tankGuestActions,500,260,'right','客方右移');
-  await input(tankGuest,host,tankGuestActions,260,20,'up','客方上移');
-  tankGuestActions[1].dispatch('click');await waitFor(host,()=>host.info().game.snapshot().tanks[1].shots>=1,'客方射击同步',5000);
-  await input(host,tankGuest,tankHostActions,20,260,'left','房主左移');
-  await input(host,tankGuest,tankHostActions,260,500,'down','房主下移');
-  tankHostActions[1].dispatch('click');await waitFor(tankGuest,()=>tankGuest.info().game.snapshot().tanks[0].shots>=1,'房主射击同步',5000);
+  await input(tankGuest,host,tankGuestJoystick,500,260,'right','客方右移');
+  await input(tankGuest,host,tankGuestJoystick,260,20,'up','客方上移');
+  tankGuestFire.dispatch('click');await waitFor(host,()=>host.info().game.snapshot().tanks[1].shots>=1,'客方射击同步',5000);
+  await input(host,tankGuest,tankHostJoystick,20,260,'left','房主左移');
+  await input(host,tankGuest,tankHostJoystick,260,500,'down','房主下移');
+  tankHostFire.dispatch('click');await waitFor(tankGuest,()=>tankGuest.info().game.snapshot().tanks[0].shots>=1,'房主射击同步',5000);
   assert('坦克大战：正常实时输入覆盖双方奖励动作阈值',host.info().game.getRelayState().lastInputSeq[1]>=5&&tankGuest.info().game.getRelayState().lastInputSeq[0]>=5);
   const accepted=host.info().game.getRelayState().lastInputSeq[1];
   tankGuest.info().online.sendTankInput({seq:accepted,clientTick:tankGuest.info().game.getRelayState().serverTick,input:{left:true}});await sleep(250);
@@ -327,8 +391,8 @@ async function verifyTankAuthorityOnline(host){
   assert('坦克大战：双方由服务端周期快照校正',Math.abs(tankGuest.info().game.snapshot().tanks[0].x-host.info().game.snapshot().tanks[0].x)<.2);
   const matchId=host.info().online.matchId,socket=tankGuest.info().online.ws;tankGuest.info().online.send({type:'debug_disconnect'});
   await waitFor(tankGuest,()=>tankGuest.info().online.connected&&tankGuest.info().online.ws&&tankGuest.info().online.ws!==socket&&tankGuest.info().online.matchId===matchId&&tankGuest.info().game,'坦克客方重连权威快照',8000);
-  const resumedActions=tankGuest.$('game-extra').querySelector('.tank-realtime-controls').children,beforeResume=host.info().game.getRelayState().lastInputSeq[1];
-  await input(tankGuest,host,resumedActions,500,260,'right','客方重连后右移');
+  const resumedJoystick=tankGuest.$('game-extra').querySelector('.tank-realtime-controls').querySelector('.tank-joystick'),beforeResume=host.info().game.getRelayState().lastInputSeq[1];
+  await input(tankGuest,host,resumedJoystick,500,260,'right','客方重连后右移');
   assert('坦克大战：重连后 input seq 延续且可继续操作',host.info().game.getRelayState().lastInputSeq[1]>beforeResume);
   assert('坦克大战：双方都不能绕过服务端自行结束正式局',tankGuest.info().game.finishMatch()===false&&host.info().game.finishMatch()===false&&!tankGuest.info().game.snapshot().over&&!host.info().game.snapshot().over);
   await waitFor(tankGuest,()=>tankGuest.info().game.snapshot().over&&tankGuest.info().game.getRelayState().resultCommitted,'客方接收服务端最终排名',12000);
@@ -341,6 +405,7 @@ async function verifyTankAuthorityOnline(host){
 
 async function main(){
   /* 启动服务端 */
+  if (!PORT) PORT = await reserveLocalPort();
   const server = spawn(process.execPath, [SERVER], {
     env: {
       ...process.env,
@@ -360,15 +425,7 @@ async function main(){
   activeServer = server;
   server.stdout.on('data', d => serverOut += d);
   server.stderr.on('data', d => serverOut += d);
-  await waitFor({ label: 'server' }, () => {
-    try {
-      const http = require('http');
-      return new Promise(res => {
-        http.get('http://127.0.0.1:' + PORT + '/', r => { res(r.statusCode === 200); r.resume(); })
-          .on('error', () => res(false));
-      });
-    } catch { return false; }
-  }, '服务端就绪', 8000);
+  await waitForOwnedServer(server);
 
   try{
     const host = registerEnv(makeEnv('host'));
@@ -420,8 +477,13 @@ async function main(){
     const hostCanvas = host.area().children[0];
     const guestCanvas = guest.area().children[0];
     const stone = (env, canvas, r, c) => {
-      const LOGICAL = 554, CELL = 34, PAD = 22;
-      canvas.dispatch('click', { clientX: (PAD + c*CELL)/LOGICAL*520, clientY: (PAD + r*CELL)/LOGICAL*520 });
+      const N = 15, CELL = 34, PAD = 22, LOGICAL = PAD * 2 + CELL * (N - 1);
+      const turns = ((Number(canvas.dataset.viewQuarterTurns) || 0) % 4 + 4) % 4;
+      let viewRow = r, viewCol = c;
+      if (turns === 1) [viewRow, viewCol] = [c, N - 1 - r];
+      else if (turns === 2) [viewRow, viewCol] = [N - 1 - r, N - 1 - c];
+      else if (turns === 3) [viewRow, viewCol] = [N - 1 - c, r];
+      canvas.dispatch('click', { clientX: (PAD + viewCol*CELL)/LOGICAL*520, clientY: (PAD + viewRow*CELL)/LOGICAL*520 });
     };
     const hostMoves = [[7,3],[7,4],[7,5],[7,6],[7,7]];
     const guestMoves = [[3,3],[3,4],[3,5],[3,6]];
@@ -629,6 +691,10 @@ async function main(){
     const leaveTetris = btnByText(host.$('room-actions'), '离开房间');
     if (leaveTetris) leaveTetris.dispatch('click');
     await waitFor(host, () => host.$('room-panel').classList.contains('hidden'), '离开俄罗斯方块房间', 4000);
+    await waitFor(host, () => {
+      const current = host.info().online;
+      return current.room === null && current.connected && current._authenticated && current.ws && current.ws.readyState === 1;
+    }, '俄罗斯方块离房后保持已认证的可写连接', 4000);
     const invitee = registerEnv(makeEnv('guest-inv'));
     await waitFor(invitee, () => /已连接服务器/.test(invitee.onlineStatus()), '受邀者连接', 5000);
     host.info().online.create({ capacity:2, visibility:'public', allowSpectators:true });
@@ -814,7 +880,7 @@ async function main(){
     for (const e of allEnvs){
       try { const ws = e.info().online.ws; if (ws) ws.close(); } catch {}
     }
-    server.kill();
+    await stopOwnedServer(server);
     try { fs.rmSync(TEST_ROOT, { recursive: true, force: true }); } catch {}
     setTimeout(() => process.exit(process.exitCode || 0), 2500).unref();
   }

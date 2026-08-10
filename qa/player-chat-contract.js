@@ -12,6 +12,8 @@ check('Honru 签到协议仍保留且不与玩家私聊耦合',/function petHonr
 check('玩家消息桌面双栏与手机主从布局存在',/grid-template-columns:minmax\(250px,320px\)/.test(template)&&/player-chat-shell:not\(\.thread-open\)/.test(template)&&/100dvh/.test(template));
 check('输入区支持 500 字、Enter 与 Shift+Enter',/id="chat-input"[\s\S]{0,180}maxlength="500"/.test(template)&&/event\.key==='Enter'&&!event\.shiftKey/.test(shell));
 check('消息正文使用 textContent 路径并标记原文',/function chatRawNode/.test(shell)&&/data-i18n-raw/.test(shell)&&!/chat-message[^\n]*innerHTML\s*=/.test(shell));
+check('会话系统空态不被 data-i18n-raw 错误冻结，而玩家昵称/正文仍保留原文',/if\(item\.lastMessage&&typeof item\.lastMessage\.text==='string'\)[\s\S]{0,180}chatRawNode\('span','chat-conversation-preview'/.test(shell)&&/else copy\.appendChild\(el\('span','chat-conversation-preview',t\('chat_start_conversation'\)\)\)/.test(shell)&&!/row\.setAttribute\('data-i18n-raw'\)/.test(shell));
+check('玩家昵称仅在真实存在时标记原文，系统 fallback 与清空线程标题保持可本地化',/function chatPeerNameNode[\s\S]{0,220}typeof name==='string'&&name\.length[\s\S]{0,160}t\('social_player'\)/.test(shell)&&/title\.removeAttribute\('data-i18n-raw'\)/.test(shell)&&/chatPeerNameNode\('span','chat-conversation-name',peer\.name\)/.test(shell));
 check('断线草稿只在内存 Map，不进入 localStorage',/chatDrafts:new Map/.test(online)&&!/localStorage[^\n]*chatDraft/i.test(online+shell));
 check('direct-chat-v1 客户端与服务端成对声明',/direct-chat-v1/.test(online)&&/direct-chat-v1/.test(server));
 ['chat_list','chat_history','chat_send','chat_read'].forEach(type=>check('服务端处理 '+type,new RegExp("type==='"+type+"'").test(server)));

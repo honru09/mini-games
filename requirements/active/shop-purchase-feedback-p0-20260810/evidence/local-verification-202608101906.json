@@ -1,0 +1,45 @@
+{
+  "task": "shop-purchase-feedback-p0",
+  "verifiedAt": "2026-08-10T19:06:42+09:00",
+  "result": "LOCAL_ACCEPTED_AWAITING_RELEASE_COMMAND",
+  "implementation": {
+    "clientState": "single in-flight purchase bound to requestId + uid + category + item id",
+    "serverResponse": "existing purchase_ok/purchase_error with correlation metadata",
+    "accessibility": "aria-live status/alert plus aria-busy button",
+    "lifecycle": ["duplicate click", "mismatched response", "timeout", "modal close", "disconnect", "logout/account switch"]
+  },
+  "tests": {
+    "shopPurchaseFeedbackContract": "PASS",
+    "i18n": "PASS",
+    "domSmoke": "PASS",
+    "shopContract": "PASS",
+    "uiShopLayout": "PASS",
+    "guestAffordance": "PASS",
+    "securityOnline": "PASS",
+    "supabaseAdapter": "PASS",
+    "progressLedger": "PASS (233 requirements, 7 reports, 62 sources)",
+    "qualityGates": "PASS",
+    "fullNpmTest": "PASS (122.3 seconds)"
+  },
+  "build": {
+    "generatedCharacters": 980789,
+    "physicalBytes": 995152,
+    "sha256": "5ACF7F4769D9A1D1642DA736A0AE8210E19FD034FC9E93DAEDB19640644E30F6",
+    "deterministicDoubleBuild": true
+  },
+  "review": {
+    "terraMax": "created with reasoning_effort=max but interrupted after no reviewable delivery",
+    "masterCorrections": [
+      "required request correlation on every success/error branch",
+      "bound client state to account and item",
+      "added close/disconnect/logout cleanup",
+      "fixed legacy shop VM DOM attribute contract"
+    ]
+  },
+  "boundaries": [
+    "No price, reward, owned authority or Supabase RPC change",
+    "No new WebSocket message type",
+    "No commit, push, GitHub Pages or Render deployment",
+    "Rolling release must deploy backend before frontend"
+  ]
+}

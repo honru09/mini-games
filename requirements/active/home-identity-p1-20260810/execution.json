@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "taskId": "home-identity-p1-20260810",
+  "status": "LOCAL_VERIFIED",
+  "startedAt": "2026-08-10T00:00:00+09:00",
+  "updatedAt": "2026-08-10T17:10:00+09:00",
+  "completed": ["reconnaissance", "scope and privacy contract frozen", "red test confirmed (8 expected failures)", "client-only identity strip", "three-language copy", "generated frontend build", "specialized and shared regression"],
+  "pending": [],
+  "verification": {"red": "CONFIRMED_EXPECTED_FAIL: node qa/home-identity-p1-contract.js (8 failures before implementation)", "specialized": ["node qa/home-identity-p1-contract.js", "node qa/home-engagement-contract.js", "node qa/home-engagement-p1-contract.js", "node qa/collection-rarity-catalog.js", "node qa/victory-mastery.js", "node qa/ui-identity-preview-contract.js", "node qa/profile-route-contract.js", "npm run test:i18n", "node qa/dom-smoke.js", "node qa/ui-responsive-contract.js", "node qa/ghost-shell-contract.js", "npm run pretest", "npm run quality:gates"], "visual": "NOT_EXECUTED: in-app Browser localhost navigation was blocked by the user's saved permission; no workaround attempted", "fullNpmTest": "PASS: npm test 120.7s; deterministic double build 971303 characters / 985572 physical bytes / SHA-256 963DEAEFC5B46621ACCE9B713444D3F3B7F5DC41C775990CD87BE36E501D69FF"},
+  "boundary": "existing Home pulse presentation only; no server/protocol/economy/purchase/rules/AI/Replay/Supabase/assets/art changes",
+  "published": false
+}

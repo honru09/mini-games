@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "taskId": "ui-repair-p04-profile-social-p0-20260810",
+  "status": "active",
+  "steps": [
+    {"id":"audit","status":"completed","owner":"Terra Max read-only audit"},
+    {"id":"implementation","status":"completed","owner":"Terra Max implementation + Master fixes"},
+    {"id":"review","status":"completed","owner":"Master"},
+    {"id":"verification","status":"completed","owner":"Master"},
+    {"id":"reports","status":"completed","owner":"Master"}
+  ],
+  "release": "local-only"
+}

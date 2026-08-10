@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "taskId": "tabletop-presentation-m1-20260810",
+  "owners": {
+    "transform": ["public/src/games/00-tabletop-perspective.js"],
+    "consumers": ["public/src/games/gomoku.js", "public/src/games/ludo.js"],
+    "buildQaDocs": ["scripts/build.js", "qa/tabletop-perspective-contract.js", "package.json", "requirements/PRODUCT_REQUIREMENTS_LEDGER.json"]
+  },
+  "forbidden": ["server/**", "shared/rules/**", "supabase/**", "art-source/**", "public/assets/**"]
+}

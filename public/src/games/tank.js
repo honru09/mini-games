@@ -99,6 +99,7 @@ function gameTank(area, extra, n, opts){
     };
   }
   function resetLocal(){
+    if (typeof releaseAllControls === 'function') releaseAllControls(false);
     aiEpoch++; aiPending.clear(); clearTransientTimers(); removeVictoryOverlay(); lastPlayersSignature='';lastStatusText='';buildMap();
     startedAt = Date.now(); finishedAt = 0; remainingMs = MATCH_MS; lastLoopAt = startedAt; accumulator = 0;
     tanks = Array.from({length:playerCount}, (_, i) => createTank(i));
@@ -258,9 +259,15 @@ function gameTank(area, extra, n, opts){
       ...(value || {}), protocol:RELAY_PROTOCOL, matchId:currentMatchId(), seq:++inputSequence,
     };
   }
+  function getLocalInput(){
+    const input = emptyInput();
+    ['up','right','down','left'].forEach(key => { input[key] = !!(keyboardInput[key] || joystickMovement[key] || dpadMovement[key]); });
+    input.fire = !!(keyboardInput.fire || fireHeld || firePointerIds.size > 0);
+    return input;
+  }
   function sendRelayAction(value){
     if(authorityMode){
-      const input=value&&value.input?normalizeInput(value.input):normalizeInput(keyboardInput);
+      const input=value&&value.input?normalizeInput(value.input):getLocalInput();
       opts.sendTankInput({seq:++inputSequence,clientTick:authorityServerTick,input});
       return true;
     }
@@ -284,8 +291,9 @@ function gameTank(area, extra, n, opts){
   function localInputChanged(){
     const pi = controlledPlayer();
     if (!canControl() || !tanks[pi] || (opts.ai && opts.ai.has(pi))) return;
-    setPlayerInput(pi, keyboardInput, true);
-    if (opts.onProgress) opts.onProgress({ act:'input', input:{...keyboardInput} });
+    const input = getLocalInput();
+    setPlayerInput(pi, input, true);
+    if (opts.onProgress) opts.onProgress({ act:'input', input:{...input} });
   }
   function localShoot(){
     if (!canControl()) return false;
@@ -300,7 +308,88 @@ function gameTank(area, extra, n, opts){
     sendRelayAction({act:'shoot'});
     return true;
   }
-  const keyboardInput = emptyInput();
+  const keyboardInput = emptyInput(), joystickMovement = emptyInput(), dpadMovement = emptyInput();
+  const firePointerIds = new Set(), dpadPointerIds = new Map();
+  let fireHeld = false, joystickPointerId = null, joystickVector = { x:0, y:0, magnitude:0, direction:'neutral' };
+  let lastDpadPointerAt = 0;
+  const directionKeys = ['up','right','down','left'];
+  const directionLabels = { up:'tank_direction_up', right:'tank_direction_right', down:'tank_direction_down', left:'tank_direction_left', neutral:'tank_direction_neutral' };
+  function localizedDirection(direction){
+    if (!direction || direction === 'neutral') return t(directionLabels.neutral);
+    const dirs = direction === 'downright' ? ['down','right'] : direction === 'downleft' ? ['down','left'] : direction === 'upleft' ? ['up','left'] : direction === 'upright' ? ['up','right'] : [direction];
+    return dirs.map(key => t(directionLabels[key])).join(' + ');
+  }
+  const joystickDirections = [
+    { key:'right', dirs:['right'], x:1, y:0 }, { key:'downright', dirs:['down','right'], x:1, y:1 }, { key:'down', dirs:['down'], x:0, y:1 }, { key:'downleft', dirs:['down','left'], x:-1, y:1 },
+    { key:'left', dirs:['left'], x:-1, y:0 }, { key:'upleft', dirs:['up','left'], x:-1, y:-1 }, { key:'up', dirs:['up'], x:0, y:-1 }, { key:'upright', dirs:['up','right'], x:1, y:-1 },
+  ];
+  function clearMovementState(target){ directionKeys.forEach(key => { target[key] = false; }); }
+  function directionInput(direction){
+    const input = emptyInput();
+    (Array.isArray(direction) ? direction : [direction]).forEach(key => { if (directionKeys.includes(key)) input[key] = true; });
+    return input;
+  }
+  function setJoystickVisual(direction, magnitude, x, y){
+    joystickVector = { x, y, magnitude, direction };
+    const knob = joystick && joystick.querySelector ? joystick.querySelector('.tank-joystick-knob') : null;
+    if (knob){
+      const limit = 34, px = Math.round(x * limit), py = Math.round(y * limit);
+      knob.style.transform = 'translate(' + px + 'px,' + py + 'px)';
+    }
+    if (joystick){
+      joystick.dataset.direction = direction;
+      joystick.setAttribute('aria-valuenow', String(Math.round(magnitude * 100)));
+      joystick.setAttribute('aria-valuetext', localizedDirection(direction));
+    }
+    if (joystickDirection){
+      joystickDirection.textContent = localizedDirection(direction);
+    }
+  }
+  function applyJoystickPoint(event){
+    if (!canControl() || (joystickPointerId !== null && event.pointerId !== undefined && event.pointerId !== joystickPointerId)) return;
+    const rect = joystick.getBoundingClientRect();
+    const half = Math.max(1, Math.min(rect.width, rect.height) / 2), rawX = Number(event.clientX) - rect.left - rect.width / 2, rawY = Number(event.clientY) - rect.top - rect.height / 2;
+    const radius = Math.max(1, half - 12), distance = Math.hypot(rawX, rawY), magnitude = Math.min(1, distance / radius);
+    if (distance <= Math.max(12, radius * .18)){
+      clearMovementState(joystickMovement); setJoystickVisual('neutral', 0, 0, 0); localInputChanged(); return;
+    }
+    const nx = rawX / distance, ny = rawY / distance;
+    const sector = (Math.round((Math.atan2(ny, nx) + Math.PI * 2) / (Math.PI / 4)) + 8) % 8;
+    const selected = joystickDirections[sector];
+    const previousDirection = joystickVector.direction;
+    clearMovementState(joystickMovement); Object.assign(joystickMovement, directionInput(selected.dirs));
+    setJoystickVisual(selected.key, magnitude, nx * magnitude, ny * magnitude);
+    if (typeof haptic === 'function' && selected.key !== previousDirection) haptic('light');
+    localInputChanged();
+  }
+  function releaseJoystick(){
+    const wasActive = joystickPointerId !== null || directionKeys.some(key => joystickMovement[key]);
+    if (!wasActive) return;
+    if (joystickPointerId !== null && joystick && typeof joystick.releasePointerCapture === 'function'){
+      try { joystick.releasePointerCapture(joystickPointerId); } catch {}
+    }
+    joystickPointerId = null; clearMovementState(joystickMovement); setJoystickVisual('neutral', 0, 0, 0); localInputChanged();
+  }
+  function setFireState(pressed){
+    const next = !!pressed;
+    if (fireHeld === next && (!next || firePointerIds.size)) return;
+    fireHeld = next;
+    if (fireBtn){ fireBtn.setAttribute('aria-pressed', next ? 'true' : 'false'); fireBtn.classList.toggle('is-held', next); }
+    if (next && typeof haptic === 'function') haptic('medium');
+    localInputChanged();
+  }
+  function releaseFirePointer(event){
+    if (event && event.pointerId !== undefined) firePointerIds.delete(event.pointerId);
+    if (!firePointerIds.size) setFireState(false);
+  }
+  function releaseAllControls(shouldSend){
+    clearMovementState(keyboardInput); clearMovementState(joystickMovement); clearMovementState(dpadMovement); keyboardInput.fire = false; fireHeld = false; firePointerIds.clear();
+    if (joystickPointerId !== null && joystick && typeof joystick.releasePointerCapture === 'function'){try{joystick.releasePointerCapture(joystickPointerId);}catch{}}
+    if (typeof dpadButtons !== 'undefined') Object.keys(dpadButtons).forEach(direction=>{const button=dpadButtons[direction],pointerId=dpadPointerIds.get(direction);if(pointerId!==undefined&&button&&typeof button.releasePointerCapture==='function'){try{button.releasePointerCapture(pointerId);}catch{}}});
+    dpadPointerIds.clear(); joystickPointerId = null; setJoystickVisual('neutral', 0, 0, 0);
+    if (fireBtn){ fireBtn.setAttribute('aria-pressed','false'); fireBtn.classList.remove('is-held'); }
+    if (shouldSend) localInputChanged();
+  }
   function handleKey(e, pressed){
     const map = { w:'up',W:'up',ArrowUp:'up', d:'right',D:'right',ArrowRight:'right', s:'down',S:'down',ArrowDown:'down', a:'left',A:'left',ArrowLeft:'left' };
     if (map[e.key]){
@@ -310,6 +399,7 @@ function gameTank(area, extra, n, opts){
     }
     if (e.key === ' ' || e.key === 'Spacebar'){
       if (canControl() && e.preventDefault) e.preventDefault();
+      if (keyboardInput.fire === pressed) return;
       keyboardInput.fire = pressed; localInputChanged();
     }
   }
@@ -318,27 +408,51 @@ function gameTank(area, extra, n, opts){
 
   extra.innerHTML = '';
   const hud = el('div','tank-arena-hud');
-  const controls = el('div','tank-realtime-controls');
-  const joystick = el('div','tank-joystick','●');
-  joystick.style.cssText = 'width:104px;height:104px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle,rgba(255,255,255,.22),rgba(15,23,42,.66));color:#fff;font-size:38px;touch-action:none;user-select:none;';
-  const fireBtn = el('button','btn btn-primary tank-fire',t('tank_fire'));
-  controls.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:28px;margin-top:8px;touch-action:none;';
-  fireBtn.style.cssText = 'width:92px;height:92px;border-radius:50%;font-weight:900;';
-  controls.appendChild(joystick); controls.appendChild(fireBtn); extra.appendChild(hud); extra.appendChild(controls);
-  function joystickInput(event){
-    if (!canControl()) return;
-    const rect = joystick.getBoundingClientRect();
-    const x = Number(event.clientX) - rect.left - rect.width/2, y = Number(event.clientY) - rect.top - rect.height/2;
-    const input = emptyInput();
-    if (Math.hypot(x,y) > 12){ if (Math.abs(x) > Math.abs(y)) input[x>0?'right':'left'] = true; else input[y>0?'down':'up'] = true; }
-    Object.assign(keyboardInput,input); localInputChanged();
+  const controls = el('div','tank-realtime-controls tank-control-deck'); controls.setAttribute('data-tank-control-deck','');
+  const joystickWrap = el('div','tank-joystick-wrap');
+  const joystick = el('div','tank-joystick'); joystick.setAttribute('role','slider'); joystick.setAttribute('tabindex','0'); joystick.setAttribute('aria-valuemin','0'); joystick.setAttribute('aria-valuemax','100'); joystick.setAttribute('aria-valuenow','0'); joystick.setAttribute('aria-valuetext',t('tank_direction_neutral')); joystick.setAttribute('data-i18n-aria-label','tank_joystick_aria'); joystick.setAttribute('aria-label',t('tank_joystick_aria'));
+  const joystickKnob = el('span','tank-joystick-knob','●'); joystickKnob.setAttribute('aria-hidden','true');
+  const joystickDirection = el('span','tank-joystick-direction',t('tank_direction_neutral')); joystickDirection.setAttribute('data-i18n','tank_direction_neutral'); joystickDirection.setAttribute('aria-live','polite');
+  joystick.appendChild(joystickKnob); joystick.appendChild(joystickDirection); joystickWrap.appendChild(joystick);
+  const dpad = el('div','tank-dpad'); dpad.setAttribute('role','group'); dpad.setAttribute('data-i18n-aria-label','tank_dpad_label'); dpad.setAttribute('aria-label',t('tank_dpad_label'));
+  const dpadButtons = {};
+  directionKeys.forEach(direction => {
+    const button = el('button','btn tank-dpad-button tank-dpad-'+direction,t('tank_'+direction)); button.type='button'; button.setAttribute('data-tank-direction',direction); button.setAttribute('data-i18n','tank_'+direction); button.setAttribute('data-i18n-aria-label','tank_'+direction+'_aria'); button.setAttribute('aria-label',t('tank_'+direction+'_aria')); dpad.appendChild(button); dpadButtons[direction]=button;
+  });
+  const fireBtn = el('button','btn btn-primary tank-fire',t('tank_fire')); fireBtn.type='button'; fireBtn.setAttribute('data-i18n','tank_fire'); fireBtn.setAttribute('data-i18n-aria-label','tank_fire_aria'); fireBtn.setAttribute('aria-label',t('tank_fire_aria')); fireBtn.setAttribute('aria-pressed','false');
+  const hint = el('span','tank-control-hint',t('tank_control_hint')); hint.setAttribute('data-i18n','tank_control_hint');
+  controls.appendChild(joystickWrap); controls.appendChild(dpad); controls.appendChild(fireBtn); controls.appendChild(hint); extra.appendChild(hud); extra.appendChild(controls);
+  function beginJoystick(event){
+    if (!canControl() || joystickPointerId !== null) return;
+    if (event && event.preventDefault) event.preventDefault(); joystickPointerId = event && event.pointerId !== undefined ? event.pointerId : 'joystick';
+    if (typeof joystick.setPointerCapture === 'function' && event && event.pointerId !== undefined){ try { joystick.setPointerCapture(event.pointerId); } catch {} }
+    applyJoystickPoint(event || {clientX:0,clientY:0,pointerId:joystickPointerId});
   }
-  const clearJoystick = () => { Object.assign(keyboardInput,emptyInput()); localInputChanged(); };
-  joystick.addEventListener('pointerdown',joystickInput); joystick.addEventListener('pointermove',e => { if (e.buttons) joystickInput(e); });
-  joystick.addEventListener('pointerup',clearJoystick); joystick.addEventListener('pointercancel',clearJoystick);
-  fireBtn.addEventListener('pointerdown',e => { if (e.preventDefault) e.preventDefault(); keyboardInput.fire = true; localInputChanged(); });
-  fireBtn.addEventListener('pointerup',() => { keyboardInput.fire = false; localInputChanged(); });
-  fireBtn.addEventListener('click',localShoot);
+  function moveJoystick(event){ if (joystickPointerId !== null && (event.pointerId === undefined || event.pointerId === joystickPointerId)) applyJoystickPoint(event); }
+  joystick.addEventListener('pointerdown',beginJoystick); joystick.addEventListener('pointermove',moveJoystick); joystick.addEventListener('pointerup',releaseJoystick); joystick.addEventListener('pointercancel',releaseJoystick); joystick.addEventListener('lostpointercapture',releaseJoystick);
+  function beginDpad(direction,event){
+    if (!canControl()) return; if (event && event.preventDefault) event.preventDefault(); lastDpadPointerAt = Date.now(); dpadMovement[direction] = true;
+    const button=dpadButtons[direction]; if(event&&event.pointerId!==undefined){dpadPointerIds.set(direction,event.pointerId);if(button&&typeof button.setPointerCapture==='function'){try{button.setPointerCapture(event.pointerId);}catch{}}}
+    localInputChanged();
+  }
+  function endDpad(direction,event){
+    if (!dpadMovement[direction] && !dpadPointerIds.has(direction)) return;
+    const button=dpadButtons[direction], pointerId=event&&event.pointerId!==undefined?event.pointerId:dpadPointerIds.get(direction); if(pointerId!==undefined&&button&&typeof button.releasePointerCapture==='function'){try{button.releasePointerCapture(pointerId);}catch{}} dpadPointerIds.delete(direction);
+    dpadMovement[direction] = false; localInputChanged();
+  }
+  directionKeys.forEach(direction => {
+    const button=dpadButtons[direction]; button.addEventListener('pointerdown',e=>beginDpad(direction,e)); button.addEventListener('pointerup',e=>endDpad(direction,e)); button.addEventListener('pointercancel',e=>endDpad(direction,e)); button.addEventListener('lostpointercapture',e=>endDpad(direction,e));
+    button.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.preventDefault)e.preventDefault();if(e.key==='Enter'||e.key===' ')beginDpad(direction,e);}); button.addEventListener('keyup',e=>{if(e.key==='Enter'||e.key===' ')endDpad(direction);});
+    button.addEventListener('click',e=>{if(Date.now()-lastDpadPointerAt<450)return;pulseMove(controlledPlayer(),directionKeys.indexOf(direction),true);});
+  });
+  function beginFire(event){
+    if (!canControl()) return; if (event && event.preventDefault) event.preventDefault(); if (event && event.pointerId !== undefined) firePointerIds.add(event.pointerId); setFireState(true);
+    if (event && event.pointerId !== undefined && typeof fireBtn.setPointerCapture === 'function'){try{fireBtn.setPointerCapture(event.pointerId);}catch{}}
+  }
+  fireBtn.addEventListener('pointerdown',beginFire); fireBtn.addEventListener('pointerup',releaseFirePointer); fireBtn.addEventListener('pointercancel',releaseFirePointer); fireBtn.addEventListener('lostpointercapture',releaseFirePointer); fireBtn.addEventListener('click',localShoot);
+  const onWindowBlur=()=>releaseAllControls(true), onVisibilityChange=()=>{if(document.visibilityState==='hidden')releaseAllControls(true);};
+  if(typeof window!=='undefined'&&window.addEventListener){window.addEventListener('blur',onWindowBlur);window.addEventListener('pointerup',releaseFirePointer);window.addEventListener('pointercancel',releaseFirePointer);}
+  if(document.addEventListener)document.addEventListener('visibilitychange',onVisibilityChange);
 
   /* Influence-map kiting：借鉴 AIIDE《Kiting in RTS Games Using Influence Maps》的
      “先避开高威胁区，再沿安全梯度取得射界”思路；这里只输出既合法又近优的动作。 */
@@ -690,7 +804,7 @@ function gameTank(area, extra, n, opts){
     if (!Number.isSafeInteger(seq) || seq < 1 || seq <= lastAuthoritySequence) return false;
     const finalOrder = payload.act === 'authoritative_result' ? payload.order : null;
     if (payload.act === 'authoritative_result' && !validOrder(finalOrder)) return false;
-    const localInput = !finalOrder && tanks[controlledPlayer()] ? normalizeInput(keyboardInput) : null;
+    const localInput = !finalOrder && tanks[controlledPlayer()] ? getLocalInput() : null;
     if (!onRestore(payload.state,replaying)) return false;
     lastAuthoritySequence = seq;
     if (replayingHost) authoritySequence = Math.max(authoritySequence,seq);
@@ -786,7 +900,7 @@ function gameTank(area, extra, n, opts){
         if(previous.alive&&!server.alive)effects.push({x:server.x,y:server.y,type:'explosion',at:Date.now(),ttl:850});
         else if(!previous.alive&&server.alive)effects.push({x:server.x,y:server.y,type:'respawn',at:Date.now(),ttl:600});
       }
-      if(id===localId)server.input=normalizeInput(keyboardInput);
+      if(id===localId)server.input=getLocalInput();
       return server;
     });
     bullets=(Array.isArray(state.projectiles)?state.projectiles:[]).slice(0,128).map((b,index)=>({id:Number(b.id)||index+1,owner:Number(b.owner)||0,x:Number(b.x)||0,y:Number(b.y)||0,d:Number(b.d)||0,ttl:Number(b.ttl)||0}));
@@ -805,10 +919,13 @@ function gameTank(area, extra, n, opts){
   function getPerformanceStats(){return{...performanceStats,activeParticles:effects.length,activeProjectiles:bullets.length,trailCount:traces.length,caps:{particles:40,projectiles:128,trails:60}};}
   function setSeason(value){ season=SEASONS.includes(value)?value:'spring'; render(); return season; }
   function setCosmetic(value){ cosmetic={default:'classic',players:{},...(value||{})}; cosmetic.default=cosmetic.default==='cyber'?'cyber':'classic'; render(); return cosmetic; }
-  function setSpectators(value){ spectator=Array.isArray(value)?value.includes(opts.viewerId):!!value; Object.assign(keyboardInput,emptyInput()); render(); return spectator; }
+  function setSpectators(value){ spectator=Array.isArray(value)?value.includes(opts.viewerId):!!value; releaseAllControls(false); render(); return spectator; }
   function destroy(){
+    if (!destroyed) releaseAllControls(true);
     destroyed=true; aiEpoch++; aiPending.clear(); aiThinkGate.clear(); clearTransientTimers(); clearInterval(simulationTimer); clearInterval(aiTimer);
     if (document.removeEventListener){ document.removeEventListener('keydown',keyDown); document.removeEventListener('keyup',keyUp); }
+    if (document.removeEventListener) document.removeEventListener('visibilitychange',onVisibilityChange);
+    if (typeof window!=='undefined' && window.removeEventListener){ window.removeEventListener('blur',onWindowBlur); window.removeEventListener('pointerup',releaseFirePointer); window.removeEventListener('pointercancel',releaseFirePointer); }
     area.style.touchAction=previousTouchAction; area.style.overscrollBehavior=previousOverscroll;
   }
   resetLocal();

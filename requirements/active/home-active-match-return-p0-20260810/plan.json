@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "taskId": "home-active-match-return-p0-20260810",
+  "status": "LOCAL_VERIFIED",
+  "steps": [
+    {"id":"recon","status":"completed"},
+    {"id":"contract","status":"completed","dependsOn":["recon"]},
+    {"id":"implementation","status":"completed","dependsOn":["contract"]},
+    {"id":"review","status":"completed","dependsOn":["implementation"],"corrections":["guard renderHomeActiveMatchReturn for old isolated Home VM contracts"]},
+    {"id":"verification","status":"completed","tests":["node qa/home-active-match-return-contract.js","Home P0/P1/Identity contracts","npm run test:i18n","DOM/responsive/Ghost Shell","npm test (199.8s)","deterministic double build"]}
+  ],
+  "release":"Local-only; no commit, push, Pages or Render deployment."
+}

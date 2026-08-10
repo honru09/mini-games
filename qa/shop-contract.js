@@ -57,6 +57,7 @@ class FakeNode {
     this.parentNode = null;
     this.isConnected = false;
     this.listeners = Object.create(null);
+    this.attributes = Object.create(null);
     this.classList = { toggle: () => {}, add: () => {} };
   }
   appendChild(child){
@@ -70,6 +71,8 @@ class FakeNode {
     this.children.forEach(child => child.setConnected(value));
   }
   addEventListener(type, listener){ this.listeners[type] = listener; }
+  setAttribute(name,value){ this.attributes[name] = String(value); }
+  removeAttribute(name){ delete this.attributes[name]; }
   dispatch(type){ if (this.listeners[type]) this.listeners[type]({ target:this }); }
   remove(){
     if (this.parentNode) this.parentNode.children = this.parentNode.children.filter(child => child !== this);
@@ -77,6 +80,7 @@ class FakeNode {
     this.setConnected(false);
   }
   querySelectorAll(){ return []; }
+  querySelector(selector){ return selector && selector.startsWith('.') ? this.findByClass(selector.slice(1)) : null; }
   findByClass(name){
     if (this.className.split(/\s+/).includes(name)) return this;
     for (const child of this.children){

@@ -1,0 +1,8 @@
+{
+  "status":"SOURCE_ONLY_ACCEPTED",
+  "startedAt":"2026-08-10T07:10:00+09:00",
+  "updatedAt":"2026-08-10T07:26:00+09:00",
+  "steps":[{"id":"ART36-1","status":"completed"},{"id":"ART36-2","status":"completed"},{"id":"ART36-3","status":"completed"},{"id":"ART36-4","status":"blocked"}],
+  "evidence":["art-source/player-character/art-036-player-character-monopoly-p1-20260810/player-character-direction-board-draft-v1.png","art-source/games/monopoly/art-036-player-character-monopoly-p1-20260810/monopoly-tabletop-direction-board-draft-v1.png","art-source/player-character/art-036-player-character-monopoly-p1-20260810/PROMPT_AND_PROVENANCE.md","asset-library/catalog.json","node scripts/asset-library-audit.js","node qa/asset-manifest-v2.js"],
+  "externalGates":["manual cleanup","Reviewer B","IP Similarity Review","user Golden Set","real device/browser art review"]
+}

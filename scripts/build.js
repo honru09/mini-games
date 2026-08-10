@@ -1,4 +1,4 @@
-﻿// Build script: concatenate public/src/* modules into public/index.html
+// Build script: concatenate public/src/* modules into public/index.html
 // Usage: node scripts/build.js
 // Zero dependencies, zero configuration.
 'use strict';
@@ -12,9 +12,13 @@ const OUT = path.join(ROOT, 'public', 'index.html');
 
 // JS modules in concatenation order
 const MODULES = [
+  'games/00-tabletop-perspective.js',
   'core/00-i18n.js',
   'core/01-utils.js',
   'core/06-assets.js',
+  '../../shared/progression/victory-mastery.js',
+  '../../shared/progression/profile-journey.js',
+  '../../shared/progression/collection-rarity-catalog.js',
   'core/02-app-shell.js',
   'core/03-game-framework.js',
   'core/04-social.js',
@@ -28,6 +32,9 @@ const MODULES = [
   '../../shared/rules/xiangqi.js',
   '../../shared/rules/monopoly.js',
   'games/00-tabletop-art-runtime.js',
+  'games/monopoly-character-presentation.js',
+  'games/monopoly-presentation-adapter.js',
+  'games/monopoly-ui-state.js',
   'games/gomoku.js',
   'games/ludo.js',
   'games/monopoly.js',
@@ -62,7 +69,9 @@ function build() {
   js = js.trimEnd();
 
   // Use callback to avoid $ replacement pattern issues in String.replace
-  const output = template.replace(marker, () => js);
+  // Normalize generated output so Windows CRLF source files do not create
+  // cross-platform build drift against the LF artifact committed by CI.
+  const output = template.replace(marker, () => js).replace(/\r\n?/g, '\n');
 
   // Write output
   fs.writeFileSync(OUT, output, 'utf8');

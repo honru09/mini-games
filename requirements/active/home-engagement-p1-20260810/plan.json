@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "taskId": "home-engagement-p1-20260810",
+  "status": "completed_local",
+  "steps": [
+    {"id":"recon","status":"completed","owner":"Terra Max","risk":"dirty shared UI worktree","evidence":["recon.md"]},
+    {"id":"contract","status":"completed","dependsOn":["recon"],"owner":"Terra Max","risk":"private aggregate leakage","evidence":["requirement.md","contract.md","ownership.json"]},
+    {"id":"red-test","status":"completed","dependsOn":["contract"],"owner":"Terra Max","risk":"test must describe public UI behavior","tests":["qa/home-engagement-p1-contract.js"],"evidence":"Initial red run exited 1 with missing card/state/locale/route contracts."},
+    {"id":"implementation","status":"completed","dependsOn":["red-test"],"owner":"Terra Max","risk":"must not alter protocol/economy/commerce","files":["public/src/core/02-app-shell.js","public/index-template.html","public/locales/zh-CN.json","public/locales/en-US.json","public/locales/uk-UA.json","package.json"]},
+    {"id":"verification","status":"completed","dependsOn":["implementation"],"owner":"Terra Max + Master","tests":["node qa/home-engagement-p1-contract.js","node qa/home-engagement-contract.js","npm run pretest","npm run test:i18n","node qa/dom-smoke.js","node qa/ghost-shell-contract.js","node qa/ui-responsive-contract.js","node qa/profile-journey.js","node qa/profile-compare-contract.js","node qa/collection-rarity-catalog.js","node qa/shop-contract.js","node qa/ui-shop-layout-contract.js","node qa/ui-profile-social-contract.js","node --experimental-websocket qa/e2e-online.js","npm test","deterministic double build"]}
+  ],
+  "rollback": "Remove the client-only card, local UI dismissal helper, locale keys and dedicated QA. No server, schema, economy, purchase, rule, AI, Replay or asset rollback exists.",
+  "release": "Local-only; no commit, push or deployment without a later explicit user command."
+}

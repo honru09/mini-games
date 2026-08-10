@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "taskId": "social-match-chat-p1-20260810",
+  "status": "completed_local",
+  "startedAt": "2026-08-10T11:08:31+09:00",
+  "updatedAt": "2026-08-10T11:47:00+09:00",
+  "completed": [
+    "match-chat-v1 protocol and capability",
+    "server authority, text normalization, idempotency, rate limits and per-recipient Block filtering",
+    "bounded in-match memory history and spectator delay",
+    "Game Stage history, unread, composer, bubbles, report and local mute",
+    "in-memory draft preservation and lifecycle cleanup",
+    "three-language, accessibility and reduced-motion contracts",
+    "specialized, legacy Social Match and full regression"
+  ],
+  "verification": {
+    "specialized": [
+      "node qa/match-chat-contract.js",
+      "node --experimental-websocket qa/match-chat-online.js",
+      "npm run test:social-match",
+      "node qa/game-stage-contract.js"
+    ],
+    "full": "npm test (142.6s, exit 0)",
+    "buildSource": "scripts/build.js",
+    "buildBytes": 923629,
+    "physicalFileBytes": 937519,
+    "buildSha256": "1A709832AD0320518DB9E944AEEA70BD508231FF56FF6BCF2B88B7436694C305",
+    "doubleBuildIdentical": true
+  },
+  "pending": [
+    "second desktop browser",
+    "Android/iPhone/Tablet",
+    "real network shaping",
+    "visible browser reduced-motion",
+    "approved Honru Emoji artwork",
+    "user release command"
+  ],
+  "dataBoundary": "match text is current-room memory only and excluded from moveLog, Replay, rewards, AI learning, Analytics, database, localStorage and ordinary logs",
+  "published": false
+}

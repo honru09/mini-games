@@ -1,17 +1,52 @@
 /* ================= 联机对战（WebSocket 中继） ================= */
+const ONLINE_CLIENT_CAPABILITIES = Object.freeze([
+  'tank-authority-v1','tetris-battle-authority-v1','tetris-rule-v3','spectator-room-v1','tournament-orchestrator-v1',
+  'xiangqi-clock-v1','xiangqi-rule-v2','monopoly-auction-v1','monopoly-rule-v2','game-cosmetic-presentation-v1',
+  'username-password-auth-v2','ephemeral-guest-v1','honru-companion-v1','direct-chat-v1','match-expression-v1','match-chat-v1',
+]);
+function socialGuestMutationBlocked(){
+  if (!(typeof account !== 'undefined' && account && account.ephemeral)) return false;
+  toast(t('guest_persistence_disabled'));
+  return true;
+}
+function markGuestSocialControl(button){
+  if (!button || !(typeof account !== 'undefined' && account && account.ephemeral)) return button;
+  button.setAttribute('aria-disabled','true');
+  button.setAttribute('title',t('guest_persistence_disabled'));
+  button.setAttribute('data-i18n-title','guest_persistence_disabled');
+  button.dataset.guestMutationBlocked = 'true';
+  button.addEventListener('click', event => {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    toast(t('guest_persistence_disabled'));
+  }, true);
+  return button;
+}
 const online = {
   ws: null, room: null, spectatorRoom:null, player: 0, isHost: false, isSpectator: false, game: null, gameplayMeta: null, presentationMeta:null, connected: false, pending: null, roomInfo: null, capacity: 2, _hb: null,
-  lobby: [], inviteTarget: null, pendingGame:null, matchId: null, reportedMatchIds: [], soloReportedIds: [], legacyResultSubmitted: false,
+  lobby: [], inviteTarget: null, pendingGame:null, pendingGameRoom:null, matchId: null, reportedMatchIds: [], soloReportedIds: [], legacyResultSubmitted: false,
   resume: null, _reconnectTimer: null, _reconnectAttempts: 0, _manualClose: false, _replaying: false, _liveMoveQueue: [],
-  pendingResultClaim: null, _resultRetryTimer: null, _authenticated: false,
+  pendingResultClaim: null, _resultRetryTimer: null, _authenticated: false, capabilities:new Set(), pendingPublicProfileUid:null, pendingProfileCompare:null,
   soloMatch: null, pendingSoloClaims: [], _soloClaimsLoaded: false, displayedRewardIds: [], rewardVersion: null,
   socialState: { version:'1.0', friends:[], incoming:[], outgoing:[], blocked:[], counts:{ friends:0, incoming:0, outgoing:0, blocked:0 } },
   dailyTasks: null, isAdmin:false,
   replays: [], _sharedReplayRequested:false,
   chatState: { version:'1.0', conversations:[], unreadTotal:0 },
-  chatHistory: {}, chatHistoryMeta:{}, chatPending: new Map(), chatDrafts:new Map(), chatActivePeerUid:null, cacheOwnerUid:null,
+  chatListPending:false, chatHistoryPending:{}, chatHistory: {}, chatHistoryMeta:{}, chatPending: new Map(), chatDrafts:new Map(), chatActivePeerUid:null, cacheOwnerUid:null,
   socialTab:'friends',
   defaultServer: 'https://mini-games-online.onrender.com',
+  sendHello(uid,token){
+    this.isAdmin=false;
+    this.tournamentState=null;
+    this.tournamentMatch=null;
+    if(typeof closeTournamentStateModal==='function')closeTournamentStateModal();
+    this.send({type:'hello',payload:{
+      uid:uid||null,
+      token:token||null,
+      proto:typeof PROTOCOL_VERSION!=='undefined'?PROTOCOL_VERSION:2,
+      capabilities:ONLINE_CLIENT_CAPABILITIES.slice(),
+    }});
+  },
   connect(){
     if (this.connected || (this.ws && (this.ws.readyState === 0 || this.ws.readyState === 1))) return;
     let wsUrl;
@@ -35,12 +70,10 @@ const online = {
       this.status(t('online_status_connected'));
       const authAccount = typeof account !== 'undefined' ? account : null;
       const authPin = typeof pendingAuthPin !== 'undefined' ? pendingAuthPin : null;
-      this.send({ type: 'hello', payload: {
-        uid: authAccount && authAccount.uid ? authAccount.uid : (typeof deviceUid !== 'undefined' ? deviceUid : null),
-        token: authAccount && authAccount.authToken ? authAccount.authToken : null,
-        proto: typeof PROTOCOL_VERSION !== 'undefined' ? PROTOCOL_VERSION : 2,
-        capabilities: ['tank-authority-v1','tetris-battle-authority-v1','tetris-rule-v3','spectator-room-v1','tournament-orchestrator-v1','xiangqi-clock-v1','xiangqi-rule-v2','monopoly-auction-v1','monopoly-rule-v2','game-cosmetic-presentation-v1','username-password-auth-v2','ephemeral-guest-v1','honru-companion-v1','direct-chat-v1'],
-      } });
+      this.sendHello(
+        authAccount && authAccount.uid ? authAccount.uid : (typeof deviceUid !== 'undefined' ? deviceUid : null),
+        authAccount && authAccount.authToken ? authAccount.authToken : null,
+      );
       this.send({ type: 'lobby' });
       const needsRegister = authAccount && authAccount.uid && authPin && authAccount.registered === false;
       const needsLogin = authAccount && authAccount.uid && authPin && !authAccount.authToken && authAccount.registered !== false;
@@ -240,6 +273,11 @@ const online = {
   },
   create(settings){
     if (!account){ toast(t('need_account_online')); openAuthModal(); return; }
+    if(this.room&&!this.isSpectator){
+      this.pendingGame=null;this.pendingGameRoom=null;
+      toast(t('server_already_in_room'));
+      return;
+    }
     settings = settings || {};
     if (this.connected){
       this.send({ type:'create', payload:{ capacity:Math.max(2,Math.min(5,Number(settings.capacity)||playerCount||2)), visibility:settings.visibility || 'public', allowSpectators:settings.allowSpectators !== false } });
@@ -272,6 +310,9 @@ const online = {
   spectateRoom(room){ this.send({ type:'spectate', payload:{ room } }); },
   setReady(ready){ this.send({ type:'ready', payload:{ ready:ready !== false } }); },
   requestSocial(){ if (this.connected && this._authenticated) this.send({ type:'social_get' }); },
+  requestProfile(uid){if(this.connected&&this._authenticated&&uid){const id=String(uid);this.pendingPublicProfileUid=id;if(typeof beginPublicProfileRequest==='function')beginPublicProfileRequest(id);this.send({type:'profile_get',payload:{uid:id}});return true;}return false;},
+  requestProfileCompare(uid){if(this.connected&&this._authenticated&&account&&!account.ephemeral&&uid){const targetUid=String(uid),requestId='compare_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,10);this.pendingProfileCompare={targetUid,requestId};if(typeof beginProfileCompareRequest==='function')beginProfileCompareRequest(targetUid,requestId);this.send({type:'profile_compare',payload:{uid:targetUid,requestId}});return true;}return false;},
+  supportsCapability(name){return !!(this.capabilities&&this.capabilities.has(String(name||'')));},
   prepareAccountScopedState(uid){
     uid=String(uid||'');
     if(this.cacheOwnerUid&&this.cacheOwnerUid!==uid)this.resetAccountCaches();
@@ -280,14 +321,15 @@ const online = {
   resetAccountCaches(){
     this.socialState={version:'1.0',friends:[],incoming:[],outgoing:[],blocked:[],counts:{friends:0,incoming:0,outgoing:0,blocked:0}};
     this.dailyTasks=null;this.replays=[];this._sharedReplayRequested=false;
-    this.chatState={version:'1.0',conversations:[],unreadTotal:0};this.chatHistory={};this.chatHistoryMeta={};this.chatPending=new Map();this.chatDrafts=new Map();this.chatActivePeerUid=null;this.cacheOwnerUid=null;
+    this.chatState={version:'1.0',conversations:[],unreadTotal:0};this.chatListPending=false;this.chatHistoryPending={};this.chatHistory={};this.chatHistoryMeta={};this.chatPending=new Map();this.chatDrafts=new Map();this.chatActivePeerUid=null;this.pendingProfileCompare=null;this.cacheOwnerUid=null;if(typeof closeProfileCompareLoading==='function')closeProfileCompareLoading();
     if(typeof renderSocialRail==='function')renderSocialRail();
     if(typeof renderPlayerChat==='function')renderPlayerChat();
     if(typeof updateChatUnreadBadge==='function')updateChatUnreadBadge();
   },
-  requestChatList(limit){if(this.connected&&this._authenticated)this.send({type:'chat_list',payload:{limit:Number(limit)||50}});},
+  requestChatList(limit){if(this.connected&&this._authenticated){this.chatListPending=true;this.send({type:'chat_list',payload:{limit:Number(limit)||50}});return true;}return false;},
   requestChatHistory(peerUid,beforeSeq){
     if(!this.connected||!this._authenticated||!peerUid)return false;
+    this.chatHistoryPending[String(peerUid)]=true;
     this.send({type:'chat_history',payload:{peerUid:String(peerUid),...(beforeSeq?{beforeSeq:String(beforeSeq)}:{}),limit:30}});return true;
   },
   sendChatMessage(peerUid,text,clientMessageId){
@@ -301,18 +343,34 @@ const online = {
     if(!this.connected||!this._authenticated||!peerUid||!throughSeq)return false;
     this.send({type:'chat_read',payload:{peerUid:String(peerUid),throughSeq:String(throughSeq)}});return true;
   },
-  friendRequest(uid){ this.send({ type:'friend_request', payload:{ toUid:String(uid || '') } }); },
-  friendRequestAction(action, requestId){ this.send({ type:'friend_request_action', payload:{ action, requestId:String(requestId || '') } }); },
-  removeFriend(uid){ this.send({ type:'friend_remove', payload:{ uid:String(uid || '') } }); },
-  blockUser(uid){ this.send({ type:'block', payload:{ uid:String(uid || '') } }); },
-  unblockUser(uid){ this.send({ type:'unblock', payload:{ uid:String(uid || '') } }); },
-  reportUser(payload){ this.send({ type:'report', payload:payload || {} }); },
+  friendRequest(uid){ if(socialGuestMutationBlocked())return false; this.send({ type:'friend_request', payload:{ toUid:String(uid || '') } }); return true; },
+  friendRequestAction(action, requestId){ if(socialGuestMutationBlocked())return false; this.send({ type:'friend_request_action', payload:{ action, requestId:String(requestId || '') } }); return true; },
+  removeFriend(uid){ if(socialGuestMutationBlocked())return false; this.send({ type:'friend_remove', payload:{ uid:String(uid || '') } }); return true; },
+  blockUser(uid){ if(socialGuestMutationBlocked())return false; this.send({ type:'block', payload:{ uid:String(uid || '') } }); return true; },
+  unblockUser(uid){ if(socialGuestMutationBlocked())return false; this.send({ type:'unblock', payload:{ uid:String(uid || '') } }); return true; },
+  reportUser(payload){ if(socialGuestMutationBlocked())return false; this.send({ type:'report', payload:payload || {} }); return true; },
   addAI(difficulty, persona){ this.send({ type:'add_ai', payload:{ difficulty:difficulty || 'normal', persona:persona || 'teacher' } }); },
   removeAI(seatId){ this.send({ type:'remove_ai', payload:{ seatId } }); },
   sendBotMove(seatId, payload){ this.send({ type:'bot_move', payload:{ seatId, payload } }); },
   sendBotTankInput(seatId, payload){ this.send({ type:'bot_tank_input', payload:{ ...(payload || {}), seatId, matchId:this.matchId } }); },
   sendBotTetrisAction(seatId, action){ this.send({ type:'bot_tetris_action', payload:{ seatId, action, matchId:this.matchId } }); },
   sendMove(payload){ this.send({type:'move', payload}); setTimeout(() => this.publishGameState(), 0); },
+  sendMatchExpression(kind,expressionId,targetSeat,eventId){
+    if(!this.connected||!this._authenticated||!this.room||!this.matchId||this.isSpectator||!this.supportsCapability('match-expression-v1'))return null;
+    const id=String(eventId||('mx_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,12)));
+    const payload={matchId:this.matchId,eventId:id,kind:String(kind||''),expressionId:String(expressionId||'')};
+    if(targetSeat!==undefined&&targetSeat!==null&&targetSeat!=='')payload.targetSeat=Number(targetSeat);
+    this.send({type:'match_expression',payload});return id;
+  },
+  requestMatchChatState(){
+    if(!this.connected||!this._authenticated||!this.matchId||(!this.room&&!this.spectatorRoom)||!this.supportsCapability('match-chat-v1'))return false;
+    this.send({type:'match_chat_sync',payload:{matchId:this.matchId}});return true;
+  },
+  sendMatchChat(text,messageId){
+    if(!this.connected||!this._authenticated||!this.room||!this.matchId||this.isSpectator||!this.supportsCapability('match-chat-v1'))return null;
+    const id=String(messageId||('mc_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,12)));
+    this.send({type:'match_chat_send',payload:{matchId:this.matchId,messageId:id,text:String(text||'')}});return id;
+  },
   sendTankInput(payload){ this.send({type:'tank_input', payload:{...(payload||{}),matchId:this.matchId}}); },
   sendTetrisLockClaim(payload){ this.send({type:'tetris_lock_claim', payload:{...(payload||{}),matchId:this.matchId}}); },
   sendTetrisKOClaim(payload){ this.send({type:'tetris_ko_claim', payload:{...(payload||{}),matchId:this.matchId}}); },
@@ -336,8 +394,11 @@ const online = {
       case 'created':
         msg.room = String(msg.room || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12);
         this.room = msg.room; this.player = msg.player; this.isHost = true;
+        if(this.pendingGame)this.pendingGameRoom=msg.room;
+        else this.pendingGameRoom=null;
         this.capacity = msg.capacity || 2;
         this.roomInfo = msg.payload || { room:msg.room, game:null, capacity:this.capacity, players:[{uid:null,player:0}], seats:[], size:1, started:false };
+        if (typeof cacheRoomPlayerCharacters === 'function') cacheRoomPlayerCharacters(this.roomInfo);
         this.status(t('room_created_status',msg.room));
         renderRoomPanel();
         if (this.inviteTarget){
@@ -349,28 +410,48 @@ const online = {
         break;
       case 'joined':
         msg.room = String(msg.room || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12);
+        this.pendingGame=null;this.pendingGameRoom=null;
         this.room = msg.room; this.player = msg.player; this.isHost = false;
         this.roomInfo = msg.payload || { room:msg.room, game:null, capacity:2, players:[{uid:null,player:0}], seats:[], size:1, started:false };
+        if (typeof cacheRoomPlayerCharacters === 'function') cacheRoomPlayerCharacters(this.roomInfo);
         this.status(t('room_joined_status',msg.room));
         renderRoomPanel();
         break;
       case 'room_update':
+        {
+        const updateRoom=String(msg.payload&&msg.payload.room||'').trim().toUpperCase();
+        const expectedRoom=String(this.room||this.spectatorRoom||(this.resume&&this.resume.room)||'').trim().toUpperCase();
+        // A leave action clears local room state immediately. Ignore any queued
+        // update from that departed room so it cannot resurrect stale state and
+        // block the next create/join action.
+        if(!updateRoom||!expectedRoom||updateRoom!==expectedRoom)break;
         this.roomInfo = msg.payload;
+        if (typeof cacheRoomPlayerCharacters === 'function') cacheRoomPlayerCharacters(this.roomInfo);
         this.capacity = msg.payload.capacity || this.capacity;
         if (this.room) this.isHost = !!(msg.payload.host && Number(msg.payload.host.seatId) === Number(this.player));
-        if (!this.isHost && !this.room && !this.isSpectator) this.room = msg.payload.room;
+        if (!this.isHost && !this.room && !this.isSpectator && this.resume && updateRoom===String(this.resume.room||'').trim().toUpperCase()) this.room = msg.payload.room;
         if (this.game && !msg.payload.game && !msg.payload.started){
           finishRoomGame();
           return;
         }
         renderRoomPanel();
         if (typeof renderGameStage === 'function') renderGameStage();
-        if (this.pendingGame){ const game=this.pendingGame; this.pendingGame=null; this.selectGame(game); }
+        if(this.pendingGame){
+          if(this.pendingGameRoom&&msg.payload&&this.pendingGameRoom===msg.payload.room&&this.pendingGameRoom===this.room){
+            const game=this.pendingGame;this.pendingGame=null;this.pendingGameRoom=null;
+            if(this.isHost&&game&&!msg.payload.game)this.selectGame(game);
+          }else if(this.pendingGameRoom&&this.pendingGameRoom!==this.room){
+            this.pendingGame=null;this.pendingGameRoom=null;
+          }
+        }
+        }
         break;
       case 'spectating':
         {
           const p=msg.payload || {};
+          this.pendingGame=null;this.pendingGameRoom=null;
           this.spectatorRoom=p.room || null;this.room=null;this.player=null;this.isHost=false;this.isSpectator=true;this.roomInfo=p;
+          if (typeof cacheRoomPlayerCharacters === 'function') cacheRoomPlayerCharacters(this.roomInfo);
           this.game=p.started?p.game:null;this.matchId=p.matchId||null;this.gameplayMeta=p.gameplay||null;this.presentationMeta=p.presentation||null;
           this.status(t('spectating_room',p.room || ''));renderRoomPanel();
           if (this.game){ startOnlineGame(this.game,p.size); this.replayMoveLog(p.moveLog || []); }
@@ -380,8 +461,10 @@ const online = {
       case 'spectate_joined':
         {
           const p=msg.payload||{};
+          this.pendingGame=null;this.pendingGameRoom=null;
           this.room=p.room;this.player=-1;this.isHost=false;this.isSpectator=true;this.game=p.game||null;this.matchId=p.matchId||null;this.gameplayMeta=p.gameplay||null;this.presentationMeta=p.presentation||null;
           this.capacity=p.capacity||2;this.roomInfo=p;renderRoomPanel();
+          if (typeof cacheRoomPlayerCharacters === 'function') cacheRoomPlayerCharacters(this.roomInfo);
           if(this.game){
             startOnlineGame(this.game,p.size);
             if(p.gameSnapshot&&currentGame&&currentGame.onRestore)currentGame.onRestore(p.gameSnapshot.snapshot);
@@ -391,7 +474,7 @@ const online = {
              if(p.tetrisRuleSnapshot&&currentGame&&currentGame.onTetrisRuleState)currentGame.onTetrisRuleState(p.tetrisRuleSnapshot);
              if(Array.isArray(p.tetrisPresentation)&&currentGame&&currentGame.onTetrisState)p.tetrisPresentation.forEach(item=>currentGame.onTetrisState(item));
              if(p.xiangqiRuleSnapshot&&currentGame&&currentGame.onXiangqiRuleState)currentGame.onXiangqiRuleState(p.xiangqiRuleSnapshot);
-             if(p.monopolyRuleSnapshot&&currentGame&&currentGame.onMonopolyRuleState)currentGame.onMonopolyRuleState(p.monopolyRuleSnapshot);
+             if(p.monopolyRuleSnapshot&&currentGame&&currentGame.onMonopolyRuleState)currentGame.onMonopolyRuleState(p.monopolyRuleSnapshot,null,'spectator-bootstrap');
              if(p.clockSnapshot&&currentGame&&currentGame.onClockState)currentGame.onClockState(p.clockSnapshot);
             if(p.auctionSnapshot&&currentGame&&currentGame.onAuctionEvent)currentGame.onAuctionEvent('auction_state',p.auctionSnapshot);
             if(p.finalResult){this.lastMatchResult=p.finalResult;toast(t('match_already_finished'));}
@@ -406,7 +489,14 @@ const online = {
       case 'hello_ack':
         this._authenticated = !!msg.authenticated;
         this.isAdmin = !!msg.admin;
+        if(!this.isAdmin){
+          this.tournamentState=null;
+          this.tournamentMatch=null;
+          if(typeof closeTournamentStateModal==='function')closeTournamentStateModal();
+        }
+        if(this.roomInfo&&typeof renderRoomPanel==='function')renderRoomPanel();
         this.rewardVersion = msg.rewardVersion || null;
+        this.capabilities = new Set(Array.isArray(msg.capabilities)?msg.capabilities.map(String):[]);
         if (msg.authenticated){
           if (!this.resume) this._reconnectAttempts = 0;
           this.loadPendingResultClaim();
@@ -439,6 +529,7 @@ const online = {
         toast(translateServerMessage(msg.msg,msg.reason||(msg.payload&&msg.payload.reason),'operation_failed'));
         break;
       case 'chat_state':
+        this.chatListPending=false;
         this.chatState=msg.payload||{version:'1.0',conversations:[],unreadTotal:0};
         if(typeof renderPlayerChat==='function')renderPlayerChat();
         if(typeof updateChatUnreadBadge==='function')updateChatUnreadBadge();
@@ -447,6 +538,7 @@ const online = {
         {
           const payload=msg.payload||{},peerUid=payload.peer&&payload.peer.uid;
           if(peerUid){
+            this.chatHistoryPending[String(peerUid)]=false;
             const current=Array.isArray(this.chatHistory[peerUid])?this.chatHistory[peerUid]:[];
             const merged=[...(payload.messages||[]),...current],byId=new Map();merged.forEach(item=>{if(item&&item.id)byId.set(item.id,item);});
             this.chatHistory[peerUid]=[...byId.values()].sort((a,b)=>String(a.seq).localeCompare(String(b.seq),undefined,{numeric:true}));
@@ -454,6 +546,15 @@ const online = {
           }
           if(typeof handlePlayerChatHistory==='function')handlePlayerChatHistory(payload);
           if(typeof renderPlayerChat==='function')renderPlayerChat();
+        }
+        break;
+      case 'spectate_left':
+        {
+          const negotiatedCapabilities=this.capabilities;
+          this.resetState();
+          this.capabilities=negotiatedCapabilities;
+          if(typeof clearMatchExpressions==='function')clearMatchExpressions();
+          renderRoomPanel();
         }
         break;
       case 'chat_message':
@@ -474,9 +575,34 @@ const online = {
         this.requestChatList();
         break;
       case 'chat_error':
+        if(msg.payload&&msg.payload.action==='chat_list')this.chatListPending=false;
+        if(msg.payload&&msg.payload.action==='chat_history')this.chatHistoryPending={};
         if(msg.payload&&msg.payload.clientMessageId&&this.chatPending.has(msg.payload.clientMessageId))this.chatPending.get(msg.payload.clientMessageId).status='failed';
         if(typeof handlePlayerChatError==='function')handlePlayerChatError(msg.payload||{});
         else toast(t('chat_error_generic'));
+        break;
+      case 'match_expression':
+        if(typeof receiveMatchExpression==='function')receiveMatchExpression(msg.payload||{});
+        break;
+      case 'match_expression_ok':
+        if(typeof handleMatchExpressionAck==='function')handleMatchExpressionAck(msg.payload||{});
+        break;
+      case 'match_expression_error':
+        if(typeof handleMatchExpressionError==='function')handleMatchExpressionError(msg.payload||{});
+        else toast(translateServerMessage(msg.msg,msg.reason||(msg.payload&&msg.payload.reason),'match_expression_failed'));
+        break;
+      case 'match_chat_state':
+        if(typeof receiveMatchChatState==='function')receiveMatchChatState(msg.payload||{});
+        break;
+      case 'match_chat_message':
+        if(typeof receiveMatchChatMessage==='function')receiveMatchChatMessage(msg.payload||{});
+        break;
+      case 'match_chat_ok':
+        if(typeof handleMatchChatAck==='function')handleMatchChatAck(msg.payload||{});
+        break;
+      case 'match_chat_error':
+        if(typeof handleMatchChatError==='function')handleMatchChatError(msg.payload||{});
+        else toast(translateServerMessage(msg.msg,msg.reason||(msg.payload&&msg.payload.reason),'match_chat_failed'));
         break;
       case 'rejoined':
         {
@@ -496,6 +622,7 @@ const online = {
             visibility:p.visibility || 'public', allowSpectators:p.allowSpectators !== false,
             started: !!p.started, settled:!!p.settled, matchId: p.matchId || null,
           };
+          if (typeof cacheRoomPlayerCharacters === 'function') cacheRoomPlayerCharacters(this.roomInfo);
           this.game = p.started ? (p.game || null) : null;
           this.clearResume();
           renderRoomPanel();
@@ -508,7 +635,7 @@ const online = {
             if(p.tetrisRuleSnapshot&&currentGame&&currentGame.onTetrisRuleState)currentGame.onTetrisRuleState(p.tetrisRuleSnapshot);
             if(Array.isArray(p.tetrisPresentation)&&currentGame&&currentGame.onTetrisState)p.tetrisPresentation.forEach(item=>currentGame.onTetrisState(item));
             if(p.xiangqiRuleSnapshot&&currentGame&&currentGame.onXiangqiRuleState)currentGame.onXiangqiRuleState(p.xiangqiRuleSnapshot);
-            if(p.monopolyRuleSnapshot&&currentGame&&currentGame.onMonopolyRuleState)currentGame.onMonopolyRuleState(p.monopolyRuleSnapshot);
+             if(p.monopolyRuleSnapshot&&currentGame&&currentGame.onMonopolyRuleState)currentGame.onMonopolyRuleState(p.monopolyRuleSnapshot,null,'reconnect');
             if(p.finalResult){this.lastMatchResult=p.finalResult;toast(t('match_already_finished'));}
           } else {
             this.status(t('room_restored', this.room));
@@ -618,7 +745,7 @@ const online = {
         if(this.game==='xiangqi'&&currentGame&&currentGame.onXiangqiRuleResult)currentGame.onXiangqiRuleResult(msg.payload||msg);
         break;
       case 'monopoly_rule_state':
-        if(this.game==='monopoly'&&currentGame&&currentGame.onMonopolyRuleState)currentGame.onMonopolyRuleState(msg.payload||msg);
+        if(this.game==='monopoly'&&currentGame&&currentGame.onMonopolyRuleState)currentGame.onMonopolyRuleState(msg.payload||msg,msg.transition||null);
         break;
       case 'monopoly_result':
         if(this.game==='monopoly'&&currentGame&&currentGame.onMonopolyRuleResult)currentGame.onMonopolyRuleResult(msg.payload||msg);
@@ -647,7 +774,8 @@ const online = {
         break;
       case 'tournament_state':
         this.tournamentState=msg.payload||null;
-        if(typeof renderTournamentState==='function')renderTournamentState(this.tournamentState);
+        if(tournamentUiAvailable()&&typeof renderTournamentState==='function')renderTournamentState(this.tournamentState);
+        else closeTournamentStateModal();
         break;
       case 'tournament_match_assigned':
         this.tournamentMatch=msg.payload||null;
@@ -768,6 +896,7 @@ const online = {
             account.registered = true;
             if (typeof pendingAuthPin !== 'undefined') pendingAuthPin = null;
             this._authenticated = true;
+            this.sendHello(uid,token);
             if (profile) updateAccountProfile(profile);
             else saveAccount();
             this.loadPendingResultClaim();
@@ -795,7 +924,9 @@ const online = {
             const token = msg.token || payload.token;
             account = Object.assign({}, profile, { device: deviceFingerprint(), registered: true });
             if (token){ account.authToken = token; delete account.pin; }
+            deviceUid = uid;
             this._authenticated = true;
+            this.sendHello(uid,token);
             updateAccountProfile(profile);
             this.loadPendingResultClaim();
             this.flushPendingResultClaim();
@@ -815,7 +946,7 @@ const online = {
       case 'guest_logged_in':
         {
           const payload=msg.payload||{},profile=payload.profile||null,uid=payload.uid||(profile&&profile.uid),token=msg.token||payload.token;
-          if(profile&&uid&&token){this.prepareAccountScopedState(uid);account=Object.assign({},profile,{uid,authToken:token,device:deviceFingerprint(),registered:true,ephemeral:true,accountKind:'guest'});deviceUid=uid;this._authenticated=true;updateAccountProfile(profile);saveAccount();renderMe();renderLeaderboard();if(authModalEl){authModalEl.remove();authModalEl=null;}toast(t('guest_login_success'));if(typeof enterGhostApp==='function')enterGhostApp();}
+          if(profile&&uid&&token){this.prepareAccountScopedState(uid);account=Object.assign({},profile,{uid,authToken:token,device:deviceFingerprint(),registered:true,ephemeral:true,accountKind:'guest'});deviceUid=uid;this._authenticated=true;this.sendHello(uid,token);updateAccountProfile(profile);saveAccount();renderMe();renderLeaderboard();if(authModalEl){authModalEl.remove();authModalEl=null;}toast(t('guest_login_success'));if(typeof enterGhostApp==='function')enterGhostApp();}
         }
         break;
       case 'username_status':
@@ -837,8 +968,28 @@ const online = {
         else this.resetState();
         break;
       case 'profile_data':
-        if (msg.payload){
-          renderProfilePopup(msg.payload, false);
+        {
+          const profile = msg.payload || null;
+          const pending = this.pendingPublicProfileUid;
+          if (profile && typeof cacheServerProfilePresentation === 'function') cacheServerProfilePresentation(profile);
+          if (pending && (!profile || String(profile.uid || '') === String(pending))){
+            this.pendingPublicProfileUid = null;
+            if (typeof finishPublicProfileRequest === 'function' && finishPublicProfileRequest(profile)) break;
+            if (!profile) toast(t('profile_not_found'));
+          }
+          if (profile && typeof account !== 'undefined' && account && profile.uid === account.uid && typeof updateAccountProfile === 'function') updateAccountProfile(profile);
+        }
+        break;
+      case 'profile_compare_data':
+        {
+          const payload=msg.payload||{},pending=this.pendingProfileCompare;
+          if(pending&&String(payload.requestId||'')===pending.requestId&&String(payload.targetUid||'')===pending.targetUid){this.pendingProfileCompare=null;if(typeof finishProfileCompareRequest==='function')finishProfileCompareRequest(payload);}
+        }
+        break;
+      case 'profile_compare_error':
+        {
+          const payload=msg.payload||{},pending=this.pendingProfileCompare;
+          if(pending&&(!payload.requestId||String(payload.requestId)===pending.requestId)){this.pendingProfileCompare=null;if(typeof finishProfileCompareRequest==='function')finishProfileCompareRequest(null,payload.reason||'profile_compare_forbidden');}
         }
         break;
       case 'purchase_ok':
@@ -846,6 +997,7 @@ const online = {
           const payload = msg.payload || {};
           const profile = payload.profile || msg.profile || (payload.uid && (payload.name !== undefined || payload.avatar !== undefined || payload.coins !== undefined) ? payload : null);
           if (profile && account && profile.uid === account.uid) updateAccountProfile(profile);
+          if (typeof finishShopPurchaseFeedback === 'function') finishShopPurchaseFeedback(true,payload,payload.reason||msg.reason);
           if (typeof refreshOpenShop === 'function') refreshOpenShop();
           if (typeof renderMe === 'function') renderMe();
           if (typeof renderMyCard === 'function') renderMyCard();
@@ -854,6 +1006,10 @@ const online = {
         }
         break;
       case 'purchase_error':
+        {
+          const payload=msg.payload||{};
+          if (typeof finishShopPurchaseFeedback === 'function') finishShopPurchaseFeedback(false,{...payload,msg:payload.msg||msg.msg},payload.reason||msg.reason);
+        }
         toast(translateServerMessage((msg.payload&&msg.payload.msg)||msg.msg,(msg.payload&&msg.payload.reason)||msg.reason,'purchase_failed'));
         if (typeof refreshOpenShop === 'function') refreshOpenShop();
         break;
@@ -1067,9 +1223,11 @@ const online = {
   },
   resetState(preserveResume){
     const wasRoomGame = !!(this.room || this.game);
+    if (!this.connected && typeof clearShopPurchaseFeedback === 'function') clearShopPurchaseFeedback({silent:true});
     if (!preserveResume) this.clearResume();
     if (!preserveResume) this.clearPendingResultClaim();
-    this.room = null; this.spectatorRoom=null; this.game = null; this.isHost = false; this.isSpectator = false; this.gameplayMeta = null; this.presentationMeta=null; this.pending = null; this.roomInfo = null; this.capacity = 2; this.inviteTarget = null; this.pendingGame=null;
+    this.room = null; this.spectatorRoom=null; this.game = null; this.isHost = false; this.isSpectator = false; this.gameplayMeta = null; this.presentationMeta=null; this.pending = null; this.roomInfo = null; this.capacity = 2; this.inviteTarget = null; this.pendingGame=null;this.pendingGameRoom=null;if(!this.connected)this.capabilities=new Set();if(!this.connected){this.chatListPending=false;this.chatHistoryPending={};}if(!this.connected){this.pendingProfileCompare=null;if(typeof closeProfileCompareLoading==='function')closeProfileCompareLoading();}
+    this.isAdmin=false;this.tournamentState=null;this.tournamentMatch=null;if(typeof closeTournamentStateModal==='function')closeTournamentStateModal();
     this.matchId = null; this.legacyResultSubmitted = false;
     $('online-banner').classList.add('hidden');
     $('room-panel').classList.add('hidden');
@@ -1159,12 +1317,12 @@ function renderRoomPanel(){
       const card=el('div','seat-card '+(seat.type==='empty'?'is-empty ':'')+(seat.host?'is-host ':'')+(seat.online===false&&seat.type==='human'?'is-offline':''));
       if(seat.type==='human'){
         const profile={...(profileByUid(seat.userId)||{}),uid:seat.userId,name:seat.nickname,avatar:seat.avatar};
-        const av=avatarStageNode(profile,38);av.style.cursor='pointer';av.addEventListener('click',()=>seat.userId&&openProfileModal(seat.userId));card.appendChild(av);
-        card.appendChild(elRaw('div','seat-name',seat.nickname+(seat.userId===deviceUid?t('profile_mine'):'')));
-        const badges=el('div','seat-badges');if(seat.host)badges.appendChild(el('span','seat-badge','HOST'));badges.appendChild(el('span','seat-badge '+(seat.ready?'ready':''),seat.ready?'READY':t('not_ready')));if(!seat.online)badges.appendChild(el('span','seat-badge',t('offline')));card.appendChild(badges);
+        const av=el('button','game-stage-avatar-button');av.type='button';av.setAttribute('aria-label',t('room_host_profile_aria',localizedPlayerName(seat.nickname)));av.disabled=!seat.userId;av.appendChild(avatarStageNode(profile,38));av.addEventListener('click',()=>seat.userId&&openProfileModal(seat.userId));card.appendChild(av);
+        const seatName=el('div','seat-name');appendPlayerName(seatName,seat.nickname);if(seat.userId===deviceUid)seatName.appendChild(el('span',null,t('profile_mine')));card.appendChild(seatName);
+        const badges=el('div','seat-badges');if(seat.host)badges.appendChild(el('span','seat-badge',t('stage_host')));badges.appendChild(el('span','seat-badge '+(seat.ready?'ready':''),t(seat.ready?'ready':'not_ready')));if(!seat.online)badges.appendChild(el('span','seat-badge',t('offline')));card.appendChild(badges);
       }else if(seat.type==='ai'){
-        card.appendChild(avatarStageNode({avatar:seat.avatar||141,frame:0,effect:0},38));card.appendChild(elRaw('div','seat-name',(seat.nickname||'AI')+' AI'));
-        const badges=el('div','seat-badges');badges.appendChild(el('span','seat-badge bot','BOT / AI'));badges.appendChild(el('span','seat-badge ready','READY'));card.appendChild(badges);
+        card.appendChild(avatarStageNode({avatar:seat.avatar||141,frame:0,effect:0},38));const seatName=el('div','seat-name');appendPlayerName(seatName,seat.nickname,'ai_default_name');card.appendChild(seatName);
+        const badges=el('div','seat-badges');badges.appendChild(el('span','seat-badge bot',t('stage_ai')));badges.appendChild(el('span','seat-badge ready',t('ready')));card.appendChild(badges);
         card.appendChild(el('div','seat-meta',(seat.aiDifficulty||'normal').toUpperCase()+' · '+(seat.aiPersona||'teacher')));
         if(online.isHost&&!info.started){const remove=el('button','btn btn-ghost',t('remove_ai'));remove.addEventListener('click',()=>online.removeAI(seat.seatId));card.appendChild(remove);}
       }else{
@@ -1195,16 +1353,16 @@ function renderRoomPanel(){
       startBtn.addEventListener('click', () => online.send({ type: 'start' }));
       actions.appendChild(startBtn);
     }
-    if(online.isHost&&!(info.aiCount||0)&&!info.started){
+    if(tournamentUiAvailable()&&online.isHost&&!(info.aiCount||0)&&!info.started){
       const tournament=el('button','btn',t('tournament_create'));tournament.addEventListener('click',()=>openTournamentCreate(info));actions.appendChild(tournament);
     }
     if(online.isHost){
-      const invite=el('button','btn',t('invite_player'));invite.addEventListener('click',openInvitePicker);actions.appendChild(invite);
+      const invite=markGuestSocialControl(el('button','btn',t('invite_player')));invite.addEventListener('click',openInvitePicker);actions.appendChild(invite);
       const visibility=el('button','btn',info.visibility==='private'?t('make_public'):t('make_private'));visibility.addEventListener('click',()=>online.send({type:'room_settings',payload:{visibility:info.visibility==='private'?'public':'private'}}));actions.appendChild(visibility);
       const watch=el('button','btn',info.allowSpectators?t('disable_spectators'):t('enable_spectators'));watch.addEventListener('click',()=>online.send({type:'room_settings',payload:{allowSpectators:!info.allowSpectators}}));actions.appendChild(watch);
     }
   }
-  if(online.tournamentState&&Array.isArray(online.tournamentState.standings)&&online.tournamentState.standings.some(item=>item.id===deviceUid)){
+  if(tournamentUiAvailable()&&online.tournamentState&&Array.isArray(online.tournamentState.standings)&&online.tournamentState.standings.some(item=>item.id===deviceUid)){
     const tournament=el('button','btn',t('tournament_open'));
     tournament.addEventListener('click',()=>renderTournamentState(online.tournamentState));
     actions.appendChild(tournament);
@@ -1218,7 +1376,15 @@ function renderRoomPanel(){
   });
   actions.appendChild(leave);
 }
+function tournamentUiAvailable(){
+  return !!(typeof online !== 'undefined' && online && online.isAdmin === true);
+}
+function closeTournamentStateModal(){
+  if(typeof document==='undefined'||!document.querySelectorAll)return;
+  document.querySelectorAll('.tournament-state-modal,.tournament-create-modal').forEach(node=>node.remove());
+}
 function openTournamentCreate(info){
+  if(!tournamentUiAvailable())return;
   const me=typeof deviceUid!=='undefined'?deviceUid:null;
   const rosterCandidates=[];
   (info.players||[]).forEach(item=>{if(item&&item.uid)rosterCandidates.push({uid:item.uid,name:item.name||item.uid,online:true});});
@@ -1226,7 +1392,7 @@ function openTournamentCreate(info){
   const candidates=[...new Map(rosterCandidates.map(item=>[item.uid,item])).values()];
   if(me&&!candidates.some(item=>item.uid===me)) candidates.unshift({uid:me,name:t('profile_mine'),online:true});
   const selected=new Set(candidates.filter(item=>(info.players||[]).some(p=>p.uid===item.uid)).map(item=>item.uid));
-  const bd=el('div','modal-backdrop'),card=el('div','modal-card');card.appendChild(el('h3',null,t('tournament_create_title')));
+  const bd=el('div','modal-backdrop tournament-create-modal'),card=el('div','modal-card');card.appendChild(el('h3',null,t('tournament_create_title')));
   card.appendChild(el('p','muted',t('tournament_hint')));
   const selectNote=el('p','muted',t('tournament_select_players',selected.size));card.appendChild(selectNote);
   const playerGrid=el('div','tournament-player-picker');candidates.slice(0,16).forEach(item=>{const button=el('button','btn '+(selected.has(item.uid)?'btn-primary':''),item.name||item.uid);button.dataset.uid=item.uid;button.addEventListener('click',()=>{if(selected.has(item.uid)){if(item.uid===me)return;selected.delete(item.uid);}else if(selected.size<6)selected.add(item.uid);playerGrid.querySelectorAll('button').forEach(node=>node.classList.toggle('btn-primary',selected.has(node.dataset.uid)));selectNote.textContent=t('tournament_select_players',selected.size);});playerGrid.appendChild(button);});card.appendChild(playerGrid);
@@ -1234,6 +1400,7 @@ function openTournamentCreate(info){
   const cancel=el('button','btn',t('cancel'));cancel.addEventListener('click',()=>bd.remove());card.appendChild(cancel);bd.appendChild(card);document.body.appendChild(bd);
 }
 function renderTournamentState(state){
+  if(!tournamentUiAvailable())return closeTournamentStateModal();
   if(!state)return;let bd=document.querySelector&&document.querySelector('.tournament-state-modal');if(bd)bd.remove();bd=el('div','modal-backdrop tournament-state-modal');const card=el('div','modal-card');
   const format=t('tournament_format_'+state.format),effectiveStatus=['expired','declined'].includes(state.guardStatus)?state.guardStatus:state.status,status=t('tournament_status_'+effectiveStatus);
   card.appendChild(el('h3',null,'🏆 '+t('tournament_title',t('game_'+state.gameId),format)));card.appendChild(el('p','muted',t('tournament_state_line',status,state.round,state.maxRounds)));
@@ -1274,13 +1441,52 @@ function renderTournamentState(state){
   if(owner&&state.status==='round_complete'){const next=el('button','btn btn-primary',t('tournament_next'));next.addEventListener('click',()=>online.send({type:'tournament_next',payload:{tournamentId:state.tournamentId}}));card.appendChild(next);}
   const close=el('button','btn',t('close'));close.addEventListener('click',()=>bd.remove());card.appendChild(close);bd.appendChild(card);document.body.appendChild(bd);
 }
+function playerNameValue(value){
+  return typeof value === 'string' && value.trim() ? value : '';
+}
+function localizedPlayerName(value){
+  return playerNameValue(value) || t('social_player');
+}
+function appendPlayerName(parent, value, fallbackKey){
+  const name = playerNameValue(value);
+  parent.appendChild(name ? elRaw('span', null, name) : el('span', null, t(fallbackKey || 'social_player')));
+  return name;
+}
+function mountOnlineOverlayDialog(backdrop, card, initialFocus, label, onClosed){
+  let cleaned = false;
+  const cleanup = () => {
+    if (cleaned) return false;
+    cleaned = true;
+    releaseModalScrollLock(backdrop);
+    try { if (typeof onClosed === 'function') onClosed(); } catch {}
+    return true;
+  };
+  backdrop.appendChild(card);
+  acquireModalScrollLock(backdrop);
+  document.body.appendChild(backdrop);
+  if (typeof setupAccessibleOverlayDialog === 'function') return setupAccessibleOverlayDialog(backdrop, card, initialFocus, label, cleanup);
+  let closed = false;
+  const close = () => {
+    if (closed) return false;
+    closed = true;
+    if (backdrop.remove) backdrop.remove();
+    cleanup();
+    return true;
+  };
+  if (typeof backdrop.addEventListener === 'function') backdrop.addEventListener('click', event => { if (event.target === backdrop) close(); });
+  try { if (initialFocus && typeof initialFocus.focus === 'function') initialFocus.focus({ preventScroll:true }); } catch {}
+  return close;
+}
 function openInvitePicker(){
+  if(socialGuestMutationBlocked())return;
   const bd = el('div','modal-backdrop');
   const card = el('div','modal-card');
   card.appendChild(el('h3', null, t('invite_picker_title')));
   const list = el('div','roster-list');
   const data = online.connected && lastServerLB ? lastServerLB : localLeaderboard();
   const onlineUsers = (data.list || []).filter(u => u.online && u.uid !== deviceUid);
+  let closeInvitePicker = () => false;
+  let initialFocus = null;
   if (!onlineUsers.length){
     card.appendChild(el('p','lobby-empty',t('invite_no_online')));
   } else {
@@ -1290,22 +1496,24 @@ function openInvitePicker(){
       const av = el('span','av');
       av.appendChild(avatarStageNode(u, 24));
       item.appendChild(av);
-      const inviteName=el('span','nm');inviteName.appendChild(elRaw('span',null,u.name));inviteName.appendChild(el('span',null,t('level_bracket',u.level || levelFromXp(u.xp || 0))));item.appendChild(inviteName);
-      item.appendChild(el('span','lb-game', CURRENCY + (u.coins || 0)));
+      const inviteName = el('span','nm');
+      appendPlayerName(inviteName, u.name);
+      inviteName.appendChild(el('span',null,t('level_bracket',u.level || levelFromXp(u.xp || 0))));
+      item.appendChild(inviteName);
+      item.appendChild(el('span','lb-game', typeof currencyAmountText === 'function' ? currencyAmountText(u.coins || 0) : CURRENCY + (u.coins || 0)));
       item.addEventListener('click', () => {
-        bd.remove();
+        closeInvitePicker();
         inviteUser(u.uid);
       });
+      if (!initialFocus) initialFocus = item;
       list.appendChild(item);
     });
     card.appendChild(list);
   }
   const cancel = el('button','btn',t('cancel'));
-  cancel.addEventListener('click', () => bd.remove());
+  cancel.addEventListener('click', () => closeInvitePicker());
   card.appendChild(cancel);
-  bd.appendChild(card);
-  bd.addEventListener('click', e => { if (e.target === bd) bd.remove(); });
-  document.body.appendChild(bd);
+  closeInvitePicker = mountOnlineOverlayDialog(bd, card, initialFocus || cancel, t('invite_picker_title'));
 }
 function presenceLabel(value){
   const key='presence_'+String(value||'offline');const localized=t(key);return localized===key?String(value||'offline'):localized;
@@ -1319,29 +1527,98 @@ function socialRelationshipFor(uid){
   return'none';
 }
 function openReportUserModal(profile,context){
+  if(socialGuestMutationBlocked())return;
   if(!profile||!profile.uid||profile.uid===deviceUid)return;
-  const bd=el('div','modal-backdrop'),card=el('div','modal-card');card.appendChild(el('h3',null,t('social_report')+' · '+(profile.name||t('social_player'))));
+  const bd=el('div','modal-backdrop'),card=el('div','modal-card');
+  const heading=el('h3');
+  heading.appendChild(el('span',null,t('social_report')));
+  heading.appendChild(document.createTextNode(' · '));
+  appendPlayerName(heading,profile.name);
+  card.appendChild(heading);
   const select=el('select','nick-input');[['harassment','social_reason_harassment'],['inappropriate_name','social_reason_inappropriate_name'],['cheating','social_reason_cheating'],['spam','social_reason_spam'],['other','social_reason_other']].forEach(([value,key])=>{const option=document.createElement('option');option.value=value;option.textContent=t(key);select.appendChild(option);});card.appendChild(select);card.appendChild(el('p','lb-note',t('social_report_note')));
-  const send=el('button','btn btn-primary');setButtonIcon(send,'flag',t('social_report'));send.addEventListener('click',()=>{online.reportUser({targetUid:profile.uid,reason:select.value,contextType:context&&context.type||'profile',contextId:context&&context.id||profile.uid,matchId:online.matchId||null});bd.remove();});card.appendChild(send);const cancel=el('button','btn',t('cancel'));cancel.addEventListener('click',()=>bd.remove());card.appendChild(cancel);bd.appendChild(card);bd.addEventListener('click',event=>{if(event.target===bd)bd.remove();});document.body.appendChild(bd);
+  let closeReport=()=>false;
+  const send=el('button','btn btn-primary');setButtonIcon(send,'flag',t('social_report'));send.addEventListener('click',()=>{online.reportUser({targetUid:profile.uid,reason:select.value,contextType:context&&context.type||'profile',contextId:context&&context.id||profile.uid,matchId:online.matchId||null,recentEventIds:context&&Array.isArray(context.recentEventIds)?context.recentEventIds:[]});closeReport();});card.appendChild(send);
+  const cancel=el('button','btn',t('cancel'));cancel.addEventListener('click',()=>closeReport());card.appendChild(cancel);
+  closeReport=mountOnlineOverlayDialog(bd,card,select,t('social_report'));
 }
 function openSocialActions(profile,context){
-  if(!profile||!profile.uid||profile.uid===deviceUid)return;const relation=socialRelationshipFor(profile.uid),bd=el('div','modal-backdrop'),card=el('div','modal-card');card.appendChild(el('h3',null,(profile.name||t('social_player'))+' · '+presenceLabel(profile.presence||(profile.online?'online':'offline'))));
-  const add=(label,cls,iconName,handler)=>{const button=el('button','btn'+(cls?' '+cls:''));setButtonIcon(button,iconName,label);button.addEventListener('click',()=>{handler();bd.remove();});card.appendChild(button);};
-  if(relation==='none')add(t('social_add_friend'),'btn-primary','user-plus',()=>online.friendRequest(profile.uid));
-  if(relation==='outgoing'){const req=(online.socialState.outgoing||[]).find(item=>item.user&&item.user.uid===profile.uid);if(req)add(t('social_cancel'),'','user-minus',()=>online.friendRequestAction('cancel',req.id));}
-  if(relation==='incoming'){const req=(online.socialState.incoming||[]).find(item=>item.user&&item.user.uid===profile.uid);if(req){add(t('social_accept'),'btn-primary','user-plus',()=>online.friendRequestAction('accept',req.id));add(t('social_decline'),'','user-minus',()=>online.friendRequestAction('decline',req.id));}}
-  if(relation==='friends'){add(t('chat_message_action'),'btn-primary','user',()=>openPlayerConversation(profile.uid));if(profile.online)add(t('social_invite_room'),'','door-open',()=>inviteUser(profile.uid));add(t('social_remove'),'','user-minus',()=>online.removeFriend(profile.uid));}
-  if(relation!=='blocked')add(t('social_block'),'social-danger','shield-alert',()=>online.blockUser(profile.uid));else add(t('social_unblock'),'','shield',()=>online.unblockUser(profile.uid));
-  add(t('social_report'),'social-danger','flag',()=>openReportUserModal(profile,context));const close=el('button','btn',t('close'));close.addEventListener('click',()=>bd.remove());card.appendChild(close);bd.appendChild(card);bd.addEventListener('click',event=>{if(event.target===bd)bd.remove();});document.body.appendChild(bd);
+  if(!profile||!profile.uid||profile.uid===deviceUid)return;
+  const relation=socialRelationshipFor(profile.uid),bd=el('div','modal-backdrop'),card=el('div','modal-card');
+  const heading=el('h3');
+  appendPlayerName(heading,profile.name);
+  heading.appendChild(document.createTextNode(' · '));
+  heading.appendChild(el('span',null,presenceLabel(profile.presence||(profile.online?'online':'offline'))));
+  card.appendChild(heading);
+  let closeSocial=()=>false,initialFocus=null;
+  const add=(label,cls,iconName,handler,persistent)=>{
+    const button=el('button','btn'+(cls?' '+cls:''));
+    setButtonIcon(button,iconName,label);
+    button.addEventListener('click',()=>{handler();closeSocial();});
+    if(persistent)markGuestSocialControl(button);
+    if(!initialFocus)initialFocus=button;
+    card.appendChild(button);
+    return button;
+  };
+  if(relation==='none')add(t('social_add_friend'),'btn-primary','user-plus',()=>online.friendRequest(profile.uid),true);
+  if(relation==='outgoing'){const req=(online.socialState.outgoing||[]).find(item=>item.user&&item.user.uid===profile.uid);if(req)add(t('social_cancel'),'','user-minus',()=>online.friendRequestAction('cancel',req.id),true);}
+  if(relation==='incoming'){const req=(online.socialState.incoming||[]).find(item=>item.user&&item.user.uid===profile.uid);if(req){add(t('social_accept'),'btn-primary','user-plus',()=>online.friendRequestAction('accept',req.id),true);add(t('social_decline'),'','user-minus',()=>online.friendRequestAction('decline',req.id),true);}}
+  if(relation==='friends'){add(t('chat_message_action'),'btn-primary','user',()=>openPlayerConversation(profile.uid));if(profile.online)add(t('social_invite_room'),'','door-open',()=>inviteUser(profile.uid),true);add(t('social_remove'),'','user-minus',()=>online.removeFriend(profile.uid),true);}
+  if(relation!=='blocked')add(t('social_block'),'social-danger','shield-alert',()=>online.blockUser(profile.uid),true);else add(t('social_unblock'),'','shield',()=>online.unblockUser(profile.uid),true);
+  const report=el('button','btn social-danger');
+  setButtonIcon(report,'flag',t('social_report'));
+  report.addEventListener('click',()=>{closeSocial();openReportUserModal(profile,context);});
+  markGuestSocialControl(report);
+  if(!initialFocus)initialFocus=report;
+  card.appendChild(report);
+  const close=el('button','btn',t('close'));close.addEventListener('click',()=>closeSocial());card.appendChild(close);
+  closeSocial=mountOnlineOverlayDialog(bd,card,initialFocus||close,t('social_more_actions',localizedPlayerName(profile.name)));
 }
 function socialRow(profile,relationship,request){
-  const row=el('div','social-row'),avatar=el('span','lb-av');avatar.appendChild(avatarStageNode(profile,24));avatar.addEventListener('click',()=>openProfileModal(profile.uid));row.appendChild(avatar);const copy=el('div','social-copy');copy.appendChild(el('div','social-name',profile.name||t('social_player')));copy.appendChild(el('div','social-meta',presenceLabel(profile.presence||(profile.online?'online':'offline'))+(relationship==='friends'?' · '+t('social_friend'):'')));row.appendChild(copy);const actions=el('div','social-actions');
-  if(request&&relationship==='incoming'){const accept=el('button','btn btn-primary');setButtonIcon(accept,'user-plus',t('social_accept'));accept.addEventListener('click',()=>online.friendRequestAction('accept',request.id));actions.appendChild(accept);const decline=el('button','btn');setButtonIcon(decline,'user-minus',t('social_decline'));decline.addEventListener('click',()=>online.friendRequestAction('decline',request.id));actions.appendChild(decline);}
-  else if(relationship==='none'){const add=el('button','btn');setButtonIcon(add,'user-plus',t('social_add_friend'));add.addEventListener('click',()=>online.friendRequest(profile.uid));actions.appendChild(add);}else if(relationship==='outgoing')actions.appendChild(el('span','social-meta',t('social_pending')));else if(relationship==='friends'){const message=el('button','btn');setButtonIcon(message,'user',t('chat_message_action'));message.addEventListener('click',()=>openPlayerConversation(profile.uid));actions.appendChild(message);if(profile.online){const invite=el('button','btn');setButtonIcon(invite,'door-open',t('social_invite_room'));invite.addEventListener('click',()=>inviteUser(profile.uid));actions.appendChild(invite);}}
-  const more=el('button','btn');setButtonIcon(more,'ellipsis','',{ariaLabel:t('social_more_actions',profile.name||t('social_player'))});more.addEventListener('click',()=>openSocialActions(profile,{type:'social',id:profile.uid}));actions.appendChild(more);row.appendChild(actions);return row;
+  const row=el('div','social-row'),avatar=el('span','lb-av');
+  avatar.appendChild(avatarStageNode(profile,24));
+  row.appendChild(avatar);
+  const copy=el('div','social-copy');
+  const profileButton=el('button','game-stage-name-button social-name');
+  profileButton.type='button';
+  profileButton.setAttribute('aria-label',t('room_host_profile_aria',localizedPlayerName(profile.name)));
+  profileButton.disabled=!profile.uid;
+  appendPlayerName(profileButton,profile.name);
+  profileButton.addEventListener('click',()=>{if(profile.uid)openProfileModal(profile.uid);});
+  copy.appendChild(profileButton);
+  const meta=el('div','social-meta');
+  meta.appendChild(el('span',null,presenceLabel(profile.presence||(profile.online?'online':'offline'))));
+  if(relationship==='friends'){meta.appendChild(document.createTextNode(' · '));meta.appendChild(el('span',null,t('social_friend')));}
+  copy.appendChild(meta);
+  row.appendChild(copy);
+  const actions=el('div','social-actions');
+  if(request&&relationship==='incoming'){const accept=markGuestSocialControl(el('button','btn btn-primary'));setButtonIcon(accept,'user-plus',t('social_accept'));accept.addEventListener('click',()=>online.friendRequestAction('accept',request.id));actions.appendChild(accept);const decline=markGuestSocialControl(el('button','btn'));setButtonIcon(decline,'user-minus',t('social_decline'));decline.addEventListener('click',()=>online.friendRequestAction('decline',request.id));actions.appendChild(decline);}
+  else if(relationship==='none'){const add=markGuestSocialControl(el('button','btn'));setButtonIcon(add,'user-plus',t('social_add_friend'));add.addEventListener('click',()=>online.friendRequest(profile.uid));actions.appendChild(add);}else if(relationship==='outgoing')actions.appendChild(el('span','social-meta',t('social_pending')));else if(relationship==='friends'){const message=el('button','btn');setButtonIcon(message,'user',t('chat_message_action'));message.addEventListener('click',()=>openPlayerConversation(profile.uid));actions.appendChild(message);if(profile.online){const invite=markGuestSocialControl(el('button','btn'));setButtonIcon(invite,'door-open',t('social_invite_room'));invite.addEventListener('click',()=>inviteUser(profile.uid));actions.appendChild(invite);}}
+  const more=el('button','btn');setButtonIcon(more,'ellipsis','',{ariaLabel:t('social_more_actions',localizedPlayerName(profile.name))});more.addEventListener('click',()=>openSocialActions(profile,{type:'social',id:profile.uid}));actions.appendChild(more);row.appendChild(actions);return row;
 }
 function openBlockedUsers(){
-  const bd=el('div','modal-backdrop'),card=el('div','modal-card');card.appendChild(el('h3',null,t('social_block_manage')));const blocked=(online.socialState&&online.socialState.blocked)||[];if(!blocked.length)card.appendChild(el('div','social-empty',t('social_empty')));blocked.forEach(item=>{const row=el('div','social-row');row.appendChild(el('div','social-copy',item.name||t('social_player')));const button=el('button','btn',t('social_unblock'));button.addEventListener('click',()=>{online.unblockUser(item.uid);bd.remove();});row.appendChild(button);card.appendChild(row);});const close=el('button','btn',t('close'));close.addEventListener('click',()=>bd.remove());card.appendChild(close);bd.appendChild(card);document.body.appendChild(bd);
+  const bd=el('div','modal-backdrop'),card=el('div','modal-card');
+  card.appendChild(el('h3',null,t('social_block_manage')));
+  const blocked=(online.socialState&&online.socialState.blocked)||[];
+  let closeBlocked=()=>false,initialFocus=null;
+  if(!blocked.length)card.appendChild(el('div','social-empty',t('social_empty')));
+  blocked.forEach(item=>{
+    const row=el('div','social-row'),copy=el('div','social-copy');
+    const profileButton=el('button','game-stage-name-button social-name');
+    profileButton.type='button';
+    profileButton.setAttribute('aria-label',t('room_host_profile_aria',localizedPlayerName(item.name)));
+    profileButton.disabled=!item.uid;
+    appendPlayerName(profileButton,item.name);
+    profileButton.addEventListener('click',()=>{if(item.uid)openProfileModal(item.uid);});
+    if(!initialFocus)initialFocus=profileButton;
+    copy.appendChild(profileButton);
+    row.appendChild(copy);
+    const button=markGuestSocialControl(el('button','btn',t('social_unblock')));
+    button.addEventListener('click',()=>{online.unblockUser(item.uid);closeBlocked();});
+    row.appendChild(button);
+    card.appendChild(row);
+  });
+  const close=el('button','btn',t('close'));close.addEventListener('click',()=>closeBlocked());card.appendChild(close);
+  closeBlocked=mountOnlineOverlayDialog(bd,card,initialFocus||close,t('social_block_manage'));
 }
 function renderSocialRail(){
   const listEl=$('social-list');if(!listEl)return;listEl.innerHTML='';const state=online.socialState||{friends:[],incoming:[],outgoing:[],blocked:[],counts:{}};const badge=$('social-requests-badge');const incomingCount=(state.incoming||[]).length;if(badge){badge.textContent=String(incomingCount);badge.classList.toggle('hidden',!incomingCount);}['friends','online','recent'].forEach(name=>{const button=$('social-tab-'+name);if(button)button.setAttribute('aria-pressed',String(online.socialTab===name));});if(!account){listEl.appendChild(el('div','social-empty',t('social_login_required')));return;}
@@ -1355,38 +1632,37 @@ function renderLobby(){
   const listEl = $('lobby-list');
   listEl.innerHTML = '';
   if (!online.connected){
-    listEl.appendChild(el('div','lobby-empty', t('lobby_waiting')));
+    const empty=el('div','lobby-empty');empty.appendChild(el('strong',null,t('room_browser_empty_title')));empty.appendChild(el('span',null,t('lobby_waiting')));listEl.appendChild(empty);
     return;
   }
-  if (!online.lobby.length){
-    listEl.appendChild(el('div','lobby-empty', t('lobby_empty')));
+  const visibleRooms=online.lobby.filter(r=>r&&r.room!==online.room&&r.room!==online.spectatorRoom);
+  if (!visibleRooms.length){
+    const empty=el('div','lobby-empty');empty.appendChild(el('strong',null,t('room_browser_empty_title')));empty.appendChild(el('span',null,t('room_browser_empty_body')));listEl.appendChild(empty);
     return;
   }
-  online.lobby.forEach(r => {
-    if (r.room === online.room) return;
-    const row = el('div','lobby-row');
-    const av = el('span','av');
+  visibleRooms.forEach(r => {
+    const canJoin = r.canJoin === true;
+    const canSpectate = r.canSpectate === true;
+    const row = el('div','lobby-row lobby-room-card'+(r.started?' is-playing':' is-waiting'));
     const hostProf = { uid: r.hostUid, avatar: r.hostAvatar, name: r.hostName, frame: 0, effect: 0 };
-    av.appendChild(avatarStageNode(hostProf, 30));
-    av.style.cursor = 'pointer';
-  av.addEventListener('click', e => { if (e && e.stopPropagation) e.stopPropagation(); if (r.hostUid) openProfileModal(r.hostUid); });
-    row.appendChild(av);
+    const hostButton=el('button','lobby-host-profile');hostButton.type='button';hostButton.setAttribute('aria-label',t('room_host_profile_aria',r.hostName||t('social_player')));hostButton.appendChild(avatarStageNode(hostProf,30));hostButton.disabled=!r.hostUid;hostButton.addEventListener('click',e=>{if(e&&e.stopPropagation)e.stopPropagation();if(r.hostUid)openProfileModal(r.hostUid);});row.appendChild(hostButton);
     const info = el('div','info');
-    const roomName=el('div','nm');roomName.appendChild(elRaw('span',null,r.hostName+' '+(r.hostLang?langFlag(r.hostLang):'')));roomName.appendChild(document.createTextNode(t('host_room_suffix')));info.appendChild(roomName);
+    const head=el('div','lobby-room-head'),roomName=el('div','nm');appendPlayerName(roomName,r.hostName);if(r.hostLang)roomName.appendChild(document.createTextNode(' '+langFlag(r.hostLang)));roomName.appendChild(el('span',null,t('host_room_suffix')));head.appendChild(roomName);head.appendChild(el('span','lobby-status-badge '+(r.started?'is-playing':'is-waiting'),t(r.started?'room_status_playing':'room_status_waiting')));info.appendChild(head);
     info.appendChild(el('div','meta',t('lobby_room_meta',r.size,r.capacity,r.game && GAMES[r.game] ? t(GAMES[r.game].nameKey) : t('not_selected'))));
+    const secondary=el('div','lobby-secondary-meta');secondary.appendChild(el('span',null,t('lobby_human_ai_meta',r.humanCount||0,r.aiCount||0)));secondary.appendChild(el('span',null,t(canSpectate?'lobby_spectate_available':'lobby_spectate_unavailable')));info.appendChild(secondary);
     row.appendChild(info);
-    const canJoin = r.canJoin !== undefined ? r.canJoin : r.joinable;
-    const canSpectate = r.canSpectate !== undefined ? r.canSpectate : r.spectatable;
-    const joinBtn = el('button','btn btn-primary invite-btn',t(canSpectate&&!canJoin?'spectate':'join'));
-    joinBtn.addEventListener('click', () => {
+    const actions=el('div','lobby-card-actions');
+    if(canJoin){const joinBtn=el('button','btn btn-primary invite-btn',t('join'));joinBtn.addEventListener('click',()=>{
       if (online.game&&!online.isSpectator){ toast(t('game_in_progress_leave_first')); return; }
-      if(canSpectate&&!canJoin){
-        if(online.spectatorRoom===r.room)return;
-        if(online.isSpectator)online.send({type:'spectate_leave'});
-        if(r.started&&r.matchId) online.spectate(r.room,r.matchId); else online.spectateRoom(r.room);
-      }else online.send({ type: 'join', payload: { room: r.room } });
-    });
-    row.appendChild(joinBtn);
+      online.send({type:'join',payload:{room:r.room}});
+    });actions.appendChild(joinBtn);}
+    if(canSpectate){const watchBtn=el('button','btn invite-btn',t('spectate'));watchBtn.addEventListener('click',()=>{
+      if(online.game&&!online.isSpectator){toast(t('game_in_progress_leave_first'));return;}
+      if(online.spectatorRoom===r.room)return;
+      if(online.isSpectator)online.send({type:'spectate_leave'});
+      if(r.started&&r.matchId)online.spectate(r.room,r.matchId);else online.spectateRoom(r.room);
+    });actions.appendChild(watchBtn);}
+    row.appendChild(actions);
     listEl.appendChild(row);
   });
 }
@@ -1403,28 +1679,35 @@ function renderAccounts(){
     const row = el('div','player-row' + (u.uid === deviceUid ? ' me' : ''));
     const av = el('span','lb-av');
     av.appendChild(avatarStageNode(u, 20));
-    av.style.cursor = 'pointer';
-  av.addEventListener('click', e => { if (e && e.stopPropagation) e.stopPropagation(); openProfileModal(u.uid); });
     row.appendChild(av);
-        const playerName=el('span','nm');playerName.appendChild(elRaw('span',null,u.name));playerName.appendChild(el('span',null,t('level_bracket',u.level || levelFromXp(u.xp || 0))+(u.uid === deviceUid ? t('profile_mine') : '')+' '+(u.lang ? langFlag(u.lang) : '')));row.appendChild(playerName);
+    const playerName=el('button','game-stage-name-button nm');
+    playerName.type='button';
+    playerName.setAttribute('aria-label',t('room_host_profile_aria',localizedPlayerName(u.name)));
+    appendPlayerName(playerName,u.name);
+    const playerMeta=el('span');
+    playerMeta.appendChild(el('span',null,t('level_bracket',u.level || levelFromXp(u.xp || 0))));
+    if(u.uid===deviceUid)playerMeta.appendChild(el('span',null,t('profile_mine')));
+    if(u.lang)playerMeta.appendChild(document.createTextNode(' '+langFlag(u.lang)));
+    playerName.appendChild(playerMeta);
+    playerName.addEventListener('click',()=>openProfileModal(u.uid));
+    row.appendChild(playerName);
     if (u.online) row.appendChild(el('span','online-dot',''));
     const coinLine = el('span','coin-line');
     coinLine.appendChild(currencyIcon('sm'));
     coinLine.appendChild(el('span','pts', (u.coins || 0)));
     row.appendChild(coinLine);
     if (u.uid !== deviceUid){
-      const inv = el('button','btn invite-btn',t('invite_short'));
+      const inv = markGuestSocialControl(el('button','btn invite-btn',t('invite_short')));
       inv.disabled = !u.online || (online.room && !online.isHost);
-  inv.addEventListener('click', e => { if (e && e.stopPropagation) e.stopPropagation(); inviteUser(u.uid); });
+      inv.addEventListener('click', () => inviteUser(u.uid));
       row.appendChild(inv);
     }
-    row.style.cursor = 'pointer';
-    row.addEventListener('click', () => openProfileModal(u.uid));
     listEl.appendChild(row);
   });
   applyI18n(listEl);
 }
 function inviteUser(uid){
+  if(socialGuestMutationBlocked())return false;
   if (online.room){
     if (!online.isHost){ toast(t('host_only_invite')); return; }
     online.send({ type: 'invite', payload: { toUid: uid } });
@@ -1443,24 +1726,27 @@ function showInviteModal(inv){
   const bd = el('div','modal-backdrop');
   const card = el('div','modal-card');
   card.appendChild(el('h3', null, t('invite_title')));
-  const msg = el('p', null, t('invite_message',inv.fromName,inv.room,inv.game ? GAMES[inv.game].name : t('not_selected')));
+  const msg = el('p');
+  appendPlayerName(msg,inv.fromName);
+  const gameName=inv.game&&GAMES[inv.game]?(GAMES[inv.game].nameKey?t(GAMES[inv.game].nameKey):GAMES[inv.game].name):t('not_selected');
+  msg.appendChild(el('span',null,t('invite_message','',inv.room,gameName)));
   msg.style.margin = '0 0 14px';
   msg.style.fontSize = '14px';
   card.appendChild(msg);
+  let closeInvite = () => false;
   const accept = el('button','btn btn-primary',t('invite_accept'));
   accept.addEventListener('click', () => {
-    bd.remove();
+    closeInvite();
     online.send({ type: 'invite_accept', payload: { room: inv.room } });
   });
   const decline = el('button','btn',t('invite_decline'));
   decline.addEventListener('click', () => {
-    bd.remove();
+    closeInvite();
     online.send({ type: 'invite_decline', payload: { room: inv.room } });
   });
   card.appendChild(accept);
   card.appendChild(decline);
-  bd.appendChild(card);
-  document.body.appendChild(bd);
+  closeInvite=mountOnlineOverlayDialog(bd,card,accept,t('invite_title'));
 }
 function openSettings(){
   const bd = el('div','modal-backdrop');

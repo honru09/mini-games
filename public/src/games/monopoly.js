@@ -56,6 +56,8 @@ function gameMonopoly(area, extra, n, opts){
   const fullRuleAuthority=!!(opts.online&&opts.gameplayMeta&&opts.gameplayMeta.protocol===RULE_PROTOCOL&&typeof opts.sendMonopolyAction==='function'&&typeof MonopolyRules!=='undefined');
   const auctionAuthority=!!(opts.online&&opts.gameplayMeta&&opts.gameplayMeta.protocol==='monopoly-auction-v1'&&typeof opts.sendMonopolyAuctionOpen==='function');
   let auctionState=null,auctionBidSeq=0,monopolySeq=0;
+  const presentationAdapter=typeof MonopolyPresentationAdapter!=='undefined'&&typeof MonopolyPresentationAdapter.create==='function'?MonopolyPresentationAdapter.create():null;
+  let uiSource='live',uiTransition=null,uiBankruptPlayer=-1,authorityReady=true,stageCountdownTimer=null;
   let startedAt = Date.now(), finishedAt = 0;
   const previousTouchAction = area.style.touchAction || '';
   const previousOverscroll = area.style.overscrollBehavior || '';
@@ -84,6 +86,7 @@ function gameMonopoly(area, extra, n, opts){
   }
   function invalidateAsync(){
     epoch++;
+    stopStageCountdown();
     const waiters = idleWaiters.splice(0);
     waiters.forEach(resolve => resolve());
   }
@@ -272,6 +275,10 @@ function gameMonopoly(area, extra, n, opts){
     drainRemoteInputs();
   });
   extra.appendChild(settleBtn);
+  const stageState = el('div','monopoly-stage-state');
+  stageState.setAttribute('role','status');
+  stageState.setAttribute('aria-live','polite');
+  extra.appendChild(stageState);
 
   function rentOf(cell){ return Math.round(cell.price/3/10)*10; }
   function aliveList(){ return players.map((p,i)=>p.alive?i:-1).filter(i=>i>=0); }
@@ -303,7 +310,7 @@ function gameMonopoly(area, extra, n, opts){
     later(() => pop.remove(), 700);
   }
   function init(){
-    players = Array.from({length:n}, () => ({ money: START_MONEY, pos: 0, visualPos: 0, alive: true, props: [], buildings: 0 }));
+    players = Array.from({length:n}, () => ({ money: START_MONEY, pos: 0, visualPos: 0, motionDirection: 1, alive: true, props: [], buildings: 0 }));
     CELLS.forEach(c => { if (c.type==='prop') c.owner = -1; });
     chanceDeck = CHANCE.map((c,i)=>i);
     if (!opts.online){
@@ -311,7 +318,13 @@ function gameMonopoly(area, extra, n, opts){
     }
     cur = 0; phase = 'roll'; over = false; winner = -1; round = 1; startedAt = Date.now(); finishedAt = 0;
   }
-  function renderBoard(){
+  function characterViews(source){
+    if(typeof MonopolyCharacterPresentation==='undefined'||typeof MonopolyCharacterPresentation.project!=='function')return [];
+    let seats=[];try{seats=typeof opts.getPublicSeats==='function'?opts.getPublicSeats():[];}catch{seats=[];}
+    return MonopolyCharacterPresentation.project({players,seats,current:cur,phase,over,winner,source:source||'live',reducedMotion:prefersReducedMotion()});
+  }
+  function renderBoard(source){
+    if(source)uiSource=source;
     const w = area.clientWidth || 520;
     S = Math.min(w, 540);
     board.style.width = S + 'px'; board.style.height = S + 'px';
@@ -323,7 +336,7 @@ function gameMonopoly(area, extra, n, opts){
       ? 'radial-gradient(circle at 50% 45%,rgba(255,255,255,.82),rgba(236,253,245,.72) 42%,rgba(22,101,52,.34)),repeating-linear-gradient(105deg,#5f9f55 0 5px,#4f8e49 5px 9px)'
       : 'radial-gradient(circle at 50% 45%,rgba(255,255,255,.92),rgba(255,247,237,.88) 48%,rgba(146,64,14,.24)),repeating-linear-gradient(90deg,#c99b6b 0 8px,#b98555 8px 16px)';
     board.innerHTML = '';
-    rollBtn.disabled = spectator || over || phase !== 'roll' || (opts.online && cur !== opts.myIdx) || (opts.ai && opts.ai.has(cur));
+    rollBtn.disabled = !authorityReady || spectator || over || phase !== 'roll' || (opts.online && cur !== opts.myIdx) || (opts.ai && opts.ai.has(cur));
     const c = S/2, R = S*0.40;
     const ang = i => (-90 + i * 360/CELLS.length) * Math.PI/180;
     const cellSize = Math.min(54, Math.floor(S*0.105));
@@ -355,17 +368,22 @@ function gameMonopoly(area, extra, n, opts){
       }
       board.appendChild(d);
     });
-    // 棋子标记
+    const projectedCharacters=characterViews(source);
+    // 棋子标记：权威位置只经纯表现模块消费；未审批 ART-036 始终使用代码原生 fallback。
     players.forEach((p, pi) => {
       if (!p.alive) return;
-      const pos = Number.isInteger(p.visualPos) ? p.visualPos : p.pos;
+      const view=projectedCharacters[pi]||null;
+      const pos = view ? view.displayPosition : (Number.isInteger(p.visualPos) ? p.visualPos : p.pos);
       const x = c + R*Math.cos(ang(pos)), y = c + R*Math.sin(ang(pos));
       const a = (pi / n) * Math.PI*2 - Math.PI/2;
-      const m = el('div','m-marker');
-      m.style.background = PLAYER_COLORS[pi];
+      const m = el('div','m-marker monopoly-character-token');
+      if(m.style&&typeof m.style.setProperty==='function')m.style.setProperty('--monopoly-token-color',PLAYER_COLORS[pi]);else if(m.style)m.style['--monopoly-token-color']=PLAYER_COLORS[pi];
       const skin = tokenSkin(pi);
-      m.textContent = skin === 'car' ? '🚗' : '♟';
-      m.title = t('monopoly_token_title',pi+1,t(skin==='car'?'monopoly_token_car':'monopoly_token_character'));
+      if(skin==='car'){m.classList.add('is-car');m.textContent='🚗';}
+      else{const fallback=el('span','monopoly-character-fallback',String(pi+1));fallback.setAttribute('aria-hidden','true');m.appendChild(fallback);}
+      const tokenTitle=t('monopoly_token_title',pi+1,t(skin==='car'?'monopoly_token_car':'monopoly_token_character'));
+      m.title=tokenTitle;m.setAttribute('role','img');m.setAttribute('aria-label',tokenTitle);
+      if(view){m.dataset.characterState=view.state;m.dataset.characterFacing=view.facing;m.dataset.characterTransition=view.transition;m.dataset.characterRenderer=view.renderMode;}
       m.style.left = (x + Math.cos(a)*7) + 'px';
       m.style.top = (y + Math.sin(a)*7) + 'px';
       board.appendChild(m);
@@ -383,6 +401,7 @@ function gameMonopoly(area, extra, n, opts){
     leaderHud.textContent = leader === undefined ? '' : t('monopoly_leader',leader+1,netWorth(leader));
     turnHud.style.cssText = 'font-weight:900;margin-bottom:3px;transition:opacity .2s ease;';
     leaderHud.style.cssText = 'font-size:10px;color:var(--muted);margin-bottom:5px;';
+    renderStageState(source);
     board.appendChild(center);
     // 结束覆盖层
     if (over){
@@ -412,7 +431,7 @@ function gameMonopoly(area, extra, n, opts){
   }
   function roll(){
     sfx('pop');
-    if (spectator || over || phase !== 'roll') return;
+    if (!authorityReady || spectator || over || phase !== 'roll') return;
     sfx('pop');
     if (opts.online && cur !== opts.myIdx) return;
     if (opts.ai && opts.ai.has(cur)) return;
@@ -459,6 +478,7 @@ function gameMonopoly(area, extra, n, opts){
       return;
     }
     const direction = signed < 0 ? -1 : 1;
+    p.motionDirection = direction;
     const total = Math.abs(signed);
     let step = 0;
     const motionDelay = total ? Math.max(55, Math.min(140, Math.floor(760 / total))) : 0;
@@ -583,21 +603,29 @@ function gameMonopoly(area, extra, n, opts){
     const card = CHANCE[idx];
     const modal = el('div','chance-modal');
     const box = el('div','chance-card');
+    const titleId='monopoly-chance-title-'+epoch+'-'+pi;
+    modal.setAttribute('role','dialog');
+    modal.setAttribute('aria-modal','true');
+    modal.setAttribute('aria-labelledby',titleId);
     box.appendChild(el('div','emo','🎁'));
-    box.appendChild(el('h3', null, t('monopoly_chance_title')));
+    const heading=el('h3',null,t('monopoly_chance_title'));heading.id=titleId;box.appendChild(heading);
     box.appendChild(el('p', null, monopolyChanceText(card)));
-    const ok = el('button','btn btn-primary', (opts.online || spectator || (opts.ai && opts.ai.has(pi))) ? t('monopoly_revealing') : t('ok'));
-    ok.addEventListener('click', () => {
-      modal.remove();
-      applyChance(pi, card, depth);
-    });
+    const autoResolve=!!(opts.online||spectator||(opts.ai&&opts.ai.has(pi)));
+    const ok = el('button','btn btn-primary',autoResolve?t('monopoly_revealing'):t('ok'));
+    ok.type='button';let resolved=false;
+    const resolve=()=>{if(resolved)return;resolved=true;modal.remove();applyChance(pi,card,depth);};
+    ok.addEventListener('click',resolve);
     box.appendChild(ok);
     modal.appendChild(box);
     board.appendChild(modal);
-    if (opts.online || spectator || (opts.ai && opts.ai.has(pi))){
+    modal.addEventListener('keydown',event=>{if(event.key==='Tab'){if(event.preventDefault)event.preventDefault();if(typeof ok.focus==='function')ok.focus();}else if(event.key==='Escape'&&!ok.disabled){if(event.preventDefault)event.preventDefault();resolve();}});
+    modal.addEventListener('click',event=>{if(event.target===modal&&!ok.disabled)resolve();});
+    if(autoResolve){
       ok.disabled = true;
-      later(() => { modal.remove(); applyChance(pi, card, depth); }, 650);
-    }
+      modal.setAttribute('tabindex','-1');
+      if(typeof modal.focus==='function')modal.focus();
+      later(resolve,650);
+    }else if(typeof ok.focus==='function')ok.focus();
   }
   function applyChance(pi, card, depth){
     const p = players[pi];
@@ -768,6 +796,8 @@ function gameMonopoly(area, extra, n, opts){
   };
   function resetLocal(){
     invalidateAsync();
+    if(presentationAdapter)presentationAdapter.reset('new-match');
+    authorityReady=true;uiSource='live';uiTransition=null;uiBankruptPlayer=-1;
     init();
     remoteInputs = [];auctionState=null;auctionBidSeq=0;monopolySeq=0;
     actionRow.innerHTML = '';
@@ -794,12 +824,44 @@ function gameMonopoly(area, extra, n, opts){
       deck: chanceDeck.slice(),
     };
   }
-  function onRestore(value){
+  function animatePresentationFrame(frame){
+    if(!frame||!frame.animation||frame.animation.mode!=='step')return;
+    const item=frame.players&&frame.players[frame.animation.player];if(!item)return;
+    const p=players[frame.animation.player];if(!p||!p.alive)return;
+    const actionEpoch=epoch,from=Number(frame.animation.from),direction=Number(frame.animation.direction)<0?-1:1,total=Math.abs(Number(frame.animation.steps)||0);
+    if(!Number.isInteger(from)||!total)return;
+    let step=0;const delay=Math.max(55,Math.min(140,Math.floor(760/total)));
+    const advance=()=>{if(actionEpoch!==epoch||opts.destroyed)return;if(step>=total){p.visualPos=Number(item.authorityPosition);renderBoard('live');return;}step++;p.visualPos=((from+direction*step)%CELLS.length+CELLS.length)%CELLS.length;renderBoard('live');later(advance,delay);};
+    advance();
+  }
+  function renderStageState(source){
+    if(!stageState||typeof MonopolyUiState==='undefined'||typeof MonopolyUiState.derive!=='function')return;
+    const currentPlayer=players[cur]||{};
+    const cell=currentPlayer&&CELLS[currentPlayer.pos];
+    const auction=auctionState&&auctionState.auction;
+    const authority=authorityReady?{state:{players:players.map(p=>({pos:p.pos,alive:p.alive})),current:cur,phase,round,terminal:over,winner},round,terminal:over,winner,auctionEndAt:auction&&auction.endAt,serverNow:Date.now()}:{};
+    const ui=MonopolyUiState.derive({source:source||uiSource,authority,transition:uiTransition,seats:typeof opts.getPublicSeats==='function'?opts.getPublicSeats():[],spectator,role:spectator?'spectator':'player',allowMutation:authorityReady&&!spectator&&(!opts.online||opts.myIdx===cur)&&!(opts.ai&&opts.ai.has(cur)),maxRound:MAX_ROUND,property:cell&&cell.type==='prop'?{name:monopolyCellName(currentPlayer.pos),price:cell.price}:null,cellName:cell?monopolyCellName(currentPlayer.pos):'',cellNames:CELLS.map((_,index)=>monopolyCellName(index)),countdown:auction?Math.max(0,auction.endAt-Date.now()):0,focusBankrupt:uiBankruptPlayer,fallbackReason:source==='fallback'?'renderer_fallback':''});
+    stageState.dataset.state=ui.id;
+    stageState.dataset.actionMode=ui.actionMode;
+    stageState.setAttribute('aria-live',ui.ariaLive||'polite');
+    const message=typeof t==='function'?t(ui.i18nKey,...(ui.args||[])):ui.i18nKey;
+    stageState.textContent=message===ui.i18nKey?String(ui.id).replace(/_/g,' '):message;
+    stageState.title=stageState.textContent;
+    syncStageCountdown(ui,auction&&auction.endAt);
+  }
+  function stopStageCountdown(){if(stageCountdownTimer){clearTimeout(stageCountdownTimer);stageCountdownTimer=null;}}
+  function syncStageCountdown(ui,deadline){
+    if(!ui||ui.id!=='auction'||!Number.isFinite(Number(deadline))||Number(deadline)<=Date.now()){stopStageCountdown();return;}
+    if(stageCountdownTimer)return;
+    stageCountdownTimer=later(()=>{stageCountdownTimer=null;renderStageState();},Math.min(1000,Math.max(120,Number(deadline)-Date.now())));
+  }
+  function onRestore(value,source,presentationFrame){
     const state = value && value.state ? value.state : value;
     if (!state || !Array.isArray(state.players)) return false;
     invalidateAsync();
-    players = state.players.map(p => ({
-      money: Number(p.money) || 0, pos: Number(p.pos) || 0, visualPos: Number(p.pos) || 0,
+    if(fullRuleAuthority)authorityReady=true;
+    players = state.players.map((p,index) => ({
+      money: Number(p.money) || 0, pos: Number(p.pos) || 0, visualPos: presentationFrame&&presentationFrame.players&&presentationFrame.players[index]?Number(presentationFrame.players[index].displayPosition):Number(p.pos) || 0, motionDirection: presentationFrame&&presentationFrame.animation&&presentationFrame.animation.player===index&&Number(presentationFrame.animation.direction)<0?-1:1,
       alive: p.alive !== false, props: Array.isArray(p.props) ? p.props.slice() : [], buildings: Number(p.buildings) || 0,
     }));
     cur = Number.isInteger(state.cur) ? state.cur : 0;
@@ -808,7 +870,7 @@ function gameMonopoly(area, extra, n, opts){
     CELLS.forEach((cell, i) => { if (cell.type === 'prop') cell.owner = Array.isArray(state.owners) && Number.isInteger(state.owners[i]) ? state.owners[i] : -1; });
     chanceDeck = Array.isArray(state.deck) && state.deck.length ? state.deck.slice() : CHANCE.map((_, i) => i);
     if (value && value.presentation){ setBoardTheme(value.presentation.boardTheme); setCosmetic(value.presentation.cosmetic); }
-    actionRow.innerHTML = ''; renderBoard(); if(fullRuleAuthority)renderRuleActions();else renderRestoredPurchaseActions();notifyIdle(); return true;
+    const renderSource=source||'snapshot';uiSource=renderSource;uiTransition=null;actionRow.innerHTML = ''; renderBoard(renderSource); if(fullRuleAuthority)renderRuleActions();else renderRestoredPurchaseActions();if(presentationFrame)animatePresentationFrame(presentationFrame);notifyIdle(); return true;
   }
   function renderRestoredPurchaseActions(){
     if(phase!=='buy'||spectator||opts.online&&cur!==opts.myIdx)return;const p=players[cur],cell=p&&CELLS[p.pos];if(!cell||cell.type!=='prop'||cell.owner!==-1)return;
@@ -816,18 +878,20 @@ function gameMonopoly(area, extra, n, opts){
     const pass=el('button','btn',t('monopoly_pass'));pass.addEventListener('click',()=>{if(auctionAuthority){phase='auction';actionRow.innerHTML='';opts.sendMonopolyAuctionOpen({propertyId:p.pos});setStatus(t('monopoly_opening_auction',monopolyCellName(cell)));renderBoard();}else{if(opts.online)opts.sendMove({decision:'pass'});applyDecision(cur,'pass');}});actionRow.appendChild(buy);actionRow.appendChild(pass);
   }
   function renderRuleActions(){
-    if(!fullRuleAuthority||spectator||over||opts.myIdx!==cur)return;actionRow.innerHTML='';
+    if(!fullRuleAuthority||!authorityReady||spectator||over||opts.myIdx!==cur)return;actionRow.innerHTML='';
     if(phase==='buy'){
       const propertyId=players[cur]&&players[cur].pos,cell=RulesCell(propertyId),runtimeCell=CELLS[propertyId];if(!cell||cell.type!=='prop'||!runtimeCell||runtimeCell.owner!==-1)return;
       const buy=el('button','btn btn-primary',t('monopoly_buy_button',cell.price));buy.addEventListener('click',()=>applyDecision(cur,'buy'));const pass=el('button','btn',t('monopoly_pass_auction'));pass.addEventListener('click',()=>applyDecision(cur,'pass'));actionRow.appendChild(buy);actionRow.appendChild(pass);
     }else if(phase==='auction'&&auctionState&&auctionState.auction){const auction=auctionState.auction;[100,250].forEach(step=>{const button=el('button','btn'+(step===250?' btn-primary':''),t('monopoly_bid_button',auction.currentBid+step));button.addEventListener('click',()=>opts.sendMonopolyAction({matchId:typeof opts.getMatchId==='function'?opts.getMatchId():opts.matchId||'',seq:++monopolySeq,action:{type:'bid',amount:auction.currentBid+step,revision:auction.revision,bidId:'bid-'+opts.myIdx+'-'+monopolySeq}}));actionRow.appendChild(button);});}
   }
   function RulesCell(index){return typeof MonopolyRules!=='undefined'&&MonopolyRules.CELLS?MonopolyRules.CELLS[index]:CELLS[index];}
-  function onMonopolyRuleState(value){
+  function onMonopolyRuleState(value,transition,cause){
     if(!fullRuleAuthority||!value||value.protocol!==RULE_PROTOCOL||String(value.matchId||'')!==String(typeof opts.getMatchId==='function'?opts.getMatchId():opts.matchId||''))return false;const state=value.state;if(!state)return false;
+    const plan=presentationAdapter?presentationAdapter.consume({cause:cause||'live',authority:value,transition:transition||value.transition||null,seats:typeof opts.getPublicSeats==='function'?opts.getPublicSeats():[],reducedMotion:prefersReducedMotion()}):null;if(presentationAdapter&&(!plan||!plan.accepted))return false;
     const owners=Array.from({length:CELLS.length},()=>-1);Object.keys(state.owners||{}).forEach(id=>{owners[Number(id)]=Number(state.owners[id]);});const snapshot={players:(state.players||[]).map(player=>({money:player.money,pos:player.pos,alive:player.alive,props:Array.isArray(player.props)?player.props.slice():[],buildings:0})),cur:state.current,phase:state.phase==='resolving'?'moving':state.phase,round:state.round,over:!!(state.terminal||value.terminal),winner:Number.isInteger(state.winner)?state.winner:-1,owners,deck:Array.isArray(state.chanceDeck)?state.chanceDeck.slice():[]};
     if(value.auctionEndAt&&state.auction){auctionState={protocol:RULE_PROTOCOL,matchId:value.matchId,auction:{...state.auction,status:'open',startAt:Date.now(),endAt:value.auctionEndAt,eligiblePlayers:state.auction.eligiblePlayers||[]},cash:state.players.map(player=>player.money),ownership:{...state.owners}};}else auctionState=null;
-    const applied=onRestore(snapshot);if(applied)renderRuleActions();return applied;
+    authorityReady=true;
+    const applied=onRestore(snapshot,'live',plan&&plan.frame?plan.frame:null);if(applied){uiSource=cause==='reconnect'?'reconnect':cause==='spectator-bootstrap'?'spectator-bootstrap':'live';uiTransition=transition||value.transition||null;uiBankruptPlayer=plan&&plan.frame&&plan.frame.changes&&plan.frame.changes.bankruptPlayers.length?plan.frame.changes.bankruptPlayers[0]:-1;renderStageState(uiSource);renderRuleActions();}return applied;
   }
   function onMonopolyRuleResult(value){return fullRuleAuthority&&value&&value.protocol===RULE_PROTOCOL?onMonopolyRuleState(value.state||value):false;}
   function setBoardTheme(theme){ boardTheme = theme === 'grass' ? 'grass' : 'classic'; renderBoard(); return boardTheme; }
@@ -846,6 +910,8 @@ function gameMonopoly(area, extra, n, opts){
     onRestart: resetLocal,
     destroy: () => {
       invalidateAsync();
+      if(presentationAdapter)presentationAdapter.destroy();
+      stopStageCountdown();
       aiPending = false;
       remoteInputs = [];
       diceFaces.forEach(face => face.reset());

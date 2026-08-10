@@ -183,11 +183,13 @@ function showModal(title, lines, btnText){
   lines.forEach(l => ul.appendChild(el('li', null, l)));
   card.appendChild(ul);
   const ok = el('button','btn btn-primary', btnText || t('ok'));
-  ok.addEventListener('click', () => bd.remove());
+  let closeModal = () => { if (bd.remove) bd.remove(); return true; };
+  ok.addEventListener('click', () => closeModal());
   card.appendChild(ok);
   bd.appendChild(card);
-  bd.addEventListener('click', e => { if (e.target === bd) bd.remove(); });
   document.body.appendChild(bd);
+  closeModal = setupAccessibleOverlayDialog(bd, card, ok, title);
+  return closeModal;
 }
 function pipsHTML(v){
   const map = {1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
@@ -517,8 +519,61 @@ function runCountdown(){
 
 
 /* ====== 统一胜利叠加层 ====== */
+function setupAccessibleOverlayDialog(overlay, card, initialFocus, label, onClosed){
+  if (!overlay || !card || typeof document === 'undefined') return () => false;
+  const previousFocus = document.activeElement;
+  const focusSelector = 'button:not([disabled]),[href],input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
+  card.setAttribute('role', 'dialog');
+  card.setAttribute('aria-modal', 'true');
+  if (label) card.setAttribute('aria-label', String(label));
+  let closed = false;
+  const focusables = () => typeof card.querySelectorAll === 'function'
+    ? Array.from(card.querySelectorAll(focusSelector)).filter(node => node && !node.disabled && !node.hidden && node.tabIndex !== -1)
+    : [];
+  const close = () => {
+    if (closed) return false;
+    closed = true;
+    if (typeof document.removeEventListener === 'function') document.removeEventListener('keydown', onKeydown, { capture:true });
+    if (typeof overlay.removeEventListener === 'function') overlay.removeEventListener('click', onBackground);
+    if (overlay.__accessibleDialogClose === close) delete overlay.__accessibleDialogClose;
+    if (typeof overlay.remove === 'function') overlay.remove();
+    try { if (typeof onClosed === 'function') onClosed(); } catch {}
+    try { if (previousFocus && previousFocus.isConnected !== false && typeof previousFocus.focus === 'function') previousFocus.focus({ preventScroll:true }); } catch {}
+    return true;
+  };
+  const onBackground = event => { if (event.target === overlay) close(); };
+  const onKeydown = event => {
+    if (event.key === 'Escape') { if (event.preventDefault) event.preventDefault(); close(); return; }
+    if (event.key !== 'Tab') return;
+    const items = focusables();
+    if (!items.length) return;
+    const current = document.activeElement, index = items.indexOf(current);
+    if (event.shiftKey && index <= 0) { if (event.preventDefault) event.preventDefault(); items[items.length - 1].focus(); }
+    else if (!event.shiftKey && (index < 0 || index === items.length - 1)) { if (event.preventDefault) event.preventDefault(); items[0].focus(); }
+  };
+  overlay.__accessibleDialogClose = close;
+  if (typeof overlay.addEventListener === 'function') overlay.addEventListener('click', onBackground);
+  if (typeof document.addEventListener === 'function') document.addEventListener('keydown', onKeydown, { capture:true });
+  const first = initialFocus || focusables()[0];
+  try { if (first && typeof first.focus === 'function') first.focus({ preventScroll:true }); } catch { try { if (first) first.focus(); } catch {} }
+  return close;
+}
+
+function closeVictoryOverlay(area){
+  if (!area) return false;
+  const overlay = area.__victoryOverlayDialog ||
+    (typeof area.querySelector === 'function' ? area.querySelector('.victory-overlay') : null);
+  if (!overlay) return false;
+  let closed = false;
+  if (typeof overlay.__accessibleDialogClose === 'function') closed = overlay.__accessibleDialogClose();
+  else if (typeof overlay.remove === 'function') { overlay.remove(); closed = true; }
+  if (area.__victoryOverlayDialog === overlay) delete area.__victoryOverlayDialog;
+  return closed;
+}
+
 function showVictoryOverlay(area, opts) {
-  // opts: { winner, winnerName, subtitle, emoji, coins, slot, playerCount, onRestart, onShare, onInvite }
+  // opts: { winner, winnerName, subtitle, emoji, coins, podium, slot, playerCount, onRestart, onShare, onInvite }
+  closeVictoryOverlay(area);
   const ov = el('div', 'overlay victory-overlay');
   const card = el('div', 'overlay-card victory-card');
   
@@ -536,6 +591,20 @@ function showVictoryOverlay(area, opts) {
   // 副标题
   if (opts.subtitle) {
     card.appendChild(el('p', 'victory-subtitle', opts.subtitle));
+  }
+
+  if (Array.isArray(opts.podium) && opts.podium.length){
+    const podium = el('ol', 'victory-podium');
+    podium.setAttribute('aria-label', t('victory_podium_label'));
+    opts.podium.slice().sort((a,b) => Number(a.rank) - Number(b.rank)).forEach(item => {
+      const row = el('li', 'victory-podium-row');
+      row.setAttribute('data-rank', String(item.rank));
+      if (row.style && row.style.setProperty) row.style.setProperty('--podium-color', String(item.color || '#8b5cf6'));
+      row.appendChild(el('span', 'victory-podium-rank', t('victory_podium_rank',item.rank)));
+      row.appendChild(typeof elRaw === 'function' ? elRaw('strong', 'victory-podium-name', item.name || '') : el('strong', 'victory-podium-name', item.name || ''));
+      podium.appendChild(row);
+    });
+    card.appendChild(podium);
   }
   
   // 胜利彩带；正式奖励异步由服务端 Reward Breakdown 展示。
@@ -557,10 +626,11 @@ function showVictoryOverlay(area, opts) {
   
   // 按钮行
   const btnRow = el('div', 'victory-btns');
+  let closeVictory = () => { if (ov.remove) ov.remove(); return true; };
   
   const again = el('button', 'btn btn-primary victory-btn', t('come_back'));
   again.addEventListener('click', () => {
-    ov.remove();
+    closeVictory();
     try { if (typeof clearHonruGameReaction === 'function') clearHonruGameReaction(); } catch {}
     if (opts.onRestart) opts.onRestart();
   });
@@ -583,13 +653,12 @@ function showVictoryOverlay(area, opts) {
   
   card.appendChild(btnRow);
   ov.appendChild(card);
-  
-  // 点击背景关闭
-  ov.addEventListener('click', e => { 
-    if (e.target === ov) { ov.remove(); }
-  });
-  
   area.appendChild(ov);
+  closeVictory = setupAccessibleOverlayDialog(ov, card, again, title.textContent, () => {
+    if (area.__victoryOverlayDialog === ov) delete area.__victoryOverlayDialog;
+  });
+  area.__victoryOverlayDialog = ov;
+  return closeVictory;
 }
 
 

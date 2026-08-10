@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "taskId": "tabletop-presentation-m1-action-20260810",
+  "owners": {
+    "gomoku": ["public/src/games/gomoku.js"],
+    "ludo": ["public/src/games/ludo.js"],
+    "qa": ["qa/tabletop-perspective-contract.js", "qa/gameplay-upgrade.js", "package.json"],
+    "docs": ["requirements/PRODUCT_REQUIREMENTS_LEDGER.json", "PROJECT_STATUS.json", "AGENTS.md", "README.md", "WHITEPAPER.md", "LOG-新增.md", "LOG-修改.md", "LOG-删除.md"]
+  },
+  "forbidden": ["server/**", "shared/rules/**", "supabase/**", "art-source/**", "public/assets/**"]
+}

@@ -1,0 +1,9 @@
+{
+  "status":"PARTIAL_AWAITING_HUMAN_REVIEW",
+  "startedAt":"2026-08-10T05:20:00+09:00",
+  "updatedAt":"2026-08-10T05:42:00+09:00",
+  "steps":[{"id":"TANKART-1","status":"completed","owner":"master"},{"id":"TANKART-2","status":"completed","owner":"master + gpt-image-2"},{"id":"TANKART-3","status":"pending","owner":"human reviewers"},{"id":"TANKART-4","status":"pending","owner":"master integration"}],
+  "blocked":[],
+  "skipped":["runtime integration before approval","commit/push/Pages/Render"],
+  "evidence":["art-source/games/tank/tank-art-p1-20260810/PROMPT_AND_PROVENANCE.md","art-source/games/tank/tank-art-p1-20260810/tank-style-board-clean-draft-v2.png","art-source/games/tank/tank-art-p1-20260810/rejected/tank-style-board-draft-v1-symbol-noise.png","asset-library/catalog.json"]
+}

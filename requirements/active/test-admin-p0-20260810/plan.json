@@ -1,0 +1,49 @@
+{
+  "status": "REQUIREMENT_FROZEN",
+  "parallelability": 1,
+  "dependencies": [
+    "Existing username/password scrypt primitives",
+    "Master-only server/index.js integration",
+    "Master-only tournament guard and Render environment integration"
+  ],
+  "steps": [
+    {
+      "id": "TA-1",
+      "description": "Implement pure configuration, capability, virtual profile/catalog and isolation module.",
+      "risk": "No persistence or secret exposure in the pure layer.",
+      "tests": ["node qa/test-admin-contract.js"]
+    },
+    {
+      "id": "TA-2",
+      "description": "Create a precise shared integration request for authentication, profile, shop, match, social, public projection, tournament and deployment seams.",
+      "risk": "server/index.js is HIGH and cannot be edited by the subtask.",
+      "tests": ["static request review"]
+    },
+    {
+      "id": "TA-3",
+      "description": "Master integrates the request without changing regular-user behavior.",
+      "risk": "Cross-cutting auth/economy/social regression.",
+      "tests": ["node --experimental-websocket qa/test-admin-online.js", "node --experimental-websocket qa/security-online.js", "node --experimental-websocket qa/tournament-recovery-online.js", "node --experimental-websocket qa/e2e-online.js"]
+    },
+    {
+      "id": "TA-4",
+      "description": "Master adds Render environment allowlist support and performs deployment only after full review.",
+      "risk": "Never print actual credentials.",
+      "tests": ["deployment smoke handled by master"]
+    }
+  ],
+  "risks": [
+    "A normal account could be accidentally configured as the test admin if UID/username checks are weakened.",
+    "Virtual ownership could leak into a public or persisted consumer.",
+    "A test admin participant could pollute normal match rewards or tournament results.",
+    "Future catalog categories need explicit normalizer integration."
+  ],
+  "tests": [
+    "node qa/test-admin-contract.js",
+    "master integration: node --experimental-websocket qa/test-admin-online.js",
+    "master integration: node --experimental-websocket qa/security-online.js",
+    "master integration: node --experimental-websocket qa/tournament-recovery-online.js",
+    "master integration: node --experimental-websocket qa/e2e-online.js"
+  ],
+  "rollback": "Disable TEST_ADMIN_ENABLED and restart; no ordinary data migration or cleanup is required."
+}
