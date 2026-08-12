@@ -586,6 +586,15 @@ function updateAccountProfile(p){
 }
 function renderMe(){
   const btn = $('btn-me');
+  // The current four-route shell gives identity ownership to Home/Profile and
+  // intentionally has no compact #btn-me host. Keep this legacy entry point
+  // for older callers (i18n, auth and WebSocket refreshes), but delegate to
+  // the canonical route renderers instead of dereferencing a removed node.
+  if (!btn){
+    if (typeof renderGhostHome === 'function') renderGhostHome();
+    if (typeof renderGhostProfile === 'function') renderGhostProfile();
+    return;
+  }
   if (!account){
     btn.classList.add('logged-out');
     btn.innerHTML = '';
@@ -1379,7 +1388,8 @@ if (typeof document !== 'undefined'){
   const joinPrivate=$('btn-join-private'); if(joinPrivate)joinPrivate.addEventListener('click',()=>{setGamesWorkspaceView('rooms');openRoomSetup();});
   const settingsBtn = $('btn-settings-page');
   if (settingsBtn) settingsBtn.addEventListener('click', openSettingsPage);
-  $('btn-me').addEventListener('click', () => openProfileModal(deviceUid));
+  const compactProfileButton = $('btn-me');
+  if (compactProfileButton) compactProfileButton.addEventListener('click', () => openProfileModal(deviceUid));
   const setLbTab = (which) => {
     lbFilter = which;
     $('lb-tab-all').setAttribute('aria-pressed', String(which === 'all'));

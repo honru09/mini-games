@@ -43,6 +43,7 @@ run('profile-design-system', process.platform === 'win32' ? 'node.exe' : 'node',
 run('profile-request-lifecycle', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/profile-request-lifecycle.js']);
 run('theme-contrast', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/theme-contrast-design-system.js']);
 run('i18n', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/i18n-coverage.js']);
+run('bootstrap-shell-lifecycle', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/bootstrap-shell-lifecycle.js']);
 run('ghost-shell', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/ghost-shell-contract.js']);
 run('ghost-auth', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/ghost-auth-credentials.js']);
 run('ghost-companion', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/ghost-companion.js']);
