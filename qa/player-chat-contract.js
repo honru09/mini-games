@@ -1,26 +1,128 @@
 'use strict';
-const fs=require('fs'),path=require('path');
-const ROOT=path.join(__dirname,'..');
-const read=file=>fs.readFileSync(path.join(ROOT,file),'utf8');
-const template=read('public/index-template.html'),shell=read('public/src/core/02-app-shell.js'),online=read('public/src/online/03-websocket.js'),server=read('server/index.js'),schema=read('supabase/schema.sql');
-let fail=0;function check(name,ok){console.log((ok?'PASS  ':'FAIL  ')+name);if(!ok)fail++;}
-check('Chat 默认标题是玩家消息而非 Honru',/id="chat-route-title"[^>]*data-i18n="chat_title"/.test(template)&&/"chat_title": "玩家消息"/.test(read('public/locales/zh-CN.json')));
-check('Honru 助手 Chat 子页、首页入口、Dock 与表单已删除',!/data-chat-view="honru"|id="honru-chat-view"|id="chat-tab-honru"|btn-home-honru|btn-honru-dock|id="companion-(?:form|input)"/.test(template+shell));
-check('旧 Honru Chat 深链与未知视图统一到玩家消息',/function chatViewFromHash\(\)\{\s*return 'players';\s*\}/.test(shell)&&/const next='#\/chat'/.test(shell)&&/ghostChatView='players'/.test(shell));
-check('前端不再有 companion 对话历史、欢迎语或发送逻辑',!/sendCompanion|renderCompanion|companionMessages|companionWelcome|\/api\/companion/.test(shell));
-check('Honru 签到协议仍保留且不与玩家私聊耦合',/function petHonru\(\)[\s\S]*?type:'companion_checkin'/.test(shell)&&/function handleCompanionCheckin/.test(shell));
-check('玩家消息桌面双栏与手机主从布局存在',/grid-template-columns:minmax\(250px,320px\)/.test(template)&&/player-chat-shell:not\(\.thread-open\)/.test(template)&&/100dvh/.test(template));
-check('输入区支持 500 字、Enter 与 Shift+Enter',/id="chat-input"[\s\S]{0,180}maxlength="500"/.test(template)&&/event\.key==='Enter'&&!event\.shiftKey/.test(shell));
-check('消息正文使用 textContent 路径并标记原文',/function chatRawNode/.test(shell)&&/data-i18n-raw/.test(shell)&&!/chat-message[^\n]*innerHTML\s*=/.test(shell));
-check('会话系统空态不被 data-i18n-raw 错误冻结，而玩家昵称/正文仍保留原文',/if\(item\.lastMessage&&typeof item\.lastMessage\.text==='string'\)[\s\S]{0,180}chatRawNode\('span','chat-conversation-preview'/.test(shell)&&/else copy\.appendChild\(el\('span','chat-conversation-preview',t\('chat_start_conversation'\)\)\)/.test(shell)&&!/row\.setAttribute\('data-i18n-raw'\)/.test(shell));
-check('玩家昵称仅在真实存在时标记原文，系统 fallback 与清空线程标题保持可本地化',/function chatPeerNameNode[\s\S]{0,220}typeof name==='string'&&name\.length[\s\S]{0,160}t\('social_player'\)/.test(shell)&&/title\.removeAttribute\('data-i18n-raw'\)/.test(shell)&&/chatPeerNameNode\('span','chat-conversation-name',peer\.name\)/.test(shell));
-check('断线草稿只在内存 Map，不进入 localStorage',/chatDrafts:new Map/.test(online)&&!/localStorage[^\n]*chatDraft/i.test(online+shell));
-check('direct-chat-v1 客户端与服务端成对声明',/direct-chat-v1/.test(online)&&/direct-chat-v1/.test(server));
-['chat_list','chat_history','chat_send','chat_read'].forEach(type=>check('服务端处理 '+type,new RegExp("type==='"+type+"'").test(server)));
-['chat_state','chat_history','chat_message','chat_send_ok','chat_read_ok','chat_error'].forEach(type=>check('客户端处理 '+type,new RegExp("case '"+type+"'").test(online)));
-check('主动推送重新验证 session token',/function socialSessions[\s\S]{0,420}userHasTokenHash/.test(server));
-check('Supabase 消息/已读表启用 RLS 并撤销浏览器权限',/create table if not exists direct_messages/.test(schema)&&/create table if not exists direct_message_reads/.test(schema)&&/alter table direct_messages enable row level security/.test(schema)&&/revoke all on table direct_messages from public, anon, authenticated/.test(schema));
-check('Supabase 发送与已读 RPC 仅授权 service_role',/grant execute on function send_direct_message_v1[\s\S]*to service_role/.test(schema)&&/grant execute on function apply_direct_message_read_v1[\s\S]*to service_role/.test(schema));
-check('reduced-motion 同时关闭路由与消息入场',/@media\(prefers-reduced-motion:reduce\)[^{]*\{[^}]*\.app-route[^}]*\.chat-message/.test(template));
-check('三语言 Chat 键集合一致',(()=>{const z=JSON.parse(read('public/locales/zh-CN.json')),e=JSON.parse(read('public/locales/en-US.json')),u=JSON.parse(read('public/locales/uk-UA.json'));const keys=Object.keys(z).filter(k=>k.startsWith('chat_'));return keys.every(k=>e[k]&&u[k])&&keys.length>=45;})());
-console.log(fail?'PLAYER_CHAT_CONTRACT_HAS_FAILURES':'PLAYER_CHAT_CONTRACT_ALL_PASS');process.exitCode=fail?1:0;
+
+/* Direct Chat contract after the Playline migration.
+ *
+ * This is intentionally a source contract: the page owns only the global
+ * overlay mount and the DirectMessage presenter creates the dialog.  The
+ * transport remains the existing direct-chat-v1 facade.
+ */
+const fs = require('fs');
+const path = require('path');
+
+const ROOT = path.join(__dirname, '..');
+const read = file => fs.readFileSync(path.join(ROOT, file), 'utf8');
+const template = read('public/index-template.html');
+const shell = read('public/src/core/02-app-shell.js');
+const presenter = read('public/src/core/07-playline.js');
+const online = read('public/src/online/03-websocket.js');
+const server = read('server/index.js');
+const schema = read('supabase/schema.sql');
+const locales = Object.fromEntries(['zh-CN', 'en-US', 'uk-UA'].map(lang => [lang, JSON.parse(read(`public/locales/${lang}.json`))]));
+
+let failures = 0;
+function check(name, ok) {
+  console.log(`${ok ? 'PASS  ' : 'FAIL  '}${name}`);
+  if (!ok) failures += 1;
+}
+
+check('四区外壳以 Playline 取代 Chat 主区',
+  /const GHOST_APP_ROUTES = \['home','games','playline','profile'\]/.test(shell) &&
+  /data-app-route="playline"/.test(template) &&
+  !/data-app-route="chat"/.test(template));
+
+check('旧 #/chat 深链归一到 #/playline 并打开全局 DM',
+  /function routeFromHash\(\)[\s\S]*\(home\|games\|playline\|chat\|profile\)/.test(shell) &&
+  /return match\[1\]==='chat'\?'playline':match\[1\]/.test(shell) &&
+  shell.includes("const next='#/playline'") &&
+  /function enterGhostApp\([\s\S]*const legacyChat=[\s\S]*location\.hash/.test(shell) &&
+  /const legacyChat[\s\S]*\^#\\\/chat/.test(shell) &&
+  /function enterGhostApp\([\s\S]*if\(legacyChat\)[\s\S]*DirectMessage\.open[\s\S]*btn-global-messages/.test(shell));
+
+check('旧/未知 Chat view 只保留玩家语义，不复活 Honru Chat',
+  /function chatViewFromHash\(\)\{\s*return 'players';\s*\}/.test(shell) &&
+  /ghostChatView='players'/.test(shell) &&
+  /function setChatView\(view,options\)[\s\S]*const next='#\/playline'/.test(shell) &&
+  !/sendCompanion|renderCompanion|companionMessages|companionWelcome|\/api\/companion/.test(shell) &&
+  !/id="(?:chat-tab-honru|honru-chat-view|honru-dock|companion-form|companion-input)"|btn-home-honru/.test(template));
+
+check('Honru 签到协议仍与玩家私信分离',
+  /function petHonru\(\)[\s\S]*type:'companion_checkin'/.test(shell) &&
+  /function handleCompanionCheckin\(/.test(shell) &&
+  /function initGhostShell\(\)[\s\S]*DirectMessage\.init\(\)/.test(shell));
+
+check('模板只提供一个全局 DM overlay mount，入口委托 DirectMessage',
+  /<div id="direct-message-overlay-root" class="hidden" aria-hidden="true"><\/div>/.test(template) &&
+  /id="btn-global-messages"/.test(template) &&
+  /id="btn-playline-open-messages"/.test(template) &&
+  /globalMessages[\s\S]*DirectMessage\.open\(\{opener:globalMessages\}\)/.test(shell) &&
+  /playlineMessages[\s\S]*DirectMessage\.open\(\{opener:playlineMessages\}\)/.test(shell));
+
+check('DirectMessage 暴露稳定的 presenter API',
+  /var DirectMessage = \{[\s\S]*init: directInit,[\s\S]*open: openDirect,[\s\S]*close: closeDirect,[\s\S]*accept: acceptDirect,[\s\S]*reset: directReset/.test(presenter) &&
+  /global\.DirectMessage\.open = openDirect/.test(presenter) &&
+  /global\.DirectMessage\.accept = acceptDirect/.test(presenter));
+
+check('私信输入和服务端都执行 500 字/2000 UTF-8 bytes 边界',
+  presenter.includes("input.setAttribute && input.setAttribute('maxlength', '500')") &&
+  server.includes("if(count>500||Buffer.byteLength(text,'utf8')>2000)") &&
+  /function normalizeChatText\(input\)[\s\S]*normalize\('NFC'\)[\s\S]*replace\(\//.test(server));
+
+check('Enter 发送且 Shift+Enter 保留换行',
+  presenter.includes("mounts.composer && mounts.composer.addEventListener") &&
+  presenter.includes('sendDirectMessage(mounts.input && mounts.input.value)') &&
+  presenter.includes("event && event.key === 'Enter' && !event.shiftKey") &&
+  presenter.includes('sendDirectMessage(mounts.input.value)') &&
+  presenter.includes("input.setAttribute && input.setAttribute('enterkeyhint', 'send')"));
+
+check('玩家昵称、预览和正文均走 textContent/raw 标记',
+  /function setRawText\(node, value\)[\s\S]*node\.textContent[\s\S]*data-i18n-raw/.test(presenter) &&
+  /setRawText\(name, peer\.name/.test(presenter) &&
+  /setRawText\(preview, item\.lastMessage\.text\)/.test(presenter) &&
+  /setRawText\(body, message\.text \|\| ''\)/.test(presenter) &&
+  !/\.innerHTML\s*=/.test(presenter));
+
+check('草稿只驻留在按账号/会话隔离的内存 Map',
+  /chatDrafts:new Map/.test(online) &&
+  /o\.chatDrafts && directState\.peerUid\) o\.chatDrafts\.set\(String\(directState\.peerUid\)/.test(presenter) &&
+  /o\.chatDrafts && typeof o\.chatDrafts\.get === 'function'/.test(presenter) &&
+  !/localStorage[^\n]*chatDraft/i.test(online + presenter));
+
+check('direct-chat-v1 capability 与四个 C→S 操作保持不变',
+  /['"]direct-chat-v1['"]/.test(online) &&
+  /requestChatList\([^)]*\)[\s\S]{0,220}type:'chat_list'/.test(online) &&
+  /requestChatHistory\(peerUid,beforeSeq\)[\s\S]{0,260}type:'chat_history'/.test(online) &&
+  /sendChatMessage\(peerUid,text,clientMessageId\)[\s\S]{0,320}type:'chat_send'[\s\S]*clientMessageId/.test(online) &&
+  /markChatRead\(peerUid,throughSeq\)[\s\S]{0,220}type:'chat_read'/.test(online));
+
+for (const type of ['chat_state', 'chat_history', 'chat_message', 'chat_send_ok', 'chat_read_ok', 'chat_error']) {
+  const start = online.indexOf(`case '${type}':`);
+  const handler = start >= 0 ? online.slice(start, start + 1800) : '';
+  check(`客户端接收 ${type} 并交给 DirectMessage`,
+    handler.includes('DirectMessage.accept(msg)') &&
+    new RegExp(`type:'${type}'|type: '${type}'`).test(server));
+}
+
+check('服务端私信仍以 token/好友/Block 边界为权威',
+  /function chatUser\(session,action,clientMessageId\)[\s\S]*userHasTokenHash\(user,session\.tokenHash\)/.test(server) &&
+  /socialFriendship\(user\.uid,peerUid\)\|\|socialBlockedBetween\(user\.uid,peerUid\)/.test(server) &&
+  /function chatValidSessions\([\s\S]*userHasTokenHash/.test(server));
+
+check('Supabase Direct Chat 表仍启用 RLS 且只允许 service_role RPC',
+  /create table if not exists direct_messages/.test(schema) &&
+  /create table if not exists direct_message_reads/.test(schema) &&
+  /alter table direct_messages enable row level security/.test(schema) &&
+  /revoke all on table direct_messages from public, anon, authenticated/.test(schema) &&
+  /grant execute on function send_direct_message_v1[\s\S]*to service_role/.test(schema) &&
+  /grant execute on function apply_direct_message_read_v1[\s\S]*to service_role/.test(schema));
+
+const requiredLocaleKeys = [
+  'direct_message_title', 'direct_message_close', 'direct_message_send',
+  'direct_message_loading', 'direct_message_loading_history', 'direct_message_ready',
+  'direct_message_enter_hint', 'direct_message_unread_count',
+];
+for (const key of requiredLocaleKeys) {
+  check(`三语言存在 ${key}`, Object.values(locales).every(locale => typeof locale[key] === 'string' && locale[key].trim()));
+}
+
+console.log(failures ? 'PLAYER_CHAT_CONTRACT_HAS_FAILURES' : 'PLAYER_CHAT_CONTRACT_ALL_PASS');
+process.exitCode = failures ? 1 : 0;

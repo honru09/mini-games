@@ -1,0 +1,47 @@
+{
+  "taskId": "game-stage-wave-b-gomoku-tetris-p0-20260811",
+  "verifiedAt": "2026-08-11T13:56:36+09:00",
+  "release": "LOCAL_ONLY_NO_COMMIT_NO_PUSH_NO_DEPLOY",
+  "status": "LOCAL_ACCEPTED_AWAITING_BROWSER_REFRESH",
+  "implementation": {
+    "gomoku": ["public/src/games/gomoku.js", "qa/game-stage-wave-b-gomoku.js"],
+    "tetris": ["public/src/games/tetris.js", "qa/game-stage-wave-b-tetris.js"],
+    "shared": ["public/index-template.html", "qa/game-stage-wave-b-layout.js", "package.json"]
+  },
+  "flagContract": {
+    "key": "mg_art_game_stage_wave_b_v1",
+    "default": "enabled when key is absent or not exactly '0'",
+    "rollback": "exact string '0'",
+    "storageError": "Wave A fail-closed",
+    "scope": "presentation DOM/CSS only; no rules, snapshots, AI, wire, reward, replay or database fields"
+  },
+  "tests": {
+    "waveB": "PASS",
+    "gameStage": "PASS",
+    "immersiveShell": "PASS",
+    "tabletopArt": "PASS",
+    "tetrisRuleCore": "PASS",
+    "tetrisBattleProtocol": "PASS",
+    "i18n": "PASS",
+    "domSmoke": "PASS",
+    "npmTest": "PASS (154s, exit 0)",
+    "qualityGates": "PASS",
+    "diffCheck": "PASS (only existing CRLF conversion warnings)"
+  },
+  "build": {
+    "command": "npm run build",
+    "physicalBytes": 1116957,
+    "utf8Bytes": 1116957,
+    "sha256": "15D803ABFF1AEB87A970DADADCD7302C8BC87B3C7DAC63625A7001DF3A0BC67A",
+    "deterministicDoubleBuild": true
+  },
+  "browser": {
+    "url": "http://127.0.0.1:8091/#/games",
+    "observedViewport": "1155x1224",
+    "observedState": "existing connector tab returned pre-Wave-B cached markup; Tetris Wave A was visible",
+    "latestWaveBVisibleRecapture": "not_completed_due_to_connector_navigation/cache limitation",
+    "console": "no new error evidence",
+    "notExecuted": ["second desktop browser", "Android", "iPhone Safari", "physical tablet", "real network shaping", "browser reduced-motion emulation"]
+  },
+  "artBoundary": "No new image, SVG, Honru Emoji or unapproved asset entered runtime; code-native Wave B only."
+}

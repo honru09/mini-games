@@ -2,6 +2,9 @@
 
 > 简易记录项目新增内容。每次改动完成前更新；格式：`日期 时间｜新增内容`。
 
+- 2026-08-12 16:40｜新增 Theme Contrast Design System P1 冻结合同、专项 QA 和本地收口简报；专项已接入 pretest、完整 test 与 Fast Quality Gates。
+- 2026-08-12 17:24｜新增 Theme Contrast P1 修正后最终验证记录：Quality Gates 通过，完整 npm test 189.0 秒通过，双构建哈希一致；Terra Max 终审重试因 429 未返回可采纳结论，按 reviewer limit 记录。
+
 - 2026-08-07 16:29｜创建 `LOG-新增.md`、`LOG-修改.md`、`LOG-删除.md` 三份中文简易日志。
 - 2026-08-07 16:29｜新增五子棋与俄罗斯方块 P0 美术纵切母图和运行时 WebP（大厅封面、五子棋棋盘底材、俄罗斯方块玻璃井底材）。
 - 2026-08-07 16:55｜新增 `requirements/` 需求目录，原样收录《Mini Games 对局奖励与成长系统需求增补》并创建需求索引。
@@ -129,3 +132,35 @@
 - 2026-08-11 00:04｜新增隔离式测试管理员 P0：`server/test-admin.js`、四类专项/安全 QA、active task、Render `sync:false` 声明、TECH-053 台账项与中文简报；提供私有无限 G Coins、MAX、当前目录全拥有和显式能力白名单，真实凭证不写入仓库。
 - 2026-08-11 00:04｜新增离房后旧 `room_update` 不得复活旧房间的客户端生命周期回归；修复后连续三轮 E2E 全通过。
 - 2026-08-11 00:51｜新增测试管理员共享 UID 校验 helper、沙盒设置不可翻转回归、结算后局内聊天/表达拒绝及观众延迟取消回归；新增 Supabase 管理员远端引导 fail-closed 静态合同。
+- 2026-08-11 01:04｜新增线上 Test Admin 烟测证据：私有 MAX/无限 G Coins 展示、临时访客公开档案/Lobby/加入/观战隔离、沙盒零奖励与正式战绩不变。
+- 2026-08-11 01:11｜本次未新增产品功能；新增一条发布后报告治理证据，确认 `da3d05c` 已发布批次与后续本地发布冻结的边界不再混淆。
+- 2026-08-11 02:30｜新增 Honru Emoji Runtime P0 source-only 批次：十枚独立最高质量生成的 wave/thumbsup/cheer/wow/oops/cry/angry/sly/heart/game，十份 1254² Chroma/Alpha、40 个 192/96/64/44 派生、1024×768 atlas、640×360 poster、44px strip、逐枚 Prompt/provenance、Reviewer A 技术记录、Reviewer B/IP/Golden Set 待审表。
+- 2026-08-11 02:30｜新增 `requirements/active/honru-emoji-runtime-p0-20260811/` 三份合同/审计文档、素材库 G-17–G-27 reference-only 条目、`qa/honru-emoji-contract.js` 与《HonruEmoji-P0源稿与合同收口》简报；没有新增 public runtime 资源或线上功能。
+- 2026-08-11 13:56｜新增五子棋/Tetris Game Stage Wave B 稳定 DOM seam、总开关、共享响应式布局、三份专项 QA、active task 证据与《GameStageWaveB-五子棋与俄罗斯方块本地实现》简报；未新增图片或线上能力。
+- 2026-08-11 15:36｜新增飞行棋/大富翁 Game Stage Wave B 专项执行/所有权证据、实体舞台与回滚状态记录；新增 GSAP Motion Governance 收口证据、四款 Wave B 统一进度叙事与本轮测试收口记录。
+- 2026-08-11 15:55｜新增最终双构建稳定性证据：`public/index.html` 物理 1,151,672 bytes、SHA-256 `CF8FC5AC30109CE23186BBEE97A07A580C0903585C9E0E09DAC83F579E7CD86F`。
+- 2026-08-11 15:56｜新增最终 PROJECT_STATUS 时间戳同步记录；本轮无新增产品功能。
+- 2026-08-11 16:10｜新增浏览器连接器与 Supabase 真实验收解除手册，记录本机权限清理、凭证/工具准备、备份迁移、RLS/并发、恢复演练和非破坏回滚顺序。
+- 2026-08-11 16:53｜新增 D 盘 Supabase 工具链：Supabase CLI 2.113.0、PostgreSQL 18.4 客户端、GNU Bash 5.3.15/MinGit 2.55.0.3，发布摘要/校验和与版本验证通过；新增五阶段隐藏输入向导 `.codex-tmp/supabase-production-wizard.sh` 和 `storage-preflight` 加密存储预检。
+- 2026-08-11 16:58｜新增 Supabase 安全修复的完整项目回归证据：`npm test` 184.7 秒退出码 0，包含 Schema、Production Readiness、Adapter、Security、Reconnect 与联机 E2E。
+- 2026-08-11 17:11｜新增第二轮 Supabase 安全收口证据：project-ref/数据库身份隔离、6543 pooler 拒绝、Windows BitLocker/EFS 可验证存储门禁、向导 JWT/ACL/连接串静态守卫与等价 URI/绕过回归；完整 `npm test` 172.3 秒退出码 0。
+- 2026-08-11 17:15｜新增 PostgreSQL 调用显式 `--dbname` 回归合同，防止环境变量 URI 解析歧义；运维脚本 dry-run、Production Readiness 和向导 Bash 语法复核通过。
+- 2026-08-11 17:19｜新增向导可选加密备份目录输入，并将该目录贯穿 plan/migrate/restore；向导语法、Production Readiness 与差异检查再次通过。
+- 2026-08-11 17:28｜新增 Windows 原生 `scripts/supabase-production-wizard.ps1`：五阶段 `Read-Host`/隐藏 Secret 输入、项目/URI/端口/恢复隔离校验、当前用户 ACL、预检/迁移/恢复显式确认；旧 Bash 启动器自动转发。
+- 2026-08-11 17:51｜新增旧 Bash 启动路径到 PowerShell 向导的无凭证 Probe 回归：原始命令返回 `POWERSHELL_WIZARD_READY`，不再发生 `read` EOF 静默结束。
+- 2026-08-11 17:54｜新增 PowerShell 向导连续流程回归，第一阶段不再要求无意义的 Enter，直接进入 Project URL 提示。
+- 2026-08-11 18:12｜新增 Supabase Adapter 凭证继承隔离回归：fake PostgREST 子进程显式清空父终端的真实服务端/数据库变量，只使用测试密钥；26 项适配器断言通过。
+- 2026-08-11 18:32｜新增 D 盘垃圾扫描记录：确认项目最大临时项为浏览器测试缓存，回收站与发布工作副本未自动处理。
+- 2026-08-11 18:48｜新增 E 盘创建安全审计记录：目标为 10GB，但 Windows 复核后拒绝缩小 D 盘，流程安全停止。
+- 2026-08-12 00:37｜新增 GAME-051/052 两项 Game Stage Wave C 过程密度需求及飞行棋/大富翁、Tank/象棋专项回归；新增 Tank 权威快照优先级与静默窗口、象棋棋钟/将军/终局保护、三语正常棋钟文案、四款 Honru Pixel Avatar source-only 合同和 Premium Background 完整生命周期证据。
+- 2026-08-12 00:37｜新增 242 项唯一需求、71 个来源、129 个依赖节点/267 条无环依赖、47 个请求覆盖组的统一台账证据及七份 20260811 分类进度报告；人工清稿、Reviewer B、IP Review、Golden Set、真机/第二浏览器/真实网络验收继续明确为未执行。
+- 2026-08-12 02:59｜新增五子棋 44×44 触控 D-pad/落子键、Canvas keyboard grid 专项合同，以及 Wave C 本地自动化验收证据 `local-verification-202608120259.json`。
+- 2026-08-12 03:31｜新增 `MAINLINE_CONTROL_ROUTING.json`、Control Plane active task 与语义 QA：242 项唯一归入 NOW_CLOSURE 146、EXTERNAL_GATE 32、DEFERRED_MAINLINE 48、FUTURE_EXPANSION 16，并固定三条共享 Gate。
+- 2026-08-12 05:29｜新增《Ghost3D-Foundation-P0本地收口》简易报告与 Foundation 治理证据：窄 `create/QUALITY → apply/snapshot/dispose` seam、inert build 注册、三轮 reviewer 修正和当前 41 条本地断言；Three r185 仍仅为研究策略，未发布。
+- 2026-08-12 06:55｜新增 default-off Gomoku Ghost3D P0：Three r185/GSAP 3.15 封闭相对 ESM、程序化 15×15 Scene、Camera/Lighting/Raycast、首镜头与落子 timeline、质量/reduced-motion、context-loss recovery、SW lazy-cache、vendor 许可证/换行保护，以及专项证据和本地收口简报。
+- 2026-08-12 11:14｜新增 UI Motion Closure P1 active task、同步路由深模块、GSAP 3.15 DOM Core+CSSPlugin 官方 ESM 图/provenance、66 条专项断言、PWA v4 按需缓存合同、本地证据与《UI-Motion-Closure-P1本地实现收口》简报。
+- 2026-08-12 12:05｜新增统一身份深模块 `public/src/core/10-identity-presentation.js`、15 项 `qa/identity-presentation-contract.js`、Identity/Avatar/Background active task 与本地收口简报；未新增产品需求 ID、图片或线上能力。
+- 2026-08-12 12:25｜新增 Identity P1 最终证据：最后一处 DM i18n 修复后的完整 `npm test` 166.5 秒、稳定双构建哈希，以及 Terra Max 未交付结论的 reviewer-limit 记录；未新增产品能力。
+- 2026-08-12 13:33｜新增 Direct Message Design System P1 active task、`GhostSurfaceMotion` 深模块、GSAP Surface Adapter 与 18+12+9 项专项 QA；私信仍复用 `direct-chat-v1`，未新增 wire 或产品能力。
+- 2026-08-12 13:39｜新增 DM P1 最终全链与双构建证据：完整 `npm test` 147.1 秒，1,333,055 characters / 1,347,604 bytes，SHA-256 `0546BBFB5C2FACA13D9D3D9C121FFBA7A1C48E9C98D5A516DA23C25EA2BCAB62`。
+- 2026-08-12 15:53｜新增 Profile Design System P1 本地收口证据：`profile-design-system-contract` 14 项、`profile-request-lifecycle` 9 项、active task 完成态、PROJECT_STATUS capability 与《Profile-DesignSystem-P1本地实现收口》中文简报；未新增协议、公开字段、经济、数据库或运行时美术。

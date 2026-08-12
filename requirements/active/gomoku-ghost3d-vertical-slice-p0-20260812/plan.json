@@ -1,0 +1,16 @@
+{
+  "taskId": "gomoku-ghost3d-vertical-slice-p0-20260812",
+  "requirement": "TECH-049",
+  "stage": "CLOSE",
+  "disposition": "NOW_CLOSURE",
+  "state": "VERIFYING",
+  "steps": [
+    {"id":"G3D-G-1","status":"completed","title":"冻结总指挥、Renderer-independent seam、GSAP 与永久 fallback 合同"},
+    {"id":"G3D-G-2","status":"completed","title":"建立 Three r185 / GSAP 3.15.0 vendor 图、provenance 与程序化 Renderer"},
+    {"id":"G3D-G-3","status":"completed","title":"建立五子棋默认关闭的语义 bridge、overlay 与生命周期"},
+    {"id":"G3D-G-4","status":"completed","title":"修正首帧 ready、Camera Entrance、context-loss pointer fallback 与专项 QA"},
+    {"id":"G3D-G-5","status":"completed","title":"接入正式测试链、Quality Gates、SW cache version 并完成共享回归"},
+    {"id":"G3D-G-6","status":"completed","title":"尝试本地可见复核并如实记录 Transport closed；完成证据、台账、状态、报告和日志收口"}
+  ],
+  "rollback": "disable mg_ghost3d_gomoku_v1 or remove the optional bridge/island; Wave B Canvas and all game facts remain intact"
+}

@@ -1,4 +1,4 @@
-// 小游戏合集在线服务：静态文件 + WebSocket 房间中继（零依赖，手写 RFC6455）
+﻿// 小游戏合集在线服务：静态文件 + WebSocket 房间中继（零依赖，手写 RFC6455）
 'use strict';
 const http = require('http');
 const fs = require('fs');
@@ -15,6 +15,7 @@ const {
 const TestAdmin = require('./test-admin');
 const testAdmin = TestAdmin.createTestAdminPolicy(process.env);
 if (testAdmin.fatal) throw new Error(TestAdmin.TEST_ADMIN_REASON);
+const { createPlaylineModule, createJsonPlaylineStore, createSupabasePlaylineStore, PROTOCOL: PLAYLINE_PROTOCOL } = require('./playline');
 const {
   normalizeStored: normalizePlayerCharacter,
   publicPresentation: publicPlayerCharacter,
@@ -345,6 +346,12 @@ async function handleAI(req, res){
     }
     const personaId = body.persona && typeof body.persona === 'object' ? String(body.persona.id || '') : String(body.persona || '');
     const persona = AI_PERSONAS[personaId] || null;
+    const requestedDifficulty = body.persona && typeof body.persona === 'object' &&
+      ['easy','normal','hard'].includes(String(body.persona.difficulty || '').toLowerCase())
+      ? String(body.persona.difficulty).toLowerCase() : null;
+    // 新三档客户端只有困难档允许访问 DeepSeek。旧客户端没有 difficulty，保持既有兼容行为。
+    // 简单/普通仍经过 personal-linear-v2 取得可确认学习票据，但不会产生上游费用或等待。
+    const allowDeepSeek = requestedDifficulty ? requestedDifficulty === 'hard' : true;
     // 只有携带当前服务端 solo 票据的请求才会产生可学习 decisionId。
     // 这样 DeepSeek 慢响应在客户端超时/回退时不会凭空写入 AI 经验。
     const requestedContext = body.context && typeof body.context === 'object'
@@ -357,7 +364,7 @@ async function handleAI(req, res){
       matchAtStart.game === game && matchAtStart.matchId === requestedMatchId &&
       matchAtStart.resultId === requestedResultId);
     let upstreamChoice = null;
-    if (DEEPSEEK_KEY){
+    if (DEEPSEEK_KEY && allowDeepSeek){
       try {
         upstreamChoice = await askDeepSeek(game, state, options, persona);
       } catch (e) {
@@ -918,6 +925,7 @@ function normalizeUserRewardState(u){
 const SUPABASE_URL = (process.env.SUPABASE_URL || '').replace(/\/+$/, '');
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY || '';
 const useSupabase = !!(SUPABASE_URL && SUPABASE_KEY);
+const PLAYLINE_ENABLED = /^(1|true|on)$/i.test(String(process.env.ENABLE_PLAYLINE_V1 || ''));
 const sbProfileQueues = new Map();
 const sbAILearningQueues = new Map();
 const sbAILearningDrains = new Map();
@@ -1364,7 +1372,7 @@ function emptyDB(){
     users: {}, history: [], rewardHistory: [], economyLedger: [], events: [], replays: [], metricsHistory: [], opsIncidents: [],
     pendingRewardSync: [], aiLearning: normalizeAILearningStore(), pendingAILearningSync: [],
     friendRequests: [], friendships: [], blocks: [], reports: [],
-    chatMessages: [], chatReads: {}, nextChatSeq: '0',
+    chatMessages: [], chatReads: {}, nextChatSeq: '0', playlinePosts: [], nextPlaylineSeq: '0',
   };
 }
 let db = emptyDB();
@@ -1392,6 +1400,8 @@ function loadDB(){
       chatMessages: Array.isArray(parsed.chatMessages) ? parsed.chatMessages : [],
       chatReads: parsed.chatReads && typeof parsed.chatReads === 'object' && !Array.isArray(parsed.chatReads) ? parsed.chatReads : {},
       nextChatSeq: String(parsed.nextChatSeq || '0'),
+      playlinePosts: Array.isArray(parsed.playlinePosts) ? parsed.playlinePosts : [],
+      nextPlaylineSeq: String(parsed.nextPlaylineSeq || '0'),
     };
   } catch { db = emptyDB(); }
   db.pendingRewardSync = db.pendingRewardSync.filter(item => item && item.uid && item.row && item.row.resultId).slice(-10000);
@@ -1474,11 +1484,12 @@ function saveDB(){
   const reports=(db.reports||[]).filter(row=>row&&!testAdmin.shouldHidePublicUid(row.reporterUid)&&!testAdmin.shouldHidePublicUid(row.targetUid));
   const chatMessages=(db.chatMessages||[]).filter(row=>row&&!testAdmin.shouldHidePublicUid(row.senderUid)&&!testAdmin.shouldHidePublicUid(row.recipientUid));
   const chatReads=Object.fromEntries(Object.entries(db.chatReads||{}).filter(([key])=>![...testAdminUidCandidates(key)].some(testAdmin.shouldHidePublicUid)));
+  const playlinePosts=(db.playlinePosts||[]).filter(row=>row&&!testAdmin.shouldHidePublicUid(row.authorUid)&&(!db.users[row.authorUid]||!db.users[row.authorUid].ephemeral));
   fs.writeFileSync(tmp, JSON.stringify({ users, history, rewardHistory, economyLedger, events, replays,
     metricsHistory:db.metricsHistory||[],opsIncidents:db.opsIncidents||[],
     pendingRewardSync, aiLearning, pendingAILearningSync,
     friendRequests, friendships, blocks, reports,
-    chatMessages, chatReads, nextChatSeq: db.nextChatSeq || '0',
+    chatMessages, chatReads, nextChatSeq: db.nextChatSeq || '0', playlinePosts, nextPlaylineSeq: db.nextPlaylineSeq || '0',
   }, null, 2));
   fs.renameSync(tmp, DB_FILE);
 }
@@ -1495,6 +1506,7 @@ function trimAuditData(){
   db.blocks = (db.blocks || []).filter(row => row && !testAdmin.shouldHidePublicUid(row.blockerUid) && !testAdmin.shouldHidePublicUid(row.blockedUid));
   db.reports = (db.reports || []).filter(row => row && !testAdmin.shouldHidePublicUid(row.reporterUid) && !testAdmin.shouldHidePublicUid(row.targetUid));
   db.chatMessages = (db.chatMessages || []).filter(row => row && !testAdmin.shouldHidePublicUid(row.senderUid) && !testAdmin.shouldHidePublicUid(row.recipientUid));
+  db.playlinePosts = (db.playlinePosts || []).filter(row => row && !testAdmin.shouldHidePublicUid(row.authorUid));
   db.aiLearning.models = Object.fromEntries(Object.entries((db.aiLearning && db.aiLearning.models) || {}).filter(([key]) => !testAdmin.shouldHidePublicUid(String(key).split('|')[0])));
   db.aiLearning.experiences = (db.aiLearning.experiences || []).filter(row => row && !testAdmin.shouldHidePublicUid(row.uid));
   db.aiLearning.appliedResults = (db.aiLearning.appliedResults || []).filter(key => !testAdmin.shouldHidePublicUid(String(key).split('|')[0]));
@@ -1511,6 +1523,7 @@ function trimAuditData(){
   if (db.friendships.length > 50000) db.friendships = db.friendships.slice(-25000);
   if (db.blocks.length > 50000) db.blocks = db.blocks.slice(-25000);
   if (db.reports.length > 50000) db.reports = db.reports.slice(-25000);
+  if (db.playlinePosts.length > 20000) db.playlinePosts = db.playlinePosts.slice(-10000);
   trimChatData();
 }
 function recordAnalytics(event, meta = {}){
@@ -1619,6 +1632,9 @@ function lobbyPayload(viewerUid){
       hostUid: r.host.uid || null,
       hostName: hu ? hu.name : '玩家',
       hostAvatar: hu ? hu.avatar : 0,
+      hostFrame: hu ? (hu.frame || 0) : 0,
+      hostEffect: hu ? (hu.effect || 0) : 0,
+      hostNameFx: hu ? (hu.nameFx || 0) : 0,
       hostLang: hu ? (hu.lang || 'zh-CN') : 'zh-CN',
       capacity: r.capacity,
       size,
@@ -2134,7 +2150,7 @@ function profileCompareAllowed(viewer,target){
 const SOCIAL_REQUEST_MAX_PER_DAY = 100;
 const SOCIAL_REPORT_MAX_PER_DAY = 30;
 const SOCIAL_REASONS = new Set(['harassment', 'inappropriate_name', 'cheating', 'spam', 'other']);
-const SOCIAL_CONTEXT_TYPES = new Set(['profile','room','match','social','tournament']);
+const SOCIAL_CONTEXT_TYPES = new Set(['profile','room','match','social','tournament','playline']);
 function socialId(prefix){ return prefix + '_' + crypto.randomBytes(10).toString('base64url'); }
 function socialPair(aUid, bUid){
   const pair = [String(aUid || ''), String(bUid || '')].sort();
@@ -2201,6 +2217,10 @@ function socialTarget(fromUid, targetUid){
   if (!target || target === fromUid || testAdmin.shouldHidePublicUid(fromUid) || testAdmin.shouldHidePublicUid(target) || !db.users[target] || db.users[target].ephemeral) return null;
   return db.users[target];
 }
+function sendPlaylineInvalidated(uids,reason){
+  if(!PLAYLINE_ENABLED)return;
+  [...new Set((Array.isArray(uids)?uids:[uids]).map(String).filter(Boolean))].forEach(uid=>socialSessions(uid,session=>{if(session.capabilities instanceof Set&&session.capabilities.has(PLAYLINE_PROTOCOL))session.sendText(JSON.stringify({type:'playline_invalidated',payload:{reason:String(reason||'relationship_changed')}}));}));
+}
 function socialDailyCount(rows, uid, field){
   const cutoff = Date.now() - 86400000;
   return rows.filter(row => row && row[field] === uid && Number(row.createdAt || 0) >= cutoff).length;
@@ -2253,7 +2273,7 @@ function socialFriendRequestAction(session, payload){
     const pair = socialPair(row.fromUid, row.toUid);
     if (!socialFriendship(row.fromUid, row.toUid)) db.friendships.push({ id:pair.id, ...pair, createdAt:Date.now() });
     saveDB(); syncSocialRows('friendRequests', [row]); syncSocialRows('friendships', db.friendships.filter(item => item.id === pair.id));
-    socialOk(session, '已添加好友', { action:'accepted' }); sendSocialState(row.fromUid); sendChatState(row.fromUid); sendChatState(row.toUid); return;
+    socialOk(session, '已添加好友', { action:'accepted' }); sendSocialState(row.fromUid); sendChatState(row.fromUid); sendChatState(row.toUid); sendPlaylineInvalidated([row.fromUid,row.toUid],'friendship_changed'); return;
   }
   if (action === 'decline' && isIncoming){ row.status='declined'; row.updatedAt=Date.now(); saveDB(); syncSocialRows('friendRequests',[row]); socialOk(session,'已忽略好友请求',{action:'declined'}); sendSocialState(row.fromUid); return; }
   if (action === 'cancel' && isOutgoing){ row.status='cancelled'; row.updatedAt=Date.now(); saveDB(); syncSocialRows('friendRequests',[row]); socialOk(session,'已取消好友请求',{action:'cancelled'}); sendSocialState(row.toUid); return; }
@@ -2267,7 +2287,7 @@ function socialRemoveFriend(session, targetUid){
   const before = db.friendships.length;
   db.friendships = db.friendships.filter(row => row.id !== pair.id);
   if (db.friendships.length === before) return socialError(session, '你们还不是好友', 'not_friends');
-  saveDB(); deleteSocialRemote('friendships', pair.id); socialOk(session, '已移除好友', { action:'removed' }); sendSocialState(target.uid); sendChatState(session.uid); sendChatState(target.uid);
+  saveDB(); deleteSocialRemote('friendships', pair.id); socialOk(session, '已移除好友', { action:'removed' }); sendSocialState(target.uid); sendChatState(session.uid); sendChatState(target.uid); sendPlaylineInvalidated([session.uid,target.uid],'friendship_changed');
 }
 function socialBlock(session, targetUid){
   if (!testAdmin.socialAccess(session.uid, targetUid).ok) return socialError(session, '测试管理员与正式社交关系隔离', 'test_admin_isolated');
@@ -2280,7 +2300,7 @@ function socialBlock(session, targetUid){
   db.friendRequests = db.friendRequests.filter(row => !removedRequests.includes(row));
   const row = { id:socialId('blk'), blockerUid:session.uid, blockedUid:target.uid, targetSnapshot:{ uid:target.uid, name:target.name, avatar:target.avatar }, createdAt:Date.now() };
   db.blocks.push(row); syncSocialRows('blocks',[row]); deleteSocialRemote('friendships',pair.id); removedRequests.forEach(request => deleteSocialRemote('friend_requests',request.id)); saveDB();
-  socialOk(session, '已屏蔽该玩家', { action:'blocked' }); sendSocialState(target.uid); sendChatState(session.uid); sendChatState(target.uid);
+  socialOk(session, '已屏蔽该玩家', { action:'blocked' }); sendSocialState(target.uid); sendChatState(session.uid); sendChatState(target.uid); sendPlaylineInvalidated([session.uid,target.uid],'block_changed');
 }
 function socialUnblock(session, targetUid){
   const target = String(targetUid || '').trim();
@@ -2288,7 +2308,7 @@ function socialUnblock(session, targetUid){
   const removed = db.blocks.filter(row => row.blockerUid === session.uid && row.blockedUid === target);
   db.blocks = db.blocks.filter(row => !(row.blockerUid === session.uid && row.blockedUid === target));
   if (!removed.length) return socialError(session, '该玩家不在屏蔽列表', 'not_blocked');
-  saveDB(); removed.forEach(row => deleteSocialRemote('blocks',row.id)); socialOk(session, '已取消屏蔽', { action:'unblocked' }); sendChatState(session.uid); sendChatState(target);
+  saveDB(); removed.forEach(row => deleteSocialRemote('blocks',row.id)); socialOk(session, '已取消屏蔽', { action:'unblocked' }); sendChatState(session.uid); sendChatState(target); sendPlaylineInvalidated([session.uid,target],'block_changed');
 }
 function socialReport(session, payload){
   if (!testAdmin.socialAccess(session.uid, payload && payload.targetUid).ok) return socialError(session, '测试管理员与正式社交关系隔离', 'test_admin_isolated');
@@ -2308,7 +2328,42 @@ function socialReport(session, payload){
   recordAnalytics('social_report_created', { uid:session.uid, metadata:{ reportId:row.id, targetUid:target.uid, reason, contextType } });
   socialOk(session, '举报已记录，我们会核查相关信息', { action:'reported', reportId:row.id });
 }
+async function socialReportPlayline(session,payload){
+  const actor=playlineActorForSession(session),postId=String(payload&&payload.contextId||'');
+  const resolved=await playline.resolveReportTarget(actor,postId);
+  if(!resolved.ok)return socialError(session,'动态不可见或已失效','post_unavailable');
+  socialReport(session,{targetUid:resolved.targetUid,reason:payload&&payload.reason,contextType:'playline',contextId:postId,recentEventIds:[]});
+}
 function socialAllowedBetween(aUid, bUid){ return !!aUid && !!bUid && aUid !== bUid && testAdmin.socialAccess(aUid, bUid).ok && !socialBlockedBetween(aUid, bUid); }
+
+/* ---------------- Playline wire adapter (playline-v1) ---------------- */
+function playlineError(session, action, result, clientPostId){
+  const reason=String(result&&result.reason||'server_unavailable');
+  const payload={action:String(action||''),reason};
+  if(clientPostId)payload.clientPostId=String(clientPostId);
+  if(result&&result.retryAfter)payload.retryAfter=Number(result.retryAfter);
+  session.sendText(JSON.stringify({type:'playline_error',payload}));
+}
+function playlineStatePayload(result, filter){
+  return {filter:String(filter||result&&result.filter||'all'),posts:Array.isArray(result&&result.posts)?result.posts:[],hasMore:!!(result&&result.hasMore),nextCursor:result&&result.nextCursor||null};
+}
+async function handlePlaylineList(session,payload){
+  const actor=playlineActorForSession(session),filter=payload&&payload.filter!==undefined?payload.filter:payload&&payload.scope;
+  const result=await playline.list(actor,{filter:filter===undefined?'all':filter,cursor:payload&&payload.cursor,limit:payload&&payload.limit});
+  if(!result.ok)return playlineError(session,'playline_list',result);
+  session.sendText(JSON.stringify({type:'playline_state',payload:playlineStatePayload(result,filter)}));
+}
+async function handlePlaylinePublish(session,payload){
+  const actor=playlineActorForSession(session),intent={clientPostId:payload&&payload.clientPostId,audience:payload&&payload.audience,content:payload&&payload.content};
+  const result=await playline.publish(actor,intent);
+  if(!result.ok)return playlineError(session,'playline_publish',result,payload&&payload.clientPostId);
+  session.sendText(JSON.stringify({type:'playline_publish_ok',payload:{clientPostId:result.clientPostId,post:result.post,duplicate:!!result.duplicate,replayed:!!result.replayed}}));
+}
+async function handlePlaylineRemove(session,payload){
+  const actor=playlineActorForSession(session),result=await playline.remove(actor,{postId:payload&&payload.postId,requestId:payload&&payload.requestId});
+  if(!result.ok)return playlineError(session,'playline_remove',result);
+  session.sendText(JSON.stringify({type:'playline_remove_ok',payload:{postId:result.postId,deleted:true,replayed:!!result.replayed}}));
+}
 
 /* ---------------- Direct Chat v1（正式好友一对一纯文本私聊） ---------------- */
 const CHAT_MAX_MESSAGES = 50000;
@@ -2664,6 +2719,57 @@ function testAdminStarterUser(uid, username){
   };
 }
 loadDB();
+
+/* ---------------- Playline Community P0 ---------------- */
+function playlineActorForSession(session){
+  const user=session&&session.uid&&db.users[session.uid];
+  if(!user)return null;
+  return {
+    uid:user.uid,
+    tokenHash:session.tokenHash,
+    authenticated:true,
+    sessionValid:!!(session.tokenHash&&userHasTokenHash(user,session.tokenHash)),
+    ephemeral:!!user.ephemeral,
+    testAdmin:testAdmin.shouldHidePublicUid(user.uid),
+    capabilities:session.capabilities instanceof Set?[...session.capabilities]:[],
+    profile:publicProfileObj(user, user.uid),
+  };
+}
+function playlineResultResolver(actor, resultId){
+  const uid=String(actor&&actor.uid||''),id=String(resultId||'');
+  if(!uid||!id||testAdmin.shouldHidePublicUid(uid))return null;
+  const row=[...(db.rewardHistory||[])].reverse().find(item=>item&&item.uid===uid&&String(item.resultId||'')===id&&item.mode==='online'&&item.eligible!==false&&item.blockedReason!=='afk'&&item.blockedReason!=='result_disputed');
+  if(!row||!VALID_GAMES.includes(String(row.game||row.gameId||'')))return null;
+  return { gameId:String(row.game||row.gameId), outcome:['win','draw','loss'].includes(String(row.result))?String(row.result):null, mode:'online', placement:Number(row.placement)||undefined, participantCount:Number(row.participantCount)||undefined, settledAt:Number(row.at||row.createdAt)||Date.now(), authority:'settled_consensus' };
+}
+function playlineRecordResolver(actor, recordKey){
+  const uid=String(actor&&actor.uid||''),key=String(recordKey||'');
+  const user=db.users[uid];
+  if(!user||user.ephemeral||testAdmin.shouldHidePublicUid(uid))return null;
+  const mastery=deriveVictoryMastery(user.wins||{});
+  if(key==='level')return {record:key,value:Math.max(1,Number(user.level)||1),recordedAt:Date.now(),badgeKey:'profile_level'};
+  if(key==='total_wins')return {record:key,value:Math.max(0,Number(user.totalWins)||0),recordedAt:Date.now(),badgeKey:'total_wins'};
+  const match=/^(game_wins|mastery):(gomoku|ludo|monopoly|tank|tetris|xiangqi)$/.exec(key);
+  if(!match)return null;
+  const game=match[2],item=mastery&&mastery.byGame&&mastery.byGame[game];
+  const value=match[1]==='game_wins'?Math.max(0,Number(user.wins&&user.wins[game])||0):Math.max(0,Number(item&&item.wins)||0);
+  return {record:key,gameId:game,value,recordedAt:Date.now(),badgeKey:match[1]};
+}
+const playlineStore=useSupabase
+  ? createSupabasePlaylineStore({rpc:(name,payload)=>sbFetch('rpc/'+name,{method:'POST',body:JSON.stringify(payload)})})
+  : createJsonPlaylineStore({state:db,persist:()=>{trimAuditData();saveDB();}});
+const playline=createPlaylineModule({
+  enabled:PLAYLINE_ENABLED,
+  store:playlineStore,
+  testAdminPolicy:testAdmin,
+  socialBlockedBetween,
+  socialFriendship:(aUid,bUid)=>!!socialFriendship(aUid,bUid),
+  publicProfileResolver:(uid,actor)=>publicProfileObj(db.users[String(uid)||''],String(actor&&actor.uid||'')),
+  resultResolver:playlineResultResolver,
+  recordResolver:playlineRecordResolver,
+  cursorSecret:process.env.PLAYLINE_CURSOR_SECRET||process.env.SESSION_SECRET||'playline-local-development-secret',
+  isFormalActor:actor=>!!(actor&&actor.uid&&db.users[actor.uid]&&!db.users[actor.uid].ephemeral&&userHasTokenHash(db.users[actor.uid],actor.tokenHash)),
+});
 
 const authFailures = new Map();
 const registrationRate = new Map();
@@ -4124,7 +4230,7 @@ class Session {
         rewardVersion: REWARD_CONFIG.version,
         capabilities: ['reward_breakdown','ai_reward_ticket','replay-v1.1','tournament-orchestrator-v1.1',...gameplayCapabilities(),
           'tank_authority_v1','tetris_battle_authority_v1','spectator_room_v1','tournament_orchestrator_v1','xiangqi_clock_v1','monopoly_auction_v1','game_cosmetic_presentation_v1',
-          'ai_decision_confirm_v1','seat_protocol_v2','ready_v1','ai_seat_v1','room_visibility_v1','social_graph_v1','direct-chat-v1',MATCH_EXPRESSION_PROTOCOL,MATCH_CHAT_PROTOCOL],
+          'ai_decision_confirm_v1','seat_protocol_v2','ready_v1','ai_seat_v1','room_visibility_v1','social_graph_v1','direct-chat-v1',MATCH_EXPRESSION_PROTOCOL,MATCH_CHAT_PROTOCOL,...(PLAYLINE_ENABLED?[PLAYLINE_PROTOCOL]:[])],
       }));
       if (this.uid) tryResumeSession(this);
       broadcastLeaderboard();
@@ -4464,6 +4570,18 @@ class Session {
       if(!already){user.companionCheckinDay=today;saveDB();if(!user.ephemeral)sbSyncAuthProfile(user);}
       this.sendText(JSON.stringify({type:'companion_checkin_ok',payload:{day:today,already,ephemeral:!!user.ephemeral}}));return;
     }
+    if(type==='playline_list'){
+      if(!this.capabilities||!this.capabilities.has(PLAYLINE_PROTOCOL))return playlineError(this,'playline_list',{reason:'unsupported_capability'});
+      handlePlaylineList(this,payload).catch(error=>{recordOperationalError('playline_list',error);playlineError(this,'playline_list',{reason:'server_unavailable'});});return;
+    }
+    if(type==='playline_publish'){
+      if(!this.capabilities||!this.capabilities.has(PLAYLINE_PROTOCOL))return playlineError(this,'playline_publish',{reason:'unsupported_capability'},payload&&payload.clientPostId);
+      handlePlaylinePublish(this,payload).catch(error=>{recordOperationalError('playline_publish',error);playlineError(this,'playline_publish',{reason:'server_unavailable'},payload&&payload.clientPostId);});return;
+    }
+    if(type==='playline_remove'){
+      if(!this.capabilities||!this.capabilities.has(PLAYLINE_PROTOCOL))return playlineError(this,'playline_remove',{reason:'unsupported_capability'});
+      handlePlaylineRemove(this,payload).catch(error=>{recordOperationalError('playline_remove',error);playlineError(this,'playline_remove',{reason:'server_unavailable'});});return;
+    }
     if(type==='chat_list'){
       handleChatList(this,payload).catch(error=>{recordOperationalError('direct_chat_list',error);chatError(this,'chat_list','server_unavailable','',3);});return;
     }
@@ -4508,6 +4626,10 @@ class Session {
     }
     if (type === 'report'){
       if (!this.requirePersistentUser()) return;
+      if (payload && payload.contextType === 'playline'){
+        socialReportPlayline(this,payload).catch(error=>{recordOperationalError('playline_report',error);socialError(this,'动态举报暂不可用','server_unavailable');});
+        return;
+      }
       socialReport(this, payload || {});
       return;
     }

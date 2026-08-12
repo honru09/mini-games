@@ -1,0 +1,13 @@
+{
+  "taskId": "playline-community-p0-20260811",
+  "status": "local_accepted",
+  "productionDefault": "off",
+  "phases": [
+    { "id": "PL-1", "title": "深 Module 与 Adapter 合同", "status": "completed" },
+    { "id": "PL-2", "title": "WS 与服务端权威集成", "status": "completed" },
+    { "id": "PL-3", "title": "Playline 路由与 DM dialog", "status": "completed" },
+    { "id": "PL-4", "title": "游戏/结算/记录分享闭环", "status": "completed" },
+    { "id": "PL-5", "title": "浏览器矩阵与完整回归", "status": "completed" },
+    { "id": "PL-6", "title": "台账/报告/日志收口", "status": "completed" }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "taskId": "ghost3d-foundation-p0-20260812",
+  "master": [
+    "requirements/GHOST_GAME_MAINLINE_COMMAND.md",
+    "requirements/MAINLINE_CONTROL_ROUTING.json",
+    "requirements/PRODUCT_REQUIREMENTS_LEDGER.json",
+    "public/index-template.html",
+    "scripts/build.js",
+    "scripts/quality-gates.js",
+    "package.json",
+    "PROJECT_STATUS.json",
+    "AGENTS.md",
+    "WHITEPAPER.md",
+    "简易报告"
+  ],
+  "agent": [
+    "public/src/core/08-ghost3d-foundation.js",
+    "qa/ghost3d-foundation.js",
+    "requirements/active/ghost3d-foundation-p0-20260812"
+  ],
+  "forbiddenWithoutMaster": [
+    "public/src/core/00-i18n.js",
+    "public/src/core/01-utils.js",
+    "public/src/core/02-app-shell.js",
+    "public/src/core/03-game-framework.js",
+    "public/src/games",
+    "server",
+    "shared/rules",
+    "package.json",
+    "public/index.html"
+  ],
+  "integration": {
+    "buildRegistration": "inert core registration before game implementations; no game calls create(), mounts an adapter, or receives a 3D scene",
+    "rendererDependency": "none; Three.js/GLB/vendor files remain out of scope"
+  },
+  "externalGates": ["GATE-DEVICE-BROWSER-NETWORK", "GATE-ART-GOLDEN-SET"]
+}

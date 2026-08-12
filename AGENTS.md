@@ -14,7 +14,11 @@
 两种玩法：**人机对战**（六款本地强策略 + DeepSeek 近优裁决）、
 **联机对战**（WebSocket 房间 + 游戏大厅 + 邀请 + 在线状态 + 全球排行榜）。
 含 **用户名密码账号 + 旧 PIN 迁移 + 一次性访客**、**💵 商城**、**三语言 i18n**（zh-CN / en-US / uk-UA）、
-**昼夜双主题**、Home/Games/Chat/Profile 四区外壳、原创品牌角色 **Honru** 与六款统一 Game Stage。
+**昼夜双主题**、Home/Games/Playline/Profile 四区外壳、原创品牌角色 **Honru** 与六款统一 Game Stage。
+
+### 唯一主线总指挥
+
+任何涉及下一主线、需求分类、视觉收口、3D Renderer、GSAP 动效、设备/Supabase/美术 Gate 或发布顺序的任务，必须先完整阅读 `requirements/GHOST_GAME_MAINLINE_COMMAND.md`，随后读取 `requirements/MAINLINE_CONTROL_ROUTING.json` 的当前四类路由与三条共享 Gate。原子需求仍只以 `requirements/PRODUCT_REQUIREMENTS_LEDGER.json` 为事实源；Defect、Acceptance Gap 与 Shared Repair 归回现有需求/覆盖组，只有真正新增产品能力才建立新 Requirement ID。
 
 ## 2. 线上地址与仓库
 
@@ -86,6 +90,7 @@ node server/index.js            # http://localhost:8080
 npm run test:i18n              # 三语言唯一 key、占位符、动态切换与界面泄漏检查
 node qa/dom-smoke.js            # 前端冒烟
 node qa/game-stage-contract.js  # 对局舞台、Seat Rail、Tetris 手机布局
+npm run test:game-stage-density-final # 六款 Wave C 过程链、生命周期与共享布局
 node qa/monopoly-character-presentation.js # 角色公开投影与代码原生 fallback
 node qa/monopoly-presentation-adapter.js # Monopoly revision/transition 表现 Adapter
 node qa/social-match-client-lifecycle.js # 同连接 capability 保留/真实断开清理
@@ -201,13 +206,18 @@ node server/index.js
 - 当前前端不再提供 Honru Chat 子页、Dock、表单或快捷问题；后端接口只作为兼容/安全边界保留，签到与默认关闭的局内反应不受影响。
 
 ### 玩家私聊（direct-chat-v1）
-- Chat 只提供玩家消息；旧 `#/chat?view=honru` 与未知 view 归一到 `#/chat`。正式账号仅能与当前好友发送一对一纯文本消息，访客禁止持久私聊。会话列表的系统空态走 i18n，玩家昵称/消息正文才标记 `data-i18n-raw`，避免语言切换冻结系统文案。
+- 玩家私聊不再占独立 Page，由全局 DM dialog 复用唯一 `direct-chat-v1` 状态；旧 `#/chat*` 归一到 `#/playline` 并打开私信。正式账号仅能与当前好友发送一对一纯文本消息，访客禁止持久私聊。会话列表的系统空态走 i18n，玩家昵称/消息正文才标记 `data-i18n-raw`，避免语言切换冻结系统文案。
 - `chat_list/chat_history/chat_send/chat_read` 与 `chat_state/chat_history/chat_message/chat_send_ok/chat_read_ok/chat_error` 成对维护；sender、conversation、message ID、十进制字符串 seq 与时间由服务端权威签发。
 - `(senderUid,clientMessageId)` 发送幂等；正文 NFC/控制符净化后限 500 Unicode/2000 UTF-8 bytes，只用 `textContent` + `data-i18n-raw` 渲染，不进入日志、Analytics、Replay、Profile、排行榜或 localStorage。
 - 任一方向 Block 阻断发送和历史并从摘要/未读排除；解除好友后历史只读；已读必须对应本人真实收到的入站 seq 且账号级单调推进。
 - 主动推送前重新校验 session token，已被五 token 上限淘汰或登出的旧 WebSocket 不得收到消息。
 - 本地 JSON 有界回退为 90 天/每会话 500/全局 50,000；Supabase 启用时发送先经过数据库好友/Block/幂等事务并持久化成功再回执。多实例与生产持久化仍以真实 Supabase 迁移/并发/备份验收为前提。
 - `ENABLE_CLUSTER_COORDINATION=1` 且真实 Supabase 迁移完成后，实例使用数据库时间租约与 fencing token；Direct Chat PubSub 只发布 message ID/参与 UID，其他实例再从数据库拉正文并重新校验有效 session。缺配置时保持现有单实例行为。
+
+### Playline 社区（playline-v1）
+- 四区为 Home / Games / Playline / Profile；Playline P0 只提供 `text/game_share/result_share/record_share`、All/Friends、删除、举报与公开资料/全局好友私信入口，不包含评论、点赞、转发、关注、媒体或陌生人私信。
+- `ENABLE_PLAYLINE_V1` 默认关闭。作者、时间、可见性、引用快照、签名 cursor、幂等、频控、好友/Block 与举报目标由服务端权威处理；guest 与 Test Admin 禁止读写玩家 UGC。
+- 本地 JSON 与 fake Supabase 只作为单实例/Adapter 回归；真实生产开放前必须完成内容治理、真实 Supabase 迁移/RLS/并发/加密备份/隔离恢复/回滚和运营门禁。
 
 ### 局内房间聊天（match-chat-v1）
 - `match_chat_send/match_chat_sync` 与 `match_chat_state/match_chat_message/match_chat_ok/match_chat_error` 成对维护；客户端只提交 `matchId/messageId/text`，sender、席位、时间和协议由服务端签发。
@@ -240,9 +250,21 @@ node server/index.js
 
 ### UI
 - 运行时主题只有 `light/dark`；旧 `midnight/ocean/forest/cyber/sakura` 读取时映射到双主题，个人购买背景 ID 不变（localStorage `mg_theme`）。
-- Home/Games/Chat/Profile 共用同一路由；`<=640px` 使用底部四项导航，平板与桌面使用顶部导航；Games 集中全部六款游戏。
+- Home/Games/Playline/Profile 共用同一路由；`<=640px` 使用底部四项导航，平板与桌面使用顶部导航；Games 集中全部六款游戏；私信使用全局 dialog。
 - Light 为缓慢云海/大气层，Dark 为向外运动的深空星场；毛玻璃、reduced-motion 和游戏中暂停环境动效同时生效。
+- Theme Contrast P1 以 `qa/theme-contrast-design-system.js` 约束双主题唯一性、语义 token 与代表性 WCAG 对比；平台组件使用 surface/text/focus/disabled/status/overlay/glass token。Premium Background 只用自身 `premium-bg-light/dark` textTone，Game Stage 只用自身 Ink/Cream，不随平台主题重绘。自动化通过不等于玻璃/图片、forced-colors、真机或人工可见验收。
+- 网站视觉、排版、转场、局内表现或视频式动效任务必须先读取对应 GSAP 官方 skill：基础 Tween 用 `gsap-core`，多步编排用 `gsap-timeline`，滚动页才用 `gsap-scrolltrigger`，插件用 `gsap-plugins`，纯辅助函数用无需注册的 `gsap-utils`，并始终用 `gsap-performance` 复核。React/Vue/Svelte 迁移时追加 `gsap-react` / `gsap-frameworks`；当前原生前端不得套用框架生命周期代码。
+- GSAP 动效以 transform/autoAlpha、作用域、可清理实例、响应式和 `prefers-reduced-motion` 为完成边界；沉浸式 Game Shell 不使用 ScrollTrigger 驱动局内输入或核心状态，未使用的插件不得进入首屏包。
 - 房间内切换游戏：`end_game` 消息 → `finishRoomGame()`。
+
+### Profile Design System P1（本地实现）
+
+- 本人 Profile 固定为 `identity / growth / journey / library` 四个稳定区域；核心四项与辅助四项统计分层，编辑只保留 Hero 主入口，底部仅保留退出。
+- 公开 Profile 的 `profile_get/profile_data` wire 继续严格为 UID-only；客户端以最多 32 条的有序请求记录关联本地 `requestId + targetUid`，不得把 requestId 偷加进协议。取消、同 UID 重开、迟到响应、真实断线、换号和注销均须 fail-closed 清理。
+- 公开 Profile 好友操作固定为私聊、战绩比较、单一“关系与安全”入口；非好友只保留单一关系/安全主入口，不新增陌生人私信或公开字段。
+- Profile 弹层只复用现有 `GhostSurfaceMotion` 的 `profile-dialog/open` 与 `settle`；可访问关闭、焦点恢复、滚动锁和 DOM 移除同步完成，不复制 Adapter、GSAP import 或 ScrollTrigger。
+- 当前只达到本地 `implemented`。浏览器连接器 `Transport closed`，第二浏览器、Android/iPhone/Tablet、visible reduced-motion、真实网络和低端 FPS 均为 `NOT_EXECUTED`；线上仍为 `da3d05c`。
+- Profile 专项 14+9 项、Quality Gates、完整 `npm test`（156.6 秒）和确定性双构建均通过；最终生成物为 1,337,226 characters / 1,351,775 bytes / SHA-256 `8E7BB74A304E6D9BF5CEC0F21CF30C834921CED2F0583C23CC4B79AD0758B39F`。两次 Terra Max 终审未交付可用结论，按 reviewer limit 记录，不冒充独立审查通过。
 
 ## 6. 部署与环境变量
 
@@ -296,12 +318,14 @@ Supabase 首次接入或升级优先用 `scripts/supabase-production-ops.ps1`：
 - v2.5 产品级打磨：补齐 Motion/Elevation/Icon/Glass 设计令牌与组件规范；统一动效库（转场/入场/弹性/Loading）
 - Game Feel：6 款游戏全量接入分级操作反馈（落子/移动/掷骰/射击/放置 → 音效+震动+状态提示），AI 思考中提示
 - Visual Polish + a11y：棋盘棋子渐变立体质感、侧栏 sticky、排行榜前三高亮、焦点环/44px 触控目标/最小字号 11px/prefers-reduced-motion
+- Theme Contrast Design System P1 本地收口：旧五套运行时主题 CSS 已清零，旧存储值继续迁移到 light/dark；新增实色 surface/text/accent/border/focus/disabled/status/icon/overlay/glass/toast 令牌和数值对比合同，统一 Button/Input/Dialog/Toast/Header/Nav/Auth/Shop/DM/Profile/Room，修正登录 Logo 与 PWA 色，并保护 Premium Background textTone 和 Game Stage Ink/Cream 独立。Game Stage 独立性修正后的 `npm run quality:gates` 与完整 `npm test`（189.0 秒）通过，双构建为 1,333,571 characters / 1,348,120 bytes / SHA-256 `ED29E547F6D6E4475D21414E0979479DB619AA019FC4952AD484D8668008CC66`；Terra Max 终审重试因 429 未形成可采纳结论，按 reviewer limit 记录。最新浏览器、forced-colors、真机、真实网络和低端性能仍未执行，线上仍为 `da3d05c`。
 - 前端冒烟 ALL_PASS + 6 款 AI 状态机 ALL_PASS + 联机 E2E ALL_PASS + WS 主动断开测试通过
 - 安全回归（鉴权/档案/结算/商城/AI）和断线重连回归均 ALL_PASS；生成产物由 CI 构建后校验与源码同步
 - Economy & Progression v1.0：统一服务端 Reward Resolver、AI 票据/日上限、有效局/AFK/秒投拦截、首胜、连胜、重复对手衰减、等级曲线、完整奖励/经济流水与 Reward Breakdown UI
 - 独立胜场 `wins/totalWins`、旧等级不降级迁移、Supabase `apply_reward_v1` 单事务落库与失败 outbox 重试
 - 视觉商城素材 P0：六款 640×360/320×180 大厅封面、48 Avatar 注册目录、商城主预览/单例/价格契约、五档响应式、三语商品与 Avatar alt 已通过自动化和本地浏览器验收；当前六封面只是 Sticker Cartoon 前的可回滚软 3D 过渡版
 - Sticker Cartoon M0 Draft：`art-source/style/` 已含 Art Bible、Facial Kit、Motion、Source Manifest 与 Prompt/provenance；Teacher 八状态、四 Avatar 已有 Alpha Draft，核心 UI 有 HTML/CSS 状态板，五子棋/飞行棋有规则精确 SVG 纵切，`qa/sticker-art-contract.js` 固定 hash/Alpha/15×15/五连/52 格/四机。人工清稿、IP 双人审查、运行时矩阵和 Golden Set 人工决议未执行，全部新旗标默认关闭。
+- Honru Pixel Avatar v3 已有 explorer、night-cadet、arcade-builder、stargazer 四款 1254×1254 source/Alpha 技术候选、不可变 hash 与 source-only 合同；人工清稿、Reviewer B、IP Review、Golden Set、44/64/96/192px 真机/主题/reduced-motion 矩阵均为 `NOT_EXECUTED`。候选未进入 `public/assets`、Manifest、默认头像、商城、Profile/Room runtime 或线上。
 - 五子棋与俄罗斯方块旧局内纵切继续保留；Canvas/DOM 规则层不变，支持 `mg_art_gomoku_v1` / `mg_art_tetris_v1` 独立回滚
 - 本地素材库 `asset-library/` 已建立 provenance、Schema 子集、目录/许可证独立哈希审计；运行时仍以 `asset_manifest.json` 为唯一机器事实源，远端对象存储尚未选择
 - 美术母图与 Prompt 位于 `art-source/`，运行时 WebP 位于 `public/assets/`，manifest 与 DOM 冒烟校验路径、ID 和 fallback
@@ -317,15 +341,19 @@ Supabase 首次接入或升级优先用 `scripts/supabase-production-ops.ps1`：
 - Seat/Social/Profile v2 已进入 main：真人/AI/空席、READY、AI Controller、公开/私密房、观战、房主转移、好友/拉黑/举报、Presence 隐私和 Profile v2。
 - Gameplay Cosmetic 产品闭环：服务端定价/owned/装备校验、商城按游戏筛选、公开档案只返回装备 ID，六款游戏保留 fallback。
 - Daily Task / Replay / Metrics：服务端任务进度与 claimId 幂等领取；Replay v1.1 支持 7 天保留、公开延迟、分享/撤销和播放控制；Metrics v2 提供 Bearer 管理员只读页面、有界历史、CSV、阈值告警、脱敏错误闭环、限频与访问审计。
-- Direct Chat v1 + Profile 深度优化：好友私聊、离线留言、历史/未读/已读/幂等/Block/访客与 token 淘汰安全边界；Chat 只保留玩家消息，旧 Honru 深链归一到 `#/chat`；个人主页完成身份、成长、六游戏战绩、成就、任务、社交、收藏和本人回放信息架构，专项与完整 `npm test` 通过。
+- Direct Chat v1 + Profile 深度优化：好友私聊、离线留言、历史/未读/已读/幂等/Block/访客与 token 淘汰安全边界；本地 Playline P0 已把私聊收进全局 DM dialog，旧 Chat 深链归一到 `#/playline`；个人主页完成身份、成长、六游戏战绩、成就、任务、社交、收藏和本人回放信息架构。
+- Playline Community P0 本地实现：四区改为 Home/Games/Playline/Profile；受限文本、游戏、正式结果与权威记录分享形成闭环，All/Friends、删除、举报、签名 cursor、guest/Test Admin/Block 和 Supabase Adapter 合同通过。生产 capability 默认关闭，真实数据库与内容治理门禁未执行；未提交、未推送、未部署。
 - Production Readiness 工程基线：Tetris `tetris-rule-v3` 高级战斗计分及旧 v2→v1 安全回退；Supabase 生产运维、集群租约/PubSub/脱敏遥测合同；带 192/512 PNG 与 Apple 图标的安装型 PWA 安全缓存；Honru cleanup v1 非运行时候选技术通过。30 分钟生产正式好友 WS 会话通过（15 条消息/已读、2 次重连、0 异常断开、P95 181ms）；真实凭证/人工/真机/真实网络闸门仍未通过。
 - Game Stage + Tabletop Wave A：六款默认进入统一 Header/真实 Seat Rail/Arena/Command Tray，Cream/Ink 代码原生底材与核心实体覆盖 `52/100`；严格 `mg_art_tabletop_wave_a='0'` 回退旧表现。Honru 助手聊天 UI 与死样式已删除，玩家私聊与签到保留；Tetris 手机 Arena 单列且七项触控 ≥44px。提交 `7fc6601` 已发布到 Pages/Render，Quality Gates、完整 `npm test`、生产 WS、本地桌面/390px 与线上 1280px 浏览器验收通过。
-- 沉浸式 Game Shell P0 本地验收：`#screen-game` fixed `100dvh` 全视口，Header/Seat/Arena/Command/Overlay 五插槽冻结；页面滚轮、触摸链和 Scroll Key 默认滚动被锁，游戏事件继续传播，内部滚动保留；进入/退出恢复 Hub 滚动与游戏卡焦点；Rules/Victory/Reward 统一命名 dialog、初始焦点、Tab 循环、Esc/背景关闭与焦点恢复；1440×900、1024×768、390×844、844×390、三语言、双主题、Quality Gates、完整 `npm test` 和双构建 Hash 均通过。未提交、未推送、未部署。
-- Social Match P0 本地验收：`match-expression-v1` 完成十个稳定 Emoji ID、六个快捷语 ID、目标席位、服务端权威身份/时间、eventId 幂等、10 秒/60 秒/单局频控、双向 Block 与逐接收者过滤、观众/访客/AI 发送拒绝；Seat 展示公开 Avatar/Frame/Effect/NameFx/Lang，真人头像/名字可打开公开 Profile；Command Slot 提供表达盘、目标和本地静音，头像旁最多三条气泡，退出/重开/销毁清理，reduced-motion 静态降级。表达不进入 moveLog、Replay、奖励、AI 学习、Analytics 或数据库。四档浏览器、专项 QA、Quality Gates、完整 `npm test` 与双构建 Hash 均通过。原创 Honru Emoji 与美术投掷素材仍未执行；未提交、未推送、未部署。
-- Social Match P1 房间自由文本聊天本地验收：新增 `match-chat-v1`，完成服务端权威身份/席位/时间、NFC/控制符净化、160 字/640 bytes/4 行、messageId 幂等、10 秒/60 秒/单局频控、Block 逐接收者过滤、观众延迟只读与当前对局 50 条内存历史；Game Stage 提供中央历史、未读、输入、举报、本地静音和头像旁短气泡，收到新消息时保留当前局内内存草稿，生命周期完整清理。正文不进入 moveLog、Replay、奖励、AI、Analytics、数据库、localStorage 或普通日志。主负责人修正旧 Social Match/Game Stage 静态测试误扫边界及重渲染丢草稿问题；专项、旧 Social Match、Game Stage 与完整 `npm test`（142.6 秒）均通过。双次构建一致：923629 characters、物理文件 937519 bytes、SHA-256 `1A709832AD0320518DB9E944AEEA70BD508231FF56FF6BCF2B88B7436694C305`。未提交、未推送、未部署。
+- 沉浸式 Game Shell P0 已随 `da3d05c` 发布：`#screen-game` fixed `100dvh` 全视口，Header/Seat/Arena/Command/Overlay 五插槽冻结；页面滚轮、触摸链和 Scroll Key 默认滚动被锁，游戏事件继续传播，内部滚动保留；进入/退出恢复 Hub 滚动与游戏卡焦点；Rules/Victory/Reward 统一命名 dialog、焦点循环与恢复。Pages/Render 线上均含 `enterImmersiveGameShell`，后续 Wave B 只提升局内密度与表现。
+- Social Match P0 已随 `da3d05c` 发布：`match-expression-v1` 完成十个稳定 Emoji ID、六个快捷语 ID、目标席位、服务端权威身份/时间、eventId 幂等、10 秒/60 秒/单局频控、双向 Block 与逐接收者过滤、观众/访客/AI 发送拒绝；Seat 展示公开 Avatar/Frame/Effect/NameFx/Lang，真人头像/名字可打开公开 Profile；Command Slot 提供表达盘、目标和本地静音，头像旁最多三条气泡，退出/重开/销毁清理，reduced-motion 静态降级。表达不进入 moveLog、Replay、奖励、AI 学习、Analytics 或数据库。十枚 Honru Emoji source-only 候选、四档派生、atlas/poster 与跨层合同已在发布后本地完成，仍未接入运行时。
+- Social Match P1 房间自由文本聊天已随 `da3d05c` 发布：`match-chat-v1` 完成服务端权威身份/席位/时间、净化、幂等、频控、Block、观众延迟只读与当前对局 50 条内存历史；Game Stage 提供中央历史、未读、输入、举报、本地静音和头像旁短气泡。Pages/Render 线上均含 `match-chat-v1`；正文仍不进入 moveLog、Replay、奖励、AI、Analytics、数据库、localStorage 或普通日志。
+- Game Stage Wave B 本地实现：五子棋新增 Arena/状态/最后落子；Tetris 拆分主井、Hold/Next/Incoming、对手、HUD 与七项控制；飞行棋新增实体舞台、骰子、回合/选择状态与排名；大富翁新增实体舞台、骰子、地产/机会卡/拍卖与交易 unavailable 只读状态。共享 CSS 覆盖桌面、平板、390px 与低高度横屏。`mg_art_game_stage_wave_b_v1` 缺失时默认启用，只有精确 `'0'` 回退 Wave A，storage 读取失败安全回退 Wave A；规则、AI、联机、Authority、奖励、Replay、角色公开投影与数据库不变。四款专项、共享布局、规则/AI/表现回归通过；浏览器 localhost 被已保存权限阻断，因此状态仍为本地 `implemented`，未提交、未推送、未部署。
+- Game Stage Wave C 本地密度/过程纵切已覆盖六款：五子棋 `turn→aim→select→place→impact→line→terminal`；Tetris `spawn→fall/move/rotate→lock→line-clear→combo/B2B/T-Spin/perfect-clear/garbage→terminal`；飞行棋、大富翁、Tank、象棋继续使用各自已冻结过程链。五子棋防止终局 pending/locked 被迟到 restore 降级；Tetris 覆盖实例隔离、观众、Authority、v3 高级计分和 Replay 非阻塞；Tank 高频权威快照按 KO/重生/移动优先级合并，象棋被动 clock 不覆盖 check/terminal。六款 process 均不进入权威 snapshot/serialized state，Authority/Rule Core/Protocol/Reward/Replay 不变；timer、reconnect/reset/destroy、reduced-motion 与桌面/平板/390px/横屏合同已覆盖。Quality Gates、完整 `npm test`（153.4 秒）和双构建通过，最终物理文件 1,255,936 bytes、SHA-256 `BACD4460A3AC0EC4098A3837C482A4BF00BFB092044B853823CC312663A95BE3`；浏览器运行时仍立即 `Transport closed`，故最新本地浏览器、第二浏览器、真机、真实网络和 visible reduced-motion 仍为 `NOT_EXECUTED`。未提交、未推送、未部署。
 - Home Engagement P0 本地验收：首页新增语义化三步引导、按既有 `played` 稳定推荐游戏、level/streak 轻量目标、访客安全 fallback 和正式账号/访客差异入口；推荐按钮进入 Games 并聚焦对应卡片。主负责人把访客“查看成长”修正为“开始第一局”，把仅导航的“去玩”修正为“查看”，并将三步改为有序列表。未增加服务器 mutation、经济数值、游戏规则或未审批美术；专项动态矩阵、三语言、DOM、Ghost Shell、响应式和完整 `npm test`（131.5 秒）通过。双次构建一致：927995 characters、物理文件 942085 bytes、SHA-256 `7980FEDB5222444C42AA7DC3540EE000F353D85ACB0A0316920B417E9903919B`。未提交、未推送、未部署。
 - Home Engagement P1 社交收藏脉冲本地验收：仅正式账号显示已有在线好友数、本人收藏编目进度与既有成长方向，复用 Profile/Chat/Shop，访客与未登录保持隐藏；关闭状态为每账号固定 `localStorage` key、以本地日期作 value，storage 异常安全退化。主负责人将“每日新 key”修正为跨日期有界存储并补专项回归。没有 server、protocol、economy、purchase、rules、AI、Replay、Supabase 或 art 变化；专项、共享回归、单独 E2E（53.7 秒）和后续完整 `npm test`（179.7 秒）通过。首次完整链在邀请房间一次性超时，随后单独 E2E 与完整链均通过；双构建一致：968233 characters、982494 bytes、SHA-256 `4A861DD2F6763FE4AFA4640E7F6AEC7418A0DC9E4EAD52BD41831C0988E43C37`。UI-010/ECO-023 仍为 partial，真正可恢复对局须独立权威恢复合同；未提交、未推送、未部署。
 - Home Identity P1 当前身份条本地验收：既有 Home pulse 仅对正式账号展示 56px 已装备头像/头像框/特效、raw 昵称和本地化 `Lv.N`，继续复用收藏 X/Y、Profile/Chat/Shop；访客/未登录在读取 `owned` 或调用身份 helper 前短路，catalog 异常安全降级，不展示余额、XP、价格、owned ID、购买记录、角色 slot 或未审批图片。红测 8 项失败后转绿；专项、Home P0/P1、Collection Rarity、Victory Mastery、Identity Preview、Profile Route、i18n、DOM、响应式、Ghost Shell、pretest、Quality Gates 与完整 `npm test`（120.7 秒）通过；双构建一致：971303 characters、985572 bytes、SHA-256 `963DEAEFC5B46621ACCE9B713444D3F3B7F5DC41C775990CD87BE36E501D69FF`。UI-011 仍为 partial；G Coins/角色服装/背景与正式获得路径另有门禁，下一条只冻结当前仍有效对局的同实例返回入口；未提交、未推送、未部署。
+- Identity / Avatar / Background CLOSE P1 本地实现步骤已收口：统一表现深模块集中 Avatar/Frame/Effect/NameFx、raw 名称、语言和非法字段回退，旧 `avatarStageNode/nameFxNode` 保持兼容 Adapter；Seat 缓存缺失、Lobby 房主、邀请、Social/玩家列表、全局 DM 与 Playline 作者均使用完整公开身份。48 Avatar 素材全部保留，新账号默认免费仍策展为 100/101；Premium Background 生命周期和 Honru Pixel v3 source-only/runtime 0 引用门禁通过。专项、三语、DOM、Quality Gates、最后一处 DM i18n 修复后的完整 `npm test`（166.5 秒）与双构建通过，最终 1,317,990 characters / 1,332,539 bytes / SHA-256 `1E878CC3B8B8985B58601BD5F34A1F8FB884989A6A94E7815528E25F63E4A44B`；Terra Max 终审未返回可用结论，保留 reviewer limit，不冒充独立审查通过。SOC-001 为 implemented，ART-021 仍 partial，浏览器/真机/人工美术门禁未执行；未提交、未推送、未部署。
 - Home Active Match Return P0 本地验收：首页仅在连接/认证、非观众、真人席位、同一 `currentGame/currentGameId/online.game/matchId` 且未结算时显示“返回当前对局”；点击重新校验 matchId 后只调用既有 `showGame()` fast path。结算、离房、过期、reset、replay/reconnect、异常 seat 和 stale click 均隐藏/no-op；不显示 room code、matchId、token、对手或经济字段，也不承诺跨设备/跨重启恢复。主负责人补上旧 Home VM 对新 helper 的 `typeof` 兼容守卫；专项、Home P0/P1/Identity、重连、安全、E2E 与完整 `npm test`（199.8 秒）通过；双构建一致：974130 characters、988467 bytes、SHA-256 `8ECE8C16D5AE051DE59A31D9FA14949FF607675504059BC26BD050BE505F81E8`。未提交、未推送、未部署。
 - Social Match 会话状态复核已修正：同一 WebSocket 内会话失效、注销、退出房间或重置对局不会清空已协商 `match-expression-v1`，只有真实断开才清空；Social Match 合同/在线 QA 和双次构建通过。localhost 会话失效后的 in-app 浏览器复核因用户保存权限阻断，保留为外部闸门。
 - Tabletop Presentation M1 第一纵切本地收口：新增唯一可逆 `TabletopPerspective`；五子棋第二席 180° 近端视角，飞行棋按本人 2/3/4 人逻辑阵营旋转基地、轨道、终点和移动位置；标准规则坐标、协议、快照、Replay、奖励、AI 和观众公共视角保持不变。主负责人修正 E2E 屏幕坐标尺寸/视角映射，并修正棋盘外坐标夹边漏洞；专项、Tabletop Wave A、AI、Gameplay、连续默认参数 E2E 与完整 `npm test` 通过。双构建一致：930449 characters、物理文件 944539 bytes、SHA-256 `CCA3CAB3193F2A75922B78D6A626716FFA92B012C063A68F4D5D489815F0D301`。localhost 浏览器复核被机器保存权限阻断；动作表现、第二浏览器、真机、真实网络、reduced-motion 可见复核和人工美术审批仍未完成。未提交、未推送、未部署。
@@ -335,13 +363,14 @@ Supabase 首次接入或升级优先用 `scripts/supabase-production-ops.ps1`：
 - Profile Compare P1 本地收口：新增 `profile_compare/profile_compare_data/profile_compare_error`，仅正式账号可比较当前好友，且服务器每次请求重新校验双向 Block；回执绑定 `requestId + targetUid`，只返回公开身份、等级、总局数/胜场、六款权威胜场/派生称号与成就数量。Profile 好友弹层提供桌面双列、手机单列、三语与统一焦点/Esc/滚动锁生命周期。主负责人修正断线清理与旧 Direct Chat 静态合同的结构回归；专项、三账号在线权限、三语言、DOM、Profile/Social 与完整 `npm test`（118.1 秒）通过；双构建 951578 characters / 965692 physical bytes / SHA-256 `5528D0C6A15C42D096E92B2BA8A7454C1C9332FA414A52497312325496776934`。未扩大公开 Profile，未返回余额、owned、价格、任务、回放、最近对手、在线偏好或凭据；未提交、未推送、未部署。
 - Profile Modal A11y P1 本地收口：旧 `openProfileEditor()` 与 `openAchievementsModal()` 已接入统一 `setupAccessibleOverlayDialog` 和 owner 滚动锁，具备命名 dialog、昵称输入/关闭按钮初始焦点、Tab/Shift+Tab、Esc/背景/显式关闭、幂等清理和发起控件焦点恢复。Terra Max 先建立 17 项红灯合同并定位真实 canonical source，主负责人批准最小所有权例外后由第二个 Terra Max 实现；主审补充保存/取消/关闭动作和手机宽度断言，并确认移除会覆盖响应式 CSS 的 460px 内联宽度。专项、三语言、DOM、Profile/Social、Profile Route 与完整 `npm test`（122.5 秒）通过；双构建 953847 characters / 967961 physical bytes / SHA-256 `B07BD0597D0B9834FB2C2C084ED7FD9AAE6ABC6B85D42766BE91DBFFA9C65B96`。未改字段、成就逻辑、协议、服务端、持久化、奖励、价格、规则、AI、Replay 或美术，未提交、未推送、未部署。
 - Collection Rarity Catalog P1 本地收口：新增 `CollectionRarityCatalog`，按五类 `category + stable numeric id` 显式编目 150 项资产，固定 Starter/Uncommon/Rare/Epic 四档，仅作为中性展示。本人 Profile 显示已编目进度与分布，商城卡显示三语稀有度；公开 Profile、好友比较和服务端不消费 owned。Terra Max 初版覆盖 117 项商城/Playroom ID；主负责人补入默认免费 avatar 0–29 与 frame/effect/background 0，修复正常新账号被误报 33 件“未编目”的问题。专项、pretest、三语言、DOM、商城价格、Profile、Shop 布局与完整 `npm test`（114.2 秒）通过；双构建 962213 characters / 976327 physical bytes / SHA-256 `457169CB1982748D74CC2E1CBF145176802B0271D88A49B8B1963BC6712B7636`。目录源码不含 price/coins/purchase/reward 推导，不改购买、装备、owned、Supabase、规则、AI、Replay 或美术，未提交、未推送、未部署。
-- UI Repair P0.1 本地实现：Canvas 与 Avatar v2 `<img>` 统一圆形裁切和 Frame/Effect 层级；`effect-4` 只旋转装饰环；商城头像/相框/特效/背景改为真实身份组合预览；Premium Background 使用真实 animated WebP、poster、播放/暂停、失败 fallback、observer/visibility 清理与 reduced-motion 静态降级。专项、三语、响应式、Quality Gates、完整 `npm test`、双构建 Hash 与 1280×720 双主题三语浏览器验收通过；其 Header/Modal 层级缺陷已由 P0.2 解决。未提交、未推送、未部署。
+- UI Repair P0.1/P0.5 本地实现：Canvas 与 Avatar v2 `<img>` 统一圆形裁切和 Frame/Effect 层级；`effect-4` 只旋转装饰环；商城头像/相框/特效/背景改为真实身份组合预览；Premium Background 对真实 animated WebP 先 preload、仅 load 后播放，visibility/离屏/恢复、运行时 reduced-motion、poster/static 失败 fallback、release 清理和迟到资源事件均受合同保护。专项、三语、响应式、Quality Gates、完整 `npm test`、双构建 Hash 与既有 1280×720 双主题三语浏览器验收通过；第二浏览器、真机、真实网络和 visible reduced-motion 未由本项新增执行。其 Header/Modal 层级缺陷已由 P0.2 解决。未提交、未推送、未部署。
 - UI Repair P0.2 本地验收：统一 Header `120` / Mobile Nav `220` / Modal `900` / Auth `11000` / Toast `12000` 层级；Room Launchpad 覆盖游戏、严格 min/max 容量、公开/私密、观战、6 位无歧义码和统一错误态；`pendingGame` 只绑定本次 `created.room`；Lobby 只信服务端 Join/Spectate 并过滤玩家/观众自身房；普通用户 Tournament 创建/打开/自动弹窗关闭，换号重新由 `hello_ack.admin` 授权；Ghost Game 三语品牌承诺更新。1440×900、1024×768、390×844、844×390、双主题、三语、两标签等待/进行中/观战、Quality Gates、完整 `npm test` 和双构建 Hash 均通过。浏览器 reduced-motion、第二桌面浏览器和真机未执行；未提交、未推送、未部署。
 - Tank Controls P0 本地验收：坦克客户端支持 Pointer Capture 八扇区/斜向摇杆、跟手方向反馈、独立多指开火、四方向 D-pad 无障碍降级、WASD/方向键/Space、blur/visibility/pointercancel/lostcapture/destroy 输入释放、44px/safe-area/reduced-motion；严格复用既有 relay/authority 输入对象和单调 seq，未改服务端/协议/规则。专项 Tank Controls、Tank Authority、Gameplay Upgrade、E2E、三语、DOM、响应式、Immersive Shell、Quality Gates、完整 `npm test` 通过。in-app 浏览器 localhost 因已保存权限拦截，第二浏览器、Android/iPhone/Tablet、真实网络整形未执行；Tank 皮肤/地图仍属 ART-035；未提交、未推送、未部署。
 - Tank Art P1 已完成最高质量 `gpt-image-2` source-only 概念批次：四种原创坦克材质与一块实体桌游竞技场，清理版与拒绝版均保留不可变 SHA 和逐字 Prompt/provenance。清理版仅进入 `asset-library/catalog.json` 的 `reference-only`，生产 manifest、Tank renderer、Controls、Authority、规则、协议和 fallback 均未改；Reviewer B、IP Review、人工清稿与用户 Golden Set 未执行，不能视为已上线美术。
 - G Coins 命名/统一货币 P0 已本地收口：正式显示名冻结为 `G Coins`，内部 `coins`/`currency` 字段、奖励数值、商城价格和协议不变；`currencyIcon()`、`currencyName()`、`currencyAmountText()` 成为统一显示 seam，三语言补齐品牌、ARIA 与法律说明。G Coins 色键源稿已登记为 `ART-026-GCOINS-SOURCE-CHROMA-V1`、1254×1254、SHA-256 `9D6D8870329B04B5A136F66449498656B7601BEE15AFBDABC2A73EAA030919AD`，保持 `reference-only/source-only`，未接入生产 Manifest；旧 `💵` 只作 fallback。专项、i18n、素材库、构建和完整 `npm test` 通过；未提交、未推送、未部署。
+- Honru Emoji Runtime P0 已进入 source-only：严格复用 `emoji_wave/thumbsup/cheer/wow/oops/cry/angry/sly/heart/game` 十个稳定 ID，完成十枚最高质量独立生成、1254² RGBA Alpha、192/96/64/44 派生、1024×768 atlas、640×360 poster、逐枚 Prompt/provenance、素材库 G-17–G-27 登记和跨层合同。Alpha 四角透明、可见绿污染 0、atlas 末两格透明；`qa/honru-emoji-contract.js`、素材库审计、Quality Gates 与完整 `npm test`（132.4 秒）通过。人工清稿、Reviewer B/IP、Golden Set、Chat Emoji adapter、Manifest/双旗标、真机与默认开启均未完成，`public/assets` 和线上表现不变。
 - Shop Purchase Feedback P0 已本地实现：正式账号同一时刻只允许一笔购买 pending，客户端按 `requestId + uid + category + id` 绑定状态；服务端沿用 `purchase_ok/error` 并回显关联字段，价格、余额、owned、RPC 与幂等权威不变。商城以 `aria-live` 显示处理中/成功/失败/超时，重复点击、错配/迟到响应、关闭、断线和注销均 fail-closed；旧服务端无关联字段时不覆盖新状态，发布须先后端再前端。专项、i18n、DOM、Shop、Security、Supabase Adapter 通过；未提交、未推送、未部署。
-- Test Admin P0 已完成本地安全验收：四个环境变量精确绑定并 fail-closed，引导账号使用 scrypt；私有投影为 `∞ G Coins`、`Lv.MAX` 与当前目录全拥有，公开档案/排行榜/Presence/Lobby/好友/Block/举报/私聊保持隐藏或拒绝。测试房间和赛事控制面隔离，测试局不写正式奖励、经济、Replay、AI 学习、Analytics 或 outbox；未来能力必须显式加入白名单。主负责人还修复了离房后旧 `room_update` 晚到复活旧房间的竞态；连续三轮 E2E、完整 `npm test`（148.1 秒）和双构建 SHA-256 `52CE07C2185B9EDC8A34D374BA15A270B2FC9F7643CC0539E967E622A307A828` 通过。实际密码/UID 不进入仓库或报告。
+- Test Admin P0 已完成线上安全验收：四个环境变量精确绑定并 fail-closed，引导账号使用 scrypt；私有投影为 `∞ G Coins`、`Lv.MAX` 与当前目录全拥有，公开档案/排行榜/Presence/Lobby/好友/Block/举报/私聊保持隐藏或拒绝。测试房间和赛事控制面隔离，测试局不写正式奖励、经济、Replay、AI 学习、Analytics 或 outbox；未来能力必须显式加入白名单。主负责人还修复了离房后旧 `room_update` 晚到复活旧房间的竞态，并依据 Terra Max 发布审计统一 Render/runtime UID 校验、锁死沙盒私有/无观战设置、清理结算后的局内聊天/表达临时态与延迟投递、对 Supabase 管理员引导失败执行监听前 fail-closed；连续三轮 E2E、完整 `npm test`（167.7 秒）和双构建 SHA-256 `E8B8D37C66D8843B61F040EAF5028995A5EBF5E30FDD6ABFF6036AB84EDE304E` 通过。`da3d05c` 已由 Render 部署 `dep-d9sv99f40ujc73dvlru0`，Render/Pages 字节一致；in-app 浏览器与线上临时访客烟测确认私有 MAX/无限币展示、公开档案/Lobby/加入/观战隔离、沙盒零奖励和正式战绩不变。实际密码/UID 不进入仓库或报告。
 
 ### UI Repair P0.3–P0.9 本地收口
 
@@ -351,11 +380,12 @@ Chat 空态、公开 Profile/社交弹层、背景预览和访客只读态已分
 ⏳ 待办：
 1. UI Repair P0.9、Social Match P1、Home Engagement P0/P1、Home Identity P1、Home Active Match Return P0、Tabletop Presentation M1、Progression Identity P1、Profile Journey/Compare/Modal A11y/Collection Rarity P1 和 G Coins 命名/统一货币 P0 均已完成本地实现/自动化验收；UI-034 普通赛事入口隐藏已随 UI Repair P0.2 本地收口。UI-010/ECO-023/UI-011 仍为 partial，剩余范围包括安全个性化获得目标、G Coins 正式原创图标审批/获得路径、角色目录和真正 durable recovery；当前返回入口不能写成跨设备/跨重启恢复。
 2. Tank Controls P0 已本地验收；Tank Art P1 已完成 source-only 生成和 provenance，当前等待人工清稿、Reviewer B、IP Review、Golden Set；通过后另立 runtime 接入任务，不与 Authority 或控制层混改。
-3. 提供真实 Supabase DB URL/service-role，并实际执行迁移、浏览器角色 RLS、并发、加密备份、隔离恢复和非破坏回滚验收；通过前 Cluster/Telemetry 保持关闭且 Render 单实例。
-4. 当前 in-app 浏览器的 localhost 访问被已保存权限拦截；仍需解除后完成四档 Tank 可见验收，以及第二浏览器、Android/iPhone/Tablet 真机、真实网络整形和浏览器 reduced-motion 实测。
-5. 由独立自然人完成 Sticker/Honru 人工清稿、Reviewer B/IP Review 与用户 Golden Set 签字；通过前 M0/P1/P2 未审批位图/SVG 继续默认关闭。代码原生 Wave A 默认开启不代表这些资源已获批。
-6. 多实例生产扩容前完成真实 Supabase 并发与 Reward/AI 分布式 outbox 验收；配置并验证外部遥测接收端。
-7. 高级延迟观战、文字/社交游戏，以及需开发者账号/证书的微信小程序、原生 App 与商店发行。
+3. Honru Emoji 十枚 source-only 候选已完成；下一步是人工清稿、Reviewer B/IP/Golden Set，再单独实现 Chat Emoji adapter 与 default-off runtime atlas/投掷接入，不能偷偷扩展现有纯文字 wire。
+4. 提供真实 Supabase DB URL/service-role，并实际执行迁移、浏览器角色 RLS、并发、加密备份、隔离恢复和非破坏回滚验收；通过前 Cluster/Telemetry 保持关闭且 Render 单实例。
+5. 当前 in-app 浏览器的 localhost 访问被已保存权限拦截；仍需解除后完成四档 Tank 可见验收，以及第二浏览器、Android/iPhone/Tablet 真机、真实网络整形和浏览器 reduced-motion 实测。
+6. 由独立自然人完成 Sticker/Honru 人工清稿、Reviewer B/IP Review 与用户 Golden Set 签字；通过前 M0/P1/P2 未审批位图/SVG 继续默认关闭。代码原生 Wave A 默认开启不代表这些资源已获批。
+7. 多实例生产扩容前完成真实 Supabase 并发与 Reward/AI 分布式 outbox 验收；配置并验证外部遥测接收端。
+8. 高级延迟观战、文字/社交游戏，以及需开发者账号/证书的微信小程序、原生 App 与商店发行。
 
 ### Player Character P0 / UI-037 / GAME-045（代码状态矩阵已实现，外部闸门待完成）
 
@@ -394,20 +424,63 @@ Chat 空态、公开 Profile/社交弹层、背景预览和访客只读态已分
 ## 11. Project Execution OS（研究报告落地）
 
 - 所有大型任务先执行 `.agents/skills/playroom-recon`，再按 `.agents/skills/playroom-plan` 建立 `requirements/active/<task>/`，冻结 `IN/OUT/契约/所有权/验收证据` 后才施工。
-- 项目级 Skills 位于 `.agents/skills/`；第三方 Skill 只登记在 `requirements/skills-registry.json`，当前均为 `REFERENCE`，未经仓库/许可/脚本/网络/破坏性命令/密钥审计不得安装或运行。
+- 项目级 Skills 位于 `.agents/skills/`；第三方 Skill 统一登记在 `requirements/skills-registry.json`，状态生命周期为 `REFERENCE → PILOT → APPROVED`，安全问题可标 `BLOCKED`。未经仓库/许可/脚本/网络/破坏性命令/密钥审计不得进入 `PILOT/APPROVED`；GSAP 官方 skills 已完成审计并登记为 `APPROVED`。
 - 共享高风险文件见 `HIGH_RISK_FILES.md` 与 `requirements/OWNERSHIP_MATRIX.json`。普通 Agent 不得直接编辑，必须提交 `SHARED_CHANGE_REQUEST.md` 由 Master 集成。
 - 机器可读进度见 `PROJECT_STATUS.json`；状态必须区分 `implemented`、`verified`、`production-ready`、`not_executed`、`blocked`。真实设备、真实 Supabase、真实网络整形未执行时不可写生产就绪。
 - Motion 统一由 `MOTION_TOKENS.json` 和前端 CSS 令牌驱动；动效分 L0-L4，有大厅/档案/游戏 Shell 密度预算，并必须尊重 reduced-motion、暂停 offscreen 动画、不阻塞输入。
+- GSAP 官方 skills 是 Motion 实现与审核的必经门禁；每个动效任务在 requirement/contract 中记录使用的 skill、时间线/插件选择、销毁点、离屏暂停、低动效分支和性能证据，详见 `requirements/active/gsap-motion-governance-p0-20260811/`。
 - 发布前运行 `npm run quality:gates` 与完整 `npm test`；最终证据可由 `npm run evidence` 生成。发布声明必须包含 changed files、tests、visual/manual QA、NOT_EXECUTED、known issues、commit、回滚点和线上地址。
 
 ## 12. 全量需求台账、分类进度与发布规则
 
-- `requirements/PRODUCT_REQUIREMENTS_LEDGER.json` 是产品需求唯一机器台账；2026-08-11 快照含 234 项唯一原子需求，分为美术与品牌、界面与交互、游戏与局内体验、社交与玩家关系、经济成长与商业化、技术数据 AI 与跨平台六类。
-- 台账 Schema v2 同时维护 62 个来源词典入口、121 个显式依赖节点/235 条有向依赖、六种状态验收口径和 42 个历史/当前请求覆盖组；覆盖组联合覆盖全部 234 个 ID，防止跨窗口需求静默消失。
-- 总进度入口为 `简易报告/项目总需求进度报告-20260809.md`；六份分类报告由 `scripts/generate-progress-reports.js` 从同一台账生成，禁止直接手改生成报告。
+- `requirements/PRODUCT_REQUIREMENTS_LEDGER.json` 是产品需求唯一机器台账；2026-08-12 快照含 242 项唯一原子需求，分为美术与品牌、界面与交互、游戏与局内体验、社交与玩家关系、经济成长与商业化、技术数据 AI 与跨平台六类。
+- 台账 Schema v2 同时维护 72 个来源词典入口、129 个显式依赖节点/267 条有向依赖、六种状态验收口径和 47 个历史/当前请求覆盖组；覆盖组联合覆盖全部 242 个 ID，防止跨窗口需求静默消失。2026-08-12 起 `requirements/GHOST_GAME_MAINLINE_COMMAND.md` 负责阶段顺序、需求冻结、Ghost3D 与 GSAP 门禁，不替代原子台账。
+- 总进度入口为 `简易报告/项目总需求进度报告-20260812.md`；六份分类报告由 `scripts/generate-progress-reports.js` 从同一台账生成，禁止直接手改生成报告。
 - 新需求必须分配唯一分类 ID；同一需求只能在一个分类计数，跨领域使用 `related`。状态只使用 `verified / implemented / partial / planned / not_executed / blocked`。
 - 当前唯一游戏范围仍是六款、人机与联机两种玩法；旧 11 款和三模式白皮书已被替代，不恢复被删除的低可玩性游戏。
 - 每个后续批次只进入一个主要领域，先建独立 active task 并冻结 IN/OUT、所有权、回滚和证据，避免美术、UI、游戏、社交与生产基础设施混在一个施工批次。
 - 图片生成默认使用最高质量图像模型与设置；只有冻结合同下与高阶模型输出实质等价并通过人工可见对比，才允许交给 `gpt-5.6-terra max` 批量执行。
 - **未经用户在当前任务明确要求“推送 / 输出线上 / 部署”，完成本地验收后必须停止，不执行 commit、git push、GitHub Pages 或 Render 发布。**
 - 修改台账后运行 `npm run reports:progress` 与 `npm run test:progress-ledger`；QA 会检查来源路径、verified 证据、依赖无环、请求全覆盖和七报告逐项字段。发布前仍需 `npm run quality:gates` 和完整 `npm test`。
+
+## 13. 2026-08-12 Wave C 当前收口点
+
+### Control Plane Reset 当前主线裁决
+
+- 2026-08-12 当前台账快照仍为 242 项；`requirements/MAINLINE_CONTROL_ROUTING.json` 已将它们唯一映射为 `NOW_CLOSURE` 146、`EXTERNAL_GATE` 32、`DEFERRED_MAINLINE` 48、`FUTURE_EXPANSION` 16。
+- 三条共享 Gate 固定为 `GATE-DEVICE-BROWSER-NETWORK`、`GATE-SUPABASE-PRODUCTION`、`GATE-ART-GOLDEN-SET`；最新报告入口为 `简易报告/项目总需求进度报告-20260812.md`，语义 QA 为 `qa/mainline-control-plane.js`。
+- TECH-027 当前 `Transport closed` 只能记为 `partial`；浏览器、真机、真实网络、真实 Supabase 与人工 Golden Set 均保持 `BLOCKED/NOT_EXECUTED`，不由历史证据或静态测试越级。
+
+- 五子棋/Tetris Wave C 已补齐 reviewer P1：五子棋拥有真实可取消 AI timeout、Canvas keyboard grid 与 44px 触控等价输入；Tetris 在 restore、Replay 与 Authority snapshot 后保持单一有效 AI timer。
+- Wave C 过程条和实际棋盘 transform 使用 Motion Token；网页/游戏后续复杂动效继续强制经过 `gsap-core`、`gsap-timeline` 与 `gsap-performance`，并保留 reduced-motion 与清理路径。
+- `npm run test:game-stage-density-final`、规则权威、网络混沌、i18n、DOM、Quality Gates 和完整 `npm test`（159.8 秒）通过；双构建稳定为逻辑 1,251,511 bytes、磁盘 1,266,060 bytes、SHA-256 `6B823D0E2F2399EB622799E4E1DEC6EEBC43F7DA02E78075C80F0A51E910AF1D`。
+- 浏览器内核仍在导航前返回 `Transport closed`，当前可见矩阵保持 `NOT_EXECUTED`；该批次状态仍是 `implemented/VERIFYING`，不得写成视觉 verified。
+
+### Ghost3D Foundation P0 本地边界
+
+- `public/src/core/08-ghost3d-foundation.js` 现已作为 inert core 在游戏实现之前进入确定性构建；对外只有 `create` / `QUALITY`，实例只有 `apply(message)`、`snapshot()`、`dispose()`。该注册不创建实例、不挂载 Adapter、不改变任何 Game Stage。
+- Foundation 只消费调用方经 `apply` 注入的语义 frame/input/motion/environment/lifecycle 数据；源码零 DOM/平台/engine 依赖，不读取或监听 `document`、`window`、`matchMedia` 等环境，也不包含 Three.js 类型或值。规则、协议、回放、奖励、AI、经济、社交和持久状态继续隔离。
+- Foundation P0 的历史批次本身没有 vendor、ESM island、游戏 Adapter 或可见 scene；后续 Gomoku 纵切已经另立 active task，不能反向扩大 Foundation Interface，也不能把后续 Renderer 事实写进规则层。
+- 三轮 reviewer 修正已固定在 Foundation 本地合同：先移除宽 Interface 与 DOM/平台耦合，再校正异步 mount/configuration、stale quality/environment 与 fresh-adapter recover，最后收紧 motion readiness，并以 VM browser-global、cross-realm frame 和 hostile projection 覆盖外部 seam。`qa/ghost3d-foundation.js` 当前为 41 条本地断言，不替代浏览器或美术 Gate。
+
+### Gomoku Ghost3D P0 当前本地边界
+
+- `requirements/active/gomoku-ghost3d-vertical-slice-p0-20260812/` 是 TECH-049 的后续纵切，不新增 Requirement。精确旗标 `mg_ghost3d_gomoku_v1 === '1'` 才懒加载 `public/three/gomoku-entry.js`；默认关闭、storage/模块/WebGL/渲染/context-loss 任一失败都保留 Wave B Canvas、键盘和触控。
+- Renderer 使用同源封闭相对 ESM 图：Three `r185 / 0.185.1`、GSAP `3.15.0` core，版本、许可证与 SHA-256 见 `vendor-provenance.md`。不使用 import map、CSSPlugin、ScrollTrigger、GLB、纹理、Loader 或未审批美术；`.gitattributes` 禁止 Git 换行改写 byte-pinned vendor。
+- `onReady` 只能在首个语义 frame 真正 render 成功后触发。HIGH 使用可 kill 的 `entrance → settled` Camera timeline 与 `focus → place → settled` 落子 timeline；LOW/reduced-motion 静态 settle。suspend、render failure、context loss、fresh recovery 与 dispose 都必须保持指针/fallback 和资源清理合同。
+- `npm run test:gomoku-ghost3d` 当前覆盖 ESM graph 55、Renderer 78、bridge、layout 与 SW lazy-cache；专项已进入 pretest/full test 和快速 Quality Gates。当前双构建为 1,302,076 characters / 1,316,625 bytes / SHA-256 `91AC0AAB42577EF1F2385A351F3E3614C8AAE86C5D228929D11EEB76706C67D4`。
+- 真实浏览器可见矩阵、第二浏览器、Android/iPhone/Tablet、真实性能/网络、GLB/正式美术、Reviewer B/IP/Golden Set 尚未完成；TECH-049 继续 `partial`、ART-033 继续 `planned`，不得写成 `3D_VISUAL_VERIFIED` 或生产就绪。线上仍是 `da3d05c`，本批未提交、推送或部署。
+
+### UI Motion Closure P1 当前本地边界
+
+- `requirements/active/ui-motion-closure-p1-20260812/` 复用 `UI-028 / TECH-054`，不新增 Requirement ID。`GhostRouteMotion` 对外只有 `transition / settle / dispose / snapshot`；`setAppRoute()` 的认证、连接、hash、aria 和路由 renderer 仍在每次调用内同步提交，动效不能延迟现有下一帧焦点或浏览器前进/后退。
+- 页面 DOM island 使用官方 GSAP `3.15.0` 的 `esm/index.js + CSSPlugin.js + gsap-core.js` 封闭相对图，首次需要时只预热，后续路由只编排 `committed → enter → settled` 的有限新页进入。Gomoku 仍直接 import core-only 文件，两条图相互隔离；不使用 CDN、ScrollTrigger 或额外插件。
+- generation、单 loader promise、sticky failure、旧 handle 隔离、hidden/aria-hidden/inert、认证/注销、document hidden、Game Shell、reduced-motion 和 dispose 都落到确定静态状态。只动画 transform/opacity，最多 12 个 target、总窗口不超过 360ms；目标页始终可聚焦和点击。
+- Route Motion 专项为 18+17+11+16+4 条断言；Quality Gates 与完整 `npm test`（176.6 秒）通过，双构建稳定为 1,312,603 characters / 1,327,152 bytes / SHA-256 `1C802828EF5E799358F8199163428AD2BFBC5572CD90997999E82EC80B887DF3`。浏览器连接器仍在初始化前 `Transport closed`，所以可见/reduced-motion/真机/低端 FPS 保持 `NOT_EXECUTED`；未提交、推送或部署。
+
+### Direct Message Design System P1 当前本地边界
+
+- `requirements/active/direct-message-design-system-p1-20260812/` 复用 `UI-024 / UI-027 / UI-028 / SOC-012 / TECH-054`，不增加消息类型或产品能力。全局私信仍只消费 `direct-chat-v1`；会话栏与线程现在分开承载服务状态、总未读、好友完整公开身份、摘要、本地化时间、消息正文与已发送/发送中/失败重试元数据。
+- `GhostSurfaceMotion` 对外只有 `run / settle / dispose / snapshot`，DM 只发 `open / thread / back / close` 四个语义阶段。私有 Adapter 复用已固定的 GSAP 3.15 Core+CSSPlugin 图，只使用有限 label、transform/opacity、generation last-wins、kill/revert；不使用 ScrollTrigger、持续循环或布局属性。
+- reduced-motion、后台、Game Shell、首次预热和模块失败均同步落到可交互稳定态；这些阻断环境不下载可选 GSAP。桌面双栏、手机 `100dvh`、四边 safe-area、内部滚动和 44px 操作已进入合同；玩家名字、摘要与正文继续只用 `textContent + data-i18n-raw`。
+- 专项为 18+12+9 条断言，三语 1,632 keys、进度台账、快速 Quality Gates、包含新 Motion 执行测试的完整 `npm test`（147.1 秒）与双构建均通过；最终 1,333,055 characters / 1,347,604 bytes / SHA-256 `0546BBFB5C2FACA13D9D3D9C121FFBA7A1C48E9C98D5A516DA23C25EA2BCAB62`。浏览器初始化继续返回 `Transport closed`，所以最新可见矩阵、第二浏览器、真机、真实网络、visible reduced-motion 和低端 FPS 保持 `NOT_EXECUTED`；未提交、推送或部署。

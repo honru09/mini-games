@@ -1,0 +1,8 @@
+{
+  "taskId": "game-stage-wave-c-gomoku-tetris-p0-20260812",
+  "state": "VERIFYING",
+  "updatedAt": "2026-08-12T02:59:02+09:00",
+  "completed": ["现状与六款 Wave C 缺口审计", "IN/OUT/Authority/Lifecycle/Motion/回滚冻结", "Terra Max 双游戏独占文件调度", "五子棋七阶段过程链与专项 QA", "Tetris 十二阶段过程链与专项 QA", "Master 共享响应式 CSS、reduced-motion 与正式测试链接入", "242 项台账内 GAME-048 验收深化且未新增 Requirement ID", "Reviewer P1：五子棋 AI timeout、键盘 grid 与 44px 触控等价输入", "Reviewer P1：Tetris restore/Replay/Authority AI timer 单写者", "Motion Token 修正", "完整 npm test 159.8 秒", "双构建逻辑 1251511 bytes / 磁盘 1266060 bytes / SHA-256 6B823D0E2F2399EB622799E4E1DEC6EEBC43F7DA02E78075C80F0A51E910AF1D", "台账/状态/报告/日志收口"],
+  "inProgress": ["浏览器内核 Transport closed 解除后补桌面/平板/手机横竖屏、双主题与 visible reduced-motion 可见矩阵"],
+  "release": "LOCAL_ONLY_NO_COMMIT_NO_PUSH_NO_DEPLOY"
+}

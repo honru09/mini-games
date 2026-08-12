@@ -1,0 +1,52 @@
+{
+  "taskId": "gomoku-ghost3d-vertical-slice-p0-20260812",
+  "verifiedAt": "2026-08-12T06:55:41+09:00",
+  "status": "pass-local-automated-visual-not-executed",
+  "commands": [
+    "npm run test:gomoku-ghost3d",
+    "npm run quality:gates",
+    "npm run reports:progress",
+    "npm run test:progress-ledger",
+    "npm run test:mainline-control",
+    "npm test"
+  ],
+  "assertions": {
+    "ghost3dFoundation": 41,
+    "gomokuEsmGraph": 55,
+    "gomokuRenderer": 78
+  },
+  "build": {
+    "characters": 1302076,
+    "bytes": 1316625,
+    "sha256": "91AC0AAB42577EF1F2385A351F3E3614C8AAE86C5D228929D11EEB76706C67D4",
+    "doubleBuildStable": true,
+    "containsLazyGomokuImport": true
+  },
+  "http": {
+    "status": "pass",
+    "paths": [
+      "/",
+      "/three/gomoku-entry.js",
+      "/vendor/three/r185/build/three.module.js",
+      "/vendor/three/r185/build/three.core.js",
+      "/vendor/three/r185/examples/jsm/capabilities/WebGL.js",
+      "/vendor/gsap/3.15.0/esm/gsap-core.js",
+      "/sw.js"
+    ],
+    "result": "all 200 with expected JavaScript/HTML MIME"
+  },
+  "visualEvidence": {
+    "status": "NOT_EXECUTED",
+    "reason": "browser control transport closed before initialization"
+  },
+  "notExecuted": [
+    "second desktop browser",
+    "Android/iPhone/Tablet portrait and landscape",
+    "visible reduced-motion matrix",
+    "real frame-time/FPS/GPU-memory/dispose performance",
+    "real network shaping",
+    "approved GLB/runtime art and Golden Set"
+  ],
+  "release": "LOCAL_ONLY_NO_COMMIT_NO_PUSH_NO_DEPLOY"
+}
+

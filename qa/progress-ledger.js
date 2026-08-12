@@ -8,7 +8,7 @@ const path = require('path');
 const ROOT = path.resolve(__dirname, '..');
 const LEDGER_PATH = path.join(ROOT, 'requirements', 'PRODUCT_REQUIREMENTS_LEDGER.json');
 const REPORT_DIR = path.join(ROOT, '简易报告');
-const EXPECTED_SNAPSHOT_DATE = '2026-08-11';
+const EXPECTED_SNAPSHOT_DATE = '2026-08-12';
 const EXPECTED_CATEGORIES = {
   art: 'ART',
   ui: 'UI',
@@ -17,6 +17,12 @@ const EXPECTED_CATEGORIES = {
   economy: 'ECO',
   tech: 'TECH'
 };
+const EXPECTED_REQUIREMENT_COUNT = 242;
+const EXPECTED_SOURCE_CATALOG_COUNT = 72;
+const EXPECTED_DEPENDENCY_NODE_COUNT = 129;
+const EXPECTED_DEPENDENCY_EDGE_COUNT = 267;
+const EXPECTED_REQUEST_COVERAGE_GROUP_COUNT = 47;
+const EXPECTED_CATEGORY_COUNTS = { art: 36, ui: 38, game: 52, social: 33, economy: 29, tech: 54 };
 const VALID_STATUSES = new Set(['verified', 'implemented', 'partial', 'planned', 'not_executed', 'blocked']);
 const VALID_PRIORITIES = new Set(['P0', 'P1', 'P2', 'P3']);
 const VALID_SOURCE_KINDS = new Set(['evidence', 'status', 'specification', 'origin']);
@@ -39,7 +45,8 @@ assert.deepStrictEqual(
   EXPECTED_CATEGORIES,
   'category set/prefix drift'
 );
-assert.strictEqual(ledger.requirements.length, 234, 'snapshot must contain 234 unique requirements');
+assert.strictEqual(ledger.requirements.length, EXPECTED_REQUIREMENT_COUNT, `snapshot must contain ${EXPECTED_REQUIREMENT_COUNT} unique requirements`);
+assert.strictEqual(Object.keys(ledger.sourceCatalog).length, EXPECTED_SOURCE_CATALOG_COUNT, 'source catalog count drift');
 
 const ids = new Set();
 for (const item of ledger.requirements) {
@@ -61,6 +68,20 @@ for (const item of ledger.requirements) {
   assert(typeof item.next === 'string' && item.next.trim(), `missing next step: ${item.id}`);
   assert(item.related === undefined || (Array.isArray(item.related) && new Set(item.related).size === item.related.length), `invalid related list: ${item.id}`);
 }
+
+const requirementById = new Map(ledger.requirements.map((item) => [item.id, item]));
+assert.strictEqual(requirementById.get('ART-019').status, 'partial', 'ART-019 must remain source-only partial until human gates close');
+assert(requirementById.get('ART-019').source.includes('honru-pixel-avatar-source-p0'), 'ART-019 must retain Honru Pixel source evidence');
+assert.strictEqual(requirementById.get('ART-021').status, 'partial', 'ART-021 must retain its external visual/art open loop');
+assert(requirementById.get('ART-021').source.includes('premium-background-runtime-p0'), 'ART-021 must retain runtime lifecycle evidence');
+for (const id of ['GAME-048', 'GAME-049', 'GAME-050', 'GAME-051', 'GAME-052']) {
+  assert.strictEqual(requirementById.get(id).status, 'implemented', `${id} must remain local implemented, not browser-verified`);
+}
+assert(requirementById.get('GAME-049').source.includes('game-stage-wave-c-density'), 'GAME-049 must retain Ludo Wave C evidence');
+assert(requirementById.get('GAME-050').source.includes('game-stage-wave-c-density'), 'GAME-050 must retain Monopoly Wave C evidence');
+assert(requirementById.get('GAME-048').source.includes('game-stage-wave-c-density'), 'GAME-048 must retain Gomoku/Tetris Wave C evidence without creating new requirement IDs');
+assert.strictEqual(requirementById.get('TECH-052').status, 'implemented', 'TECH-052 command plane must remain implemented');
+assert(requirementById.get('TECH-049').source.includes('mainline-command-20260812'), 'TECH-049 must retain the renderer-independent 3D command source');
 
 for (const [source, entry] of Object.entries(ledger.sourceCatalog)) {
   assert(VALID_SOURCE_KINDS.has(entry.kind), `invalid source kind: ${source}`);
@@ -88,6 +109,7 @@ for (const [id, dependencies] of Object.entries(ledger.dependencyGraph)) {
     assert.notStrictEqual(dependency, id, `self dependency: ${id}`);
   }
 }
+assert.strictEqual(Object.keys(ledger.dependencyGraph).length, EXPECTED_DEPENDENCY_NODE_COUNT, 'dependency node count drift');
 
 const requestCoverageIds = new Set();
 for (const [key, group] of Object.entries(ledger.requestCoverage)) {
@@ -100,8 +122,9 @@ for (const [key, group] of Object.entries(ledger.requestCoverage)) {
     requestCoverageIds.add(id);
   }
 }
-assert.strictEqual(Object.keys(ledger.requestCoverage).length, 42, 'request coverage group count drift');
+assert.strictEqual(Object.keys(ledger.requestCoverage).length, EXPECTED_REQUEST_COVERAGE_GROUP_COUNT, 'request coverage group count drift');
 assert.deepStrictEqual([...requestCoverageIds].sort(), [...ids].sort(), 'request coverage must include every atomic requirement');
+assert.deepStrictEqual(ledger.requestCoverage['game-stage-wave-c-tank-xiangqi'].ids, ['GAME-051', 'GAME-052'], 'Tank/Xiangqi Wave C request coverage drift');
 
 const visiting = new Set();
 const visited = new Set();
@@ -115,20 +138,20 @@ function visitDependency(id, trail = []) {
 }
 for (const id of ids) visitDependency(id);
 
-const expectedCounts = { art: 36, ui: 37, game: 47, social: 32, economy: 29, tech: 53 };
-for (const [category, count] of Object.entries(expectedCounts)) {
+for (const [category, count] of Object.entries(EXPECTED_CATEGORY_COUNTS)) {
   assert.strictEqual(ledger.requirements.filter((item) => item.category === category).length, count, `category count drift: ${category}`);
 }
 
 assert(fs.existsSync(TOTAL_REPORT), 'missing total progress report');
 const totalText = fs.readFileSync(TOTAL_REPORT, 'utf8');
-assert(totalText.includes('234 项唯一原子需求'), 'total report is missing unique count');
+assert(totalText.includes(`${EXPECTED_REQUIREMENT_COUNT} 项唯一原子需求`), 'total report is missing unique count');
 assert(totalText.includes('LOCAL_ACCEPTED_AWAITING_RELEASE_COMMAND'), 'total report is missing local-only release state');
 assert(totalText.includes('未提交、未推送、未触发 GitHub Pages 或 Render'), 'total report is missing no-release boundary');
 assert(totalText.includes('旧白皮书的 11 款、三模式范围已被后续决策替代'), 'total report is missing old-scope ruling');
 assert(totalText.includes('前置依赖图：'), 'total report is missing dependency graph coverage');
-assert(totalText.includes('来源词典 62 项'), 'total report is missing source traceability coverage');
-assert(totalText.includes('历史/当前请求覆盖索引：42 个主题组'), 'total report is missing historical/current request coverage');
+assert(totalText.includes(`来源词典 ${EXPECTED_SOURCE_CATALOG_COUNT} 项`), 'total report is missing source traceability coverage');
+assert(totalText.includes(`前置依赖图：${EXPECTED_DEPENDENCY_NODE_COUNT} 个有显式前置条件的需求、${EXPECTED_DEPENDENCY_EDGE_COUNT} 条有向依赖`), 'total report is missing dependency graph count');
+assert(totalText.includes(`历史/当前请求覆盖索引：${EXPECTED_REQUEST_COVERAGE_GROUP_COUNT} 个主题组`), 'total report is missing historical/current request coverage');
 
 const agentsText = fs.readFileSync(path.join(ROOT, 'AGENTS.md'), 'utf8');
 const whitepaperText = fs.readFileSync(path.join(ROOT, 'WHITEPAPER.md'), 'utf8');
@@ -168,4 +191,5 @@ for (const filePath of fs.readdirSync(archiveRoot, { recursive:true })
 }
 
 const dependencyEdges = Object.values(ledger.dependencyGraph).reduce((sum, dependencies) => sum + dependencies.length, 0);
+assert.strictEqual(dependencyEdges, EXPECTED_DEPENDENCY_EDGE_COUNT, 'dependency edge count drift');
 console.log(`PROGRESS_LEDGER_ALL_PASS requirements=${ledger.requirements.length} reports=7 sources=${Object.keys(ledger.sourceCatalog).length} dependencyEdges=${dependencyEdges}`);

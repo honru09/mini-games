@@ -1,0 +1,10 @@
+{
+  "taskId": "gsap-motion-governance-p0-20260811",
+  "state": "IMPLEMENTED_AWAITING_FIRST_RUNTIME_SLICE",
+  "steps": [
+    {"id": "GSAP-1", "status": "completed", "title": "读取与审计八套官方 skill"},
+    {"id": "GSAP-2", "status": "completed", "title": "建立 AGENTS/Registry/Ledger 路由"},
+    {"id": "GSAP-3", "status": "completed", "title": "冻结 CSS-first、生命周期、性能与 Game Shell 边界"},
+    {"id": "GSAP-4", "status": "pending", "title": "首个实际 runtime 纵切 ADR、包体、帧耗和真机验收"}
+  ]
+}

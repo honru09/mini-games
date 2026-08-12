@@ -1,6 +1,13 @@
 /* ================= 个人档案弹层（自己的 / 他人的） ================= */
 let activeProfileLoading = null;
 let activeProfileCompare = null;
+function runProfileSurfaceMotion(phase,root,panel,onComplete){
+  const motion=typeof globalThis!=='undefined'&&globalThis.GhostSurfaceMotion;
+  if(!motion||typeof motion.run!=='function'||!root||!panel){if(typeof onComplete==='function')onComplete('static');return false;}
+  try{motion.run({surface:'profile-dialog',phase,root,panel,onComplete});return true;}
+  catch(_error){if(typeof onComplete==='function')onComplete('failed');return false;}
+}
+function settleProfileSurfaceMotion(reason){const motion=typeof globalThis!=='undefined'&&globalThis.GhostSurfaceMotion;try{if(motion&&typeof motion.settle==='function')motion.settle('profile-dialog',reason||'settle');}catch(_error){}}
 function closeProfileCompareLoading(){const current=activeProfileCompare;if(!current)return false;activeProfileCompare=null;if(typeof online!=='undefined'&&online.pendingProfileCompare&&online.pendingProfileCompare.requestId===current.requestId)online.pendingProfileCompare=null;if(typeof current.close==='function')current.close();else if(current.bd&&current.bd.remove)current.bd.remove();return true;}
 function beginProfileCompareRequest(uid,requestId){const id=String(uid||''),rid=String(requestId||'');if(!id||!rid)return false;closeProfileCompareLoading();const bd=el('div','modal-backdrop'),card=el('div','modal-card profile-loading-card');card.appendChild(el('h3',null,t('profile_compare_title')));card.appendChild(el('div','profile-loading-state',t('profile_compare_loading')));const cancel=el('button','btn',t('cancel'));cancel.addEventListener('click',closeProfileCompareLoading);card.appendChild(cancel);bd.appendChild(card);acquireModalScrollLock(bd);document.body.appendChild(bd);let close=()=>{if(bd.remove)bd.remove();};if(typeof setupAccessibleOverlayDialog==='function')close=setupAccessibleOverlayDialog(bd,card,cancel,t('profile_compare_title'),()=>{if(activeProfileCompare&&activeProfileCompare.requestId===rid)activeProfileCompare=null;if(typeof online!=='undefined'&&online.pendingProfileCompare&&online.pendingProfileCompare.requestId===rid)online.pendingProfileCompare=null;releaseModalScrollLock(bd);});activeProfileCompare={uid:id,requestId:rid,bd,close};return true;}
 function finishProfileCompareRequest(payload,reason){const current=activeProfileCompare;if(!current)return false;closeProfileCompareLoading();if(!payload){toast(t(reason==='profile_compare_forbidden'?'profile_compare_forbidden':'profile_compare_unavailable'));return true;}renderProfileComparePopup(payload);return true;}
@@ -9,14 +16,16 @@ function closeProfileLoading(){
   const current = activeProfileLoading;
   if (!current) return false;
   activeProfileLoading = null;
-  if (typeof online !== 'undefined' && online.pendingPublicProfileUid === current.uid) online.pendingPublicProfileUid = null;
+  if (typeof online !== 'undefined' && online && online.pendingPublicProfile && online.pendingPublicProfile.requestId === current.requestId && typeof online.cancelPublicProfileRequest === 'function') online.cancelPublicProfileRequest(current.requestId);
   if (typeof current.close === 'function') current.close();
   else if (current.bd && current.bd.remove) current.bd.remove();
   return true;
 }
-function beginPublicProfileRequest(uid){
+function cancelPublicProfileRequest(){return closeProfileLoading();}
+function beginPublicProfileRequest(uid,requestId){
   const id = String(uid || '');
-  if (!id) return false;
+  const rid=String(requestId||'');
+  if (!id||!rid) return false;
   closeProfileLoading();
   const bd = el('div','modal-backdrop');
   const card = el('div','modal-card profile-loading-card');
@@ -30,16 +39,16 @@ function beginPublicProfileRequest(uid){
   acquireModalScrollLock(bd);
   document.body.appendChild(bd);
   if (typeof setupAccessibleOverlayDialog === 'function') close = setupAccessibleOverlayDialog(bd,card,cancel,t('profile_title'),() => {
-    if (activeProfileLoading && activeProfileLoading.uid === id) activeProfileLoading = null;
-    if (typeof online !== 'undefined' && online.pendingPublicProfileUid === id) online.pendingPublicProfileUid = null;
+    if (activeProfileLoading && activeProfileLoading.requestId === rid) activeProfileLoading = null;
+    if (typeof online !== 'undefined' && online && online.pendingPublicProfile && online.pendingPublicProfile.requestId === rid && typeof online.cancelPublicProfileRequest === 'function') online.cancelPublicProfileRequest(rid);
     releaseModalScrollLock(bd);
   });
-  activeProfileLoading = { uid:id, bd, close };
+  activeProfileLoading = { uid:id, requestId:rid, bd, close };
   return true;
 }
-function finishPublicProfileRequest(profile){
+function finishPublicProfileRequest(profile,request){
   const current = activeProfileLoading;
-  if (!current) return false;
+  if (!current||!request||current.requestId!==request.requestId||current.uid!==request.targetUid) return false;
   if (!profile || String(profile.uid || '') !== current.uid){
     closeProfileLoading();
     toast(t('profile_not_found'));
@@ -113,8 +122,7 @@ function renderProfilePopup(p, isMe){
   if (!p) return;
   const testAdmin=!!isMe&&!!account&&typeof isTestAdminPrivateAccount==='function'&&isTestAdminPrivateAccount(account);
   const bd = el('div','modal-backdrop');
-  const card = el('div','modal-card');
-  card.style.width = '420px';
+  const card = el('div','modal-card profile-public-card');
   const hero = el('div','profile-hero bg-' + (p.background || 0));
   applyPremiumBackground(hero, p.background || 0, 'profile');
   const avWrap = el('div','hero-avatar');
@@ -197,6 +205,7 @@ function renderProfilePopup(p, isMe){
     return true;
   };
   if (isMe && account){
+    links.classList.add('profile-self-actions');
     const edit = el('button','btn btn-primary',t('edit_profile'));
     edit.addEventListener('click', () => { closeProfile(); openProfileEditor(account.uid); });
     links.appendChild(edit);
@@ -211,6 +220,7 @@ function renderProfilePopup(p, isMe){
     links.appendChild(logout);
   } else {
     const relation = typeof socialRelationshipFor === 'function' ? socialRelationshipFor(p.uid) : 'none';
+    links.classList.add('profile-public-actions');links.setAttribute('data-profile-relation',relation);
     if (relation === 'friends' && typeof openPlayerConversation === 'function'){
       const message = el('button','btn btn-primary');
       setButtonIcon(message, 'user', t('chat_message_action'));
@@ -218,12 +228,7 @@ function renderProfilePopup(p, isMe){
       links.appendChild(message);
       if(typeof online!=='undefined'&&online&&typeof online.requestProfileCompare==='function'){const compare=el('button','btn',t('profile_compare_action'));compare.addEventListener('click',()=>{closeProfile();online.requestProfileCompare(p.uid);});links.appendChild(compare);}
     }
-    const label = relation === 'friends' ? t('social_friend') : relation === 'outgoing' ? t('social_pending') : relation === 'incoming' ? t('social_requests') : t('social_add_friend');
-    const social = el('button','btn' + ((relation === 'none' || relation === 'incoming') ? ' btn-primary' : ''));
-    setButtonIcon(social, relation === 'friends' ? 'users' : 'user-plus', label);
-    social.addEventListener('click', () => { closeProfile(); if (typeof openSocialActions === 'function') openSocialActions(p, { type:'profile', id:p.uid }); });
-    links.appendChild(social);
-    const more = el('button','btn'); setButtonIcon(more, 'shield', t('social_security_more'));
+    const more = el('button','btn' + (relation==='friends'?'':' btn-primary')); setButtonIcon(more, relation==='friends'?'shield':'user-plus', relation==='friends'?t('social_security_more'):(relation==='outgoing'?t('social_pending'):relation==='incoming'?t('social_requests'):relation==='blocked'?t('social_unblock'):t('social_add_friend')));
     more.addEventListener('click', () => { closeProfile(); if (typeof openSocialActions === 'function') openSocialActions(p, { type:'profile', id:p.uid }); });
     links.appendChild(more);
   }
@@ -235,6 +240,10 @@ function renderProfilePopup(p, isMe){
   bd.appendChild(card);
   acquireModalScrollLock(bd);
   document.body.appendChild(bd);
-  if(typeof setupAccessibleOverlayDialog==='function')closeProfile=setupAccessibleOverlayDialog(bd,card,close,t('profile_title'),releaseProfileResources);
+  let dialogClose=null,closing=false,closed=false;
+  const finishProfileClose=()=>{if(closed)return false;closed=true;if(typeof dialogClose==='function')return dialogClose();releaseProfileResources();if(bd.remove)bd.remove();return true;};
+  closeProfile=()=>{if(closing||closed)return false;closing=true;bd.classList.add('profile-dialog-closing');bd.setAttribute('aria-hidden','true');settleProfileSurfaceMotion('close');return finishProfileClose();};
+  if(typeof setupAccessibleOverlayDialog==='function')dialogClose=setupAccessibleOverlayDialog(bd,card,close,t('profile_title'),()=>{settleProfileSurfaceMotion('dialog_closed');releaseProfileResources();});
   else if(typeof bd.addEventListener==='function')bd.addEventListener('click',event=>{if(event.target===bd)closeProfile();});
+  runProfileSurfaceMotion('open',bd,card);
 }

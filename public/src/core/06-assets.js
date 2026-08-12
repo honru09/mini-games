@@ -6,6 +6,14 @@ const ASSET_ROOT = 'assets/';
 const CURRENCY = '💵';
 const CURRENCY_NAME = 'G Coins';
 const CURRENCY_ASSET_ID = 'P-003';
+/*
+ * Presentation-only starter curation.  These IDs intentionally describe the
+ * small pixel-first default gallery, not an entitlement or a price list:
+ * server `owned` and purchase responses remain authoritative.  Older IDs are
+ * still renderable and an already equipped legacy ID is kept in pickers.
+ */
+const CURATED_DEFAULT_FREE_AVATAR_IDS = Object.freeze([100, 101]);
+const CURATED_DEFAULT_FREE_AVATAR_ID_SET = new Set(CURATED_DEFAULT_FREE_AVATAR_IDS);
 const ASSET_CATALOG = Object.freeze({
   brandMark: 'brand/ghost-game-mark.svg',
   brandWordmark: 'brand/ghost-game-wordmark.svg',
@@ -219,6 +227,21 @@ function premiumBackgroundMeta(id){
   return PREMIUM_BACKGROUND_BY_ID.get(Number(id)) || null;
 }
 
+function isCuratedDefaultFreeAvatarId(id){
+  return CURATED_DEFAULT_FREE_AVATAR_ID_SET.has(Number(id));
+}
+
+function curatedAvatarCatalogItems(items, selectedAvatar){
+  const selected = Number(selectedAvatar);
+  return (Array.isArray(items) ? items : []).filter(item => {
+    const id = Number(item && item.id);
+    if (!Number.isInteger(id)) return false;
+    // Former broad free choices are no longer starter options.  They remain
+    // readable when equipped; paid entries stay in the catalog as before.
+    return isCuratedDefaultFreeAvatarId(id) || item.free !== true || id === selected;
+  });
+}
+
 function prefersReducedMotion(){
   return typeof window !== 'undefined' && typeof window.matchMedia === 'function' &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -235,9 +258,21 @@ function setPremiumBackgroundImage(element, item, path, fallbackPath){
   element.style.backgroundImage = 'linear-gradient(' + item.overlay + ',' + item.overlay + '),url("' + assetUrl(path) + '")' + fallbackLayer;
 }
 
+function premiumBackgroundLoader(){
+  try {
+    if (typeof Image === 'function') return new Image();
+    if (typeof document !== 'undefined' && document && typeof document.createElement === 'function') return document.createElement('img');
+  } catch (error) {}
+  return null;
+}
+
 function releasePremiumBackground(element){
   if (!element) return;
   if (typeof element._premiumBackgroundCleanup === 'function') element._premiumBackgroundCleanup();
+  if (element._premiumBackgroundToneClass && element.classList && typeof element.classList.remove === 'function') {
+    element.classList.remove(element._premiumBackgroundToneClass);
+  }
+  delete element._premiumBackgroundToneClass;
   element._premiumBackgroundCleanup = null;
   delete element._premiumBackgroundPlayback;
 }
@@ -257,37 +292,111 @@ function applyPremiumBackground(element, id, context, options){
   const opts = options || {};
   const fallback = premiumStaticAsset(item, useContext);
   const poster = item.animated ? item.poster : fallback;
-  element.classList.add('premium-background', 'premium-bg-' + item.textTone);
+  const toneClass = 'premium-bg-' + item.textTone;
+  element.classList.add('premium-background', toneClass);
+  element._premiumBackgroundToneClass = toneClass;
   element.dataset.backgroundId = String(item.id);
   element.dataset.backgroundAnimated = item.animated ? 'true' : 'false';
-  setPremiumBackgroundImage(element, item, poster);
+  setPremiumBackgroundImage(element, item, poster, fallback);
   let visible = true;
   let active = false;
   let observer = null;
+  let loader = null;
+  let removeLoaderListeners = null;
+  let loaderEpoch = 0;
+  let animationReady = !item.animated;
+  let animationFailed = false;
   const playbackListeners = new Set();
-  const mayAnimate = item.animated && !prefersReducedMotion() && useContext !== 'shop-grid';
+  const motionQuery = typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+    ? window.matchMedia('(prefers-reduced-motion: reduce)')
+    : null;
+  let reducedMotion = motionQuery ? !!motionQuery.matches : prefersReducedMotion();
+  const mayAnimate = () => item.animated && !reducedMotion && useContext !== 'shop-grid';
   let playbackRequested = Object.prototype.hasOwnProperty.call(opts, 'autoplay') ? !!opts.autoplay : true;
   let lastPlaybackState = null;
+  const discardLoader = invalidate => {
+    if (invalidate) loaderEpoch++;
+    if (typeof removeLoaderListeners === 'function') removeLoaderListeners();
+    removeLoaderListeners = null;
+    loader = null;
+  };
   const emitPlaybackState = force => {
     const pageVisible = typeof document === 'undefined' || !document.hidden;
-    const state = Object.freeze({ active, requested:playbackRequested, disabled:!mayAnimate, visible, pageVisible });
-    if (!force && lastPlaybackState && lastPlaybackState.active === state.active && lastPlaybackState.requested === state.requested && lastPlaybackState.disabled === state.disabled && lastPlaybackState.visible === state.visible && lastPlaybackState.pageVisible === state.pageVisible) return;
+    const state = Object.freeze({ active, requested:playbackRequested, disabled:!mayAnimate(), visible, pageVisible, failed:animationFailed, loading:!!loader });
+    if (!force && lastPlaybackState && lastPlaybackState.active === state.active && lastPlaybackState.requested === state.requested && lastPlaybackState.disabled === state.disabled && lastPlaybackState.visible === state.visible && lastPlaybackState.pageVisible === state.pageVisible && lastPlaybackState.failed === state.failed && lastPlaybackState.loading === state.loading) return;
     lastPlaybackState = state;
     if (typeof opts.onPlaybackStateChange === 'function') { try { opts.onPlaybackStateChange(state); } catch {} }
     playbackListeners.forEach(listener => { try { listener(state); } catch {} });
   };
+  const setPoster = () => {
+    setPremiumBackgroundImage(element, item, poster, fallback);
+    element.dataset.animationActive = 'false';
+  };
+  const pause = () => {
+    if (active) setPoster();
+    active = false;
+    element.dataset.animationActive = 'false';
+  };
+  const beginAnimatedPreload = () => {
+    if (animationReady || animationFailed || loader || !mayAnimate()) return;
+    const probe = premiumBackgroundLoader();
+    // Non-browser consumers (such as minimal contract harnesses) have no
+    // image lifecycle.  They retain the old deterministic direct seam.
+    if (!probe || typeof probe !== 'object') {
+      animationReady = true;
+      return;
+    }
+    const epoch = ++loaderEpoch;
+    loader = probe;
+    const onLoad = () => {
+      if (epoch !== loaderEpoch || loader !== probe) return;
+      discardLoader(false);
+      animationReady = true;
+      sync();
+    };
+    const onError = () => {
+      if (epoch !== loaderEpoch || loader !== probe) return;
+      discardLoader(false);
+      animationReady = false;
+      animationFailed = true;
+      pause();
+      setPoster();
+      element.dataset.animationFailed = 'true';
+      emitPlaybackState(true);
+    };
+    if (typeof probe.addEventListener === 'function') {
+      probe.addEventListener('load', onLoad);
+      probe.addEventListener('error', onError);
+      removeLoaderListeners = () => {
+        if (typeof probe.removeEventListener === 'function') {
+          probe.removeEventListener('load', onLoad);
+          probe.removeEventListener('error', onError);
+        }
+      };
+    } else {
+      probe.onload = onLoad;
+      probe.onerror = onError;
+      removeLoaderListeners = () => { probe.onload = null; probe.onerror = null; };
+    }
+    try { probe.src = assetUrl(item.asset); }
+    catch (error) { onError(); }
+  };
   const sync = () => {
     const pageVisible = typeof document === 'undefined' || !document.hidden;
-    const next = !!(mayAnimate && playbackRequested && visible && pageVisible);
-    if (next !== active){
-      active = next;
-      setPremiumBackgroundImage(element, item, active ? item.asset : poster, poster);
-      element.dataset.animationActive = active ? 'true' : 'false';
-    }
+    const next = !!(mayAnimate() && playbackRequested && visible && pageVisible && !animationFailed);
+    if (!next && loader) discardLoader(true);
+    if (next && !animationReady) beginAnimatedPreload();
+    if (next && animationReady){
+      if (!active) setPremiumBackgroundImage(element, item, item.asset, poster);
+      active = true;
+      element.dataset.animationActive = 'true';
+    } else pause();
+    element.dataset.playbackDisabled = mayAnimate() ? 'false' : 'true';
+    element.dataset.animationFailed = animationFailed ? 'true' : 'false';
     emitPlaybackState(false);
   };
   const setPlayback = shouldPlay => {
-    if (!mayAnimate){
+    if (!mayAnimate() || animationFailed){
       playbackRequested = false;
       element.dataset.playbackRequested = 'false';
       element.dataset.playbackDisabled = 'true';
@@ -300,10 +409,15 @@ function applyPremiumBackground(element, id, context, options){
     return true;
   };
   const onVisibility = () => sync();
+  const onReducedMotionChange = event => {
+    reducedMotion = !!(event && event.matches);
+    sync();
+  };
   element.dataset.animationActive = 'false';
   element.dataset.playbackRequested = playbackRequested ? 'true' : 'false';
-  element.dataset.playbackDisabled = mayAnimate ? 'false' : 'true';
-  if (mayAnimate && typeof IntersectionObserver !== 'undefined'){
+  element.dataset.playbackDisabled = mayAnimate() ? 'false' : 'true';
+  element.dataset.animationFailed = 'false';
+  if (item.animated && useContext !== 'shop-grid' && typeof IntersectionObserver !== 'undefined'){
     visible = false;
     observer = new IntersectionObserver(entries => {
       const entry = entries[0];
@@ -312,29 +426,33 @@ function applyPremiumBackground(element, id, context, options){
     }, { threshold:.05 });
     observer.observe(element);
   }
-  if (mayAnimate && typeof document !== 'undefined' && document.addEventListener){
+  if (item.animated && useContext !== 'shop-grid' && typeof document !== 'undefined' && document.addEventListener){
     document.addEventListener('visibilitychange', onVisibility);
   }
+  if (motionQuery && typeof motionQuery.addEventListener === 'function') motionQuery.addEventListener('change', onReducedMotionChange);
+  else if (motionQuery && typeof motionQuery.addListener === 'function') motionQuery.addListener(onReducedMotionChange);
   element._premiumBackgroundPlayback = {
     setPlayback,
     sync,
     subscribe(listener){
       if (typeof listener !== 'function') return () => {};
       playbackListeners.add(listener);
-      try { listener(lastPlaybackState || { active, requested:playbackRequested, disabled:!mayAnimate, visible, pageVisible:typeof document === 'undefined' || !document.hidden }); } catch {}
+      try { listener(lastPlaybackState || { active, requested:playbackRequested, disabled:!mayAnimate(), visible, pageVisible:typeof document === 'undefined' || !document.hidden, failed:animationFailed, loading:!!loader }); } catch {}
       return () => playbackListeners.delete(listener);
     },
   };
   sync();
   element._premiumBackgroundCleanup = () => {
     if (observer) observer.disconnect();
-    if (mayAnimate && typeof document !== 'undefined' && document.removeEventListener){
+    discardLoader(true);
+    if (item.animated && useContext !== 'shop-grid' && typeof document !== 'undefined' && document.removeEventListener){
       document.removeEventListener('visibilitychange', onVisibility);
     }
+    if (motionQuery && typeof motionQuery.removeEventListener === 'function') motionQuery.removeEventListener('change', onReducedMotionChange);
+    else if (motionQuery && typeof motionQuery.removeListener === 'function') motionQuery.removeListener(onReducedMotionChange);
     active = false;
     playbackRequested = false;
-    setPremiumBackgroundImage(element, item, poster);
-    element.dataset.animationActive = 'false';
+    setPoster();
     element.dataset.playbackRequested = 'false';
     playbackListeners.clear();
     delete element._premiumBackgroundPlayback;

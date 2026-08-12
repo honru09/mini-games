@@ -2,6 +2,9 @@
 
 > 简易记录项目修改内容。每次改动完成前更新；格式：`日期 时间｜修改内容`。
 
+- 2026-08-12 16:40｜统一 light/dark 语义色层，修正焦点、disabled、Toast、登录 Logo、PWA 顶栏、Premium Background textTone 与 Game Stage 主题独立；清理旧运行时主题 CSS 并保留旧存储迁移和游戏 cyber 皮肤。专项、三语、DOM、响应式、Quality Gates 与完整回归通过，线上未变。
+- 2026-08-12 17:24｜同步 Theme Contrast P1 最终收口数字与 reviewer limit：修正后 Quality Gates、完整 npm test（189.0 秒）和双构建均通过；构建为 1,333,571 characters / 1,348,120 bytes / SHA-256 `ED29E547F6D6E4475D21414E0979479DB619AA019FC4952AD484D8668008CC66`。外部浏览器/真机/网络/forced-colors 门禁仍未执行，线上未变。
+
 - 2026-08-07 16:29｜补记：平台已聚焦为 6 款精选游戏，并完成白皮书、美术清单、品牌 Logo、💵 资源与 asset manifest 第一阶段融合。
 - 2026-08-07 16:29｜开始接入五子棋 Canvas 与俄罗斯方块 DOM/网格两个 P0 美术纵切。
 - 2026-08-07 16:55｜更新 `AGENTS.md`，登记奖励与成长系统 v1.0 为权威新增需求，并明确当前代码尚未实现及 18 条验收要求。
@@ -151,3 +154,36 @@
 - 2026-08-11 00:04｜修改 WebSocket `room_update`：仅接受当前房间/观战/恢复目标的同 ID 更新，防止离房后的排队旧消息阻塞下一次建房。完整 `npm test` 148.1 秒、连续三轮 E2E、双构建 SHA-256 `52CE07C2185B9EDC8A34D374BA15A270B2FC9F7643CC0539E967E622A307A828` 通过。
 - 2026-08-11 00:04｜需求台账更新为 234 项（93 verified、28 implemented、37 partial、57 planned、19 blocked）、42 个覆盖组；重新生成 20260811 总报告和六分类报告，并同步 PROJECT_STATUS、AGENTS、README、WHITEPAPER 与简报索引。
 - 2026-08-11 00:51｜修改 `scripts/build.js` 为跨平台统一 LF 生成物；修改 Render/服务端测试管理员配置、沙盒房间设置和局内社交结算生命周期；修正 PROJECT_STATUS 总体状态为 `BLOCKED`、20260811 报告入口和 Tournament UI 已隐藏事实。Quality Gates、管理员合同/在线/安全、Social Match、Match Chat、完整 `npm test` 167.7 秒和双构建 SHA-256 `E8B8D37C66D8843B61F040EAF5028995A5EBF5E30FDD6ABFF6036AB84EDE304E` 全部通过。
+- 2026-08-11 01:04｜将 `da3d05c` 快进推送到 `main`，写入 Render 测试管理员环境变量并部署 `dep-d9sv99f40ujc73dvlru0`；Render/Pages 均返回与本地逐字一致的 996,728 字节构建。浏览器和线上临时访客隔离烟测通过，PROJECT_STATUS 与测试管理员简报同步为已发布/已线上验证；总体 RC 因外部门禁仍保持 `BLOCKED`。
+- 2026-08-11 01:11｜修正 `scripts/generate-progress-reports.js` 的发布节点叙事：沉浸式 Game Shell、Social Match、UI Repair、Home、Tabletop M1、Player Character、Profile、G Coins、商城反馈和 Test Admin P0 已随 `da3d05c` 发布并线上验证；该节点之后重新执行“无新明确命令不发布”。重新生成七份进度报告（1 份内容变化），234 项台账、235 条依赖边和完整 Quality Gates 全部通过，构建产物稳定。
+- 2026-08-11 02:30｜修改唯一需求台账、PROJECT_STATUS、AGENTS、README、WHITEPAPER、素材库 Catalog、报告生成器/门禁、package 测试入口、七份进度报告和简报索引：ART-024 如实升级为 source-only `partial`，ART-025/SOC-017 仍未实现；来源词典由 62 增至 63，QA 从硬编码数量改为动态计数。
+- 2026-08-11 02:30｜主负责人复核 Terra Max 合同与 QA，确认十个稳定 ID、Chat 纯文字边界、Unicode fallback、人工/IP/Golden 门禁未被越过。Emoji 专项、Social Match、素材库、234 项进度台账、Quality Gates 和完整 `npm test`（132.4 秒）通过；双构建均为 996728 bytes / SHA-256 `E8B8D37C66D8843B61F040EAF5028995A5EBF5E30FDD6ABFF6036AB84EDE304E`，证明生产前端未因 source-only 美术发生漂移。本批未提交、未推送、未部署。
+- 2026-08-11 13:56｜修改五子棋/Tetris 表现层与共享 Game Stage CSS：统一 `mg_art_game_stage_wave_b_v1` 为仅精确 `'0'` 回退、storage 异常回退 Wave A；修正会污染 Wave A 回滚的通用 Arena 选择器，并把 Wave B 专项纳入完整 `npm test`。
+- 2026-08-11 13:56｜修改唯一需求台账为 237 项、65 个来源、124 个依赖节点/248 条边、44 个覆盖组；同步 PROJECT_STATUS、AGENTS、README、WHITEPAPER、报告生成器与七份进度报告。Quality Gates、完整 `npm test`（154 秒）、Progress Ledger、`git diff --check` 和双构建通过；最终 1,116,957 bytes / SHA-256 `15D803ABFF1AEB87A970DADADCD7302C8BC87B3C7DAC63625A7001DF3A0BC67A`，未提交、未推送、未部署。
+- 2026-08-11 15:36｜修改报告生成器、PROJECT_STATUS、WHITEPAPER、简易报告索引与四款 Wave B active task：统一为 240 项、68 个来源、127 个依赖节点/259 条边、46 个覆盖组，补齐飞行棋/大富翁本地节点和 GSAP 动效治理边界；专项连续回归与完整 `npm test`（138.4 秒）通过，未提交、未推送、未部署。
+- 2026-08-11 15:55｜修改 `PROJECT_STATUS.json` 与本轮简报，写入最终构建哈希/字节数；双构建一致，未提交、未推送、未部署。
+- 2026-08-11 15:56｜修改 `PROJECT_STATUS.json` 的最终更新时间为本轮收口时间；测试产物与发布边界不变。
+- 2026-08-11 16:10｜修改简易报告索引，加入两道外部门禁的可执行解除手册；未修改运行时代码、协议或线上配置。
+- 2026-08-11 16:53｜修改 `.gitignore`，阻止 `.env/.env.*` 凭证误提交；修复 Supabase 运维脚本仅凭 `cipher` 退出码误判 EFS 的安全缺陷，改为校验目录/备份文件真实 `Encrypted` 属性并删除未加密残片；同步生产合同与解除手册。Supabase Schema、Production Readiness、Adapter、Wizard 和 dry-run 回归全部通过。
+- 2026-08-11 16:58｜完成最终本地主线复核：完整 `npm test`、`git diff --check`、向导五阶段/密钥落点/忽略规则和字面密钥扫描全部通过；真实 D 盘 `storage-preflight` 按预期 fail-closed，未连接生产数据库。
+- 2026-08-11 17:11｜修改 Supabase 运维身份检查为 project ref + 数据库名，拒绝同项目变体恢复与 6543；移除 Windows 单变量加密旁路，改为 EFS 属性或实际 BitLocker 状态；向导拒绝 anon JWT/6543/跨项目 URI并用 ACL 保护本地凭证；扩展回滚、dump 忽略与 plan 合同。未写真实 Supabase/Render。
+- 2026-08-11 17:15｜修改 `pg_dump`、`psql`、`pg_restore` 全部显式传入 `--dbname`，同步生产合同；未连接真实数据库，未部署。
+- 2026-08-11 17:19｜修改 Supabase 向导，使备份目录不再硬编码未加密 D 盘；同步手册说明 Windows Home 当前 EFS/BitLocker 门禁和可选目录路径。未写真实 Supabase/Render。
+- 2026-08-11 17:28｜修复 MinGit Bash 从 PowerShell 启动时 `read` 立即 EOF、向导静默结束的问题；解除手册主命令改为原生 PowerShell。Bash 转发 Probe、PowerShell 语法、Bash 语法与 `git diff --check` 通过。
+- 2026-08-11 17:51｜完成 PowerShell 向导最终语法与路径解析复核；启动路径从 Bash 传入时不再在参数默认值阶段读取空 `$PSScriptRoot`。
+- 2026-08-11 17:54｜修正生产向导第 1 阶段交互：浏览器仅用于确认项目 Healthy，不再阻塞终端输入；PowerShell Probe、语法及差异检查通过。
+- 2026-08-11 18:12｜修复 `qa/supabase-adapter.js` 测试子进程可继承真实 `SUPABASE_SERVICE_ROLE_KEY` 的缺陷；该故障仅影响假服务测试判定，不会执行真实迁移或写入生产库。
+- 2026-08-11 18:32｜复核 D 盘空间：项目源码/素材/报告未改动；仅保留 `.codex-tmp` 中仍可能用于文档与视觉复核的临时资料。
+- 2026-08-11 18:48｜按 Windows 官方整合空闲空间后复核 D 盘，系统仍报告卷尾不可移动文件，未强制缩小分区；源码与素材未改动。
+- 2026-08-12 00:37｜修改飞行棋/大富翁过程表现层及 Tank/象棋权威状态合并：Tank 按 `KO > spawn > move` 保留高优先级状态、复用单一 quiet timer 并拒绝终局后迟到快照；象棋被动棋钟与观众同步不再覆盖 check/terminal，正常棋钟不再误报到期。
+- 2026-08-12 00:37｜修改默认 Avatar 策展与 Premium Background 生命周期、AI 三档难度和设置页无连接服务入口的旧测试漂移、Profile Modal 测试夹具、Honru Avatar source-only 合同措辞；同步 AGENTS、WHITEPAPER、PROJECT_STATUS、报告生成器及七份报告。Quality Gates、完整 `npm test`（140.3 秒）与双构建通过，最终构建 1,224,670 bytes / SHA-256 `02AD62609B8C2199C4BDD78AEB82048A1D17148761DDB8F2D1525EB9DF081657`；浏览器连接器仍为 `Transport closed`，未提交、未推送、未部署。
+- 2026-08-12 02:59｜修正 reviewer P1：五子棋 AI timeout 在 reset/restore/destroy 真正清除，Tetris restore/Replay/Authority snapshot 不再遗留自动落块；Wave C 裸时长改用 Motion Token。专项、i18n、DOM、规则权威、网络混沌、Quality Gates 与完整 `npm test`（159.8 秒）通过；双构建稳定为逻辑 1,251,511 bytes / 磁盘 1,266,060 bytes / SHA-256 `6B823D0E2F2399EB622799E4E1DEC6EEBC43F7DA02E78075C80F0A51E910AF1D`。浏览器内核仍为 `Transport closed`，未提交、未推送、未部署。
+- 2026-08-12 03:31｜推进台账快照与七份生成报告至 2026-08-12，将 TECH-027 由历史 verified 修正为当前 partial；主审把 Mainline Control 与 Progress Ledger QA 强制接入完整 `npm test`，并同步 PROJECT_STATUS、AGENTS、WHITEPAPER 与简报索引。未解除任何外部门禁，未发布。
+- 2026-08-12 05:29｜修改 PROJECT_STATUS、AGENTS、WHITEPAPER、简易报告索引与七份 20260812 进度报告：Ghost3D Foundation 记录为本地 implemented，TECH-049 整体保持 partial；当前节点转为 Foundation 本地收口，下一步仅 Gomoku 3D vertical slice，线上仍为 da3d05c，未提交、未推送、未部署。
+- 2026-08-12 06:55｜修正 Gomoku 3D 首帧 ready 与指针时序、HIGH Camera Entrance、render failure/context loss/fresh recovery 清理；专项接入 pretest/full test/Quality Gates，台账和七报告保持 242 项与 TECH-049 partial。Quality Gates、完整 `npm test`（162.1 秒）和双构建通过，最终 1,302,076 characters / 1,316,625 bytes / SHA-256 `91AC0AAB42577EF1F2385A351F3E3614C8AAE86C5D228929D11EEB76706C67D4`；浏览器连接器仍 `Transport closed`，未提交、推送或部署。
+- 2026-08-12 11:14｜修改 Home/Games/Playline/Profile 路由为同步业务提交 + 后续有限 `committed→enter→settled` 分层进入；补 hidden/aria-hidden/inert、认证/注销、generation、单 loader、旧 handle、context/dispose、reduced-motion/后台/Game Shell 静态回退。主审纠正 core-only 无 CSSPlugin、重复注册、延迟 commit 破坏 focus、autoAlpha 隐藏控件和 cache 版本硬编码。Quality Gates、完整 `npm test`（176.6 秒）与双构建通过，最终 1,312,603 characters / 1,327,152 bytes / SHA-256 `1C802828EF5E799358F8199163428AD2BFBC5572CD90997999E82EC80B887DF3`；浏览器仍 `Transport closed`，未提交、推送或部署。
+- 2026-08-12 12:05｜修改 Seat/Lobby/邀请/Social/玩家列表/全局 DM/Playline 使用统一 Avatar+Frame+Effect+NameFx 身份；Lobby 只增量公开 hostFrame/hostEffect/hostNameFx，修复缓存缺失和 DM 语言切换抹掉闪名。SOC-001 从 partial 升为本地 implemented，ART-021 仍 partial；48 Avatar 与 Premium Background/Honru source-only 门禁保留。Quality Gates、完整 `npm test`（142.7 秒）与双构建通过，最终 1,317,990 characters / 1,332,539 bytes / SHA-256 `1E878CC3B8B8985B58601BD5F34A1F8FB884989A6A94E7815528E25F63E4A44B`；未提交、推送或部署。
+- 2026-08-12 12:25｜最终同步 Identity P1 计划、台账、PROJECT_STATUS、AGENTS、WHITEPAPER 与简报：最新完整 `npm test` 166.5 秒通过，双构建仍为 1,317,990 characters / 1,332,539 bytes / SHA-256 `1E878CC3B8B8985B58601BD5F34A1F8FB884989A6A94E7815528E25F63E4A44B`。Terra Max 终审多次限时催交仍无可用结论，按 reviewer limit 停止空转；本地实现步骤收口，外部门禁继续 VERIFYING。
+- 2026-08-12 13:33｜重构全局私信会话/线程信息层级、三语时间与发送状态，补齐桌面双栏、手机 100dvh/四边 safe-area/44px/内部滚动，并修正关闭重开竞态、blocked-environment lazy-load 与 sticky failure；台账五项和七份进度报告同步更新。
+- 2026-08-12 13:39｜将 DMDS-6 标记完成并同步 PROJECT_STATUS、AGENTS、WHITEPAPER 与简报的最终测试/哈希数字；总状态继续 `implemented / VERIFYING`，未解除浏览器、真机或真实网络门禁。
+- 2026-08-12 15:53｜修改本人 Profile 为 identity/growth/journey/library 四层结构并区分核心/辅助指标；修改公开 Profile 为好友私聊/战绩比较/单一关系与安全入口；修正 uid-only profile_get 的有序本地 requestId+targetUid 生命周期、同 UID 重开/迟到/断线/换号/注销边界，并复用 GhostSurfaceMotion 同步关闭。专项、Quality Gates、完整 npm test 156.6 秒与双构建通过，最终 1,337,226 characters / 1,351,775 bytes / SHA-256 `8E7BB74A304E6D9BF5CEC0F21CF30C834921CED2F0583C23CC4B79AD0758B39F`；线上未变。

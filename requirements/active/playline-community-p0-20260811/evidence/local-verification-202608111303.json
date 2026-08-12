@@ -1,0 +1,30 @@
+{
+  "taskId": "playline-community-p0-20260811",
+  "verifiedAt": "2026-08-11T13:03:34+09:00",
+  "state": "LOCAL_ACCEPTED_AWAITING_RELEASE_COMMAND",
+  "tests": {
+    "playline": "PASS",
+    "progressLedger": "PASS requirements=236 reports=7 sources=64 dependencyEdges=244",
+    "i18n": "PASS 1605 keys x 3 locales",
+    "domAndProtocol": "PASS",
+    "qualityGates": "PASS",
+    "fullNpmTest": "PASS 150.4s"
+  },
+  "browser": {
+    "url": "http://127.0.0.1:8091/#/playline",
+    "matrix": ["desktop", "1024x768", "390x844", "844x390", "light", "dark", "zh-CN", "en-US", "uk-UA"],
+    "verified": ["Playline text post", "All/Friends presentation", "global DM desktop/mobile empty state", "44px and safe-area", "zero console warning/error"]
+  },
+  "build": {
+    "logicalBytesReported": 1080713,
+    "physicalBytes": 1095185,
+    "sha256": "DF714E6CC84235A423DDCD70982D7DD04EA59405D2DCBD56FF8067ED02024D56",
+    "doubleBuildStable": true
+  },
+  "notExecuted": [
+    "real Supabase migration/RLS/concurrency/encrypted backup/restore/rollback",
+    "production content governance and moderation operations",
+    "second browser, physical devices and real network shaping",
+    "commit, push, GitHub Pages and Render deployment"
+  ]
+}

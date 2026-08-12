@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "taskId": "identity-avatar-background-closure-p1-20260812",
+  "requirements": ["ART-020", "ART-021", "UI-022", "UI-023", "SOC-001", "ECO-013", "ECO-014"],
+  "excludedRequirements": ["UI-037", "ART-036", "GAME-045"],
+  "stage": "CLOSE",
+  "disposition": "NOW_CLOSURE",
+  "status": "VERIFYING",
+  "parallelability": 2,
+  "steps": [
+    {"id":"IDENTITY-1","status":"completed","owner":"Master + Terra-Max read-only audit","title":"完成八段 RECON、需求归属纠偏与消费者矩阵"},
+    {"id":"IDENTITY-2","status":"completed","owner":"Master","title":"冻结统一身份深模块 Interface、回滚与测试合同","dependsOn":["IDENTITY-1"]},
+    {"id":"IDENTITY-3","status":"completed","owner":"Master","title":"先写红测覆盖 Seat 缓存缺失、邀请、私信和 Playline 身份组合","dependsOn":["IDENTITY-2"]},
+    {"id":"IDENTITY-4","status":"completed","owner":"Master","title":"实现统一 Avatar/Frame/Effect/NameFx 表现与消费者接入","dependsOn":["IDENTITY-3"]},
+    {"id":"IDENTITY-5","status":"completed","owner":"Master + Terra-Max Reviewer（reviewer limit）","title":"审查资产治理、动态背景生命周期和未审批素材隔离；Terra Max 未在限时催交后返回可用结论，由主负责人以专项、安全、协议与全链证据完成审核并如实保留 reviewer limit","dependsOn":["IDENTITY-4"]},
+    {"id":"IDENTITY-6","status":"completed","owner":"Master","title":"专项、i18n、DOM、Quality Gates、完整 npm test 与双构建","dependsOn":["IDENTITY-5"]},
+    {"id":"IDENTITY-7","status":"completed","owner":"Master","title":"同步台账、分类进度报告、简易报告与三份中文日志","dependsOn":["IDENTITY-6"]}
+  ],
+  "release": "LOCAL_ONLY_NO_COMMIT_NO_PUSH_NO_DEPLOY"
+}

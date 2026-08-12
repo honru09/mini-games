@@ -6,6 +6,7 @@ const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..');
 const LEDGER_PATH = path.join(ROOT, 'requirements', 'PRODUCT_REQUIREMENTS_LEDGER.json');
+const ROUTING_PATH = path.join(ROOT, 'requirements', 'MAINLINE_CONTROL_ROUTING.json');
 const REPORT_DIR = path.join(ROOT, '简易报告');
 const STATUS_ORDER = ['verified', 'implemented', 'partial', 'planned', 'not_executed', 'blocked'];
 const STATUS_LABELS = {
@@ -17,9 +18,33 @@ const STATUS_LABELS = {
   blocked: '受阻'
 };
 const PRIORITY_ORDER = ['P0', 'P1', 'P2', 'P3'];
+const ROUTING_LABELS = {
+  NOW_CLOSURE: '当前收口',
+  EXTERNAL_GATE: '外部门禁',
+  DEFERRED_MAINLINE: '主线后置',
+  FUTURE_EXPANSION: '未来扩展'
+};
 
 function readLedger() {
   return JSON.parse(fs.readFileSync(LEDGER_PATH, 'utf8'));
+}
+
+function readRouting() {
+  return JSON.parse(fs.readFileSync(ROUTING_PATH, 'utf8'));
+}
+
+function makeRoutingIndex(ledger, routing) {
+  const byRequirement = new Map();
+  for (const group of routing.routingGroups || []) {
+    for (const id of group.ids || []) {
+      if (byRequirement.has(id)) throw new Error(`duplicate routing assignment: ${id}`);
+      byRequirement.set(id, group);
+    }
+  }
+  for (const item of ledger.requirements) {
+    if (!byRequirement.has(item.id)) throw new Error(`missing routing assignment: ${item.id}`);
+  }
+  return byRequirement;
 }
 
 function reportDate(ledger) {
@@ -82,9 +107,25 @@ function makeEvidenceRefs(item, ledger) {
   return refs.map((ref) => `\`${ref}\``).join('、');
 }
 
-function makeRequirement(item, ledger) {
+function routeText(route) {
+  const gate = route.gate ? `；共享 Gate：\`${route.gate}\`` : '';
+  return `${ROUTING_LABELS[route.disposition]}（\`${route.disposition}\`）/ ${route.stage}${gate}`;
+}
+
+function makeRoutingStatsTable(items, routingIndex) {
+  const counts = Object.fromEntries(Object.keys(ROUTING_LABELS).map((disposition) => [disposition, 0]));
+  for (const item of items) counts[routingIndex.get(item.id).disposition] += 1;
+  return [
+    '| 主线路由 | 数量 |',
+    '| --- | ---: |',
+    ...Object.entries(ROUTING_LABELS).map(([disposition, label]) => `| ${label}（\`${disposition}\`） | ${counts[disposition]} |`)
+  ].join('\n');
+}
+
+function makeRequirement(item, ledger, routingIndex) {
   const related = item.related && item.related.length ? item.related.join('、') : '无';
   const dependencies = ledger.dependencyGraph[item.id] || [];
+  const route = routingIndex.get(item.id);
   const dependencyText = dependencies.length
     ? dependencies.map((id) => {
       const dependency = ledger.requirements.find((candidate) => candidate.id === id);
@@ -96,6 +137,7 @@ function makeRequirement(item, ledger) {
     '',
     `- 状态：${STATUS_LABELS[item.status]}（\`${item.status}\`）`,
     `- 优先级 / 当前阶段：${item.priority} / ${item.phase}`,
+    `- 主线路由：${routeText(route)}`,
     `- 前置依赖：${dependencyText}`,
     `- 来源：${item.source.join('、')}`,
     `- 当前证据入口：${makeEvidenceRefs(item, ledger)}`,
@@ -106,7 +148,7 @@ function makeRequirement(item, ledger) {
   ].join('\n');
 }
 
-function makeCategoryReport(ledger, categoryKey) {
+function makeCategoryReport(ledger, categoryKey, routingIndex) {
   const category = ledger.categories[categoryKey];
   const items = ledger.requirements.filter((item) => item.category === categoryKey);
   const verified = items.filter((item) => item.status === 'verified').length;
@@ -132,6 +174,10 @@ function makeCategoryReport(ledger, categoryKey) {
     '',
     makeStatsTable(items),
     '',
+    '## 主线路由',
+    '',
+    makeRoutingStatsTable(items, routingIndex),
+    '',
     '## 优先级与阶段',
     '',
     '| 优先级 | 数量 |',
@@ -150,7 +196,7 @@ function makeCategoryReport(ledger, categoryKey) {
     '',
     '## 原子需求明细',
     '',
-    ...items.map((item) => makeRequirement(item, ledger))
+    ...items.map((item) => makeRequirement(item, ledger, routingIndex))
   ].join('\n').trimEnd() + '\n';
 }
 
@@ -187,7 +233,28 @@ function makeFocusList(ledger, categoryKey, limit = 8) {
     .join('\n') || '- 当前无开放需求。';
 }
 
-function makeTotalReport(ledger) {
+function makeMainlineRoutingTable(ledger, routingIndex) {
+  const counts = Object.fromEntries(Object.keys(ROUTING_LABELS).map((disposition) => [disposition, 0]));
+  for (const item of ledger.requirements) counts[routingIndex.get(item.id).disposition] += 1;
+  return [
+    '| 主线路由 | 数量 | 当前含义 |',
+    '| --- | ---: | --- |',
+    `| 当前收口（\`NOW_CLOSURE\`） | ${counts.NOW_CLOSURE} | 当前可施工或作为回归基线；不自动扩为新功能。 |`,
+    `| 外部门禁（\`EXTERNAL_GATE\`） | ${counts.EXTERNAL_GATE} | 真实设备、真实数据或人工决议前保持阻塞。 |`,
+    `| 主线后置（\`DEFERRED_MAINLINE\`） | ${counts.DEFERRED_MAINLINE} | 保留在产品范围内，按阶段顺序再冻结。 |`,
+    `| 未来扩展（\`FUTURE_EXPANSION\`） | ${counts.FUTURE_EXPANSION} | 不进入当前产品收口。 |`
+  ].join('\n');
+}
+
+function makeSharedGateTable(routing) {
+  return [
+    '| 共享 Gate | 状态 | 阶段 | 当前解除条件 |',
+    '| --- | --- | --- | --- |',
+    ...Object.entries(routing.sharedGates).map(([id, gate]) => `| \`${id}\` | ${gate.status} | ${gate.stage} | ${escapeCell(gate.requiredEvidence.join('；'))} |`)
+  ].join('\n');
+}
+
+function makeTotalReport(ledger, routing, routingIndex) {
   const items = ledger.requirements;
   const counts = Object.fromEntries(countBy(items, 'status', STATUS_ORDER));
   const functionalUnfinished = ['partial', 'planned', 'not_executed', 'blocked']
@@ -211,15 +278,21 @@ function makeTotalReport(ledger) {
     '',
     `当前共收录 **${items.length} 项唯一原子需求**，分为六条互不混改的工作流。已验证关闭 **${counts.verified || 0}** 项；已有实现但仍待验证/审批 **${counts.implemented || 0}** 项；功能性未完成、未执行或受阻 **${functionalUnfinished}** 项；合计 **${openLoop}** 项尚未达到 \`verified\`。`,
     '',
-    '当前产品节点是：**Game Stage + Tabletop Wave A 已发布；沉浸式 Game Shell P0、Social Match P0/P1、UI Repair P0.1–P0.9、Home Engagement P0/P1、Home Identity P1、Home Active Match Return P0、Tabletop Presentation M1、Player Character P0、Progression Identity P1、Profile Journey/Compare/Modal A11y/Collection Rarity P1、G Coins Naming/Unified Currency P0、Shop Purchase Feedback P0 与 UI-037/GAME-045 代码原生表现 Adapter 已完成本地实现/回归但未发布；UI-034 普通赛事入口隐藏已在 UI Repair P0.2 本地收口。Home Active Match Return P0 只在同一内存中仍有效的真人联机对局显示，点击仅复用 showGame fast path；结算、过期、replay/reconnect、异常 seat 和 stale click 均 fail-closed。它不是跨设备、跨重启或持久恢复。UI-010/ECO-023/UI-011 仍为 partial：G Coins 正式原创图标/获得路径、角色服装/背景和非强迫个性化目标仍需独立合同；本轮未改奖励数值、商城价格、Supabase RPC 或未审批 runtime 美术。** ART-026 人工清稿/Reviewer B/IP/Golden Set、ART-036 人工审批、ECO-029 正式购买事务和外部设备/数据库门禁仍开放；美术 M0/P1/P2 未获人工审批的资源继续默认关闭，真实 Supabase、真机、真实网络和多实例也不得写成生产就绪。',
+    '当前产品节点分为两层：**线上仍是 `da3d05c` 的已发布基线；本地层包含尚未发布的 Playline、全局私信、Game Stage Wave B/Wave C、Gomoku Ghost3D 与 UI Motion Closure P1。** 六款 Wave C 过程表现和四区路由 Motion 都保持表现层、非权威状态，Rule/Authority/Protocol/Reward/Replay 不变。当前浏览器内核对最新本地构建立即返回 `Transport closed`，因此任何最新可见能力均保持 implemented/partial，不能冒充 visual verified。未审批 M0/P1/P2、Honru、Emoji、G Coins、Avatar 与游戏候选继续 source-only/reference-only/default-off。',
     '',
-    '本轮新增 2026-08-10 长需求追溯：实体桌游美术与 A/B 本地视角、Tank 触控、大富翁虚拟形象、局内文字聊天、胜场称号、赛事入口隐藏、报告分层归档和全球地区小游戏长期愿景均已进入唯一台账；这一步只治理需求，没有冒充产品实现。',
+    '本轮先完成 CONTROL：每一个原子需求都有且只有一个主线路由。`NOW_CLOSURE` 中的已验证项只作回归基线，`EXTERNAL_GATE` 汇聚为三条共享 Gate，`DEFERRED_MAINLINE` 和 `FUTURE_EXPANSION` 不再与当前 Close 批次混合。只记录已落盘的本地实现/自动化事实，不冒充浏览器、真机、人工审批或线上发布。',
     '',
-    '当前本地工作终态继续是 `LOCAL_ACCEPTED_AWAITING_RELEASE_COMMAND`：未收到本任务明确发布指令前，不 commit、不 push，也不触发 GitHub Pages 或 Render。',
+    '上述发布批次已在 `da3d05c` 完成线上验收；自该节点之后的后续本地改动继续使用 `LOCAL_ACCEPTED_AWAITING_RELEASE_COMMAND` 发布冻结标记：未收到新的明确发布指令前，未提交、未推送、未触发 GitHub Pages 或 Render。',
     '',
     '## 总体状态统计',
     '',
     makeStatsTable(items),
+    '',
+    '## 总指挥路由与共享 Gate',
+    '',
+    makeMainlineRoutingTable(ledger, routingIndex),
+    '',
+    makeSharedGateTable(routing),
     '',
     makeCategorySummary(ledger),
     '',
@@ -250,16 +323,15 @@ function makeTotalReport(ledger) {
     '## 当前最重要的开放需求',
     '',
     ...categorySections,
-    '## 分轨执行顺序',
+    '## 单主线执行顺序',
     '',
-    '1. **已收口本地主线**：Requirements Governance、UI Repair P0.1–P0.9、Social Match P1、Home Engagement P0/P1、G Coins Naming/Unified Currency P0、Shop Purchase Feedback P0、Profile Journey/Compare/Modal A11y/Collection Rarity P1 均保持本地验收状态，等待外部闸门和用户发布指令。',
-    '2. **已收口体验主线**：Tabletop Presentation M1 的视角/动作/镜头/排名台与 Progression Identity P1 的六款胜场称号保持本地实现状态，等待外部可见门禁和发布指令。',
-    '3. **UI-037/GAME-045 后续主线**：保留已完成的代码原生表现 Adapter；在 ART-036/ECO-029 门禁满足后完成获批角色 renderer、三语/a11y 和设备验收。',
-    '4. **Home 主线后续**：Home Engagement P1、Home Identity P1 与同实例 Active Match Return P0 已本地收口；UI-010/ECO-023/UI-011 仍保持 partial，剩余为安全个性化获得目标、G Coins 正式原创图标/角色目录与真正 durable recovery。返回入口不得宣传为跨设备或跨重启恢复。',
-    '5. **Profile 后续边界**：Journey 目标卡、正式好友窄化比较、旧弹层 a11y 和本人收藏稀有度分布已完成；后续不能按价格推断、制造强迫购买或把公开 Profile 扩成私有数据通道。',
-    '6. **Tech/Production P0**：真实 Supabase、RLS/并发/备份恢复、多实例、真机/第二浏览器/真实网络；需要凭证或外部设备时明确保持受阻。',
+    '1. **CONTROL（当前）**：维护台账、路由、三个共享 Gate、状态语义和发布冻结；Defect/Acceptance Gap/Shared Repair 归回原 ID。',
+    '2. **CLOSE / UI 与 Ghost3D 纵切**：Foundation、五子棋 Renderer 和四区 Route Motion 已建立窄 Interface；继续按现有 UI/Game Stage/资产原 ID 逐批收口，永久保留 fallback 与同步输入/路由语义。',
+    '3. **PROVE**：第二浏览器、Android、iPhone、Tablet、横竖屏、三语言、双主题、reduced-motion 与真实网络。',
+    '4. **DATA**：真实 Supabase、迁移、RLS、并发、加密备份、隔离恢复、非破坏回滚和多实例。',
+    '5. **ART → PARITY → LOOP → COMMUNITY → PLATFORM**：依次推进人工 Golden Set 后的运行时美术、六款统一体验、快速开局/教学/经济闭环、受治理社区，最后才是原生/商店、新游戏和未来 Renderer。',
     '',
-    '以上六轨不得在一个实现批次杂糅。每轨先建立独立 active task，冻结 IN/OUT、文件所有权、协议、回滚点和验收证据，再施工。',
+    '每批只服务单一主线目标。先建立独立 active task，冻结 IN/OUT、文件所有权、协议、回滚点和验收证据，再施工；外部门禁未解除时只准备下一阶段，不越过 Gate。',
     '',
     '## 明确尚未执行或受阻',
     '',
@@ -293,11 +365,13 @@ function writeIfChanged(filePath, content) {
 
 function main() {
   const ledger = readLedger();
+  const routing = readRouting();
+  const routingIndex = makeRoutingIndex(ledger, routing);
   fs.mkdirSync(REPORT_DIR, { recursive: true });
   const writes = [];
-  writes.push([`项目总需求进度报告-${compactReportDate(ledger)}.md`, makeTotalReport(ledger)]);
+  writes.push([`项目总需求进度报告-${compactReportDate(ledger)}.md`, makeTotalReport(ledger, routing, routingIndex)]);
   for (const key of Object.keys(ledger.categories)) {
-    writes.push([ledger.categories[key].report, makeCategoryReport(ledger, key)]);
+    writes.push([ledger.categories[key].report, makeCategoryReport(ledger, key, routingIndex)]);
   }
   let changed = 0;
   for (const [filename, content] of writes) {

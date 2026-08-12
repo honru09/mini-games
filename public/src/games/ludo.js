@@ -14,6 +14,105 @@ function gameLudo(area, extra, n, opts){
   let movingToken = null;
   let remoteInputs = [], drainingRemoteInputs = false, epoch = 0;
   let S = 520;
+  // Wave C is a local, disposable process rail. It is deliberately kept out
+  // of the rule state: the server and Replay still only see snapshot().
+  const LUDO_WAVE_C_PROCESS_STEPS = ['roll','dice','pick','move','capture','finish','ranking','turn-end'];
+  let ludoWaveCProcess = 'roll', ludoWaveCProcessDetail = '';
+  let ludoWaveCProcessTimers = new Set();
+  let ludoWaveCProcessRail = null, ludoWaveCProcessLabel = null, ludoWaveCProcessSteps = [];
+  let ludoIdleWaiters = [];
+  function ludoWaveCLater(callback, delay){
+    let timer = null;
+    timer = setTimeout(() => {
+      ludoWaveCProcessTimers.delete(timer);
+      try { callback(); }
+      finally { notifyLudoIdle(); }
+    }, delay);
+    ludoWaveCProcessTimers.add(timer);
+    return timer;
+  }
+  function clearLudoWaveCProcessTimers(){
+    ludoWaveCProcessTimers.forEach(timer => clearTimeout(timer));
+    ludoWaveCProcessTimers.clear();
+  }
+  function ludoIsIdle(){
+    return phase !== 'rolling' && !drainingRemoteInputs && !aiPending && movingToken === null && ludoWaveCProcessTimers.size === 0;
+  }
+  function notifyLudoIdle(force){
+    if (!force && !ludoIsIdle()) return;
+    const waiters = ludoIdleWaiters.splice(0);
+    waiters.forEach(resolve => resolve());
+  }
+  function whenLudoIdle(){ return ludoIsIdle() ? Promise.resolve() : new Promise(resolve => ludoIdleWaiters.push(resolve)); }
+  // Wave B is intentionally a local presentation seam. A missing flag keeps
+  // the code-native stage on, only the exact string "0" restores Wave A, and
+  // unavailable storage fails closed without touching Ludo state or wire data.
+  const LUDO_WAVE_B_STORAGE_KEY = 'mg_art_game_stage_wave_b_v1';
+  function ludoWaveBEnabled(){
+    try {
+      const storage = typeof window !== 'undefined' ? window.localStorage : null;
+      if (!storage || typeof storage.getItem !== 'function') return false;
+      return storage.getItem(LUDO_WAVE_B_STORAGE_KEY) !== '0';
+    } catch (_error) {
+      return false;
+    }
+  }
+  let ludoWaveBActive = ludoWaveBEnabled();
+  let ludoWaveBMountFailed = false;
+  let ludoWaveBStage = null, ludoWaveBBoardFrame = null, ludoWaveBMeta = null;
+  let ludoWaveBTurn = null, ludoWaveBState = null, ludoWaveBRankings = null, ludoWaveBCommand = null;
+  function ludoWaveBClass(node, className, enabled){
+    if (!node || !node.classList) return;
+    if (enabled) node.classList.add(className); else node.classList.remove(className);
+  }
+  function ludoWaveBData(node, name, value){
+    if (!node) return;
+    const attr = 'data-' + name;
+    const key = name.replace(/-([a-z])/g, (_match, letter) => letter.toUpperCase());
+    if (value === null || value === undefined){
+      if (typeof node.removeAttribute === 'function') node.removeAttribute(attr);
+      else if (node.dataset) delete node.dataset[key];
+      return;
+    }
+    if (typeof node.setAttribute === 'function') node.setAttribute(attr, String(value));
+    else if (node.dataset) node.dataset[key] = String(value);
+  }
+  function ludoWaveCProcessText(){
+    if (ludoWaveCProcess === 'dice') return t('ludo_player_rolling', curIdx + 1);
+    if (ludoWaveCProcess === 'pick') return t('ludo_choose_plane');
+    if (ludoWaveCProcess === 'move') return t('ludo_move_complete', curIdx + 1);
+    if (ludoWaveCProcess === 'capture') return t('ludo_captured', Number(ludoWaveCProcessDetail) || 1);
+    if (ludoWaveCProcess === 'finish') return t('ludo_all_home');
+    if (ludoWaveCProcess === 'ranking') return t('victory_podium_label');
+    if (ludoWaveCProcess === 'turn-end') return t('ludo_next_turn', '', curIdx + 1);
+    return t('ludo_roll_die');
+  }
+  function paintLudoWaveCProcess(){
+    if (!ludoWaveBActive || !ludoWaveBStage) return;
+    [area, ludoWaveBStage, board].forEach(node => ludoWaveBData(node, 'ludo-process', ludoWaveCProcess));
+    if (ludoWaveCProcessRail){
+      ludoWaveBData(ludoWaveCProcessRail, 'ludo-process', ludoWaveCProcess);
+      if (ludoWaveCProcessLabel) ludoWaveCProcessLabel.textContent = ludoWaveCProcessText();
+    }
+    ludoWaveCProcessSteps.forEach((step, index) => {
+      const active = step && step.dataset && step.dataset.ludoProcessStep === ludoWaveCProcess;
+      ludoWaveBData(step, 'ludo-process-active', active ? 'true' : 'false');
+      ludoWaveBData(step, 'ludo-process-index', index);
+    });
+  }
+  function setLudoWaveCProcess(next, detail){
+    ludoWaveCProcess = LUDO_WAVE_C_PROCESS_STEPS.includes(next) ? next : 'roll';
+    ludoWaveCProcessDetail = detail === undefined || detail === null ? '' : String(detail);
+    paintLudoWaveCProcess();
+  }
+  function settleLudoWaveCProcess(next, detail){
+    // A following extra turn may already have advanced to dice/pick while the
+    // previous token flight is finishing.  Never let an old visual callback
+    // rewind that newer player-facing process.
+    if (ludoWaveCProcess === 'dice' || ludoWaveCProcess === 'pick' || ludoWaveCProcess === 'ranking') return false;
+    setLudoWaveCProcess(next, detail);
+    return true;
+  }
   const board = el('div','ludo-board');
   const previousTouchAction = area.style.touchAction || '';
   const previousOverscroll = area.style.overscrollBehavior || '';
@@ -27,6 +126,170 @@ function gameLudo(area, extra, n, opts){
   diceBtn.appendChild(dice3d.wrap);
   diceBtn.addEventListener('click', roll);
   extra.appendChild(diceBtn);
+  function mountLudoWaveBPresentation(){
+    if (!ludoWaveBActive || ludoWaveBStage || ludoWaveBMountFailed) return;
+    try {
+    ludoWaveBStage = el('section', 'ludo-wave-b-stage');
+    ludoWaveBStage.setAttribute('role', 'group');
+    ludoWaveBStage.setAttribute('aria-label', t('game_ludo'));
+    ludoWaveBBoardFrame = el('div', 'ludo-wave-b-board-frame');
+    ludoWaveBBoardFrame.setAttribute('role', 'group');
+    ludoWaveBBoardFrame.setAttribute('aria-label', t('game_ludo'));
+    ludoWaveBMeta = el('div', 'ludo-wave-b-meta');
+    ludoWaveBMeta.setAttribute('role', 'status');
+    ludoWaveBMeta.setAttribute('aria-live', 'polite');
+    ludoWaveBTurn = el('output', 'ludo-wave-b-turn');
+    ludoWaveBState = el('output', 'ludo-wave-b-state');
+    ludoWaveBState.setAttribute('aria-live', 'polite');
+    ludoWaveCProcessRail = el('section', 'ludo-wave-c-process');
+    ludoWaveCProcessRail.setAttribute('role', 'status');
+    ludoWaveCProcessRail.setAttribute('aria-live', 'polite');
+    ludoWaveCProcessLabel = el('output', 'ludo-wave-c-process-label');
+    const ludoWaveCProcessTrack = el('div', 'ludo-wave-c-process-track');
+    ludoWaveCProcessSteps = LUDO_WAVE_C_PROCESS_STEPS.map(step => {
+      const node = el('span', 'ludo-wave-c-process-step');
+      ludoWaveBData(node, 'ludo-process-step', step);
+      node.setAttribute('aria-hidden', 'true');
+      ludoWaveCProcessTrack.appendChild(node);
+      return node;
+    });
+    ludoWaveCProcessRail.appendChild(ludoWaveCProcessLabel);
+    ludoWaveCProcessRail.appendChild(ludoWaveCProcessTrack);
+    ludoWaveBRankings = el('ol', 'ludo-wave-b-rankings ludo-wave-b-standings');
+    ludoWaveBRankings.setAttribute('aria-label', t('victory_podium_label'));
+    ludoWaveBData(ludoWaveBTurn, 'ludo-region', 'turn');
+    ludoWaveBData(ludoWaveBState, 'ludo-region', 'state');
+    ludoWaveBData(ludoWaveCProcessRail, 'ludo-region', 'process');
+    ludoWaveBData(ludoWaveBRankings, 'ludo-region', 'rankings');
+    ludoWaveBMeta.appendChild(ludoWaveBTurn);
+    ludoWaveBMeta.appendChild(ludoWaveBState);
+    ludoWaveBMeta.appendChild(ludoWaveCProcessRail);
+    ludoWaveBMeta.appendChild(ludoWaveBRankings);
+    ludoWaveBBoardFrame.appendChild(board);
+    ludoWaveBStage.appendChild(ludoWaveBBoardFrame);
+    ludoWaveBStage.appendChild(ludoWaveBMeta);
+    area.appendChild(ludoWaveBStage);
+    ludoWaveBCommand = el('div', 'ludo-wave-b-command');
+    ludoWaveBCommand.appendChild(turnHud);
+    ludoWaveBCommand.appendChild(diceBtn);
+    extra.appendChild(ludoWaveBCommand);
+    ludoWaveBClass(area, 'ludo-wave-b-arena', true);
+    ludoWaveBClass(board, 'ludo-wave-b-board', true);
+    ludoWaveBClass(turnHud, 'ludo-wave-b-turn-hud', true);
+    ludoWaveBClass(diceBtn, 'ludo-wave-b-dice', true);
+    ludoWaveBData(area, 'game-stage-wave-b', 'active');
+    ludoWaveBData(area, 'ludo-stage', 'wave-b');
+    ludoWaveBData(ludoWaveBStage, 'ludo-stage', 'wave-b');
+    ludoWaveBData(ludoWaveBBoardFrame, 'ludo-region', 'board');
+    ludoWaveBData(board, 'ludo-region', 'board');
+    ludoWaveBData(ludoWaveBCommand, 'ludo-region', 'command');
+    ludoWaveBData(turnHud, 'ludo-region', 'turn');
+    ludoWaveBData(diceBtn, 'ludo-control', 'dice');
+    paintLudoWaveCProcess();
+    } catch (_error) {
+      try { releaseLudoWaveBPresentation(); } catch (_cleanupError) {}
+      ludoWaveBMountFailed = true;
+      ludoWaveBActive = false;
+    }
+  }
+  function releaseLudoWaveBPresentation(){
+    if (ludoWaveBStage){
+      if (board.parentNode === ludoWaveBBoardFrame) area.appendChild(board);
+      if (turnHud.parentNode === ludoWaveBCommand) extra.appendChild(turnHud);
+      if (diceBtn.parentNode === ludoWaveBCommand) extra.appendChild(diceBtn);
+      if (ludoWaveBCommand && ludoWaveBCommand.parentNode === extra) extra.removeChild(ludoWaveBCommand);
+      if (typeof ludoWaveBStage.remove === 'function') ludoWaveBStage.remove();
+      else if (ludoWaveBStage.parentNode && typeof ludoWaveBStage.parentNode.removeChild === 'function') ludoWaveBStage.parentNode.removeChild(ludoWaveBStage);
+    }
+    ludoWaveBClass(area, 'ludo-wave-b-arena', false);
+    ludoWaveBClass(board, 'ludo-wave-b-board', false);
+    ludoWaveBClass(turnHud, 'ludo-wave-b-turn-hud', false);
+    ludoWaveBClass(diceBtn, 'ludo-wave-b-dice', false);
+    ludoWaveBData(area, 'game-stage-wave-b', null);
+    ludoWaveBData(area, 'ludo-stage', null);
+    ludoWaveBData(area, 'ludo-phase', null);
+    ludoWaveBData(area, 'ludo-status', null);
+    ludoWaveBData(area, 'ludo-active-player', null);
+    ludoWaveBData(area, 'ludo-process', null);
+    ludoWaveBData(board, 'ludo-region', null);
+    ludoWaveBData(board, 'ludo-phase', null);
+    ludoWaveBData(board, 'ludo-active-player', null);
+    ludoWaveBData(board, 'ludo-process', null);
+    ludoWaveBData(turnHud, 'ludo-region', null);
+    ludoWaveBData(turnHud, 'ludo-phase', null);
+    ludoWaveBData(diceBtn, 'ludo-control', null);
+    ludoWaveBData(diceBtn, 'ludo-dice-state', null);
+    ludoWaveBData(diceBtn, 'ludo-roll', null);
+    ludoWaveBStage = null; ludoWaveBBoardFrame = null; ludoWaveBMeta = null;
+    ludoWaveBTurn = null; ludoWaveBState = null; ludoWaveBRankings = null; ludoWaveBCommand = null;
+    ludoWaveCProcessRail = null; ludoWaveCProcessLabel = null; ludoWaveCProcessSteps = [];
+  }
+  function syncLudoWaveBPresentation(){
+    const enabled = ludoWaveBEnabled();
+    if (!enabled || ludoWaveBMountFailed){
+      if (ludoWaveBStage) releaseLudoWaveBPresentation();
+      ludoWaveBActive = false;
+      return;
+    }
+    ludoWaveBActive = true;
+    if (!ludoWaveBStage) mountLudoWaveBPresentation();
+  }
+  function ludoWaveBStatus(){
+    if (over) return 'finished';
+    if (spectator) return 'spectating';
+    if (opts.ai && opts.ai.has(curIdx)) return 'thinking';
+    if (opts.online && curIdx !== opts.myIdx) return 'waiting';
+    return 'active';
+  }
+  function ludoWaveBStateText(status){
+    if (status === 'finished') return t('match_over');
+    if (status === 'spectating') return t('spectator_player_action', curIdx + 1);
+    if (status === 'thinking') return t('ai_thinking');
+    if (status === 'waiting') return t('opponent_turn');
+    if (phase === 'rolling') return t('ludo_player_rolling', curIdx + 1);
+    return t(phase === 'pick' ? 'ludo_choose_plane' : 'ludo_roll_die');
+  }
+  function clearLudoWaveBRankings(){
+    if (!ludoWaveBRankings || !ludoWaveBRankings.children) return;
+    while (ludoWaveBRankings.children.length){
+      ludoWaveBRankings.removeChild(ludoWaveBRankings.children[0]);
+    }
+  }
+  function updateLudoWaveBPresentation(){
+    if (!ludoWaveBActive || !ludoWaveBStage) return;
+    const status = ludoWaveBStatus();
+    ludoWaveBData(ludoWaveBStage, 'game-stage-wave-b', 'active');
+    ludoWaveBData(ludoWaveBStage, 'ludo-stage', 'wave-b');
+    ludoWaveBData(area, 'ludo-phase', phase);
+    ludoWaveBData(area, 'ludo-status', status);
+    ludoWaveBData(area, 'ludo-active-player', curIdx);
+    ludoWaveBData(ludoWaveBStage, 'ludo-phase', phase);
+    ludoWaveBData(ludoWaveBStage, 'ludo-status', status);
+    ludoWaveBData(ludoWaveBStage, 'ludo-active-player', curIdx);
+    ludoWaveBData(board, 'ludo-phase', phase);
+    ludoWaveBData(board, 'ludo-active-player', curIdx);
+    ludoWaveBData(turnHud, 'ludo-phase', phase);
+    ludoWaveBData(diceBtn, 'ludo-dice-state', phase);
+    ludoWaveBData(diceBtn, 'ludo-roll', dice);
+    ludoWaveBTurn.textContent = t('stage_current_turn') + ': ' + t('player_number', curIdx + 1);
+    ludoWaveBState.textContent = ludoWaveBStateText(status);
+    clearLudoWaveBRankings();
+    const stats = getMatchStats();
+    const rankedPlayers = pids.map((_pid, index) => index).sort((a, b) => stats.placement[a] - stats.placement[b] || a - b);
+    rankedPlayers.forEach(index => {
+      const entry = el('li', 'ludo-wave-b-ranking');
+      const finished = stats.piecesFinished[index];
+      ludoWaveBData(entry, 'ludo-player', index);
+      ludoWaveBData(entry, 'ludo-rank', stats.placement[index]);
+      ludoWaveBData(entry, 'ludo-home', finished);
+      ludoWaveBData(entry, 'ludo-active', index === curIdx ? 'true' : 'false');
+      entry.setAttribute('aria-current', index === curIdx ? 'true' : 'false');
+      entry.textContent = t('victory_podium_rank', stats.placement[index]) + ' · ' + t('player_number', index + 1) + ' · ' + t('ludo_home_progress', finished);
+      ludoWaveBRankings.appendChild(entry);
+    });
+    paintLudoWaveCProcess();
+  }
+  mountLudoWaveBPresentation();
   let aiPending = false;
   function normalizeCosmetic(value){
     const source = value || {};
@@ -104,16 +367,24 @@ function gameLudo(area, extra, n, opts){
     const risk = captureRisk(pi, outcome.destination, outcome.state);
     return gain * 1.5 + (finish ? 145 : 0) + outcome.captured * 55 + (takeoff ? 20 : 0) - risk * 42;
   }
-  function expectedNextTurn(pi, state){
+  function expectedNextTurn(pi, state, rollLimit){
     let total = 0;
-    for (let roll = 1; roll <= 6; roll++){
+    const maxRoll = Math.max(1, Math.min(6, Number(rollLimit) || 6));
+    for (let roll = 1; roll <= maxRoll; roll++){
       let best = 0;
       for (let ti = 0; ti < 4; ti++) best = Math.max(best, futureMoveValue(pi, ti, roll, state));
       total += best;
     }
-    return total / 6;
+    return total / maxRoll;
   }
-  function evaluateLudoMove(pi, ti){
+  function ludoDifficultyProfile(difficulty){
+    const id = difficulty && difficulty.id;
+    if (id === 'easy') return { rolls:3, candidates:4, futureWeight:.16, exposureWeight:0 };
+    if (id === 'hard') return { rolls:6, candidates:6, futureWeight:.24, exposureWeight:12 };
+    // 普通档维持既有六骰分支的近优本地策略。
+    return { rolls:6, candidates:4, futureWeight:.2, exposureWeight:0 };
+  }
+  function evaluateLudoMove(pi, ti, profile){
     const before = tokens;
     const outcome = simulateLudoMove(pi, ti, dice, before);
     const ownProgress = playerProgress(pi, before);
@@ -130,13 +401,16 @@ function gameLudo(area, extra, n, opts){
     const activeAfter = outcome.state[pi].filter(position => position >= 0 && position < HOME).length;
     const sortedProgress = before[pi].map(tokenProgress).slice().sort((a, b) => a - b);
     const developsLaggard = tokenProgress(outcome.from) <= sortedProgress[1];
-    const future = expectedNextTurn(pi, outcome.state);
+    const future = expectedNextTurn(pi, outcome.state, profile.rolls);
+    const teamExposure = profile.exposureWeight
+      ? outcome.state[pi].reduce((sum, position) => sum + captureRisk(pi, position, outcome.state), 0) : 0;
     const score = progressGain * (1.7 + catchup * .8) + (finish ? 155 : 0) +
       outcome.captured * (58 + catchup * 30) + (takeoff ? 22 : 0) + (safeLane ? 16 : 0) +
       (oldRisk - risk) * 28 - risk * (38 + tokenProgress(outcome.destination) * .3) +
-      balanceDelta * 24 + (activeAfter > activeBefore ? 7 : 0) + (developsLaggard ? 6 : 0) + future * .2;
+      balanceDelta * 24 + (activeAfter > activeBefore ? 7 : 0) + (developsLaggard ? 6 : 0) +
+      future * profile.futureWeight - teamExposure * profile.exposureWeight;
     return { ti, choice:'token:' + ti, score, outcome, progressGain, finish, takeoff, safeLane,
-      risk, oldRisk, balanceDelta, catchup, future, developsLaggard };
+      risk, oldRisk, balanceDelta, catchup, future, teamExposure, developsLaggard };
   }
   function scheduleAI(){
     if (opts.destroyed || aiPending || over) return;
@@ -145,7 +419,7 @@ function gameLudo(area, extra, n, opts){
     const gen = epoch;
     const turn = curIdx;
     setStatus(t('ai_thinking'));
-    setTimeout(async () => {
+    ludoWaveCLater(async () => {
       if (opts.destroyed || over || gen !== epoch || curIdx !== turn || !opts.ai.has(curIdx)){
         aiPending = false;
         return;
@@ -160,10 +434,12 @@ function gameLudo(area, extra, n, opts){
       if (phase === 'pick'){
         const mv = movable();
         if (!mv.length){ aiPending = false; nextTurn(t('ludo_no_movable')); return; }
-        const ranked = mv.map(ti => evaluateLudoMove(curIdx, ti)).sort((a, b) => b.score - a.score || a.ti - b.ti);
+        const difficulty = typeof aiDifficultyFromOptions === 'function' ? aiDifficultyFromOptions(opts) : { id:'hard' };
+        const profile = ludoDifficultyProfile(difficulty);
+        const ranked = mv.map(ti => evaluateLudoMove(curIdx, ti, profile)).sort((a, b) => b.score - a.score || a.ti - b.ti);
         const best = ranked[0];
         const band = Math.max(10, Math.min(24, Math.abs(best.score) * .08));
-        const near = ranked.filter(item => item.score >= best.score - band).slice(0, 4);
+        const near = ranked.filter(item => item.score >= best.score - band).slice(0, profile.candidates);
         const choices = near.map(item => item.choice);
         const moveByChoice = new Map(near.map(item => [item.choice, item.ti]));
         const learningCandidates = near.map(item => ({ choice:item.choice, features:{
@@ -179,22 +455,34 @@ function gameLudo(area, extra, n, opts){
           develops_laggard:item.developsLaggard ? 1 : 0,
           catchup:aiClamp(item.catchup, .5),
           future_expectation:aiClamp(item.future, 90),
+          team_exposure:aiClamp(-item.teamExposure, 4),
         } }));
+        const remoteAllowed = typeof aiDifficultyAllowsRemote === 'function' ? aiDifficultyAllowsRemote(difficulty) : difficulty.id === 'hard';
+        const remoteProfile = typeof aiDifficultyRequestProfile === 'function' ? aiDifficultyRequestProfile(difficulty) : { id:'teacher', difficulty:difficulty.id };
+        const requestStateKey = JSON.stringify({ tokens:tokens.map(list => list.slice()), curIdx, dice, phase });
+        // 学习样本保留在所有难度；普通/简单只执行本地已排序的合法候选。
         const remoteChoice = await aiChoose('ludo', {
           tokens: tokens.map(list => list.slice()), turn: curIdx, dice, home: HOME,
           localRanking: near.map(item => ({ choice:item.choice, score:Math.round(item.score * 10) / 10 })),
-        }, choices, opts.aiPersona, learningCandidates);
-        if (opts.destroyed || over || gen !== epoch || curIdx !== turn || phase !== 'pick'){
+        }, choices, remoteProfile, learningCandidates);
+        if (opts.destroyed || over || gen !== epoch || curIdx !== turn || phase !== 'pick' ||
+            JSON.stringify({ tokens:tokens.map(list => list.slice()), curIdx, dice, phase }) !== requestStateKey){
           aiPending = false;
+          notifyLudoIdle();
           return;
         }
-        const chosen = moveByChoice.has(remoteChoice) ? moveByChoice.get(remoteChoice) : best.ti;
+        const localIndex = typeof aiDifficultyLocalChoiceIndex === 'function'
+          ? aiDifficultyLocalChoiceIndex(difficulty, choices.length) : (difficulty.id === 'easy' ? Math.min(choices.length - 1, 1) : 0);
+        const localChoice = choices[Math.max(0, localIndex)] || choices[0];
+        const chosen = remoteAllowed && moveByChoice.has(remoteChoice)
+          ? moveByChoice.get(remoteChoice) : moveByChoice.get(localChoice);
         if (!movable().includes(chosen)){
           aiPending = false;
+          notifyLudoIdle();
           return;
         }
         aiPending = false;
-        aiSpeak(opts.aiPersona, 'think');
+        aiSpeak(difficulty, 'think');
         if (opts.online && typeof opts.sendBotMove === 'function') opts.sendBotMove(turn, { ti:chosen });
         if (applyPick(curPid(), chosen) && typeof confirmAIReady === 'function') {
           confirmAIReady('ludo', 'token:' + chosen);
@@ -202,6 +490,7 @@ function gameLudo(area, extra, n, opts){
         return;
       }
       aiPending = false;
+      notifyLudoIdle();
     }, 700);
   }
 
@@ -247,8 +536,12 @@ function gameLudo(area, extra, n, opts){
     return { c, tpos, colPos, basePos, viewQuarterTurns };
   }
   function renderBoard(){
+    syncLudoWaveBPresentation();
     const w = area.clientWidth || 520;
-    S = Math.min(w, 540);
+    const h = Number(area.clientHeight) || 0;
+    const heightLimit = h > 320 ? Math.max(260, Math.min(680, h - 16)) : 640;
+    S = Math.min(w, heightLimit);
+    if (board.style && typeof board.style.setProperty === 'function') board.style.setProperty('--ludo-wave-c-board-size', S + 'px');
     board.style.width = S + 'px'; board.style.height = S + 'px';
     const tabletop = typeof tabletopArtEnabled === 'function' && tabletopArtEnabled();
     if (typeof markTabletopSurface === 'function') markTabletopSurface(board, 'ludo-board', { variant: boardTheme });
@@ -397,7 +690,7 @@ function gameLudo(area, extra, n, opts){
         winner: pids.indexOf(winner), winnerName: winnerName,
         emoji: '🏆', subtitle: t('ludo_all_home'), coins: 1,
         podium: placement.map((rank,index) => ({ rank, name:t('player_number',index+1), color:PLAYER_COLORS[pids[index]] })),
-        onRestart: reset
+        onRestart: reset, onShare: () => shareGameLink('ludo')
       });
     }
     const infos = pids.map(pid => {
@@ -413,6 +706,7 @@ function gameLudo(area, extra, n, opts){
     diceBtn.style.transition = 'filter .22s ease,transform .22s ease';
     turnHud.textContent = over ? t('match_over') : (spectator ? t('spectator_player_action',curIdx+1) : t('ludo_turn_phase',curIdx+1,t(phase === 'roll' ? 'ludo_roll_die' : 'ludo_choose_plane')));
     renderPlayers(curIdx, infos, null, pids.map(pid => PLAYER_COLORS[pid]));
+    updateLudoWaveBPresentation();
   }
   function roll(){
     sfx('pop');
@@ -431,20 +725,25 @@ function gameLudo(area, extra, n, opts){
     const gen = epoch;
     phase = 'rolling';
     dice = d;
+    setLudoWaveCProcess('dice', d);
     diceBtn.disabled = true;
+    updateLudoWaveBPresentation();
     setStatus(t('ludo_player_rolling',curIdx+1));
     dice3d.roll(dice, () => {
       if (gen !== epoch || over || curIdx !== turn || phase !== 'rolling') return;
       const mv = movable();
       if (!mv.length){
+        setLudoWaveCProcess('turn-end');
         nextTurn(t('ludo_roll_no_move',curIdx+1,dice));
         return;
       }
       phase = 'pick';
+      setLudoWaveCProcess('pick', dice);
       renderBoard();
       setStatus(t('ludo_roll_choose',curIdx+1,dice));
       drainRemoteInputs();
       if (phase === 'pick') scheduleAI();
+      notifyLudoIdle();
     });
     return true;
   }
@@ -469,6 +768,7 @@ function gameLudo(area, extra, n, opts){
     const from = arr[ti], path = movementPath(from, dice), destination = advanceToken(from, dice);
     const capturedTokens = [];
     movingToken = { pi, ti, pid, from, path: path.slice(), destination };
+    setLudoWaveCProcess('move', dice);
     arr[ti] = destination;
     if (wasBase) takeoffs++;
     if (arr[ti] <= 50){
@@ -501,9 +801,10 @@ function gameLudo(area, extra, n, opts){
       if (opts.onEnd) opts.onEnd(pids.map((p2, i) => ({ slot: i, coins: i === curIdx ? 1 : 0, rank: ranks.get(i) })));
       renderBoard();
       setStatus(t('result_winner',curIdx+1), true);
-      animateTokenMove(movingToken, wasBase, capturedTokens, true);
+      animateTokenMove(movingToken, wasBase, capturedTokens, true, true, 'ranking');
       return true;
     }
+    const stableProcess = dice === 6 ? 'roll' : 'turn-end';
     if (dice === 6){
       phase = 'roll';
       diceBtn.disabled = false;
@@ -514,7 +815,7 @@ function gameLudo(area, extra, n, opts){
     } else {
       nextTurn(t('ludo_move_complete',curIdx+1));
     }
-    animateTokenMove(movingToken, wasBase, capturedTokens, destination === HOME);
+    animateTokenMove(movingToken, wasBase, capturedTokens, destination === HOME, false, stableProcess);
     return true;
   }
   function tokenPoint(pid, position){
@@ -524,12 +825,19 @@ function gameLudo(area, extra, n, opts){
     if (position < HOME) return g.colPos(pid, position - 51);
     return [S/2, S/2];
   }
-  function animateTokenMove(animation, wasBase, capturedTokens, finished){
+  function animateTokenMove(animation, wasBase, capturedTokens, reachedHome, matchFinished, stableProcess){
     if (!animation) return;
     const animationEpoch = epoch;
     const reduced = prefersReducedMotion();
     const steps = animation.path.length ? animation.path.slice() : [animation.destination];
-    if (reduced){ movingToken = null; renderBoard(); return; }
+    const settledProcess = matchFinished ? 'ranking' : (stableProcess === 'roll' ? 'roll' : 'turn-end');
+    if (reduced){
+      movingToken = null;
+      renderBoard();
+      setLudoWaveCProcess(settledProcess);
+      notifyLudoIdle();
+      return;
+    }
     const flyer = el('div','ludo-flight-token ' + (wasBase ? 'takeoff' : 'moving'), playerCosmetic(animation.pi).piece === 'jet' ? '✈' : '●');
     const start = tokenPoint(animation.pid, animation.from);
     flyer.style.cssText = 'position:absolute;z-index:12;width:26px;height:26px;line-height:26px;text-align:center;border-radius:50%;font-weight:900;color:#fff;background:' + color(animation.pid) + ';box-shadow:0 7px 14px rgba(15,23,42,.3);pointer-events:none;transition:left .12s linear,top .12s linear,transform .12s ease;';
@@ -543,22 +851,32 @@ function gameLudo(area, extra, n, opts){
         if (capturedTokens.length){
           const impact = el('div','ludo-impact','💥'); const point = tokenPoint(animation.pid, animation.destination);
           impact.style.cssText = 'position:absolute;z-index:13;left:' + (point[0]-18) + 'px;top:' + (point[1]-18) + 'px;font-size:32px;pointer-events:none;'; board.appendChild(impact);
-          setTimeout(() => impact.remove(), 320);
+          settleLudoWaveCProcess('capture', capturedTokens.length);
+          ludoWaveCLater(() => impact.remove(), 320);
         }
-        if (finished) flyer.textContent = '🏁';
-        flyer.style.transform = finished ? 'scale(1.35)' : 'scale(.92)';
-        setTimeout(() => {
+        if (reachedHome){
+          flyer.textContent = '🏁';
+          settleLudoWaveCProcess('finish');
+        } else if (!capturedTokens.length) {
+          settleLudoWaveCProcess(settledProcess);
+        }
+        flyer.style.transform = reachedHome ? 'scale(1.35)' : 'scale(.92)';
+        ludoWaveCLater(() => {
           flyer.remove();
-          if (animationEpoch === epoch && movingToken === animation){ movingToken = null; renderBoard(); }
-        }, finished ? 220 : 100);
+          if (animationEpoch === epoch && movingToken === animation){
+            movingToken = null;
+            renderBoard();
+            settleLudoWaveCProcess(settledProcess);
+          }
+        }, reachedHome ? 220 : 100);
         return;
       }
       const point = tokenPoint(animation.pid, steps[index++]);
       flyer.style.left = (point[0]-13) + 'px'; flyer.style.top = (point[1]-13) + 'px';
       flyer.style.transform = wasBase && index === 1 ? 'scale(1.22) rotate(-12deg)' : 'scale(1)';
-      setTimeout(advance, stepDelay);
+      ludoWaveCLater(advance, stepDelay);
     };
-    setTimeout(advance, 20);
+    ludoWaveCLater(advance, 20);
   }
   function nextTurn(msg){
     phase = 'roll';
@@ -568,6 +886,7 @@ function gameLudo(area, extra, n, opts){
     setStatus(t('ludo_next_turn',msg ? msg + t('message_separator') : '',curIdx+1));
     drainRemoteInputs();
     if (phase === 'roll') scheduleAI();
+    notifyLudoIdle();
   }
   function drainRemoteInputs(){
     if (drainingRemoteInputs || over) return;
@@ -609,6 +928,7 @@ function gameLudo(area, extra, n, opts){
       }
     } finally {
       drainingRemoteInputs = false;
+      notifyLudoIdle();
     }
   }
   opts.onMove = (payload, player) => {
@@ -619,6 +939,7 @@ function gameLudo(area, extra, n, opts){
   };
   function resetLocal(){
     epoch++;
+    clearLudoWaveCProcessTimers();
     tokens = pids.map(() => Array(4).fill(-1));
     curIdx = 0; phase = 'roll'; dice = 0; over = false; winner = -1; aiPending = false;
     startedAt = Date.now(); finishedAt = 0; captures = 0; takeoffs = 0; movingToken = null;
@@ -626,8 +947,10 @@ function gameLudo(area, extra, n, opts){
     remoteInputs = [];
     diceBtn.disabled = false;
     dice3d.reset();
+    setLudoWaveCProcess('roll');
     renderBoard();
     setStatus(t('ludo_initial_turn'));
+    notifyLudoIdle();
   }
   function reset(){
     if (opts.online && !opts.isHost){ toast(t('host_only_restart')); return; }
@@ -647,22 +970,20 @@ function gameLudo(area, extra, n, opts){
   function onRestore(value){
     const state = value && value.state ? value.state : value;
     if (!state || !Array.isArray(state.tokens) || state.tokens.length !== pids.length) return false;
-    epoch++; movingToken = null;
+    epoch++; clearLudoWaveCProcessTimers(); movingToken = null;
     tokens = state.tokens.map(list => Array.isArray(list) ? list.slice(0, 4).map(v => Math.max(-1, Math.min(HOME, Number(v) || 0))) : Array(4).fill(-1));
     curIdx = Math.max(0, Math.min(pids.length - 1, Number(state.curIdx) || 0)); phase = ['roll','rolling','pick'].includes(state.phase) ? state.phase : 'roll';
     dice = Math.max(0, Math.min(6, Number(state.dice) || 0)); over = !!state.over; winner = Number.isInteger(state.winner) ? state.winner : -1;
+    setLudoWaveCProcess(over ? 'ranking' : (phase === 'rolling' ? 'dice' : (phase === 'pick' ? 'pick' : 'roll')));
     if (value && value.presentation){ boardTheme = value.presentation.boardTheme === 'grass' ? 'grass' : 'classic'; cosmetic = normalizeCosmetic(value.presentation.cosmetic); }
-    renderBoard(); return true;
+    renderBoard(); notifyLudoIdle(); return true;
   }
   renderBoard();
   setStatus(t('ludo_initial_turn'));
   return {
     reset, onMove: opts.onMove, onRestart: resetLocal,
-    destroy: () => { epoch++; aiPending = false; remoteInputs = []; dice3d.reset(); area.style.touchAction = previousTouchAction; area.style.overscrollBehavior = previousOverscroll; },
-    whenIdle: () => new Promise(resolve => {
-      const wait = () => (phase !== 'rolling' && !drainingRemoteInputs) ? resolve() : setTimeout(wait, 20);
-      wait();
-    }),
+    destroy: () => { epoch++; clearLudoWaveCProcessTimers(); aiPending = false; remoteInputs = []; dice3d.reset(); releaseLudoWaveBPresentation(); area.style.touchAction = previousTouchAction; area.style.overscrollBehavior = previousOverscroll; notifyLudoIdle(true); },
+    whenIdle: whenLudoIdle,
     snapshot, onRestore,
     serialize: () => ({ state: snapshot(), presentation: { boardTheme, cosmetic: { ...cosmetic, players:{...cosmetic.players} } }, stats: getMatchStats() }),
     setBoardTheme, setCosmetic, renderCosmetic: setCosmetic, setSpectators, getMatchStats,

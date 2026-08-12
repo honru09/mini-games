@@ -1,0 +1,8 @@
+{
+  "taskId": "game-stage-wave-b-ludo-monopoly-p0",
+  "masterOnly": ["public/index-template.html", "scripts/build.js", "public/index.html", "requirements/PRODUCT_REQUIREMENTS_LEDGER.json", "PROJECT_STATUS.json", "AGENTS.md", "README.md", "WHITEPAPER.md"],
+  "ludoAgent": ["public/src/games/ludo.js", "qa/game-stage-wave-b-ludo.js"],
+  "monopolyAgent": ["public/src/games/monopoly.js", "qa/game-stage-wave-b-monopoly.js"],
+  "sharedIntegration": ["public/index-template.html", "qa/game-stage-wave-b-ludo-monopoly-layout.js", "package.json"],
+  "forbidden": ["server/**", "shared/rules/**", "supabase/**", "public/src/online/**", "public/assets/**", "art-source/**"]
+}

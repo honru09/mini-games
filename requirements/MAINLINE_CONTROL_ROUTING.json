@@ -1,0 +1,206 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-08-12T03:21:21+09:00",
+  "authority": {
+    "command": "requirements/GHOST_GAME_MAINLINE_COMMAND.md",
+    "atomicRequirementSource": "requirements/PRODUCT_REQUIREMENTS_LEDGER.json",
+    "releasePolicy": "explicit-user-command-only",
+    "currentStage": "CONTROL",
+    "nextStage": "CLOSE"
+  },
+  "stageOrder": [
+    "CONTROL",
+    "CLOSE",
+    "PROVE",
+    "DATA",
+    "ART",
+    "PARITY",
+    "LOOP",
+    "COMMUNITY",
+    "PLATFORM"
+  ],
+  "dispositions": {
+    "NOW_CLOSURE": {
+      "label": "当前收口",
+      "meaning": "当前阶段允许继续施工或回归；已验证项只作为基线维护，未验证项必须按既定边界补齐本地实现与证据。"
+    },
+    "EXTERNAL_GATE": {
+      "label": "外部门禁",
+      "meaning": "继续前必须获得真实设备、真实生产数据环境或人工美术决议；自动化、静态合同和历史截图不能替代该门禁。"
+    },
+    "DEFERRED_MAINLINE": {
+      "label": "主线后置",
+      "meaning": "需求保留在当前产品范围内，但必须遵循总指挥阶段顺序，不与 CONTROL/CLOSE 批次混合施工。"
+    },
+    "FUTURE_EXPANSION": {
+      "label": "未来扩展",
+      "meaning": "明确记录但不进入当前产品收口；只有六款基线、生产 Gate 和主线前序达成后才重新冻结。"
+    }
+  },
+  "semanticStatusContract": {
+    "rule": "ledger.status 描述已落盘的实现/证据边界，routing disposition 描述下一步执行顺序；两者不得相互冒充。",
+    "visibleEvidence": "代码、静态合同、DOM/VM 和无截图自动化只能证明实现或合同。涉及页面、动效、3D、真机、浏览器或人工美术的可见声明，必须保留真实可见证据或 NOT_EXECUTED。",
+    "externalEvidence": "真实 Supabase、真实设备/第二浏览器/真实网络和 Reviewer B/IP/Golden Set 均只能在对应 Gate 记录可复核证据后解除。",
+    "releaseEvidence": "任何本地 implemented/verified 结论均不授予发布权限；发布仍只由当前用户明确命令授权。"
+  },
+  "sharedGates": {
+    "GATE-DEVICE-BROWSER-NETWORK": {
+      "label": "第二浏览器、真机与真实网络",
+      "status": "BLOCKED",
+      "stage": "PROVE",
+      "owner": "用户提供或连接可用浏览器/设备/整形环境；项目侧只准备脚本、矩阵与证据目录。",
+      "requiredEvidence": [
+        "第二桌面浏览器双正式账号 UI 流程",
+        "Android、iPhone Safari、Tablet 横竖屏与 PWA/音频/恢复",
+        "真实 50/100/200ms 延迟、抖动、丢包、乱序整形",
+        "最新本地构建的浏览器可见、双主题、三语言和 reduced-motion 复核"
+      ],
+      "releaseEffect": "未解除时，涉及可见体验的本地能力保持 implemented/partial；不得用静态或旧浏览器证据提升为最新 visual verified。"
+    },
+    "GATE-SUPABASE-PRODUCTION": {
+      "label": "真实 Supabase、RLS、备份恢复与多实例",
+      "status": "BLOCKED",
+      "stage": "DATA",
+      "owner": "用户提供生产项目和仅服务端凭证；运维脚本默认 dry-run，真实迁移/恢复仅在隔离与确认边界内执行。",
+      "requiredEvidence": [
+        "加密且访问受限的备份",
+        "事务迁移、RLS、原子 RPC、并发与幂等验收",
+        "隔离目标恢复演练与非破坏回滚",
+        "多实例租约、单写者、Direct Chat PubSub 与线上浏览器验证"
+      ],
+      "releaseEffect": "未解除时，JSON/fake PostgREST/单实例回退不可被描述为生产持久化或多实例一致性。"
+    },
+    "GATE-ART-GOLDEN-SET": {
+      "label": "人工清稿、Reviewer B、IP Review 与 Golden Set",
+      "status": "BLOCKED",
+      "stage": "ART",
+      "owner": "人工美术/法务审阅与用户 Golden Set 决议；生成模型只提供 source-only 候选、Prompt、hash 与 provenance。",
+      "requiredEvidence": [
+        "人工清稿与小尺寸可读性检查",
+        "独立 Reviewer B 技术审阅",
+        "IP Similarity Review",
+        "用户 Golden Set 默认开启签字",
+        "运行时派生、Manifest、真机/主题/reduced-motion 矩阵"
+      ],
+      "releaseEffect": "未解除时，Honru、Sticker、Emoji、G Coins、Avatar、Tank/Monopoly 等候选必须留在 source-only/reference-only/default-off，不进入 public runtime 或商城默认项。"
+    }
+  },
+  "routingGroups": [
+    {
+      "id": "control-baseline",
+      "disposition": "NOW_CLOSURE",
+      "stage": "CONTROL",
+      "workMode": "REGRESSION_BASELINE",
+      "summary": "已验证或已冻结的当前产品基线；只维护回归、状态、证据和发布边界，不把它们伪装成下一批新功能。",
+      "ids": [
+        "ART-001", "ART-003", "ART-012", "ART-013", "ART-031",
+        "UI-001", "UI-002", "UI-003", "UI-004", "UI-005", "UI-006", "UI-008", "UI-013", "UI-014", "UI-015", "UI-016", "UI-029", "UI-030", "UI-033", "UI-034", "UI-036", "UI-038",
+        "GAME-001", "GAME-002", "GAME-003", "GAME-004", "GAME-005", "GAME-006", "GAME-007", "GAME-008", "GAME-010", "GAME-011", "GAME-012", "GAME-013", "GAME-014", "GAME-016", "GAME-019", "GAME-020", "GAME-021", "GAME-022", "GAME-024", "GAME-025", "GAME-027", "GAME-029", "GAME-030", "GAME-032", "GAME-037",
+        "SOC-002", "SOC-003", "SOC-004", "SOC-005", "SOC-006", "SOC-007", "SOC-008", "SOC-009", "SOC-010", "SOC-011", "SOC-013", "SOC-015", "SOC-016", "SOC-018", "SOC-019",
+        "ECO-001", "ECO-002", "ECO-003", "ECO-004", "ECO-005", "ECO-007", "ECO-008", "ECO-009", "ECO-010", "ECO-011", "ECO-016", "ECO-018", "ECO-019", "ECO-020", "ECO-025",
+        "TECH-001", "TECH-002", "TECH-003", "TECH-004", "TECH-005", "TECH-006", "TECH-007", "TECH-008", "TECH-009", "TECH-010", "TECH-011", "TECH-012", "TECH-013", "TECH-014", "TECH-015", "TECH-026", "TECH-038", "TECH-045", "TECH-046", "TECH-047", "TECH-052", "TECH-053"
+      ]
+    },
+    {
+      "id": "close-local",
+      "disposition": "NOW_CLOSURE",
+      "stage": "CLOSE",
+      "workMode": "LOCAL_IMPLEMENT_AND_PROVE",
+      "summary": "现有 UI、Game Stage、性能、资产治理与本地证据的收口项；保持 Rule/Authority/Protocol/Reward/Replay 与未经批准美术的边界。",
+      "ids": [
+        "ART-020", "ART-021", "ART-028", "ART-030",
+        "UI-007", "UI-009", "UI-019", "UI-020", "UI-021", "UI-022", "UI-023", "UI-024", "UI-025", "UI-026", "UI-027", "UI-028", "UI-035", "UI-037",
+        "GAME-041", "GAME-042", "GAME-043", "GAME-044", "GAME-045", "GAME-048", "GAME-049", "GAME-050", "GAME-051", "GAME-052",
+        "SOC-001", "SOC-012", "SOC-014",
+        "ECO-012", "ECO-013", "ECO-014", "ECO-015", "ECO-028",
+        "TECH-019", "TECH-031", "TECH-033", "TECH-037", "TECH-039", "TECH-040", "TECH-041", "TECH-049", "TECH-050", "TECH-051", "TECH-054"
+      ]
+    },
+    {
+      "id": "art-golden-set-gate",
+      "disposition": "EXTERNAL_GATE",
+      "stage": "ART",
+      "gate": "GATE-ART-GOLDEN-SET",
+      "workMode": "WAIT_FOR_HUMAN_APPROVAL",
+      "summary": "已有源稿或方案可以保存、审计和回滚，但 runtime/default-on 只能在 Golden Set Gate 后进入。",
+      "ids": [
+        "ART-002", "ART-004", "ART-005", "ART-006", "ART-007", "ART-008", "ART-009", "ART-010", "ART-011", "ART-019", "ART-024", "ART-026", "ART-032", "ART-035", "ART-036"
+      ]
+    },
+    {
+      "id": "device-browser-network-gate",
+      "disposition": "EXTERNAL_GATE",
+      "stage": "PROVE",
+      "gate": "GATE-DEVICE-BROWSER-NETWORK",
+      "workMode": "WAIT_FOR_REAL_ENVIRONMENT",
+      "summary": "最新本地运行时的浏览器可见复核、第二浏览器、真机和真实网络是同一高扇出证明 Gate。",
+      "ids": [
+        "UI-031", "GAME-040", "SOC-029", "TECH-027", "TECH-028", "TECH-029", "TECH-030"
+      ]
+    },
+    {
+      "id": "supabase-production-gate",
+      "disposition": "EXTERNAL_GATE",
+      "stage": "DATA",
+      "gate": "GATE-SUPABASE-PRODUCTION",
+      "workMode": "WAIT_FOR_PRODUCTION_DATA_ENVIRONMENT",
+      "summary": "真实数据、RLS、备份恢复与多实例只通过一个生产 Gate 推进，单实例或 fake adapter 不可越级。",
+      "ids": [
+        "GAME-009", "SOC-027", "SOC-028", "ECO-006", "TECH-016", "TECH-017", "TECH-018", "TECH-020", "TECH-021", "TECH-022"
+      ]
+    },
+    {
+      "id": "deferred-art",
+      "disposition": "DEFERRED_MAINLINE",
+      "stage": "ART",
+      "workMode": "SEQUENCED_AFTER_DATA_AND_APPROVAL_PREP",
+      "summary": "正式美术扩张和角色/Emoji runtime 接入等待数据与 Golden Set 前序，避免 source-only 图扩张挤占当前收口。",
+      "ids": [
+        "ART-014", "ART-015", "ART-016", "ART-017", "ART-018", "ART-022", "ART-023", "ART-025", "ART-027", "ART-033", "ART-034",
+        "UI-012", "UI-017", "UI-018",
+        "GAME-023", "GAME-038",
+        "SOC-017", "SOC-031",
+        "ECO-029"
+      ]
+    },
+    {
+      "id": "deferred-data-and-parity",
+      "disposition": "DEFERRED_MAINLINE",
+      "stage": "PARITY",
+      "workMode": "SEQUENCED_AFTER_GHOST3D_FOUNDATION",
+      "summary": "规则权威、反作弊、性能与资产交付的下一层深化，必须建立在 Ghost3D Foundation、真实数据和现有 fallback 边界之上。",
+      "ids": [
+        "ART-029",
+        "GAME-015", "GAME-017", "GAME-018",
+        "TECH-032", "TECH-034", "TECH-044"
+      ]
+    },
+    {
+      "id": "deferred-loop-and-community",
+      "disposition": "DEFERRED_MAINLINE",
+      "stage": "LOOP",
+      "workMode": "SEQUENCED_AFTER_PARITY",
+      "summary": "Quick Play、教学、回放深化、经济观测、信任治理和受限 Playline 生产闭环在基础体验和数据 Gate 后单独冻结。",
+      "ids": [
+        "UI-010", "UI-011", "UI-032",
+        "GAME-026", "GAME-031", "GAME-033", "GAME-034", "GAME-035", "GAME-036", "GAME-046",
+        "SOC-025", "SOC-026", "SOC-030", "SOC-032", "SOC-033",
+        "ECO-017", "ECO-023", "ECO-024", "ECO-026",
+        "TECH-023", "TECH-024", "TECH-025"
+      ]
+    },
+    {
+      "id": "future-expansion",
+      "disposition": "FUTURE_EXPANSION",
+      "stage": "PLATFORM",
+      "workMode": "DO_NOT_START_DURING_CURRENT_PRODUCT_CLOSURE",
+      "summary": "新社交面、赛季化、原生/商店、平台 SDK、新目录与替代渲染试点均保留需求，不进入当前主线。",
+      "ids": [
+        "GAME-028", "GAME-039", "GAME-047",
+        "SOC-020", "SOC-021", "SOC-022", "SOC-023", "SOC-024",
+        "ECO-021", "ECO-022", "ECO-027",
+        "TECH-035", "TECH-036", "TECH-042", "TECH-043", "TECH-048"
+      ]
+    }
+  ]
+}

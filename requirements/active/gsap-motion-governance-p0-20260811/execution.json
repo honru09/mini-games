@@ -1,0 +1,9 @@
+{
+  "taskId": "gsap-motion-governance-p0-20260811",
+  "status": "IMPLEMENTED",
+  "updatedAt": "2026-08-11T15:23:31+09:00",
+  "runtimeDependencyAdded": false,
+  "completed": ["official skill audit", "durable routing", "motion contract", "ambient pause correction"],
+  "notExecuted": ["GSAP runtime ADR", "bundle/FPS/physical-device runtime evidence"],
+  "release": "LOCAL_ONLY_NO_COMMIT_NO_PUSH_NO_DEPLOY"
+}

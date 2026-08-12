@@ -8,6 +8,7 @@
     {"name": "bernstein", "source": "https://github.com/sipyourdrink-ltd/bernstein", "status": "REFERENCE"},
     {"name": "polywave-codex", "source": "https://github.com/blackwell-systems/polywave-codex", "status": "REFERENCE"},
     {"name": "vibe-skills", "source": "https://github.com/foryourhealth111-pixel/Vibe-Skills", "status": "REFERENCE"},
-    {"name": "brooks-lint", "source": "https://github.com/hyhmrright/brooks-lint", "status": "REFERENCE"}
+    {"name": "brooks-lint", "source": "https://github.com/hyhmrright/brooks-lint", "status": "REFERENCE"},
+    {"name": "greensock-gsap-skills", "source": "https://github.com/greensock/gsap-skills", "status": "APPROVED", "license": "MIT", "skills": ["gsap-core", "gsap-timeline", "gsap-scrolltrigger", "gsap-plugins", "gsap-utils", "gsap-react", "gsap-performance", "gsap-frameworks"], "audit": "requirements/active/gsap-motion-governance-p0-20260811/skill-audit.md"}
   ]
 }

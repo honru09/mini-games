@@ -352,8 +352,14 @@ function openShop(){
     previewSelection = null;
     Array.from(tabs.children).forEach((node, i) => node.classList.toggle('btn-primary', defs[i][0] === tab));
     if (tab === 'avatars'){
-      PLAYROOM_AVATARS.forEach(a => {
-        const owned = a.free || ownItem(account, 'avatars', a.id);
+      // A legacy isolated host can load this module before the asset helper;
+      // its fallback is display-only and never grants an entitlement.
+      const avatarItems = typeof curatedAvatarCatalogItems === 'function'
+        ? curatedAvatarCatalogItems(PLAYROOM_AVATARS, account.avatar)
+        : PLAYROOM_AVATARS.filter(a => !a.free || a.id === account.avatar);
+      avatarItems.forEach(a => {
+        const defaultFree = typeof isCuratedDefaultFreeAvatarId === 'function' ? isCuratedDefaultFreeAvatarId(a.id) : !!a.free;
+        const owned = defaultFree || ownItem(account, 'avatars', a.id);
         const it = el('div','shop-item' + (account.avatar === a.id ? ' selected' : '') + (owned ? ' owned' : ''));
         it.appendChild(avatarCanvas(a.id, 48));
         it.appendChild(el('div','si-name', shopItemName('avatars',a)));
@@ -369,7 +375,7 @@ function openShop(){
           });
           it.appendChild(buy);
         } else {
-          it.appendChild(el('div','si-price',a.free ? t('shop_free') : t('shop_owned')));
+          it.appendChild(el('div','si-price',defaultFree ? t('shop_free') : t('shop_owned')));
           const use = el('button','btn',t('shop_use'));
           use.addEventListener('click', () => { account.avatar = a.id; saveAccount(); syncProfiles(); closeShop(); toast(t('shop_avatar_changed')); });
           it.appendChild(use);

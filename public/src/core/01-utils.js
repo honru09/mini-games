@@ -95,7 +95,8 @@ function themeMeta(id){
 function normalizeTheme(theme){
   const value = String(theme || 'light');
   if (value === 'light' || value === 'ocean' || value === 'forest' || value === 'sakura') return 'light';
-  return 'dark';
+  if (value === 'dark' || value === 'midnight' || value === 'cyber') return 'dark';
+  return 'light';
 }
 function applyTheme(theme){
   theme = normalizeTheme(theme);
@@ -103,7 +104,7 @@ function applyTheme(theme){
     document.documentElement.setAttribute('data-theme', theme);
   }
   const themeColor=document.getElementById&&document.getElementById('pwa-theme-color');
-  if(themeColor)themeColor.setAttribute('content',theme==='dark'?'#0d1220':'#eef1f8');
+  if(themeColor)themeColor.setAttribute('content',theme==='dark'?'#05070b':'#eaf3fa');
   const btn = $('btn-theme');
   if (btn){
     const meta = themeMeta(theme);
@@ -664,6 +665,11 @@ function showVictoryOverlay(area, opts) {
 
 /* ====== 分享 & 邀请 ====== */
 function shareGameLink(gameId, roomCode) {
+  if (!roomCode && typeof Playline !== 'undefined' && Playline && typeof Playline.prefill === 'function') {
+    Playline.prefill({ kind:'game_share', gameId:String(gameId || '') });
+    if (typeof setAppRoute === 'function') setAppRoute('playline');
+    return;
+  }
   const base = location.origin + location.pathname;
   let url = base;
   if (roomCode) {

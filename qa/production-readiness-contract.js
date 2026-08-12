@@ -10,6 +10,7 @@ function check(name,value,detail){console.log((value?'PASS':'FAIL')+'  '+name+(v
 
 async function main(){
   const schema=read('supabase/schema.sql'),ops=read('scripts/supabase-production-ops.ps1'),acceptance=read('supabase/production-acceptance.sql');
+  const rollback=read('supabase/non-destructive-rollback.sql'),gitignore=read('.gitignore');
   const synthetic=read('scripts/long-session-smoke.js');
   const requiredTables=['cluster_instances','cluster_leases','platform_events','cluster_event_cursors','metrics_snapshots'];
   const requiredRpcs=['claim_cluster_lease_v1','renew_cluster_lease_v1','append_platform_event_v1','list_platform_events_v1','commit_cluster_cursor_v1','append_metrics_snapshot_v1','get_direct_message_by_id_v1','cleanup_cluster_data_v1'];
@@ -18,9 +19,11 @@ async function main(){
   check('Production DB：租约使用数据库时间、事务锁与 fencing token',/claim_cluster_lease_v1[\s\S]*clock_timestamp\(\)[\s\S]*pg_advisory_xact_lock[\s\S]*fencing_token\+1/i.test(schema)&&/stale_cluster_fencing_token/i.test(schema));
   check('Production DB：有效租约不可被其他实例抢占且过期数据由 leader 清理',/v_takeover\s*:=\s*v_row\.holder_instance_id is null or v_row\.lease_until <= v_now/i.test(schema)&&!/v_takeover\s*:=\s*[^;]*holder_instance_id <> p_instance_id/i.test(schema)&&/cleanup_cluster_data_v1[\s\S]*platform_events[\s\S]*metrics_snapshots[\s\S]*cluster_event_cursors[\s\S]*cluster_instances/i.test(schema));
   check('Production DB：事件 payload 白名单拒绝正文与凭证',/platform_event_payload_allowed_v1[\s\S]*body\|text\|message\|password\|pin\|token\|secret\|prompt\|authorization/i.test(schema)&&/when 'direct_message'[\s\S]*messageId/i.test(schema));
-  check('Production Ops：默认 dry-run、迁移先备份且回滚不 DROP',/\[string\]\$Action = 'plan'/.test(ops)&&/if \(-not \$Execute\)/.test(ops)&&/New-VerifiedBackup \$url[\s\S]*--single-transaction/.test(ops)&&!/Remove-Item|drop table|drop column/i.test(read('supabase/non-destructive-rollback.sql')));
-  check('Production Ops：恢复演练隔离目标并有破坏确认',/SUPABASE_RESTORE_DB_URL/.test(ops)&&/source -eq \$target/.test(ops)&&/I_UNDERSTAND_EPHEMERAL_TARGET_WILL_BE_REPLACED/.test(ops));
-  check('Production Ops：备份目录 ACL/加密/保留期与失败残片清理受控',/icacls/.test(ops)&&/cipher \/E/.test(ops)&&/SUPABASE_BACKUP_ENCRYPTED_VOLUME_CONFIRM/.test(ops)&&/SUPABASE_BACKUP_RETENTION_DAYS/.test(ops)&&/Remove-Item -LiteralPath \$target -Force/.test(ops));
+  check('Production Ops：默认 dry-run、迁移先备份且回滚不破坏数据',/\[string\]\$Action = 'plan'/.test(ops)&&/if \(-not \$Execute\)/.test(ops)&&/New-VerifiedBackup \$url[\s\S]*--single-transaction/.test(ops)&&!/\b(?:delete\s+from|truncate|drop\s+(?:table|column|schema|database))\b/i.test(rollback));
+  check('Production Ops：恢复演练按 Supabase project ref 隔离并有破坏确认',/Get-SupabaseDatabaseIdentity/.test(ops)&&/sourceIdentity\.ProjectRef -eq \$targetIdentity\.ProjectRef/.test(ops)&&/I_UNDERSTAND_EPHEMERAL_TARGET_WILL_BE_REPLACED/.test(ops));
+  check('Production Ops：备份目录 ACL/实际加密属性/保留期与失败残片清理受控',/icacls/.test(ops)&&/cipher \/E/.test(ops)&&/\[IO\.FileAttributes\]::Encrypted/.test(ops)&&/Test-BitLockerProtectedVolume/.test(ops)&&/SUPABASE_BACKUP_RETENTION_DAYS/.test(ops)&&/Remove-Item -LiteralPath \$target -Force/.test(ops));
+  check('Production Ops：plan 覆盖 dump/restore、项目身份和加密存储',/'plan'[\s\S]*Get-SupabaseDatabaseIdentity[\s\S]*Require-Tool 'pg_dump'[\s\S]*Require-Tool 'pg_restore'[\s\S]*Ensure-BackupStorage/.test(ops)&&/--dbname \$DatabaseUrl/.test(ops)&&/--dbname \$url/.test(ops)&&/--dbname \$target/.test(ops));
+  check('Production Ops：本地凭证和自定义 dump 均被 Git 忽略',/^\.env$/m.test(gitignore)&&/^\.env\.\*$/m.test(gitignore)&&/^\*\.dump$/m.test(gitignore));
   check('Synthetic Session：默认只连本机且生产永久账号要求显式确认',/ws:\/\/127\.0\.0\.1:8080\/ws/.test(synthetic)&&/SYNTHETIC_PRODUCTION_CONFIRM/.test(synthetic)&&/CREATE_PERSISTENT_QA_ACCOUNTS/.test(synthetic));
   check('Production Acceptance：真实 RLS/权限/租约/游标均有探针',/relrowsecurity/.test(acceptance)&&/has_table_privilege\('anon'/.test(acceptance)&&/claim_cluster_lease_v1/.test(acceptance)&&/commit_cluster_cursor_v1/.test(acceptance)&&/rollback;/i.test(acceptance));
 

@@ -28,7 +28,8 @@ function section(source, start, end) {
 }
 
 const overlayHelper = section(utilsSource, 'function setupAccessibleOverlayDialog', 'function closeVictoryOverlay');
-const profilePopup = section(profileSource, 'function profilePresenceLabel', '');
+const profilePopup = section(profileSource, 'function runProfileSurfaceMotion', 'function closeProfileCompareLoading') + '\n' +
+  section(profileSource, 'function profilePresenceLabel', '');
 const onlineDialogHelpers = section(onlineSource, 'function playerNameValue', 'function renderSocialRail');
 const playerListRenderer = section(onlineSource, 'function renderAccounts', 'function inviteUser');
 const inviteDialog = section(onlineSource, 'function showInviteModal', 'function openSettings');
@@ -41,7 +42,7 @@ check('shared accessible overlay helper is available to the P0.4 paths', overlay
 check('profile modal uses raw child nodes for identity/signature and a localized dialog label',
   /function profileNameNode[\s\S]*nameFxNode[\s\S]*t\('social_player'\)/.test(profilePopup) &&
   /elRaw\('div','profile-signature'/.test(profilePopup) &&
-  /setupAccessibleOverlayDialog\(bd,card,close,t\('profile_title'\),releaseProfileResources\)/.test(profilePopup));
+  /setupAccessibleOverlayDialog\(bd,card,close,t\('profile_title'\),\(\)=>\{settleProfileSurfaceMotion\('dialog_closed'\);releaseProfileResources\(\);\}\)/.test(profilePopup));
 check('profile modal locks and releases scroll through an idempotent resource cleanup',
   /acquireModalScrollLock\(bd\)/.test(profilePopup) &&
   /releaseModalScrollLock\(bd\)/.test(profilePopup) &&
@@ -295,7 +296,7 @@ function makeRuntime() {
     socialGuestMutationBlocked() { return false; }, markGuestSocialControl(button) { return button; },
     socialRelationshipFor() { return 'none'; }, presenceLabel(value) { return value === 'online' ? t('presence_online') : t('presence_offline'); },
     account:{ uid:'me', coins:0, total:0 }, deviceUid:'me',
-    online:{ connected:true, room:null, isHost:true, matchId:null, socialState:{ friends:[], incoming:[], outgoing:[], blocked:[] }, reportUser() {}, friendRequest() {}, friendRequestAction() {}, removeFriend() {}, blockUser() {}, unblockUser() {} },
+    online:{ connected:true, room:null, isHost:true, matchId:null, socialState:{ friends:[], incoming:[], outgoing:[], blocked:[] }, requestProfile(){return false;}, reportUser() {}, friendRequest() {}, friendRequestAction() {}, removeFriend() {}, blockUser() {}, unblockUser() {} },
     lastServerLB:null, localLeaderboard() { return { list:[] }; },
     $(id) { return containers.get(id) || null; },
   };

@@ -16,14 +16,24 @@ const MODULES = [
   'core/00-i18n.js',
   'core/01-utils.js',
   'core/06-assets.js',
+  // Player identity presentation is defined before consumers and resolves the
+  // roster-owned catalogs lazily when its small Interface is invoked.
+  'core/10-identity-presentation.js',
   '../../shared/progression/victory-mastery.js',
   '../../shared/progression/profile-journey.js',
   '../../shared/progression/collection-rarity-catalog.js',
+  // Deep route-motion bridge stays synchronous and lazy-loads its DOM GSAP island only on demand.
+  'core/09-route-motion.js',
+  // Shared overlay motion stays presentation-only and lazy-loads the same pinned GSAP island.
+  'core/11-surface-motion.js',
   'core/02-app-shell.js',
   'core/03-game-framework.js',
   'core/04-social.js',
   'core/05-ai-personas.js',
   'online/03-websocket.js',
+  'core/07-playline.js',
+  // Foundation is inert until an exact per-game opt-in bridge creates an instance.
+  'core/08-ghost3d-foundation.js',
   'shop/04-auth.js',
   'shop/05-profile.js',
   'shop/06-shop.js',

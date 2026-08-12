@@ -176,6 +176,61 @@ create table if not exists reports (
 );
 create index if not exists idx_reports_target_created on reports (target_uid, created_at desc);
 
+-- Playline Community P0：受限动态持久化合同。
+-- post id/clientPostId 由 Node 服务签发或规范化；private_source 仅供 service_role
+-- 做引用审计，任何列表/报告 projection 都不得返回它。删除保留 tombstone，过期
+-- 由读取过滤，便于后续治理与非破坏清理。
+create table if not exists playline_posts (
+  id text primary key,
+  seq bigserial not null unique,
+  author_uid text not null references profiles(uid) on delete cascade,
+  client_post_id text not null,
+  audience text not null check (audience in ('all', 'friends')),
+  content_kind text not null check (content_kind in ('text', 'game_share', 'result_share', 'record_share')),
+  content_version integer not null default 1 check (content_version between 1 and 32),
+  canonical_content jsonb not null,
+  private_source jsonb not null default '{}'::jsonb,
+  state text not null default 'active' check (state in ('active', 'deleted', 'hidden', 'expired')),
+  created_at timestamptz not null default now(),
+  deleted_at timestamptz,
+  expires_at timestamptz not null default (now() + interval '90 days'),
+  check (id ~ '^[A-Za-z0-9][A-Za-z0-9._:-]{0,159}$'),
+  check (client_post_id ~ '^[A-Za-z0-9][A-Za-z0-9._:-]{0,159}$'),
+  check (jsonb_typeof(canonical_content) = 'object'),
+  check (octet_length(canonical_content::text) <= 32768),
+  check (octet_length(private_source::text) <= 32768),
+  check (deleted_at is null or state in ('deleted', 'hidden', 'expired'))
+);
+create unique index if not exists idx_playline_posts_author_client_post
+  on playline_posts (author_uid, client_post_id);
+create index if not exists idx_playline_posts_created_id
+  on playline_posts (created_at desc, id desc);
+create index if not exists idx_playline_posts_seq
+  on playline_posts (seq desc);
+create index if not exists idx_playline_posts_audience_created_id
+  on playline_posts (audience, created_at desc, id desc);
+create index if not exists idx_playline_posts_author_created
+  on playline_posts (author_uid, created_at desc, id desc);
+create index if not exists idx_playline_posts_state_expiry_created
+  on playline_posts (state, expires_at, created_at desc, id desc);
+
+-- 受限频控事件只保存作者、动作和时间；不保存正文、canonical source 或任何
+-- 通用 analytics/report payload。过期事件可由 service-role 维护清理。
+create table if not exists playline_rate_events (
+  id bigserial primary key,
+  author_uid text not null references profiles(uid) on delete cascade,
+  event_kind text not null check (event_kind in ('publish', 'list', 'delete', 'report')),
+  client_post_id text,
+  post_id text references playline_posts(id) on delete set null,
+  created_at timestamptz not null default now(),
+  check (client_post_id is null or client_post_id ~ '^[A-Za-z0-9][A-Za-z0-9._:-]{0,159}$')
+);
+create index if not exists idx_playline_rate_events_author_kind_created
+  on playline_rate_events (author_uid, event_kind, created_at desc);
+create index if not exists idx_playline_rate_events_post_created
+  on playline_rate_events (post_id, created_at desc)
+  where post_id is not null;
+
 -- Direct Chat v1：消息正文只允许服务端 service_role 访问；浏览器永不直连。
 create table if not exists direct_messages (
   seq bigserial primary key,
@@ -849,6 +904,454 @@ $$;
 revoke all on function list_direct_message_reads_v1(integer, integer) from public, anon, authenticated;
 grant execute on function list_direct_message_reads_v1(integer, integer) to service_role;
 
+-- Playline P0 RPC：数据库只保存 Node 已经裁决过的 canonical content，
+-- 但仍在事务内检查作者、字段形状、幂等键、过期时间和关系可见性。
+-- 所有返回值都是窄 projection；private_source/seq 永远不会进入读者结果。
+create or replace function create_playline_post_v1(
+  p_post_id text,
+  p_author_uid text,
+  p_client_post_id text,
+  p_audience text,
+  p_content_kind text,
+  p_content_version integer default 1,
+  p_canonical_content jsonb default '{}'::jsonb,
+  p_private_source jsonb default '{}'::jsonb,
+  p_expires_at timestamptz default null
+) returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_existing playline_posts%rowtype;
+  v_row playline_posts%rowtype;
+  v_expires_at timestamptz;
+  v_publish_count integer;
+  v_same boolean;
+begin
+  if p_author_uid is null or btrim(p_author_uid) = ''
+     or not exists (select 1 from profiles where uid = p_author_uid) then
+    return jsonb_build_object('created', false, 'duplicate', false, 'conflict', false,
+      'reason', 'author_not_found');
+  end if;
+  if p_post_id is null or p_post_id !~ '^[A-Za-z0-9][A-Za-z0-9._:-]{0,159}$'
+     or p_client_post_id is null or p_client_post_id !~ '^[A-Za-z0-9][A-Za-z0-9._:-]{0,159}$' then
+    return jsonb_build_object('created', false, 'duplicate', false, 'conflict', false,
+      'reason', 'invalid_post_id');
+  end if;
+  if p_audience is null or p_audience not in ('all', 'friends') then
+    return jsonb_build_object('created', false, 'duplicate', false, 'conflict', false,
+      'reason', 'invalid_audience');
+  end if;
+  if p_content_kind is null or p_content_kind not in ('text', 'game_share', 'result_share', 'record_share')
+     or coalesce(p_content_version, 0) not between 1 and 32
+     or p_canonical_content is null or jsonb_typeof(p_canonical_content) <> 'object'
+     or jsonb_typeof(coalesce(p_private_source, '{}'::jsonb)) <> 'object'
+     or octet_length(p_canonical_content::text) > 32768
+     or octet_length(coalesce(p_private_source, '{}'::jsonb)::text) > 32768 then
+    return jsonb_build_object('created', false, 'duplicate', false, 'conflict', false,
+      'reason', 'invalid_canonical_content');
+  end if;
+
+  -- The module has already resolved references. The RPC accepts only the safe
+  -- canonical envelope and rejects private/audit identifiers if they leak in.
+  if p_canonical_content ?| array[
+      'source', 'privateSource', 'private_source', 'resultId', 'result_id',
+      'replayId', 'replay_id', 'matchId', 'match_id', 'opponent', 'opponents',
+      'opponentIds', 'opponent_ids', 'reward', 'coins', 'xp', 'seq'
+    ] then
+    return jsonb_build_object('created', false, 'duplicate', false, 'conflict', false,
+      'reason', 'invalid_canonical_content');
+  end if;
+  if p_content_kind = 'text' then
+    if not (p_canonical_content ? 'text')
+       or jsonb_typeof(p_canonical_content->'text') <> 'string'
+       or char_length(p_canonical_content->>'text') not between 1 and 280
+       or octet_length(p_canonical_content->>'text') > 1200
+       or array_length(string_to_array(p_canonical_content->>'text', E'\n'), 1) > 4 then
+      return jsonb_build_object('created', false, 'duplicate', false, 'conflict', false,
+        'reason', 'invalid_text');
+    end if;
+  elsif p_content_kind = 'game_share' then
+    if jsonb_typeof(p_canonical_content->'gameId') <> 'string'
+       or p_canonical_content->>'gameId' not in ('gomoku','ludo','monopoly','tank','tetris','xiangqi') then
+      return jsonb_build_object('created', false, 'duplicate', false, 'conflict', false,
+        'reason', 'invalid_game');
+    end if;
+  elsif p_content_kind = 'result_share' then
+    if jsonb_typeof(p_canonical_content->'gameId') <> 'string'
+       or p_canonical_content->>'gameId' not in ('gomoku','ludo','monopoly','tank','tetris','xiangqi')
+       or jsonb_typeof(p_canonical_content->'outcome') <> 'string'
+       or (p_canonical_content ? 'mode' and jsonb_typeof(p_canonical_content->'mode') <> 'string') then
+      return jsonb_build_object('created', false, 'duplicate', false, 'conflict', false,
+        'reason', 'invalid_result');
+    end if;
+  elsif p_content_kind = 'record_share' then
+    if coalesce(jsonb_typeof(p_canonical_content->'record'), jsonb_typeof(p_canonical_content->'metric'), '') <> 'string' then
+      return jsonb_build_object('created', false, 'duplicate', false, 'conflict', false,
+        'reason', 'invalid_record');
+    end if;
+  end if;
+
+  v_expires_at := coalesce(p_expires_at, clock_timestamp() + interval '90 days');
+  if v_expires_at <= clock_timestamp()
+     or v_expires_at > clock_timestamp() + interval '90 days' + interval '1 minute' then
+    return jsonb_build_object('created', false, 'duplicate', false, 'conflict', false,
+      'reason', 'invalid_expiry');
+  end if;
+
+  -- Serialize the author/client key so concurrent retries cannot create two rows
+  -- or consume two rate slots.
+  perform pg_advisory_xact_lock(hashtext('playline:' || p_author_uid || ':' || p_client_post_id));
+  select * into v_existing
+    from playline_posts
+   where author_uid = p_author_uid and client_post_id = p_client_post_id
+   for update;
+  if found then
+    v_same := v_existing.audience = p_audience
+      and v_existing.content_kind = p_content_kind
+      and v_existing.content_version = coalesce(p_content_version, 1)
+      and v_existing.canonical_content = p_canonical_content;
+    return jsonb_build_object(
+      'created', false,
+      'duplicate', true,
+      'replayed', true,
+      'conflict', not v_same,
+      'reason', case when v_same then null else 'idempotency_conflict' end,
+      'post', jsonb_build_object(
+        'id', v_existing.id,
+        'authorUid', v_existing.author_uid,
+        'audience', v_existing.audience,
+        'kind', v_existing.content_kind,
+        'contentVersion', v_existing.content_version,
+        'content', jsonb_strip_nulls(v_existing.canonical_content - array[
+          'source','privateSource','private_source','resultId','result_id',
+          'replayId','replay_id','matchId','match_id','opponent','opponents',
+          'opponentIds','opponent_ids','reward','coins','xp','seq'
+        ]::text[]),
+        'createdAt', v_existing.created_at,
+        'expiresAt', v_existing.expires_at,
+        'state', v_existing.state
+      )
+    );
+  end if;
+
+  select count(*)::integer into v_publish_count
+    from playline_rate_events
+   where author_uid = p_author_uid
+     and event_kind = 'publish'
+     and created_at >= clock_timestamp() - interval '10 minutes';
+  if v_publish_count >= 3 then
+    return jsonb_build_object('created', false, 'duplicate', false, 'conflict', false,
+      'reason', 'rate_limited', 'retryAfter', 600);
+  end if;
+  select count(*)::integer into v_publish_count
+    from playline_rate_events
+   where author_uid = p_author_uid
+     and event_kind = 'publish'
+     and created_at >= clock_timestamp() - interval '24 hours';
+  if v_publish_count >= 15 then
+    return jsonb_build_object('created', false, 'duplicate', false, 'conflict', false,
+      'reason', 'rate_limited', 'retryAfter', 86400);
+  end if;
+
+  insert into playline_posts(
+    id, author_uid, client_post_id, audience, content_kind, content_version,
+    canonical_content, private_source, state, expires_at
+  ) values (
+    p_post_id, p_author_uid, p_client_post_id, p_audience, p_content_kind,
+    coalesce(p_content_version, 1), p_canonical_content, coalesce(p_private_source, '{}'::jsonb),
+    'active', v_expires_at
+  ) returning * into v_row;
+  insert into playline_rate_events(author_uid, event_kind, client_post_id, post_id)
+    values (p_author_uid, 'publish', p_client_post_id, v_row.id);
+  return jsonb_build_object(
+    'created', true, 'duplicate', false, 'replayed', false, 'conflict', false,
+    'post', jsonb_build_object(
+      'id', v_row.id,
+      'authorUid', v_row.author_uid,
+      'audience', v_row.audience,
+      'kind', v_row.content_kind,
+      'contentVersion', v_row.content_version,
+      'content', jsonb_strip_nulls(v_row.canonical_content - array[
+        'source','privateSource','private_source','resultId','result_id',
+        'replayId','replay_id','matchId','match_id','opponent','opponents',
+        'opponentIds','opponent_ids','reward','coins','xp','seq'
+      ]::text[]),
+      'createdAt', v_row.created_at,
+      'expiresAt', v_row.expires_at,
+      'state', v_row.state
+    )
+  );
+exception when unique_violation then
+  if exists (select 1 from playline_posts where id = p_post_id) then
+    return jsonb_build_object('created', false, 'duplicate', false, 'conflict', true,
+      'reason', 'post_id_conflict');
+  end if;
+  raise;
+end;
+$$;
+
+revoke all on function create_playline_post_v1(text, text, text, text, text, integer, jsonb, jsonb, timestamptz)
+  from public, anon, authenticated;
+grant execute on function create_playline_post_v1(text, text, text, text, text, integer, jsonb, jsonb, timestamptz)
+  to service_role;
+
+create or replace function list_playline_posts_v1(
+  p_actor_uid text,
+  p_scope text,
+  p_before_seq text default null,
+  p_snapshot bigint default null,
+  p_limit integer default 20
+) returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_limit integer := greatest(1, least(coalesce(p_limit, 20), 30));
+  v_before_seq bigint;
+  v_snapshot timestamptz := to_timestamp(coalesce(p_snapshot, (extract(epoch from clock_timestamp()) * 1000)::bigint) / 1000.0);
+  v_posts jsonb := '[]'::jsonb;
+  v_has_more boolean := false;
+  v_next_cursor text := null;
+  v_list_count integer;
+  v_count integer;
+begin
+  if p_actor_uid is null or btrim(p_actor_uid) = ''
+     or not exists (select 1 from profiles where uid = p_actor_uid) then
+    return jsonb_build_object('allowed', false, 'reason', 'not_authenticated', 'posts', '[]'::jsonb);
+  end if;
+  if p_scope is null or p_scope not in ('all', 'friends') then
+    return jsonb_build_object('allowed', false, 'reason', 'invalid_scope', 'posts', '[]'::jsonb);
+  end if;
+  select count(*)::integer into v_list_count
+    from playline_rate_events
+   where author_uid = p_actor_uid
+     and event_kind = 'list'
+     and created_at >= clock_timestamp() - interval '1 minute';
+  if v_list_count >= 60 then
+    return jsonb_build_object('allowed', false, 'reason', 'rate_limited', 'posts', '[]'::jsonb,
+      'retryAfter', 60);
+  end if;
+  insert into playline_rate_events(author_uid, event_kind) values (p_actor_uid, 'list');
+
+  -- Node signs the public cursor and passes only the decoded internal sequence
+  -- to this service-role RPC. Browser roles cannot execute this function.
+  if p_before_seq is not null and btrim(p_before_seq) <> '' then
+    if p_before_seq !~ '^[0-9]{1,40}$' then
+      return jsonb_build_object('allowed', false, 'reason', 'invalid_cursor', 'posts', '[]'::jsonb);
+    end if;
+    begin v_before_seq := p_before_seq::bigint; exception when others then v_before_seq := null; end;
+    if v_before_seq is null or v_before_seq <= 0 then
+      return jsonb_build_object('allowed', false, 'reason', 'invalid_cursor', 'posts', '[]'::jsonb);
+    end if;
+  end if;
+
+  select coalesce(jsonb_agg(jsonb_build_object(
+      'id', row_value.id,
+      'seq', row_value.seq::text,
+      'authorUid', row_value.author_uid,
+      'audience', row_value.audience,
+      'kind', row_value.content_kind,
+      'clientPostId', row_value.client_post_id,
+      'normalizedText', case when row_value.content_kind = 'text' then row_value.canonical_content->>'text' else null end,
+      'safeSnapshot', jsonb_strip_nulls(row_value.canonical_content - array[
+        'source','privateSource','private_source','resultId','result_id',
+        'replayId','replay_id','matchId','match_id','opponent','opponents',
+        'opponentIds','opponent_ids','reward','coins','xp','seq'
+      ]::text[]),
+      'createdAt', floor(extract(epoch from row_value.created_at) * 1000)::bigint,
+      'deletedAt', 0,
+      'tombstone', false
+    ) order by row_value.seq desc), '[]'::jsonb)
+    into v_posts
+    from (
+      select p.id, p.seq, p.author_uid, p.client_post_id, p.audience, p.content_kind,
+             p.canonical_content, p.created_at
+        from playline_posts p
+        join profiles pr on pr.uid = p.author_uid
+       where p.state = 'active'
+         and p.expires_at > clock_timestamp()
+         and p.created_at <= v_snapshot
+         and (v_before_seq is null or p.seq < v_before_seq)
+         -- Every read re-checks both directions of Block; no cached audience
+         -- snapshot can bypass a current social graph decision.
+         and not exists (
+           select 1 from blocks b
+            where (b.blocker_uid = p_actor_uid and b.blocked_uid = p.author_uid)
+               or (b.blocker_uid = p.author_uid and b.blocked_uid = p_actor_uid)
+         )
+         and (
+           (p_scope = 'all' and (p.audience = 'all' or p.author_uid = p_actor_uid))
+           or
+           (p_scope = 'friends' and (
+             p.author_uid = p_actor_uid
+             or exists (
+               select 1 from friendships f
+                where f.a_uid = least(p_actor_uid, p.author_uid)
+                  and f.b_uid = greatest(p_actor_uid, p.author_uid)
+             )
+           ))
+         )
+       order by p.seq desc
+       limit v_limit + 1
+    ) row_value;
+
+  v_count := jsonb_array_length(v_posts);
+  if v_count > v_limit then
+    v_has_more := true;
+    v_next_cursor := v_posts->(v_limit - 1)->>'seq';
+    v_posts := v_posts - v_limit;
+  end if;
+  return jsonb_build_object(
+    'allowed', true,
+    'records', v_posts,
+    'hasMore', v_has_more,
+    'lastSeq', v_next_cursor,
+    'snapshot', floor(extract(epoch from v_snapshot) * 1000)::bigint
+  );
+end;
+$$;
+
+revoke all on function list_playline_posts_v1(text, text, text, bigint, integer)
+  from public, anon, authenticated;
+grant execute on function list_playline_posts_v1(text, text, text, bigint, integer)
+  to service_role;
+
+create or replace function delete_playline_post_v1(
+  p_author_uid text,
+  p_post_id text,
+  p_request_id text default null
+) returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_row playline_posts%rowtype;
+  v_delete_count integer;
+begin
+  if p_author_uid is null or btrim(p_author_uid) = ''
+     or not exists (select 1 from profiles where uid = p_author_uid) then
+    return jsonb_build_object('deleted', false, 'duplicate', false, 'reason', 'not_authenticated');
+  end if;
+  if p_post_id is null or p_post_id !~ '^[A-Za-z0-9][A-Za-z0-9._:-]{0,159}$' then
+    return jsonb_build_object('deleted', false, 'duplicate', false, 'reason', 'invalid_post_id');
+  end if;
+  perform pg_advisory_xact_lock(hashtext('playline-delete:' || p_post_id));
+  select * into v_row from playline_posts where id = p_post_id for update;
+  if not found then
+    -- A missing target is an idempotent tombstone response; do not reveal whether
+    -- a different author's post ever existed.
+    return jsonb_build_object('deleted', false, 'duplicate', true, 'postId', p_post_id);
+  end if;
+  if v_row.author_uid <> p_author_uid then
+    return jsonb_build_object('deleted', false, 'duplicate', false, 'reason', 'delete_forbidden');
+  end if;
+  if v_row.state <> 'active' or v_row.deleted_at is not null then
+    return jsonb_build_object('deleted', true, 'duplicate', true, 'postId', v_row.id,
+      'state', v_row.state, 'deletedAt', v_row.deleted_at);
+  end if;
+  select count(*)::integer into v_delete_count
+    from playline_rate_events
+   where author_uid = p_author_uid
+     and event_kind = 'delete'
+     and created_at >= clock_timestamp() - interval '1 minute';
+  if v_delete_count >= 20 then
+    return jsonb_build_object('deleted', false, 'duplicate', false, 'reason', 'rate_limited',
+      'retryAfter', 60);
+  end if;
+  update playline_posts
+     set state = 'deleted', deleted_at = clock_timestamp()
+   where id = v_row.id;
+  insert into playline_rate_events(author_uid, event_kind, post_id)
+    values (p_author_uid, 'delete', v_row.id);
+  return jsonb_build_object('deleted', true, 'duplicate', false, 'postId', v_row.id,
+    'state', 'deleted', 'deletedAt', (select deleted_at from playline_posts where id = v_row.id));
+end;
+$$;
+
+revoke all on function delete_playline_post_v1(text, text, text)
+  from public, anon, authenticated;
+grant execute on function delete_playline_post_v1(text, text, text)
+  to service_role;
+
+create or replace function resolve_playline_report_target_v1(
+  p_reporter_uid text,
+  p_post_id text
+) returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_author_uid text;
+  v_audience text;
+begin
+  if p_reporter_uid is null or btrim(p_reporter_uid) = ''
+     or not exists (select 1 from profiles where uid = p_reporter_uid) then
+    return jsonb_build_object('allowed', false, 'reason', 'not_authenticated');
+  end if;
+  select author_uid, audience into v_author_uid, v_audience
+    from playline_posts
+   where id = p_post_id
+     and state = 'active'
+     and expires_at > clock_timestamp();
+  if not found or v_author_uid = p_reporter_uid
+     or exists (
+       select 1 from blocks b
+        where (b.blocker_uid = p_reporter_uid and b.blocked_uid = v_author_uid)
+           or (b.blocker_uid = v_author_uid and b.blocked_uid = p_reporter_uid)
+     )
+     or not (
+       v_audience = 'all'
+       or exists (
+         select 1 from friendships f
+          where f.a_uid = least(p_reporter_uid, v_author_uid)
+            and f.b_uid = greatest(p_reporter_uid, v_author_uid)
+       )
+     ) then
+    return jsonb_build_object('allowed', false, 'reason', 'post_unavailable');
+  end if;
+  -- Only IDs/context are returned. The caller may now create a normal report row;
+  -- this RPC intentionally never copies canonical content into reports/analytics.
+  return jsonb_build_object(
+    'allowed', true,
+    'postId', p_post_id,
+    'targetUid', v_author_uid,
+    'contextType', 'playline',
+    'contextId', p_post_id
+  );
+end;
+$$;
+
+revoke all on function resolve_playline_report_target_v1(text, text)
+  from public, anon, authenticated;
+grant execute on function resolve_playline_report_target_v1(text, text)
+  to service_role;
+
+create or replace function purge_playline_posts_v1(p_now bigint default null)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_now timestamptz := to_timestamp(coalesce(p_now, (extract(epoch from clock_timestamp()) * 1000)::bigint) / 1000.0);
+  v_expired integer := 0;
+begin
+  update playline_posts set state = 'expired', deleted_at = coalesce(deleted_at, v_now)
+   where state = 'active' and expires_at <= v_now;
+  get diagnostics v_expired = row_count;
+  delete from playline_rate_events where created_at < v_now - interval '90 days';
+  return jsonb_build_object('ok', true, 'expired', v_expired);
+end;
+$$;
+
+revoke all on function purge_playline_posts_v1(bigint) from public, anon, authenticated;
+grant execute on function purge_playline_posts_v1(bigint) to service_role;
+
 -- 多实例协调与跨实例持久事件（durable polling baseline）。
 -- 这些表只允许 service_role 通过受限 RPC 访问；事件 payload 严禁聊天正文、凭证和任意用户原文。
 create table if not exists cluster_instances (
@@ -1174,6 +1677,8 @@ alter table cluster_leases enable row level security;
 alter table platform_events enable row level security;
 alter table cluster_event_cursors enable row level security;
 alter table metrics_snapshots enable row level security;
+alter table playline_posts enable row level security;
+alter table playline_rate_events enable row level security;
 revoke all on table profiles from anon, authenticated;
 revoke all on table history from anon, authenticated;
 revoke all on table reward_history from anon, authenticated;
@@ -1192,6 +1697,10 @@ revoke all on table cluster_leases from public, anon, authenticated;
 revoke all on table platform_events from public, anon, authenticated;
 revoke all on table cluster_event_cursors from public, anon, authenticated;
 revoke all on table metrics_snapshots from public, anon, authenticated;
+revoke all on table playline_posts from public, anon, authenticated;
+revoke all on table playline_rate_events from public, anon, authenticated;
+grant all on table playline_posts to service_role;
+grant all on table playline_rate_events to service_role;
 revoke all on sequence history_id_seq from anon, authenticated;
 revoke all on sequence reward_history_id_seq from anon, authenticated;
 revoke all on sequence economy_ledger_id_seq from anon, authenticated;
@@ -1200,6 +1709,10 @@ revoke all on sequence ai_learning_experiences_id_seq from anon, authenticated;
 revoke all on sequence direct_messages_seq_seq from public, anon, authenticated;
 revoke all on sequence platform_events_id_seq from public, anon, authenticated;
 revoke all on sequence metrics_snapshots_id_seq from public, anon, authenticated;
+revoke all on sequence playline_posts_seq_seq from public, anon, authenticated;
+revoke all on sequence playline_rate_events_id_seq from public, anon, authenticated;
+grant usage, select on sequence playline_posts_seq_seq to service_role;
+grant usage, select on sequence playline_rate_events_id_seq to service_role;
 
 -- 常用管理查询（供日后在 Dashboard 使用）
 -- 1) 全球总榜：select name, coins, total, played from profiles order by coins desc;

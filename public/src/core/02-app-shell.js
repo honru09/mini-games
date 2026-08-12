@@ -73,24 +73,9 @@ function openSettingsPage() {
   langNote.setAttribute('data-i18n', 'language_note');
   card.appendChild(langNote);
 
-  // Server section (merged from openSettings)
-  const srvLabel = localizedLabel('div', null, '🔗', 'server_config');
-  srvLabel.style.cssText = "font-weight:600; margin:10px 0 6px; font-size:14px";
-  card.appendChild(srvLabel);
-  const srvInput = el("input","nick-input");
-  srvInput.type = "text";
-  srvInput.placeholder = t('server_placeholder');
-  srvInput.setAttribute('data-i18n-placeholder', 'server_placeholder');
-  try { srvInput.value = localStorage.getItem("mg_server") || online.defaultServer; } catch {}
-  card.appendChild(srvInput);
-  const serverNote = el('p','lb-note',t('server_note'));
-  serverNote.setAttribute('data-i18n', 'server_note');
-  card.appendChild(serverNote);
-
   const close = el("button","btn btn-primary", t("close"));
   close.setAttribute('data-i18n', 'close');
   close.addEventListener("click", () => {
-    try { localStorage.setItem("mg_server", srvInput.value.trim()); } catch {}
     bd.remove();
     toast(t('settings_saved'));
   });
@@ -109,7 +94,7 @@ function getTheme() {
 }
 
 /* ================= Ghost Game 四区应用外壳 ================= */
-const GHOST_APP_ROUTES = ['home','games','chat','profile'];
+const GHOST_APP_ROUTES = ['home','games','playline','profile'];
 let ghostAppRoute = 'home';
 let ghostChatView = 'players';
 let chatLastConversationFocus = null;
@@ -584,44 +569,69 @@ function renderGameStage(nextState){
 }
 
 function routeFromHash(){
-  const match = /^#\/(home|games|chat|profile)(?:$|[?&])/.exec(String(typeof location!=='undefined'&&location.hash || ''));
-  return match ? match[1] : 'home';
+  const raw=String(typeof location!=='undefined'&&location.hash || '');
+  const match = /^#\/(home|games|playline|chat|profile)(?:$|[?&])/.exec(raw);
+  if(!match)return 'home';
+  return match[1]==='chat'?'playline':match[1];
 }
 function chatViewFromHash(){
   return 'players';
 }
 function setChatView(view,options){
-  // 旧 #/chat?view=honru 和未知 view 一律收敛到真实玩家私聊，避免遗留深链访问已移除的助手界面。
+  // 旧 #/chat?view=honru 和未知 view 只收敛到 Playline；玩家私信由全局 dialog 承载。
   ghostChatView='players';
-  const title=$('chat-route-title'),intro=$('chat-route-intro');
-  if(title)title.textContent=t('chat_title');
-  if(intro)intro.textContent=t('chat_intro');
-  renderPlayerChat();if(online&&online.connected&&online._authenticated)online.requestChatList();
+  if(typeof Playline!=='undefined'&&Playline&&typeof Playline.open==='function')Playline.open({tab:'all'});
+  if(typeof online!=='undefined'&&online&&online.connected&&online._authenticated)online.requestChatList();
   if(typeof history!=='undefined'){
-    const next='#/chat';
+    const next='#/playline';
     if(location.hash!==next){const method=options&&options.silentHash||options&&options.replace?'replaceState':'pushState';if(typeof history[method]==='function')history[method](null,'',next);}
   }
 }
+function openPlaylineGameSharePicker(opener){
+  if(typeof Playline==='undefined'||!Playline||typeof Playline.prefill!=='function')return false;
+  const overlay=el('div','modal-backdrop'),card=el('section','modal-card playline-game-picker'),title=el('h3',null,t('playline_choose_game'));card.appendChild(title);
+  const grid=el('div','game-grid playline-game-picker-grid'),ids=(typeof GAME_KEYS!=='undefined'?GAME_KEYS:Object.keys(typeof GAMES!=='undefined'?GAMES:{})).filter(id=>GAMES&&GAMES[id]);
+  let close=()=>{overlay.remove();return true;};
+  ids.forEach(id=>{const meta=GAMES[id],button=el('button','btn playline-game-picker-option');button.type='button';button.appendChild(el('span','playline-game-picker-icon',meta.icon||'🎮'));button.appendChild(el('strong',null,meta.name||t(meta.nameKey)));button.addEventListener('click',()=>{Playline.prefill({kind:'game_share',gameId:id});close();setAppRoute('playline');});grid.appendChild(button);});
+  card.appendChild(grid);const cancel=el('button','btn',t('close'));cancel.addEventListener('click',()=>close());card.appendChild(cancel);overlay.appendChild(card);document.body.appendChild(overlay);acquireModalScrollLock(overlay);
+  close=setupAccessibleOverlayDialog(overlay,card,grid.querySelector('button')||cancel,title.textContent,()=>releaseModalScrollLock(overlay));
+  return true;
+}
 function setAppRoute(route, options){
+  if(route==='chat')route='playline';
   route = GHOST_APP_ROUTES.includes(route) ? route : 'home';
   if (!account && typeof openAuthModal === 'function') { openAuthModal(route === 'profile' ? 'login' : 'login'); return; }
-  ghostAppRoute = route;
-  if (typeof showHub === 'function') showHub();
-  document.querySelectorAll('[data-app-route]').forEach(node => node.classList.toggle('hidden', node.getAttribute('data-app-route') !== route));
-  document.querySelectorAll('[data-app-route-target]').forEach(node => {
-    const active = node.getAttribute('data-app-route-target') === route;
-    if (active) node.setAttribute('aria-current','page'); else node.removeAttribute('aria-current');
-  });
-  if (!(options && options.silentHash)){
-    const next = '#/' + route;
-    if (typeof location!=='undefined'&&location.hash !== next&&typeof history!=='undefined'){
-      const method=options&&options.replace?'replaceState':'pushState';if(typeof history[method]==='function')history[method](null,'',next);
+  const fromRoute=ghostAppRoute;
+  const commit=()=>{
+    ghostAppRoute = route;
+    if(typeof online!=='undefined'&&online&&typeof online.ensureConnected==='function')online.ensureConnected('route');
+    if (typeof showHub === 'function') showHub();
+    document.querySelectorAll('[data-app-route]').forEach(node => {
+      const active=node.getAttribute('data-app-route')===route;
+      node.classList.toggle('hidden',!active);
+      if(active){node.removeAttribute('aria-hidden');node.removeAttribute('inert');if('inert' in node)node.inert=false;}
+      else{node.setAttribute('aria-hidden','true');node.setAttribute('inert','');if('inert' in node)node.inert=true;}
+    });
+    document.querySelectorAll('[data-app-route-target]').forEach(node => {
+      const active = node.getAttribute('data-app-route-target') === route;
+      if (active) node.setAttribute('aria-current','page'); else node.removeAttribute('aria-current');
+    });
+    if (!(options && options.silentHash)){
+      const next = '#/' + route;
+      if (typeof location!=='undefined'&&location.hash !== next&&typeof history!=='undefined'){
+        const method=options&&options.replace?'replaceState':'pushState';if(typeof history[method]==='function')history[method](null,'',next);
+      }
     }
+    if (route === 'home') renderGhostHome();
+    if (route === 'profile') renderGhostProfile();
+    if (route === 'playline'&&typeof Playline!=='undefined'&&Playline&&typeof Playline.open==='function') Playline.open({tab:'all'});
+    resetGhostHeroTimer();
+  };
+  if(typeof GhostRouteMotion!=='undefined'&&GhostRouteMotion&&typeof GhostRouteMotion.transition==='function'){
+    try{return GhostRouteMotion.transition({from:fromRoute,to:route,commit,reason:options&&options.reason||'route'});}catch(_error){}
   }
-  if (route === 'home') renderGhostHome();
-  if (route === 'profile') renderGhostProfile();
-  if (route === 'chat') setChatView('players',{silentHash:true});
-  resetGhostHeroTimer();
+  commit();
+  return {status:'settled'};
 }
 function homePulseDayKey(date){
   const value=date instanceof Date&&!Number.isNaN(date.getTime())?date:new Date();
@@ -706,13 +716,12 @@ function renderGhostHome(){
   if(recommendationButton){recommendationButton.textContent=account&&!account.ephemeral?t('home_recommendation_view',gameName):t('home_recommendation_open');recommendationButton.onclick=()=>{setAppRoute('games');requestAnimationFrame(()=>{const card=document.querySelector('.game-card[data-game-id="'+recommended+'"]');if(card&&typeof card.focus==='function')card.focus();});};}
   if(goalButton){goalButton.textContent=t(account&&!account.ephemeral?'home_goal_open_profile':'home_goal_start');goalButton.onclick=()=>setAppRoute(account&&!account.ephemeral?'profile':'games');}
   if(goalValue&&goalCopy&&goalMeta){goalMeta.innerHTML='';if(account&&!account.ephemeral){goalValue.textContent=t('home_goal_level',typeof testAdminLevelValue==='function'?testAdminLevelValue(account,Number(account.level)||1):Number(account.level)||1);const levelValue=typeof testAdminLevelValue==='function'?testAdminLevelValue(account,Number(account.level)||1):Number(account.level)||1;goalCopy.textContent=(Number(account.streak)||0)>0?t('home_goal_streak',Number(account.streak)||0):t('home_goal_recommendation',gameName);const level=el('span',null,t('home_goal_level_chip',levelValue));const target=el('span',null,t('home_goal_game_chip',gameName));goalMeta.appendChild(level);goalMeta.appendChild(target);}else{goalValue.textContent=t('home_goal_guest');goalCopy.textContent=t('home_goal_guest_copy');}}
-  const pulse=$('home-engagement-pulse'),pulseFriends=$('home-pulse-friends'),pulseCollection=$('home-pulse-collection'),pulseGoal=$('home-pulse-goal'),pulseIdentity=$('home-pulse-identity'),pulseIdentityAvatar=$('home-pulse-identity-avatar'),pulseIdentityName=$('home-pulse-identity-name'),pulseIdentityLevel=$('home-pulse-identity-level'),pulseProfile=$('btn-home-pulse-profile'),pulseChat=$('btn-home-pulse-chat'),pulseShop=$('btn-home-pulse-shop'),pulseDismiss=$('btn-home-pulse-dismiss');
+  const pulse=$('home-engagement-pulse'),pulseFriends=$('home-pulse-friends'),pulseCollection=$('home-pulse-collection'),pulseGoal=$('home-pulse-goal'),pulseProfile=$('btn-home-pulse-profile'),pulseChat=$('btn-home-pulse-chat'),pulseShop=$('btn-home-pulse-shop'),pulseDismiss=$('btn-home-pulse-dismiss');
   if(pulse){
     const visible=!!(account&&!account.ephemeral)&&!homePulseDismissedFor(account);
     pulse.classList.toggle('hidden',!visible);
     if(!visible){
       if(pulseFriends)pulseFriends.textContent='';if(pulseCollection)pulseCollection.textContent='';if(pulseGoal)pulseGoal.textContent='';
-      if(pulseIdentity)pulseIdentity.classList.add('hidden');if(pulseIdentityAvatar)pulseIdentityAvatar.innerHTML='';if(pulseIdentityName)pulseIdentityName.innerHTML='';if(pulseIdentityLevel)pulseIdentityLevel.textContent='';
       if(pulseProfile)pulseProfile.onclick=null;if(pulseChat)pulseChat.onclick=null;if(pulseShop)pulseShop.onclick=null;if(pulseDismiss)pulseDismiss.onclick=null;
     }else{
       let collectionRarity=null;try{if(typeof CollectionRarityCatalog!=='undefined'&&CollectionRarityCatalog&&typeof CollectionRarityCatalog.deriveOwnedCollection==='function')collectionRarity=CollectionRarityCatalog.deriveOwnedCollection(account.owned);}catch(_error){}
@@ -723,20 +732,8 @@ function renderGhostHome(){
       if(pulseFriends)pulseFriends.textContent=t('home_pulse_online_friends_value',onlineFriends);
       if(pulseCollection)pulseCollection.textContent=t('home_pulse_collection_value',ownedCount,catalogCount);
       if(pulseGoal)pulseGoal.textContent=existingGoal;
-      if(pulseIdentity){
-        pulseIdentity.classList.remove('hidden');
-        if(pulseIdentityAvatar){
-          pulseIdentityAvatar.innerHTML='';
-          try{if(typeof avatarStageNode==='function'){const avatar=avatarStageNode(account,56);if(avatar){avatar.setAttribute('aria-hidden','true');pulseIdentityAvatar.appendChild(avatar);}}}catch(_error){}
-        }
-        if(pulseIdentityName){
-          const rawName=typeof account.name==='string'?account.name:'';pulseIdentityName.innerHTML='';pulseIdentityName.setAttribute('data-i18n-raw','');
-          try{if(typeof nameFxNode==='function'){const nameNode=nameFxNode(account,rawName);if(nameNode)pulseIdentityName.appendChild(nameNode);else pulseIdentityName.textContent=rawName;}else pulseIdentityName.textContent=rawName;}catch(_error){pulseIdentityName.textContent=rawName;}
-        }
-        if(pulseIdentityLevel){const level=Math.max(1,Math.floor(Number(account.level)||1));pulseIdentityLevel.textContent=typeof testAdminLevelShortText==='function'?testAdminLevelShortText(account,level):t('profile_level_short',level);}
-      }
       if(pulseProfile)pulseProfile.onclick=()=>setAppRoute('profile');
-      if(pulseChat)pulseChat.onclick=()=>setAppRoute('chat');
+      if(pulseChat)pulseChat.onclick=()=>{if(typeof DirectMessage!=='undefined'&&DirectMessage&&typeof DirectMessage.open==='function')DirectMessage.open({opener:pulseChat});else setAppRoute('playline');};
       if(pulseShop)pulseShop.onclick=()=>{if(typeof openShop==='function')openShop();};
       if(pulseDismiss)pulseDismiss.onclick=()=>{dismissHomePulseFor(account);renderGhostHome();requestAnimationFrame(()=>{if(recommendationButton&&typeof recommendationButton.focus==='function')recommendationButton.focus();});};
     }
@@ -783,9 +780,10 @@ function chatEmptyNode(titleKey,bodyKey,action){
 }
 function openPlayerConversation(peerUid){
   peerUid=String(peerUid||'');if(!peerUid)return false;
+  if(typeof DirectMessage!=='undefined'&&DirectMessage&&typeof DirectMessage.open==='function')return DirectMessage.open({peerUid,opener:document.activeElement});
   if(typeof online==='undefined')return false;
   online.chatActivePeerUid=peerUid;
-  setAppRoute('chat',{chatView:'players'});
+  setAppRoute('playline',{chatView:'players'});
   const shell=$('player-chat-shell');if(shell)shell.classList.add('thread-open');
   online.requestChatHistory(peerUid);
   renderPlayerChat();
@@ -869,7 +867,7 @@ function handlePlayerChatHistory(payload){
 }
 function handlePlayerChatMessage(payload){
   const message=payload&&payload.message||{},peerUid=message.senderUid===account.uid?message.recipientUid:message.senderUid;
-  if(peerUid===online.chatActivePeerUid&&ghostAppRoute==='chat'&&ghostChatView==='players'&&message.recipientUid===account.uid)online.markChatRead(peerUid,message.seq);
+  if(peerUid===online.chatActivePeerUid&&(ghostAppRoute==='playline'||ghostAppRoute==='chat')&&ghostChatView==='players'&&message.recipientUid===account.uid)online.markChatRead(peerUid,message.seq);
   renderPlayerChat();
 }
 function handlePlayerChatSendAck(payload){
@@ -900,7 +898,8 @@ function renderGhostProfile(){
   const games=(typeof GAME_KEYS!=='undefined'?GAME_KEYS:Object.keys(GAMES)).filter(id=>GAMES[id]);
   const unlocked=new Set(Array.isArray(account.achievements)?account.achievements:[]),titleInfo=typeof titleFor==='function'?titleFor(level):{icon:'✦',nameKey:'social_title_1'};
 
-  const hero=el('section','profile-route-hero profile-hero bg-'+Number(account.background||0));ghostProfileBackgroundNode=hero;
+  const priority=el('div','profile-route-priority');
+  const hero=el('section','profile-route-hero profile-hero bg-'+Number(account.background||0));hero.setAttribute('data-profile-region','identity');ghostProfileBackgroundNode=hero;
   if(typeof applyPremiumBackground==='function')applyPremiumBackground(hero,account.background||0,'profile');
   const heroScrim=el('div','profile-route-hero-scrim'),identity=el('div','profile-route-identity');identity.appendChild(avatarStageNode(account,108));
   const identityCopy=el('div','profile-route-identity-copy'),name=el('div','profile-route-name');name.appendChild(nameFxNode(account,account.name||t('default_player_name')));if(typeof appendTestAdminBadge==='function')appendTestAdminBadge(name,account,'profile');name.appendChild(el('span','profile-lang-flag',langFlag(account.lang||currentLang)));identityCopy.appendChild(name);
@@ -911,18 +910,22 @@ function renderGhostProfile(){
   if(account.signature)identityCopy.appendChild(chatRawNode('p','profile-route-signature','“'+String(account.signature).slice(0,80)+'”'));
   const showcase=typeof profileShowcaseText==='function'?profileShowcaseText(account):'';if(showcase)identityCopy.appendChild(el('div','profile-route-showcase',showcase));
   identity.appendChild(identityCopy);heroScrim.appendChild(identity);
-  const heroActions=el('div','profile-route-hero-actions');[['edit_profile',()=>openProfileEditor(account.uid),'btn-primary'],['shop',()=>openShop(),'']].forEach(([key,fn,cls])=>{const button=el('button','btn '+cls,t(key));button.addEventListener('click',fn);heroActions.appendChild(button);});heroScrim.appendChild(heroActions);hero.appendChild(heroScrim);root.appendChild(hero);
+  const heroActions=el('div','profile-route-hero-actions');[['edit_profile',()=>openProfileEditor(account.uid),'btn-primary'],['shop',()=>openShop(),'']].forEach(([key,fn,cls])=>{const button=el('button','btn '+cls,t(key));button.addEventListener('click',fn);heroActions.appendChild(button);});heroScrim.appendChild(heroActions);hero.appendChild(heroScrim);priority.appendChild(hero);
 
-  const growth=el('section','home-glass-card profile-growth-card');
+  const growth=el('section','home-glass-card profile-growth-card');growth.setAttribute('data-profile-region','growth');
   const growthHead=el('div','profile-section-head');growthHead.appendChild(el('div',null,t('profile_growth_title')));growthHead.appendChild(el('span',null,typeof testAdminGrowthText==='function'?testAdminGrowthText(account,xpCurrent,xpRequired):t('profile_xp_progress',xpCurrent,xpRequired)));growth.appendChild(growthHead);
   const progress=el('div','profile-xp-progress');progress.setAttribute('role','progressbar');progress.setAttribute('aria-label',testAdmin?t('test_admin_growth_aria'):t('profile_xp_aria'));progress.setAttribute('aria-valuemin','0');progress.setAttribute('aria-valuemax',String(testAdmin?1:xpRequired));progress.setAttribute('aria-valuenow',String(testAdmin?1:xpCurrent));const fill=el('span');fill.style.width=xpPercent+'%';progress.appendChild(fill);growth.appendChild(progress);
-  const stats=el('div','profile-route-stats');[
-    ['profile_stat_level',typeof testAdminLevelValue==='function'?testAdminLevelValue(account,level):String(level)],['profile_stat_games',String(total)],['profile_stat_wins',String(totalWins)],['profile_stat_win_rate',winRate===null?'—':winRate+'%'],['profile_stat_streak',String(account.streak||0)],['profile_stat_best_streak',String(account.bestStreak||0)],['profile_stat_achievements',unlocked.size+'/'+(typeof ACHIEVEMENTS!=='undefined'?ACHIEVEMENTS.length:8)],['profile_stat_balance',typeof testAdminCurrencyText==='function'?testAdminCurrencyText(account):(typeof currencyAmountText==='function'?currencyAmountText(account.coins||0):String(account.coins||0)+'💵')],
-  ].forEach(([key,value])=>{const item=el('div','profile-route-stat');item.appendChild(el('strong',null,value));item.appendChild(el('span',null,t(key)));stats.appendChild(item);});growth.appendChild(stats);root.appendChild(growth);
+  const coreStats=el('div','profile-route-stats profile-core-stats'),supportStats=el('div','profile-route-stats profile-support-stats');
+  [
+    ['profile_stat_level',typeof testAdminLevelValue==='function'?testAdminLevelValue(account,level):String(level)],['profile_stat_wins',String(totalWins)],['profile_stat_win_rate',winRate===null?'—':winRate+'%'],['profile_stat_balance',typeof testAdminCurrencyText==='function'?testAdminCurrencyText(account):(typeof currencyAmountText==='function'?currencyAmountText(account.coins||0):String(account.coins||0)+'💵')],
+  ].forEach(([key,value])=>{const item=el('div','profile-route-stat');item.appendChild(el('strong',null,value));item.appendChild(el('span',null,t(key)));coreStats.appendChild(item);});
+  [
+    ['profile_stat_games',String(total)],['profile_stat_streak',String(account.streak||0)],['profile_stat_best_streak',String(account.bestStreak||0)],['profile_stat_achievements',unlocked.size+'/'+(typeof ACHIEVEMENTS!=='undefined'?ACHIEVEMENTS.length:8)],
+  ].forEach(([key,value])=>{const item=el('div','profile-route-stat');item.appendChild(el('strong',null,value));item.appendChild(el('span',null,t(key)));supportStats.appendChild(item);});growth.appendChild(coreStats);growth.appendChild(supportStats);priority.appendChild(growth);root.appendChild(priority);
 
   const journeyModel=typeof ProfileJourney!=='undefined'&&ProfileJourney?ProfileJourney.deriveProfileJourney(account,{masteryApi:typeof VictoryMastery!=='undefined'?VictoryMastery:null,achievementTotal:typeof ACHIEVEMENTS!=='undefined'?ACHIEVEMENTS.length:0}):null;
   if(journeyModel){
-    const journeySection=el('section','home-glass-card profile-journey-section'),journeyHead=el('div','profile-section-head');journeyHead.appendChild(el('h2',null,t('profile_journey_title')));journeyHead.appendChild(el('span',null,t('profile_journey_subtitle')));journeySection.appendChild(journeyHead);
+    const journeySection=el('section','home-glass-card profile-journey-section');journeySection.setAttribute('data-profile-region','journey');const journeyHead=el('div','profile-section-head');journeyHead.appendChild(el('h2',null,t('profile_journey_title')));journeyHead.appendChild(el('span',null,t('profile_journey_subtitle')));journeySection.appendChild(journeyHead);
     const journeyGrid=el('div','profile-journey-grid');
     const addGoal=(icon,label,detail,action,onClick)=>{const card=el('button','profile-journey-card');card.type='button';card.appendChild(el('span','profile-journey-icon',icon));const copy=el('span','profile-journey-copy');copy.appendChild(el('small',null,label));copy.appendChild(el('strong',null,detail));copy.appendChild(el('span','profile-journey-action',action+' →'));card.appendChild(copy);card.setAttribute('aria-label',label+' · '+detail+' · '+action);card.addEventListener('click',onClick);journeyGrid.appendChild(card);};
     const masteryGoal=journeyModel.mastery,masteryGame=masteryGoal.gameId&&GAMES[masteryGoal.gameId],masteryName=masteryGame&&(masteryGame.name||t(masteryGame.nameKey));
@@ -932,7 +935,7 @@ function renderGhostProfile(){
     journeySection.appendChild(journeyGrid);root.appendChild(journeySection);
   }
 
-  const content=el('div','profile-route-content'),main=el('div','profile-route-main'),side=el('aside','profile-route-side');
+  const content=el('div','profile-route-content');content.setAttribute('data-profile-region','library');const main=el('div','profile-route-main'),side=el('aside','profile-route-side');
   const gameSection=el('section','home-glass-card profile-route-section');const gameHead=el('div','profile-section-head');gameHead.appendChild(el('h2',null,t('profile_games_title')));gameHead.appendChild(el('span',null,t('profile_games_subtitle')));gameSection.appendChild(gameHead);
   const masteryFallback=typeof VictoryMastery!=='undefined'&&VictoryMastery?VictoryMastery.deriveVictoryMastery(account.wins||{}):null;
   const gameGrid=el('div','profile-game-grid');games.forEach(id=>{
@@ -970,7 +973,7 @@ function renderGhostProfile(){
   const replaySection=el('section','home-glass-card profile-route-section');const replayHead=el('div','profile-section-head');replayHead.appendChild(el('h2',null,t('profile_replays_title')));replayHead.appendChild(el('span',null,t('profile_replays_retention')));replaySection.appendChild(replayHead);const ownReplays=(online&&Array.isArray(online.replays)?online.replays:[]).filter(item=>item&&item.canShare===true).slice(0,3),replayList=el('div','profile-replay-list');ownReplays.forEach(item=>{const row=el('button','profile-replay-row');row.type='button';row.appendChild(el('span',null,GAMES[item.game]&&GAMES[item.game].icon||'🎮'));row.appendChild(el('strong',null,GAMES[item.game]&&(GAMES[item.game].name||t(GAMES[item.game].nameKey))||item.game));row.appendChild(el('small',null,t('replay_events',item.eventCount||0)));row.addEventListener('click',()=>online.requestReplay(item.replayId));replayList.appendChild(row);});if(!ownReplays.length)replayList.appendChild(el('div','profile-compact-empty',t('profile_replays_empty')));replaySection.appendChild(replayList);side.appendChild(replaySection);
   content.appendChild(main);content.appendChild(side);root.appendChild(content);
 
-  const footer=el('section','profile-route-footer');const edit=el('button','btn',t('edit_profile'));edit.addEventListener('click',()=>openProfileEditor(account.uid));footer.appendChild(edit);const logout=el('button','btn',t(account.ephemeral?'profile_guest_logout':'logout'));logout.addEventListener('click',logoutAccount);footer.appendChild(logout);root.appendChild(footer);
+  const footer=el('section','profile-route-footer');const logout=el('button','btn',t(account.ephemeral?'profile_guest_logout':'logout'));logout.addEventListener('click',logoutAccount);footer.appendChild(logout);root.appendChild(footer);
 }
 function setGhostHero(index){
   const slides=[...document.querySelectorAll('[data-hero-slide]')];
@@ -994,13 +997,16 @@ function handleCompanionCheckin(payload){
   setHonruPlatformReaction(payload&&payload.already?'idle':'check-in');
 }
 function enterGhostApp(options){
+  const legacyChat=typeof location!=='undefined'&&/^#\/chat(?:$|[?&])/.test(String(location.hash||''));
   document.body.classList.remove('ghost-shell-booting','auth-required');document.body.classList.add('authenticated');
   const app=$('app');if(app){app.hidden=false;app.inert=false;app.removeAttribute('aria-hidden');}
   if (authModalEl){releaseModalScrollLock(authModalEl);authModalEl.remove();authModalEl=null;}
   setAppRoute(routeFromHash(),{replace:true,silentHash:!!(options&&options.silentHash)});
   renderGhostHome();renderGhostProfile();
+  if(legacyChat)requestAnimationFrame(()=>{if(typeof DirectMessage!=='undefined'&&DirectMessage&&typeof DirectMessage.open==='function')DirectMessage.open({opener:$('btn-global-messages')});});
 }
 function requireGhostAuth(mode){
+  if(typeof GhostRouteMotion!=='undefined'&&GhostRouteMotion&&typeof GhostRouteMotion.settle==='function')GhostRouteMotion.settle('auth_required');
   clearHonruGameReaction();
   if(typeof exitImmersiveGameShell==='function')exitImmersiveGameShell();
   document.body.classList.remove('ghost-shell-booting','authenticated');document.body.classList.add('auth-required');
@@ -1011,7 +1017,14 @@ function initGhostShell(){
   document.querySelectorAll('[data-app-route-target]').forEach(node=>node.addEventListener('click',()=>setAppRoute(node.getAttribute('data-app-route-target'))));
   document.querySelectorAll('[data-hero-dot]').forEach(node=>node.addEventListener('click',()=>{setGhostHero(node.getAttribute('data-hero-dot'));resetGhostHeroTimer();}));
   const checkin=$('btn-home-checkin');if(checkin)checkin.addEventListener('click',petHonru);
-  initPlayerChat();
-  if(window&&typeof window.addEventListener==='function')window.addEventListener('hashchange',()=>{const route=routeFromHash();if(GHOST_APP_ROUTES.includes(route)&&(route!==ghostAppRoute||route==='chat'))setAppRoute(route,{silentHash:true});});
+  if(typeof Playline!=='undefined'&&Playline&&typeof Playline.init==='function')Playline.init();
+  if(typeof DirectMessage!=='undefined'&&DirectMessage&&typeof DirectMessage.init==='function')DirectMessage.init();
+  const shareGame=$('btn-playline-share-game');if(shareGame)shareGame.addEventListener('click',()=>openPlaylineGameSharePicker(shareGame));
+  const shareResult=$('btn-playline-share-result');if(shareResult&&typeof Playline!=='undefined'&&Playline&&typeof Playline.prefill==='function')shareResult.addEventListener('click',()=>{const pending=typeof online!=='undefined'&&online&&online.lastShareableResult;if(pending)Playline.prefill({kind:'result_share',resultId:pending.resultId,gameId:pending.gameId});else toast(t('playline_result_unavailable'));});
+  const shareRecord=$('btn-playline-share-record');if(shareRecord&&typeof Playline!=='undefined'&&Playline&&typeof Playline.prefill==='function')shareRecord.addEventListener('click',()=>Playline.prefill({kind:'record_share',recordId:'total_wins'}));
+  const openGames=$('btn-playline-open-games');if(openGames)openGames.addEventListener('click',()=>setAppRoute('games'));
+  const globalMessages=$('btn-global-messages');if(globalMessages&&typeof DirectMessage!=='undefined'&&DirectMessage&&typeof DirectMessage.open==='function')globalMessages.addEventListener('click',()=>DirectMessage.open({opener:globalMessages}));
+  const playlineMessages=$('btn-playline-open-messages');if(playlineMessages&&typeof DirectMessage!=='undefined'&&DirectMessage&&typeof DirectMessage.open==='function')playlineMessages.addEventListener('click',()=>DirectMessage.open({opener:playlineMessages}));
+  if(window&&typeof window.addEventListener==='function')window.addEventListener('hashchange',()=>{const route=routeFromHash();if(GHOST_APP_ROUTES.includes(route)&&(route!==ghostAppRoute||route==='playline'))setAppRoute(route,{silentHash:true});});
   setGhostHero(0);resetGhostHeroTimer();
 }

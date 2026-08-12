@@ -231,7 +231,7 @@ async function main(){
   const englishAvatarAlt = G.avatarAltForQa(100);
   check('英文切换覆盖 Avatar v2 替代文本', !!englishAvatarAlt && !/[\u3400-\u9fff]/.test(englishAvatarAlt) && !/shop_item_/.test(englishAvatarAlt));
   G.aiMode = true; G.renderPersonaRow();
-  check('英文覆盖 AI 角色选择与大厅动态文字', untranslatedUi([$('game-grid'),$('persona-row'),$('my-card')]).length === 0);
+  check('英文覆盖 AI 难度选择与大厅动态文字', untranslatedUi([$('game-grid'),$('persona-row'),$('my-card')]).length === 0);
   G.aiMode = false;
   for (const id of ['gomoku','ludo','monopoly','tank','tetris','xiangqi']){
     G.playerCount = 2; G.showGame(id);
@@ -249,7 +249,7 @@ async function main(){
   check('乌克兰语切换覆盖 Avatar v2 替代文本', !!ukrainianAvatarAlt && !/[\u3400-\u9fff]/.test(ukrainianAvatarAlt) && !/shop_item_/.test(ukrainianAvatarAlt));
   check('历史 AI 对手名称按当前语言实时派生', G.aiMateDisplayName('ai_gambler', 'legacy-name') !== englishAiMateName && !/[\u3400-\u9fff]/.test(G.aiMateDisplayName('ai_gambler', 'legacy-name')));
   G.aiMode = true; G.renderPersonaRow();
-  check('乌克兰语覆盖 AI 角色选择与大厅动态文字', untranslatedUi([$('game-grid'),$('persona-row'),$('my-card')]).length === 0);
+  check('乌克兰语覆盖 AI 难度选择与大厅动态文字', untranslatedUi([$('game-grid'),$('persona-row'),$('my-card')]).length === 0);
   G.aiMode = false;
   for (const id of ['gomoku','ludo','monopoly','tank','tetris','xiangqi']){
     G.playerCount = 2; G.showGame(id);
@@ -599,15 +599,18 @@ async function main(){
     online.pendingSoloClaims = [];
   }
 
-  // AI 角色化（Phase 4）
-  check('AI_PERSONAS 定义 5 个角色', G.personas && G.personas.length === 5);
-  const personaBefore = G.currentPersona.id;
-  G.setAiPersona('gambler');
-  check('切换 AI 角色生效', G.currentPersona.id === 'gambler' && G.currentPersona === G.personas.find(persona => persona.id === 'gambler'));
-  G.setAiPersona(personaBefore);
+  // AI 对手只暴露三档强度；旧 persona 符号仅作跨模块兼容。
+  check('AI 难度目录定义简单、普通、困难三档',
+    G.personas && JSON.stringify(G.personas.map(item => item.id)) === JSON.stringify(['easy','normal','hard']));
+  const difficultyBefore = G.currentPersona.difficulty;
+  G.setAiPersona('hard');
+  check('切换困难 AI 生效且兼容层不恢复人格',
+    G.currentPersona.id === 'teacher' && G.currentPersona.difficulty === 'hard');
+  G.setAiPersona(difficultyBefore);
   G.aiMode = true;
   G.renderPersonaRow();
-  check('人机模式渲染角色选择卡', $('persona-row').children.length >= 2 && $('persona-row').querySelectorAll('.persona-card').length === 5);
+  check('人机模式渲染三张难度选择卡',
+    $('persona-row').children.length >= 2 && $('persona-row').querySelectorAll('.ai-difficulty-card').length === 3);
   G.aiMode = false;
   G.renderPersonaRow();
   check('联机模式隐藏 AI 角色选择', $('persona-row').classList.contains('hidden'));
@@ -623,9 +626,10 @@ async function main(){
       const node = stBd.querySelector(`[data-i18n="${key}"]`);
       return node && node.textContent;
     };
-    check('设置弹层内切换语言后标题与分区即时更新',
+    check('设置弹层内切换语言后标题与分区即时更新且无连接服务入口',
       localizedSetting('settings') === 'Settings' && localizedSetting('theme') === 'Theme' &&
-      localizedSetting('language') === 'Language' && localizedSetting('server_config') === 'Online Server' && localizedSetting('close') === 'Close');
+      localizedSetting('language') === 'Language' && localizedSetting('close') === 'Close' &&
+      localizedSetting('server_config') === null);
     check('设置页只持久化实际加载成功的账号语言', JSON.parse(localStorage.getItem('mg_account')).lang === 'en-US');
     const chineseButton = stBd.querySelectorAll('button').find(button => button.dataset.langCode === 'zh-CN');
     if (chineseButton) { chineseButton.dispatch('click'); await sleep(20); }

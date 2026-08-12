@@ -14,7 +14,8 @@ function gameTank(area, extra, n, opts){
   const seasonLabel=value=>t('tank_season_'+value);
   const previousTouchAction = area.style.touchAction || '';
   const previousOverscroll = area.style.overscrollBehavior || '';
-  area.style.touchAction = 'none'; area.style.overscrollBehavior = 'contain';
+  const previousDisplay = area.style.display || '', previousFlexDirection = area.style.flexDirection || '', previousAlignItems = area.style.alignItems || '', previousJustifyContent = area.style.justifyContent || '';
+  area.style.touchAction = 'none'; area.style.overscrollBehavior = 'contain'; area.style.display = 'flex'; area.style.flexDirection = 'column'; area.style.alignItems = 'center'; area.style.justifyContent = 'flex-start';
 
   let grid = [], tanks = [], bullets = [], traces = [], effects = [];
   let over = false, winner = -1, cur = 0, destroyed = false;
@@ -28,6 +29,13 @@ function gameTank(area, extra, n, opts){
   let lastRenderAt = 0;
   const performanceStats={samples:0,lastFrameMs:0,maxFrameMs:0,longFrames:0};
   const transientTimers=new Set();
+  // Wave C is presentation-only.  Keep its process/timers outside snapshots
+  // so authority, input sequencing and replay payloads remain unchanged.
+  const TANK_WAVE_C_PROCESS_STEPS = ['spawn','ready','move','fire','hit','ko','score','terminal'];
+  let tankWaveCProcess = 'spawn', tankWaveCProcessDetail = '', tankWaveCProcessEpoch = 0, tankWaveCProcessRevision = 0;
+  const tankWaveCProcessTimers = new Set();
+  let tankWaveCProcessRail = null, tankWaveCProcessLabel = null, tankWaveCProcessSteps = [];
+  let tankWaveCMoveQuietTimer = null, tankWaveCMoveQuietRevision = 0;
   const renderObjectIds=new WeakMap();
   let nextRenderObjectId=0,lastPlayersSignature='',lastStatusText='',victoryShown=false;
   const renderNodes={board:null,staticCells:new Map(),traces:new Map(),bullets:new Map(),tanks:new Map(),respawns:new Map(),effects:new Map(),time:null,scores:[]};
@@ -36,6 +44,96 @@ function gameTank(area, extra, n, opts){
   function scheduleTransient(callback,delay){
     const timer=setTimeout(()=>{transientTimers.delete(timer);if(!destroyed)callback();},delay);
     if(timer&&typeof timer.unref==='function')timer.unref();transientTimers.add(timer);return timer;
+  }
+  function clearTankWaveCMoveQuietTimer(){
+    tankWaveCMoveQuietRevision++;
+    if (tankWaveCMoveQuietTimer !== null){
+      clearTimeout(tankWaveCMoveQuietTimer);
+      tankWaveCProcessTimers.delete(tankWaveCMoveQuietTimer);
+      tankWaveCMoveQuietTimer = null;
+    }
+  }
+  function clearTankWaveCProcessTimers(){
+    clearTankWaveCMoveQuietTimer();
+    tankWaveCProcessTimers.forEach(timer => clearTimeout(timer));
+    tankWaveCProcessTimers.clear();
+  }
+  function scheduleTankWaveCProcess(callback, delay){
+    const epoch = tankWaveCProcessEpoch;
+    const timer = setTimeout(() => {
+      tankWaveCProcessTimers.delete(timer);
+      if (!destroyed && epoch === tankWaveCProcessEpoch) callback();
+    }, Math.max(0, Number(delay) || 0));
+    if (timer && typeof timer.unref === 'function') timer.unref();
+    tankWaveCProcessTimers.add(timer);
+    return timer;
+  }
+  function tankWaveCProcessText(){
+    const player = Number(tankWaveCProcessDetail) + 1;
+    if (tankWaveCProcess === 'spawn') return t('tank_realtime') + ' · ' + t('player_number', player);
+    if (tankWaveCProcess === 'ready') return t('tank_control_hint');
+    if (tankWaveCProcess === 'move') return t('tank_direction_neutral');
+    if (tankWaveCProcess === 'fire') return t('tank_fire');
+    if (tankWaveCProcess === 'hit') return t('tank_player_stats', player, 0, 0);
+    if (tankWaveCProcess === 'ko') return t('tank_win_status', player, 0);
+    if (tankWaveCProcess === 'score') return t('tank_score_line', player, 0, 0, 0);
+    return t('match_over');
+  }
+  function tankWaveCData(node, key, value){
+    if (!node) return;
+    const datasetKey = key.replace(/-([a-z])/g, (_match, char) => char.toUpperCase());
+    if (node.dataset) node.dataset[datasetKey] = String(value);
+    if (node.setAttribute) node.setAttribute('data-' + key, String(value));
+  }
+  function paintTankWaveCProcess(){
+    tankWaveCData(area, 'tank-process', tankWaveCProcess);
+    if (renderNodes && renderNodes.board) tankWaveCData(renderNodes.board, 'tank-process', tankWaveCProcess);
+    if (tankWaveCProcessRail){
+      tankWaveCData(tankWaveCProcessRail, 'tank-process', tankWaveCProcess);
+      if (tankWaveCProcessLabel) tankWaveCProcessLabel.textContent = tankWaveCProcessText();
+      tankWaveCProcessSteps.forEach(step => {
+        const active = step && step.dataset && step.dataset.tankProcessStep === tankWaveCProcess;
+        tankWaveCData(step, 'tank-process-active', active ? 'true' : 'false');
+        if (step && step.style){
+          step.style.background = active ? 'linear-gradient(90deg,var(--accent,#435ac1),#f59e0b)' : 'rgba(76,43,21,.16)';
+          step.style.boxShadow = active ? '0 2px 0 rgba(43,32,37,.2),0 5px 10px rgba(245,158,11,.28)' : 'inset 0 1px 1px rgba(255,255,255,.65)';
+          step.style.transform = active && !(typeof prefersReducedMotion === 'function' && prefersReducedMotion()) ? 'translateY(-2px) scaleY(1.16)' : 'none';
+        }
+      });
+    }
+  }
+  function setTankWaveCProcess(next, detail){
+    const process = TANK_WAVE_C_PROCESS_STEPS.includes(next) ? next : 'ready';
+    const processDetail = detail === undefined || detail === null ? '' : String(detail);
+    if (process === tankWaveCProcess && processDetail === tankWaveCProcessDetail) return;
+    if (process !== 'move') clearTankWaveCMoveQuietTimer();
+    tankWaveCProcess = process;
+    tankWaveCProcessDetail = processDetail;
+    tankWaveCProcessRevision++;
+    paintTankWaveCProcess();
+  }
+  function settleTankWaveCProcess(next, detail, delay){
+    if (typeof prefersReducedMotion === 'function' && prefersReducedMotion()) { setTankWaveCProcess(next, detail); return; }
+    const revision = tankWaveCProcessRevision;
+    scheduleTankWaveCProcess(() => {
+      if (revision === tankWaveCProcessRevision) setTankWaveCProcess(next, detail);
+    }, delay);
+  }
+  function tankWaveCProcessBlocksMove(){
+    return ['fire','hit','ko','score','spawn','terminal'].includes(tankWaveCProcess);
+  }
+  function noteTankWaveCMove(){
+    if (tankWaveCProcessBlocksMove()) return;
+    setTankWaveCProcess('move');
+    if (typeof prefersReducedMotion === 'function' && prefersReducedMotion()) return;
+    const revision = tankWaveCProcessRevision;
+    clearTankWaveCMoveQuietTimer();
+    const quietRevision = tankWaveCMoveQuietRevision;
+    tankWaveCMoveQuietTimer = scheduleTankWaveCProcess(() => {
+      if (quietRevision !== tankWaveCMoveQuietRevision || revision !== tankWaveCProcessRevision || tankWaveCProcess !== 'move') return;
+      tankWaveCMoveQuietTimer = null;
+      setTankWaveCProcess('ready');
+    }, 180);
   }
   function renderObjectKey(value,prefix){
     if(!value||typeof value!=='object')return prefix+'-none';
@@ -100,7 +198,7 @@ function gameTank(area, extra, n, opts){
   }
   function resetLocal(){
     if (typeof releaseAllControls === 'function') releaseAllControls(false);
-    aiEpoch++; aiPending.clear(); clearTransientTimers(); removeVictoryOverlay(); lastPlayersSignature='';lastStatusText='';buildMap();
+    aiEpoch++; aiPending.clear(); clearTransientTimers(); clearTankWaveCProcessTimers(); tankWaveCProcessEpoch++; removeVictoryOverlay(); lastPlayersSignature='';lastStatusText='';buildMap();
     startedAt = Date.now(); finishedAt = 0; remainingMs = MATCH_MS; lastLoopAt = startedAt; accumulator = 0;
     tanks = Array.from({length:playerCount}, (_, i) => createTank(i));
     bullets = []; traces = []; effects = []; over = false; winner = -1; cur = 0; bulletSequence = 0; destroyed = false;
@@ -108,6 +206,8 @@ function gameTank(area, extra, n, opts){
     authorityServerTick = 0;
     authorityEndAt = authorityMode && opts.gameplayMeta ? Number(opts.gameplayMeta.endAt) || 0 : 0;
     season = chooseSeason(matchSeed());
+    setTankWaveCProcess('spawn');
+    settleTankWaveCProcess('ready', controlledPlayer(), 220);
     render(); updateStatus();
   }
   function controlledPlayer(){ return opts.online ? Math.max(0, Number(opts.myIdx) || 0) : 0; }
@@ -123,6 +223,7 @@ function gameTank(area, extra, n, opts){
   function moveTank(tank, dx, dy, dt){
     if (!tank || !tank.alive) return;
     if (dx || dy){
+      noteTankWaveCMove();
       if (Math.abs(dx) >= Math.abs(dy)) tank.d = dx > 0 ? 1 : 3;
       else tank.d = dy > 0 ? 2 : 0;
       const length = Math.hypot(dx,dy) || 1, speed = 2.65;
@@ -139,12 +240,14 @@ function gameTank(area, extra, n, opts){
   function fireTank(tank){
     const now = Date.now();
     if (!tank || !tank.alive || now < tank.fireReadyAt) return false;
+    setTankWaveCProcess('fire', tank.id);
     tank.fireReadyAt = now + 420; tank.shots++;
     const d = DIRS[tank.d];
     bullets.push({ id:++bulletSequence, owner:tank.id, x:tank.x+d[0]*.55, y:tank.y+d[1]*.55, d:tank.d, ttl:2600 });
     effects.push({ x:tank.x+d[0]*.5, y:tank.y+d[1]*.5, type:'muzzle', at:now, ttl:140 });
     if (effects.length > 40) effects.splice(0, effects.length - 40);
     playFeedback('shoot');
+    settleTankWaveCProcess('ready', tank.id, 180);
     return true;
   }
   function damageTank(target, owner, amount){
@@ -153,14 +256,18 @@ function gameTank(area, extra, n, opts){
     target.hp -= amount;
     const shooter = tanks[owner];
     if (shooter){ shooter.damage += amount; shooter.hits++; }
+    setTankWaveCProcess('hit', target.id);
     effects.push({ x:target.x, y:target.y, type:'impact', at:now, ttl:360 });
     if (target.hp <= 0){
+      setTankWaveCProcess('ko', target.id);
       target.alive = false; target.deaths++; target.respawnAt = now + 2000; target.input = emptyInput();
       if (shooter && shooter.id !== target.id) shooter.kills++;
       effects.push({ x:target.x, y:target.y, type:'explosion', at:now, ttl:850 });
       traces.push({ x:target.x, y:target.y, at:now, type:'scorch', owner:target.id });
       playFeedback('capture');
+      settleTankWaveCProcess('score', owner, 260);
     }
+    else settleTankWaveCProcess('ready', target.id, 220);
     return true;
   }
   function safestSpawn(tank){
@@ -175,7 +282,9 @@ function gameTank(area, extra, n, opts){
     const spawn = safestSpawn(tank);
     tank.x = spawn[0]; tank.y = spawn[1]; tank.d = tank.id % 2 ? 3 : 1; tank.hp = 3;
     tank.alive = true; tank.respawnAt = 0; tank.invulnerableUntil = now + 1500; tank.input = emptyInput();
+    setTankWaveCProcess('spawn', tank.id);
     effects.push({ x:tank.x, y:tank.y, type:'respawn', at:now, ttl:600 });
+    settleTankWaveCProcess('ready', tank.id, 320);
   }
   function fixedUpdate(dt){
     if (over) return;
@@ -233,6 +342,9 @@ function gameTank(area, extra, n, opts){
     resultCommitted = true;
     if (broadcastFinal) broadcastAuthoritativeState(order);
     if (opts.onEnd) opts.onEnd(resultsForOrder(order));
+    clearTankWaveCProcessTimers();
+    setTankWaveCProcess('score', winner);
+    settleTankWaveCProcess('terminal', winner, 260);
     render(); setStatus(t('tank_win_status',winner+1,tanks[winner].kills), true);
     return true;
   }
@@ -585,29 +697,29 @@ function gameTank(area, extra, n, opts){
     }
     return distance;
   }
-  function tankAIPersonaBonus(item){
-    const id=opts.aiPersona&&opts.aiPersona.id,features=item.features;
-    if(id==='gambler')return (item.choice==='shoot'?5:0)+features.line_of_sight*2-features.cover;
-    if(id==='mean')return (item.choice==='shoot'?3:0)+features.target_priority*3;
-    if(id==='cute')return features.dodge*3+features.cover*2;
-    if(id==='tsundere')return features.line_of_sight*2+features.path_progress;
-    return 0;
+  function tankDifficultyProfile(difficulty){
+    const id=difficulty&&difficulty.id;
+    if(id==='easy')return{pathSearch:false,candidates:4};
+    if(id==='hard')return{pathSearch:true,candidates:5};
+    // 普通档保留既有危险图 + 火线最短路径近优策略。
+    return{pathSearch:true,candidates:4};
   }
-  function tankAIPlan(pi){
+  function tankAIPlan(pi,difficulty){
     const me=tanks[pi];
     if(!me||!me.alive)return null;
+    const profile=tankDifficultyProfile(difficulty);
     const targetInfo=tankAISelectTarget(me),target=targetInfo&&targetInfo.target;
-    const influence=tankAIBuildInfluence(me),fireDistance=tankAIFireDistance(me,target,influence);
+    const influence=tankAIBuildInfluence(me),fireDistance=profile.pathSearch?tankAIFireDistance(me,target,influence):null;
     const currentCell=[Math.floor(me.y),Math.floor(me.x)],currentMap=influence[currentCell[0]][currentCell[1]]||{danger:1,cover:0};
     const currentBullet=tankAIBulletThreat(me.x,me.y,me.id),urgent=currentBullet.urgent;
-    const currentFireDistance=fireDistance[currentCell[0]][currentCell[1]],ranked=[];
+    const currentFireDistance=fireDistance&&fireDistance[currentCell[0]]?fireDistance[currentCell[0]][currentCell[1]]:Infinity,ranked=[];
     DIRS.forEach(([dx,dy],direction)=>{
       const x=me.x+dx*AI_MOVE_LOOKAHEAD,y=me.y+dy*AI_MOVE_LOOKAHEAD;
       if(isBlocked(x,y,me.id))return;
       const r=Math.floor(y),c=Math.floor(x),map=influence[r]&&influence[r][c]||{danger:1,cover:0,boundary:1};
       const projectile=tankAIBulletThreat(x,y,me.id).value,danger=Math.max(map.danger,projectile);
       const line=target&&tankAIFireLine({id:me.id,x,y},target),aimed=!!(line&&line.direction===direction);
-      const nextFireDistance=fireDistance[r]&&fireDistance[r][c];
+      const nextFireDistance=fireDistance&&fireDistance[r]&&fireDistance[r][c];
       let pathProgress=0;
       if(Number.isFinite(currentFireDistance)&&Number.isFinite(nextFireDistance))pathProgress=tankAIClamp((currentFireDistance-nextFireDistance)/2,-1,1);
       else if(!Number.isFinite(currentFireDistance)&&Number.isFinite(nextFireDistance))pathProgress=1;
@@ -649,10 +761,10 @@ function gameTank(area, extra, n, opts){
     ranked.push({choice:'shoot',score:shotScore,features:shotFeatures});
     ranked.sort((a,b)=>b.score-a.score||a.choice.localeCompare(b.choice));
     const best=ranked[0],band=Math.max(16,Math.min(42,Math.abs(best.score)*.1+10));
-    const near=ranked.filter(item=>item.score>=best.score-band).slice(0,4);
+    const near=ranked.filter(item=>item.score>=best.score-band).slice(0,profile.candidates);
     near.forEach(item=>{item.features.quality=tankAIClamp(1-(best.score-item.score)/Math.max(1,band),-1,1);});
-    near.sort((a,b)=>(b.score+tankAIPersonaBonus(b))-(a.score+tankAIPersonaBonus(a))||a.choice.localeCompare(b.choice));
-    return {me,targetInfo,influence,currentDanger:currentMap.danger,urgent,best,near};
+    near.sort((a,b)=>b.score-a.score||a.choice.localeCompare(b.choice));
+    return {me,targetInfo,influence,currentDanger:currentMap.danger,urgent,best,near,profile};
   }
 
   const aiPending = new Set(),aiThinkGate=new Map();
@@ -662,11 +774,15 @@ function gameTank(area, extra, n, opts){
     if(gate&&gate.epoch===aiEpoch&&now<gate.readyAt)return;
     // 正常 650ms 调度不受影响；同时避免后台/测试的压缩计时器造成高频重复寻路。
     aiThinkGate.set(pi,{epoch:aiEpoch,readyAt:now+400});
-    const plan=tankAIPlan(pi);
+    const difficulty=typeof aiDifficultyFromOptions === 'function' ? aiDifficultyFromOptions(opts) : {id:'hard'};
+    const plan=tankAIPlan(pi,difficulty);
     if(!plan||!plan.near.length)return;
     aiPending.add(pi); const epoch = aiEpoch,plannedAt=Date.now();
     const choices=plan.near.map(item=>item.choice);
     const learningCandidates=plan.near.map(item=>({choice:item.choice,features:{...item.features}}));
+    const remoteAllowed=typeof aiDifficultyAllowsRemote === 'function' ? aiDifficultyAllowsRemote(difficulty) : difficulty.id==='hard';
+    const remoteProfile=typeof aiDifficultyRequestProfile === 'function' ? aiDifficultyRequestProfile(difficulty) : {id:'teacher',difficulty:difficulty.id};
+    // 所有难度上传合法候选记录学习；远端选择仅在困难档影响实际输入。
     const remote = await aiChoose('tank', {
       season, remainingMs, player:pi,
       tanks:tanks.map(t => ({id:t.id,x:+t.x.toFixed(2),y:+t.y.toFixed(2),d:t.d,hp:t.hp,alive:t.alive,kills:t.kills,damage:t.damage})),
@@ -674,13 +790,16 @@ function gameTank(area, extra, n, opts){
       grid:grid.map(row => row.join('')),
       target:plan.targetInfo?{id:plan.targetInfo.target.id,priority:+plan.targetInfo.priority.toFixed(3),threat:+plan.targetInfo.threat.toFixed(3)}:null,
       localRanking:plan.near.map(item=>({choice:item.choice,score:+item.score.toFixed(2)})),
-    }, choices, opts.aiPersona, learningCandidates);
+    }, choices, remoteProfile, learningCandidates);
     if (destroyed || over || epoch !== aiEpoch || !tanks[pi] || !tanks[pi].alive){ aiPending.delete(pi); return; }
     // 实时局面在模型等待期间仍会变化：旧选择必须在新影响图中仍属近优，否则立即重规划。
-    const livePlan=Date.now()-plannedAt>120?tankAIPlan(pi):plan;
+    const livePlan=Date.now()-plannedAt>120?tankAIPlan(pi,difficulty):plan;
     const liveChoices=livePlan?livePlan.near.map(item=>item.choice):[];
-    // Persona/模型只能在近优带内微调；无网、超时或非法返回始终执行固定的本地最优。
-    const choice = choices.includes(remote)&&liveChoices.includes(remote) ? remote : (livePlan?livePlan.best.choice:plan.best.choice);
+    const localIndex=typeof aiDifficultyLocalChoiceIndex === 'function'
+      ? aiDifficultyLocalChoiceIndex(difficulty,liveChoices.length) : (difficulty.id==='easy'?Math.min(liveChoices.length-1,1):0);
+    const localChoice=liveChoices[Math.max(0,localIndex)] || (livePlan?livePlan.best.choice:plan.best.choice);
+    // 模型响应必须仍位于最新合法近优带内；否则执行难度对应的本地候选。
+    const choice = remoteAllowed&&choices.includes(remote)&&liveChoices.includes(remote) ? remote : localChoice;
     aiPending.delete(pi);
     const actor=tanks[pi];
     if (choice === 'shoot'){
@@ -712,6 +831,7 @@ function gameTank(area, extra, n, opts){
   function ensureRenderTree(){
     if(renderNodes.board&&area.querySelector&&area.querySelector('.tank-board')===renderNodes.board)return renderNodes.board;
     area.innerHTML='';
+    tankWaveCProcessRail = null; tankWaveCProcessLabel = null; tankWaveCProcessSteps = [];
     const board=el('div','tank-board realtime-arena season-'+season);
     board.style.touchAction='none';board.style.overscrollBehavior='contain';board.style.overflow='hidden';
     board.addEventListener('pointerdown',event=>{if(event.button===0)localShoot();});
@@ -722,16 +842,39 @@ function gameTank(area, extra, n, opts){
       for(let index=0;index<playerCount;index++){const score=el('span','tank-score-chip');renderNodes.scores.push(score);hud.appendChild(score);}
       hud.style.cssText='display:flex;gap:7px;justify-content:center;align-items:center;flex-wrap:wrap;margin-bottom:6px;font-size:12px;';
     }
+    tankWaveCProcessRail = el('section','tank-wave-c-process');
+    tankWaveCProcessRail.setAttribute('role','status'); tankWaveCProcessRail.setAttribute('aria-live','polite');
+    tankWaveCProcessLabel = el('output','tank-wave-c-process-label');
+    const track = el('div','tank-wave-c-process-track');
+    tankWaveCProcessSteps = TANK_WAVE_C_PROCESS_STEPS.map(step => {
+      const node = el('span','tank-wave-c-process-step');
+      node.dataset.tankProcessStep = step; node.setAttribute('data-tank-process-step',step); track.appendChild(node); return node;
+    });
+    tankWaveCProcessRail.appendChild(tankWaveCProcessLabel); tankWaveCProcessRail.appendChild(track); area.appendChild(tankWaveCProcessRail);
+    tankWaveCProcessRail.style.cssText='display:grid;gap:7px;width:min(100%,' + Math.max(260, Math.min(640, Number(area.clientWidth) || 560)) + 'px);margin:10px auto 0;padding:9px 10px;box-sizing:border-box;border:1px solid rgba(43,32,37,.28);border-radius:14px;background:linear-gradient(135deg,rgba(67,90,193,.12),rgba(255,255,255,.68));box-shadow:inset 0 1px 0 rgba(255,255,255,.72),0 3px 0 rgba(76,43,21,.12);color:var(--stage-ink,var(--text));';
+    tankWaveCProcessLabel.style.cssText='min-width:0;font-size:10px;font-weight:900;line-height:1.35;overflow-wrap:anywhere;';
+    track.style.cssText='display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:3px;min-height:8px;';
+    tankWaveCProcessSteps.forEach(step => { step.style.cssText='display:block;min-width:0;height:7px;border-radius:999px;background:rgba(76,43,21,.16);box-shadow:inset 0 1px 1px rgba(255,255,255,.65);'; });
+    paintTankWaveCProcess();
     return board;
   }
   function render(){
     if (destroyed) return;
-    const width = Math.min(area.clientWidth || 560, 620), cell = width/W, height = cell*H;
+    // Fit the map and its live process rail into the measured Arena.  The old
+    // 620px cap made wide/tall stages look like a card inside a room; this
+    // preserves the map ratio while taking every usable height/width pixel.
+    const availableWidth = Math.max(240, Number(area.clientWidth) || 560);
+    const availableHeight = Math.max(0, Number(area.clientHeight) || 0);
+    const widthBudget = Math.max(240, Math.min(availableWidth - 16, 980));
+    const heightBudget = availableHeight > 0 ? Math.max(240, (availableHeight - 76) * W / H) : widthBudget;
+    const width = Math.min(widthBudget, heightBudget);
+    const cell = width/W, height = cell*H;
     const board=ensureRenderTree();
     board.className='tank-board realtime-arena season-'+season;
+    if (board.style && typeof board.style.setProperty === 'function') board.style.setProperty('--tank-wave-c-board-size', width+'px');
     const tabletop = typeof tabletopArtEnabled === 'function' && tabletopArtEnabled();
     if (typeof markTabletopSurface === 'function') markTabletopSurface(board, 'tank-arena', { variant: season });
-    board.style.width = width+'px'; board.style.height = height+'px';
+    board.style.width = width+'px'; board.style.height = height+'px'; board.style.maxWidth='100%'; board.style.boxSizing='border-box'; board.style.margin='0 auto'; board.style.transform='translateZ(0)';
     board.style.background = tabletop
       ? 'radial-gradient(circle at 22% 16%,rgba(255,255,255,.35),transparent 22%),linear-gradient(135deg,#74b985,#3b7b62)'
       : seasonBackground();
@@ -760,7 +903,7 @@ function gameTank(area, extra, n, opts){
     controls.style.display=spectator?'none':'flex';
     const playerRows=tanks.map(tank=>t('tank_player_stats',tank.kills,tank.deaths,tank.damage)),playersSignature=controlledPlayer()+'|'+playerRows.join('|');
     if(playersSignature!==lastPlayersSignature){lastPlayersSignature=playersSignature;renderPlayers(controlledPlayer(),playerRows);}
-    if(over&&!victoryShown){victoryShown=true;showVictoryOverlay(area,{winner,winnerName:t('player_number',winner+1),emoji:'🏆',subtitle:t('tank_victory_subtitle'),coins:1,onRestart:reset});}
+    if(over&&!victoryShown){victoryShown=true;showVictoryOverlay(area,{winner,winnerName:t('player_number',winner+1),emoji:'🏆',subtitle:t('tank_victory_subtitle'),coins:1,onRestart:reset,onShare:()=>shareGameLink('tank')});}
     updateStatus();
   }
 
@@ -865,7 +1008,7 @@ function gameTank(area, extra, n, opts){
     const state=value&&value.state?value.state:value;
     if (!state || !Array.isArray(state.tanks) || state.tanks.length !== playerCount || !Array.isArray(state.grid) ||
         state.grid.length !== H || state.grid.some(row=>!Array.isArray(row)||row.length!==W)) return false;
-    aiEpoch++;
+    aiEpoch++; clearTankWaveCProcessTimers(); tankWaveCProcessEpoch++;
     grid=state.grid.map(row=>row.map(v=>v===2||v===3?v:0));
     tanks=state.tanks.map((t,id)=>sanitizeTank(t,id));
     bullets=(Array.isArray(state.bullets)?state.bullets:[]).slice(0,128).map((b,index)=>({
@@ -881,10 +1024,12 @@ function gameTank(area, extra, n, opts){
     cur=Number.isInteger(state.cur)&&state.cur>=0&&state.cur<playerCount?state.cur:0;
     lastLoopAt=Date.now(); accumulator=0; traces=[]; effects=[];
     if (value&&value.presentation) setCosmetic(value.presentation.cosmetic);
+    setTankWaveCProcess(over ? 'terminal' : 'ready', cur);
     if (!silent) render(); return true;
   }
   function onAuthoritySnapshot(state,silent){
     if(!authorityMode||!state||state.protocol!==AUTH_PROTOCOL||String(state.matchId||'')!==currentMatchId()||!Array.isArray(state.players)||state.players.length!==playerCount)return false;
+    if (resultCommitted || over) return false;
     if(Number(state.serverTick)<authorityServerTick)return false;
     const old=tanks.slice(),localId=controlledPlayer();authorityServerTick=Math.max(authorityServerTick,Number(state.serverTick)||0);
     const ack=Array.isArray(state.ack)?state.ack.slice(0,playerCount).map(value=>Math.max(0,Math.floor(Number(value)||0))):[];
@@ -892,17 +1037,35 @@ function gameTank(area, extra, n, opts){
     lastAuthoritySequence=authorityServerTick;
     authorityEndAt=Number(state.endAt)||authorityEndAt;remainingMs=Math.max(0,Number(state.remainingMs)||0);season=SEASONS.includes(state.season)?state.season:season;
     grid=(Array.isArray(state.destructibles)?state.destructibles:grid).map(row=>Array.isArray(row)?row.map(v=>v===2||v===3?v:0):[]);
+    let authorityPresentation = null;
+    const noteAuthorityPresentation = (process, id) => {
+      const priority = process === 'ko' ? 3 : process === 'spawn' ? 2 : 1;
+      if (!authorityPresentation || priority > authorityPresentation.priority ||
+          (priority === authorityPresentation.priority && id < authorityPresentation.id)){
+        authorityPresentation = { process, id, priority };
+      }
+    };
     tanks=state.players.map((raw,id)=>{
       const server=sanitizeTank(raw,id),previous=old[id];
       if(previous){
         const distance=Math.hypot(previous.x-server.x,previous.y-server.y),factor=id===localId?(distance<.8?.35:1):.55;
         server.x=previous.x+(server.x-previous.x)*factor;server.y=previous.y+(server.y-previous.y)*factor;
-        if(previous.alive&&!server.alive)effects.push({x:server.x,y:server.y,type:'explosion',at:Date.now(),ttl:850});
-        else if(!previous.alive&&server.alive)effects.push({x:server.x,y:server.y,type:'respawn',at:Date.now(),ttl:600});
+        if(previous.alive&&!server.alive){effects.push({x:server.x,y:server.y,type:'explosion',at:Date.now(),ttl:850});noteAuthorityPresentation('ko',id);}
+        else if(!previous.alive&&server.alive){effects.push({x:server.x,y:server.y,type:'respawn',at:Date.now(),ttl:600});noteAuthorityPresentation('spawn',id);}
+        else if(distance>.06) noteAuthorityPresentation('move',id);
       }
       if(id===localId)server.input=getLocalInput();
       return server;
     });
+    if (authorityPresentation){
+      if (authorityPresentation.process === 'ko'){
+        setTankWaveCProcess('ko', authorityPresentation.id);
+        settleTankWaveCProcess('score', authorityPresentation.id, 260);
+      } else if (authorityPresentation.process === 'spawn'){
+        setTankWaveCProcess('spawn', authorityPresentation.id);
+        settleTankWaveCProcess('ready', authorityPresentation.id, 320);
+      } else noteTankWaveCMove();
+    }
     bullets=(Array.isArray(state.projectiles)?state.projectiles:[]).slice(0,128).map((b,index)=>({id:Number(b.id)||index+1,owner:Number(b.owner)||0,x:Number(b.x)||0,y:Number(b.y)||0,d:Number(b.d)||0,ttl:Number(b.ttl)||0}));
     if(!silent)render();return true;
   }
@@ -910,6 +1073,8 @@ function gameTank(area, extra, n, opts){
     const order=payload&&payload.order;if(!authorityMode||resultCommitted||!validOrder(order))return false;
     if(Array.isArray(payload.stats))payload.stats.forEach((item,id)=>{if(tanks[id])Object.assign(tanks[id],sanitizeTank(item,id));});
     over=true;finishedAt=Date.now();remainingMs=0;winner=order[0];resultCommitted=true;order.forEach((id,index)=>{if(tanks[id])tanks[id].placement=index+1;});
+    clearTankWaveCProcessTimers(); setTankWaveCProcess('score', winner);
+    settleTankWaveCProcess('terminal', winner, 260);
     render();setStatus(t('tank_server_final',winner+1),true);return true;
   }
   function getMatchStats(){
@@ -922,16 +1087,17 @@ function gameTank(area, extra, n, opts){
   function setSpectators(value){ spectator=Array.isArray(value)?value.includes(opts.viewerId):!!value; releaseAllControls(false); render(); return spectator; }
   function destroy(){
     if (!destroyed) releaseAllControls(true);
-    destroyed=true; aiEpoch++; aiPending.clear(); aiThinkGate.clear(); clearTransientTimers(); clearInterval(simulationTimer); clearInterval(aiTimer);
+    destroyed=true; aiEpoch++; tankWaveCProcessEpoch++; tankWaveCProcessRevision++; aiPending.clear(); aiThinkGate.clear(); clearTransientTimers(); clearTankWaveCProcessTimers(); clearInterval(simulationTimer); clearInterval(aiTimer);
     if (document.removeEventListener){ document.removeEventListener('keydown',keyDown); document.removeEventListener('keyup',keyUp); }
     if (document.removeEventListener) document.removeEventListener('visibilitychange',onVisibilityChange);
     if (typeof window!=='undefined' && window.removeEventListener){ window.removeEventListener('blur',onWindowBlur); window.removeEventListener('pointerup',releaseFirePointer); window.removeEventListener('pointercancel',releaseFirePointer); }
-    area.style.touchAction=previousTouchAction; area.style.overscrollBehavior=previousOverscroll;
+    area.style.touchAction=previousTouchAction; area.style.overscrollBehavior=previousOverscroll; area.style.display=previousDisplay; area.style.flexDirection=previousFlexDirection; area.style.alignItems=previousAlignItems; area.style.justifyContent=previousJustifyContent;
   }
   resetLocal();
   return { reset,onMove:opts.onMove,onRestart:resetLocal,destroy,snapshot,onRestore,onAuthoritySnapshot,onAuthorityResult,
     serialize:()=>({state:snapshot(),presentation:{season,cosmetic},stats:getMatchStats()}),
     fixedUpdate,getMatchStats,getPerformanceStats,setSeason,setCosmetic,renderCosmetic:setCosmetic,setSpectators,finishMatch,
+    getPresentationState:()=>({process:tankWaveCProcess,detail:tankWaveCProcessDetail,epoch:tankWaveCProcessEpoch,revision:tankWaveCProcessRevision}),
     // moveLog 中的权威快照已包含完整状态，重连回放无需为每条实时事件等待动画。
     whenIdle:()=>Promise.resolve(),
     broadcastAuthoritativeState,

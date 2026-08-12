@@ -1,0 +1,7 @@
+{
+  "taskId": "playline-community-p0-20260811",
+  "masterOnly": ["server/index.js", "public/src/online/03-websocket.js", "public/src/core/02-app-shell.js", "public/index-template.html", "scripts/build.js", "supabase/schema.sql", "requirements/PRODUCT_REQUIREMENTS_LEDGER.json"],
+  "serverModule": ["server/playline.js", "qa/playline-contract.js"],
+  "clientModule": ["public/src/core/07-playline.js", "qa/ui-playline-contract.js"],
+  "notes": "共享工作树；禁止覆盖历史未提交改动，禁止提交、推送或部署。"
+}

@@ -1,0 +1,26 @@
+{
+  "taskId": "control-plane-reset-p0-20260812",
+  "owner": "Master",
+  "files": {
+    "master": [
+      "requirements/PRODUCT_REQUIREMENTS_LEDGER.json",
+      "requirements/MAINLINE_CONTROL_ROUTING.json",
+      "scripts/generate-progress-reports.js",
+      "qa/mainline-control-plane.js",
+      "qa/progress-ledger.js",
+      "package.json",
+      "PROJECT_STATUS.json",
+      "AGENTS.md",
+      "WHITEPAPER.md",
+      "LOG-新增.md",
+      "LOG-修改.md",
+      "LOG-删除.md"
+    ],
+    "review": ["all generated 2026-08-12 progress reports", "requirements/active/control-plane-reset-p0-20260812/acceptance.md"]
+  },
+  "parallelBoundaries": [
+    "Gomoku/Tetris reviewer agents own only their explicitly assigned game files and QA; they do not edit this control-plane routing.",
+    "No runtime or art source files are in this task."
+  ]
+}
+

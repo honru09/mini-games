@@ -19,6 +19,14 @@ function gameXiangqi(area, extra, n, opts){
   let spectator = !!opts.spectator;
   let startedAt = Date.now(), finishedAt = 0, moveCount = 0, captureCount = 0, checkCount = 0;
   let capturedPieces = [[], []], motion = null, motionEpoch = 0;
+  // Wave C presentation is deliberately local-only.  It visualizes the
+  // existing authority state without changing Xiangqi Rule Core, clocks or
+  // the online action protocol.
+  const XIANGQI_WAVE_C_PROCESS_STEPS = ['turn','select','move','capture','check','clock','terminal'];
+  let xiangqiWaveCProcess = 'turn', xiangqiWaveCProcessDetail = '', xiangqiWaveCProcessEpoch = 0, xiangqiWaveCProcessRevision = 0;
+  const xiangqiWaveCProcessTimers = new Set();
+  let xiangqiWaveCProcessRail = null, xiangqiWaveCProcessLabel = null, xiangqiWaveCProcessSteps = [], xiangqiWaveCBoard = null;
+  let destroyed = false;
   const RULE_PROTOCOL='xiangqi-rule-v2';
   const ruleAuthority=!!(opts.online&&opts.gameplayMeta&&opts.gameplayMeta.protocol===RULE_PROTOCOL&&typeof opts.sendXiangqiAction==='function'&&typeof XiangqiRules!=='undefined');
   const clockAuthority=!!(opts.online&&opts.gameplayMeta&&['xiangqi-clock-v1',RULE_PROTOCOL].includes(opts.gameplayMeta.protocol));
@@ -47,6 +55,76 @@ function gameXiangqi(area, extra, n, opts){
     const now = Date.now();
     if (!over && clockRemaining[cur] !== null) clockRemaining[cur] = Math.max(0, clockRemaining[cur] - (now - lastClockAt));
     lastClockAt = now;
+  }
+  function clearXiangqiWaveCProcessTimers(){
+    xiangqiWaveCProcessTimers.forEach(timer => clearTimeout(timer));
+    xiangqiWaveCProcessTimers.clear();
+  }
+  function scheduleXiangqiWaveCProcess(callback, delay){
+    const epoch = xiangqiWaveCProcessEpoch;
+    const timer = setTimeout(() => {
+      xiangqiWaveCProcessTimers.delete(timer);
+      if (!destroyed && epoch === xiangqiWaveCProcessEpoch) callback();
+    }, Math.max(0, Number(delay) || 0));
+    if (timer && typeof timer.unref === 'function') timer.unref();
+    xiangqiWaveCProcessTimers.add(timer);
+    return timer;
+  }
+  function xiangqiWaveCData(node, key, value){
+    if (!node) return;
+    const datasetKey = key.replace(/-([a-z])/g, (_match, char) => char.toUpperCase());
+    if (node.dataset) node.dataset[datasetKey] = String(value);
+    if (node.setAttribute) node.setAttribute('data-' + key, String(value));
+  }
+  function xiangqiWaveCProcessText(){
+    if (xiangqiWaveCProcess === 'select') return t('xiangqi_initial_turn');
+    if (xiangqiWaveCProcess === 'move') return t('player_turn', cur + 1);
+    if (xiangqiWaveCProcess === 'capture') return t('xiangqi_captured_count', captureCount);
+    if (xiangqiWaveCProcess === 'check') return t('xiangqi_player_in_check', cur + 1);
+    if (xiangqiWaveCProcess === 'clock') return t('xiangqi_clock_active', cur + 1, formatClock(clockRemaining[cur]));
+    if (xiangqiWaveCProcess === 'terminal') return t('match_over');
+    return t('xiangqi_turn_status', spectator ? t('spectating_prefix') : '', t(cur === 0 ? 'xiangqi_red_side' : 'xiangqi_black_side'), t(opts.online && cur === opts.myIdx && !spectator ? 'your_turn' : 'thinking'));
+  }
+  function paintXiangqiWaveCProcess(){
+    xiangqiWaveCData(area, 'xiangqi-process', xiangqiWaveCProcess);
+    xiangqiWaveCData(xiangqiWaveCBoard, 'xiangqi-process', xiangqiWaveCProcess);
+    if (xiangqiWaveCProcessRail){
+      xiangqiWaveCData(xiangqiWaveCProcessRail, 'xiangqi-process', xiangqiWaveCProcess);
+      if (xiangqiWaveCProcessLabel) xiangqiWaveCProcessLabel.textContent = xiangqiWaveCProcessText();
+      xiangqiWaveCProcessSteps.forEach(step => {
+        const active = step && step.dataset && step.dataset.xiangqiProcessStep === xiangqiWaveCProcess;
+        xiangqiWaveCData(step, 'xiangqi-process-active', active ? 'true' : 'false');
+        if (step && step.style){
+          step.style.background = active ? 'linear-gradient(90deg,var(--accent,#435ac1),#f59e0b)' : 'rgba(76,43,21,.16)';
+          step.style.boxShadow = active ? '0 2px 0 rgba(43,32,37,.2),0 5px 10px rgba(245,158,11,.28)' : 'inset 0 1px 1px rgba(255,255,255,.65)';
+          step.style.transform = active && !(typeof prefersReducedMotion === 'function' && prefersReducedMotion()) ? 'translateY(-2px) scaleY(1.16)' : 'none';
+        }
+      });
+    }
+  }
+  function setXiangqiWaveCProcess(next, detail){
+    const process = XIANGQI_WAVE_C_PROCESS_STEPS.includes(next) ? next : 'turn';
+    const processDetail = detail === undefined || detail === null ? '' : String(detail);
+    if (process === xiangqiWaveCProcess && processDetail === xiangqiWaveCProcessDetail) return;
+    xiangqiWaveCProcess = process;
+    xiangqiWaveCProcessDetail = processDetail;
+    xiangqiWaveCProcessRevision++;
+    paintXiangqiWaveCProcess();
+  }
+  function settleXiangqiWaveCProcess(next, detail, delay){
+    if (typeof prefersReducedMotion === 'function' && prefersReducedMotion()) { setXiangqiWaveCProcess(next, detail); return; }
+    const revision = xiangqiWaveCProcessRevision;
+    scheduleXiangqiWaveCProcess(() => {
+      if (revision === xiangqiWaveCProcessRevision) setXiangqiWaveCProcess(next, detail);
+    }, delay);
+  }
+  function pulseXiangqiWaveCClock(){
+    if (over){
+      setXiangqiWaveCProcess('terminal', winner);
+      return;
+    }
+    setXiangqiWaveCProcess('clock', cur);
+    settleXiangqiWaveCProcess('turn', cur, 180);
   }
   function renderAux(){
     clockHud.innerHTML = '';
@@ -331,7 +409,14 @@ function gameXiangqi(area, extra, n, opts){
     }
     return best;
   }
-  function xqSearchRoot(side){
+  function xqDifficultyProfile(difficulty, pieceCount){
+    const id = difficulty && difficulty.id;
+    if (id === 'easy') return { rootWidth:10, maxDepth:2, deadline:65, maxNodes:1600, candidates:4 };
+    if (id === 'hard') return { rootWidth:36, maxDepth:pieceCount <= 12 ? 5 : 4, deadline:280, maxNodes:12000, candidates:12 };
+    // 普通档延续当前迭代加深预算。
+    return { rootWidth:28, maxDepth:pieceCount <= 12 ? 4 : 3, deadline:190, maxNodes:7200, candidates:8 };
+  }
+  function xqSearchRoot(side, difficulty){
     const all = xqOrderedMoves(side, 0, false);
     if (!all.length) return [];
     const fallback = [];
@@ -343,11 +428,11 @@ function gameXiangqi(area, extra, n, opts){
       fallback.push({ move, score, givesCheck, captured, order:move.order });
     }
     fallback.sort((a, b) => b.score - a.score || b.order - a.order || xqMoveKey(a.move).localeCompare(xqMoveKey(b.move)));
-    let completed = fallback.slice(0, 28);
     const pieceCount = board.reduce((sum, row) => sum + row.filter(Boolean).length, 0);
-    const maxDepth = pieceCount <= 12 ? 4 : 3;
-    const control = { deadline:Date.now() + 190, nodes:0, maxNodes:7200, stopped:false };
-    for (let depth = 2; depth <= maxDepth; depth++){
+    const profile = xqDifficultyProfile(difficulty, pieceCount);
+    let completed = fallback.slice(0, profile.rootWidth);
+    const control = { deadline:Date.now() + profile.deadline, nodes:0, maxNodes:profile.maxNodes, stopped:false };
+    for (let depth = 2; depth <= profile.maxDepth; depth++){
       const iteration = [];
       control.stopped = false;
       for (const base of completed){
@@ -367,15 +452,6 @@ function gameXiangqi(area, extra, n, opts){
     }
     return completed;
   }
-  function xqPersonaBonus(item){
-    const id = opts.aiPersona && opts.aiPersona.id;
-    const captureValue = item.captured ? Math.min(18, XQ_VALUE[item.captured.t] / 45) : 0;
-    if (id === 'gambler') return captureValue + (item.givesCheck ? 12 : 0);
-    if (id === 'mean') return (item.givesCheck ? 16 : 0) + captureValue * .4;
-    if (id === 'tsundere') return item.captured ? captureValue * .5 : Math.max(-5, item.order / 40);
-    if (id === 'cute') return Math.max(-4, Math.min(8, item.order / 55));
-    return 0;
-  }
   function scheduleAI(){
     if (opts.destroyed || aiPending || over) return;
     if (!opts.ai || !opts.ai.has(cur)) return;
@@ -388,12 +464,15 @@ function gameXiangqi(area, extra, n, opts){
         aiPending = false;
         return;
       }
-      const ranked = xqSearchRoot(cur);
+      const difficulty = typeof aiDifficultyFromOptions === 'function' ? aiDifficultyFromOptions(opts) : { id:'hard' };
+      const ranked = xqSearchRoot(cur, difficulty);
       if (!ranked.length){ aiPending = false; lose(cur); return; }
       const best = ranked[0];
       const band = best.score >= XQ_MATE / 2 ? 1 : 48;
-      const near = ranked.filter(item => item.score >= best.score - band).slice(0, 8)
-        .sort((a, b) => (b.score + xqPersonaBonus(b)) - (a.score + xqPersonaBonus(a)) || xqMoveKey(a.move).localeCompare(xqMoveKey(b.move)));
+      const pieceCount = board.reduce((sum, row) => sum + row.filter(Boolean).length, 0);
+      const profile = xqDifficultyProfile(difficulty, pieceCount);
+      const near = ranked.filter(item => item.score >= best.score - band).slice(0, profile.candidates)
+        .sort((a, b) => b.score - a.score || xqMoveKey(a.move).localeCompare(xqMoveKey(b.move)));
       const choices = near.map(item => xqMoveKey(item.move));
       const moveByChoice = new Map(near.map(item => [xqMoveKey(item.move), item.move]));
       const learningCandidates = near.map(item => ({ choice:xqMoveKey(item.move), features:{
@@ -402,19 +481,28 @@ function gameXiangqi(area, extra, n, opts){
         capture_value:item.captured ? Math.min(1, XQ_VALUE[item.captured.t] / 1200) : 0,
         gives_check:item.givesCheck ? 1 : 0,
         move_order:Math.max(-1, Math.min(1, item.order / 1000)),
+        search_depth:Math.min(1, profile.maxDepth / 5),
       } }));
+      const remoteAllowed = typeof aiDifficultyAllowsRemote === 'function' ? aiDifficultyAllowsRemote(difficulty) : difficulty.id === 'hard';
+      const remoteProfile = typeof aiDifficultyRequestProfile === 'function' ? aiDifficultyRequestProfile(difficulty) : { id:'teacher', difficulty:difficulty.id };
+      const requestStateKey = JSON.stringify({ board:board.map(row => row.map(item => item ? (item.p + item.t) : '--')), cur, lastMove });
+      // 候选会在所有难度中进入个性化学习；远端裁决仅能影响困难档。
       const remoteChoice = await aiChoose('xiangqi', {
         board: board.map(row => row.map(item => item ? (item.p + item.t) : '--')),
         turn: cur, inCheck: isCheck(cur), lastMove,
-      }, choices, opts.aiPersona, learningCandidates);
-      if (opts.destroyed || over || gen !== aiEpoch || cur !== turn){
+      }, choices, remoteProfile, learningCandidates);
+      if (opts.destroyed || over || gen !== aiEpoch || cur !== turn ||
+          JSON.stringify({ board:board.map(row => row.map(item => item ? (item.p + item.t) : '--')), cur, lastMove }) !== requestStateKey){
         aiPending = false;
         return;
       }
-      const xqMv = moveByChoice.get(remoteChoice) || near[0].move;
+      const localIndex = typeof aiDifficultyLocalChoiceIndex === 'function'
+        ? aiDifficultyLocalChoiceIndex(difficulty, choices.length) : (difficulty.id === 'easy' ? Math.min(choices.length - 1, 1) : 0);
+      const localChoice = choices[Math.max(0, localIndex)] || choices[0];
+      const xqMv = remoteAllowed && moveByChoice.has(remoteChoice) ? moveByChoice.get(remoteChoice) : moveByChoice.get(localChoice);
       const executedChoice = xqMoveKey(xqMv);
       aiPending = false;
-      aiSpeak(opts.aiPersona, 'think');
+      aiSpeak(difficulty, 'think');
       if (opts.online && opts.ai && opts.ai.has(turn) && typeof opts.sendBotMove === 'function') opts.sendBotMove(turn, { from:xqMv.from, to:xqMv.to });
       if (doMove(xqMv.from, xqMv.to) && typeof confirmAIReady === 'function') {
         confirmAIReady('xiangqi', executedChoice);
@@ -437,7 +525,8 @@ function gameXiangqi(area, extra, n, opts){
       capturedPieces[cur].push(captured.p === 0 ? PIECE[captured.t] : BLACK_PIECE[captured.t]);
       captureCount++;
     }
-    const animateMove = !prefersReducedMotion();
+    const animateMove = !(typeof prefersReducedMotion === 'function' && prefersReducedMotion());
+    setXiangqiWaveCProcess(captured ? 'capture' : 'move', cur);
     motion = animateMove ? { from: from.slice(), to: to.slice(), piece: { ...piece }, captured: captured ? { ...captured } : null } : null;
     const thisMotion = ++motionEpoch;
     board[from[0]][from[1]] = null;
@@ -457,13 +546,17 @@ function gameXiangqi(area, extra, n, opts){
       over = true; finishedAt = Date.now();
       winner = cur ^ 1;
       if (opts.onEnd) opts.onEnd([{ slot: winner, coins: 1, rank: 1 }, { slot: cur, coins: 0, rank: 2 }]);
+      motion = null; motionEpoch++; clearXiangqiWaveCProcessTimers();
+      setXiangqiWaveCProcess('terminal', winner);
       render();
       return true;
     }
-    if (isCheck(cur)) checkCount++;
+    const checked = isCheck(cur);
+    if (checked) checkCount++;
     render();
-    setStatus(isCheck(cur) ? t('xiangqi_player_in_check',cur+1) : t('player_turn',cur+1));
-    if (animateMove) setTimeout(() => { if (thisMotion === motionEpoch){ motion = null; render(); } }, 260);
+    setStatus(checked ? t('xiangqi_player_in_check',cur+1) : t('player_turn',cur+1));
+    settleXiangqiWaveCProcess(checked ? 'check' : 'turn', cur, 280);
+    if (animateMove) scheduleXiangqiWaveCProcess(() => { if (thisMotion === motionEpoch){ motion = null; render(); } }, 260);
     scheduleAI();
     return true;
   }
@@ -472,20 +565,35 @@ function gameXiangqi(area, extra, n, opts){
     over = true; finishedAt = Date.now();
     winner = pi ^ 1;
     if (!suppressReport && opts.onEnd) opts.onEnd([{ slot: winner, coins: 1, rank: 1 }, { slot: pi, coins: 0, rank: 2 }]);
+    motion = null; motionEpoch++; clearXiangqiWaveCProcessTimers();
+    setXiangqiWaveCProcess('terminal', winner);
     render();
     if (reason) setStatus(t('xiangqi_win_reason',winner+1,reason), true);
   }
   function render(){
-    const w = area.clientWidth || 520;
-    const S = Math.min(w, 560);
+    // Treat the board and its process rail as one measured stage.  Desktop
+    // and tablet place the rail beside the tall board; narrow/short screens
+    // stack it below, keeping the complete 9×10 playfield in the Arena.
+    const availableWidth = Math.max(220, Number(area.clientWidth) || 520);
+    const availableHeight = Math.max(0, Number(area.clientHeight) || 0);
+    const useSideProcessRail = availableWidth >= 700 && availableHeight >= 450;
+    const railWidth = Math.max(180, Math.min(260, Math.round(availableWidth * .25)));
+    const widthBudget = Math.max(220, Math.min((useSideProcessRail ? availableWidth - railWidth - 24 : availableWidth - 16), 980));
+    const heightBudget = availableHeight > 0 ? Math.max(220, (availableHeight - 16) * COLS / ROWS) : widthBudget;
+    const S = Math.min(widthBudget, heightBudget);
     Array.from(area.children || []).forEach(node => {
       if (node && node.id !== 'honru-game-reaction' && typeof node.remove === 'function') node.remove();
     });
+    xiangqiWaveCProcessRail = null; xiangqiWaveCProcessLabel = null; xiangqiWaveCProcessSteps = []; xiangqiWaveCBoard = null;
     const wrap = el('div','xiangqi-wrap');
+    wrap.classList.add('xiangqi-wave-c-stage');
+    wrap.style.cssText='display:grid;grid-template-areas:' + (useSideProcessRail ? '"board process"' : '"board" "process"') + ';grid-template-columns:' + (useSideProcessRail ? 'minmax(0,1fr) ' + railWidth + 'px' : 'minmax(0,1fr)') + ';place-items:center;align-content:start;gap:10px;width:100%;height:100%;min-width:0;min-height:0;margin:0;padding:4px;box-sizing:border-box;';
     const boardEl = el('div','xiangqi-board');
+    xiangqiWaveCBoard = boardEl;
     const tabletop = typeof tabletopArtEnabled === 'function' && tabletopArtEnabled();
     if (typeof markTabletopSurface === 'function') markTabletopSurface(boardEl, 'xiangqi-board', { variant: boardTheme });
-    boardEl.style.width = S + 'px'; boardEl.style.height = S * ROWS / COLS + 'px';
+    boardEl.style.width = S + 'px'; boardEl.style.height = S * ROWS / COLS + 'px'; boardEl.style.maxWidth = '100%'; boardEl.style.boxSizing = 'border-box'; boardEl.style.margin = '0 auto'; boardEl.style.transform = 'translateZ(0)'; boardEl.style.gridArea = 'board';
+    if (boardEl.style && typeof boardEl.style.setProperty === 'function') boardEl.style.setProperty('--xiangqi-wave-c-board-size', S + 'px');
     boardEl.style.touchAction = 'none'; boardEl.style.overscrollBehavior = 'contain';
     const cs = S / COLS;
     const cv = document.createElement('canvas');
@@ -595,7 +703,9 @@ function gameXiangqi(area, extra, n, opts){
       const mover = el('div','xiangqi-motion-piece',label);
       mover.style.cssText = 'position:absolute;z-index:4;width:' + (cs*.84) + 'px;height:' + (cs*.84) + 'px;line-height:' + (cs*.84) + 'px;text-align:center;border-radius:50%;font-weight:900;background:rgba(255,255,255,.9);box-shadow:0 8px 18px rgba(0,0,0,.25);pointer-events:none;transition:transform .24s cubic-bezier(.2,.8,.2,1);left:' + (pad + renderedMotion.from[1]*cs - cs*.42) + 'px;top:' + (pad + renderedMotion.from[0]*cs - cs*.42) + 'px;';
       boardEl.appendChild(mover);
-      setTimeout(() => { mover.style.transform = 'translate(' + ((renderedMotion.to[1]-renderedMotion.from[1])*cs) + 'px,' + ((renderedMotion.to[0]-renderedMotion.from[0])*cs) + 'px)'; }, 0);
+      scheduleXiangqiWaveCProcess(() => {
+        if (renderedMotion === motion && !destroyed) mover.style.transform = 'translate(' + ((renderedMotion.to[1]-renderedMotion.from[1])*cs) + 'px,' + ((renderedMotion.to[0]-renderedMotion.from[0])*cs) + 'px)';
+      }, 0);
     }
     boardEl.addEventListener('click', e => {
       if (spectator || over) return;
@@ -613,12 +723,13 @@ function gameXiangqi(area, extra, n, opts){
           doMove(selected, [r,c]);
           return;
         }
-        selected = null; legalMoves = [];
+        selected = null; legalMoves = []; setXiangqiWaveCProcess('turn', cur);
       }
       const piece = board[r][c];
       if (piece && piece.p === cur){
         selected = [r,c];
         legalMoves = legalMovesOf(cur, r, c);
+        setXiangqiWaveCProcess('select', r + ',' + c);
       }
       render();
     });
@@ -626,11 +737,25 @@ function gameXiangqi(area, extra, n, opts){
       const winnerName = t('player_number',winner+1);
       showVictoryOverlay(area, {
         winner: winner, winnerName: winnerName,
-        emoji: '🏆', subtitle: t('xiangqi_victory_subtitle'), coins: 1, onRestart: reset
+        emoji: '🏆', subtitle: t('xiangqi_victory_subtitle'), coins: 1, onRestart: reset, onShare: () => shareGameLink('xiangqi')
       });
     }
     wrap.appendChild(boardEl);
+    xiangqiWaveCProcessRail = el('section','xiangqi-wave-c-process');
+    xiangqiWaveCProcessRail.setAttribute('role','status'); xiangqiWaveCProcessRail.setAttribute('aria-live','polite');
+    xiangqiWaveCProcessLabel = el('output','xiangqi-wave-c-process-label');
+    const track = el('div','xiangqi-wave-c-process-track');
+    xiangqiWaveCProcessSteps = XIANGQI_WAVE_C_PROCESS_STEPS.map(step => {
+      const node = el('span','xiangqi-wave-c-process-step');
+      node.dataset.xiangqiProcessStep = step; node.setAttribute('data-xiangqi-process-step',step); track.appendChild(node); return node;
+    });
+    xiangqiWaveCProcessRail.appendChild(xiangqiWaveCProcessLabel); xiangqiWaveCProcessRail.appendChild(track); wrap.appendChild(xiangqiWaveCProcessRail);
+    xiangqiWaveCProcessRail.style.cssText='display:grid;grid-area:process;align-self:' + (useSideProcessRail ? 'stretch' : 'start') + ';gap:7px;width:' + (useSideProcessRail ? '100%' : 'min(100%,' + Math.max(240, Math.min(640, S)) + 'px)') + ';padding:9px 10px;box-sizing:border-box;border:1px solid rgba(43,32,37,.28);border-radius:14px;background:linear-gradient(135deg,rgba(67,90,193,.12),rgba(255,255,255,.68));box-shadow:inset 0 1px 0 rgba(255,255,255,.72),0 3px 0 rgba(76,43,21,.12);color:var(--stage-ink,var(--text));';
+    xiangqiWaveCProcessLabel.style.cssText='min-width:0;font-size:10px;font-weight:900;line-height:1.35;overflow-wrap:anywhere;';
+    track.style.cssText='display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px;min-height:8px;';
+    xiangqiWaveCProcessSteps.forEach(step => { step.style.cssText='display:block;min-width:0;height:7px;border-radius:999px;background:rgba(76,43,21,.16);box-shadow:inset 0 1px 1px rgba(255,255,255,.65);'; });
     area.appendChild(wrap);
+    paintXiangqiWaveCProcess();
     renderAux();
     const turnText = over ? t('match_over') : t('xiangqi_turn_status',spectator ? t('spectating_prefix') : '',t(cur === 0 ? 'xiangqi_red_side' : 'xiangqi_black_side'),t(opts.online && cur === opts.myIdx && !spectator ? 'your_turn' : 'thinking'));
     setStatus(turnText + (isCheck(cur) && !over ? t('xiangqi_check_suffix') : ''));
@@ -643,7 +768,7 @@ function gameXiangqi(area, extra, n, opts){
     doMove(payload.from, payload.to);
   };
   function resetLocal(){
-    aiEpoch++;
+    aiEpoch++; destroyed = false; clearXiangqiWaveCProcessTimers(); xiangqiWaveCProcessEpoch++;
     initBoard();
     cur = 0; over = false; winner = -1; selected = null; legalMoves = []; lastMove = null; aiPending = false;
     startedAt = Date.now(); finishedAt = 0; moveCount = 0; captureCount = 0; checkCount = 0; capturedPieces = [[], []]; motion = null; motionEpoch++;
@@ -652,6 +777,7 @@ function gameXiangqi(area, extra, n, opts){
       clockRemaining=state&&Array.isArray(state.remainingMsByPlayer)?state.remainingMsByPlayer.slice(0,2):[600000,600000];
     } else clockRemaining = clockMode === 'rapid' ? [600000,600000] : clockMode === 'blitz' ? [180000,180000] : [null,null];
     clockMoveSeq=0;lastClockAt = Date.now();
+    setXiangqiWaveCProcess('turn', cur);
     render();
     setStatus(t('xiangqi_initial_turn'));
   }
@@ -668,7 +794,7 @@ function gameXiangqi(area, extra, n, opts){
   function onRestore(value){
     const state = value && value.state ? value.state : value;
     if (!state || !Array.isArray(state.board) || state.board.length !== ROWS) return false;
-    aiEpoch++; motionEpoch++; motion = null;
+    aiEpoch++; motionEpoch++; motion = null; clearXiangqiWaveCProcessTimers(); xiangqiWaveCProcessEpoch++;
     board = state.board.map(row => row.map(x => x && (x.p === 0 || x.p === 1) && PIECE[x.t] ? { p:x.p, t:x.t } : null));
     cur = state.cur === 1 ? 1 : 0; over = !!state.over; winner = Number.isInteger(state.winner) ? state.winner : -1;
     lastMove = Array.isArray(state.lastMove) ? state.lastMove.map(x => x.slice()) : null;
@@ -678,30 +804,38 @@ function gameXiangqi(area, extra, n, opts){
     moveCount = Number(state.moveCount) || 0; captureCount = Number(state.captureCount) || 0; checkCount = Number(state.checkCount) || 0;
     selected = null; legalMoves = []; aiPending = false; lastClockAt = Date.now();
     if (value && value.presentation){ setBoardTheme(value.presentation.boardTheme); setCosmetic(value.presentation.cosmetic); }
+    setXiangqiWaveCProcess(over ? 'terminal' : (isCheck(cur) ? 'check' : 'turn'), cur);
     render(); return true;
   }
   function setBoardTheme(theme){ boardTheme = theme === 'grass' ? 'grass' : 'classic'; render(); return boardTheme; }
   function setCosmetic(value){ cosmetic = normalizeCosmetic(value); render(); return {default:cosmetic.default,players:{...cosmetic.players}}; }
-  function setSpectators(value){ spectator = Array.isArray(value) ? value.includes(opts.viewerId) : !!value; selected = null; legalMoves = []; render(); return spectator; }
+  function setSpectators(value){
+    spectator = Array.isArray(value) ? value.includes(opts.viewerId) : !!value;
+    selected = null; legalMoves = [];
+    if (over) setXiangqiWaveCProcess('terminal', winner);
+    else if (xiangqiWaveCProcess === 'select') setXiangqiWaveCProcess('turn', cur);
+    render(); return spectator;
+  }
   // Canvas text is not part of the DOM i18n pass, so the platform calls this
   // optional instance hook after a locale has finished loading.
   function onLanguageChange(){ render(); return true; }
   function setClockMode(mode){
     clockMode = ['rapid','blitz'].includes(mode) ? mode : 'casual';
     clockRemaining = clockMode === 'rapid' ? [600000,600000] : clockMode === 'blitz' ? [180000,180000] : [null,null];
-    lastClockAt = Date.now(); renderAux(); return getClockState();
+    lastClockAt = Date.now(); pulseXiangqiWaveCClock(); renderAux(); return getClockState();
   }
   function getClockState(){ syncClock(); return { mode: clockMode, remaining: clockRemaining.slice(), authoritative: !opts.online }; }
   function setClockState(value){
     if (!value || !Array.isArray(value.remaining)) return false;
     clockMode = ['rapid','blitz'].includes(value.mode) ? value.mode : 'casual';
-    clockRemaining = value.remaining.slice(0,2).map(v => v === null ? null : Math.max(0, Number(v) || 0)); lastClockAt = Date.now(); renderAux(); return true;
+    clockRemaining = value.remaining.slice(0,2).map(v => v === null ? null : Math.max(0, Number(v) || 0)); lastClockAt = Date.now(); pulseXiangqiWaveCClock(); renderAux(); return true;
   }
   function onClockState(value){
     const state=value&&value.clock?value.clock:value;
     if(!clockAuthority||!state||state.protocol!=='xiangqi-clock-v1'||!Array.isArray(state.remainingMsByPlayer))return false;
     clockMode='rapid';clockRemaining=state.remainingMsByPlayer.slice(0,2).map(v=>Math.max(0,Number(v)||0));lastClockAt=Date.now();
-    if(state.finished&&Number.isInteger(state.loser)&&!over)lose(state.loser,t('xiangqi_clock_expired'),true);else renderAux();
+    if(over){ setXiangqiWaveCProcess('terminal', winner); renderAux(); return true; }
+    if(state.finished&&Number.isInteger(state.loser))lose(state.loser,t('xiangqi_clock_expired'),true);else renderAux();
     return true;
   }
   function onXiangqiRuleState(value){
@@ -728,6 +862,7 @@ function gameXiangqi(area, extra, n, opts){
     setClockMode, getClockState, setClockState, getMatchStats, startMatch, reportGameResult,
     getTournamentRequirement: count => count > 2 ? 'TOURNAMENT_ORCHESTRATOR_V1' : null,
     getMultiplayerRequirement: () => opts.online ? (ruleAuthority?'XIANGQI_RULE_PROTOCOL_V2':(clockMode !== 'casual'?'XIANGQI_CLOCK_PROTOCOL_V1':null)) : null,
-    destroy: () => { aiEpoch++; motionEpoch++; aiPending = false; clearInterval(clockTimer); area.style.touchAction = previousTouchAction; area.style.overscrollBehavior = previousOverscroll; },
+    getPresentationState: () => ({process:xiangqiWaveCProcess,detail:xiangqiWaveCProcessDetail,epoch:xiangqiWaveCProcessEpoch,revision:xiangqiWaveCProcessRevision}),
+    destroy: () => { destroyed = true; aiEpoch++; motionEpoch++; xiangqiWaveCProcessEpoch++; xiangqiWaveCProcessRevision++; aiPending = false; clearXiangqiWaveCProcessTimers(); clearInterval(clockTimer); area.style.touchAction = previousTouchAction; area.style.overscrollBehavior = previousOverscroll; },
   };
 }

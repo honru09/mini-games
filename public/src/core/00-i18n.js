@@ -391,6 +391,10 @@ async function setLanguage(lang) {
     document.documentElement.setAttribute('lang', currentLang);
   }
   applyI18n();
+  // Formatted runtime values (for example Playline's audience label) must be
+  // recomputed from stable IDs after the committed locale changes.  Static
+  // applyI18n cannot safely translate an already formatted parameter.
+  try { if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function' && typeof Event === 'function') window.dispatchEvent(new Event('languagechange')); } catch {}
   // Static icon labels and early-rendered dynamic rails may be created before
   // the async locale request resolves. Re-render them from stable keys once
   // the committed locale is available so a temporary key never becomes UI.
@@ -407,7 +411,6 @@ async function setLanguage(lang) {
   if (typeof renderGhostHome === 'function') renderGhostHome();
   if (typeof renderGhostProfile === 'function') renderGhostProfile();
   if (typeof renderSocialRail === 'function') renderSocialRail();
-  if (typeof renderPlayerChat === 'function') renderPlayerChat();
   if (typeof setChatView === 'function' && typeof ghostAppRoute !== 'undefined' && ghostAppRoute === 'chat') setChatView(typeof ghostChatView !== 'undefined' ? ghostChatView : 'players', { silentHash:true });
   if (online.room) renderRoomPanel();
   if (currentGame && typeof currentGame.onLanguageChange === 'function') currentGame.onLanguageChange(currentLang);

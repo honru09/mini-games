@@ -2,7 +2,7 @@
 const ONLINE_CLIENT_CAPABILITIES = Object.freeze([
   'tank-authority-v1','tetris-battle-authority-v1','tetris-rule-v3','spectator-room-v1','tournament-orchestrator-v1',
   'xiangqi-clock-v1','xiangqi-rule-v2','monopoly-auction-v1','monopoly-rule-v2','game-cosmetic-presentation-v1',
-  'username-password-auth-v2','ephemeral-guest-v1','honru-companion-v1','direct-chat-v1','match-expression-v1','match-chat-v1',
+  'username-password-auth-v2','ephemeral-guest-v1','honru-companion-v1','direct-chat-v1','match-expression-v1','match-chat-v1','playline-v1',
 ]);
 function socialGuestMutationBlocked(){
   if (!(typeof account !== 'undefined' && account && account.ephemeral)) return false;
@@ -25,8 +25,8 @@ function markGuestSocialControl(button){
 const online = {
   ws: null, room: null, spectatorRoom:null, player: 0, isHost: false, isSpectator: false, game: null, gameplayMeta: null, presentationMeta:null, connected: false, pending: null, roomInfo: null, capacity: 2, _hb: null,
   lobby: [], inviteTarget: null, pendingGame:null, pendingGameRoom:null, matchId: null, reportedMatchIds: [], soloReportedIds: [], legacyResultSubmitted: false,
-  resume: null, _reconnectTimer: null, _reconnectAttempts: 0, _manualClose: false, _replaying: false, _liveMoveQueue: [],
-  pendingResultClaim: null, _resultRetryTimer: null, _authenticated: false, capabilities:new Set(), pendingPublicProfileUid:null, pendingProfileCompare:null,
+  resume: null, _reconnectTimer: null, _reconnectAttempts: 0, _preserveReconnectAttempts: false, _manualClose: false, _replaying: false, _liveMoveQueue: [],
+  pendingResultClaim: null, _resultRetryTimer: null, _authenticated: false, capabilities:new Set(), pendingPublicProfile:null, publicProfileRequests:[], pendingProfileCompare:null, lastShareableResult:null,
   soloMatch: null, pendingSoloClaims: [], _soloClaimsLoaded: false, displayedRewardIds: [], rewardVersion: null,
   socialState: { version:'1.0', friends:[], incoming:[], outgoing:[], blocked:[], counts:{ friends:0, incoming:0, outgoing:0, blocked:0 } },
   dailyTasks: null, isAdmin:false,
@@ -35,7 +35,35 @@ const online = {
   chatListPending:false, chatHistoryPending:{}, chatHistory: {}, chatHistoryMeta:{}, chatPending: new Map(), chatDrafts:new Map(), chatActivePeerUid:null, cacheOwnerUid:null,
   socialTab:'friends',
   defaultServer: 'https://mini-games-online.onrender.com',
+  hasAuthSession(){
+    const authAccount = typeof account !== 'undefined' ? account : null;
+    return !this._manualClose && !!(authAccount && authAccount.authToken);
+  },
+  canAutoReconnect(){
+    const authAccount = typeof account !== 'undefined' ? account : null;
+    if(!this.hasAuthSession())return false;
+    if(authAccount.ephemeral && this.resume && this.resume.deadline && Date.now() >= this.resume.deadline)return false;
+    return !authAccount.ephemeral || !!(this.room || this.resume);
+  },
+  expireReconnectResume(){
+    if(this.resume && this.resume.deadline && Date.now() >= this.resume.deadline){
+      this.clearResume(true);
+      this.status(t('reconnect_timeout'));
+      return true;
+    }
+    return false;
+  },
+  ensureConnected(){
+    if(!this.hasAuthSession())return false;
+    this.expireReconnectResume();
+    if(!this.canAutoReconnect())return false;
+    if(this.connected || (this.ws && this.ws.readyState < 3))return false;
+    if(this._reconnectTimer){clearTimeout(this._reconnectTimer);this._reconnectTimer=null;}
+    this.connect();
+    return true;
+  },
   sendHello(uid,token){
+    this._manualClose = false;
     this.isAdmin=false;
     this.tournamentState=null;
     this.tournamentMatch=null;
@@ -48,7 +76,7 @@ const online = {
     }});
   },
   connect(){
-    if (this.connected || (this.ws && (this.ws.readyState === 0 || this.ws.readyState === 1))) return;
+    if (this.connected || (this.ws && this.ws.readyState < 3)) return false;
     let wsUrl;
     try {
       const raw = resolveServer();
@@ -61,7 +89,16 @@ const online = {
     } catch {
       wsUrl = (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws';
     }
-    const ws = new WebSocket(wsUrl);
+    let ws;
+    try {
+      ws = new WebSocket(wsUrl);
+    } catch {
+      this.ws = null;
+      this.connected=false;
+      this.status(t('online_status_failed'));
+      this.scheduleReconnect();
+      return false;
+    }
     this.ws = ws;
     ws.onopen = () => {
       if (this.ws !== ws) return;
@@ -109,8 +146,9 @@ const online = {
     ws.onmessage = e => { if (this.ws === ws) this.onMessage(JSON.parse(e.data)); };
     ws.onclose = () => {
       if (this.ws !== ws) return;
-      const shouldResume = !this._manualClose && !!(account && account.authToken) && !!(this.room || this.resume);
-      if (this.room){
+      const canReconnect = this.canAutoReconnect();
+      const shouldResume = canReconnect && !!(this.room || this.resume);
+      if (canReconnect && this.room){
         this.resume = {
           room: this.room, player: this.player, isHost: this.isHost, game: this.game,
           matchId: this.matchId, deadline: Date.now() + 60000,
@@ -120,31 +158,31 @@ const online = {
       this._authenticated = false;
       this.ws = null;
       if (this._hb){ clearInterval(this._hb); this._hb = null; }
-      this.status(shouldResume ? t('online_reconnecting') : t('online_disconnected'));
+      this.status(canReconnect ? t('online_reconnecting') : t('online_disconnected'));
+      this._preserveReconnectAttempts = canReconnect;
       this.resetState(shouldResume);
-      if (shouldResume) this.scheduleReconnect();
+      if (canReconnect) this.scheduleReconnect();
       this._manualClose = false;
     };
     ws.onerror = () => { if (this.ws === ws) this.status(this.resume ? t('online_reconnecting') : t('online_status_failed')); };
+    return true;
   },
   scheduleReconnect(){
-    if (!this.resume || !account || !account.authToken) return;
-    if (this.resume.deadline && Date.now() >= this.resume.deadline){
-      this.clearResume();
-      this.status(t('reconnect_timeout'));
-      return;
-    }
-    if (this._reconnectTimer || this.connected || (this.ws && this.ws.readyState === 0)) return;
+    if (!this.hasAuthSession()) return false;
+    this.expireReconnectResume();
+    if (!this.canAutoReconnect()) return false;
+    if (this._reconnectTimer || this.connected || (this.ws && this.ws.readyState < 3)) return false;
     const delay = Math.min(5000, 500 * Math.pow(2, Math.min(4, this._reconnectAttempts++)));
     this._reconnectTimer = setTimeout(() => {
       this._reconnectTimer = null;
       this.connect();
     }, delay);
+    return true;
   },
-  clearResume(){
+  clearResume(preserveReconnectAttempts){
     if (this._reconnectTimer) clearTimeout(this._reconnectTimer);
     this._reconnectTimer = null;
-    this._reconnectAttempts = 0;
+    if (!preserveReconnectAttempts) this._reconnectAttempts = 0;
     this.resume = null;
   },
   loadPendingResultClaim(){
@@ -267,6 +305,10 @@ const online = {
     }
   },
   send(msg){
+    if (msg && msg.type === 'logout'){
+      this._manualClose = true;
+      this.clearResume();
+    }
     if (!this.ws || this.ws.readyState !== 1) return false;
     this.ws.send(JSON.stringify(msg));
     return true;
@@ -310,7 +352,8 @@ const online = {
   spectateRoom(room){ this.send({ type:'spectate', payload:{ room } }); },
   setReady(ready){ this.send({ type:'ready', payload:{ ready:ready !== false } }); },
   requestSocial(){ if (this.connected && this._authenticated) this.send({ type:'social_get' }); },
-  requestProfile(uid){if(this.connected&&this._authenticated&&uid){const id=String(uid);this.pendingPublicProfileUid=id;if(typeof beginPublicProfileRequest==='function')beginPublicProfileRequest(id);this.send({type:'profile_get',payload:{uid:id}});return true;}return false;},
+  requestProfile(uid){if(this.connected&&this._authenticated&&uid){if(this.publicProfileRequests.length>=32)return false;const targetUid=String(uid),requestId='profile_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,10);if(this.pendingPublicProfile)this.pendingPublicProfile.active=false;this.pendingPublicProfile={targetUid,requestId,active:true};const request=this.pendingPublicProfile;this.publicProfileRequests.push(request);if(typeof beginPublicProfileRequest==='function')beginPublicProfileRequest(targetUid,requestId);this.send({type:'profile_get',payload:{uid:targetUid}});return true;}return false;},
+  cancelPublicProfileRequest(requestId){const current=this.pendingPublicProfile;if(!current||requestId&&current.requestId!==String(requestId))return false;current.active=false;this.pendingPublicProfile=null;return true;},
   requestProfileCompare(uid){if(this.connected&&this._authenticated&&account&&!account.ephemeral&&uid){const targetUid=String(uid),requestId='compare_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,10);this.pendingProfileCompare={targetUid,requestId};if(typeof beginProfileCompareRequest==='function')beginProfileCompareRequest(targetUid,requestId);this.send({type:'profile_compare',payload:{uid:targetUid,requestId}});return true;}return false;},
   supportsCapability(name){return !!(this.capabilities&&this.capabilities.has(String(name||'')));},
   prepareAccountScopedState(uid){
@@ -321,12 +364,14 @@ const online = {
   resetAccountCaches(){
     this.socialState={version:'1.0',friends:[],incoming:[],outgoing:[],blocked:[],counts:{friends:0,incoming:0,outgoing:0,blocked:0}};
     this.dailyTasks=null;this.replays=[];this._sharedReplayRequested=false;
-    this.chatState={version:'1.0',conversations:[],unreadTotal:0};this.chatListPending=false;this.chatHistoryPending={};this.chatHistory={};this.chatHistoryMeta={};this.chatPending=new Map();this.chatDrafts=new Map();this.chatActivePeerUid=null;this.pendingProfileCompare=null;this.cacheOwnerUid=null;if(typeof closeProfileCompareLoading==='function')closeProfileCompareLoading();
+    this.chatState={version:'1.0',conversations:[],unreadTotal:0};this.chatListPending=false;this.chatHistoryPending={};this.chatHistory={};this.chatHistoryMeta={};this.chatPending=new Map();this.chatDrafts=new Map();this.chatActivePeerUid=null;this.lastShareableResult=null;if(this.pendingPublicProfile)this.pendingPublicProfile.active=false;this.pendingPublicProfile=null;this.publicProfileRequests=[];if(typeof closeProfileLoading==='function')closeProfileLoading();this.pendingProfileCompare=null;this.cacheOwnerUid=null;if(typeof closeProfileCompareLoading==='function')closeProfileCompareLoading();
     if(typeof renderSocialRail==='function')renderSocialRail();
-    if(typeof renderPlayerChat==='function')renderPlayerChat();
     if(typeof updateChatUnreadBadge==='function')updateChatUnreadBadge();
   },
   requestChatList(limit){if(this.connected&&this._authenticated){this.chatListPending=true;this.send({type:'chat_list',payload:{limit:Number(limit)||50}});return true;}return false;},
+  requestPlayline(filter,cursor,limit){if(!this.connected||!this._authenticated||!this.supportsCapability('playline-v1'))return false;this.send({type:'playline_list',payload:{filter:String(filter||'all'),...(cursor?{cursor:String(cursor)}:{}),limit:Math.max(1,Math.min(30,Number(limit)||20))}});return true;},
+  publishPlayline(intent){if(!this.connected||!this._authenticated||!this.supportsCapability('playline-v1')||!intent)return false;this.send({type:'playline_publish',payload:intent});return true;},
+  removePlayline(postId,requestId){if(!this.connected||!this._authenticated||!this.supportsCapability('playline-v1')||!postId)return false;this.send({type:'playline_remove',payload:{postId:String(postId),requestId:String(requestId||('pldel_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,10)))}});return true;},
   requestChatHistory(peerUid,beforeSeq){
     if(!this.connected||!this._authenticated||!peerUid)return false;
     this.chatHistoryPending[String(peerUid)]=true;
@@ -528,11 +573,19 @@ const online = {
       case 'social_error':
         toast(translateServerMessage(msg.msg,msg.reason||(msg.payload&&msg.payload.reason),'operation_failed'));
         break;
+      case 'playline_state':
+      case 'playline_publish_ok':
+      case 'playline_remove_ok':
+      case 'playline_invalidated':
+      case 'playline_error':
+        if(typeof Playline!=='undefined'&&Playline&&typeof Playline.accept==='function')Playline.accept(msg);
+        else if(msg.type==='playline_error')toast(translateServerMessage(msg.msg,msg.payload&&msg.payload.reason||msg.reason,'playline_not_ready'));
+        break;
       case 'chat_state':
         this.chatListPending=false;
         this.chatState=msg.payload||{version:'1.0',conversations:[],unreadTotal:0};
-        if(typeof renderPlayerChat==='function')renderPlayerChat();
         if(typeof updateChatUnreadBadge==='function')updateChatUnreadBadge();
+        if(typeof DirectMessage!=='undefined'&&DirectMessage&&typeof DirectMessage.accept==='function')DirectMessage.accept(msg);
         break;
       case 'chat_history':
         {
@@ -542,10 +595,11 @@ const online = {
             const current=Array.isArray(this.chatHistory[peerUid])?this.chatHistory[peerUid]:[];
             const merged=[...(payload.messages||[]),...current],byId=new Map();merged.forEach(item=>{if(item&&item.id)byId.set(item.id,item);});
             this.chatHistory[peerUid]=[...byId.values()].sort((a,b)=>String(a.seq).localeCompare(String(b.seq),undefined,{numeric:true}));
+            this.chatHistoryMeta= this.chatHistoryMeta || {};
+            this.chatHistoryMeta[String(peerUid)]={hasMore:!!payload.hasMore,nextBeforeSeq:payload.nextBeforeSeq||null};
             if(payload.messages&&payload.messages.length){const received=[...payload.messages].reverse().find(item=>item.recipientUid===account.uid);if(received)this.markChatRead(peerUid,received.seq);}
           }
-          if(typeof handlePlayerChatHistory==='function')handlePlayerChatHistory(payload);
-          if(typeof renderPlayerChat==='function')renderPlayerChat();
+          if(typeof DirectMessage!=='undefined'&&DirectMessage&&typeof DirectMessage.accept==='function')DirectMessage.accept(msg);
         }
         break;
       case 'spectate_left':
@@ -561,25 +615,35 @@ const online = {
         {
           const payload=msg.payload||{},message=payload.message||{},peerUid=message.senderUid===account.uid?message.recipientUid:message.senderUid;
           if(peerUid&&message.id){const rows=Array.isArray(this.chatHistory[peerUid])?this.chatHistory[peerUid]:[];if(!rows.some(item=>item.id===message.id))rows.push(message);this.chatHistory[peerUid]=rows.sort((a,b)=>String(a.seq).localeCompare(String(b.seq),undefined,{numeric:true}));}
-          if(typeof handlePlayerChatMessage==='function')handlePlayerChatMessage(payload);
           this.requestChatList();
+          if(typeof DirectMessage!=='undefined'&&DirectMessage&&typeof DirectMessage.accept==='function')DirectMessage.accept(msg);
         }
         break;
       case 'chat_send_ok':
-        if(msg.payload&&msg.payload.clientMessageId)this.chatPending.delete(msg.payload.clientMessageId);
-        if(typeof handlePlayerChatSendAck==='function')handlePlayerChatSendAck(msg.payload||{});
+        {
+          const payload=msg.payload||{},message=payload.message||{},clientId=payload.clientMessageId;
+          if(clientId)this.chatPending.delete(clientId);
+          if(message.id&&message.senderUid&&message.recipientUid){
+            const peerUid=String(message.senderUid)===String(account&&account.uid||'')?String(message.recipientUid):String(message.senderUid);
+            const rows=Array.isArray(this.chatHistory[peerUid])?this.chatHistory[peerUid]:[];
+            if(!rows.some(item=>item&&item.id===message.id))rows.push(message);
+            this.chatHistory[peerUid]=rows.sort((a,b)=>String(a.seq).localeCompare(String(b.seq),undefined,{numeric:true}));
+            if(this.chatDrafts&&typeof this.chatDrafts.delete==='function')this.chatDrafts.delete(peerUid);
+          }
+        }
         this.requestChatList();
+        if(typeof DirectMessage!=='undefined'&&DirectMessage&&typeof DirectMessage.accept==='function')DirectMessage.accept(msg);
         break;
       case 'chat_read_ok':
-        if(typeof handlePlayerChatRead==='function')handlePlayerChatRead(msg.payload||{});
         this.requestChatList();
+        if(typeof DirectMessage!=='undefined'&&DirectMessage&&typeof DirectMessage.accept==='function')DirectMessage.accept(msg);
         break;
       case 'chat_error':
         if(msg.payload&&msg.payload.action==='chat_list')this.chatListPending=false;
         if(msg.payload&&msg.payload.action==='chat_history')this.chatHistoryPending={};
         if(msg.payload&&msg.payload.clientMessageId&&this.chatPending.has(msg.payload.clientMessageId))this.chatPending.get(msg.payload.clientMessageId).status='failed';
-        if(typeof handlePlayerChatError==='function')handlePlayerChatError(msg.payload||{});
-        else toast(t('chat_error_generic'));
+        if(typeof toast==='function')toast(translateServerMessage(msg.msg,msg.reason||(msg.payload&&msg.payload.reason),'operation_failed'));
+        if(typeof DirectMessage!=='undefined'&&DirectMessage&&typeof DirectMessage.accept==='function')DirectMessage.accept(msg);
         break;
       case 'match_expression':
         if(typeof receiveMatchExpression==='function')receiveMatchExpression(msg.payload||{});
@@ -970,12 +1034,13 @@ const online = {
       case 'profile_data':
         {
           const profile = msg.payload || null;
-          const pending = this.pendingPublicProfileUid;
+          const request = this.publicProfileRequests.shift() || null;
           if (profile && typeof cacheServerProfilePresentation === 'function') cacheServerProfilePresentation(profile);
-          if (pending && (!profile || String(profile.uid || '') === String(pending))){
-            this.pendingPublicProfileUid = null;
-            if (typeof finishPublicProfileRequest === 'function' && finishPublicProfileRequest(profile)) break;
-            if (!profile) toast(t('profile_not_found'));
+          if(request&&request.active){
+            if(this.pendingPublicProfile===request)this.pendingPublicProfile=null;
+            const matchedProfile=profile&&String(profile.uid||'')===request.targetUid?profile:null;
+            if(typeof finishPublicProfileRequest==='function'&&finishPublicProfileRequest(matchedProfile,request))break;
+            if(!profile)toast(t('profile_not_found'));
           }
           if (profile && typeof account !== 'undefined' && account && profile.uid === account.uid && typeof updateAccountProfile === 'function') updateAccountProfile(profile);
         }
@@ -1028,6 +1093,7 @@ const online = {
       case 'result_ok':
         {
           const payload = msg.payload || {};
+          if(payload.resultId&&payload.reward&&payload.reward.eligible!==false&&payload.reward.mode==='online')this.lastShareableResult={resultId:String(payload.resultId),gameId:String(payload.reward.gameId||currentGameId||'')};
           const resultMatchId = msg.matchId || payload.matchId || null;
           const pendingClaim = this.pendingResultClaim;
           const profile = payload.profile || msg.profile || (payload.uid && (payload.name !== undefined || payload.avatar !== undefined || payload.coins !== undefined) ? payload : null);
@@ -1044,7 +1110,7 @@ const online = {
               if (this.displayedRewardIds.length > 100) this.displayedRewardIds.splice(0, this.displayedRewardIds.length - 100);
               this.saveSoloClaims();
             }
-            if (typeof showRewardBreakdown === 'function') showRewardBreakdown(payload.reward);
+            if (typeof showRewardBreakdown === 'function') showRewardBreakdown(payload.reward,{resultId:payload.resultId||rewardId,gameId:payload.reward&&payload.reward.gameId||currentGameId||''});
           } else if (!payload.reward && (pendingClaim || this.pendingSoloClaims.some(claim => String(claim.resultId || '') === rewardId))){
             toast(t('reward_settled_refresh'));
           }
@@ -1223,10 +1289,12 @@ const online = {
   },
   resetState(preserveResume){
     const wasRoomGame = !!(this.room || this.game);
+    const preserveReconnectAttempts = this._preserveReconnectAttempts === true;
+    this._preserveReconnectAttempts = false;
     if (!this.connected && typeof clearShopPurchaseFeedback === 'function') clearShopPurchaseFeedback({silent:true});
-    if (!preserveResume) this.clearResume();
+    if (!preserveResume) this.clearResume(preserveReconnectAttempts);
     if (!preserveResume) this.clearPendingResultClaim();
-    this.room = null; this.spectatorRoom=null; this.game = null; this.isHost = false; this.isSpectator = false; this.gameplayMeta = null; this.presentationMeta=null; this.pending = null; this.roomInfo = null; this.capacity = 2; this.inviteTarget = null; this.pendingGame=null;this.pendingGameRoom=null;if(!this.connected)this.capabilities=new Set();if(!this.connected){this.chatListPending=false;this.chatHistoryPending={};}if(!this.connected){this.pendingProfileCompare=null;if(typeof closeProfileCompareLoading==='function')closeProfileCompareLoading();}
+    this.room = null; this.spectatorRoom=null; this.game = null; this.isHost = false; this.isSpectator = false; this.gameplayMeta = null; this.presentationMeta=null; this.pending = null; this.roomInfo = null; this.capacity = 2; this.inviteTarget = null; this.pendingGame=null;this.pendingGameRoom=null;if(!this.connected)this.capabilities=new Set();if(!this.connected){this.chatListPending=false;this.chatHistoryPending={};}if(!this.connected){if(this.pendingPublicProfile)this.pendingPublicProfile.active=false;this.pendingPublicProfile=null;this.publicProfileRequests=[];if(typeof closeProfileLoading==='function')closeProfileLoading();this.pendingProfileCompare=null;if(typeof closeProfileCompareLoading==='function')closeProfileCompareLoading();}
     this.isAdmin=false;this.tournamentState=null;this.tournamentMatch=null;if(typeof closeTournamentStateModal==='function')closeTournamentStateModal();
     this.matchId = null; this.legacyResultSubmitted = false;
     $('online-banner').classList.add('hidden');
@@ -1237,13 +1305,20 @@ const online = {
   },
 };
 function resolveServer(){
-  try {
-    const raw = (localStorage.getItem('mg_server') || '').trim();
-    if (raw) return raw;
-  } catch {}
   const h = (typeof location !== 'undefined' && location.hostname) || '';
-  if (!h || h === 'localhost' || h === '127.0.0.1' || h.endsWith('.local')) return '';
+  if (!h || h === 'localhost' || h === '127.0.0.1' || h === '::1' || h === '[::1]' || h.endsWith('.localhost') || h.endsWith('.local')) return '';
   return online.defaultServer;
+}
+function requestOnlineConnectionRecovery(){
+  if(typeof online!=='undefined'&&online&&typeof online.ensureConnected==='function')online.ensureConnected('lifecycle');
+}
+if(typeof window!=='undefined'&&window&&typeof window.addEventListener==='function'){
+  window.addEventListener('online',requestOnlineConnectionRecovery);
+  window.addEventListener('pageshow',requestOnlineConnectionRecovery);
+  window.addEventListener('focus',requestOnlineConnectionRecovery);
+}
+if(typeof document!=='undefined'&&document&&typeof document.addEventListener==='function'){
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)requestOnlineConnectionRecovery();});
 }
 function finishRoomGame(){
   online.clearPendingResultClaim(online.matchId);
@@ -1316,9 +1391,9 @@ function renderRoomPanel(){
     (info.seats || []).forEach(seat => {
       const card=el('div','seat-card '+(seat.type==='empty'?'is-empty ':'')+(seat.host?'is-host ':'')+(seat.online===false&&seat.type==='human'?'is-offline':''));
       if(seat.type==='human'){
-        const profile={...(profileByUid(seat.userId)||{}),uid:seat.userId,name:seat.nickname,avatar:seat.avatar};
+        const profile={...(profileByUid(seat.userId)||{}),uid:seat.userId,name:seat.nickname,avatar:seat.avatar,frame:seat.frame,effect:seat.effect,nameFx:seat.nameFx,lang:seat.lang};
         const av=el('button','game-stage-avatar-button');av.type='button';av.setAttribute('aria-label',t('room_host_profile_aria',localizedPlayerName(seat.nickname)));av.disabled=!seat.userId;av.appendChild(avatarStageNode(profile,38));av.addEventListener('click',()=>seat.userId&&openProfileModal(seat.userId));card.appendChild(av);
-        const seatName=el('div','seat-name');appendPlayerName(seatName,seat.nickname);if(seat.userId===deviceUid)seatName.appendChild(el('span',null,t('profile_mine')));card.appendChild(seatName);
+        const seatName=el('div','seat-name');seatName.appendChild(typeof playerIdentityNameNode==='function'?playerIdentityNameNode(profile):nameFxNode(profile,seat.nickname||''));if(seat.userId===deviceUid)seatName.appendChild(el('span',null,t('profile_mine')));card.appendChild(seatName);
         const badges=el('div','seat-badges');if(seat.host)badges.appendChild(el('span','seat-badge',t('stage_host')));badges.appendChild(el('span','seat-badge '+(seat.ready?'ready':''),t(seat.ready?'ready':'not_ready')));if(!seat.online)badges.appendChild(el('span','seat-badge',t('offline')));card.appendChild(badges);
       }else if(seat.type==='ai'){
         card.appendChild(avatarStageNode({avatar:seat.avatar||141,frame:0,effect:0},38));const seatName=el('div','seat-name');appendPlayerName(seatName,seat.nickname,'ai_default_name');card.appendChild(seatName);
@@ -1494,10 +1569,10 @@ function openInvitePicker(){
       const item = el('button','roster-item');
       item.type = 'button';
       const av = el('span','av');
-      av.appendChild(avatarStageNode(u, 24));
+      av.appendChild(typeof playerIdentityAvatarNode==='function'?playerIdentityAvatarNode(u,{size:24}):avatarStageNode(u,24));
       item.appendChild(av);
       const inviteName = el('span','nm');
-      appendPlayerName(inviteName, u.name);
+      inviteName.appendChild(typeof playerIdentityNameNode==='function'?playerIdentityNameNode(u,{includeLanguage:false}):nameFxNode(u,u.name||''));
       inviteName.appendChild(el('span',null,t('level_bracket',u.level || levelFromXp(u.xp || 0))));
       item.appendChild(inviteName);
       item.appendChild(el('span','lb-game', typeof currencyAmountText === 'function' ? currencyAmountText(u.coins || 0) : CURRENCY + (u.coins || 0)));
@@ -1575,14 +1650,14 @@ function openSocialActions(profile,context){
 }
 function socialRow(profile,relationship,request){
   const row=el('div','social-row'),avatar=el('span','lb-av');
-  avatar.appendChild(avatarStageNode(profile,24));
+  avatar.appendChild(typeof playerIdentityAvatarNode==='function'?playerIdentityAvatarNode(profile,{size:24}):avatarStageNode(profile,24));
   row.appendChild(avatar);
   const copy=el('div','social-copy');
   const profileButton=el('button','game-stage-name-button social-name');
   profileButton.type='button';
   profileButton.setAttribute('aria-label',t('room_host_profile_aria',localizedPlayerName(profile.name)));
   profileButton.disabled=!profile.uid;
-  appendPlayerName(profileButton,profile.name);
+  profileButton.appendChild(typeof playerIdentityNameNode==='function'?playerIdentityNameNode(profile):nameFxNode(profile,profile.name||''));
   profileButton.addEventListener('click',()=>{if(profile.uid)openProfileModal(profile.uid);});
   copy.appendChild(profileButton);
   const meta=el('div','social-meta');
@@ -1644,10 +1719,10 @@ function renderLobby(){
     const canJoin = r.canJoin === true;
     const canSpectate = r.canSpectate === true;
     const row = el('div','lobby-row lobby-room-card'+(r.started?' is-playing':' is-waiting'));
-    const hostProf = { uid: r.hostUid, avatar: r.hostAvatar, name: r.hostName, frame: 0, effect: 0 };
+    const hostProf = { uid:r.hostUid, avatar:r.hostAvatar, name:r.hostName, frame:r.hostFrame, effect:r.hostEffect, nameFx:r.hostNameFx, lang:r.hostLang };
     const hostButton=el('button','lobby-host-profile');hostButton.type='button';hostButton.setAttribute('aria-label',t('room_host_profile_aria',r.hostName||t('social_player')));hostButton.appendChild(avatarStageNode(hostProf,30));hostButton.disabled=!r.hostUid;hostButton.addEventListener('click',e=>{if(e&&e.stopPropagation)e.stopPropagation();if(r.hostUid)openProfileModal(r.hostUid);});row.appendChild(hostButton);
     const info = el('div','info');
-    const head=el('div','lobby-room-head'),roomName=el('div','nm');appendPlayerName(roomName,r.hostName);if(r.hostLang)roomName.appendChild(document.createTextNode(' '+langFlag(r.hostLang)));roomName.appendChild(el('span',null,t('host_room_suffix')));head.appendChild(roomName);head.appendChild(el('span','lobby-status-badge '+(r.started?'is-playing':'is-waiting'),t(r.started?'room_status_playing':'room_status_waiting')));info.appendChild(head);
+    const head=el('div','lobby-room-head'),roomName=el('div','nm');if(typeof playerIdentityNameNode==='function')roomName.appendChild(playerIdentityNameNode(hostProf,{includeLanguage:true}));else{appendPlayerName(roomName,r.hostName);if(r.hostLang)roomName.appendChild(document.createTextNode(' '+langFlag(r.hostLang)));}roomName.appendChild(el('span',null,t('host_room_suffix')));head.appendChild(roomName);head.appendChild(el('span','lobby-status-badge '+(r.started?'is-playing':'is-waiting'),t(r.started?'room_status_playing':'room_status_waiting')));info.appendChild(head);
     info.appendChild(el('div','meta',t('lobby_room_meta',r.size,r.capacity,r.game && GAMES[r.game] ? t(GAMES[r.game].nameKey) : t('not_selected'))));
     const secondary=el('div','lobby-secondary-meta');secondary.appendChild(el('span',null,t('lobby_human_ai_meta',r.humanCount||0,r.aiCount||0)));secondary.appendChild(el('span',null,t(canSpectate?'lobby_spectate_available':'lobby_spectate_unavailable')));info.appendChild(secondary);
     row.appendChild(info);
@@ -1678,12 +1753,12 @@ function renderAccounts(){
   list.forEach(u => {
     const row = el('div','player-row' + (u.uid === deviceUid ? ' me' : ''));
     const av = el('span','lb-av');
-    av.appendChild(avatarStageNode(u, 20));
+    av.appendChild(typeof playerIdentityAvatarNode==='function'?playerIdentityAvatarNode(u,{size:20}):avatarStageNode(u,20));
     row.appendChild(av);
     const playerName=el('button','game-stage-name-button nm');
     playerName.type='button';
     playerName.setAttribute('aria-label',t('room_host_profile_aria',localizedPlayerName(u.name)));
-    appendPlayerName(playerName,u.name);
+    playerName.appendChild(typeof playerIdentityNameNode==='function'?playerIdentityNameNode(u):nameFxNode(u,u.name||''));
     const playerMeta=el('span');
     playerMeta.appendChild(el('span',null,t('level_bracket',u.level || levelFromXp(u.xp || 0))));
     if(u.uid===deviceUid)playerMeta.appendChild(el('span',null,t('profile_mine')));
@@ -1749,26 +1824,6 @@ function showInviteModal(inv){
   closeInvite=mountOnlineOverlayDialog(bd,card,accept,t('invite_title'));
 }
 function openSettings(){
-  const bd = el('div','modal-backdrop');
-  const card = el('div','modal-card');
-  card.appendChild(el('h3', null, t('server_config')));
-  const input = el('input','nick-input');
-  input.type = 'text';
-  input.placeholder = t('server_placeholder');
-  try { input.value = localStorage.getItem('mg_server') || online.defaultServer; } catch {}
-  card.appendChild(input);
-  card.appendChild(el('p','lb-note',t('server_note')));
-  const save = el('button','btn btn-primary',t('save'));
-  save.addEventListener('click', () => {
-    try { localStorage.setItem('mg_server', input.value.trim()); } catch {}
-    bd.remove();
-    toast(t('settings_saved'));
-  });
-  const cancel = el('button','btn',t('cancel'));
-  cancel.addEventListener('click', () => bd.remove());
-  card.appendChild(save);
-  card.appendChild(cancel);
-  bd.appendChild(card);
-  bd.addEventListener('click', e => { if (e.target === bd) bd.remove(); });
-  document.body.appendChild(bd);
+  if(typeof openSettingsPage==='function')return openSettingsPage();
+  return false;
 }

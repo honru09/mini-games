@@ -94,9 +94,7 @@ function avatarMeta(idx){
   return p ? p : null;
 }
 function nameFxNode(profile, name){
-  const fx = profile && profile.nameFx ? Number(profile.nameFx) : 0;
-  const span = elRaw('span', fx >= 1 && fx <= 4 ? 'name-fx-' + fx : null, name || '');
-  return span;
+  return playerIdentityNameNode(profile,{name:name||''});
 }
 function nameFxLabel(fx){
   const key='name_fx_'+(Number.isInteger(Number(fx))?Number(fx):0),localized=t(key);
@@ -110,6 +108,7 @@ function avatarCategory(idx) {
   return meta ? meta.category : 'creative'; // 30-55 商城头像
 }
 function avatarLocked(idx){
+  if(typeof isCuratedDefaultFreeAvatarId==='function'&&isCuratedDefaultFreeAvatarId(idx))return false;
   const v=PLAYROOM_AVATAR_BY_ID.get(Number(idx));
   if(v) return !v.free&&!ownItem(account,'avatars',Number(idx));
   return idx >= 30 && !ownItem(account, 'avatars', idx);
@@ -117,6 +116,16 @@ function avatarLocked(idx){
 function avatarPrice(idx){
   const meta = SHOP.avatars.find(a => a.id === idx);
   return meta ? meta.price : 0;
+}
+function avatarPickerIds(selectedAvatar){
+  const selected=Number(selectedAvatar);
+  const ids=[];
+  for(let id=0;id<AVATAR_COUNT;id++){
+    const meta=avatarMeta(id);
+    const defaultFree=meta&&(typeof isCuratedDefaultFreeAvatarId==='function'?isCuratedDefaultFreeAvatarId(id):meta.free===true);
+    if(id===selected||(meta&&(defaultFree||meta.free!==true)))ids.push(id);
+  }
+  return ids;
 }
 function ownItem(acc, kind, id){
   if (!acc) return false;
@@ -269,15 +278,7 @@ function avatarCanvas(idx, size, options){
   return c;
 }
 function avatarStageNode(profile, size, extraCls){
-  const st = el('span', 'mini-avatar-stage' + (extraCls ? ' ' + extraCls : ''));
-  st.setAttribute('data-uid', profile && profile.uid || '');
-  const fr = profile && profile.frame || 0;
-  const fx = profile && profile.effect || 0;
-  if (fr) st.appendChild(el('span', 'frame-ring ' + (SHOP.frames.find(f => f.id === fr) ? SHOP.frames.find(f => f.id === fr).cls : ''), ''));
-  const cv = avatarCanvas(profile ? profile.avatar : 0, size || 22);
-  st.appendChild(cv);
-  if (fx) st.classList.add(SHOP.effects.find(e => e.id === fx) ? SHOP.effects.find(e => e.id === fx).cls : '');
-  return st;
+  return playerIdentityAvatarNode(profile,{size:size||22,className:extraCls||''});
 }
 const GAME_KEYS = Object.keys(GAMES);
 const LS_ROSTER = 'mg_roster';
@@ -505,6 +506,7 @@ function logoutAccount(){
   completeLocalLogout(true);
 }
 function completeLocalLogout(showLogin){
+  if (typeof GhostRouteMotion!=='undefined'&&GhostRouteMotion&&typeof GhostRouteMotion.settle==='function') GhostRouteMotion.settle('logout');
   pendingAuthPin = null;
   if (typeof clearShopPurchaseFeedback === 'function') clearShopPurchaseFeedback({silent:true});
   if (online){
@@ -645,25 +647,25 @@ function openProfileEditor(uid){
   card.appendChild(catLabel);
   const editorCats = el('div','shop-tabs');
   const editorCatsDef = [
-    { id:'all' }, { id:'basic' }, { id:'theme' }, ...AVATAR_CATEGORIES.map(item => ({ id:item.id })),
+    { id:'all' }, ...AVATAR_CATEGORIES.map(item => ({ id:item.id })),
     { id:'fantasy' }, { id:'animals' }, { id:'profession' }, { id:'creative' },
   ];
   let editorCat = 'all';
   const grid = el('div','avatar-grid');
   function renderEditorGrid(){
     grid.innerHTML = '';
-    for (let i = 0; i < AVATAR_COUNT; i++){
-      if (editorCat !== 'all' && avatarCategory(i) !== editorCat) continue;
+    avatarPickerIds(avatar).forEach(i => {
+      if (editorCat !== 'all' && avatarCategory(i) !== editorCat) return;
       const locked = avatarLocked(i);
       const opt = el('button','avatar-opt' + (i === avatar ? ' selected' : '') + (locked ? ' locked' : ''));
       opt.type = 'button';
       opt.appendChild(avatarCanvas(i, 26));
       opt.setAttribute('aria-label', t('profile_avatar_aria',i+1));
       if (locked){
-        opt.appendChild(el('span','avatar-lock','🔒' + (avatarPrice(i) ? (typeof currencyAmountText === 'function' ? currencyAmountText(avatarPrice(i)) : CURRENCY + avatarPrice(i)) : '')));
+        opt.appendChild(el('span','avatar-lock','🔒'));
         opt.addEventListener('click', () => {
           const meta = avatarMeta(i);
-          toast(t('auth_avatar_locked',meta ? shopItemName('avatars',meta) : t('shop_tab_avatars'),CURRENCY,meta ? meta.price : 0));
+          toast(t('shop_item_requires_purchase',meta ? shopItemName('avatars',meta) : t('shop_tab_avatars')));
         });
       } else {
         opt.addEventListener('click', () => {
@@ -672,7 +674,7 @@ function openProfileEditor(uid){
         });
       }
       grid.appendChild(opt);
-    }
+    });
   }
   editorCatsDef.forEach(c => {
     const tb = el('button','btn shop-tab' + (editorCat === c.id ? ' btn-primary' : ''));
@@ -925,7 +927,7 @@ function formatRewardSummary(reward){
   const currencySuffix = typeof currencyName === 'function' ? currencyName() : CURRENCY;
   return t('reward_total_summary', signedReward(reward.currency, ' ' + currencySuffix), signedReward(reward.xp, ' XP'));
 }
-function showRewardBreakdown(reward){
+function showRewardBreakdown(reward, shareContext){
   if (!reward || typeof document === 'undefined' || !document.body) return;
   try {
     if (typeof setHonruResultReaction === 'function') setHonruResultReaction(reward.result, { source:'reward', spectator:!!(online&&online.isSpectator) });
@@ -961,6 +963,10 @@ function showRewardBreakdown(reward){
   card.appendChild(total);
   if (Number(reward.levelAfter) > Number(reward.levelBefore)){
     card.appendChild(el('p', 'reward-level-up', t('reward_level_up', reward.levelBefore, reward.levelAfter)));
+  }
+  const resultId=String(shareContext&&shareContext.resultId||'');
+  if(resultId&&reward.eligible!==false&&typeof Playline!=='undefined'&&Playline&&typeof Playline.prefill==='function'){
+    const share=el('button','btn',t('playline_share_result'));share.addEventListener('click',()=>{Playline.prefill({kind:'result_share',resultId,gameId:shareContext.gameId||''});if(typeof setAppRoute==='function')setAppRoute('playline');});card.appendChild(share);
   }
   const close = el('button', 'btn btn-primary reward-breakdown-close', t('reward_close'));
   let closeOverlay = () => { if (overlay.remove) overlay.remove(); return true; };
@@ -1031,7 +1037,10 @@ function showHub(){
   }
   const endBtn = $('btn-end-game');
   if (endBtn) endBtn.classList.add('hidden');
-  if (online.room || online.spectatorRoom) renderRoomPanel();
+  if (online.room || online.spectatorRoom){
+    renderRoomPanel();
+    if (typeof setGamesWorkspaceView === 'function') setGamesWorkspaceView('rooms');
+  }
   if (typeof ghostAppRoute !== 'undefined' && ghostAppRoute === 'home' && typeof renderGhostHome === 'function') renderGhostHome();
 }
 function showGame(id){
@@ -1246,6 +1255,27 @@ function setStatus(text, win){
   s.classList.toggle('win', !!win);
 }
 
+let gamesWorkspaceView = 'library';
+function setGamesWorkspaceView(view, options = {}){
+  const next = view === 'rooms' ? 'rooms' : 'library';
+  gamesWorkspaceView = next;
+  document.querySelectorAll('[data-games-workspace-target]').forEach(button => {
+    const active = button.dataset.gamesWorkspaceTarget === next;
+    button.classList.toggle('active', active);
+    button.setAttribute('aria-selected', String(active));
+    button.tabIndex = active ? 0 : -1;
+  });
+  document.querySelectorAll('[data-games-workspace-panel]').forEach(panel => {
+    const active = panel.dataset.gamesWorkspacePanel === next;
+    panel.classList.toggle('hidden', !active);
+    panel.setAttribute('aria-hidden', String(!active));
+  });
+  if (options.focus){
+    const active = document.querySelector('[data-games-workspace-target="' + next + '"]');
+    if (active) active.focus();
+  }
+}
+
 function renderHub(){
   renderPersonaRow();
   const grid = $('game-grid');
@@ -1300,6 +1330,15 @@ if (typeof document !== 'undefined'){
   initI18n().then(() => {
   initTheme();
   initGhostShell();
+  document.querySelectorAll('[data-games-workspace-target]').forEach(button => {
+    button.addEventListener('click', () => setGamesWorkspaceView(button.dataset.gamesWorkspaceTarget));
+    button.addEventListener('keydown', event => {
+      if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight' && event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
+      event.preventDefault();
+      setGamesWorkspaceView(button.dataset.gamesWorkspaceTarget === 'library' ? 'rooms' : 'library', { focus:true });
+    });
+  });
+  setGamesWorkspaceView(online && (online.room || online.spectatorRoom) ? 'rooms' : gamesWorkspaceView);
   if (account && account.authToken) enterGhostApp({ silentHash:true });
   else requireGhostAuth('login');
   const modeBtns = document.querySelectorAll('#mode-group .count-btn');
@@ -1335,9 +1374,9 @@ if (typeof document !== 'undefined'){
     setAppRoute('games');
   });
   const quickJoin=$('btn-quick-join'); if(quickJoin)quickJoin.addEventListener('click',()=>online.quickJoin(null));
-  const createRoom=$('btn-create-room'); if(createRoom)createRoom.addEventListener('click',()=>openRoomSetup());
-  const browseRooms=$('btn-browse-rooms'); if(browseRooms)browseRooms.addEventListener('click',()=>{ const node=$('lobby-panel'); if(node&&node.scrollIntoView){node.scrollIntoView({behavior:'smooth',block:'start'});try{node.focus({preventScroll:true});}catch{}} });
-  const joinPrivate=$('btn-join-private'); if(joinPrivate)joinPrivate.addEventListener('click',()=>openRoomSetup());
+  const createRoom=$('btn-create-room'); if(createRoom)createRoom.addEventListener('click',()=>{setGamesWorkspaceView('rooms');openRoomSetup();});
+  const browseRooms=$('btn-browse-rooms'); if(browseRooms)browseRooms.addEventListener('click',()=>{ setGamesWorkspaceView('rooms');const node=$('lobby-panel'); if(node&&node.scrollIntoView){node.scrollIntoView({behavior:'smooth',block:'start'});try{node.focus({preventScroll:true});}catch{}} });
+  const joinPrivate=$('btn-join-private'); if(joinPrivate)joinPrivate.addEventListener('click',()=>{setGamesWorkspaceView('rooms');openRoomSetup();});
   const settingsBtn = $('btn-settings-page');
   if (settingsBtn) settingsBtn.addEventListener('click', openSettingsPage);
   $('btn-me').addEventListener('click', () => openProfileModal(deviceUid));

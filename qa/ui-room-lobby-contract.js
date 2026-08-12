@@ -122,10 +122,12 @@ check('Room Launchpad 所有主触控目标至少 44px',
   /room-launchpad-join[^}]*min-height\s*:\s*44px/s.test(template) &&
   /room-launchpad-actions\s+\.btn[^}]*min-height\s*:\s*44px/s.test(template) &&
   /room-launchpad-code-form\s+\.nick-input[^}]*min-height\s*:\s*44px/s.test(template));
-check('Lobby 在窄屏启动路径前出现且只保留一个列表节点',
+check('Lobby 保留单一列表节点，并由独立房间工作区在窄屏可达',
   count(template, /id="lobby-panel"/g) === 1 &&
   count(template, /id="lobby-list"/g) === 1 &&
-  template.indexOf('id="lobby-panel"') < template.indexOf('id="game-grid"'));
+  /data-games-workspace-target="rooms"/.test(template) &&
+  /id="games-rooms-panel"/.test(template) &&
+  template.indexOf('data-games-workspace-target="rooms"') < template.indexOf('id="game-grid"'));
 
 class LaunchpadNode {
   constructor(tag, className){

@@ -1,172 +1,142 @@
-/* ================= AI 角色化（Phase 4） ================= */
-const AI_PERSONAS = [
-  {
-    id: 'tsundere',
-    nameKey: 'ai_persona_tsundere_name',
-    icon: '😤',
-    descKey: 'ai_persona_tsundere_desc',
-    systemPrompt: '你是一个傲娇型游戏对手。嘴上嫌弃对方，实际很认真。每局都用充满傲娇口吻的中文短句发言，保持2-3句内。',
-    temperature: 0.8,
-    randomness: 0.02,
-    quotes: {
-      think: ['哼，这种局面还用想？', '才不是因为你才认真下的……', '勉为其难陪你玩一下好了。'],
-      win: ['赢你根本不用全力好吗！', '哼，下次可不会这么简单了。', '看到差距了吧，笨蛋！'],
-      lose: ['呜……刚才只是放水而已！', '你、你别得意，下局一定赢你！', '才不是输给你了呢！'],
-    },
-  },
-  {
-    id: 'gambler',
-    nameKey: 'ai_persona_gambler_name',
-    icon: '🎲',
-    descKey: 'ai_persona_gambler_desc',
-    systemPrompt: '你是一个激进冒险的赌徒型游戏对手。喜欢高风险高回报的走法，发言充满赌博梗和豪言壮语，保持2-3句内。',
-    temperature: 1.2,
-    randomness: 0.04,
-    quotes: {
-      think: ['赌一把大的！', '富贵险中求，就这步了！', '今天运势超强，梭哈！'],
-      win: ['看吧，敢赌才会赢！', '全押！赢麻了！', '运气也是实力的一部分！'],
-      lose: ['不可能，我算好的！', '再来一局，这把一定翻盘！', '呜呜，赔光了……'],
-    },
-  },
-  {
-    id: 'mean',
-    nameKey: 'ai_persona_mean_name',
-    icon: '🗯️',
-    descKey: 'ai_persona_mean_desc',
-    systemPrompt: '你是一个毒舌嘲讽型游戏对手。擅长犀利点评对手的走法，发言带刺但有趣，保持2-3句内。',
-    temperature: 0.6,
-    randomness: 0.01,
-    quotes: {
-      think: ['这步棋也太好猜了吧。', '闭着眼睛都知道你要走哪。', '菜鸟，看好了。'],
-      win: ['就这水平？再来一百局也一样。', '赢你毫无成就感。', '下次换个能打的来。'],
-      lose: ['……意外，纯属意外。', '是我大意了，别得意。', '哼，运气选手罢了。'],
-    },
-  },
-  {
-    id: 'cute',
-    nameKey: 'ai_persona_cute_name',
-    icon: '🌸',
-    descKey: 'ai_persona_cute_desc',
-    systemPrompt: '你是一个可爱卖萌型游戏对手。发言软萌活泼，爱用语气词和颜文字，保持2-3句内。',
-    temperature: 1.0,
-    randomness: 0.02,
-    quotes: {
-      think: ['让我想想哦～', '选哪里好呢？', '嗯嗯，就这里啦！'],
-      win: ['耶！人家赢啦～', '嘿嘿，运气超好的！', '下次也一起玩哦！'],
-      lose: ['呜哇，输了啦', '下次人家会更努力的！', '不许笑我哦！'],
-    },
-  },
-  {
-    id: 'teacher',
-    nameKey: 'ai_persona_teacher_name',
-    icon: '📐',
-    descKey: 'ai_persona_teacher_desc',
-    systemPrompt: '你是一个严谨计算型的数学老师对手。每一步都经过缜密分析，发言理性而略带说教，保持2-3句内。',
-    temperature: 0.2,
-    randomness: 0,
-    quotes: {
-      think: ['根据概率论，这一步胜率最高。', '让我计算一下所有可能分支。', '选择最优解，是数学的基本素养。'],
-      win: ['胜负已定，这就是数学的力量。', '结论：认真计算的人不会输。', '下一题，不，下一局。'],
-      lose: ['这次样本量不足，下次重来。', '我的模型需要修正。', '意外误差，统计学上可接受。'],
-    },
-  },
-];
+/* ================= AI 三档强度 ================= */
+// 玩家只选择强度。旧 `aiPersona` 名称保留为跨模块兼容层，绝不再表示可见人格。
+const AI_DIFFICULTIES = Object.freeze([
+  { id:'easy', nameKey:'ai_difficulty_easy', descKey:'ai_difficulty_easy_desc', icon:'🌱' },
+  { id:'normal', nameKey:'ai_difficulty_normal', descKey:'ai_difficulty_normal_desc', icon:'⚖️' },
+  { id:'hard', nameKey:'ai_difficulty_hard', descKey:'ai_difficulty_hard_desc', icon:'🔥' },
+]);
+const AI_DIFFICULTY_DEFAULT = 'normal';
+const AI_DIFFICULTY_FALLBACK_NAMES = Object.freeze({ easy:'Easy', normal:'Normal', hard:'Hard' });
+// 07-roster 仍公开这个旧符号；值已是三档难度，不能再恢复五人格目录。
+const AI_PERSONAS = AI_DIFFICULTIES;
 
-function personaName(persona){ return persona ? t(persona.nameKey) : t('ai_default_name'); }
-function personaDesc(persona){ return persona ? t(persona.descKey) : ''; }
-
-let currentPersona = AI_PERSONAS[0];
-
-function personaById(id) {
-  return AI_PERSONAS.find(p => p.id === id) || AI_PERSONAS[0];
+function aiDifficultyById(value){
+  const raw = value && typeof value === 'object'
+    ? (value.difficulty || value.id)
+    : value;
+  const id = String(raw || '').toLowerCase();
+  return AI_DIFFICULTIES.find(item => item.id === id) || AI_DIFFICULTIES.find(item => item.id === AI_DIFFICULTY_DEFAULT);
 }
 
-function setAiPersona(id) {
-  currentPersona = personaById(id);
-  try { localStorage.setItem('mg_persona', currentPersona.id); } catch {}
-  return currentPersona;
+function aiDifficultyFromOptions(opts){
+  const explicit = opts && opts.aiDifficulty;
+  if (explicit) return aiDifficultyById(explicit);
+  const legacy = opts && opts.aiPersona;
+  if (legacy && typeof legacy === 'object' && legacy.difficulty) return aiDifficultyById(legacy.difficulty);
+  if (legacy && typeof legacy === 'object' && AI_DIFFICULTIES.some(item => item.id === legacy.id)) return aiDifficultyById(legacy.id);
+  // 独立旧工厂调用中 teacher 曾代表最高本地策略；产品入口会由框架显式补成 normal。
+  if (legacy && typeof legacy === 'object' && legacy.id === 'teacher') return aiDifficultyById('hard');
+  return aiDifficultyById(AI_DIFFICULTY_DEFAULT);
 }
 
-function initAiPersona() {
+function aiDifficultyAllowsRemote(value){ return aiDifficultyById(value).id === 'hard'; }
+
+function aiDifficultyRequestProfile(value){
+  const difficulty = aiDifficultyById(value);
+  // 三档都通过服务端取得可确认的个人学习票据；只有 hard 允许服务端访问上游模型。
+  // 真正模型型号始终只由服务端环境变量决定，前端不能指定模型或密钥。
+  return { id:'teacher', difficulty:difficulty.id };
+}
+
+function aiDifficultyCompatibilityProfile(value){
+  const difficulty = aiDifficultyById(value);
+  return { id:'teacher', difficulty:difficulty.id };
+}
+
+function aiDifficultyLocalChoiceIndex(value, listLength){
+  const length = Math.max(0, Number(listLength) || 0);
+  if (length <= 1) return 0;
+  // 简单档只在已由游戏规则生成的合法候选中确定性选择较弱位置，绝不随机跳到未知动作。
+  return aiDifficultyById(value).id === 'easy' ? Math.min(length - 1, Math.max(1, Math.floor(length / 2))) : 0;
+}
+
+function aiDifficultyName(value){
+  const difficulty = aiDifficultyById(value);
+  const translated = t(difficulty.nameKey);
+  // 词典更新前保留可读 fallback；三语键由本批次外的 locale owner 统一补齐。
+  return translated === difficulty.nameKey ? AI_DIFFICULTY_FALLBACK_NAMES[difficulty.id] : translated;
+}
+
+let currentAIDifficulty = aiDifficultyById(AI_DIFFICULTY_DEFAULT);
+let currentPersona = aiDifficultyCompatibilityProfile(currentAIDifficulty);
+
+function getAiDifficulty(){ return currentAIDifficulty; }
+
+function setAiDifficulty(id){
+  currentAIDifficulty = aiDifficultyById(id);
+  currentPersona = aiDifficultyCompatibilityProfile(currentAIDifficulty);
+  try { localStorage.setItem('mg_ai_difficulty', currentAIDifficulty.id); } catch {}
+  return currentAIDifficulty;
+}
+
+function initAiDifficulty(){
+  let saved = null;
   try {
-    const saved = localStorage.getItem('mg_persona');
-    if (saved) currentPersona = personaById(saved);
+    saved = localStorage.getItem('mg_ai_difficulty');
+    // 迁移时不保留旧人格选择，避免旧偏好重新出现在玩家界面。
+    localStorage.removeItem('mg_persona');
   } catch {}
+  setAiDifficulty(saved || AI_DIFFICULTY_DEFAULT);
+  return currentAIDifficulty;
 }
 
-/* 角色只允许在已排序的近优候选中轻微偏移，绝不随机跳到任意弱着。 */
-function aiPersonaMove(listLength, bestIdx, persona) {
-  persona = persona || currentPersona;
-  if (!persona || listLength <= 1) return bestIdx;
-  if (Math.random() < (persona.randomness || 0)) {
-    return Math.min(listLength - 1, Math.max(0, bestIdx) + 1);
-  }
-  return bestIdx;
+// 以下三项是旧调用方兼容名：传入旧人格不会恢复人格，统一落到当前/普通难度。
+function personaById(id){
+  const difficulty = AI_DIFFICULTIES.some(item => item.id === String(id || '').toLowerCase())
+    ? aiDifficultyById(id) : currentAIDifficulty;
+  return aiDifficultyCompatibilityProfile(difficulty);
+}
+function setAiPersona(id){ return setAiDifficulty(id); }
+function personaName(){ return t('ai_default_name'); }
+function personaDesc(){ return ''; }
+
+function aiPersonaMove(listLength, bestIdx, value){
+  const offset = aiDifficultyLocalChoiceIndex(value || currentAIDifficulty, listLength);
+  return Math.min(Math.max(0, Number(listLength) - 1), Math.max(0, Number(bestIdx) || 0) + offset);
 }
 
-/* 角色发言：think / win / lose */
-function aiSpeak(persona, kind) {
-  persona = persona || currentPersona;
-  if (!persona) return;
-  const quotes = persona.quotes && persona.quotes[kind];
-  if (!quotes || !quotes.length) return;
-  const index = Math.floor(Math.random() * quotes.length);
-  const q = t('ai_persona_' + persona.id + '_' + kind + '_' + (index + 1));
-  toast(t('ai_persona_speech', persona.icon, personaName(persona), q));
-  sfx('pop');
+// 保留局内反应钩子，但不再展示任何人格台词或口吻。
+function aiSpeak(_value, kind){
   if (kind === 'think') {
     try { if (typeof triggerHonruGameReaction === 'function') triggerHonruGameReaction('think', { source:'ai-turn' }); } catch {}
   }
 }
 
-/* AI 对手信息（用于「最近一起玩」记录） */
-function aiMateInfo(persona) {
-  persona = persona || currentPersona;
-  const id = persona ? persona.id : 'default';
-  return {
-    uid: 'ai_' + id,
-    name: 'ai_' + id,
-  };
+function aiMateInfo(value){
+  const difficulty = aiDifficultyById(value || currentAIDifficulty);
+  return { uid:'ai_' + difficulty.id, name:'ai_' + difficulty.id };
 }
 
-function aiMateDisplayName(uid, fallbackName) {
+function aiMateDisplayName(uid, fallbackName){
   const value = String(uid || '');
-  if (!value.startsWith('ai_')) return fallbackName || t('default_player_name');
-  const id = value.slice(3);
-  if (id === 'default') return t('ai_default_name');
-  const persona = AI_PERSONAS.find(item => item.id === id);
-  return persona ? persona.icon + ' ' + personaName(persona) : (fallbackName || t('ai_default_name'));
+  return value.startsWith('ai_') ? t('ai_default_name') : (fallbackName || t('default_player_name'));
 }
 
-/* 渲染 AI 角色选择行 */
-function renderPersonaRow() {
+// 保留原挂载点，渲染内容已从五人格换成三档难度。
+function renderPersonaRow(){
   const row = $('persona-row');
   if (!row) return;
-  if (!aiMode) {
-    row.classList.add('hidden');
-    return;
-  }
+  if (!aiMode){ row.classList.add('hidden'); return; }
   row.classList.remove('hidden');
   row.innerHTML = '';
   row.appendChild(el('span', 'hub-label', t('ai_persona_select')));
-  const cards = el('div', 'persona-cards');
-  AI_PERSONAS.forEach(p => {
-    const card = el('button', 'persona-card' + (currentPersona.id === p.id ? ' selected' : ''));
+  const cards = el('div', 'persona-cards ai-difficulty-cards');
+  AI_DIFFICULTIES.forEach(difficulty => {
+    const card = el('button', 'persona-card ai-difficulty-card' + (currentAIDifficulty.id === difficulty.id ? ' selected' : ''));
     card.type = 'button';
-    card.title = personaDesc(p);
-    card.appendChild(el('span', 'persona-icon', p.icon));
-    card.appendChild(el('span', 'persona-name', personaName(p)));
-    card.appendChild(el('span', 'persona-desc', personaDesc(p)));
+    card.setAttribute('aria-pressed', String(currentAIDifficulty.id === difficulty.id));
+    card.setAttribute('aria-label', aiDifficultyName(difficulty) + ' · ' + t(difficulty.descKey));
+    card.appendChild(el('span', 'persona-icon', difficulty.icon));
+    card.appendChild(el('span', 'persona-name', aiDifficultyName(difficulty)));
+    card.appendChild(el('span', 'persona-desc', t(difficulty.descKey)));
     card.addEventListener('click', () => {
-      setAiPersona(p.id);
+      setAiDifficulty(difficulty.id);
       renderPersonaRow();
-      toast(t('ai_persona_selected', p.icon, personaName(p)));
+      toast(t('ai_persona_selected', difficulty.icon, aiDifficultyName(difficulty)));
     });
     cards.appendChild(card);
   });
   row.appendChild(cards);
 }
 
-if (typeof document !== 'undefined') {
-  initAiPersona();
-}
+if (typeof document !== 'undefined') initAiDifficulty();

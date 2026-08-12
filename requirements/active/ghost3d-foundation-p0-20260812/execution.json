@@ -1,0 +1,42 @@
+{
+  "taskId": "ghost3d-foundation-p0-20260812",
+  "requirement": "TECH-049",
+  "status": "ACCEPTED",
+  "updatedAt": "2026-08-12T04:30:37+09:00",
+  "interface": {
+    "moduleOwnKeys": ["create", "QUALITY"],
+    "instanceOwnKeys": ["apply", "dispose", "snapshot"],
+    "messageTypes": ["frame", "input", "motion", "lifecycle", "quality", "context-lost", "recover", "environment"]
+  },
+  "files": [
+    "public/src/core/08-ghost3d-foundation.js",
+    "qa/ghost3d-foundation.js",
+    "scripts/build.js",
+    "scripts/quality-gates.js",
+    "package.json",
+    "requirements/PRODUCT_REQUIREMENTS_LEDGER.json",
+    "PROJECT_STATUS.json",
+    "requirements/active/ghost3d-foundation-p0-20260812/requirement.md",
+    "requirements/active/ghost3d-foundation-p0-20260812/contract.md",
+    "requirements/active/ghost3d-foundation-p0-20260812/acceptance.md",
+    "requirements/active/ghost3d-foundation-p0-20260812/execution.json",
+    "requirements/active/ghost3d-foundation-p0-20260812/plan.json",
+    "requirements/active/ghost3d-foundation-p0-20260812/evidence/local-verification.json"
+  ],
+  "buildRegisteredInertly": true,
+  "runtimeWired": false,
+  "gameIntegration": false,
+  "rendererDependencyAdded": false,
+  "automatedEvidence": [
+    "node --check public/src/core/08-ghost3d-foundation.js",
+    "node qa/ghost3d-foundation.js"
+  ],
+  "notExecuted": [
+    "browser visual acceptance",
+    "second browser and real device matrix",
+    "real network shaping",
+    "formal art/Golden Set approval",
+    "production release"
+  ],
+  "release": "LOCAL_ONLY_NO_COMMIT_NO_PUSH_NO_DEPLOY"
+}

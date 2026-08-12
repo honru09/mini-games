@@ -1,6 +1,6 @@
 'use strict';
 
-const CACHE_VERSION='ghost-game-shell-v2-20260809';
+const CACHE_VERSION='ghost-game-shell-v5-20260812';
 const SHELL=['./','./index.html','./manifest.webmanifest','./assets/brand/ghost-game-mark.svg','./assets/brand/honru-mascot-v1.svg','./assets/brand/pwa/ghost-game-192.png','./assets/brand/pwa/ghost-game-512.png'];
 const CACHEABLE_DESTINATIONS=new Set(['image','style','script','font','manifest']);
 

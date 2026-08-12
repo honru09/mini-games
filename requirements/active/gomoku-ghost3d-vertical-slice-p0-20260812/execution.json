@@ -1,0 +1,24 @@
+{
+  "taskId": "gomoku-ghost3d-vertical-slice-p0-20260812",
+  "requirement": "TECH-049",
+  "status": "VERIFYING",
+  "implementationStatus": "implemented",
+  "updatedAt": "2026-08-12T06:55:41+09:00",
+  "runtimeFlag": "mg_ghost3d_gomoku_v1 === '1'",
+  "defaultEnabled": false,
+  "renderer": "Three.js r185 / 0.185.1",
+  "motion": "GSAP 3.15.0 core only",
+  "runtimeArt": "procedural-only",
+  "automatedEvidence": [
+    "npm run test:gomoku-ghost3d (ESM graph 55 / Renderer 78 / bridge / layout / cache)",
+    "npm run quality:gates",
+    "npm test (162.1s)",
+    "double build 1302076 characters / 1316625 bytes / SHA-256 91AC0AAB42577EF1F2385A351F3E3614C8AAE86C5D228929D11EEB76706C67D4"
+  ],
+  "visualEvidence": "NOT_EXECUTED_BROWSER_CONNECTOR_TRANSPORT_CLOSED",
+  "httpEvidence": "localhost entry/ESM/Three/WebGL/GSAP/SW all 200 with text/javascript or text/html MIME",
+  "deviceEvidence": "NOT_EXECUTED",
+  "networkEvidence": "NOT_EXECUTED",
+  "goldenSetEvidence": "NOT_EXECUTED",
+  "release": "LOCAL_ONLY_NO_COMMIT_NO_PUSH_NO_DEPLOY"
+}

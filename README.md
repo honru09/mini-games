@@ -14,16 +14,18 @@
 - 🌐 **三语国际化**：中文 / English / Українська，Settings 一键切换
 - 🏳️ **语言旗帜**：个人档案、排行榜、房间大厅实时显示
 - ⚙️ **Settings 设置页**：白天云海 / 黑夜星空双主题、三语言、联机地址
-- 🧭 **四区应用外壳**：Home / Games / Chat / Profile；手机使用底部四项导航，平板与桌面使用顶部导航
+- 🧭 **四区应用外壳**：Home / Games / Playline / Profile；手机使用底部四项导航，平板与桌面使用顶部导航
 - 🚀 **首页下一步**：三步轻引导、按既有战绩推荐游戏、level/streak 目标与访客安全入口；推荐后把键盘焦点落到对应游戏卡
 - 🎨 **Design System**：统一间距（4px 刻度）/ 字号 / 色彩令牌，卡片入场动画、按钮光效、胜负彩带、WebAudio 轻音效（零资源）
 - 🎬 **动效 + 手感**：统一 Motion 动效库（转场/入场/弹性/Loading）、6 款游戏全量操作反馈（音效+震动+状态提示）、棋盘棋子立体质感
 - ✨ **个性化**：动态头像框（8 款含流光/烈焰/彩虹/赛博脉冲）、闪名（4 种特效）、动态档案背景（星空/樱花/赛博矩阵/海浪）、等级进度条
 - 🔐 **用户名密码账号**：用户名大小写不敏感唯一，密码使用随机盐 scrypt 慢哈希；旧 PIN 账号可原 UID 迁移
 - 👻 **一次性访客**：服务端签发临时身份；退出立即删号，不进入持久库、排行榜、永久购买或持续 AI 学习
-- 📨 **玩家私聊**：正式好友一对一纯文本消息、离线留言、历史分页、账号级未读/已读、多会话同步；Block/访客/越权读取与伪造身份由服务端拒绝
+- 📨 **全局玩家私聊**：正式好友一对一纯文本消息收进全局 DM dialog，不再占独立 Page；离线留言、历史分页、账号级未读/已读、多会话同步继续复用 `direct-chat-v1`
+- 🪐 **Playline 社区纵切**：本地 P0 提供 All/Friends、纯文本、游戏/正式结果/权威记录分享、删除、举报与 Block；`ENABLE_PLAYLINE_V1` 默认关闭，真实生产开放仍等待持久化与内容治理门禁
 - 💬 **局内玩家交流**：`match-expression-v1` 提供白名单 Emoji/快捷语，`match-chat-v1` 提供当前对局 50 条有界文字历史、未读、头像旁气泡、举报和静音；服务端执行身份、净化、幂等、频控、Block 与观众延迟，正文不进入 Replay、奖励、AI、Analytics 或持久库
-- 👻 **Honru 品牌角色**：保留每日签到、品牌形象与默认关闭的局内反应；前端助手聊天框已移除，Chat 专注玩家私聊
+- 👻 **Honru 品牌角色**：保留每日签到、品牌形象与默认关闭的局内反应；前端助手聊天框已移除，玩家私聊使用全局 DM dialog，Playline 承担受限社区动态
+- 🎮 **Game Stage Wave B（本地未发布）**：五子棋强化棋盘状态/最后落子层级，Tetris 拆分主井、Hold/Next/Incoming、对手 HUD 与七项控制；严格保留 Wave A 回滚和全部规则/协议边界
 - 🎲 **沉浸式 Game Shell**：六款游戏进入 fixed `100dvh` 全视口对局；真实 Seat Rail、Arena、Command Tray 均在 Shell 内，页面滚动/回弹被锁而内部区域可滚，桌面、平板、手机横竖屏均有独立布局
 - 🪪 **深度个人主页**：身份背景、等级 XP、六游戏战绩、连胜、成就、任务、好友/最近同玩、收藏与本人近 7 日回放统一展示
 - 🛍️ **💵 商城**：头像 / 头像框 / 动态特效 / 个人背景 / 六款游戏外观（游戏外观购买与装备由服务端权威校验）
@@ -115,6 +117,7 @@ WebSocket 端点 `/ws`，所有消息为 JSON：
 | C→S | `username_check` / `legacy_bind` / `guest_login` | 实时查重、把旧 PIN 账号原 UID 绑定到用户名密码、创建一次性访客 |
 | C→S | `companion_checkin` | Honru 每日签到；按账号与日期幂等 |
 | C→S | `chat_list` / `chat_history` / `chat_send` / `chat_read` | `direct-chat-v1`：正式好友私聊摘要、排他游标历史、`clientMessageId` 幂等发送与账号级单调已读；访客/陌生人/Block/越权读取由服务端拒绝 |
+| C→S | `playline_list` / `playline_publish` / `playline_remove` | `playline-v1`：读取 All/Friends、发布四类受限动态和幂等删除；作者、可见性、引用快照、时间、游标、频控与 Block 由服务端权威裁决，默认关闭 |
 | C→S | `match_expression` | `match-expression-v1`：正式真人玩家发送白名单 Emoji/快捷语；服务端校验 match、eventId、目标、频控与 Block，并权威签发发送者/席位/时间；能力属于连接级协商状态，同一连接内会话失效/注销/房间重置不会丢失 |
 | C→S | `match_chat_send` / `match_chat_sync` | `match-chat-v1`：正式真人玩家发送局内自由文本或同步本局最近 50 条；NFC/控制符净化、160 字/4 行、messageId 幂等、频控、Block 与观众/访客只读由服务端权威处理 |
 | C→S | `profile_get` / `profile` | 查询档案；仅修改 name/lang、本人平台外观与白名单 `gameCosmetics` 装备，不能写金币、owned、XP、胜场、局数等权威字段 |
@@ -139,6 +142,7 @@ WebSocket 端点 `/ws`，所有消息为 JSON：
 | S→C | `hello_ack` / `registered` / `logged_in` / `logged_out` / `auth_error` | 认证状态、稳定错误 reason 与服务端签发 token |
 | S→C | `username_status` / `guest_logged_in` / `companion_checkin_ok` | 查重结果、临时访客身份与 Honru 签到幂等结果 |
 | S→C | `chat_state` / `chat_history` / `chat_message` / `chat_send_ok` / `chat_read_ok` / `chat_error` | 服务端权威消息 ID、十进制字符串 seq、时间、发送者、未读/已读与稳定错误 reason；正文只发给会话参与者 |
+| S→C | `playline_state` / `playline_publish_ok` / `playline_remove_ok` / `playline_invalidated` / `playline_error` | viewer-specific 动态投影、签名 cursor、幂等发布/删除回执与失效通知；guest/test-admin/伪造结果或记录/篡改游标拒绝 |
 | S→C | `match_expression` / `match_expression_ok` / `match_expression_error` | 局内表达事件、幂等回执与稳定错误；接收前按每个玩家重新执行 Block，观众只读且遵循延迟；不进入 Replay、规则、奖励或数据库 |
 | S→C | `match_chat_state` / `match_chat_message` / `match_chat_ok` / `match_chat_error` | 本局房间文字历史、实时消息、幂等回执与稳定错误；服务端签发 sender/seat/time，观众延迟接收，逐接收者 Block 过滤；不进入 Replay、规则、奖励、AI、Analytics 或数据库 |
 | S→C | `lobby` | 可加入的等待房与可观战的进行中房间列表 |
@@ -211,7 +215,7 @@ node scripts/render-deploy.js
 - `public/assets/manifests/asset_manifest.json` 锁定 6 个游戏 runtime ID、平台 asset ID、状态、fallback 和 a11y 语义。
 - 首批已接入 `public/assets/brand/` 品牌 SVG 与 `public/assets/ui/currency_cash.svg`；Header、Hero、商城、排行榜与结算统一显示 G Coins。内部余额字段仍兼容 `coins`，旧 `💵` 只保留为资源失败 fallback。
 - G Coins 是 Ghost Game 平台内虚拟货币，仅限站内使用，不可兑换现金、不可提现、不可转赠；正式图标源稿在人工/IP/Golden Set 审批前保持 reference-only。
-- 测试管理员由服务端四个环境变量精确绑定，私有界面显示无限 G Coins、MAX 等级和测试徽章；公开档案、排行榜、Presence、Lobby、持久社交、正式经济、Replay、AI 学习和 Analytics 均保持隔离。凭证不进入仓库；关闭 `TEST_ADMIN_ENABLED` 并重启即可回滚。
+- 测试管理员由服务端四个环境变量精确绑定，私有界面显示无限 G Coins、MAX 等级和测试徽章；公开档案、排行榜、Presence、Lobby、持久社交、正式经济、Replay、AI 学习和 Analytics 均保持隔离。提交 `da3d05c` 已在 Render/Pages 上线，浏览器与临时访客隔离烟测通过；凭证不进入仓库，关闭 `TEST_ADMIN_ENABLED` 并重启即可回滚。
 - 商城购买反馈已在本地接入现有服务端权威：按钮显示处理中，成功/失败进入可访问 live status；回执按 `requestId + 账号 + 商品` 关联，重复点击、迟到响应、关闭商城、断线与注销不会污染下一笔购买。价格、扣款和 owned 仍只由服务端决定。
 - 六款游戏都已接入 640×360 / 320×180 响应式大厅封面；五子棋与俄罗斯方块从旧版升级，飞行棋、大富翁、坦克和象棋补齐封面。当前六图是可回滚的软 3D 过渡批次，不等同于最终游戏包或 Sticker Cartoon Golden Set。
 - 五子棋木纹 Canvas 与俄罗斯方块玻璃井两个旧纵切继续保留，规则、快照、AI 与联机协议不包含美术状态。
@@ -235,7 +239,8 @@ node scripts/render-deploy.js
 - `asset-library/` 是本地 provenance sidecar，分别校验目录与许可证哈希；`asset_manifest.json` 仍是唯一运行时机器事实源。未冻结对象存储提供商、许可、生命周期与凭证前不上传外部桶。
 - `Pocket Tabletop Sticker × Expressive Sticker Cartoon` M0 已进入 Draft：Art Bible v1、Facial Kit 16×3、Design/Motion、Source Manifest v2、Teacher 八状态与四 Avatar Alpha 源、Core UI 状态板、精确五子棋 15×15/五连和飞行棋 52 格/每方四机规格均已落地并通过 `test:sticker-art`。生成式规则错误稿已排除；人工清稿、IP 双人审查、运行时集成和 Golden Set 人工决议仍未执行，所有新旗标默认关闭。
 - Honru 九状态已有默认关闭的 P2 运行时预览：只有 `mg_art_honru_states_v1=1` 与 `mg_art_honru_game_reactions_v1=1` 同时存在时才加载当前状态 WebP；失败回退 v1，不进入规则、AI、联机、Replay 或奖励。人工/IP/真实设备验收前不得默认开启。
-- `/api/companion` 与净化/限流/离线回退继续作为后端兼容和安全边界，但当前产品前端没有 Honru 对话入口；`#/chat?view=honru` 会归一到玩家消息。
+- Honru Emoji P0 已本地完成十枚 source-only 候选：固定复用现有十个 `emojiId`，每枚独立生成并保留 1254² Chroma/Alpha、192/96/64/44 派生、atlas/poster、Prompt/hash/license 与素材库 G-17–G-27 `reference-only` 登记。它们尚未进入 `public/assets` 或生产 Manifest；人工清稿、Reviewer B/IP、Golden Set、聊天适配器、runtime 双旗标与真机验收前仍显示既有 Unicode fallback。
+- `/api/companion` 与净化/限流/离线回退继续作为后端兼容和安全边界，但当前产品前端没有 Honru 对话入口；旧 `#/chat*` 会归一到 `#/playline` 并打开全局好友私信弹层。
 - 所有美术资源保留 CSS / Canvas / DOM Emoji / WebAudio 回退，资源加载失败不能阻塞大厅或开局。
 
 ### ART-036 角色与大富翁美术源稿
@@ -245,7 +250,7 @@ node scripts/render-deploy.js
 - `qa/monopoly-character-presentation.js`、`qa/monopoly-presentation-adapter.js`、`qa/social-match-client-lifecycle.js` 已纳入 `pretest` 与完整 `npm test`；代码原生 fallback 不是 ART-036 Golden Set 或正式商城完成证据。
 
 ### 数据库（Supabase）
-`supabase/schema.sql` 可重复执行建表/迁移，创建奖励/购买/AI 学习/Direct Chat RPC，以及 `cluster_instances`、fencing lease、持久事件/游标和 `metrics_snapshots`；全部敏感表启用 RLS 并撤销 `anon`/`authenticated` 访问。
+`supabase/schema.sql` 可重复执行建表/迁移，创建奖励/购买/AI 学习/Direct Chat/Playline RPC，以及 `cluster_instances`、fencing lease、持久事件/游标和 `metrics_snapshots`；全部敏感表启用 RLS 并撤销 `anon`/`authenticated` 访问。Playline 生产能力默认关闭，静态/fake 合同不能替代真实 RLS、并发、备份与恢复验收。
 
 1. 设置只存在于本机进程的 `SUPABASE_DB_URL`，运行 `scripts/supabase-production-ops.ps1`；默认仅显示计划，`-Execute -Action migrate` 才会先加密备份、事务迁移并执行生产验收。
 2. 用隔离临时数据库运行 `restore-drill`，再运行真实并发/RLS 验收；`rollback` 只撤销本轮 Cluster RPC 并过期租约，不删除用户数据。
@@ -297,14 +302,14 @@ Playroom 的长期开发按项目级执行系统运行，而不是依赖单次�
 5. `ACCEPTED`：同步代码事实到 README/AGENTS/WHITEPAPER/requirements/状态矩阵和三份中文日志，再提交发布。
 
 项目级 Skills 在 `.agents/skills/`，质量闸门配置在 `requirements/QUALITY_GATES.json`，当前能力与发布阻塞项在 `PROJECT_STATUS.json`。
-当前不会为了视觉参考强行迁移 React/Framer/GSAP，也不会自动安装未经审计的第三方 Skill。
+当前不会为了视觉参考强行迁移 React/Framer；GSAP 官方 skills 已纳入动效门禁。Gomoku Ghost3D 继续按需加载固定 `3.15.0` core；四区路由另以首次交互 lazy-load 的同版本 Core+CSSPlugin ESM island 提供有限分层进入，路由业务始终同步提交，失败/reduced-motion/后台/Game Shell 均静态回退。两条 island 都不进入规则或首屏安装缓存，也不载入 ScrollTrigger。未经审计的第三方 Skill 仍不会自动安装。
 
 ## 第三阶段发布状态
 
 - 自动化：`npm test`、关键协议 5 次连续回归、10/25/50 逻辑并发房、1000 次生命周期内存、Timer Audit 均已通过。
 - 浏览器：本地 in-app Chromium 已完成当前 P0 的 1440/768/481/390/360 注册、商城、大厅、六封面、英/乌语言、overflow、44px 控件、单例与滚动锁验收，控制台无 warning/error；证据在 `deliverables/visual-qa/visual-commerce-p0-20260808/`。
 - 已执行：30 分钟生产正式好友 WebSocket 会话通过（15 条消息与已读、2 次重连、0 异常断开、P95 181ms）；逻辑 Chaos、完整 `npm test` 与 Quality Gates 通过。
-- 已执行：本轮本地 in-app Chromium 默认桌面/390px 的 Auth/Home/Games/Chat/Profile、五子棋/Tetris、light/dark、overflow/44px/控制台矩阵。
+- 已执行：本轮本地 in-app Chromium 默认桌面/390px 的 Auth/Home/Games/Playline/Profile、全局 DM 弹层、五子棋/Tetris、light/dark、overflow/44px/控制台矩阵。
 - 已执行：Game Stage + Tabletop Wave A 提交 `7fc6601` 已发布到 Pages/Render；两端 HTTP 内容一致，生产 WS 与线上 Chromium 登录前/访客/六游戏/AI 五子棋 Stage 抽查通过。
 - 未执行：Android Chrome、iPhone Safari、真实 Tablet、第二桌面浏览器、真实 `tc/netem`、真实 Supabase/RLS/并发/备份回滚。
 - 因真实设备发布闸门未完成，当前结论是 `AUTOMATED_VERIFIED`，Release Candidate 总状态仍为 `BLOCKED`，不能写 `PRODUCTION_READY`。
