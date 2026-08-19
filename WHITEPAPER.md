@@ -8,6 +8,8 @@
 
 > 2026-08-19 当前本地权威节点：四窗口并行期间，当前 `public/index.html` 的精确 characters/bytes/SHA 以自动生成 TECH-027 报告和当次 `node scripts/build.js --check` 为准，静态文档只保留时点快照；当前身份尚无匹配的浏览器矩阵。T7 的 P7 已完成 `reward-progression-v1` 投影，P8 已统一六个 Boundary 的显式 `now`，P9 已迁移 `room-graph-recovery` 周期，P10 已迁移访客 cleanup，P11 已迁移 reconnect/Presence/room removal retry，P12 已把 heartbeat 迁移为单一 repeat owner、单次时间采样和分域异常隔离；Manual Clock 动态证明首 tick 故障后同 tick 后续任务与第二 tick 继续，访客 `close(true)`、普通超时 `close()` 不变。P12 专项、连接、赛事与独立端口 E2E 已通过，统一 Quality Gates 与完整 `npm test` 正在本批末集中复核。其余 token/lifecycle/outbox/gameplay/transport 与 Metrics `generatedAt` 仍未迁移，整体保持 `partial`、`LOCAL_ONLY / NOT_RELEASED`。
 
+> 2026-08-19 视觉主线重排：依据用户《Ghost Game 2.5D 游戏重推指南》（SHA-256 `E6FD38CE8338CBFCCFD76AEE54932C088DE398386CBAB090B9813229D89397E7`），生产表现从“六款继续扩张 Ghost3D”改为共享 `Vanilla DOM + CSS + Canvas + GSAP` 2.5D 空间语言。`DepthScene`、八模式 `CameraSystem`、Honru 空间导航、页面转场和 Home→Games→Gomoku→Result→Games Demo 为当前 CLOSE 目标；Three.js/Ghost3D 保留冻结的可选实验层，不删除、不继续扩张，也不改变规则、AI、联机、奖励或 Replay。
+
 > 2026-08-16 TECH-027 PROVE P4（historical-as-of）：SHA-256 `963F83511200AC16AA309EC1FA5BE243F01FB5CADD4DD5E2B41D7B718C8B686B` / 1,612,091 bytes 曾完成单一 Codex in-app Chromium 的五档四区、四共享表面、六款 Game Stage、深滚动回顶、Monopoly compact/micro、三语复数、G Coins、双主题、visible reduced-motion、forced-colors、console 与 cleanup 可见矩阵。该证据只对当时构建有效；第二浏览器、真机、真实网络与 Supabase 仍是发布证据待决，人工美术咨询仍为可选，且该批次没有发布授权。
 
 > 2026-08-16 技术优化授权：Delta/紧凑数值、Tank prediction/reconciliation、Renderer 生命周期/DPR/Context Loss、Haptic/Input Buffer/空间音频、Worker AI、APM/Action Entropy、脱敏环形诊断、按需加载/SW 预热、Server 深模块与测试隔离已正式纳入主线。按照需求治理，它们归回既有 Requirement 的 Acceptance Gap/Shared Repair；机器可验证子项自动推进，外部环境发布证据与可选人工/IP 咨询分轨记录，不伪造解锁或 PASS。合同与执行顺序见 `requirements/active/technical-optimization-mainline-p0-20260816/`。
@@ -347,7 +349,11 @@ Game Stage Wave C 的五子棋/Tetris reviewer 收口已完成：五子棋新增
 
 该 2026-08-12 批次当时停在 `CONTROL`，下一阶段为 `CLOSE/Ghost3D Foundation`；当时本地浏览器仍立即 `Transport closed`，因此 TECH-027 从历史 `verified` 回写为 `partial`。这些是历史节点事实，当前权威阶段已由总指挥推进为 `CLOSE → PROVE`；此次只更新治理、报告、状态和 QA，未改运行时、协议、数据、经济、美术 runtime，也未提交、推送或部署。
 
-## 2026-08-12 Ghost3D Foundation P0（本地）
+## 2026-08-19 2.5D 表现重推 P0（当前本地主线）
+
+2.5D 纵切合同与执行记录位于 `requirements/active/visual-25d-repush-p0-20260819/`。生产模块只发出和消费语义表现事件：`DepthScene` 管理 background/world/foreground 三层，`CameraSystem` 提供 overview/hover/enter/active/focus/impact/result/exit，GSAP Core/Timeline 只做可清理的 transform/autoAlpha/CSS variable 动效；游戏规则层不得直接驱动镜头。缺失、禁用、reduced-motion、切后台或销毁均回退到原 DOM/Canvas 静态表现。当前已通过 `npm run test:visual-25d`，真实浏览器可见 Demo、第二浏览器、真机、真实网络与六款推广仍待后续证据。
+
+## 2026-08-12 Ghost3D Foundation P0（历史冻结，可选实验）
 
 `TECH-049` 现为 `partial`：无依赖 Foundation 以 inert core 形式参与确定性构建，但没有接入任何游戏。公共边界刻意收窄为模块 `create` / `QUALITY`，以及实例 `apply(message)` / `snapshot()` / `dispose()`；语义 frame、input、motion、quality、environment 与 lifecycle 只能从 `apply` 进入，Adapter 和 programmatic fallback 的生命周期留在模块内。源码零 DOM、平台或 engine 依赖，不读取/监听浏览器环境，也不让 Renderer 类型越过 Rule、Authority、Protocol、Replay、Reward、AI、Economy、Social 或持久化边界。
 

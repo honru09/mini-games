@@ -99,6 +99,7 @@
     "user-20260810-long-product-vision": {"kind":"origin","refs":["requirements/active/requirements-governance-p0-20260810/requirement.md","requirements/active/requirements-governance-p0-20260810/source-analysis.md"]},
     "user-history": {"kind":"origin","refs":["AGENTS.md","简易报告/README.md"]},
     "visual-commerce-assets-p0": {"kind":"evidence","refs":["requirements/active/visual-commerce-assets-p0-20260808","qa/shop-contract.js","qa/ui-responsive-contract.js"]},
+    "visual-25d-repush-p0-20260819": {"kind":"evidence","refs":["requirements/active/visual-25d-repush-p0-20260819","qa/visual-25d-contract.js","public/src/core/23-depth-scene.js","public/src/core/25-camera-system.js","public/src/core/26-ghost-mascot-motion.js","public/src/core/27-page-transition.js","public/src/core/28-game-stage-2_5d.js","public/depth-motion-entry.js"]},
     "g-coins-p0": {"kind":"evidence","refs":["requirements/active/g-coins-naming-unified-p0-20260810","qa/g-coins-contract.js","public/src/core/06-assets.js","asset-library/catalog.json"]},
     "shop-purchase-feedback-p0": {"kind":"evidence","refs":["requirements/active/shop-purchase-feedback-p0-20260810","qa/shop-purchase-feedback-contract.js","qa/security-online.js","public/src/shop/06-shop.js","server/index.js"]},
     "whitepaper-v3": {"kind":"specification","refs":["WHITEPAPER.md","deliverables/Mini Games Platform 产品与技术白皮书 v3.0 完善版.docx"]}
