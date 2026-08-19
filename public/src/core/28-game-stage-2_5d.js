@@ -9,7 +9,7 @@
     const row=Math.max(0,Math.min(14,Number(event.row)||0)),col=Math.max(0,Math.min(14,Number(event.col)||0)),size=Math.max(2,Number(event.size)||15);
     marker=document.createElement('span');marker.className='game-impact25d';marker.setAttribute('aria-hidden','true');marker.style.left=((col+.5)/size*100).toFixed(3)+'%';marker.style.top=((row+.5)/size*100).toFixed(3)+'%';surface.appendChild(marker);
     if(root.CameraSystem25D)root.CameraSystem25D.shake({target:surface,focus:'lastMove',intensity:event.terminal?2.2:1.15,duration:.18});
-    timer=setTimeout(clear,event.reducedMotion?180:620);return true;
+    timer=setTimeout(()=>{clear();if(root.CameraSystem25D)root.CameraSystem25D.to('active',{target:surface,focus:'turn',duration:event.reducedMotion?.08:.16});},event.reducedMotion?180:620);return true;
   }
   function emit(value){
     const event=value&&typeof value==='object'?value:{type:String(value||'')};last={...event,at:Date.now()};

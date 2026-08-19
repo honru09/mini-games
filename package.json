@@ -87,6 +87,7 @@
     "test:honru-runtime": "node qa/honru-runtime-contract.js",
     "test:honru-emoji": "node qa/honru-emoji-contract.js && node qa/honru-emoji-runtime.js",
     "test:honru-context-reactions": "node qa/honru-context-reactions-v1.js",
+    "test:progression-feedback-art": "node qa/progression-feedback-art-v1.js",
     "test:chat-contract": "node qa/player-chat-contract.js && node qa/ui-chat-presentation-contract.js && node qa/direct-message-design-system-contract.js && node qa/ui-playline-contract.js",
     "test:playline": "node qa/playline-contract.js && node qa/playline-supabase-contract.js && node qa/ui-playline-contract.js && node qa/ui-chat-presentation-contract.js && node --experimental-websocket qa/playline-online.js",
     "test:social-match": "node qa/social-match-contract.js && node qa/social-match-client-lifecycle.js && node --experimental-websocket qa/social-match-online.js",

@@ -184,6 +184,7 @@ const p1RuntimeEntries = manifest.assets.filter(item => {
 const p1ClearanceFiles = filesUnder('requirements/active/gcoins-source-redesign-p1-20260814')
   .filter(relative => /OWNER_AUTHORIZED_ART_CLEARANCE/i.test(path.basename(relative)));
 const publicGCoinsFiles = filesUnder('public/assets').filter(relative => /g[-_]?coins/i.test(relative));
+const allManifestRuntimePaths = new Set(manifest.assets.flatMap(manifestRuntimePaths));
 const runtimeSignals = p1RuntimeEntries.length + p1ClearanceFiles.length + publicGCoinsFiles.length;
 
 if(runtimeSignals === 0){
@@ -211,7 +212,7 @@ if(runtimeSignals === 0){
   check(runtimePath && fs.existsSync(path.join(root,runtimePath)) && /^[a-f0-9]{64}$/.test(integrity) && sha256(runtimePath) === integrity && Number.isInteger(runtimeEntry.actual_bytes) && Number.isInteger(runtimeEntry.byte_budget) && runtimeEntry.actual_bytes === fs.statSync(path.join(root,runtimePath)).size && runtimeEntry.actual_bytes > 0 && runtimeEntry.actual_bytes <= runtimeEntry.byte_budget, 'P1 runtime actual_bytes 等于主文件真实字节且不超过预算');
   check(clearanceText && [ownerClearance,p1CatalogId,p1Expected.source,p1Expected.alpha,'M0 North Star',optionalAdvisory,'NOT_EXECUTED','P-003','fallback','blocked-license','EXTERNAL_REFERENCE_ONLY',...flagIds].every(token => clearanceText.includes(token)) && [/(?:machine|机器)/i,/(?:technical|技术)/i,/(?:visual|视觉)/i,/(?:similarity|相似)/i,/(?:risk|风险)/i].every(pattern => pattern.test(clearanceText)) && runtimeFiles.every(file => clearanceText.toLowerCase().includes(String(file.integrity||'').replace(/^sha256:/,'').toLowerCase())) && !hasFabricatedHumanPass(clearanceText), '逐族 clearance 固定机器技术/视觉/相似风险、来源、逐文件哈希、回滚与未执行咨询且不伪造人工/IP PASS');
   check(runtimeEntry && core.includes(runtimeEntry.asset_id) && flagIds.length > 0 && flagIds.every(id => core.includes(id)) && core.includes('ownerClearedDefaultOnFlagEnabled') && core.includes("currencyCash: 'ui/currency_cash.svg'"), '客户端只通过 owner-cleared default-on seam 接入并保留 P-003 一键回滚');
-  check(publicGCoinsFiles.every(relative => runtimePaths.includes(relative)), 'public G Coins 派生全部由 Runtime Manifest 声明，无孤儿文件');
+  check(publicGCoinsFiles.every(relative => allManifestRuntimePaths.has(relative)), 'public G Coins 派生全部由 Runtime Manifest 声明，无孤儿文件');
 }
 
 if (failed) process.exitCode = 1;
