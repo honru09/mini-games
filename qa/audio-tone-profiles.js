@@ -9,8 +9,10 @@ const vm = require('vm');
 const ROOT = path.resolve(__dirname, '..');
 const adapterPath = path.join(ROOT, 'public/src/core/21-unified-feedback-adapter.js');
 const busPath = path.join(ROOT, 'public/src/core/15-feedback-bus.js');
-const source = fs.readFileSync(adapterPath, 'utf8');
-const busSource = fs.readFileSync(busPath, 'utf8');
+// Normalize checkout line endings before extracting frozen source literals.
+// The contract is about the semantic tables, not the host's newline style.
+const source = fs.readFileSync(adapterPath, 'utf8').replace(/\r\n/g, '\n');
+const busSource = fs.readFileSync(busPath, 'utf8').replace(/\r\n/g, '\n');
 const Adapter = require(adapterPath);
 
 let assertions = 0;

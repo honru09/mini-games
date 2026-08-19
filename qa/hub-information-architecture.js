@@ -23,7 +23,8 @@ function section(source, start, end) {
 
 const home = section(template, 'data-app-route="home"', 'data-app-route="games"');
 const games = section(template, 'data-app-route="games"', 'data-app-route="playline"');
-const profile = section(template, 'data-app-route="profile"', '</section>\n  </section>');
+const profileStart = template.indexOf('data-app-route="profile"');
+const profile = profileStart >= 0 ? template.slice(profileStart) : '';
 
 check('Home does not duplicate a compact player profile',
   !/home-pulse-identity|id="my-card"|id="btn-me"/.test(home));

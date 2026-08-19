@@ -11,7 +11,7 @@
     {
       "id": "production-asset-manifest",
       "path": "public/assets/manifests/asset_manifest.json",
-      "sha256": "22af3bf1815fc1cd1f62d4b03bd58c7afe68b0b96befed23d5b2a1dd96faacdb"
+      "sha256": "1c8154210f8acd7322ac20e5bbe1826285de1bc6bc037f28aaf09076e2e37af4"
     },
     {
       "id": "original-14-family-complete-visual-inventory-20260814",
@@ -26,7 +26,7 @@
     {
       "id": "external-psd-secondary-parser-verification-20260814",
       "path": "requirements/active/external-assets-audit-p1-20260813/evidence/external-psd-secondary-parser-verification-20260814.json",
-      "sha256": "3be180b68f12a6928567b375866bd23d9be1552a628d9c410fd1b82069b03d77"
+      "sha256": "a6acbd5aa6d5b0d05216c58f39004099f17206a853d9b6a20f42e9a21007ff90"
     }
   ],
   "collections": [
@@ -1060,7 +1060,7 @@
       "assetType": "auth-background-runtime-owner-cleared",
       "sourceType": "project-owned",
       "sourcePath": "art-source/platform/auth/ghost-wake-v1/source/auth-ghost-wake-light-desktop-v1.svg",
-      "sourceSha256": "c8edb6d9426d1afc125cfceb83d297577df25830352def50dd3de159b028654f",
+      "sourceSha256": "8bc8f13fbe29e76f5080cafa550df36453b1e2d305aa43592c0777a84aab6257",
       "license": "project-owned-deterministic-vector",
       "author": "OpenAI Codex for Ghost Game",
       "status": "integrated-local-only",
@@ -1164,7 +1164,7 @@
       "assetType": "auth-status-icons-runtime-owner-cleared",
       "sourceType": "project-owned",
       "sourcePath": "art-source/platform/auth/status-v1/username-available-v1.svg",
-      "sourceSha256": "8c3538f5a4673937a4f71aef41210247eca2ad7d6fb99bf6cf1d9524a9a35b33",
+      "sourceSha256": "de8c11d70e935100ae8c5421d3e7cbabf12832ddc3e0fd458f12803369dff029",
       "license": "project-owned-deterministic-vector",
       "author": "OpenAI Codex for Ghost Game",
       "status": "integrated-local-only",
@@ -1192,7 +1192,7 @@
       "assetType": "pwa-launch-runtime-owner-cleared",
       "sourceType": "project-owned",
       "sourcePath": "art-source/platform/pwa/ghost-wake-v1/source/ghost-game-maskable-v1.svg",
-      "sourceSha256": "795b1e5f7d5f27280faded936ba77a1f79c985c35fb0b2f4a6d85dad789feff0",
+      "sourceSha256": "a672e1b122b58dbf2b54308736d36e6eb77e633482b6f499b596358fb74068c8",
       "license": "project-owned-deterministic-vector",
       "author": "OpenAI Codex for Ghost Game",
       "status": "integrated-local-only",
@@ -1218,7 +1218,7 @@
       "assetType": "platform-scenes-runtime-owner-cleared",
       "sourceType": "project-owned",
       "sourcePath": "art-source/platform/scenes/signal-worlds-v1/source-layers/home/light/desktop/home-light-desktop-far-v1.svg",
-      "sourceSha256": "dcda96541ba2096b18840fd3b2433ca00c4e2fd8262a9faf1a32349c100f7c17",
+      "sourceSha256": "81300b19cf9159d0f3cc704eddf570cafe11a6e3a87625b85fd9256a9be0f4ef",
       "license": "project-owned-deterministic-vector",
       "author": "OpenAI Codex for Ghost Game",
       "status": "integrated-local-only",
@@ -1320,7 +1320,7 @@
       "assetType": "shared-game-stage-runtime-owner-cleared",
       "sourceType": "project-owned",
       "sourcePath": "art-source/platform/game-stage/shared-v1/source/surface-v1.svg",
-      "sourceSha256": "b08440fa98d5d6f559101cfe53d17f72d8ab738815e2d38cfb2a4151a98ae680",
+      "sourceSha256": "5b84371fe2341ef5fffb636e98a2cb4d0b57aeee28d90d7f3cc41fa9f6a4330b",
       "license": "project-owned-deterministic-vector",
       "author": "OpenAI Codex for Ghost Game",
       "status": "integrated-local-only",
@@ -1343,7 +1343,7 @@
       "assetType": "modal-illustration-runtime-owner-cleared",
       "sourceType": "project-owned",
       "sourcePath": "art-source/platform/modal/illustrations-v1/source/auth-entry-v1.svg",
-      "sourceSha256": "de91cf0ad3f6ff5409526c9252d70afa7ddfdd6b18e2438a6fcd61fef6693937",
+      "sourceSha256": "509a1dfda28620fe1bfdf12ef89498ec49b99f0ff0d2bb5077f6d0ea1d16aef6",
       "license": "project-owned-deterministic-vector",
       "author": "OpenAI Codex for Ghost Game",
       "status": "integrated-local-only",
@@ -1367,7 +1367,7 @@
       "assetType": "loading-state-runtime-owner-cleared",
       "sourceType": "project-owned",
       "sourcePath": "art-source/platform/loading/state-art-v1/source/boot-v1.svg",
-      "sourceSha256": "b53cbff6e9f59ffbc7c668024b2e9f007926332e037e8df0341f8835586aee5e",
+      "sourceSha256": "920d71ceb6b2533cd1fa4b284bdcded4b026e79d0e6d82cd3e0b3beedf766156",
       "license": "project-owned-deterministic-vector",
       "author": "OpenAI Codex for Ghost Game",
       "status": "integrated-local-only",
@@ -1390,7 +1390,7 @@
       "assetType": "gomoku-final-board-piece-vfx-runtime-owner-cleared",
       "sourceType": "project-owned",
       "sourcePath": "art-source/games/gomoku/final-art-v1/source/board-wood-v1.svg",
-      "sourceSha256": "1aa2158a238f09641b9d6670e064eaca3fa235e53d1353da9dcd7f845b69b527",
+      "sourceSha256": "9fc80ea4222fdfaf560ad25a97caa0dd08b16d66429a3fe448ca6935802bfd4b",
       "license": "project-owned-deterministic-vector",
       "author": "OpenAI Codex for Ghost Game",
       "status": "integrated-local-only",
@@ -1448,7 +1448,7 @@
       "assetType": "ludo-final-board-aircraft-vfx-runtime-owner-cleared",
       "sourceType": "project-owned",
       "sourcePath": "art-source/games/ludo/final-art-v1/source/board-classic-v1.svg",
-      "sourceSha256": "5d07fed83ad6e7f8ab5b75af8a9152e31387ae709ef646e7f020d2abd07089a3",
+      "sourceSha256": "6cd7ab53fa59fef1d940d20870148b8d2c3e6e517ef5417266a7f6cca9bd91fa",
       "license": "project-owned-deterministic-vector",
       "author": "OpenAI Codex for Ghost Game",
       "status": "integrated-local-only",

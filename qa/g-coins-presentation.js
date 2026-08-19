@@ -31,7 +31,10 @@ class FakeNode{
 
 const core=read('public/src/core/06-assets.js');
 const start=core.indexOf('const GCOINS_RUNTIME_ASSET_ID');
-const end=core.indexOf('/*\n * Test-admin presentation',start);
+// Source files may be checked out with LF or CRLF. Keep this contract focused
+// on the stable presentation seam instead of a platform-specific line ending.
+const endMatch=/\/\*\r?\n \* Test-admin presentation/.exec(core.slice(start));
+const end=endMatch ? start + endMatch.index : -1;
 check(start>=0&&end>start,'currency presentation source slice exists');
 const context={
   CURRENCY:'💵',CURRENCY_NAME:'G Coins',CURRENCY_ASSET_ID:'P-003',

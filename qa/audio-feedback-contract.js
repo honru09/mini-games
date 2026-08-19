@@ -199,7 +199,7 @@ check('countdown owns a cancellable generation and cannot emit stale start cues'
   assert(utilsSource.includes('if (_activeAudioCountdown !== active) return'));
   assert(utilsSource.includes('clearInterval(active.interval)'));
   assert(utilsSource.includes('clearTimeout(active.removalTimeout)'));
-  assert(utilsSource.includes('cancelCountdown();\n  const area'));
+  assert(/cancelCountdown\(\);\r?\n  const area/.test(utilsSource));
 });
 
 check('game, reconnect, spectator/account and auth boundaries reset presentation audio', () => {
