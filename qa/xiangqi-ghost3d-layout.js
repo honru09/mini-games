@@ -20,7 +20,9 @@ const canvasCss = /\.xiangqi-ghost3d-slot canvas\{[^}]*width:100%[^}]*height:100
 check('Xiangqi overlay is hidden until first successful semantic render and never owns input',
   slotCss && readyCss && !/\.xiangqi-ghost3d-slot\[data-ghost3d-ready="true"\][^{]*\{[^}]*pointer-events:auto/.test(TEMPLATE));
 check('renderer canvas fills the retained 9x10 DOM board without changing its dimensions',
-  canvasCss && /boardEl\.style\.width\s*=\s*S \+ 'px'/.test(SOURCE) && /boardEl\.style\.height\s*=\s*S \* ROWS \/ COLS \+ 'px'/.test(SOURCE));
+  canvasCss && /const boardHeight = S \* ROWS \/ COLS/.test(SOURCE) &&
+  /boardEl\.style\.width\s*=\s*S \+ 'px'; boardEl\.style\.height\s*=\s*boardHeight \+ 'px'/.test(SOURCE) &&
+  /cv\.style\.width\s*=\s*S \+ 'px'; cv\.style\.height\s*=\s*boardHeight \+ 'px'/.test(SOURCE));
 check('DOM board remains the sole click, touch-click, and keyboard gameplay input owner above an inert renderer contract',
   /boardEl\.addEventListener\('click'/.test(SOURCE) && /boardEl\.addEventListener\('keydown'/.test(SOURCE) &&
   /boardEl\.setAttribute\('role','grid'\); boardEl\.setAttribute\('tabindex','0'\)/.test(SOURCE) &&

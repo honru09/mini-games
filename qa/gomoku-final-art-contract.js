@@ -26,6 +26,10 @@ function digest(file) {
   const data = fs.readFileSync(file);
   return { sha256: crypto.createHash('sha256').update(data).digest('hex').toUpperCase(), bytes: data.length };
 }
+function canonicalTextDigest(file) {
+  const data = Buffer.from(fs.readFileSync(file, 'utf8').replace(/\r\n/g, '\n'), 'utf8');
+  return { sha256: crypto.createHash('sha256').update(data).digest('hex').toUpperCase(), bytes: data.length };
+}
 function webpInfo(file) {
   const data = fs.readFileSync(file);
   if (data.toString('ascii', 0, 4) !== 'RIFF' || data.toString('ascii', 8, 12) !== 'WEBP') return null;
@@ -50,7 +54,9 @@ let integrityFailures = 0;
 for (const asset of family.sourceMasters) {
   const file = fileFor(asset.path);
   if (!fs.existsSync(file)) { integrityFailures++; continue; }
-  const actual = digest(file);
+  // Git may materialize tracked SVG text as CRLF on Windows. The family
+  // manifest pins canonical LF source bytes; runtime WebP remains byte-exact.
+  const actual = canonicalTextDigest(file);
   if (actual.sha256 !== asset.sha256 || actual.bytes !== asset.bytes) integrityFailures++;
   const svg = fs.readFileSync(file, 'utf8');
   if (!/^<svg\b/.test(svg) || /<(?:script|foreignObject|image|iframe|object|embed|animate|animateTransform|set|text)\b/i.test(svg) || /(?:href|src|url\s*\(\s*(?!#)|@import)/i.test(svg)) integrityFailures++;

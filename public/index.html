@@ -1968,7 +1968,7 @@ html.visual-25d .honru-mascot25d:hover>img{filter:drop-shadow(0 22px 22px rgba(9
 html.visual-25d .home-glass-card{transform-style:preserve-3d;box-shadow:0 12px 26px rgba(4,7,12,.08),inset 0 1px 0 rgba(255,255,255,.55)}
 html.visual-25d .depth-card25d{--depth-card-x:0px;--depth-card-y:0px;--depth-card-rx:0deg;--depth-card-ry:0deg;position:relative;isolation:isolate;transform:translate3d(var(--depth-card-x),var(--depth-card-y),0) rotateX(var(--depth-card-rx)) rotateY(var(--depth-card-ry));transform-style:preserve-3d;transition:transform .24s var(--ease-out),box-shadow .24s ease,border-color .24s ease;will-change:transform}
 html.visual-25d .depth-card25d::before{content:"";position:absolute;inset:12% 10% -10%;z-index:-1;border-radius:inherit;background:radial-gradient(circle at 50% 100%,color-mix(in srgb,var(--accent) 24%,transparent),transparent 66%);filter:blur(18px);opacity:.15;transform:translateZ(-22px);transition:opacity .24s ease;pointer-events:none}
-html.visual-25d .depth-card25d.depth-card25d-active:not(.disabled){transform:translate3d(var(--depth-card-x),calc(var(--depth-card-y) - 7px),18px) rotateX(var(--depth-card-rx)) rotateY(var(--depth-card-ry)) scale(1.012);box-shadow:0 20px 38px rgba(4,7,12,.16),0 5px 0 color-mix(in srgb,var(--accent) 18%,transparent)}
+html.visual-25d .depth-card25d.depth-card25d-active:not(.disabled){transform:translate3d(var(--depth-card-x),calc(var(--depth-card-y) - 7px),18px) rotateX(var(--depth-card-rx)) rotateY(var(--depth-card-ry)) scale(1.012)!important;box-shadow:0 20px 38px rgba(4,7,12,.16),0 5px 0 color-mix(in srgb,var(--accent) 18%,transparent)}
 html.visual-25d .depth-card25d.depth-card25d-active::before{opacity:.72}
 html.visual-25d .game-card .game-cover,html.visual-25d .game-card .icon{transform:translateZ(24px)}
 html.visual-25d .game-card .name{transform:translateZ(14px)}
@@ -1981,7 +1981,7 @@ html.visual-25d .depth-stage25d .game-stage-command{transform:translateZ(10px);b
 @keyframes gameImpact25D{0%{scale:.35;opacity:0}20%{opacity:1}100%{scale:1.35;opacity:0}}
 .honru-flight25d{position:fixed;z-index:1200;width:clamp(82px,12vw,150px);height:auto;filter:drop-shadow(0 14px 20px rgba(0,0,0,.24));pointer-events:none;will-change:transform,opacity}
 html.visual-25d [data-camera25d-mode="result"] .game-stage-command{opacity:.82}
-@media(max-width:640px){html.visual-25d .depth-card25d{will-change:auto}html.visual-25d .depth-card25d.depth-card25d-active:not(.disabled){transform:translate3d(0,-3px,8px) scale(.992)}html.visual-25d .depth-stage25d[data-shell-game="gomoku"] .gomoku-wave-b-board-frame{transform:translateZ(8px)}.honru-flight25d{width:82px}}
+@media(max-width:640px){html.visual-25d .depth-card25d{will-change:auto}html.visual-25d .depth-card25d.depth-card25d-active:not(.disabled){transform:translate3d(0,-3px,8px) scale(.992)!important}html.visual-25d .depth-stage25d[data-shell-game="gomoku"] .gomoku-wave-b-board-frame{transform:translateZ(8px)}.honru-flight25d{width:82px}}
 @media(prefers-reduced-motion:reduce){html.visual-25d .depth-layer25d{translate:0 0!important;will-change:auto}html.visual-25d .honru-mascot25d>img,html.visual-25d .depth-card25d,html.visual-25d .depth-card25d.depth-card25d-active:not(.disabled),html.visual-25d .depth-stage25d[data-shell-game="gomoku"] .gomoku-wave-b-board-frame,html.visual-25d .depth-stage25d .game-stage-command{transform:none!important;translate:none!important;transition:none!important;will-change:auto}.game-impact25d{animation:none;scale:1;opacity:.8}.honru-flight25d{display:none}}
 @media(forced-colors:active){html.visual-25d .depth-card25d::before,.game-impact25d{display:none}html.visual-25d .depth-card25d{transform:none!important}}
 </style>
@@ -34443,21 +34443,22 @@ function gameXiangqi(area, extra, n, opts){
     boardEl.setAttribute('aria-keyshortcuts','ArrowUp ArrowDown ArrowLeft ArrowRight Enter Space');
     const tabletop = typeof tabletopArtEnabled === 'function' && tabletopArtEnabled();
     if (typeof markTabletopSurface === 'function') markTabletopSurface(boardEl, 'xiangqi-board', { variant: boardTheme });
-    boardEl.style.width = S + 'px'; boardEl.style.height = S * ROWS / COLS + 'px'; boardEl.style.maxWidth = '100%'; boardEl.style.boxSizing = 'border-box'; boardEl.style.margin = '0 auto'; boardEl.style.position = 'relative'; boardEl.style.transform = 'translateZ(0)'; boardEl.style.gridArea = 'board';
+    const boardHeight = S * ROWS / COLS;
+    boardEl.style.width = S + 'px'; boardEl.style.height = boardHeight + 'px'; boardEl.style.maxWidth = '100%'; boardEl.style.boxSizing = 'border-box'; boardEl.style.margin = '0 auto'; boardEl.style.position = 'relative'; boardEl.style.transform = 'translateZ(0)'; boardEl.style.gridArea = 'board';
     if (boardEl.style && typeof boardEl.style.setProperty === 'function') boardEl.style.setProperty('--xiangqi-wave-c-board-size', S + 'px');
     boardEl.style.touchAction = 'none'; boardEl.style.overscrollBehavior = 'contain';
     const cs = S / COLS;
     const cv = document.createElement('canvas');
-    cv.style.position = 'absolute'; cv.style.left = '0'; cv.style.top = '0';
+    cv.style.position = 'absolute'; cv.style.left = '0'; cv.style.top = '0'; cv.style.width = S + 'px'; cv.style.height = boardHeight + 'px';
     const dpr = window.devicePixelRatio || 1;
-    cv.width = S*dpr; cv.height = S*ROWS/COLS*dpr;
+    cv.width = Math.max(1,Math.round(S*dpr)); cv.height = Math.max(1,Math.round(boardHeight*dpr));
     boardEl.appendChild(cv);
     xiangqiGhost3DAdoptBoardSlot(boardEl, retainedXiangqiGhost3DSlot);
     const ctx = cv.getContext('2d');
     ctx.setTransform(dpr,0,0,dpr,0,0);
     if (tabletop){
       const grassPaper = boardTheme === 'grass';
-      const paper = ctx.createLinearGradient ? ctx.createLinearGradient(0,0,S,S*ROWS/COLS) : null;
+      const paper = ctx.createLinearGradient ? ctx.createLinearGradient(0,0,S,boardHeight) : null;
       if (paper && paper.addColorStop){
         paper.addColorStop(0,grassPaper?'#F7F9E7':'#FFF9F2'); paper.addColorStop(.58,grassPaper?'#D7E8B6':'#F3E5C4'); paper.addColorStop(1,grassPaper?'#A7C27C':'#E7C57F'); ctx.fillStyle = paper;
       } else ctx.fillStyle = grassPaper ? '#D7E8B6' : '#F3E5C4';
@@ -34473,10 +34474,19 @@ function gameXiangqi(area, extra, n, opts){
       else ctx.fillStyle = '#e9c79a';
       ctx.strokeStyle = '#8a5a2b';
     }
-    ctx.fillRect(0,0,S,S*ROWS/COLS); ctx.lineWidth = tabletop ? 2.25 : 1.4; ctx.lineCap = tabletop ? 'round' : 'butt'; ctx.lineJoin = tabletop ? 'round' : 'miter';
+    ctx.fillRect(0,0,S,boardHeight); ctx.lineWidth = tabletop ? 2.25 : 1.4; ctx.lineCap = tabletop ? 'round' : 'butt'; ctx.lineJoin = tabletop ? 'round' : 'miter';
     const pad = cs/2;
+    const boardBottom = boardHeight - pad;
     for (let c = 0; c < COLS; c++){
-      ctx.beginPath(); ctx.moveTo(pad + c*cs, pad); ctx.lineTo(pad + c*cs, S - pad); ctx.stroke();
+      const x = pad + c*cs;
+      ctx.beginPath();
+      if (c === 0 || c === COLS - 1){
+        ctx.moveTo(x, pad); ctx.lineTo(x, boardBottom);
+      } else {
+        ctx.moveTo(x, pad); ctx.lineTo(x, pad + 4*cs);
+        ctx.moveTo(x, pad + 5*cs); ctx.lineTo(x, boardBottom);
+      }
+      ctx.stroke();
     }
     if (lastMove){
       lastMove.forEach(([r,c], idx) => {
@@ -34495,10 +34505,6 @@ function gameXiangqi(area, extra, n, opts){
       ctx.stroke();
     };
     palace(0); palace(7);
-    // 河界
-    ctx.setLineDash([6,5]);
-    ctx.beginPath(); ctx.moveTo(pad, pad + 5*cs); ctx.lineTo(S - pad, pad + 5*cs); ctx.stroke();
-    ctx.setLineDash([]);
     for (let r = 0; r < ROWS; r++){
       for (let c = 0; c < COLS; c++){
         const piece = board[r][c];

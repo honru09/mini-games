@@ -12,7 +12,9 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..');
-const read = relative => fs.readFileSync(path.join(ROOT, relative), 'utf8');
+// Normalize line endings so source-local coverage remains stable on Windows
+// and Unix checkouts; the assertions target control-flow order, not CRLF.
+const read = relative => fs.readFileSync(path.join(ROOT, relative), 'utf8').replace(/\r\n/g, '\n');
 const bus = read('public/src/core/15-feedback-bus.js');
 const adapter = read('public/src/core/21-unified-feedback-adapter.js');
 const utils = read('public/src/core/01-utils.js');

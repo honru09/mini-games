@@ -72,11 +72,20 @@ function node(tag) {
     contains(item) { return classes.has(item); },
   };
   if (value.tagName === 'CANVAS') {
-    value.getContext = () => ({
-      setTransform() {}, fillRect() {}, beginPath() {}, moveTo() {}, lineTo() {}, stroke() {}, arc() {}, fill() {}, save() {}, restore() {}, clip() {}, fillText() {}, setLineDash() {},
+    const canvasLog = { currentPath:[], strokedPaths:[], lineDashes:[] };
+    const context = {
+      setTransform() {}, fillRect() {},
+      beginPath() { canvasLog.currentPath = []; },
+      moveTo(x,y) { canvasLog.currentPath.push({ type:'move', x, y }); },
+      lineTo(x,y) { canvasLog.currentPath.push({ type:'line', x, y }); },
+      stroke() { if (canvasLog.currentPath.length) canvasLog.strokedPaths.push(canvasLog.currentPath.slice()); },
+      arc() {}, fill() {}, save() {}, restore() {}, clip() {}, fillText() {},
+      setLineDash(value) { canvasLog.lineDashes.push(Array.from(value || [])); },
       createLinearGradient() { return { addColorStop() {} }; },
       createRadialGradient() { return { addColorStop() {} }; },
-    });
+    };
+    value.canvasLog = canvasLog;
+    value.getContext = () => context;
   }
   return value;
 }
@@ -86,6 +95,16 @@ function findByClass(root, className) {
   if (root.classList && root.classList.contains(className)) return root;
   for (const child of root.children || []) {
     const found = findByClass(child, className);
+    if (found) return found;
+  }
+  return null;
+}
+
+function findByTag(root, tagName) {
+  if (!root) return null;
+  if (root.tagName === String(tagName || '').toUpperCase()) return root;
+  for (const child of root.children || []) {
+    const found = findByTag(child, tagName);
     if (found) return found;
   }
   return null;
@@ -185,7 +204,7 @@ function run(settings) {
     mg_ghost3d_xiangqi_quality_v1: settings.quality === undefined ? null : settings.quality,
   };
   const window = {
-    devicePixelRatio:1,
+    devicePixelRatio:Number.isFinite(settings.dpr) && settings.dpr > 0 ? settings.dpr : 1,
     localStorage:{ getItem(key) { if (settings.storageThrows) throw new Error('blocked'); return Object.prototype.hasOwnProperty.call(values, key) ? values[key] : null; } },
     matchMedia() { return media; },
     addEventListener(type, handler) { if (!windowListeners.has(type)) windowListeners.set(type, new Set()); windowListeners.get(type).add(handler); },
@@ -284,6 +303,45 @@ check('accepted check and terminal facts remain presentation-only finite camera 
     check('missing key keeps Xiangqi on the production DOM board with no renderer work',
       defaultOn.log.hosts.length === 0 && defaultOn.log.imports === 0 && !findByClass(defaultOn.area, 'xiangqi-ghost3d-slot'));
     defaultOn.game.destroy();
+
+    const canvasMap = run({ ghost3d:'0', dpr:2 });
+    const canvasBoard = findByClass(canvasMap.area, 'xiangqi-board');
+    const canvas = findByTag(canvasBoard, 'canvas');
+    const cssWidth = parseFloat(canvas && canvas.style.width);
+    const cssHeight = parseFloat(canvas && canvas.style.height);
+    const boardWidth = parseFloat(canvasBoard && canvasBoard.style.width);
+    const boardHeight = parseFloat(canvasBoard && canvasBoard.style.height);
+    const epsilon = .001;
+    const paths = canvas && canvas.canvasLog ? canvas.canvasLog.strokedPaths : [];
+    const straightPaths = paths.filter(path => path.length >= 2 && path.every(point => point.type === 'move' || point.type === 'line'));
+    const verticalSegments = straightPaths.flatMap(path => {
+      const segments = [];
+      for (let index = 0; index + 1 < path.length; index += 2) {
+        const start = path[index], end = path[index + 1];
+        if (start.type === 'move' && end.type === 'line' && Math.abs(start.x - end.x) < epsilon) segments.push([start,end]);
+      }
+      return segments;
+    });
+    const horizontalSegments = straightPaths.flatMap(path => {
+      const segments = [];
+      for (let index = 0; index + 1 < path.length; index += 2) {
+        const start = path[index], end = path[index + 1];
+        if (start.type === 'move' && end.type === 'line' && Math.abs(start.y - end.y) < epsilon) segments.push([start,end]);
+      }
+      return segments;
+    });
+    const fullHeightVerticals = verticalSegments.filter(segment =>
+      Math.abs(segment[0].y - boardWidth / 18) < epsilon && Math.abs(segment[1].y - (boardHeight - boardWidth / 18)) < epsilon);
+    check('permanent Canvas map pins CSS pixels separately from its DPR backing store',
+      !!canvas && Math.abs(cssWidth - boardWidth) < epsilon && Math.abs(cssHeight - boardHeight) < epsilon &&
+      canvas.width === Math.round(cssWidth * 2) && canvas.height === Math.round(cssHeight * 2),
+      JSON.stringify({ cssWidth, cssHeight, backingWidth:canvas && canvas.width, backingHeight:canvas && canvas.height }));
+    check('permanent Canvas map draws all ten ranks and only the two borders across the river',
+      horizontalSegments.length === 10 && verticalSegments.length === 16 && fullHeightVerticals.length === 2 &&
+      canvas.canvasLog.lineDashes.every(dash => dash.length === 0),
+      JSON.stringify({ horizontal:horizontalSegments.length, vertical:verticalSegments.length, fullHeight:fullHeightVerticals.length, dashes:canvas.canvasLog.lineDashes }));
+    canvasMap.game.destroy();
+
     const rollback = run({ ghost3d:'0' });
     await settle();
     check('exact local zero performs no host creation, slot mount, or module request',

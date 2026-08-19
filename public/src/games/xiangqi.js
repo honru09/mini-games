@@ -1470,21 +1470,22 @@ function gameXiangqi(area, extra, n, opts){
     boardEl.setAttribute('aria-keyshortcuts','ArrowUp ArrowDown ArrowLeft ArrowRight Enter Space');
     const tabletop = typeof tabletopArtEnabled === 'function' && tabletopArtEnabled();
     if (typeof markTabletopSurface === 'function') markTabletopSurface(boardEl, 'xiangqi-board', { variant: boardTheme });
-    boardEl.style.width = S + 'px'; boardEl.style.height = S * ROWS / COLS + 'px'; boardEl.style.maxWidth = '100%'; boardEl.style.boxSizing = 'border-box'; boardEl.style.margin = '0 auto'; boardEl.style.position = 'relative'; boardEl.style.transform = 'translateZ(0)'; boardEl.style.gridArea = 'board';
+    const boardHeight = S * ROWS / COLS;
+    boardEl.style.width = S + 'px'; boardEl.style.height = boardHeight + 'px'; boardEl.style.maxWidth = '100%'; boardEl.style.boxSizing = 'border-box'; boardEl.style.margin = '0 auto'; boardEl.style.position = 'relative'; boardEl.style.transform = 'translateZ(0)'; boardEl.style.gridArea = 'board';
     if (boardEl.style && typeof boardEl.style.setProperty === 'function') boardEl.style.setProperty('--xiangqi-wave-c-board-size', S + 'px');
     boardEl.style.touchAction = 'none'; boardEl.style.overscrollBehavior = 'contain';
     const cs = S / COLS;
     const cv = document.createElement('canvas');
-    cv.style.position = 'absolute'; cv.style.left = '0'; cv.style.top = '0';
+    cv.style.position = 'absolute'; cv.style.left = '0'; cv.style.top = '0'; cv.style.width = S + 'px'; cv.style.height = boardHeight + 'px';
     const dpr = window.devicePixelRatio || 1;
-    cv.width = S*dpr; cv.height = S*ROWS/COLS*dpr;
+    cv.width = Math.max(1,Math.round(S*dpr)); cv.height = Math.max(1,Math.round(boardHeight*dpr));
     boardEl.appendChild(cv);
     xiangqiGhost3DAdoptBoardSlot(boardEl, retainedXiangqiGhost3DSlot);
     const ctx = cv.getContext('2d');
     ctx.setTransform(dpr,0,0,dpr,0,0);
     if (tabletop){
       const grassPaper = boardTheme === 'grass';
-      const paper = ctx.createLinearGradient ? ctx.createLinearGradient(0,0,S,S*ROWS/COLS) : null;
+      const paper = ctx.createLinearGradient ? ctx.createLinearGradient(0,0,S,boardHeight) : null;
       if (paper && paper.addColorStop){
         paper.addColorStop(0,grassPaper?'#F7F9E7':'#FFF9F2'); paper.addColorStop(.58,grassPaper?'#D7E8B6':'#F3E5C4'); paper.addColorStop(1,grassPaper?'#A7C27C':'#E7C57F'); ctx.fillStyle = paper;
       } else ctx.fillStyle = grassPaper ? '#D7E8B6' : '#F3E5C4';
@@ -1500,10 +1501,19 @@ function gameXiangqi(area, extra, n, opts){
       else ctx.fillStyle = '#e9c79a';
       ctx.strokeStyle = '#8a5a2b';
     }
-    ctx.fillRect(0,0,S,S*ROWS/COLS); ctx.lineWidth = tabletop ? 2.25 : 1.4; ctx.lineCap = tabletop ? 'round' : 'butt'; ctx.lineJoin = tabletop ? 'round' : 'miter';
+    ctx.fillRect(0,0,S,boardHeight); ctx.lineWidth = tabletop ? 2.25 : 1.4; ctx.lineCap = tabletop ? 'round' : 'butt'; ctx.lineJoin = tabletop ? 'round' : 'miter';
     const pad = cs/2;
+    const boardBottom = boardHeight - pad;
     for (let c = 0; c < COLS; c++){
-      ctx.beginPath(); ctx.moveTo(pad + c*cs, pad); ctx.lineTo(pad + c*cs, S - pad); ctx.stroke();
+      const x = pad + c*cs;
+      ctx.beginPath();
+      if (c === 0 || c === COLS - 1){
+        ctx.moveTo(x, pad); ctx.lineTo(x, boardBottom);
+      } else {
+        ctx.moveTo(x, pad); ctx.lineTo(x, pad + 4*cs);
+        ctx.moveTo(x, pad + 5*cs); ctx.lineTo(x, boardBottom);
+      }
+      ctx.stroke();
     }
     if (lastMove){
       lastMove.forEach(([r,c], idx) => {
@@ -1522,10 +1532,6 @@ function gameXiangqi(area, extra, n, opts){
       ctx.stroke();
     };
     palace(0); palace(7);
-    // 河界
-    ctx.setLineDash([6,5]);
-    ctx.beginPath(); ctx.moveTo(pad, pad + 5*cs); ctx.lineTo(S - pad, pad + 5*cs); ctx.stroke();
-    ctx.setLineDash([]);
     for (let r = 0; r < ROWS; r++){
       for (let c = 0; c < COLS; c++){
         const piece = board[r][c];
