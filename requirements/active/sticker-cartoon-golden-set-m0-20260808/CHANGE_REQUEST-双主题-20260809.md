@@ -2,6 +2,8 @@
 
 日期：2026-08-09（Asia/Tokyo）
 
+> 当前裁决（2026-08-16）：本文件末尾“仍等待人工 Art Bible、双人 IP Review”的表述只记录 2026-08-09 的 `historical-as-of` 状态。当前 M0 North Star 已由项目所有者确认，原创 Ghost-native 资产按 `OWNER_AUTHORIZED_ART_CLEARANCE` 继续开发与可逆 runtime；人工清稿、Reviewer B、IP/法律意见和逐资产 Golden Set 均为 `OPTIONAL_ADVISORY_EVIDENCE`，不得阻塞开发。真实设备仍是 `RELEASE_EVIDENCE_PENDING`，发布仍需当前用户明确命令。
+
 ## 原因
 
 Ghost Game P0 已冻结运行时主题为 `light|dark`。继续让 Golden Set M0 以六主题作为验收矩阵，会同时制造文档漂移、不可执行的 QA 和未来美术返工。

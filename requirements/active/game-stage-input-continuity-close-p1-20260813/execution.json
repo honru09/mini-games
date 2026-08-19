@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "taskId": "game-stage-input-continuity-close-p1-20260813",
+  "status": "completed_local",
+  "completed": [
+    "shared six-game Game Shell lifecycle audit",
+    "wheel/touchmove/keydown document-lock and internal-scroll regression",
+    "return focus and scroll restoration for all six game IDs",
+    "listener cleanup and idempotent exit regression",
+    "registered immersive-shell and fast Quality Gate coverage"
+  ],
+  "verification": {
+    "specialized": ["node qa/game-stage-input-continuity.js", "npm run test:immersive-shell", "node qa/code-health-sweep.js", "node qa/progress-ledger.js"],
+    "pendingFinal": ["npm run quality:gates", "npm test", "deterministic build and hash"]
+  },
+  "published": false,
+  "boundary": "local presentation/input lifecycle only; no rules, Authority, protocol, reward, Replay, database, unapproved art runtime, commit, push or deployment"
+}

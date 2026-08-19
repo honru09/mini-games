@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "taskId": "ui-repair-p09-direct-chat-presentation-p0-20260810",
+  "status": "completed_local",
+  "completed": ["scope freeze", "chat presentation states", "history scroll anchoring", "responsive/accessibility copy", "specialized and online chat verification"],
+  "pending": ["second desktop browser", "Android/iPhone/Tablet", "real network shaping", "in-app localhost visual permission", "user release command"],
+  "verification": {
+    "specialized": ["node qa/ui-chat-presentation-contract.js", "node qa/player-chat-contract.js", "node --experimental-websocket qa/player-chat-online.js", "node qa/social-match-client-lifecycle.js", "npm run test:i18n", "node qa/dom-smoke.js"],
+    "full": "npm test (113.2s, exit 0)",
+    "buildSource": "scripts/build.js",
+    "buildBytes": 924691,
+    "buildSha256": "1E00C59C0C6E5FA197BD7C4DB2EA60795897A5CB2992340863FF5F78199133F5"
+  },
+  "protocolBoundary": "direct-chat-v1 messages and server authority unchanged",
+  "published": false
+}

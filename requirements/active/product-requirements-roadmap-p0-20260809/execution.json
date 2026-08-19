@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "task": "product-requirements-roadmap-p0-20260809",
+  "state": "LOCAL_ACCEPTED_AWAITING_RELEASE_COMMAND",
+  "startedAt": "2026-08-09T19:20:00+09:00",
+  "updatedAt": "2026-08-09T21:34:00+09:00",
+  "progress": {
+    "recon": {"status":"completed"},
+    "freeze": {"status":"completed"},
+    "ledger": {"status":"verified","schemaVersion":2,"requirements":208,"categories":6,"sources":58,"dependencyNodes":97,"dependencyEdges":168,"requestCoverageGroups":40},
+    "reports": {"status":"verified","generated":7,"idempotent":true,"perItemFields":["status","phase","dependencies","sources","evidence","acceptance","nextStage","related"]},
+    "docsSync": {"status":"verified","files":["AGENTS.md","WHITEPAPER.md","PROJECT_STATUS.json","简易报告/README.md"]},
+    "verification": {"status":"verified","commands":["npm run test:progress-ledger","npm run reports:progress (second run changed=0)","npm run validate:project","npm run quality:gates","npm test","git diff --check"],"results":{"progressLedger":"pass","reportIdempotency":"pass","projectState":"pass","qualityGates":"pass","fullTest":"pass (144.4s)","diffCheck":"pass"}},
+    "release": {"status":"not_executed","reason":"user requires an explicit later command before any online output"}
+  },
+  "blocked": [],
+  "notExecuted": ["product implementation", "image generation", "commit", "git push", "GitHub Pages deployment", "Render deployment"],
+  "nextTracks": ["Social Match P0", "UI Repair P0", "Art M1 P0", "Economy Loop P0/P1", "Tech/Production P0"]
+}

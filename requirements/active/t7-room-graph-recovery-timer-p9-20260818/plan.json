@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "task": "t7-room-graph-recovery-timer-p9-20260818",
+  "state": "VERIFIED_LOCAL",
+  "requirements": ["TECH-039", "TECH-040", "TECH-052"],
+  "steps": [
+    {"id":"P9-1","status":"complete","name":"冻结 room-graph-recovery owner 与回滚边界"},
+    {"id":"P9-2","status":"complete","name":"迁移周期 lease、取消和 server close 生命周期"},
+    {"id":"P9-3","status":"complete","name":"加入 Timer Audit owner/取消回归并运行赛事恢复在线测试"},
+    {"id":"P9-4","status":"complete","name":"同步台账、状态、简报与三日志"}
+  ],
+  "next": "继续按 owner 迁移低风险 lifecycle timer；heartbeat、outbox、gameplay tick、transport deadline 后置",
+  "release": "LOCAL_ONLY / NOT_RELEASED",
+  "rollback": "restore native interval and clearInterval compatibility path; keep P6/P8 seams"
+}

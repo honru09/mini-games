@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "taskId": "profile-journey-p1-20260810",
+  "status": "implemented_local_pending_external",
+  "steps": [
+    {"id":"contract","status":"completed","owner":"Master"},
+    {"id":"pure-projection","status":"completed","owner":"Master"},
+    {"id":"profile-consumer","status":"completed","owner":"Master"},
+    {"id":"i18n-responsive","status":"completed","owner":"Master"},
+    {"id":"regression-docs","status":"completed","owner":"Master"}
+  ],
+  "release": "local-only"
+}

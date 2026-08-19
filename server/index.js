@@ -4,6 +4,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const { ClusterCoordinator } = require('./cluster-coordinator');
 const {
   normalizeUsername,
   validateUsername,
@@ -11,6 +12,15 @@ const {
   hashPassword,
   verifyPassword,
 } = require('./auth-credentials');
+const TestAdmin = require('./test-admin');
+const testAdmin = TestAdmin.createTestAdminPolicy(process.env);
+if (testAdmin.fatal) throw new Error(TestAdmin.TEST_ADMIN_REASON);
+const { createPlaylineModule, createJsonPlaylineStore, createSupabasePlaylineStore, PROTOCOL: PLAYLINE_PROTOCOL } = require('./playline');
+const {
+  normalizeStored: normalizePlayerCharacter,
+  publicPresentation: publicPlayerCharacter,
+} = require('./player-character');
+const { deriveVictoryMastery } = require('../shared/progression/victory-mastery');
 const Companion = require('./companion');
 const {
   VALID_GAMES,
@@ -25,13 +35,15 @@ const {
   resolveMatchReward,
 } = require('./reward-engine');
 const { TankAuthority } = require('./gameplay/tank-sim');
+const EngagementIntegrityAnalyzer=(()=>{try{return require('./gameplay/engagement-integrity');}catch{return null;}})();
+const { TANK_SNAPSHOT_DELTA_PROTOCOL, createTankSnapshotStream } = require('./gameplay/tank-snapshot-stream');
 const { TetrisBattleAuthority } = require('./gameplay/tetris-battle');
 const { XiangqiClockAuthority, MonopolyAuctionAuthority } = require('./gameplay/turn-protocols');
 const { TournamentOrchestrator } = require('./gameplay/tournament');
 const { TetrisRuleAuthority } = require('./gameplay/tetris-rule-authority');
 const { XiangqiRuleAuthority } = require('./gameplay/xiangqi-rule-authority');
 const { MonopolyRuleAuthority } = require('./gameplay/monopoly-rule-authority');
-const { PROTOCOL_VERSIONS, protocolError, capabilities: gameplayCapabilities } = require('./gameplay/protocol');
+const { PROTOCOL_VERSIONS, capabilities: gameplayCapabilities } = require('./gameplay/protocol');
 const {
   increment: incrementGameplayMetric,
   snapshot: gameplayMetricsSnapshot,
@@ -39,7 +51,64 @@ const {
   alerts: gameplayMetricAlerts,
   historyCsv: gameplayMetricsHistoryCsv,
 } = require('./gameplay/metrics');
-const metricsRate = new Map();
+const {
+  createOperationalMetricsBoundary,
+  createJsonMetricsAdapter,
+} = require('./boundaries/operational-metrics');
+const {
+  createAuthProfileBoundary,
+  createJsonRuntimeAuthProfileAdapter,
+} = require('./boundaries/auth-profile');
+const {
+  createRoomPresenceBoundary,
+  createJsonRuntimeRoomPresenceAdapter,
+} = require('./boundaries/room-presence');
+const {
+  createMatchProtocolBoundary,
+  createJsonRuntimeMatchProtocolAdapter,
+} = require('./boundaries/match-protocol');
+const {
+  createChatPlaylineBoundary,
+  createJsonRuntimeChatPlaylineAdapter,
+} = require('./boundaries/chat-playline');
+const {
+  createRewardEconomyBoundary,
+  createJsonRuntimeRewardEconomyAdapter,
+} = require('./boundaries/reward-economy');
+const {
+  createRewardProgressionPolicy,
+  createRewardProgression,
+  createJsonRuntimeRewardProgressionAdapter,
+} = require('./boundaries/reward-progression');
+const { createServerClockTimer } = require('./boundaries/server-clock-timer');
+const { createHeartbeatSweepIsolation } = require('./boundaries/heartbeat-sweep-isolation');
+let operationalMetricsBoundary = null;
+let authProfileBoundary = null;
+let roomPresenceBoundary = null;
+let matchProtocolBoundary = null;
+let chatPlaylineBoundary = null;
+let rewardEconomyBoundary = null;
+let rewardProgression = null;
+const serverClockTimer = createServerClockTimer({
+  onError: (context, error) => {
+    if (operationalMetricsBoundary) return operationalMetricsBoundary.recordError(context, error);
+    incrementGameplayMetric('serverErrors');
+    return { recorded: false, context, kind: String(error && error.name || 'Error') };
+  },
+});
+const serverNow = () => serverClockTimer.now();
+const rewardProgressionPolicy = createRewardProgressionPolicy({
+  validGames: VALID_GAMES,
+  dayKey,
+  xpForLevel,
+  levelFromXp,
+  curveVersion: REWARD_CONFIG.level.curveVersion,
+  normalizePlayerCharacter,
+});
+// Match Protocol has no player-facing persistence. The JSON runtime Adapter
+// still receives an isolated runtime state callback so its commit contract is
+// identical to the test Adapter without adding a schema field.
+let matchProtocolRuntimeState = { journal: [] };
 const METRICS_ADMIN_TOKEN = String(process.env.METRICS_ADMIN_TOKEN || '').trim();
 const METRICS_HISTORY_INTERVAL_MS = Math.max(60000, Math.min(60 * 60 * 1000, Number(process.env.METRICS_HISTORY_INTERVAL_MS) || 5 * 60 * 1000));
 const METRICS_HISTORY_LIMIT = Math.max(24, Math.min(10000, Number(process.env.METRICS_HISTORY_LIMIT) || 2016));
@@ -53,65 +122,23 @@ const METRICS_THRESHOLDS = Object.freeze({
   activeMatches: Math.max(1, Number(process.env.METRICS_ACTIVE_MATCH_ALERT_THRESHOLD) || 200),
 });
 const TOURNAMENT_ADMIN_UIDS = new Set(String(process.env.TOURNAMENT_ADMIN_UIDS || '').split(',').map(value=>value.trim()).filter(Boolean));
-function isTournamentAdmin(uid){ return !!uid && TOURNAMENT_ADMIN_UIDS.has(String(uid)); }
-function metricsAdminAuthorized(req){
-  if (!METRICS_ADMIN_TOKEN) return { ok:false, status:503, reason:'metrics_not_configured' };
-  const ip = requestIp(req);
-  const now = Date.now();
-  const recent = (metricsRate.get(ip) || []).filter(at => now - at < 60000);
-  if (recent.length >= 60){ metricsRate.set(ip, recent); return { ok:false, status:429, reason:'metrics_rate_limited' }; }
-  recent.push(now); metricsRate.set(ip, recent);
-  const header = String((req.headers && req.headers.authorization) || '');
-  const match = /^Bearer\s+(.+)$/.exec(header);
-  if (!match || match[1].length !== METRICS_ADMIN_TOKEN.length || !crypto.timingSafeEqual(Buffer.from(match[1]), Buffer.from(METRICS_ADMIN_TOKEN))){
-    return { ok:false, status:401, reason:'metrics_unauthorized' };
-  }
-  return { ok:true, ip };
+function isTournamentAdmin(uid){ return !!uid && (testAdmin.hasCapability(uid, 'tournament_recover') || testAdmin.hasCapability(uid, 'tournament_create') || TOURNAMENT_ADMIN_UIDS.has(String(uid))); }
+function recordOperationalError(context,error){
+  if (operationalMetricsBoundary) return operationalMetricsBoundary.recordError(context,error);
+  incrementGameplayMetric('serverErrors');
+  return { recorded:false, context:'bootstrap', kind:'Error' };
 }
 function currentGameplayMetrics(){
-  return safeGameplayMetricsSnapshot(gameplayMetricsSnapshot({
+  const snapshot=gameplayMetricsSnapshot({
     activeMatches:[...rooms.values()].filter(room=>room.started&&!room.settled).length,
     activeSpectators:[...rooms.values()].reduce((sum,room)=>sum+(room.spectators instanceof Map?room.spectators.size:0),0),
     activeTournaments:tournaments.size,
-  }));
-}
-function captureGameplayMetrics(force=false){
-  const current=currentGameplayMetrics(),history=Array.isArray(db.metricsHistory)?db.metricsHistory:(db.metricsHistory=[]);
-  const last=history[history.length-1],lastAt=last?Date.parse(last.generatedAt):0;
-  if(force||!last||!Number.isFinite(lastAt)||Date.now()-lastAt>=METRICS_HISTORY_INTERVAL_MS){
-    history.push(current);db.metricsHistory=history.slice(-METRICS_HISTORY_LIMIT);trimAuditData();saveDB();
-  }
-  return current;
-}
-function operationalMetricsPayload(force=false){
-  const current=captureGameplayMetrics(force),history=Array.isArray(db.metricsHistory)?db.metricsHistory:[];
-  const previous=history.length>1?history[history.length-2]:{};
-  return {
-    version:'metrics-v2',data:current,
-    alerts:gameplayMetricAlerts(current,previous,METRICS_THRESHOLDS),
-    incidents:(db.opsIncidents||[]).slice(-50).reverse().map(item=>({
-      fingerprint:item.fingerprint,context:item.context,kind:item.kind,count:item.count,firstAt:item.firstAt,lastAt:item.lastAt,
-    })),
-  };
-}
-function recordMetricsAccess(auth,urlPath){
-  recordAnalytics('metrics_read',{metadata:{
-    path:String(urlPath||'/api/metrics').slice(0,80),
-    ipHash:crypto.createHash('sha256').update(String(auth&&auth.ip||'')).digest('hex').slice(0,16),
-  }});
-  trimAuditData();saveDB();
-}
-function recordOperationalError(context,error){
-  incrementGameplayMetric('serverErrors');
-  const safeContext=/^[a-z0-9_:-]{1,64}$/i.test(String(context||''))?String(context):'unknown';
-  const kind=/^[A-Za-z][A-Za-z0-9]{0,63}$/.test(String(error&&error.name||''))?String(error.name):'Error';
-  const fingerprint=crypto.createHash('sha256').update(safeContext+'|'+kind).digest('hex').slice(0,16),now=Date.now();
-  try{
-    const incidents=Array.isArray(db.opsIncidents)?db.opsIncidents:(db.opsIncidents=[]),existing=incidents.find(item=>item.fingerprint===fingerprint);
-    if(existing){existing.count=(Number(existing.count)||0)+1;existing.lastAt=now;}
-    else incidents.push({fingerprint,context:safeContext,kind,count:1,firstAt:now,lastAt:now});
-    db.opsIncidents=incidents.slice(-500);trimAuditData();saveDB();
-  }catch{}
+  });
+  return safeGameplayMetricsSnapshot({
+    ...snapshot,
+    engagementIntegrityShadowEnabled:ENGAGEMENT_INTEGRITY_SHADOW_ENABLED?1:0,
+    engagementIntegrityActiveAnalyzers:activeEngagementIntegrityAnalyzerCount(),
+  });
 }
 const { SpectatorAccessGuard, TournamentGuard } = require('./gameplay/guards');
 const { AI_STRATEGY_VERSION, aiStrategyPrompt } = require('./ai-strategy-skills');
@@ -138,6 +165,7 @@ const MIME = {
   '.svg': 'image/svg+xml',
   '.ico': 'image/x-icon',
   '.json': 'application/json; charset=utf-8',
+  '.webmanifest': 'application/manifest+json; charset=utf-8',
 };
 
 /* ---------------- AI 代理（DeepSeek） ---------------- */
@@ -335,6 +363,12 @@ async function handleAI(req, res){
     }
     const personaId = body.persona && typeof body.persona === 'object' ? String(body.persona.id || '') : String(body.persona || '');
     const persona = AI_PERSONAS[personaId] || null;
+    const requestedDifficulty = body.persona && typeof body.persona === 'object' &&
+      ['easy','normal','hard'].includes(String(body.persona.difficulty || '').toLowerCase())
+      ? String(body.persona.difficulty).toLowerCase() : null;
+    // 新三档客户端只有困难档允许访问 DeepSeek。旧客户端没有 difficulty，保持既有兼容行为。
+    // 简单/普通仍经过 personal-linear-v2 取得可确认学习票据，但不会产生上游费用或等待。
+    const allowDeepSeek = requestedDifficulty ? requestedDifficulty === 'hard' : true;
     // 只有携带当前服务端 solo 票据的请求才会产生可学习 decisionId。
     // 这样 DeepSeek 慢响应在客户端超时/回退时不会凭空写入 AI 经验。
     const requestedContext = body.context && typeof body.context === 'object'
@@ -343,11 +377,11 @@ async function handleAI(req, res){
     const requestedMatchId = String(requestedContext.matchId || '');
     const requestedResultId = String(requestedContext.resultId || '');
     const matchAtStart = typeof soloMatches !== 'undefined' ? soloMatches.get(user.uid) : null;
-    const contextBound = !!(!user.ephemeral && matchAtStart && !matchAtStart.completed &&
+    const contextBound = !!(!user.ephemeral && !testAdmin.shouldHidePublicUid(user.uid) && matchAtStart && !matchAtStart.completed &&
       matchAtStart.game === game && matchAtStart.matchId === requestedMatchId &&
       matchAtStart.resultId === requestedResultId);
     let upstreamChoice = null;
-    if (DEEPSEEK_KEY){
+    if (DEEPSEEK_KEY && allowDeepSeek){
       try {
         upstreamChoice = await askDeepSeek(game, state, options, persona);
       } catch (e) {
@@ -355,7 +389,7 @@ async function handleAI(req, res){
       }
     }
     if (options && !options.includes(upstreamChoice)) upstreamChoice = null;
-    const learningStore = user.ephemeral ? normalizeAILearningStore() : db.aiLearning;
+    const learningStore = user.ephemeral || testAdmin.shouldHidePublicUid(user.uid) ? normalizeAILearningStore() : db.aiLearning;
     const decision = chooseLearnedCandidate(learningStore, user.uid, game, state, options, body.candidates, upstreamChoice);
     const choice = decision && decision.choice;
     const activeMatch = typeof soloMatches !== 'undefined' ? soloMatches.get(user.uid) : null;
@@ -469,24 +503,14 @@ const server = http.createServer((req, res) => {
     return;
   }
   if (req.method === 'GET' && ['/api/metrics','/api/metrics/history','/api/metrics/export'].includes(urlPath)){
-    const auth = metricsAdminAuthorized(req);
-    if (!auth.ok){
-      res.writeHead(auth.status, {...corsHeaders(req),'Content-Type':'application/json','Cache-Control':'no-store'});
-      res.end(JSON.stringify({ error: auth.reason }));
-      return;
-    }
-    const payload=operationalMetricsPayload(urlPath==='/api/metrics');
-    recordMetricsAccess(auth,urlPath);
-    if(urlPath==='/api/metrics/export'){
-      const csv=gameplayMetricsHistoryCsv(db.metricsHistory||[]);
-      res.writeHead(200,{...corsHeaders(req),'Content-Type':'text/csv; charset=utf-8','Content-Disposition':'attachment; filename="mini-games-metrics.csv"','Cache-Control':'no-store'});
-      res.end('\ufeff'+csv);return;
-    }
-    res.writeHead(200,{...corsHeaders(req),'Content-Type':'application/json','Cache-Control':'no-store'});
-    if(urlPath==='/api/metrics/history'){
-      res.end(JSON.stringify({...payload,history:(db.metricsHistory||[]).slice(-METRICS_HISTORY_LIMIT)}));return;
-    }
-    res.end(JSON.stringify(payload));return;
+    const outcome=operationalMetricsBoundary.handle({
+      method:req.method,
+      path:urlPath,
+      authorization:String((req.headers&&req.headers.authorization)||''),
+      ip:requestIp(req),
+    });
+    res.writeHead(outcome.status,{...corsHeaders(req),...outcome.headers});
+    res.end(outcome.body);return;
   }
   const requestedPath = urlPath === '/' ? 'index.html' : urlPath.replace(/^[/\\]+/, '');
   const file = path.resolve(PUBLIC, requestedPath);
@@ -511,10 +535,114 @@ const server = http.createServer((req, res) => {
 const WS_GUID = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11';
 const rooms = new Map(); // roomId -> { host, clients: Map<ws, player>, game }
 const tournaments = new Map();
+let tournamentTestStartFailureConsumed=false;
+const tournamentTestFaults=process.env.NODE_ENV==='test'?{
+  sourceResetConsumed:false,sourceResetRoomId:null,sourceResetWritesRemaining:0,
+  abortReleaseFailuresRemaining:Math.max(0,Math.min(20,Number(process.env.TOURNAMENT_TEST_FAIL_ABORT_RELEASE_COUNT)||0)),
+}:null;
 const spectatorAccessGuard = new SpectatorAccessGuard({
   maxSpectators:Math.max(1,Math.min(50,Number(process.env.MAX_SPECTATORS)||12)),
   maxConnectionsPerUid:1,
 });
+const ROOM_PRESENCE_RETRY_LIMIT=Math.max(1,Math.min(8,Number(process.env.ROOM_PRESENCE_RETRY_LIMIT)||5));
+const ROOM_PRESENCE_QUARANTINED_MUTATIONS=new Set([
+  'match_expression','match_chat_send','move','bot_move','tank_input','bot_tank_input','tetris_lock_claim','tetris_attack_claim',
+  'tetris_ko_claim','tetris_action','bot_tetris_action','tetris_state','xiangqi_action','monopoly_action','monopoly_auction_open','monopoly_bid','monopoly_turn_end',
+  'game_state','result','start','restart','end_game','select_game','ready','room_settings','add_ai','remove_ai','invite',
+]);
+function roomPresenceRetryDelay(attempt){
+  const base=Math.max(250,Math.min(5000,Number(process.env.ROOM_PRESENCE_RETRY_MS)||1000));
+  return Math.min(30000,base*Math.pow(2,Math.max(0,Number(attempt)-1)));
+}
+const RECONNECT_TIMER_OWNER_PREFIX='reconnect-expiry:';
+const ROOM_REMOVAL_RETRY_TIMER_OWNER_PREFIX='room-removal-retry:';
+function cancelServerTimer(timer){
+  if(!timer)return false;
+  if(typeof timer.cancel==='function'){
+    try{if(timer.cancel())return true;}catch(_error){}
+  }
+  try{clearTimeout(timer);return true;}catch(_error){return false;}
+}
+function cancelReconnectTimer(session){
+  if(!session)return false;
+  const timer=session.reconnectTimer;
+  session.reconnectTimer=null;
+  return cancelServerTimer(timer);
+}
+function scheduleReconnectTimer(session,room,delayMs){
+  if(!session||!room)return null;
+  cancelReconnectTimer(session);
+  const lease=serverClockTimer.schedule({
+    owner:RECONNECT_TIMER_OWNER_PREFIX+session.sessionId,
+    delayMs,
+    run:()=>{
+      // Clear the owner field before entering expiry/retry logic. A failed
+      // presence mutation may schedule the next lease under the same owner.
+      session.reconnectTimer=null;
+      return expireDetachedSession(room,session);
+    },
+  });
+  if(lease.ok)session.reconnectTimer=lease;
+  else recordOperationalError('reconnect_timer_schedule',new Error(lease.reason||'clock_timer_unavailable'));
+  return lease.ok?lease:null;
+}
+function cancelRoomRemovalRetryTimer(session){
+  if(!session)return false;
+  const timer=session.roomRemovalRetryTimer;
+  session.roomRemovalRetryTimer=null;
+  return cancelServerTimer(timer);
+}
+function scheduleRoomRemovalRetryTimer(session,room,delayMs){
+  if(!session||!room)return null;
+  if(session.roomRemovalRetryTimer)return session.roomRemovalRetryTimer;
+  const lease=serverClockTimer.schedule({
+    owner:ROOM_REMOVAL_RETRY_TIMER_OWNER_PREFIX+session.sessionId,
+    delayMs,
+    run:()=>{
+      session.roomRemovalRetryTimer=null;
+      if(session.room===room.id)return session.leaveRoom();
+      return true;
+    },
+  });
+  if(lease.ok)session.roomRemovalRetryTimer=lease;
+  else recordOperationalError('room_removal_retry_schedule',new Error(lease.reason||'clock_timer_unavailable'));
+  return lease.ok?lease:null;
+}
+const ROOM_GRAPH_RECOVERY_SWEEP_MS=Math.max(1000,Math.min(5*60*1000,Number(process.env.ROOM_GRAPH_RECOVERY_SWEEP_MS)||30000));
+const roomGraphRecoveryQueue=new Map();
+let roomGraphRecoveryTimer=null;
+const ROOM_GRAPH_RECOVERY_TIMER_OWNER='room-graph-recovery';
+function cancelRoomGraphRecoveryTimer(){
+  const timer=roomGraphRecoveryTimer;
+  roomGraphRecoveryTimer=null;
+  if(timer&&typeof timer.cancel==='function'){timer.cancel();return;}
+  if(timer)clearInterval(timer);
+}
+function runRoomGraphRecoverySweep(){
+  for(const [key,record] of roomGraphRecoveryQueue){
+    let recovered=false;
+    try{recovered=record&&typeof record.recover==='function'&&record.recover()===true;}catch(_error){recovered=false;}
+    if(!recovered)continue;
+    roomGraphRecoveryQueue.delete(key);
+    try{if(typeof record.onRecovered==='function')record.onRecovered();}catch(_error){}
+  }
+  if(!roomGraphRecoveryQueue.size&&roomGraphRecoveryTimer)cancelRoomGraphRecoveryTimer();
+}
+function enqueueRoomGraphRecovery(key,record){
+  const id=String(key||'');if(!id||!record||typeof record.recover!=='function')return false;
+  roomGraphRecoveryQueue.set(id,record);
+  if(!roomGraphRecoveryTimer){
+    const lease=serverClockTimer.schedule({
+      owner:ROOM_GRAPH_RECOVERY_TIMER_OWNER,
+      delayMs:ROOM_GRAPH_RECOVERY_SWEEP_MS,
+      repeat:true,
+      run:()=>runRoomGraphRecoverySweep(),
+    });
+    if(!lease.ok){recordOperationalError('room_graph_recovery_schedule',new Error(lease.reason||'clock_timer_unavailable'));return false;}
+    roomGraphRecoveryTimer=lease;
+  }
+  return true;
+}
 const tournamentGuard = new TournamentGuard({
   maxActive:Math.max(1,Math.min(500,Number(process.env.MAX_ACTIVE_TOURNAMENTS)||100)),
   maxPerOwner:Math.max(1,Math.min(20,Number(process.env.MAX_TOURNAMENTS_PER_OWNER)||3)),
@@ -524,19 +652,18 @@ function broadcastTournament(entry){
   if(!entry||!entry.tournament)return;
   const guardState=tournamentGuard.snapshot(entry.tournament.tournamentId);
   const payload={...entry.tournament.snapshot(),ownerUid:entry.ownerUid,
+    participants:(entry.tournament.participants || []).map(item=>String(item && (item.id || item.uid || item))),
     consents:guardState&&guardState.consents||{},expiresAt:guardState&&guardState.expiresAt||null,
     guardStatus:guardState&&guardState.status||'expired'};
   const ids=new Set(entry.tournament.participants.map(item=>item.id));
+  if (entry.ownerUid) ids.add(entry.ownerUid);
   for(const session of sessions)if(session.uid&&ids.has(session.uid))session.sendText(JSON.stringify({type:'tournament_state',payload}));
 }
 function registerTournamentPairings(entry){
   if(!entry||!entry.tournament)return false;
   const tournamentId=entry.tournament.tournamentId;
-  for(const pairing of entry.tournament.pairings||[]){
-    const registered=tournamentGuard.registerPairing(tournamentId,pairing.pairingId,pairing.players);
-    if(!registered.ok&&registered.reason!=='duplicate_pairing')return false;
-  }
-  return true;
+  const requests=(entry.tournament.pairings||[]).map(pairing=>({pairingId:pairing.pairingId,players:pairing.players}));
+  return tournamentGuard.registerPairings(tournamentId,requests).ok;
 }
 function tournamentParticipantSessions(entry){
   if(!entry||!entry.tournament)return{ok:false,reason:'tournament_not_found'};
@@ -551,29 +678,123 @@ function tournamentParticipantSessions(entry){
   }
   return{ok:true,byUid};
 }
-function releaseTournamentSourceRooms(sessionMap){
-  const affected=new Set();
-  for(const session of sessionMap.values()){
-    if(session.spectatorRoom)session.leaveSpectator();
-    const room=session.room&&rooms.get(session.room);
-    if(room&&room.clients.has(session)){
-      affected.add(room);room.clients.delete(session);
-      if(room.started)session.sendText(JSON.stringify({type:'end_game'}));
+function armTournamentSourceResetAdapterFailure(released){
+  if(!tournamentTestFaults||tournamentTestFaults.sourceResetConsumed)return false;
+  const forcedResetIndex=process.env.NODE_ENV==='test'&&/^\d+$/.test(String(process.env.TOURNAMENT_TEST_FAIL_SOURCE_RESET_INDEX||''))
+    ?Number(process.env.TOURNAMENT_TEST_FAIL_SOURCE_RESET_INDEX):-1;
+  const change=forcedResetIndex>=0&&released&&Array.isArray(released.changes)?released.changes[forcedResetIndex]:null;
+  if(!change||!change.started||!change.roomId)return false;
+  tournamentTestFaults.sourceResetConsumed=true;
+  tournamentTestFaults.sourceResetRoomId=String(change.roomId);
+  tournamentTestFaults.sourceResetWritesRemaining=1;
+  return true;
+}
+function sendTournamentSourceTerminal(room){
+  if(!room)return false;
+  const text=JSON.stringify({type:'end_game'});
+  for(const session of room.clients instanceof Map?room.clients.keys():[])session.sendText(text);
+  // Terminal lifecycle events bypass spectatorDelay.  A delayed end_game can
+  // otherwise arrive after the survivor has already entered the waiting room.
+  for(const session of room.spectators instanceof Map?room.spectators.keys():[])session.sendText(text);
+  return true;
+}
+function enqueueTournamentSourceResetRecovery(room,reason){
+  if(!room||!room.id)return false;
+  const expectedMatchId=String(room.matchId||'');
+  room.presenceQuarantined=true;
+  return enqueueRoomGraphRecovery('tournament-source-reset:'+room.id+':'+(expectedMatchId||'none'),{
+    room,
+    reason:reason||'room_presence_unavailable',
+    recover:()=>{
+      if(rooms.get(room.id)!==room)return true;
+      // A later explicit lifecycle transition owns its new match.  Recovery
+      // finalizes only the exact source match that lost its READY reset.
+      if(!room.started||String(room.matchId||'')!==expectedMatchId)return true;
+      const reset=resetRoomMatch(room);
+      if(!reset.ok)return false;
+      return true;
+    },
+    onRecovered:()=>{
+      const sameCanonical=rooms.get(room.id)===room;
+      const fullyRecovered=![...roomGraphRecoveryQueue.values()].some(record=>record.room===room);
+      if(fullyRecovered)room.presenceQuarantined=false;
+      if(sameCanonical)broadcastRoom(room);
+      if(fullyRecovered)broadcastLobby();
+    },
+  });
+}
+function releaseTournamentSourceRooms(sessionMap,targetRooms=[]){
+  const participants=[...sessionMap.values()];
+  const sessionsById=new Map(participants.map(session=>[session.sessionId,session]));
+  const sourceRooms=new Map();
+  const spectatorRooms=new Map();
+  for(const room of rooms.values())if(room&&room.clients instanceof Map&&participants.some(session=>room.clients.has(session)))sourceRooms.set(room.id,room);
+  for(const room of rooms.values())if(room&&room.spectators instanceof Map&&participants.some(session=>room.spectators.has(session)))spectatorRooms.set(room.id,room);
+  // RoomPresence commits every source membership transition as one graph
+  // transaction.  No end_game, spectator or authority side effect is emitted
+  // until all rooms have persisted successfully.
+  const released=roomPresenceBoundary.room({action:targetRooms.length?'rehome_many':'release_many',sessions:participants,targetRooms,compactSources:true,preferOnlineHost:true,allowUnregistered:true});
+  if(!released.ok)return{ok:false,reason:released.reason||'room_presence_unavailable'};
+  // Arm only after rehome_many has durably committed.  The next reset_ready
+  // persistence for this exact source id then fails through the real runtime
+  // Adapter; its rollback write and the recovery retry remain healthy.
+  armTournamentSourceResetAdapterFailure(released);
+  const spectatorChangedRooms=new Set();
+  const resetFailures=[];
+  for(const release of released.spectatorReleases||[]){
+    spectatorAccessGuard.leave(release.sessionId);
+    const room=spectatorRooms.get(release.roomId),session=sessionsById.get(release.sessionId);
+    if(room&&session){
+      forgetTankSnapshotRecipient(room,session);spectatorChangedRooms.add(room);
     }
-    session.room=null;session.player=null;session.resumeUntil=0;
+    if(session)session.sendText(JSON.stringify({type:'spectate_left',payload:{room:release.roomId,reason:'tournament_rehome'}}));
   }
-  for(const room of affected){
-    if(!room.clients.size){
+  for(const change of released.changes||[]){
+    const room=sourceRooms.get(change.roomId);
+    if(!room)continue;
+    spectatorChangedRooms.delete(room);
+    for(const member of change.removed||[]){
+      const session=sessionsById.get(member.sessionId);
+      if(!session)continue;
+      forgetTankSnapshotRecipient(room,session);
+      if(change.started)session.sendText(JSON.stringify({type:'end_game'}));
+    }
+    if(change.closed || !room.clients.size){
       if(room.spectators)for(const spectator of room.spectators.keys()){spectatorAccessGuard.leave(spectator.sessionId);spectator.spectatorRoom=null;spectator.sendText(JSON.stringify({type:'peer_left',payload:{roomClosed:true}}));}
-      stopRoomAuthorities(room);rooms.delete(room.id);continue;
+      stopRoomAuthorities(room);continue;
     }
-    if(!room.clients.has(room.host)){
-      room.host=[...room.clients.entries()].sort((a,b)=>a[1]-b[1])[0][0];
-      room.host.sendText(JSON.stringify({type:'host_changed',payload:{player:room.clients.get(room.host)}}));
+    if(change.started){
+      // rehome_many is already committed, so the old match can never resume:
+      // stop every Authority and deliver the terminal edge synchronously even
+      // when the Adapter-backed READY reset needs quarantine recovery.
+      stopRoomAuthorities(room);
+      sendTournamentSourceTerminal(room);
+      const reset=resetRoomMatch(room);
+      if(!reset.ok){
+        const reason=reset.reason||'room_presence_unavailable';
+        const queued=enqueueTournamentSourceResetRecovery(room,reason);
+        resetFailures.push({roomId:room.id,reason,queued});
+        broadcast(room,{type:'error',msg:'源房间状态已进入安全恢复队列',reason:'room_presence_quarantined'});
+      }
     }
-    if(room.started)resetRoomMatch(room);
-    compactRoomPlayers(room);broadcastRoom(room);
+    notifyRoomReassignments(room,change.reassigned);
+    if(change.hostChanged)broadcast(room,{type:'host_changed',payload:{uid:room.host&&room.host.uid||null,player:room.clients.get(room.host)}});
+    broadcastRoom(room);
   }
+  for(const room of spectatorChangedRooms)broadcastRoom(room);
+  if((released.spectatorReleases||[]).length)broadcastLobby();
+  if(resetFailures.length)return{
+    ok:false,reason:resetFailures[0].reason,committed:true,
+    sourceRecoveries:resetFailures.map(item=>({roomId:item.roomId,queued:item.queued})),
+  };
+  return{ok:true,targets:released.targets||[],retired:released.retired||[],spectatorReleases:released.spectatorReleases||[]};
+}
+function releaseTournamentAbortParticipants(sessionsToRelease){
+  if(tournamentTestFaults&&tournamentTestFaults.abortReleaseFailuresRemaining>0){
+    tournamentTestFaults.abortReleaseFailuresRemaining--;
+    return{ok:false,reason:'tournament_test_abort_release_failed'};
+  }
+  return roomPresenceBoundary.room({action:'release_many',sessions:sessionsToRelease,compactSources:true,preferOnlineHost:true,allowUnregistered:true});
 }
 function createTournamentMatchRoom(entry,pairing,sessionMap){
   const participants=pairing.players.map(uid=>sessionMap.get(uid));
@@ -581,7 +802,7 @@ function createTournamentMatchRoom(entry,pairing,sessionMap){
   let roomId=genCode();while(rooms.has(roomId))roomId=genCode();
   const room={
     id:roomId,host:participants[0],clients:new Map(participants.map((session,player)=>[session,player])),game:entry.tournament.gameId,capacity:2,
-    started:false,matchId:null,resultClaims:new Map(),settled:false,disputed:false,
+    started:false,matchId:crypto.randomBytes(12).toString('base64url'),resultClaims:new Map(),settled:false,disputed:false,
     moveSeq:0,moveLog:[],moveLogBytes:0,moveLogTruncated:false,
     tankInputSeq:{},tankAuthoritySeq:0,tankFinalSent:false,
     startedAt:0,rewardProgress:null,resultRewards:new Map(),
@@ -589,27 +810,135 @@ function createTournamentMatchRoom(entry,pairing,sessionMap){
     spectatorDelayMs:Math.max(0,Math.min(30000,Number(process.env.SPECTATOR_DELAY_MS)||0)),gameSnapshot:null,
     tetrisPresentation:new Map(),tournamentBinding:null,finalResult:null,
   };
-  rooms.set(roomId,room);
-  participants.forEach((session,player)=>{session.room=roomId;session.player=player;session.resumeUntil=0;session.sendText(JSON.stringify(player===0?{type:'created',room:roomId,player,capacity:2}:{type:'joined',room:roomId,player}));});
-  broadcastRoom(room);startRoomMatch(room);
-  const bound=tournamentGuard.bindMatch(entry.tournament.tournamentId,pairing.pairingId,{matchId:room.matchId,gameId:room.game,players:pairing.players});
-  if(!bound.ok){stopRoomAuthorities(room);rooms.delete(roomId);participants.forEach(session=>{session.room=null;session.player=null;});return bound;}
-  const attached=entry.tournament.attachMatchRoom(pairing.pairingId,roomId,{source:'tournament',gameId:room.game,serverMatchId:room.matchId});
-  if(!attached.ok){stopRoomAuthorities(room);rooms.delete(roomId);participants.forEach(session=>{session.room=null;session.player=null;});return attached;}
-  room.tournamentBinding={tournamentId:entry.tournament.tournamentId,roundId:pairing.roundId,pairingId:pairing.pairingId,matchRoomId:roomId,source:'tournament',matchId:room.matchId,players:pairing.players.slice()};
-  for(const session of participants)session.sendText(JSON.stringify({type:'tournament_match_assigned',payload:{...room.tournamentBinding,gameId:room.game,player:room.clients.get(session)}}));
-  return{ok:true,room};
+  return{ok:true,room,pairing,participants,bound:false,attached:false};
+}
+function rollbackTournamentMatchRooms(entry,plans,transaction){
+  const state=transaction||{};
+  let detachedNow=false;
+  if(state.attachReceipt){
+    const detached=entry.tournament.detachMatchRooms(state.attachReceipt,{source:'server_rollback'});
+    if(!detached.ok)return false;
+    state.attachReceipt=null;state.attached=false;detachedNow=true;
+    for(const plan of plans)plan.attached=false;
+  }
+  if(state.bound||plans.some(plan=>plan.bound)){
+    const requests=state.bindRequests||plans.map(plan=>({pairingId:plan.pairing.pairingId,matchId:plan.room.matchId,source:'server_rollback'}));
+    const unbound=tournamentGuard.unbindMatches(entry.tournament.tournamentId,requests.map(request=>({pairingId:request.pairingId,matchId:request.matchId,source:'server_rollback'})));
+    if(!unbound.ok){
+      // A receipt-validated detach should make unbind deterministic.  If an
+      // invariant nevertheless changed between the two synchronous commits,
+      // restore the Orchestrator attachment so Guard and Orchestrator remain
+      // consistently bound rather than exposing a split-brain half-state.
+      if(detachedNow&&Array.isArray(state.attachRequests)){
+        const restored=entry.tournament.attachMatchRooms(state.attachRequests,{source:'tournament'});
+        if(restored.ok){state.attachReceipt=restored.rollbackReceipt;state.attached=true;for(const plan of plans)plan.attached=true;}
+      }
+      return false;
+    }
+    state.bound=false;
+    for(const plan of plans)plan.bound=false;
+  }
+  return true;
+}
+function recoverQuarantinedTournamentAbort(entry,plans,sessionsReady,transaction){
+  for(const plan of plans)stopRoomAuthorities(plan.room);
+  const cleanup=releaseTournamentAbortParticipants([...sessionsReady.byUid.values()]);
+  if(!cleanup.ok)return false;
+  if(!rollbackTournamentMatchRooms(entry,plans,transaction))return false;
+  entry.abortAttempts=0;entry.abortQuarantined=false;
+  return true;
+}
+function scheduleTournamentAbortRetry(entry,plans,sessionsReady,transaction,reason){
+  const attempts=Number(entry.abortAttempts)||0;
+  if(attempts>=TOURNAMENT_ABORT_RETRY_LIMIT){
+    entry.abortQuarantined=true;
+    enqueueRoomGraphRecovery('tournament:'+entry.tournament.tournamentId,{
+      recover:()=>recoverQuarantinedTournamentAbort(entry,plans,sessionsReady,transaction),
+      onRecovered:()=>{broadcastTournament(entry);broadcastLobby();},
+    });
+    for(const session of sessionsReady.byUid.values())if(session&&session.alive)session.sendText(JSON.stringify({type:'tournament_error',msg:'赛事房间已进入安全恢复队列',reason:'tournament_room_cleanup_quarantined'}));
+    broadcastTournament(entry);broadcastLobby();
+    return{ok:false,reason:'tournament_room_cleanup_quarantined'};
+  }
+  entry.abortAttempts=attempts+1;
+  if(!entry.abortTimer){
+    entry.abortTimer=setTimeout(()=>{
+      entry.abortTimer=null;
+      const retried=abortCommittedTournamentMatchRooms(entry,plans,sessionsReady,transaction,reason);
+      if(retried.recovered){broadcastTournament(entry);broadcastLobby();}
+    },Math.min(30000,TOURNAMENT_ABORT_RETRY_MS*Math.pow(2,attempts)));
+    if(entry.abortTimer&&entry.abortTimer.unref)entry.abortTimer.unref();
+  }
+  return{ok:false,reason:'tournament_room_cleanup_retry_scheduled'};
+}
+function abortCommittedTournamentMatchRooms(entry,plans,sessionsReady,transaction,reason){
+  for(const plan of plans)stopRoomAuthorities(plan.room);
+  const cleanup=releaseTournamentAbortParticipants([...sessionsReady.byUid.values()]);
+  if(!cleanup.ok)return scheduleTournamentAbortRetry(entry,plans,sessionsReady,transaction,'tournament_room_cleanup_failed');
+  const rolledBack=rollbackTournamentMatchRooms(entry,plans,transaction);
+  if(!rolledBack)return scheduleTournamentAbortRetry(entry,plans,sessionsReady,transaction,'tournament_binding_rollback_failed');
+  entry.abortAttempts=0;entry.abortQuarantined=false;
+  return{ok:false,recovered:true,reason:reason||'tournament_room_prepare_failed'};
 }
 function autoCreateTournamentRound(entry,ready){
   const sessionsReady=ready&&ready.ok?ready:tournamentParticipantSessions(entry);if(!sessionsReady.ok)return sessionsReady;
-  releaseTournamentSourceRooms(sessionsReady.byUid);
+  const plans=[];
+  for(const pairing of entry.tournament.pairings||[]){const plan=createTournamentMatchRoom(entry,pairing,sessionsReady.byUid);if(!plan.ok)return plan;plans.push(plan);}
+  const transaction={
+    bindRequests:plans.map(plan=>({pairingId:plan.pairing.pairingId,matchId:plan.room.matchId,gameId:plan.room.game,players:plan.pairing.players.slice()})),
+    attachRequests:plans.map(plan=>({pairingId:plan.pairing.pairingId,matchRoomId:plan.room.id,metadata:{gameId:plan.room.game,serverMatchId:plan.room.matchId}})),
+    bound:false,attached:false,attachReceipt:null,
+  };
+  const bound=tournamentGuard.bindMatches(entry.tournament.tournamentId,transaction.bindRequests);
+  if(!bound.ok)return bound;
+  transaction.bound=true;for(const plan of plans)plan.bound=true;
+  const attached=entry.tournament.attachMatchRooms(transaction.attachRequests,{source:'tournament'});
+  if(!attached.ok){const rolledBack=rollbackTournamentMatchRooms(entry,plans,transaction);return rolledBack?attached:{ok:false,reason:'tournament_binding_rollback_failed'};}
+  transaction.attached=true;transaction.attachReceipt=attached.rollbackReceipt;for(const plan of plans)plan.attached=true;
+  const released=releaseTournamentSourceRooms(sessionsReady.byUid,plans.map(plan=>plan.room));
+  if(!released.ok){
+    if(released.committed)return abortCommittedTournamentMatchRooms(entry,plans,sessionsReady,transaction,released.reason||'room_presence_unavailable');
+    const rolledBack=rollbackTournamentMatchRooms(entry,plans,transaction);return rolledBack?released:{ok:false,reason:'tournament_binding_rollback_failed'};
+  }
+  const targetsById=new Map((released.targets||[]).map(target=>[target.roomId,target]));
+  for(const plan of plans){
+    const target=targetsById.get(plan.room.id);
+    const membersBySession=new Map((target&&target.members||[]).map(member=>[member.sessionId,member]));
+    if(!target||plan.participants.some(session=>!membersBySession.has(session.sessionId)))return abortCommittedTournamentMatchRooms(entry,plans,sessionsReady,transaction,'room_registration_failed');
+    plan.membersBySession=membersBySession;
+  }
+  try {
+    const forcedStartFailureIndex=process.env.NODE_ENV==='test'&&/^\d+$/.test(String(process.env.TOURNAMENT_TEST_FAIL_START_INDEX||''))?Number(process.env.TOURNAMENT_TEST_FAIL_START_INDEX):-1;
+    for(const [index,plan] of plans.entries()){
+      if(index===forcedStartFailureIndex&&!tournamentTestStartFailureConsumed){tournamentTestStartFailureConsumed=true;throw new Error('room_start_failed');}
+      if(!startRoomMatch(plan.room,{matchId:plan.room.matchId,skipCompact:true,deferAnnounce:true}))throw new Error('room_start_failed');
+    }
+  } catch (_error) {
+    return abortCommittedTournamentMatchRooms(entry,plans,sessionsReady,transaction,'tournament_room_start_failed');
+  }
   const paired=new Set();
-  for(const pairing of entry.tournament.pairings||[]){
-    const created=createTournamentMatchRoom(entry,pairing,sessionsReady.byUid);if(!created.ok)return created;
-    pairing.players.forEach(uid=>paired.add(uid));
+  for(const plan of plans){
+    for(const session of plan.participants){
+      const member=plan.membersBySession.get(session.sessionId);
+      session.sendText(JSON.stringify(member.player===0?{type:'created',room:plan.room.id,player:member.player,capacity:2}:{type:'joined',room:plan.room.id,player:member.player}));
+    }
+    plan.room.tournamentBinding={tournamentId:entry.tournament.tournamentId,roundId:plan.pairing.roundId,pairingId:plan.pairing.pairingId,matchRoomId:plan.room.id,source:'tournament',matchId:plan.room.matchId,players:plan.pairing.players.slice()};
+    broadcastRoom(plan.room);
+    announceRoomMatch(plan.room);
+    for(const session of plan.participants)session.sendText(JSON.stringify({type:'tournament_match_assigned',payload:{...plan.room.tournamentBinding,gameId:plan.room.game,player:plan.room.clients.get(session)}}));
+    plan.pairing.players.forEach(uid=>paired.add(uid));
   }
   for(const [uid,session] of sessionsReady.byUid)if(!paired.has(uid))session.sendText(JSON.stringify({type:'tournament_bye',payload:{tournamentId:entry.tournament.tournamentId,roundId:entry.tournament.round,source:'tournament'}}));
   broadcastTournament(entry);broadcastLobby();return{ok:true};
+}
+function tournamentRoundCanRetry(entry,guardState){
+  if(!entry||!entry.tournament||!guardState||guardState.status!=='running'||entry.tournament.status!=='round_playing')return false;
+  if(!Array.isArray(entry.tournament.pairings)||!entry.tournament.pairings.length||!Array.isArray(guardState.pairings)||!Array.isArray(guardState.bindings)||guardState.bindings.length)return false;
+  const guardPairings=new Map(guardState.pairings.map(pairing=>[pairing.pairingId,pairing]));
+  return entry.tournament.pairings.every(pairing=>{
+    const guarded=guardPairings.get(pairing.pairingId);
+    return pairing.status==='playing'&&!pairing.roomMetadata&&guarded&&guarded.status==='unbound'&&!guarded.matchId;
+  });
 }
 function scheduleTournamentNextRound(entry){
   if(!entry||entry.advanceTimer||entry.tournament.status!=='round_complete')return;
@@ -670,97 +999,111 @@ const GAME_MAX = { gomoku: 2, ludo: 4, monopoly: 5, tank: 2, tetris: 4, xiangqi:
 const GAME_MIN = { gomoku: 2, ludo: 2, monopoly: 2, tank: 2, tetris: 2, xiangqi: 2 };
 const AI_DIFFICULTIES = new Set(['easy', 'normal', 'hard']);
 const AI_PERSONA_IDS = new Set(Object.keys(AI_PERSONAS));
+const MATCH_EXPRESSION_PROTOCOL = 'match-expression-v1';
+const MATCH_EXPRESSION_EMOJI_IDS = new Set(['emoji_wave','emoji_thumbsup','emoji_cheer','emoji_wow','emoji_oops','emoji_cry','emoji_angry','emoji_sly','emoji_heart','emoji_game']);
+const MATCH_EXPRESSION_QUICK_IDS = new Set(['quick_hello','quick_good_luck','quick_nice','quick_wow','quick_thanks','quick_again']);
+const MATCH_EXPRESSION_EVENT_RE = /^[A-Za-z][A-Za-z0-9_-]{7,80}$/;
+const MATCH_CHAT_PROTOCOL = 'match-chat-v1';
+const MATCH_CHAT_MESSAGE_RE = /^[A-Za-z][A-Za-z0-9_-]{7,80}$/;
+const MATCH_CHAT_MAX_EVENTS = 50;
 
 function normalizeRoomVisibility(value){ return value === 'private' ? 'private' : 'public'; }
 function normalizeAIDifficulty(value){ return AI_DIFFICULTIES.has(value) ? value : 'normal'; }
 function normalizeAIPersona(value){ return AI_PERSONA_IDS.has(value) ? value : 'teacher'; }
+const roomPresenceAdapter = createJsonRuntimeRoomPresenceAdapter({
+  readRooms:() => rooms,
+  readSessions:() => sessions,
+  readUsers:() => db && db.users || {},
+  putRoom:room => {
+    if(tournamentTestFaults&&tournamentTestFaults.sourceResetWritesRemaining>0&&
+        String(room&&room.id||'')===tournamentTestFaults.sourceResetRoomId){
+      tournamentTestFaults.sourceResetWritesRemaining--;
+      if(!tournamentTestFaults.sourceResetWritesRemaining)tournamentTestFaults.sourceResetRoomId=null;
+      throw new Error('tournament_test_source_reset_adapter_failure');
+    }
+    return rooms.set(room.id, room);
+  },
+  removeRoom:roomId => rooms.delete(roomId),
+});
+const TOURNAMENT_ABORT_RETRY_LIMIT=Math.max(1,Math.min(8,Number(process.env.TOURNAMENT_ABORT_RETRY_LIMIT)||5));
+const TOURNAMENT_ABORT_RETRY_MS=Math.max(250,Math.min(30000,Number(process.env.TOURNAMENT_ABORT_RETRY_MS)||1000));
+roomPresenceBoundary = createRoomPresenceBoundary({
+  adapter:roomPresenceAdapter,
+  now:serverNow,
+  heartbeatTimeoutMs:HEARTBEAT_TIMEOUT_MS,
+  gameMin:GAME_MIN,
+  gameMax:GAME_MAX,
+  normalizeVisibility:normalizeRoomVisibility,
+  normalizeAIDifficulty,
+  normalizeAIPersona,
+  publicPlayerCharacter,
+  isHiddenUid:uid => testAdmin.shouldHidePublicUid(uid),
+  isFriend:(viewerUid, uid) => socialFriendship(viewerUid, uid),
+  isAllowedBetween:(viewerUid, uid) => socialAllowedBetween(viewerUid, uid),
+  gameplayMetadata:room => gameplayMetadata(room),
+  secureEqual,
+  cancelTimer:cancelServerTimer,
+});
+const matchProtocolAdapter=createJsonRuntimeMatchProtocolAdapter({
+  read:()=>matchProtocolRuntimeState,
+  write:next=>{matchProtocolRuntimeState=next;},
+  send:(session,message)=>session&&session.sendText(JSON.stringify(message)),
+  broadcast:(room,message)=>broadcast(room,message),
+  incrementMetric:incrementGameplayMetric,
+  recordAction:(room,player,action)=>recordRoomAction(room,player,action),
+  settle:(room,order,cause)=>settleAuthoritativeRoom(room,order,cause),
+  stop:room=>stopRoomGameplayTimer(room),
+});
+matchProtocolBoundary=createMatchProtocolBoundary({adapter:matchProtocolAdapter,now:serverNow});
+function roomInspection(room, session){
+  const outcome = roomPresenceBoundary.room({ action:'inspect', room, session });
+  return outcome.ok ? outcome.details : { seats:[], activeSeats:[], humanSeats:[], aiSeats:[], firstEmptySeat:null, sessionSeat:null, activeCount:0, canStart:false, allOnline:false };
+}
 function emptySeat(seatId){
-  return { seatId, type:'empty', userId:null, nickname:'', avatar:0, ready:false, host:false, online:false, aiDifficulty:null, aiPersona:null, controllerUid:null };
+  const outcome = roomPresenceBoundary.room({ action:'seat', kind:'empty', seatId });
+  return outcome.ok ? outcome.seat : { seatId, type:'empty', userId:null, nickname:'', avatar:0, frame:0, effect:0, nameFx:0, lang:'zh-CN', playerCharacter:publicPlayerCharacter(), ready:false, host:false, online:false, aiDifficulty:null, aiPersona:null, controllerUid:null };
 }
 function humanSeatFromSession(session, seatId, host){
-  const user = session && session.uid && db.users[session.uid];
-  return {
-    seatId, type:'human', userId:session && session.uid || null,
-    nickname:user && user.name || '玩家' + (seatId + 1), avatar:user && user.avatar || 0,
-    ready:!!host, host:!!host, online:!!(session && session.alive),
-    aiDifficulty:null, aiPersona:null, controllerUid:null,
-  };
+  const outcome = roomPresenceBoundary.room({ action:'seat', kind:'human', session, seatId, host:!!host });
+  return outcome.ok ? outcome.seat : emptySeat(seatId);
 }
 function ensureRoomSeats(room){
-  if (!room) return [];
-  if (!Array.isArray(room.seats) || room.seats.length !== room.capacity){
-    room.seats = Array.from({length:room.capacity}, (_, seatId) => emptySeat(seatId));
-    for (const [session, seatId] of room.clients || []){
-      if (seatId >= 0 && seatId < room.capacity) room.seats[seatId] = humanSeatFromSession(session, seatId, session === room.host);
-    }
-  }
-  for (const [session, seatId] of room.clients || []){
-    const seat = room.seats[seatId];
-    if (!seat || seat.type !== 'human' || seat.userId !== session.uid){
-      room.seats[seatId] = humanSeatFromSession(session, seatId, session === room.host);
-    } else {
-      const user = session.uid && db.users[session.uid];
-      seat.nickname = user && user.name || seat.nickname;
-      seat.avatar = user && user.avatar || seat.avatar || 0;
-      seat.host = session === room.host;
-      seat.online = !!session.alive;
-    }
-  }
-  return room.seats;
+  return roomInspection(room, null).seats;
 }
-function activeRoomSeats(room){ return ensureRoomSeats(room).filter(seat => seat.type !== 'empty'); }
-function humanRoomSeats(room){ return activeRoomSeats(room).filter(seat => seat.type === 'human'); }
-function aiRoomSeats(room){ return activeRoomSeats(room).filter(seat => seat.type === 'ai'); }
-function activeSeatCount(room){ return activeRoomSeats(room).length; }
-function firstEmptySeat(room){ return ensureRoomSeats(room).find(seat => seat.type === 'empty') || null; }
+function activeRoomSeats(room){ return roomInspection(room, null).activeSeats; }
+function humanRoomSeats(room){ return roomInspection(room, null).humanSeats; }
+function aiRoomSeats(room){ return roomInspection(room, null).aiSeats; }
+function activeSeatCount(room){ return roomInspection(room, null).activeCount; }
+function firstEmptySeat(room){ return roomInspection(room, null).firstEmptySeat; }
 function seatForSession(room, session){
-  const seatId = room && room.clients && room.clients.get(session);
-  return Number.isInteger(seatId) ? ensureRoomSeats(room)[seatId] : null;
+  return roomInspection(room, session).sessionSeat;
 }
 function publicSeat(seat){
-  return {
-    seatId:seat.seatId, type:seat.type, userId:seat.userId || null, nickname:seat.nickname || '', avatar:Number(seat.avatar)||0,
-    ready:seat.type === 'ai' ? true : !!seat.ready, host:!!seat.host, online:seat.type === 'ai' ? true : !!seat.online,
-    aiDifficulty:seat.type === 'ai' ? normalizeAIDifficulty(seat.aiDifficulty) : null,
-    aiPersona:seat.type === 'ai' ? normalizeAIPersona(seat.aiPersona) : null,
-    controllerUid:seat.type === 'ai' ? seat.controllerUid || null : null,
-  };
+  const outcome = roomPresenceBoundary.room({ action:'seat', kind:'public', value:seat });
+  return outcome.ok ? outcome.seat : emptySeat(Number(seat && seat.seatId) || 0);
 }
 function roomHostPayload(room){
   const seat = room && room.host ? seatForSession(room, room.host) : null;
   return { uid:room && room.host && room.host.uid || null, seatId:seat ? seat.seatId : null };
 }
 function updateAIControllers(room){
-  const controllerUid = room && room.host && room.host.uid || null;
-  for (const seat of aiRoomSeats(room)) seat.controllerUid = controllerUid;
+  roomPresenceBoundary.room({ action:'update_ai_controllers', room });
+}
+function notifyRoomReassignments(room,reassigned){
+  for (const item of reassigned || []) {
+    const session = [...(room.clients instanceof Map ? room.clients.keys() : [])].find(candidate =>
+      candidate && candidate.uid === item.uid && (!item.sessionId || candidate.sessionId === item.sessionId));
+    if (session) session.sendText(JSON.stringify({ type:'player_reassigned', payload:{ player:item.player } }));
+  }
 }
 function compactRoomSeats(room){
-  if (!room) return;
-  const oldSeats = activeRoomSeats(room).sort((a, b) => a.seatId - b.seatId);
-  const sessionByUid = new Map([...(room.clients || new Map()).keys()].map(session => [session.uid, session]));
-  room.clients = new Map();
-  room.seats = Array.from({length:room.capacity}, (_, seatId) => emptySeat(seatId));
-  oldSeats.forEach((oldSeat, seatId) => {
-    const seat = { ...oldSeat, seatId, host:false };
-    if (seat.type === 'human'){
-      const session = sessionByUid.get(seat.userId);
-      if (!session) return;
-      const previous = session.player;
-      session.player = seatId;
-      room.clients.set(session, seatId);
-      seat.host = session === room.host;
-      seat.online = !!session.alive;
-      if (previous !== seatId) session.sendText(JSON.stringify({ type:'player_reassigned', payload:{ player:seatId } }));
-    }
-    room.seats[seatId] = seat;
-  });
-  updateAIControllers(room);
+  const outcome = roomPresenceBoundary.room({ action:'compact', room });
+  if (!outcome.ok) return outcome;
+  notifyRoomReassignments(room,outcome.reassigned);
+  return outcome;
 }
 function roomCanStart(room){
-  if (!room || !room.game || room.started) return false;
-  const count = activeSeatCount(room);
-  if (count < GAME_MIN[room.game] || count > GAME_MAX[room.game]) return false;
-  return humanRoomSeats(room).length > 0 && humanRoomSeats(room).every(seat => seat.online && seat.ready);
+  return roomInspection(room, null).canStart;
 }
 
 const PROTOCOL_VERSION = 2;
@@ -864,33 +1207,14 @@ function actionFingerprint(game, player, payload){
   return key === null ? '' : game + '|' + String(player) + '|' + key;
 }
 function normalizeUserRewardState(u){
-  if (!u || typeof u !== 'object') return u;
-  const oldLevel = Math.max(1, Number(u.level) || 1);
-  u.xp = Math.max(0, Math.floor(Number(u.xp) || 0));
-  // 即使数据库迁移曾把旧账号直接标记为新曲线，也绝不允许既有等级回退。
-  u.xp = Math.max(u.xp, xpForLevel(oldLevel));
-  if (Number(u.xpCurveVersion) !== REWARD_CONFIG.level.curveVersion){
-    u.xpCurveVersion = REWARD_CONFIG.level.curveVersion;
-  }
-  u.level = levelFromXp(u.xp);
-  u.streak = Math.max(0, Math.floor(Number(u.streak) || 0));
-  u.bestStreak = Math.max(u.streak, Math.floor(Number(u.bestStreak) || 0));
-  u.dailyFirstWinDate = String(u.dailyFirstWinDate || '');
-  u.dailyAICurrencyKey = String(u.dailyAICurrencyKey || '');
-  u.dailyAICurrencyEarned = Math.max(0, Math.floor(Number(u.dailyAICurrencyEarned) || 0));
-  if (u.dailyAICurrencyKey !== dayKey()){
-    u.dailyAICurrencyKey = dayKey();
-    u.dailyAICurrencyEarned = 0;
-  }
-  if (!u.wins || typeof u.wins !== 'object' || Array.isArray(u.wins)) u.wins = {};
-  u.totalWins = Math.max(0, Math.floor(Number(u.totalWins) || Object.values(u.wins).reduce((sum, value) => sum + Math.max(0, Number(value) || 0), 0)));
-  return u;
+  return rewardProgressionPolicy.normalizeUser(u);
 }
 
 /* ---------------- Supabase 数据库（可选，配置环境变量后启用） ---------------- */
 const SUPABASE_URL = (process.env.SUPABASE_URL || '').replace(/\/+$/, '');
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY || '';
 const useSupabase = !!(SUPABASE_URL && SUPABASE_KEY);
+const PLAYLINE_ENABLED = /^(1|true|on)$/i.test(String(process.env.ENABLE_PLAYLINE_V1 || ''));
 const sbProfileQueues = new Map();
 const sbAILearningQueues = new Map();
 const sbAILearningDrains = new Map();
@@ -899,7 +1223,7 @@ function profileRowToUser(r){
   return normalizeUserRewardState({
     uid:r.uid,name:r.name,avatar:r.avatar,coins:r.coins||0,xp:r.xp||0,level:r.level||1,streak:r.streak||0,bestStreak:r.best_streak||0,played:r.played||{},total:r.total||0,wins:r.wins||{},totalWins:r.total_wins||0,
     background:r.background||0,frame:r.frame||0,effect:r.effect||0,signature:r.signature||'',countryRegion:r.country_region||'',genderTag:r.gender_tag||'hidden',presencePreference:r.presence_preference||'joinable',presenceVisibility:r.presence_visibility||'everyone',showcase:r.showcase||null,
-    owned:normalizeOwned(r.owned),gameCosmetics:normalizeGameCosmetics(r.game_cosmetics),pin_hash:r.pin_hash||null,
+    owned:normalizeOwned(r.owned),gameCosmetics:normalizeGameCosmetics(r.game_cosmetics),playerCharacter:normalizePlayerCharacter(r.player_character),pin_hash:r.pin_hash||null,
     username:r.username||'',usernameKey:r.username_key||'',passwordHash:r.password_hash||null,authVersion:r.auth_version||'',companionCheckinDay:r.companion_checkin_day||'',lang:r.lang||'zh-CN',
     achievements:r.achievements||[],playmates:r.playmates||{},daily:r.daily||{play:0,win:0,streak:0},dailyKey:r.daily_key||'',dailyTaskKey:r.daily_task_key||'',dailyTasks:r.daily_tasks||null,nameFx:r.name_fx||0,
     authTokens:normalizeAuthTokenRecords(r.auth_tokens),recentResults:Array.isArray(r.recent_results)?r.recent_results.map(String).slice(-500):[],purchaseRequests:Array.isArray(r.purchase_requests)?r.purchase_requests.map(String).slice(-100):[],soloRate:Array.isArray(r.solo_rate)?r.solo_rate.map(Number).filter(Number.isFinite).slice(-100):[],dailyFirstWinDate:r.daily_first_win_date||'',dailyAICurrencyKey:r.daily_ai_currency_key||'',dailyAICurrencyEarned:r.daily_ai_currency_earned||0,xpCurveVersion:r.xp_curve_version||0,
@@ -947,6 +1271,17 @@ async function sbFetch(path, options = {}){
   try { return JSON.parse(text); }
   catch { throw new Error('supabase 返回了无效 JSON（status=' + res.status + '）'); }
 }
+const clusterCoordinator = new ClusterCoordinator({
+  enabled:useSupabase && String(process.env.ENABLE_CLUSTER_COORDINATION || '') === '1',
+  rpc:(name,payload)=>sbFetch('rpc/'+name,{method:'POST',body:JSON.stringify(payload)}),
+  instanceId:process.env.RENDER_INSTANCE_ID || process.env.INSTANCE_ID,
+  deploymentId:process.env.RENDER_GIT_COMMIT || process.env.DEPLOYMENT_ID,
+  telemetryUrl:process.env.TELEMETRY_WEBHOOK_URL,
+  telemetryToken:process.env.TELEMETRY_WEBHOOK_TOKEN,
+  telemetryAllowlist:process.env.TELEMETRY_WEBHOOK_ALLOWLIST,
+  onEvent:handleClusterEvent,
+  onError:recordOperationalError,
+});
 async function sbLoadProfiles(){
   if (!useSupabase) return;
   try {
@@ -966,6 +1301,8 @@ async function sbLoadProfiles(){
     await retryPendingRewardSync();
     await sbLoadAILearningModels();
     await retryPendingAILearningSync();
+    await sbLoadSocialGraph();
+    await sbLoadDirectChat();
     console.log('已从 Supabase 加载 ' + Object.keys(users).length + ' 位玩家');
   } catch (e) {
     recordOperationalError('supabase_profile_load',e);console.error('加载 Supabase 数据失败（继续使用本地数据）:', e.message);
@@ -1224,19 +1561,19 @@ function ledgerDbRow(row){
 function sbAddHistory(row, game, coins, meta = {}){
   // 兼容旧调用签名 sbAddHistory(uid, game, coins, meta)，迁移期间统一归一为流水对象。
   if (!row || typeof row !== 'object' || Array.isArray(row)) row = { uid: row, game, coins, ...meta };
-  if (!row || (db.users[row.uid] && db.users[row.uid].ephemeral)) return Promise.resolve();
+  if (!row || testAdmin.shouldHidePublicUid(row.uid) || (db.users[row.uid] && db.users[row.uid].ephemeral)) return Promise.resolve();
   return sbInsert('history', [historyDbRow(row)], '对局历史');
 }
 function sbAddRewardHistory(row){
-  if (!row || (db.users[row.uid] && db.users[row.uid].ephemeral)) return Promise.resolve();
+  if (!row || testAdmin.shouldHidePublicUid(row.uid) || (db.users[row.uid] && db.users[row.uid].ephemeral)) return Promise.resolve();
   return sbInsert('reward_history', [rewardDbRow(row)], '奖励流水');
 }
 function sbAddEconomyLedger(row){
-  if (!row || !row.amount || (db.users[row.uid] && db.users[row.uid].ephemeral)) return Promise.resolve();
+  if (!row || testAdmin.shouldHidePublicUid(row.uid) || !row.amount || (db.users[row.uid] && db.users[row.uid].ephemeral)) return Promise.resolve();
   return sbInsert('economy_ledger', [ledgerDbRow(row)], '经济流水');
 }
 function sbAddAnalyticsEvents(rows){
-  const safe = (Array.isArray(rows) ? rows : [rows]).filter(Boolean).filter(row => !row.uid || !(db.users[row.uid] && db.users[row.uid].ephemeral));
+  const safe = (Array.isArray(rows) ? rows : [rows]).filter(Boolean).filter(row => !row.uid || (!testAdmin.shouldHidePublicUid(row.uid) && !(db.users[row.uid] && db.users[row.uid].ephemeral)));
   if (!safe.length) return Promise.resolve();
   return sbInsert('analytics_events', safe.map(row => ({
     event: row.event,
@@ -1324,9 +1661,43 @@ function emptyDB(){
     users: {}, history: [], rewardHistory: [], economyLedger: [], events: [], replays: [], metricsHistory: [], opsIncidents: [],
     pendingRewardSync: [], aiLearning: normalizeAILearningStore(), pendingAILearningSync: [],
     friendRequests: [], friendships: [], blocks: [], reports: [],
+    chatMessages: [], chatReads: {}, nextChatSeq: '0', playlinePosts: [], nextPlaylineSeq: '0',
   };
 }
 let db = emptyDB();
+const authProfileAdapter = createJsonRuntimeAuthProfileAdapter({
+  readUser: uid => db.users && db.users[String(uid)] || null,
+  readUsers: () => db.users || {},
+  putUser: user => { db.users[user.uid] = user; },
+  removeUser: uid => { if (db.users) delete db.users[String(uid)]; },
+});
+// Construct before loadDB(): token normalization is also used while legacy
+// JSON records are migrated.  All policy callbacks are lazy function
+// references, so constants declared later are only read after bootstrap.
+authProfileBoundary = createAuthProfileBoundary({
+  adapter: authProfileAdapter,
+  now: serverNow,
+  tokenTtlMs: Math.max(3600000, Math.min(365 * 86400000, Number(process.env.AUTH_TOKEN_TTL_MS) || 30 * 86400000)),
+  tokenLimit: 5,
+  normalizeUser: normalizeUserRewardState,
+  normalizeOwned,
+  normalizeGameCosmetics,
+  publicPlayerCharacter,
+  deriveMastery: deriveVictoryMastery,
+  levelProgress,
+  xpForLevel,
+  dailyTasksPayload,
+  publicPresence,
+  virtualProfile: (profile, options) => testAdmin.virtualProfile(profile, options),
+  isHidden: uid => testAdmin.shouldHidePublicUid(uid),
+  isTestAdmin: uid => testAdmin.isTestAdminUid(uid),
+  validOwnedId,
+  ownsItem,
+  sanitizePlainText,
+  validGames: VALID_GAMES,
+  getShopPrices: () => SHOP_PRICES,
+  canCompare: (viewer, target) => socialFriendship(viewer.uid, target.uid) && !socialBlockedBetween(viewer.uid, target.uid),
+});
 function loadDB(){
   try {
     const raw = fs.readFileSync(DB_FILE, 'utf8');
@@ -1348,6 +1719,11 @@ function loadDB(){
       friendships: Array.isArray(parsed.friendships) ? parsed.friendships : [],
       blocks: Array.isArray(parsed.blocks) ? parsed.blocks : [],
       reports: Array.isArray(parsed.reports) ? parsed.reports : [],
+      chatMessages: Array.isArray(parsed.chatMessages) ? parsed.chatMessages : [],
+      chatReads: parsed.chatReads && typeof parsed.chatReads === 'object' && !Array.isArray(parsed.chatReads) ? parsed.chatReads : {},
+      nextChatSeq: String(parsed.nextChatSeq || '0'),
+      playlinePosts: Array.isArray(parsed.playlinePosts) ? parsed.playlinePosts : [],
+      nextPlaylineSeq: String(parsed.nextPlaylineSeq || '0'),
     };
   } catch { db = emptyDB(); }
   db.pendingRewardSync = db.pendingRewardSync.filter(item => item && item.uid && item.row && item.row.resultId).slice(-10000);
@@ -1357,6 +1733,7 @@ function loadDB(){
   db.friendships = db.friendships.filter(row => row && row.id && row.aUid && row.bUid && row.aUid !== row.bUid).slice(-50000);
   db.blocks = db.blocks.filter(row => row && row.id && row.blockerUid && row.blockedUid && row.blockerUid !== row.blockedUid).slice(-50000);
   db.reports = db.reports.filter(row => row && row.id && row.reporterUid && row.targetUid && row.reason).slice(-50000);
+  normalizeChatStore();
   db.metricsHistory = (db.metricsHistory || []).map(safeGameplayMetricsSnapshot).slice(-METRICS_HISTORY_LIMIT);
   db.opsIncidents = (db.opsIncidents || []).filter(item=>item&&/^[a-f0-9]{16}$/.test(String(item.fingerprint||''))&&item.context&&item.kind).slice(-500);
   for (const [uid, u] of Object.entries(db.users)){
@@ -1403,27 +1780,58 @@ function loadDB(){
     }
   }
 }
+function testAdminUidCandidates(value){ return String(value || '').split('|').map(String).filter(Boolean); }
 function saveDB(){
   fs.mkdirSync(DATA_DIR, { recursive: true });
   const tmp = DB_FILE + '.tmp';
   const users = Object.fromEntries(Object.entries(db.users).filter(([, u]) => !u.ephemeral));
-  const history = db.history.filter(h => !h.ephemeral && (!db.users[h.uid] || !db.users[h.uid].ephemeral));
-  const rewardHistory = db.rewardHistory.filter(h => !h.ephemeral && (!db.users[h.uid] || !db.users[h.uid].ephemeral));
-  const economyLedger = db.economyLedger.filter(h => !h.ephemeral && (!db.users[h.uid] || !db.users[h.uid].ephemeral));
-  const events = db.events.filter(h => !h.uid || !db.users[h.uid] || !db.users[h.uid].ephemeral);
-  const replays = (db.replays || []).filter(item => item && Number(item.expiresAt || 0) > Date.now() && (!item.uids || item.uids.some(uid => !db.users[uid] || !db.users[uid].ephemeral)));
+  const history = db.history.filter(h => h && !testAdmin.shouldHidePublicUid(h.uid) && !h.ephemeral && (!db.users[h.uid] || !db.users[h.uid].ephemeral));
+  const rewardHistory = db.rewardHistory.filter(h => h && !testAdmin.shouldHidePublicUid(h.uid) && !h.ephemeral && (!db.users[h.uid] || !db.users[h.uid].ephemeral));
+  const economyLedger = db.economyLedger.filter(h => h && !testAdmin.shouldHidePublicUid(h.uid) && !h.ephemeral && (!db.users[h.uid] || !db.users[h.uid].ephemeral));
+  const events = db.events.filter(h => h && !testAdmin.shouldHidePublicUid(h.uid) && (!h.uid || !db.users[h.uid] || !db.users[h.uid].ephemeral));
+  const replays = (db.replays || []).filter(item => item && Number(item.expiresAt || 0) > Date.now() && (!item.uids || !item.uids.some(testAdmin.shouldHidePublicUid) && item.uids.some(uid => !db.users[uid] || !db.users[uid].ephemeral)));
   const pendingRewardSync = (db.pendingRewardSync || []).filter(item => item && !item.ephemeral &&
-    (!db.users[item.uid] || !db.users[item.uid].ephemeral));
+    !testAdmin.shouldHidePublicUid(item.uid) && (!db.users[item.uid] || !db.users[item.uid].ephemeral));
   const pendingAILearningSync = (db.pendingAILearningSync || []).filter(item => item && !item.ephemeral &&
-    (!db.users[item.uid] || !db.users[item.uid].ephemeral));
+    !testAdmin.shouldHidePublicUid(item.uid) && (!db.users[item.uid] || !db.users[item.uid].ephemeral));
+  const aiLearning = {
+    ...(db.aiLearning || {}),
+    models:Object.fromEntries(Object.entries((db.aiLearning && db.aiLearning.models) || {}).filter(([key]) => !String(key).split('|')[0] || !testAdmin.shouldHidePublicUid(String(key).split('|')[0]))),
+    experiences:((db.aiLearning && db.aiLearning.experiences) || []).filter(row => row && !testAdmin.shouldHidePublicUid(row.uid)),
+    appliedResults:((db.aiLearning && db.aiLearning.appliedResults) || []).filter(key => !testAdmin.shouldHidePublicUid(String(key).split('|')[0])),
+  };
+  const friendRequests=(db.friendRequests||[]).filter(row=>row&&!testAdmin.shouldHidePublicUid(row.fromUid)&&!testAdmin.shouldHidePublicUid(row.toUid));
+  const friendships=(db.friendships||[]).filter(row=>row&&!testAdmin.shouldHidePublicUid(row.aUid)&&!testAdmin.shouldHidePublicUid(row.bUid));
+  const blocks=(db.blocks||[]).filter(row=>row&&!testAdmin.shouldHidePublicUid(row.blockerUid)&&!testAdmin.shouldHidePublicUid(row.blockedUid));
+  const reports=(db.reports||[]).filter(row=>row&&!testAdmin.shouldHidePublicUid(row.reporterUid)&&!testAdmin.shouldHidePublicUid(row.targetUid));
+  const chatMessages=(db.chatMessages||[]).filter(row=>row&&!testAdmin.shouldHidePublicUid(row.senderUid)&&!testAdmin.shouldHidePublicUid(row.recipientUid));
+  const chatReads=Object.fromEntries(Object.entries(db.chatReads||{}).filter(([key])=>![...testAdminUidCandidates(key)].some(testAdmin.shouldHidePublicUid)));
+  const playlinePosts=(db.playlinePosts||[]).filter(row=>row&&!testAdmin.shouldHidePublicUid(row.authorUid)&&(!db.users[row.authorUid]||!db.users[row.authorUid].ephemeral));
   fs.writeFileSync(tmp, JSON.stringify({ users, history, rewardHistory, economyLedger, events, replays,
     metricsHistory:db.metricsHistory||[],opsIncidents:db.opsIncidents||[],
-    pendingRewardSync, aiLearning: db.aiLearning, pendingAILearningSync,
-    friendRequests: db.friendRequests || [], friendships: db.friendships || [], blocks: db.blocks || [], reports: db.reports || [],
+    pendingRewardSync, aiLearning, pendingAILearningSync,
+    friendRequests, friendships, blocks, reports,
+    chatMessages, chatReads, nextChatSeq: db.nextChatSeq || '0', playlinePosts, nextPlaylineSeq: db.nextPlaylineSeq || '0',
   }, null, 2));
   fs.renameSync(tmp, DB_FILE);
 }
 function trimAuditData(){
+  db.history = db.history.filter(row => row && !testAdmin.shouldHidePublicUid(row.uid));
+  db.rewardHistory = db.rewardHistory.filter(row => row && !testAdmin.shouldHidePublicUid(row.uid));
+  db.economyLedger = db.economyLedger.filter(row => row && !testAdmin.shouldHidePublicUid(row.uid));
+  db.events = db.events.filter(row => row && !testAdmin.shouldHidePublicUid(row.uid));
+  db.replays = (db.replays || []).filter(row => row && (!Array.isArray(row.uids) || !row.uids.some(testAdmin.shouldHidePublicUid)));
+  db.pendingRewardSync = (db.pendingRewardSync || []).filter(row => row && !testAdmin.shouldHidePublicUid(row.uid));
+  db.pendingAILearningSync = (db.pendingAILearningSync || []).filter(row => row && !testAdmin.shouldHidePublicUid(row.uid));
+  db.friendRequests = (db.friendRequests || []).filter(row => row && !testAdmin.shouldHidePublicUid(row.fromUid) && !testAdmin.shouldHidePublicUid(row.toUid));
+  db.friendships = (db.friendships || []).filter(row => row && !testAdmin.shouldHidePublicUid(row.aUid) && !testAdmin.shouldHidePublicUid(row.bUid));
+  db.blocks = (db.blocks || []).filter(row => row && !testAdmin.shouldHidePublicUid(row.blockerUid) && !testAdmin.shouldHidePublicUid(row.blockedUid));
+  db.reports = (db.reports || []).filter(row => row && !testAdmin.shouldHidePublicUid(row.reporterUid) && !testAdmin.shouldHidePublicUid(row.targetUid));
+  db.chatMessages = (db.chatMessages || []).filter(row => row && !testAdmin.shouldHidePublicUid(row.senderUid) && !testAdmin.shouldHidePublicUid(row.recipientUid));
+  db.playlinePosts = (db.playlinePosts || []).filter(row => row && !testAdmin.shouldHidePublicUid(row.authorUid));
+  db.aiLearning.models = Object.fromEntries(Object.entries((db.aiLearning && db.aiLearning.models) || {}).filter(([key]) => !testAdmin.shouldHidePublicUid(String(key).split('|')[0])));
+  db.aiLearning.experiences = (db.aiLearning.experiences || []).filter(row => row && !testAdmin.shouldHidePublicUid(row.uid));
+  db.aiLearning.appliedResults = (db.aiLearning.appliedResults || []).filter(key => !testAdmin.shouldHidePublicUid(String(key).split('|')[0]));
   if (db.history.length > 10000) db.history = db.history.slice(-5000);
   if (db.rewardHistory.length > 50000) db.rewardHistory = db.rewardHistory.slice(-25000);
   if (db.economyLedger.length > 10000) db.economyLedger = db.economyLedger.slice(-5000);
@@ -1437,8 +1845,38 @@ function trimAuditData(){
   if (db.friendships.length > 50000) db.friendships = db.friendships.slice(-25000);
   if (db.blocks.length > 50000) db.blocks = db.blocks.slice(-25000);
   if (db.reports.length > 50000) db.reports = db.reports.slice(-25000);
+  if (db.playlinePosts.length > 20000) db.playlinePosts = db.playlinePosts.slice(-10000);
+  trimChatData();
 }
+const operationalMetricsAdapter=createJsonMetricsAdapter({
+  read:()=>({history:db.metricsHistory||[],incidents:db.opsIncidents||[]}),
+  write:state=>{
+    db.metricsHistory=state.history;
+    db.opsIncidents=state.incidents;
+    trimAuditData();
+    saveDB();
+  },
+});
+operationalMetricsBoundary=createOperationalMetricsBoundary({
+  adapter:operationalMetricsAdapter,
+  adminToken:METRICS_ADMIN_TOKEN,
+  historyIntervalMs:METRICS_HISTORY_INTERVAL_MS,
+  historyLimit:METRICS_HISTORY_LIMIT,
+  thresholds:METRICS_THRESHOLDS,
+  now:() => serverClockTimer.now(),
+  currentMetrics:currentGameplayMetrics,
+  safeSnapshot:safeGameplayMetricsSnapshot,
+  alerts:gameplayMetricAlerts,
+  historyCsv:gameplayMetricsHistoryCsv,
+  incrementMetric:incrementGameplayMetric,
+  onAccess:access=>{
+    recordAnalytics('metrics_read',{metadata:{path:access.path,ipHash:access.ipHash}});
+    trimAuditData();
+    saveDB();
+  },
+});
 function recordAnalytics(event, meta = {}){
+  if (meta && meta.uid && testAdmin.shouldHidePublicUid(meta.uid)) return null;
   const row = {
     event: String(event || ''),
     uid: meta.uid || null,
@@ -1455,9 +1893,9 @@ function recordAnalytics(event, meta = {}){
   sbAddAnalyticsEvents(row);
   return row;
 }
-function recordEconomyChange(u, kind, amount, refId, metadata, syncRemote = true){
+function recordEconomyChange(u, kind, amount, refId, metadata, syncRemote = true, atOverride){
   amount = Math.trunc(Number(amount) || 0);
-  if (!u || !amount) return null;
+  if (!u || testAdmin.shouldHidePublicUid(u.uid) || !amount) return null;
   const row = {
     uid: u.uid,
     kind: String(kind || 'adjustment'),
@@ -1465,7 +1903,7 @@ function recordEconomyChange(u, kind, amount, refId, metadata, syncRemote = true
     balanceAfter: u.coins || 0,
     refId: refId || null,
     metadata: metadata && typeof metadata === 'object' ? metadata : {},
-    at: Date.now(),
+    at: Number.isSafeInteger(Number(atOverride)) && Number(atOverride) >= 0 ? Number(atOverride) : Date.now(),
     ephemeral: !!u.ephemeral,
   };
   db.economyLedger.push(row);
@@ -1476,6 +1914,7 @@ function recordEconomyChange(u, kind, amount, refId, metadata, syncRemote = true
     mode: metadata && metadata.mode,
     game: metadata && metadata.game,
     matchId: metadata && metadata.matchId,
+    at: row.at,
     metadata: { amount, balanceAfter: row.balanceAfter, kind: row.kind, refId: row.refId },
   });
   return row;
@@ -1484,27 +1923,13 @@ function sanitizePlainText(value, maxLength){
   return String(value == null ? '' : value).replace(/<[^>]*>/g, '').replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, maxLength);
 }
 function publicPresence(uid, user, viewerUid){
-  const visibility = user && user.presenceVisibility || 'everyone';
-  if (viewerUid && viewerUid !== uid){
-    if (visibility === 'nobody') return 'offline';
-    if (visibility === 'friends' && !socialFriendship(viewerUid, uid)) return 'offline';
-  } else if (!viewerUid && visibility !== 'everyone') return 'offline';
-  const preference = user && user.presencePreference || 'joinable';
-  if (preference === 'invisible') return 'offline';
-  const active = [...sessions].some(session => session.uid === uid && session.alive && Date.now() - session.lastSeen < HEARTBEAT_TIMEOUT_MS);
-  if (!active) return 'offline';
-  const playing = [...rooms.values()].some(room => room.started && [...room.clients.keys()].some(session => session.uid === uid));
-  if (playing) return 'playing';
-  return preference;
+  const outcome = roomPresenceBoundary.presence({ action:'public', uid, user, viewerUid });
+  return outcome.ok ? outcome.value : 'offline';
 }
 function leaderboardPayload(){
-  const onlineUids = new Set();
-  const now = Date.now();
-  for (const s of sessions){
-    const user = s.uid && db.users[s.uid];
-    if (s.uid && s.alive && now - s.lastSeen < HEARTBEAT_TIMEOUT_MS && (!user || user.presencePreference !== 'invisible')) onlineUids.add(s.uid);
-  }
-  const list = Object.keys(db.users).filter(uid => !db.users[uid].ephemeral)
+  const online = roomPresenceBoundary.presence({ action:'online_uids' });
+  const onlineUids = new Set(online.ok ? online.uids : []);
+  const list = Object.keys(db.users).filter(uid => !db.users[uid].ephemeral && !testAdmin.shouldHidePublicUid(uid))
     .map(uid => {
       const u = db.users[uid];
       return {
@@ -1517,65 +1942,22 @@ function leaderboardPayload(){
     })
     .sort((a, b) => (b.coins - a.coins) || (b.total - a.total) || String(a.name).localeCompare(String(b.name)))
     .slice(0, 200);
-  return { list, total: Object.values(db.users).filter(u => !u.ephemeral).length };
+  return { list, total: Object.values(db.users).filter(u => !u.ephemeral && !testAdmin.shouldHidePublicUid(u.uid)).length };
 }
 function broadcastLeaderboard(){
   const payload = leaderboardPayload();
   for (const s of sessions) s.sendText(JSON.stringify({ type: 'leaderboard', payload }));
 }
 function lobbyPayload(viewerUid){
-  const list = [];
-  for (const r of rooms.values()){
-    if ([...r.clients.keys()].some(c => !c.alive || Date.now() - c.lastSeen >= HEARTBEAT_TIMEOUT_MS)) continue;
-    if (normalizeRoomVisibility(r.visibility) !== 'public') continue;
-    const size = activeSeatCount(r);
-    const joinLimit = r.game && GAME_MAX[r.game] ? Math.min(r.capacity, GAME_MAX[r.game]) : r.capacity;
-    const joinable = !r.started && size < joinLimit && !!firstEmptySeat(r);
-    const spectatable = !!r.allowSpectators && (r.spectators ? r.spectators.size : 0) < (r.maxSpectators || 20);
-    if (!joinable && !spectatable) continue;
-    const hu = r.host.uid ? db.users[r.host.uid] : null;
-    if (hu && hu.presencePreference === 'invisible') continue;
-    if (viewerUid && [...r.clients.keys()].some(c => c.uid && c.uid !== viewerUid && !socialAllowedBetween(viewerUid, c.uid))) continue;
-    list.push({
-      room: r.id,
-      hostUid: r.host.uid || null,
-      hostName: hu ? hu.name : '玩家',
-      hostAvatar: hu ? hu.avatar : 0,
-      hostLang: hu ? (hu.lang || 'zh-CN') : 'zh-CN',
-      capacity: r.capacity,
-      size,
-      humanCount:humanRoomSeats(r).length,
-      aiCount:aiRoomSeats(r).length,
-      game: r.game || null,
-      started: !!r.started,
-      joinable,
-      spectatable,
-      spectatorCount: r.spectators ? r.spectators.size : 0,
-      maxSpectators: r.maxSpectators || 0,
-      matchId:r.matchId || null,
-      status:r.started ? 'playing' : 'waiting',
-      visibility:'public', allowSpectators:!!r.allowSpectators, canJoin:joinable, canSpectate:spectatable,
-      seats:ensureRoomSeats(r).map(publicSeat),
-    });
-  }
-  return list;
+  const outcome = roomPresenceBoundary.room({ action:'lobby', viewerUid });
+  return outcome.ok ? outcome.rooms : [];
 }
 function broadcastLobby(){
   for (const s of sessions) s.sendText(JSON.stringify({ type: 'lobby', payload: lobbyPayload(s.uid) }));
 }
 function roomPayload(r){
-  const now = Date.now();
-  ensureRoomSeats(r);
-  const players = [...r.clients.entries()]
-    .map(([c, p]) => ({ uid: c.uid || null, player: p, online: c.alive !== false && now - c.lastSeen < HEARTBEAT_TIMEOUT_MS }))
-    .sort((a, b) => a.player - b.player);
-  return {
-    room:r.id, game:r.game || null, capacity:r.capacity, players, seats:r.seats.map(publicSeat),
-    size:activeSeatCount(r), activePlayerCount:activeSeatCount(r), humanCount:humanRoomSeats(r).length, aiCount:aiRoomSeats(r).length,
-    onlineSize:players.filter(p => p.online).length, spectatorCount:r.spectators ? r.spectators.size : 0, maxSpectators:r.maxSpectators || 20,
-    started:!!r.started, settled:!!r.settled, matchId:r.matchId || null, visibility:normalizeRoomVisibility(r.visibility),
-    allowSpectators:!!r.allowSpectators, canStart:roomCanStart(r), host:roomHostPayload(r), gameplay:gameplayMetadata(r),
-  };
+  const outcome = roomPresenceBoundary.room({ action:'payload', room:r });
+  return outcome.ok ? outcome.payload : { room:r && r.id || null, players:[], seats:[], size:0, activePlayerCount:0, humanCount:0, aiCount:0, onlineSize:0, spectatorCount:0, maxSpectators:0, started:false, settled:false, matchId:null, visibility:'public', allowSpectators:false, testAdminSandbox:false, canStart:false, host:{uid:null,seatId:null}, gameplay:null };
 }
 function tetrisPresentationPayload(r){
   if(!(r&&r.tetrisPresentation instanceof Map))return[];
@@ -1593,16 +1975,31 @@ function broadcastRoom(r){
   if (r.spectators) for (const c of r.spectators.keys()) c.sendText(text);
 }
 function resumeKey(uid, tokenHash){ return String(uid || '') + '|' + String(tokenHash || ''); }
-function clearExpiredResumes(){
-  const now = Date.now();
+function clearExpiredResumes(at){
+  const now = Number.isFinite(Number(at)) ? Number(at) : Date.now();
   for (const [key, value] of expiredResumes) if (!value || value.expiresAt <= now) expiredResumes.delete(key);
 }
 const ephemeralCleanupTimers = new Map();
+const EPHEMERAL_CLEANUP_TIMER_OWNER_PREFIX='ephemeral-cleanup:';
+function cancelEphemeralCleanup(uid){
+  const key=String(uid||''),timer=ephemeralCleanupTimers.get(key);
+  if(!timer)return false;
+  ephemeralCleanupTimers.delete(key);
+  if(typeof timer.cancel==='function')return timer.cancel();
+  clearTimeout(timer);
+  return true;
+}
 function scheduleEphemeralCleanup(uid,delayMs){
   if(!uid||!db.users[uid]||!db.users[uid].ephemeral)return;
-  const old=ephemeralCleanupTimers.get(uid);if(old)clearTimeout(old);
-  const timer=setTimeout(()=>{ephemeralCleanupTimers.delete(uid);cleanupEphemeralUser(uid);},Math.max(1000,Number(delayMs)||60000));
-  ephemeralCleanupTimers.set(uid,timer);
+  cancelEphemeralCleanup(uid);
+  const lease=serverClockTimer.schedule({
+    owner:EPHEMERAL_CLEANUP_TIMER_OWNER_PREFIX+uid,
+    delayMs:Math.max(1000,Number(delayMs)||60000),
+    run:()=>{ephemeralCleanupTimers.delete(uid);cleanupEphemeralUser(uid);},
+  });
+  if(!lease.ok){recordOperationalError('ephemeral_cleanup_schedule',new Error(lease.reason||'clock_timer_unavailable'));return false;}
+  ephemeralCleanupTimers.set(uid,lease);
+  return true;
 }
 function cleanupEphemeralUser(uid){
   const u = uid && db.users[uid];
@@ -1611,7 +2008,7 @@ function cleanupEphemeralUser(uid){
   const reserved = [...rooms.values()].some(r => [...r.clients.keys()].some(s => s.uid === uid) ||
     [...(r.spectators instanceof Map ? r.spectators.keys() : r.spectators instanceof Set ? r.spectators : [])].some(s => s.uid === uid));
   if (active || reserved) return;
-  const timer=ephemeralCleanupTimers.get(uid);if(timer)clearTimeout(timer);ephemeralCleanupTimers.delete(uid);
+  cancelEphemeralCleanup(uid);
   delete db.users[uid];
   db.history = db.history.filter(h => h.uid !== uid);
   db.rewardHistory = db.rewardHistory.filter(h => h.uid !== uid);
@@ -1633,6 +2030,12 @@ function cleanupEphemeralUser(uid){
   saveDB();
 }
 function resetRoomMatch(r){
+  if(!r)return{ok:false,reason:'room_not_found'};
+  // READY is the only fallible Adapter-backed mutation in this reset. Commit
+  // it before stopping timers or clearing match state so an Adapter failure
+  // leaves the canonical match wholly intact and retryable.
+  const readyReset=r.host?roomPresenceBoundary.room({action:'reset_ready',room:r,session:r.host}):{ok:true};
+  if(!readyReset.ok)return readyReset;
   stopRoomAuthorities(r);
   r.started = false;
   r.matchId = null;
@@ -1652,22 +2055,28 @@ function resetRoomMatch(r){
   r.gameplay = null;
   r.gameSnapshot = null;
   r.tetrisPresentation = new Map();
+  r.matchExpressionSeen = new Map();
+  r.matchExpressionRates = new Map();
+  r.matchExpressionCounts = new Map();
+  r.matchChatEvents = [];
+  r.matchChatSeen = new Map();
+  r.matchChatRates = new Map();
+  r.matchChatCounts = new Map();
   r.tournamentBinding = null;
   r.finalResult = null;
   r.tetrisRuleAuthority = null;
   r.xiangqiRuleAuthority = null;
   r.monopolyRuleAuthority = null;
-  for (const seat of humanRoomSeats(r)) seat.ready = !!seat.host;
+  return{ok:true};
 }
 function compactRoomPlayers(r){
-  compactRoomSeats(r);
+  return compactRoomSeats(r);
 }
 function allRoomClientsOnline(r){
-  const now = Date.now();
-  return !!r && [...r.clients.keys()].every(c => c.alive && now - c.lastSeen < HEARTBEAT_TIMEOUT_MS);
+  return roomInspection(r, null).allOnline;
 }
-function expireDetachedSession(r, oldSession){
-  if (!r || !r.clients.has(oldSession) || oldSession.alive !== false) return;
+function expireDetachedSession(r, oldSession, options={}){
+  if (!r || !r.clients.has(oldSession) || oldSession.alive !== false) return true;
   const player = r.clients.get(oldSession);
   const uid = oldSession.uid;
   if (r.tankAuthority && typeof r.tankAuthority.clearDisconnectedInput === 'function') {
@@ -1675,54 +2084,62 @@ function expireDetachedSession(r, oldSession){
   }
   const wasHost = r.host === oldSession;
   if (r.started && !r.settled) settleRoomForfeit(r, oldSession, 'afk');
-  r.clients.delete(oldSession);
-  if (Number.isInteger(player) && ensureRoomSeats(r)[player]) r.seats[player] = emptySeat(player);
-  oldSession.room = null;
-  oldSession.player = null;
-  oldSession.resumeUntil = 0;
-  oldSession.reconnectTimer = null;
+  const membership = roomPresenceBoundary.room({action:'remove',room:r,session:oldSession,deleteWhenEmpty:true,preferOnlineHost:true,allowUnregistered:true});
+  if (!membership.ok) {
+    if(options.quarantineSweep===true)return false;
+    // The current timer has fired already. Retry a bounded number of times;
+    // a permanent Adapter failure is quarantined instead of creating an
+    // unbounded timer/seat leak.
+    const attempts=Number(oldSession.roomPresenceRetryAttempts)||0;
+    if(attempts>=ROOM_PRESENCE_RETRY_LIMIT){
+      oldSession.reconnectTimer=null;oldSession.roomPresenceQuarantined=true;r.presenceQuarantined=true;
+      enqueueRoomGraphRecovery('expired:'+oldSession.sessionId,{
+        room:r,
+        recover:()=>expireDetachedSession(r,oldSession,{quarantineSweep:true}),
+        onRecovered:()=>{oldSession.roomPresenceQuarantined=false;if(![...roomGraphRecoveryQueue.values()].some(record=>record.room===r))r.presenceQuarantined=false;},
+      });
+      broadcast(r,{type:'error',msg:'房间状态已进入安全恢复队列',reason:'room_presence_quarantined'});
+      return false;
+    }
+    oldSession.roomPresenceRetryAttempts=attempts+1;
+    scheduleReconnectTimer(oldSession,r,roomPresenceRetryDelay(attempts+1));
+    return false;
+  }
+  cancelReconnectTimer(oldSession);
+  oldSession.roomPresenceRetryAttempts=0;oldSession.roomPresenceQuarantined=false;
   expiredResumes.set(resumeKey(uid, oldSession.tokenHash), {
     room: r.id, player, expiresAt: Date.now() + EXPIRED_RESUME_TTL_MS,
   });
-  if (!r.clients.size){
+  if (membership.closed){
     stopRoomAuthorities(r);
     if(r.spectators)for(const spectator of r.spectators.keys()){spectatorAccessGuard.leave(spectator.sessionId);spectator.spectatorRoom=null;spectator.sendText(JSON.stringify({type:'peer_left',payload:{roomClosed:true}}));}
-    rooms.delete(r.id); cleanupEphemeralUser(uid); broadcastLobby(); return;
+    cleanupEphemeralUser(uid); broadcastLobby(); return true;
   }
-  let hostChanged = false;
-  if (wasHost){
-    const next = [...r.clients.entries()].sort((a, b) => {
-      const onlineDiff = Number(a[0].alive === false) - Number(b[0].alive === false);
-      return onlineDiff || a[1] - b[1];
-    })[0];
-    r.host = next[0];
-    hostChanged = true;
-  }
-  resetRoomMatch(r);
-  compactRoomPlayers(r);
-  updateAIControllers(r);
+  const hostChanged = !!membership.hostChanged || wasHost;
+  const reset=resetRoomMatch(r);
+  if(!reset.ok)broadcast(r,{type:'error',msg:'房间状态暂不可用',reason:reset.reason||'room_presence_unavailable'});
+  notifyRoomReassignments(r,membership.reassigned);
   broadcast(r, { type: 'reconnect_expired', payload: { uid, player, hostPlayer: r.clients.get(r.host), hostChanged } });
   if (hostChanged) broadcast(r, { type: 'host_changed', payload: { uid: r.host.uid, player: r.clients.get(r.host) } });
   broadcastRoom(r);
   broadcastLobby();
   cleanupEphemeralUser(uid);
+  return true;
 }
 function detachForReconnect(session){
   if (!session.room || !session.uid || !session.tokenHash) return false;
   const r = rooms.get(session.room);
   if (!r || !r.started || !r.clients.has(session)) return false;
-  session.detachedAt = Date.now();
-  session.resumeUntil = session.detachedAt + RECONNECT_GRACE_MS;
+  forgetTankSnapshotRecipient(r,session);
+  const detached = roomPresenceBoundary.room({action:'detach',room:r,session,graceMs:RECONNECT_GRACE_MS,allowUnregistered:true});
+  if (!detached.ok) return false;
   // A disconnected Tank must stop receiving the last held input while the
   // reconnect grace window is open.  The authority will accept fresh input
   // only after the player has resumed with a live authenticated session.
   if (r.tankAuthority && typeof r.tankAuthority.clearDisconnectedInput === 'function') {
     r.tankAuthority.clearDisconnectedInput(session.player);
   }
-  session.reconnectTimer = setTimeout(() => expireDetachedSession(r, session), RECONNECT_GRACE_MS);
-  if (session.reconnectTimer && session.reconnectTimer.unref) session.reconnectTimer.unref();
-  const seat = seatForSession(r, session);
-  if (seat) seat.online = false;
+  scheduleReconnectTimer(session,r,RECONNECT_GRACE_MS);
   broadcast(r, { type: 'peer_status', payload: { uid: session.uid, player: session.player, online: false, resumeUntil: session.resumeUntil } }, session);
   broadcastRoom(r);
   return true;
@@ -1731,23 +2148,16 @@ function tryResumeSession(session){
   if (!session.uid || !session.tokenHash) return false;
   clearExpiredResumes();
   const now = Date.now();
-  for (const r of rooms.values()){
-    for (const [oldSession, player] of r.clients){
-      if (oldSession.alive !== false || oldSession.uid !== session.uid || oldSession.resumeUntil <= now) continue;
-      if (!secureEqual(oldSession.tokenHash, session.tokenHash)) continue;
-      if (oldSession.reconnectTimer) clearTimeout(oldSession.reconnectTimer);
-      oldSession.reconnectTimer = null;
-      r.clients.delete(oldSession);
-      r.clients.set(session, player);
-      if (r.host === oldSession) r.host = session;
-      session.room = r.id;
-      session.player = player;
-      const seat = ensureRoomSeats(r)[player];
-      if (seat){ seat.online = true; seat.userId = session.uid; seat.host = r.host === session; }
-      session.resumeUntil = 0;
+  const resumed = roomPresenceBoundary.room({action:'resume',session});
+  if (resumed.ok){
+      const r = rooms.get(resumed.roomId || session.room);
+      if (!r) return false;
+      const player = resumed.player;
+      markRoomEngagementIntegrityReconnect(r,player);
       const hasAuthoritySnapshot = !!(r.tankAuthority || r.tetrisAuthority || r.tetrisRuleAuthority || r.xiangqiRuleAuthority || r.monopolyRuleAuthority);
       const replayUnavailable = !!(r.started && r.moveLogTruncated && !hasAuthoritySnapshot);
-      if (replayUnavailable) resetRoomMatch(r);
+      const replayReset=replayUnavailable?resetRoomMatch(r):{ok:true};
+      if(!replayReset.ok)session.sendText(JSON.stringify({type:'error',msg:'房间状态暂不可用',reason:replayReset.reason||'room_presence_unavailable'}));
       const payload = {
         ...roomPayload(r),
         player,
@@ -1772,7 +2182,6 @@ function tryResumeSession(session){
       }
       broadcastRoom(r);
       return true;
-    }
   }
   const expired = expiredResumes.get(resumeKey(session.uid, session.tokenHash));
   if (expired){
@@ -1815,59 +2224,30 @@ function pinMatches(u, pin, currentHash, oldHash){
   return secureEqual(stored, currentHash || hashPin(pin)) || secureEqual(stored, oldHash || legacyPinHash(pin));
 }
 function hashToken(token){
-  return crypto.createHash('sha256').update('mg-auth:' + String(token || '')).digest('base64url');
-}
-const AUTH_TOKEN_TTL_MS = Math.max(3600000, Math.min(365 * 86400000, Number(process.env.AUTH_TOKEN_TTL_MS) || 30 * 86400000));
-function authTokenRecord(tokenHash, issuedAt){ return 't2$' + (issuedAt || Date.now()) + '$' + tokenHash; }
-function parseAuthTokenRecord(value){
-  const text = String(value || '');
-  const match = /^t2\$(\d{10,16})\$([A-Za-z0-9_-]{40,100})$/.exec(text);
-  if (match) return { issuedAt: Number(match[1]), hash: match[2] };
-  return /^[A-Za-z0-9_-]{40,100}$/.test(text) ? { issuedAt: 0, hash: text } : null;
+  const result = authProfileBoundary.session({ action:'hash_token', token });
+  return result.ok ? result.tokenHash : '';
 }
 function normalizeAuthTokenRecords(values){
-  const now = Date.now();
-  const out = [];
-  for (const value of (Array.isArray(values) ? values : [])){
-    const parsed = parseAuthTokenRecord(value);
-    if (!parsed) continue;
-    const issuedAt = parsed.issuedAt || now; // 旧格式在首次迁移时获得一个完整有效期，随后持久化时间戳。
-    if (now - issuedAt <= AUTH_TOKEN_TTL_MS) out.push(authTokenRecord(parsed.hash, issuedAt));
-  }
-  return out.slice(-5);
+  const result = authProfileBoundary.session({ action:'normalize', records:values });
+  return result.ok && Array.isArray(result.records) ? result.records : [];
 }
 function issueAuthToken(u){
-  const token = crypto.randomBytes(32).toString('base64url');
-  const tokenHash = hashToken(token);
-  u.authTokens = normalizeAuthTokenRecords(u.authTokens)
-    .filter(record => {
-      const parsed = parseAuthTokenRecord(record);
-      return !parsed || !secureEqual(parsed.hash, tokenHash);
-    })
-    .concat(authTokenRecord(tokenHash)).slice(-5);
-  return { token, tokenHash };
+  const result = authProfileBoundary.session({ action:'issue', user:u });
+  if (!result.ok) throw new Error(result.reason || 'auth_unavailable');
+  return { token:result.token, tokenHash:result.tokenHash };
 }
 function userHasToken(u, token){
-  if (!u || !token || !Array.isArray(u.authTokens)) return false;
-  const h = hashToken(token);
-  u.authTokens = normalizeAuthTokenRecords(u.authTokens);
-  return u.authTokens.some(v => {
-    const parsed = parseAuthTokenRecord(v);
-    return !!parsed && secureEqual(parsed.hash, h);
-  });
+  if (!u || !token) return false;
+  return !!authProfileBoundary.session({ action:'verify_token', user:u, token }).ok;
 }
 function userHasTokenHash(u, tokenHash){
-  if (!u || !tokenHash || !Array.isArray(u.authTokens)) return false;
-  u.authTokens = normalizeAuthTokenRecords(u.authTokens);
-  return u.authTokens.some(v => {
-    const parsed = parseAuthTokenRecord(v);
-    return !!parsed && secureEqual(parsed.hash, tokenHash);
-  });
+  if (!u || !tokenHash) return false;
+  return !!authProfileBoundary.session({ action:'verify_hash', user:u, tokenHash }).ok;
 }
 function userForToken(token){
   if (!token) return null;
-  for (const u of Object.values(db.users)) if (userHasToken(u, token)) return u;
-  return null;
+  const result = authProfileBoundary.session({ action:'resolve_token', token });
+  return result.ok ? result.user : null;
 }
 function credentialUserByKey(usernameKey){
   return Object.values(db.users).find(user => !user.ephemeral && user.usernameKey === usernameKey) || null;
@@ -1884,7 +2264,7 @@ async function credentialUser(usernameKey){
 function starterUser(uid,name,lang){
   return {
     uid,name:String(name||'玩家').slice(0,12),avatar:100,ephemeral:false,background:0,frame:0,effect:0,
-    achievements:[],playmates:{},daily:{play:0,win:0,streak:0},nameFx:0,owned:normalizeOwned({backgrounds:[0]}),gameCosmetics:normalizeGameCosmetics({}),
+    achievements:[],playmates:{},daily:{play:0,win:0,streak:0},nameFx:0,owned:normalizeOwned({backgrounds:[0]}),gameCosmetics:normalizeGameCosmetics({}),playerCharacter:normalizePlayerCharacter(),
     xp:0,level:1,streak:0,bestStreak:0,coins:0,played:{},total:0,wins:{},totalWins:0,recentResults:[],purchaseRequests:[],soloRate:[],pin_hash:null,
     dailyFirstWinDate:'',dailyAICurrencyKey:'',dailyAICurrencyEarned:0,xpCurveVersion:REWARD_CONFIG.level.curveVersion,
     signature:'',countryRegion:'',genderTag:'hidden',presencePreference:'joinable',presenceVisibility:'everyone',showcase:null,
@@ -1983,6 +2363,7 @@ function validOwnedId(kind, id){
   return !!(SHOP_PRICES[kind] && Object.prototype.hasOwnProperty.call(SHOP_PRICES[kind], id));
 }
 function ownsItem(u, kind, id){
+  if (u && testAdmin.hasCapability(u.uid, 'test_admin_all_catalog_items') && validOwnedId(kind, id)) return true;
   if (kind === 'avatars' && id >= 0 && id < 30) return true;
   if (kind === 'avatars' && id >= 100 && id <= 147 && (id - 100) % 8 < 2) return true;
   if (kind === 'backgrounds' && id >= 0 && id <= 6) return true;
@@ -1991,47 +2372,26 @@ function ownsItem(u, kind, id){
   return !!(u && u.owned && Array.isArray(u.owned[kind]) && u.owned[kind].includes(id));
 }
 function profileObj(u, viewerUid){
-  normalizeUserRewardState(u);
-  return {
-    uid: u.uid, name: u.name, avatar: u.avatar,
-    background: u.background || 0, frame: u.frame || 0, effect: u.effect || 0,
-    owned: u.owned || { avatars: [], frames: [], effects: [], backgrounds: [], game_cosmetics: [] },
-    cosmeticSchemaVersion: 1, gameCosmetics: normalizeGameCosmetics(u.gameCosmetics),
-    coins: u.coins || 0, xp: u.xp || 0, level: u.level || 1, streak: u.streak || 0, bestStreak: u.bestStreak || 0,
-    played: u.played || {}, total: u.total || 0, wins: u.wins || {}, totalWins: u.totalWins || 0, lang: u.lang || 'zh-CN',
-    achievements: u.achievements || [], playmates: u.playmates || {}, daily: u.daily || { play: 0, win: 0, streak: 0 }, nameFx: u.nameFx || 0,
-    dailyFirstWinDate: u.dailyFirstWinDate || '',
-    dailyAICurrencyKey: u.dailyAICurrencyKey || '',
-    dailyAICurrencyEarned: u.dailyAICurrencyEarned || 0,
-    xpProgress: levelProgress(u.xp || 0),
-    dailyTasks: dailyTasksPayload(u),
-    signature:u.signature || '', countryRegion:u.countryRegion || '', genderTag:u.genderTag || 'hidden', showcase:u.showcase || null,
-    presencePreference:u.presencePreference || 'joinable', presenceVisibility:u.presenceVisibility || 'everyone', presence:publicPresence(u.uid, u, viewerUid || u.uid),
-    username:u.username || '', authVersion:u.authVersion || (u.pin_hash ? 'legacy-pin-v1' : ''), ephemeral:!!u.ephemeral,
-    accountKind:u.ephemeral ? 'guest' : 'member', companionCheckinDay:u.companionCheckinDay || '',
-  };
+  const result = authProfileBoundary.profile({ action:'private', user:u, viewerUid });
+  return result.ok ? result.profile : null;
 }
 function publicProfileObj(u, viewerUid){
-  const p = profileObj(u, viewerUid);
-  delete p.owned;
-  delete p.playmates;
-  delete p.daily;
-  delete p.dailyTasks;
-  delete p.dailyFirstWinDate;
-  delete p.dailyAICurrencyKey;
-  delete p.dailyAICurrencyEarned;
-  delete p.presencePreference;
-  delete p.presenceVisibility;
-  delete p.username;
-  delete p.authVersion;
-  delete p.companionCheckinDay;
-  return p;
+  const result = authProfileBoundary.profile({ action:'public', user:u, viewerUid });
+  return result.ok ? result.profile : null;
+}
+function profileCompareProjection(u){
+  const result = authProfileBoundary.profile({ action:'compare_projection', user:u });
+  return result.ok ? result.profile : null;
+}
+function profileCompareAllowed(viewer,target){
+  return !!authProfileBoundary.profile({ action:'can_compare', viewer, target }).allowed;
 }
 
 /* ---------------- Social Graph v1（好友 / 屏蔽 / 举报） ---------------- */
 const SOCIAL_REQUEST_MAX_PER_DAY = 100;
 const SOCIAL_REPORT_MAX_PER_DAY = 30;
 const SOCIAL_REASONS = new Set(['harassment', 'inappropriate_name', 'cheating', 'spam', 'other']);
+const SOCIAL_CONTEXT_TYPES = new Set(['profile','room','match','social','tournament','playline']);
 function socialId(prefix){ return prefix + '_' + crypto.randomBytes(10).toString('base64url'); }
 function socialPair(aUid, bUid){
   const pair = [String(aUid || ''), String(bUid || '')].sort();
@@ -2057,24 +2417,30 @@ function socialRelationship(viewerUid, targetUid){
 }
 function socialPublicEntry(viewerUid, targetUid){
   const target = db.users[targetUid];
-  if (!target || target.ephemeral) return null;
+  if (!target || target.ephemeral || testAdmin.shouldHidePublicUid(targetUid) || testAdmin.shouldHidePublicUid(viewerUid)) return null;
   const profile = publicProfileObj(target, viewerUid);
   return { ...profile, relationship: socialRelationship(viewerUid, targetUid), blocked: socialBlockedBetween(viewerUid, targetUid) };
 }
 function socialState(uid){
-  const friends = (db.friendships || []).filter(row => row && (row.aUid === uid || row.bUid === uid))
+  if (testAdmin.shouldHidePublicUid(uid)) return { version:'1.0', friends:[], incoming:[], outgoing:[], blocked:[], counts:{ friends:0, incoming:0, outgoing:0, blocked:0 } };
+  const friends = (db.friendships || []).filter(row => row && !testAdmin.shouldHidePublicUid(row.aUid) && !testAdmin.shouldHidePublicUid(row.bUid) && (row.aUid === uid || row.bUid === uid))
     .map(row => socialPublicEntry(uid, row.aUid === uid ? row.bUid : row.aUid)).filter(Boolean);
-  const incoming = (db.friendRequests || []).filter(row => row && row.status === 'pending' && row.toUid === uid)
+  const incoming = (db.friendRequests || []).filter(row => row && !testAdmin.shouldHidePublicUid(row.fromUid) && !testAdmin.shouldHidePublicUid(row.toUid) && row.status === 'pending' && row.toUid === uid)
     .map(row => ({ id: row.id, createdAt: row.createdAt, user: socialPublicEntry(uid, row.fromUid) })).filter(row => row.user);
-  const outgoing = (db.friendRequests || []).filter(row => row && row.status === 'pending' && row.fromUid === uid)
+  const outgoing = (db.friendRequests || []).filter(row => row && !testAdmin.shouldHidePublicUid(row.fromUid) && !testAdmin.shouldHidePublicUid(row.toUid) && row.status === 'pending' && row.fromUid === uid)
     .map(row => ({ id: row.id, createdAt: row.createdAt, user: socialPublicEntry(uid, row.toUid) })).filter(row => row.user);
-  const blocked = (db.blocks || []).filter(row => row && row.blockerUid === uid)
+  const blocked = (db.blocks || []).filter(row => row && !testAdmin.shouldHidePublicUid(row.blockerUid) && !testAdmin.shouldHidePublicUid(row.blockedUid) && row.blockerUid === uid)
     .map(row => ({ uid: row.blockedUid, name: row.targetSnapshot && row.targetSnapshot.name || (db.users[row.blockedUid] && db.users[row.blockedUid].name) || '玩家', createdAt: row.createdAt }));
   return { version:'1.0', friends, incoming, outgoing, blocked,
     counts:{ friends:friends.length, incoming:incoming.length, outgoing:outgoing.length, blocked:blocked.length } };
 }
 function socialSessions(uid, fn){
-  for (const session of sessions) if (session.uid === uid && session.alive) fn(session);
+  const user = db.users[uid];
+  for (const session of sessions){
+    if (session.uid !== uid || !session.alive) continue;
+    if (!user || !userHasTokenHash(user, session.tokenHash)) { session.close(); continue; }
+    fn(session);
+  }
 }
 function sendSocialState(uid){
   const payload = socialState(uid);
@@ -2089,8 +2455,12 @@ function socialError(session, msg, reason){
 }
 function socialTarget(fromUid, targetUid){
   const target = String(targetUid || '').trim();
-  if (!target || target === fromUid || !db.users[target] || db.users[target].ephemeral) return null;
+  if (!target || target === fromUid || testAdmin.shouldHidePublicUid(fromUid) || testAdmin.shouldHidePublicUid(target) || !db.users[target] || db.users[target].ephemeral) return null;
   return db.users[target];
+}
+function sendPlaylineInvalidated(uids,reason){
+  if(!PLAYLINE_ENABLED)return;
+  [...new Set((Array.isArray(uids)?uids:[uids]).map(String).filter(Boolean))].forEach(uid=>socialSessions(uid,session=>{if(session.capabilities instanceof Set&&session.capabilities.has(PLAYLINE_PROTOCOL))session.sendText(JSON.stringify({type:'playline_invalidated',payload:{reason:String(reason||'relationship_changed')}}));}));
 }
 function socialDailyCount(rows, uid, field){
   const cutoff = Date.now() - 86400000;
@@ -2117,6 +2487,7 @@ function deleteSocialRemote(table, id){
   sbFetch(table + '?id=eq.' + encodeURIComponent(id), { method:'DELETE' }).catch(error => {recordOperationalError('supabase_social_delete',error);console.error('Supabase 社交关系删除失败:', error.message);});
 }
 function socialSendRequest(session, targetUid){
+  if (!testAdmin.socialAccess(session.uid, targetUid).ok) return socialError(session, '测试管理员与正式社交关系隔离', 'test_admin_isolated');
   const target = socialTarget(session.uid, targetUid);
   if (!target) return socialError(session, '目标玩家不存在', 'target_not_found');
   if (socialBlockedBetween(session.uid, target.uid)) return socialError(session, '该玩家已被屏蔽，不能建立关系', 'blocked');
@@ -2134,6 +2505,7 @@ function socialFriendRequestAction(session, payload){
   const requestId = String(payload && payload.requestId || '');
   const row = db.friendRequests.find(item => item && item.id === requestId && item.status === 'pending');
   if (!row) return socialError(session, '好友请求不存在或已处理', 'request_not_found');
+  if (!testAdmin.socialAccess(row.fromUid, row.toUid).ok) return socialError(session, '测试管理员与正式社交关系隔离', 'test_admin_isolated');
   const isIncoming = row.toUid === session.uid;
   const isOutgoing = row.fromUid === session.uid;
   if (action === 'accept' && isIncoming){
@@ -2142,22 +2514,24 @@ function socialFriendRequestAction(session, payload){
     const pair = socialPair(row.fromUid, row.toUid);
     if (!socialFriendship(row.fromUid, row.toUid)) db.friendships.push({ id:pair.id, ...pair, createdAt:Date.now() });
     saveDB(); syncSocialRows('friendRequests', [row]); syncSocialRows('friendships', db.friendships.filter(item => item.id === pair.id));
-    socialOk(session, '已添加好友', { action:'accepted' }); sendSocialState(row.fromUid); return;
+    socialOk(session, '已添加好友', { action:'accepted' }); sendSocialState(row.fromUid); sendChatState(row.fromUid); sendChatState(row.toUid); sendPlaylineInvalidated([row.fromUid,row.toUid],'friendship_changed'); return;
   }
   if (action === 'decline' && isIncoming){ row.status='declined'; row.updatedAt=Date.now(); saveDB(); syncSocialRows('friendRequests',[row]); socialOk(session,'已忽略好友请求',{action:'declined'}); sendSocialState(row.fromUid); return; }
   if (action === 'cancel' && isOutgoing){ row.status='cancelled'; row.updatedAt=Date.now(); saveDB(); syncSocialRows('friendRequests',[row]); socialOk(session,'已取消好友请求',{action:'cancelled'}); sendSocialState(row.toUid); return; }
   socialError(session, '无权处理该好友请求', 'forbidden');
 }
 function socialRemoveFriend(session, targetUid){
+  if (!testAdmin.socialAccess(session.uid, targetUid).ok) return socialError(session, '测试管理员与正式社交关系隔离', 'test_admin_isolated');
   const target = socialTarget(session.uid, targetUid);
   if (!target) return socialError(session, '目标玩家不存在', 'target_not_found');
   const pair = socialPair(session.uid, target.uid);
   const before = db.friendships.length;
   db.friendships = db.friendships.filter(row => row.id !== pair.id);
   if (db.friendships.length === before) return socialError(session, '你们还不是好友', 'not_friends');
-  saveDB(); deleteSocialRemote('friendships', pair.id); socialOk(session, '已移除好友', { action:'removed' }); sendSocialState(target.uid);
+  saveDB(); deleteSocialRemote('friendships', pair.id); socialOk(session, '已移除好友', { action:'removed' }); sendSocialState(target.uid); sendChatState(session.uid); sendChatState(target.uid); sendPlaylineInvalidated([session.uid,target.uid],'friendship_changed');
 }
 function socialBlock(session, targetUid){
+  if (!testAdmin.socialAccess(session.uid, targetUid).ok) return socialError(session, '测试管理员与正式社交关系隔离', 'test_admin_isolated');
   const target = socialTarget(session.uid, targetUid);
   if (!target) return socialError(session, '目标玩家不存在', 'target_not_found');
   if (db.blocks.some(row => row.blockerUid === session.uid && row.blockedUid === target.uid)) return socialOk(session, '该玩家已被屏蔽', { action:'idempotent' });
@@ -2167,22 +2541,25 @@ function socialBlock(session, targetUid){
   db.friendRequests = db.friendRequests.filter(row => !removedRequests.includes(row));
   const row = { id:socialId('blk'), blockerUid:session.uid, blockedUid:target.uid, targetSnapshot:{ uid:target.uid, name:target.name, avatar:target.avatar }, createdAt:Date.now() };
   db.blocks.push(row); syncSocialRows('blocks',[row]); deleteSocialRemote('friendships',pair.id); removedRequests.forEach(request => deleteSocialRemote('friend_requests',request.id)); saveDB();
-  socialOk(session, '已屏蔽该玩家', { action:'blocked' }); sendSocialState(target.uid);
+  socialOk(session, '已屏蔽该玩家', { action:'blocked' }); sendSocialState(target.uid); sendChatState(session.uid); sendChatState(target.uid); sendPlaylineInvalidated([session.uid,target.uid],'block_changed');
 }
 function socialUnblock(session, targetUid){
   const target = String(targetUid || '').trim();
+  if (!testAdmin.socialAccess(session.uid, target).ok) return socialError(session, '测试管理员与正式社交关系隔离', 'test_admin_isolated');
   const removed = db.blocks.filter(row => row.blockerUid === session.uid && row.blockedUid === target);
   db.blocks = db.blocks.filter(row => !(row.blockerUid === session.uid && row.blockedUid === target));
   if (!removed.length) return socialError(session, '该玩家不在屏蔽列表', 'not_blocked');
-  saveDB(); removed.forEach(row => deleteSocialRemote('blocks',row.id)); socialOk(session, '已取消屏蔽', { action:'unblocked' });
+  saveDB(); removed.forEach(row => deleteSocialRemote('blocks',row.id)); socialOk(session, '已取消屏蔽', { action:'unblocked' }); sendChatState(session.uid); sendChatState(target); sendPlaylineInvalidated([session.uid,target],'block_changed');
 }
 function socialReport(session, payload){
+  if (!testAdmin.socialAccess(session.uid, payload && payload.targetUid).ok) return socialError(session, '测试管理员与正式社交关系隔离', 'test_admin_isolated');
   const target = socialTarget(session.uid, payload && payload.targetUid);
   if (!target) return socialError(session, '目标玩家不存在', 'target_not_found');
   const reason = String(payload && payload.reason || '');
   if (!SOCIAL_REASONS.has(reason)) return socialError(session, '举报原因无效', 'invalid_reason');
   if (socialDailyCount(db.reports || [], session.uid, 'reporterUid') >= SOCIAL_REPORT_MAX_PER_DAY) return socialError(session, '今日举报次数已达上限', 'rate_limited');
-  const contextType = sanitizePlainText(payload && payload.contextType, 24) || 'profile';
+  const requestedContextType=sanitizePlainText(payload&&payload.contextType,24)||'profile';
+  const contextType=SOCIAL_CONTEXT_TYPES.has(requestedContextType)?requestedContextType:'profile';
   const contextId = sanitizePlainText(payload && payload.contextId, 80);
   const recentEventIds = Array.isArray(payload && payload.recentEventIds) ? payload.recentEventIds.map(v => sanitizePlainText(v,80)).filter(Boolean).slice(0,20) : [];
   const duplicate = db.reports.find(row => row && row.reporterUid === session.uid && row.targetUid === target.uid && row.reason === reason && row.contextId === contextId && Date.now() - Number(row.createdAt || 0) < 600000);
@@ -2192,7 +2569,399 @@ function socialReport(session, payload){
   recordAnalytics('social_report_created', { uid:session.uid, metadata:{ reportId:row.id, targetUid:target.uid, reason, contextType } });
   socialOk(session, '举报已记录，我们会核查相关信息', { action:'reported', reportId:row.id });
 }
-function socialAllowedBetween(aUid, bUid){ return !!aUid && !!bUid && aUid !== bUid && !socialBlockedBetween(aUid, bUid); }
+async function socialReportPlayline(session,payload){
+  const actor=playlineActorForSession(session),postId=String(payload&&payload.contextId||'');
+  const resolved=await chatPlaylineBoundary.playline({action:'report',actor,postId});
+  if(!resolved.ok)return socialError(session,'动态不可见或已失效','post_unavailable');
+  socialReport(session,{targetUid:resolved.targetUid,reason:payload&&payload.reason,contextType:'playline',contextId:postId,recentEventIds:[]});
+}
+function socialAllowedBetween(aUid, bUid){ return !!aUid && !!bUid && aUid !== bUid && testAdmin.socialAccess(aUid, bUid).ok && !socialBlockedBetween(aUid, bUid); }
+
+/* ---------------- Playline wire adapter (playline-v1) ---------------- */
+function playlineError(session, action, result, clientPostId){
+  const reason=String(result&&result.reason||'server_unavailable');
+  const payload={action:String(action||''),reason};
+  if(clientPostId)payload.clientPostId=String(clientPostId);
+  if(result&&result.retryAfter)payload.retryAfter=Number(result.retryAfter);
+  session.sendText(JSON.stringify({type:'playline_error',payload}));
+}
+function playlineStatePayload(result, filter){
+  return {filter:String(filter||result&&result.filter||'all'),posts:Array.isArray(result&&result.posts)?result.posts:[],hasMore:!!(result&&result.hasMore),nextCursor:result&&result.nextCursor||null};
+}
+async function handlePlaylineList(session,payload){
+  const actor=playlineActorForSession(session),filter=payload&&payload.filter!==undefined?payload.filter:payload&&payload.scope;
+  const result=await chatPlaylineBoundary.playline({action:'list',actor,filter:filter===undefined?'all':filter,cursor:payload&&payload.cursor,limit:payload&&payload.limit});
+  if(!result.ok)return playlineError(session,'playline_list',result);
+  session.sendText(JSON.stringify({type:'playline_state',payload:playlineStatePayload(result,filter)}));
+}
+async function handlePlaylinePublish(session,payload){
+  const actor=playlineActorForSession(session),intent={clientPostId:payload&&payload.clientPostId,audience:payload&&payload.audience,content:payload&&payload.content};
+  const result=await chatPlaylineBoundary.playline({action:'publish',actor,...intent});
+  if(!result.ok)return playlineError(session,'playline_publish',result,payload&&payload.clientPostId);
+  session.sendText(JSON.stringify({type:'playline_publish_ok',payload:{clientPostId:result.clientPostId,post:result.post,duplicate:!!result.duplicate,replayed:!!result.replayed}}));
+}
+async function handlePlaylineRemove(session,payload){
+  const actor=playlineActorForSession(session),result=await chatPlaylineBoundary.playline({action:'remove',actor,postId:payload&&payload.postId,requestId:payload&&payload.requestId});
+  if(!result.ok)return playlineError(session,'playline_remove',result);
+  session.sendText(JSON.stringify({type:'playline_remove_ok',payload:{postId:result.postId,deleted:true,replayed:!!result.replayed}}));
+}
+
+/* ---------------- Direct Chat v1（正式好友一对一纯文本私聊） ---------------- */
+const CHAT_MAX_MESSAGES = 50000;
+const CHAT_MAX_PER_CONVERSATION = 500;
+const CHAT_MAX_AGE_MS = 90 * 86400000;
+const CHAT_CLIENT_ID_RE = /^[A-Za-z0-9._:-]{12,80}$/;
+const chatRateBuckets = new Map();
+function chatSeq(value){
+  const raw=String(value===undefined||value===null?'0':value);
+  if(!/^\d{1,30}$/.test(raw))return'0';
+  try{return BigInt(raw).toString();}catch{return'0';}
+}
+function chatSeqCompare(a,b){
+  const aa=BigInt(chatSeq(a)),bb=BigInt(chatSeq(b));
+  return aa<bb?-1:aa>bb?1:0;
+}
+function nextChatSeq(){
+  db.nextChatSeq=(BigInt(chatSeq(db.nextChatSeq))+1n).toString();
+  return db.nextChatSeq;
+}
+function chatConversation(aUid,bUid){
+  const pair=socialPair(aUid,bUid);
+  return {id:'dm:'+pair.id,aUid:pair.aUid,bUid:pair.bUid};
+}
+function chatPeerUid(conversationId,uid){
+  const prefix='dm:';
+  if(!String(conversationId||'').startsWith(prefix))return'';
+  const pair=String(conversationId).slice(prefix.length).split('|');
+  if(pair.length!==2)return'';
+  if(pair[0]===uid)return pair[1];
+  if(pair[1]===uid)return pair[0];
+  return'';
+}
+function normalizeChatText(input){
+  let text=String(input===undefined||input===null?'':input).normalize('NFC').replace(/\r\n?/g,'\n');
+  text=text.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F\u202A-\u202E\u2066-\u2069]/g,'').trim();
+  return text;
+}
+function validChatText(text){
+  const count=[...text].length;
+  if(!count)return{ok:false,reason:'empty_message'};
+  if(count>500||Buffer.byteLength(text,'utf8')>2000)return{ok:false,reason:'message_too_long'};
+  return{ok:true};
+}
+function normalizeChatMessage(row){
+  if(!row||typeof row!=='object')return null;
+  const senderUid=String(row.senderUid||''),recipientUid=String(row.recipientUid||'');
+  if(!senderUid||!recipientUid||senderUid===recipientUid)return null;
+  const conversation=chatConversation(senderUid,recipientUid);
+  const seq=chatSeq(row.seq);
+  const id=String(row.id||'');
+  const clientMessageId=String(row.clientMessageId||'');
+  const text=normalizeChatText(row.text);
+  const valid=validChatText(text);
+  if(!id||seq==='0'||!CHAT_CLIENT_ID_RE.test(clientMessageId)||!valid.ok)return null;
+  const createdAt=Number(row.createdAt)||Date.now();
+  return{id,conversationId:conversation.id,seq,senderUid,recipientUid,clientMessageId,text,createdAt};
+}
+function normalizeChatRead(row,key){
+  if(!row||typeof row!=='object')return null;
+  const conversationId=String(row.conversationId||'');
+  const uid=String(row.uid||''),peerUid=String(row.peerUid||'');
+  if(!uid||!peerUid||uid===peerUid||chatConversation(uid,peerUid).id!==conversationId)return null;
+  return{conversationId,uid,peerUid,lastReadSeq:chatSeq(row.lastReadSeq),updatedAt:Number(row.updatedAt)||0,key:key||conversationId+'|'+uid};
+}
+function trimChatData(){
+  const cutoff=Date.now()-CHAT_MAX_AGE_MS,byConversation=new Map(),seenIds=new Set(),seenClient=new Set();
+  for(const raw of Array.isArray(db.chatMessages)?db.chatMessages:[]){
+    const row=normalizeChatMessage(raw);
+    if(!row||row.createdAt<cutoff||seenIds.has(row.id))continue;
+    const clientKey=row.senderUid+'|'+row.clientMessageId;
+    if(seenClient.has(clientKey))continue;
+    seenIds.add(row.id);seenClient.add(clientKey);
+    if(!byConversation.has(row.conversationId))byConversation.set(row.conversationId,[]);
+    byConversation.get(row.conversationId).push(row);
+  }
+  const retained=[];
+  for(const rows of byConversation.values()){
+    rows.sort((a,b)=>chatSeqCompare(a.seq,b.seq));
+    retained.push(...rows.slice(-CHAT_MAX_PER_CONVERSATION));
+  }
+  retained.sort((a,b)=>chatSeqCompare(a.seq,b.seq));
+  db.chatMessages=retained.slice(-CHAT_MAX_MESSAGES);
+  const reads={};
+  for(const [key,value] of Object.entries(db.chatReads&&typeof db.chatReads==='object'?db.chatReads:{})){
+    const row=normalizeChatRead(value,key);if(row)reads[row.conversationId+'|'+row.uid]=row;
+  }
+  db.chatReads=reads;
+  const max=db.chatMessages.reduce((value,row)=>chatSeqCompare(row.seq,value)>0?row.seq:value,chatSeq(db.nextChatSeq));
+  db.nextChatSeq=max;
+}
+function normalizeChatStore(){ trimChatData(); }
+function chatReadKey(conversationId,uid){return conversationId+'|'+uid;}
+function chatReadState(conversationId,uid,peerUid){
+  return db.chatReads[chatReadKey(conversationId,uid)]||{conversationId,uid,peerUid,lastReadSeq:'0',updatedAt:0};
+}
+function chatMessagesFor(conversationId){
+  return db.chatMessages.filter(row=>row.conversationId===conversationId).sort((a,b)=>chatSeqCompare(a.seq,b.seq));
+}
+function chatHasHistory(aUid,bUid){
+  const id=chatConversation(aUid,bUid).id;
+  return db.chatMessages.some(row=>row.conversationId===id);
+}
+function chatCanRead(aUid,bUid){
+  return !socialBlockedBetween(aUid,bUid)&&(!!socialFriendship(aUid,bUid)||chatHasHistory(aUid,bUid));
+}
+function chatPublicPeer(viewerUid,peerUid){
+  const profile=socialPublicEntry(viewerUid,peerUid);
+  return profile?{uid:profile.uid,name:profile.name,avatar:profile.avatar,frame:profile.frame,effect:profile.effect,background:profile.background,nameFx:profile.nameFx,lang:profile.lang,presence:profile.presence,relationship:profile.relationship}:null;
+}
+function chatUnreadCount(uid,peerUid){
+  const conversation=chatConversation(uid,peerUid),read=chatReadState(conversation.id,uid,peerUid).lastReadSeq;
+  return db.chatMessages.filter(row=>row.conversationId===conversation.id&&row.recipientUid===uid&&chatSeqCompare(row.seq,read)>0).length;
+}
+function chatConversationSummary(uid,peerUid){
+  if(testAdmin.shouldHidePublicUid(uid)||testAdmin.shouldHidePublicUid(peerUid)||!db.users[peerUid]||db.users[peerUid].ephemeral||socialBlockedBetween(uid,peerUid))return null;
+  const conversation=chatConversation(uid,peerUid),messages=chatMessagesFor(conversation.id),last=messages[messages.length-1]||null;
+  const read=chatReadState(conversation.id,uid,peerUid),peerRead=chatReadState(conversation.id,peerUid,uid);
+  return{conversationId:conversation.id,peer:chatPublicPeer(uid,peerUid),lastMessage:last?chatMessagePayload(last):null,
+    unreadCount:chatUnreadCount(uid,peerUid),readThroughSeq:read.lastReadSeq,peerReadThroughSeq:peerRead.lastReadSeq};
+}
+function chatState(uid,limit){
+  if(testAdmin.shouldHidePublicUid(uid)) return {version:'1.0',conversations:[],unreadTotal:0};
+  const peerIds=new Set();
+  for(const row of db.friendships||[]){if(testAdmin.shouldHidePublicUid(row.aUid)||testAdmin.shouldHidePublicUid(row.bUid))continue;if(row.aUid===uid)peerIds.add(row.bUid);else if(row.bUid===uid)peerIds.add(row.aUid);}
+  for(const row of db.chatMessages||[]){if(testAdmin.shouldHidePublicUid(row.senderUid)||testAdmin.shouldHidePublicUid(row.recipientUid))continue;if(row.senderUid===uid)peerIds.add(row.recipientUid);else if(row.recipientUid===uid)peerIds.add(row.senderUid);}
+  const conversations=[...peerIds].map(peerUid=>chatConversationSummary(uid,peerUid)).filter(item=>item&&item.peer)
+    .sort((a,b)=>Number(b.lastMessage&&b.lastMessage.createdAt||0)-Number(a.lastMessage&&a.lastMessage.createdAt||0)||String(a.peer.name||'').localeCompare(String(b.peer.name||'')))
+    .slice(0,Math.max(1,Math.min(100,Number(limit)||50)));
+  return{version:'1.0',conversations,unreadTotal:conversations.reduce((sum,item)=>sum+item.unreadCount,0)};
+}
+function chatMessagePayload(row){
+  return{id:row.id,seq:chatSeq(row.seq),senderUid:row.senderUid,recipientUid:row.recipientUid,text:row.text,createdAt:row.createdAt};
+}
+function chatError(session,action,reason,clientMessageId,retryAfter){
+  session.sendText(JSON.stringify({type:'chat_error',payload:{action:String(action||''),reason:String(reason||'server_unavailable'),
+    ...(clientMessageId?{clientMessageId:String(clientMessageId)}:{}),...(retryAfter?{retryAfter:Number(retryAfter)}:{})}}));
+}
+function chatUser(session,action,clientMessageId){
+  const user=session.uid&&db.users[session.uid];
+  if(!user||!userHasTokenHash(user,session.tokenHash)){chatError(session,action,'not_authenticated',clientMessageId);return null;}
+  if(user.ephemeral){chatError(session,action,'guest_forbidden',clientMessageId);return null;}
+  if(testAdmin.shouldHidePublicUid(user.uid)){chatError(session,action,'test_admin_isolated',clientMessageId);return null;}
+  return user;
+}
+function chatValidSessions(uid,fn){socialSessions(uid,fn);}
+function sendChatState(uid){
+  if(!useSupabase&&chatPlaylineBoundary){
+    chatValidSessions(uid,session=>{
+      Promise.resolve(chatPlaylineBoundary.chat({action:'state',actor:chatBoundaryActorForSession(session)})).then(result=>{
+        if(!result||!result.ok)return;
+        session.sendText(JSON.stringify({type:'chat_state',payload:{version:result.version,conversations:result.conversations,unreadTotal:result.unreadTotal}}));
+      }).catch(error=>recordOperationalError('direct_chat_state_boundary',error));
+    });
+    return;
+  }
+  const payload=chatState(uid);
+  chatValidSessions(uid,session=>session.sendText(JSON.stringify({type:'chat_state',payload})));
+}
+function consumeChatRate(key,limit,windowMs){
+  const now=Date.now(),cutoff=now-windowMs;
+  let list=chatRateBuckets.get(key)||[];list=list.filter(value=>value>cutoff);
+  if(list.length>=limit){chatRateBuckets.set(key,list);return Math.max(1,Math.ceil((list[0]+windowMs-now)/1000));}
+  list.push(now);chatRateBuckets.set(key,list);return 0;
+}
+function chatQueryAllowed(uid,action){return !consumeChatRate('query:'+uid+':'+action,60,60000);}
+function chatSendRetry(uid,peerUid){
+  return consumeChatRate('send10:'+uid,8,10000)||consumeChatRate('send60:'+uid,30,60000)||
+    consumeChatRate('pair60:'+chatConversation(uid,peerUid).id,30,60000)||consumeChatRate('send24:'+uid,500,86400000);
+}
+function directMessageFromDb(row){
+  if(!row||typeof row!=='object')return null;
+  return normalizeChatMessage({id:row.id,conversationId:row.conversation_id,seq:row.seq,senderUid:row.sender_uid,recipientUid:row.recipient_uid,
+    clientMessageId:row.client_message_id,text:row.body,createdAt:Date.parse(row.created_at)||Date.now()});
+}
+async function persistDirectMessage(candidate){
+  const local=db.chatMessages.find(row=>row.senderUid===candidate.senderUid&&row.clientMessageId===candidate.clientMessageId);
+  if(local)return{row:local,duplicate:true,conflict:local.recipientUid!==candidate.recipientUid||local.text!==candidate.text};
+  if(!useSupabase){candidate.seq=nextChatSeq();db.chatMessages.push(candidate);trimChatData();saveDB();return{row:candidate,duplicate:false,conflict:false};}
+  const pair=chatConversation(candidate.senderUid,candidate.recipientUid);
+  const result=await sbFetch('rpc/send_direct_message_v1',{method:'POST',body:JSON.stringify({
+    p_id:candidate.id,p_conversation_id:pair.id,p_a_uid:pair.aUid,p_b_uid:pair.bUid,p_sender_uid:candidate.senderUid,
+    p_recipient_uid:candidate.recipientUid,p_client_message_id:candidate.clientMessageId,p_body:candidate.text,
+  })});
+  if(result&&result.allowed===false)return{unavailable:true,reason:String(result.reason||'conversation_unavailable')};
+  const row=directMessageFromDb(result&&result.message);if(!row)throw new Error('direct_message_insert_empty');
+  if(!db.chatMessages.some(item=>item.id===row.id))db.chatMessages.push(row);
+  if(chatSeqCompare(row.seq,db.nextChatSeq)>0)db.nextChatSeq=row.seq;trimChatData();saveDB();
+  return{row,duplicate:!!(result&&result.duplicate),conflict:!!(result&&result.conflict)};
+}
+async function persistChatRead(row){
+  if(useSupabase){
+    const result=await sbFetch('rpc/apply_direct_message_read_v1',{method:'POST',body:JSON.stringify({p_conversation_id:row.conversationId,p_uid:row.uid,p_peer_uid:row.peerUid,p_last_read_seq:row.lastReadSeq})});
+    if(result&&result.lastReadSeq)row.lastReadSeq=chatSeq(result.lastReadSeq);
+  }
+  row.updatedAt=Date.now();db.chatReads[chatReadKey(row.conversationId,row.uid)]=row;saveDB();return row;
+}
+async function sbLoadDirectChat(){
+  if(!useSupabase)return;
+  try{
+    const messages=[],pageSize=1000;
+    for(let offset=0;offset<CHAT_MAX_MESSAGES;offset+=pageSize){
+      const rows=await sbFetch('rpc/list_direct_messages_v1',{method:'POST',body:JSON.stringify({p_limit:pageSize,p_offset:offset})});const page=Array.isArray(rows)?rows:[];
+      messages.push(...page.map(directMessageFromDb).filter(Boolean));if(page.length<pageSize)break;
+    }
+    const reads=[];
+    for(let offset=0;offset<100000;offset+=pageSize){const rows=await sbFetch('rpc/list_direct_message_reads_v1',{method:'POST',body:JSON.stringify({p_limit:pageSize,p_offset:offset})});const page=Array.isArray(rows)?rows:[];reads.push(...page);if(page.length<pageSize)break;}
+    db.chatMessages=messages.filter(row=>row&&!testAdmin.shouldHidePublicUid(row.senderUid)&&!testAdmin.shouldHidePublicUid(row.recipientUid));
+    db.chatReads=Object.fromEntries((Array.isArray(reads)?reads:[]).map(row=>{const value=normalizeChatRead({conversationId:row.conversation_id,uid:row.uid,peerUid:row.peer_uid,lastReadSeq:row.last_read_seq,updatedAt:Date.parse(row.updated_at)||0});return value?[chatReadKey(value.conversationId,value.uid),value]:null;}).filter(Boolean));
+    normalizeChatStore();saveDB();
+  }catch(error){recordOperationalError('supabase_direct_chat_load',error);console.error('加载 Supabase 私聊数据失败（私聊保持不可用直到迁移或服务恢复）:',error.message);}
+}
+async function sbLoadSocialGraph(){
+  if(!useSupabase)return;
+  try{
+    const [requests,friendships,blocks,reports]=await Promise.all([
+      sbFetch('friend_requests?select=*&status=eq.pending&limit=50000'),
+      sbFetch('friendships?select=*&limit=50000'),
+      sbFetch('blocks?select=*&limit=50000'),
+      sbFetch('reports?select=*&order=created_at.desc&limit=50000'),
+    ]);
+    db.friendRequests=(Array.isArray(requests)?requests:[]).map(row=>({id:row.id,fromUid:row.from_uid,toUid:row.to_uid,status:row.status,createdAt:Date.parse(row.created_at)||0,updatedAt:Date.parse(row.updated_at)||0})).filter(row=>!testAdmin.shouldHidePublicUid(row.fromUid)&&!testAdmin.shouldHidePublicUid(row.toUid));
+    db.friendships=(Array.isArray(friendships)?friendships:[]).map(row=>({id:row.id,aUid:row.a_uid,bUid:row.b_uid,createdAt:Date.parse(row.created_at)||0})).filter(row=>!testAdmin.shouldHidePublicUid(row.aUid)&&!testAdmin.shouldHidePublicUid(row.bUid));
+    db.blocks=(Array.isArray(blocks)?blocks:[]).map(row=>({id:row.id,blockerUid:row.blocker_uid,blockedUid:row.blocked_uid,targetSnapshot:row.target_snapshot||{},createdAt:Date.parse(row.created_at)||0})).filter(row=>!testAdmin.shouldHidePublicUid(row.blockerUid)&&!testAdmin.shouldHidePublicUid(row.blockedUid));
+    db.reports=(Array.isArray(reports)?reports:[]).map(row=>({id:row.id,reporterUid:row.reporter_uid,targetUid:row.target_uid,reason:row.reason,contextType:row.context_type||'profile',contextId:row.context_id||'',matchId:row.match_id||'',recentEventIds:Array.isArray(row.recent_event_ids)?row.recent_event_ids:[],targetSnapshot:row.target_snapshot||{},status:row.status||'open',createdAt:Date.parse(row.created_at)||0})).filter(row=>!testAdmin.shouldHidePublicUid(row.reporterUid)&&!testAdmin.shouldHidePublicUid(row.targetUid));
+    saveDB();
+  }catch(error){recordOperationalError('supabase_social_load',error);console.error('加载 Supabase 社交图谱失败（继续使用本地缓存）:',error.message);}
+}
+async function handleChatList(session,payload){
+  if(!useSupabase&&chatPlaylineBoundary){
+    const result=await chatPlaylineBoundary.chat({action:'list',actor:chatBoundaryActorForSession(session),limit:payload&&payload.limit});
+    if(!result.ok)return chatError(session,'chat_list',result.reason,'',result.retryAfter);
+    session.sendText(JSON.stringify({type:'chat_state',payload:{version:result.version,conversations:result.conversations,unreadTotal:result.unreadTotal}}));
+    return;
+  }
+  const user=chatUser(session,'chat_list');if(!user)return;
+  if(!chatQueryAllowed(user.uid,'list'))return chatError(session,'chat_list','rate_limited','',5);
+  session.sendText(JSON.stringify({type:'chat_state',payload:chatState(user.uid,payload&&payload.limit)}));
+}
+async function handleChatHistory(session,payload){
+  if(!useSupabase&&chatPlaylineBoundary){
+    const result=await chatPlaylineBoundary.chat({action:'history',actor:chatBoundaryActorForSession(session),peerUid:payload&&payload.peerUid,beforeSeq:payload&&payload.beforeSeq,limit:payload&&payload.limit});
+    if(!result.ok)return chatError(session,'chat_history',result.reason,'',result.retryAfter);
+    session.sendText(JSON.stringify({type:'chat_history',payload:{conversationId:result.conversationId,peer:result.peer,messages:result.messages,hasMore:result.hasMore,nextBeforeSeq:result.nextBeforeSeq,readThroughSeq:result.readThroughSeq,peerReadThroughSeq:result.peerReadThroughSeq}}));
+    return;
+  }
+  const user=chatUser(session,'chat_history');if(!user)return;
+  if(!chatQueryAllowed(user.uid,'history'))return chatError(session,'chat_history','rate_limited','',5);
+  const peerUid=String(payload&&payload.peerUid||''),peer=db.users[peerUid];
+  if(!testAdmin.socialAccess(user.uid,peerUid).ok)return chatError(session,'chat_history','test_admin_isolated');
+  if(!peer||peer.ephemeral||peerUid===user.uid)return chatError(session,'chat_history','invalid_target');
+  if(!chatCanRead(user.uid,peerUid))return chatError(session,'chat_history','conversation_unavailable');
+  const beforeRaw=payload&&payload.beforeSeq, before=beforeRaw===undefined||beforeRaw===null||beforeRaw===''?null:chatSeq(beforeRaw);
+  if(before==='0')return chatError(session,'chat_history','invalid_cursor');
+  const limit=Math.max(1,Math.min(50,Number(payload&&payload.limit)||30)),conversation=chatConversation(user.uid,peerUid);
+  let rows=chatMessagesFor(conversation.id);if(before)rows=rows.filter(row=>chatSeqCompare(row.seq,before)<0);
+  const page=rows.slice(-limit),read=chatReadState(conversation.id,user.uid,peerUid),peerRead=chatReadState(conversation.id,peerUid,user.uid);
+  session.sendText(JSON.stringify({type:'chat_history',payload:{conversationId:conversation.id,peer:chatPublicPeer(user.uid,peerUid),messages:page.map(chatMessagePayload),
+    hasMore:rows.length>page.length,nextBeforeSeq:rows.length>page.length&&page.length?page[0].seq:null,readThroughSeq:read.lastReadSeq,peerReadThroughSeq:peerRead.lastReadSeq}}));
+}
+async function handleChatSend(session,payload){
+  if(!useSupabase&&chatPlaylineBoundary){
+    const clientMessageId=String(payload&&payload.clientMessageId||'');
+    const result=await chatPlaylineBoundary.chat({action:'send',actor:chatBoundaryActorForSession(session),peerUid:payload&&payload.peerUid,clientMessageId,text:payload&&payload.text});
+    if(!result.ok)return chatError(session,'chat_send',result.reason,clientMessageId,result.retryAfter);
+    const message=result.message,peerUid=String(message&&message.senderUid===session.uid?message.recipientUid:message.senderUid),conversationId=chatConversation(session.uid,peerUid).id;
+    if(!result.duplicate&&clusterCoordinator.enabled)clusterCoordinator.publishDirectMessage(message.id,session.uid,message.recipientUid)
+      .catch(error=>recordOperationalError('cluster_chat_publish',error));
+    session.sendText(JSON.stringify({type:'chat_send_ok',payload:{clientMessageId:result.clientMessageId||clientMessageId,messageId:result.messageId,seq:result.seq,message,duplicate:!!result.duplicate}}));
+    chatValidSessions(session.uid,target=>{if(target!==session)target.sendText(JSON.stringify({type:'chat_message',payload:{conversationId,message,unreadCount:chatUnreadCount(session.uid,message.recipientUid),duplicate:!!result.duplicate}}));});
+    chatValidSessions(message.recipientUid,target=>target.sendText(JSON.stringify({type:'chat_message',payload:{conversationId,message,unreadCount:chatUnreadCount(message.recipientUid,session.uid),duplicate:!!result.duplicate}})));
+    sendChatState(session.uid);sendChatState(message.recipientUid);
+    return;
+  }
+  const peerUid=String(payload&&payload.peerUid||''),clientMessageId=String(payload&&payload.clientMessageId||''),peer=db.users[peerUid];
+  const user=chatUser(session,'chat_send',clientMessageId);if(!user)return;
+  if(!testAdmin.socialAccess(user.uid,peerUid).ok)return chatError(session,'chat_send','test_admin_isolated',clientMessageId);
+  if(!peer||peer.ephemeral||peerUid===user.uid)return chatError(session,'chat_send','invalid_target',clientMessageId);
+  if(!CHAT_CLIENT_ID_RE.test(clientMessageId))return chatError(session,'chat_send','invalid_client_message_id',clientMessageId);
+  const text=normalizeChatText(payload&&payload.text),valid=validChatText(text);if(!valid.ok)return chatError(session,'chat_send',valid.reason,clientMessageId);
+  if(!socialFriendship(user.uid,peerUid)||socialBlockedBetween(user.uid,peerUid))return chatError(session,'chat_send','conversation_unavailable',clientMessageId);
+  const retryAfter=chatSendRetry(user.uid,peerUid);if(retryAfter)return chatError(session,'chat_send','rate_limited',clientMessageId,retryAfter);
+  const conversation=chatConversation(user.uid,peerUid),candidate={id:socialId('msg'),conversationId:conversation.id,seq:'0',senderUid:user.uid,recipientUid:peerUid,clientMessageId,text,createdAt:Date.now()};
+  let persisted;try{persisted=await persistDirectMessage(candidate);}catch(error){recordOperationalError('direct_chat_persist',error);return chatError(session,'chat_send','server_unavailable',clientMessageId,3);}
+  if(persisted.unavailable)return chatError(session,'chat_send',persisted.reason||'conversation_unavailable',clientMessageId);
+  if(persisted.conflict)return chatError(session,'chat_send','idempotency_conflict',clientMessageId);
+  const message=chatMessagePayload(persisted.row);
+  if(!persisted.duplicate&&clusterCoordinator.enabled)clusterCoordinator.publishDirectMessage(message.id,user.uid,peerUid)
+    .catch(error=>recordOperationalError('cluster_chat_publish',error));
+  session.sendText(JSON.stringify({type:'chat_send_ok',payload:{clientMessageId,messageId:message.id,seq:message.seq,message,duplicate:!!persisted.duplicate}}));
+  chatValidSessions(user.uid,target=>{if(target!==session)target.sendText(JSON.stringify({type:'chat_message',payload:{conversationId:conversation.id,message,
+    unreadCount:chatUnreadCount(user.uid,peerUid),duplicate:!!persisted.duplicate}}));});
+  chatValidSessions(peerUid,target=>target.sendText(JSON.stringify({type:'chat_message',payload:{conversationId:conversation.id,message,
+    unreadCount:chatUnreadCount(peerUid,user.uid),duplicate:!!persisted.duplicate}})));
+  sendChatState(user.uid);sendChatState(peerUid);
+}
+async function handleChatRead(session,payload){
+  if(!useSupabase&&chatPlaylineBoundary){
+    const result=await chatPlaylineBoundary.chat({action:'read',actor:chatBoundaryActorForSession(session),peerUid:payload&&payload.peerUid,throughSeq:payload&&payload.throughSeq});
+    if(!result.ok)return chatError(session,'chat_read',result.reason,'',result.retryAfter);
+    const peerUid=String(payload&&payload.peerUid||''),response={conversationId:result.conversationId,readerUid:result.readerUid,throughSeq:result.throughSeq,readAt:result.readAt};
+    if(clusterCoordinator.enabled)clusterCoordinator.publishDirectMessageRead(result.conversationId,result.readerUid,peerUid,result.throughSeq)
+      .catch(error=>recordOperationalError('cluster_chat_read_publish',error));
+    for(const uid of [result.readerUid,peerUid])chatValidSessions(uid,target=>target.sendText(JSON.stringify({type:'chat_read_ok',payload:response})));
+    sendChatState(result.readerUid);sendChatState(peerUid);
+    return;
+  }
+  const user=chatUser(session,'chat_read');if(!user)return;
+  if(!chatQueryAllowed(user.uid,'read'))return chatError(session,'chat_read','rate_limited','',5);
+  const peerUid=String(payload&&payload.peerUid||''),peer=db.users[peerUid],throughSeq=chatSeq(payload&&payload.throughSeq);
+  if(!testAdmin.socialAccess(user.uid,peerUid).ok)return chatError(session,'chat_read','test_admin_isolated');
+  if(!peer||peer.ephemeral||peerUid===user.uid)return chatError(session,'chat_read','invalid_target');
+  if(!chatCanRead(user.uid,peerUid))return chatError(session,'chat_read','conversation_unavailable');
+  const conversation=chatConversation(user.uid,peerUid),received=chatMessagesFor(conversation.id).filter(row=>row.recipientUid===user.uid&&chatSeqCompare(row.seq,throughSeq)<=0);
+  if(throughSeq==='0'||!received.some(row=>row.seq===throughSeq))return chatError(session,'chat_read','message_not_found');
+  const current=chatReadState(conversation.id,user.uid,peerUid);if(chatSeqCompare(throughSeq,current.lastReadSeq)>0)current.lastReadSeq=throughSeq;
+  try{await persistChatRead(current);}catch(error){recordOperationalError('direct_chat_read_persist',error);return chatError(session,'chat_read','server_unavailable','',3);}
+  if(clusterCoordinator.enabled)clusterCoordinator.publishDirectMessageRead(conversation.id,user.uid,peerUid,current.lastReadSeq)
+    .catch(error=>recordOperationalError('cluster_chat_read_publish',error));
+  const response={conversationId:conversation.id,readerUid:user.uid,throughSeq:current.lastReadSeq,readAt:current.updatedAt};
+  for(const uid of [user.uid,peerUid])chatValidSessions(uid,target=>target.sendText(JSON.stringify({type:'chat_read_ok',payload:response})));
+  sendChatState(user.uid);sendChatState(peerUid);
+}
+
+async function handleClusterEvent(topic,payload){
+  if(topic==='direct_message'){
+    const messageId=String(payload&&payload.messageId||'');
+    if(!/^[A-Za-z0-9._:-]{3,128}$/.test(messageId))throw new Error('cluster_direct_message_id_invalid');
+    const raw=await sbFetch('rpc/get_direct_message_by_id_v1',{method:'POST',body:JSON.stringify({p_id:messageId})});
+    const row=directMessageFromDb(raw);
+    if(!row||row.id!==messageId||row.senderUid!==String(payload.senderUid||'')||row.recipientUid!==String(payload.recipientUid||''))
+      throw new Error('cluster_direct_message_lookup_mismatch');
+    const inserted=!db.chatMessages.some(item=>item.id===row.id);
+    if(inserted){
+      db.chatMessages.push(row);if(chatSeqCompare(row.seq,db.nextChatSeq)>0)db.nextChatSeq=row.seq;trimChatData();saveDB();
+    }
+    if(!inserted)return;
+    const message=chatMessagePayload(row),conversation=chatConversation(row.senderUid,row.recipientUid);
+    for(const uid of [row.senderUid,row.recipientUid])chatValidSessions(uid,target=>target.sendText(JSON.stringify({type:'chat_message',payload:{
+      conversationId:conversation.id,message,unreadCount:chatUnreadCount(uid,uid===row.senderUid?row.recipientUid:row.senderUid),duplicate:false,
+    }})));
+    sendChatState(row.senderUid);sendChatState(row.recipientUid);return;
+  }
+  if(topic==='direct_message_read'){
+    const conversationId=String(payload&&payload.conversationId||''),readerUid=String(payload&&payload.readerUid||''),peerUid=String(payload&&payload.peerUid||'');
+    if(chatConversation(readerUid,peerUid).id!==conversationId)throw new Error('cluster_direct_message_read_invalid');
+    const rows=await sbFetch('direct_message_reads?conversation_id=eq.'+encodeURIComponent(conversationId)+'&uid=eq.'+encodeURIComponent(readerUid)+'&select=*&limit=1');
+    const raw=Array.isArray(rows)&&rows[0];
+    const read=normalizeChatRead(raw&&{conversationId:raw.conversation_id,uid:raw.uid,peerUid:raw.peer_uid,lastReadSeq:raw.last_read_seq,updatedAt:Date.parse(raw.updated_at)||Date.now()});
+    if(!read||read.peerUid!==peerUid||chatSeqCompare(read.lastReadSeq,payload.throughSeq)<0)throw new Error('cluster_direct_message_read_lookup_mismatch');
+    const current=db.chatReads[chatReadKey(conversationId,readerUid)];if(current&&chatSeqCompare(current.lastReadSeq,read.lastReadSeq)>=0)return;
+    db.chatReads[chatReadKey(conversationId,readerUid)]=read;saveDB();
+    const response={conversationId,readerUid,throughSeq:read.lastReadSeq,readAt:read.updatedAt};
+    for(const uid of [readerUid,peerUid])chatValidSessions(uid,target=>target.sendText(JSON.stringify({type:'chat_read_ok',payload:response})));
+    sendChatState(readerUid);sendChatState(peerUid);
+  }
+}
 
 function normalizeOwned(o){
   const base = { avatars: Array.from({ length: 30 }, (_, i) => i).concat([100,101,108,109,116,117,124,125,132,133,140,141]), frames: [0], effects: [0], backgrounds: [0], game_cosmetics: [] };
@@ -2218,7 +2987,192 @@ function normalizeGameCosmetics(value, user){
     xiangqi:{pieceSkin:choose('xiangqi','pieceSkin',source.xiangqi&&source.xiangqi.pieceSkin,['classic','jade'],'classic')},
   };
 }
+function testAdminStarterUser(uid, username){
+  const starterBackground = 0;
+  return {
+    uid, username, usernameKey: normalizeUsername(username), name: 'Ghost QA Admin',
+    avatar: 100, background: starterBackground, frame: 0, effect: 0, nameFx: 0,
+    owned: normalizeOwned({ backgrounds: [starterBackground] }),
+    gameCosmetics: normalizeGameCosmetics(), playerCharacter: normalizePlayerCharacter(),
+    achievements: [], playmates: {}, daily: { play: 0, win: 0, streak: 0 },
+    xp: 0, level: 1, streak: 0, bestStreak: 0, coins: 0, played: {}, total: 0, wins: {}, totalWins: 0,
+    recentResults: [], purchaseRequests: [], soloRate: [], pin_hash: null,
+    dailyFirstWinDate: '', dailyAICurrencyKey: '', dailyAICurrencyEarned: 0,
+    xpCurveVersion: REWARD_CONFIG.level.curveVersion,
+    signature: '', countryRegion: '', genderTag: 'hidden', presencePreference: 'invisible', presenceVisibility: 'nobody', showcase: null,
+    lang: 'zh-CN', created_at: Date.now(), authTokens: [], authVersion: 'username-password-v1', ephemeral: false,
+  };
+}
 loadDB();
+
+/* ---------------- Playline Community P0 ---------------- */
+function playlineActorForSession(session){
+  const user=session&&session.uid&&db.users[session.uid];
+  if(!user)return null;
+  return {
+    uid:user.uid,
+    tokenHash:session.tokenHash,
+    authenticated:true,
+    sessionValid:!!(session.tokenHash&&userHasTokenHash(user,session.tokenHash)),
+    ephemeral:!!user.ephemeral,
+    testAdmin:testAdmin.shouldHidePublicUid(user.uid),
+    capabilities:session.capabilities instanceof Set?[...session.capabilities]:[],
+    profile:publicProfileObj(user, user.uid),
+  };
+}
+function playlineResultResolver(actor, resultId){
+  const uid=String(actor&&actor.uid||''),id=String(resultId||'');
+  if(!uid||!id||testAdmin.shouldHidePublicUid(uid))return null;
+  const row=[...(db.rewardHistory||[])].reverse().find(item=>item&&item.uid===uid&&String(item.resultId||'')===id&&item.mode==='online'&&item.eligible!==false&&item.blockedReason!=='afk'&&item.blockedReason!=='result_disputed');
+  if(!row||!VALID_GAMES.includes(String(row.game||row.gameId||'')))return null;
+  return { gameId:String(row.game||row.gameId), outcome:['win','draw','loss'].includes(String(row.result))?String(row.result):null, mode:'online', placement:Number(row.placement)||undefined, participantCount:Number(row.participantCount)||undefined, settledAt:Number(row.at||row.createdAt)||Date.now(), authority:'settled_consensus' };
+}
+function playlineRecordResolver(actor, recordKey){
+  const uid=String(actor&&actor.uid||''),key=String(recordKey||'');
+  const user=db.users[uid];
+  if(!user||user.ephemeral||testAdmin.shouldHidePublicUid(uid))return null;
+  const mastery=deriveVictoryMastery(user.wins||{});
+  if(key==='level')return {record:key,value:Math.max(1,Number(user.level)||1),recordedAt:Date.now(),badgeKey:'profile_level'};
+  if(key==='total_wins')return {record:key,value:Math.max(0,Number(user.totalWins)||0),recordedAt:Date.now(),badgeKey:'total_wins'};
+  const match=/^(game_wins|mastery):(gomoku|ludo|monopoly|tank|tetris|xiangqi)$/.exec(key);
+  if(!match)return null;
+  const game=match[2],item=mastery&&mastery.byGame&&mastery.byGame[game];
+  const value=match[1]==='game_wins'?Math.max(0,Number(user.wins&&user.wins[game])||0):Math.max(0,Number(item&&item.wins)||0);
+  return {record:key,gameId:game,value,recordedAt:Date.now(),badgeKey:match[1]};
+}
+const playlineStore=useSupabase
+  ? createSupabasePlaylineStore({rpc:(name,payload)=>sbFetch('rpc/'+name,{method:'POST',body:JSON.stringify(payload)})})
+  : createJsonPlaylineStore({state:db,persist:()=>{trimAuditData();saveDB();}});
+const playline=createPlaylineModule({
+  enabled:PLAYLINE_ENABLED,
+  store:playlineStore,
+  testAdminPolicy:testAdmin,
+  socialBlockedBetween,
+  socialFriendship:(aUid,bUid)=>!!socialFriendship(aUid,bUid),
+  publicProfileResolver:(uid,actor)=>publicProfileObj(db.users[String(uid)||''],String(actor&&actor.uid||'')),
+  resultResolver:playlineResultResolver,
+  recordResolver:playlineRecordResolver,
+  cursorSecret:process.env.PLAYLINE_CURSOR_SECRET||process.env.SESSION_SECRET||'playline-local-development-secret',
+  isFormalActor:actor=>!!(actor&&actor.uid&&db.users[actor.uid]&&!db.users[actor.uid].ephemeral&&userHasTokenHash(db.users[actor.uid],actor.tokenHash)),
+});
+
+/* ---------------- Chat/Playline boundary (local compatibility lane) ----------------
+ * The WebSocket wire and cluster fan-out remain caller-owned.  On the local
+ * JSON lane, Direct Chat policy/state now runs through the T7 boundary; when
+ * real Supabase is configured the existing transactional RPC path remains the
+ * explicit fallback until a production Chat Adapter is separately verified.
+ */
+function chatBoundaryActorForSession(session){
+  const uid=String(session&&session.uid||''),user=db.users[uid];
+  if(!user)return null;
+  return {
+    uid,
+    tokenHash:String(session&&session.tokenHash||''),
+    authenticated:true,
+    sessionValid:!!(session&&session.tokenHash&&userHasTokenHash(user,session.tokenHash)),
+    ephemeral:!!user.ephemeral,
+    testAdmin:testAdmin.shouldHidePublicUid(uid),
+    capabilities:session&&session.capabilities instanceof Set?[...session.capabilities]:[],
+  };
+}
+const chatPlaylineRuntimeAdapter=createJsonRuntimeChatPlaylineAdapter({
+  shape:'legacy',
+  read:()=>({chatMessages:db.chatMessages,chatReads:db.chatReads,nextChatSeq:db.nextChatSeq}),
+  commit:async(next)=>{
+    db.chatMessages=Array.isArray(next&&next.chatMessages)?next.chatMessages:[];
+    db.chatReads=next&&next.chatReads&&typeof next.chatReads==='object'&&!Array.isArray(next.chatReads)?next.chatReads:{};
+    db.nextChatSeq=String(next&&next.nextChatSeq||'0');
+    trimChatData();
+    saveDB();
+    return {ok:true,state:{chatMessages:db.chatMessages,chatReads:db.chatReads,nextChatSeq:db.nextChatSeq}};
+  },
+});
+chatPlaylineBoundary=createChatPlaylineBoundary({
+  adapter:chatPlaylineRuntimeAdapter,
+  now:serverNow,
+  users:db.users,
+  listPeers:()=>Object.keys(db.users||{}),
+  resolvePeer:uid=>db.users[String(uid)]||null,
+  isFriend:(aUid,bUid)=>!!socialFriendship(aUid,bUid),
+  isBlockedBetween:(aUid,bUid)=>socialBlockedBetween(aUid,bUid),
+  publicPeer:(viewerUid,peerUid)=>chatPublicPeer(viewerUid,peerUid),
+  isTestAdmin:uid=>testAdmin.shouldHidePublicUid(uid),
+  authorizeActor:actor=>{
+    const user=db.users[String(actor&&actor.uid||'')];
+    return !!(user&&actor&&userHasTokenHash(user,String(actor.tokenHash||'')));
+  },
+  playline,
+  playlineRequireCapability:true,
+});
+
+/* ---------------- Reward/Economy boundary (outbox ownership lane) ----------------
+ * Reward numbers remain in reward-engine; profile projection is owned by
+ * reward-progression-v1 while this seam owns only the remote outbox.
+ * This seam owns only detached pending state, per-UID serialization and the
+ * idempotent Supabase RPC retry path.  The legacy JSON field name is retained
+ * so an interrupted rolling deployment can resume the same outbox safely.
+ */
+const rewardEconomyRuntimeAdapter=createJsonRuntimeRewardEconomyAdapter({
+  shape:'legacy',
+  read:()=>({pendingRewardSync:db.pendingRewardSync}),
+  write:next=>{db.pendingRewardSync=Array.isArray(next&&next.pendingRewardSync)?next.pendingRewardSync:[];saveDB();},
+});
+rewardEconomyBoundary=createRewardEconomyBoundary({
+  adapter:rewardEconomyRuntimeAdapter,
+  enabled:useSupabase,
+  now:serverNow,
+  isExcluded:uid=>!!(testAdmin.shouldHidePublicUid(uid)||(db.users[uid]&&db.users[uid].ephemeral)),
+  remoteApply:({uid,row,user})=>sbApplyRewardTransaction(user||db.users[uid],row),
+});
+const rewardProgressionRuntimeAdapter=createJsonRuntimeRewardProgressionAdapter({
+  findResult:({uid,resultId})=>[...(db.rewardHistory||[])].reverse().find(row=>row&&row.uid===uid&&row.resultId===resultId)||null,
+  commit:plan=>{
+    const user=db.users[plan && plan.uid];
+    if(!user||user!==plan.user||!plan.profilePatch)return{ok:false,reason:'reward_progression_state_unavailable'};
+    const previousProfile={};
+    for(const key of Object.keys(plan.profilePatch))previousProfile[key]=user[key];
+    const previous={
+      history:db.history,
+      rewardHistory:db.rewardHistory,
+      economyLedger:db.economyLedger,
+      events:db.events,
+    };
+    try{
+      for(const key of Object.keys(plan.profilePatch)) user[key]=plan.profilePatch[key];
+      db.history.push(plan.row);
+      db.rewardHistory.push(plan.row);
+      if(plan.economy){
+        const economyRow=recordEconomyChange(user,plan.economy.kind,plan.economy.amount,plan.economy.refId,plan.economy.metadata,false,plan.at);
+        if(economyRow)plan.row.economyRow=economyRow;
+      }
+      for(const event of Array.isArray(plan.analytics)?plan.analytics:[]){
+        recordAnalytics(event.event,{uid:event.uid,matchId:event.matchId,game:event.game,mode:event.mode,at:event.at,metadata:event.metadata});
+      }
+      trimAuditData();
+      return{ok:true,row:plan.row};
+    }catch(error){
+      for(const key of Object.keys(plan.profilePatch))user[key]=previousProfile[key];
+      db.history=previous.history;
+      db.rewardHistory=previous.rewardHistory;
+      db.economyLedger=previous.economyLedger;
+      db.events=previous.events;
+      recordOperationalError('reward_progression_commit',error);
+      return{ok:false,reason:'reward_progression_commit_failed'};
+    }
+  },
+});
+rewardProgression=createRewardProgression({
+  adapter:rewardProgressionRuntimeAdapter,
+  policy:rewardProgressionPolicy,
+  now:serverNow,
+  isTestAdmin:uid=>testAdmin.shouldHidePublicUid(uid),
+  sandboxReward:input=>testAdmin.sandboxReward(input),
+  applyLocalRewardCurrency:(draft,reward)=>{
+    if(useSupabase&&!draft.ephemeral&&reward.currency){
+      draft._supabaseLocalRewardCurrency=(Number(draft._supabaseLocalRewardCurrency)||0)+(Number(reward.currency)||0);
+    }
+  },
+});
 
 const authFailures = new Map();
 const registrationRate = new Map();
@@ -2254,88 +3208,16 @@ function allowRegistration(ip){
   list.push(now); registrationRate.set(ip, list); return true;
 }
 function updateEditableProfile(u, payload){
-  if (!u || !payload || typeof payload !== 'object') return;
-  if (payload.name !== undefined){
-    const name = String(payload.name || '').trim().slice(0, 12);
-    if (name) u.name = name;
-  }
-  if (payload.lang && ['zh-CN','en-US','uk-UA'].includes(payload.lang)) u.lang = payload.lang;
-  if (Number.isInteger(payload.avatar) && validOwnedId('avatars', payload.avatar) && ownsItem(u, 'avatars', payload.avatar)) u.avatar = payload.avatar;
-  if (Number.isInteger(payload.background) && validOwnedId('backgrounds', payload.background) && ownsItem(u, 'backgrounds', payload.background)) u.background = payload.background;
-  if (Number.isInteger(payload.frame) && validOwnedId('frames', payload.frame) && ownsItem(u, 'frames', payload.frame)) u.frame = payload.frame;
-  if (Number.isInteger(payload.effect) && validOwnedId('effects', payload.effect) && ownsItem(u, 'effects', payload.effect)) u.effect = payload.effect;
-  if (Number.isInteger(payload.nameFx) && payload.nameFx >= 0 && payload.nameFx <= 4) u.nameFx = payload.nameFx;
-  if (payload.gameCosmetics !== undefined) u.gameCosmetics = normalizeGameCosmetics(payload.gameCosmetics, u);
-  if (payload.signature !== undefined) u.signature = sanitizePlainText(payload.signature, 80);
-  if (payload.countryRegion !== undefined){
-    const region = String(payload.countryRegion || '').trim().toUpperCase();
-    if (!region || /^[A-Z]{2}$/.test(region)) u.countryRegion = region;
-  }
-  if (payload.genderTag !== undefined){
-    const gender = sanitizePlainText(payload.genderTag, 24);
-    if (['hidden','male','female','nonbinary'].includes(gender) || /^custom:[^<>]{1,16}$/.test(gender)) u.genderTag = gender;
-  }
-  if (['joinable','online','busy','invisible'].includes(payload.presencePreference)) u.presencePreference = payload.presencePreference;
-  if (['everyone','friends','nobody'].includes(payload.presenceVisibility)) u.presenceVisibility = payload.presenceVisibility;
-  if (payload.showcase === null) u.showcase = null;
-  else if (payload.showcase && typeof payload.showcase === 'object'){
-    const type = String(payload.showcase.type || '');
-    const value = sanitizePlainText(payload.showcase.value, 48);
-    const valid = (type === 'game' && VALID_GAMES.includes(value)) ||
-      (type === 'achievement' && Array.isArray(u.achievements) && u.achievements.includes(value)) ||
-      (type === 'collection' && /^(pixel|anime|landscape|animal|neon|technology)_origins$/.test(value)) ||
-      (type === 'record' && ['totalWins','bestStreak','total','level'].includes(value));
-    if (valid) u.showcase = { type, value };
-  }
+  const result = authProfileBoundary.profile({ action:'update', user:u, payload, viewerUid:u && u.uid });
+  return !!result.ok;
 }
-function addServerAchievement(u, id){
-  if (!Array.isArray(u.achievements)) u.achievements = [];
-  if (!u.achievements.includes(id)) u.achievements.push(id);
-}
-function updateServerAchievements(u){
-  if ((u.totalWins || 0) >= 1) addServerAchievement(u, 'first_win');
-  if ((u.totalWins || 0) >= 10) addServerAchievement(u, 'win_10');
-  if ((u.totalWins || 0) >= 50) addServerAchievement(u, 'win_50');
-  if ((u.bestStreak || 0) >= 3) addServerAchievement(u, 'streak_3');
-  if ((u.bestStreak || 0) >= 5) addServerAchievement(u, 'streak_5');
-  if ((u.level || 1) >= 5) addServerAchievement(u, 'level_5');
-  if (VALID_GAMES.every(game => Number((u.played || {})[game] || 0) > 0)) addServerAchievement(u, 'all_games');
-  if (Object.keys(u.playmates || {}).length >= 3) addServerAchievement(u, 'social');
-}
-function updateServerDaily(u, won){
-  const key = new Date().toISOString().slice(0, 10);
-  if (u.dailyKey !== key){ u.dailyKey = key; u.daily = { play: 0, win: 0, streak: 0 }; }
-  if (!u.daily || typeof u.daily !== 'object') u.daily = { play: 0, win: 0, streak: 0 };
-  u.daily.play = (u.daily.play || 0) + 1;
-  if (won) u.daily.win = (u.daily.win || 0) + 1;
-  u.daily.streak = Math.max(u.daily.streak || 0, u.streak || 0);
-  ensureServerDailyTasks(u, key);
-  u.dailyTasks.play = u.daily.play;
-  u.dailyTasks.win = u.daily.win;
-  u.dailyTasks.streak = u.daily.streak;
-}
-const DAILY_TASK_DEFS = Object.freeze([
-  { id:'play_1', kind:'play', target:1, reward:5 },
-  { id:'play_3', kind:'play', target:3, reward:10 },
-  { id:'win_1', kind:'win', target:1, reward:8 },
-  { id:'streak_2', kind:'streak', target:2, reward:12 },
-]);
-function ensureServerDailyTasks(u, key){
-  const day = key || new Date().toISOString().slice(0, 10);
-  if (u.dailyTaskKey !== day || !u.dailyTasks || typeof u.dailyTasks !== 'object'){
-    u.dailyTaskKey = day;
-    u.dailyTasks = { play:0, win:0, streak:0, claimed:[], claimIds:{} };
-  }
-  u.dailyTasks.claimed = Array.isArray(u.dailyTasks.claimed) ? u.dailyTasks.claimed.map(String).slice(-20) : [];
-  u.dailyTasks.claimIds = u.dailyTasks.claimIds && typeof u.dailyTasks.claimIds === 'object' ? u.dailyTasks.claimIds : {};
-  return u.dailyTasks;
-}
-function dailyTasksPayload(u){
-  const state = ensureServerDailyTasks(u);
-  return { dayKey:u.dailyTaskKey, tasks:DAILY_TASK_DEFS.map(task => ({...task, progress:Math.min(task.target,Number(state[task.kind])||0), claimed:state.claimed.includes(task.id)})) };
-}
+const DAILY_TASK_DEFS = rewardProgressionPolicy.dailyTaskDefs;
+function updateServerAchievements(u){ return rewardProgressionPolicy.updateAchievements(u); }
+function updateServerDaily(u, won, at){ return rewardProgressionPolicy.updateDaily(u, won, at); }
+function ensureServerDailyTasks(u, key){ return rewardProgressionPolicy.ensureDailyTasks(u, key); }
+function dailyTasksPayload(u, at){ return rewardProgressionPolicy.dailyTasksPayload(u, at); }
 function recordServerPlaymate(u, other, game){
-  if (!u || !other || !other.uid || other.uid === u.uid) return;
+  if (!u || testAdmin.shouldHidePublicUid(u.uid) || !other || !other.uid || testAdmin.shouldHidePublicUid(other.uid) || other.uid === u.uid) return;
   if (!u.playmates || typeof u.playmates !== 'object') u.playmates = {};
   const pm = u.playmates[other.uid] || { name: other.name || '玩家', count: 0, lastAt: 0, games: {} };
   pm.name = other.name || pm.name;
@@ -2402,127 +3284,20 @@ function playerResult(results, mine, participantCount){
   }
   return mine.rank === 1 || mine.coins === 1 || mine.result === 'win' ? 'win' : 'loss';
 }
-function rewardRowFrom(u, reward, meta){
-  return {
-    uid: u.uid,
-    game: reward.gameId,
-    coins: reward.currency || 0,
-    xp: reward.xp || 0,
-    at: Number(meta.at) || Date.now(),
-    resultId: meta.resultId || null,
-    matchId: meta.matchId || null,
-    mode: reward.mode,
-    result: reward.result,
-    placement: reward.placement,
-    opponentIds: meta.opponentIds || [],
-    opponentKey: meta.opponentKey || '',
-    durationMs: meta.durationMs || 0,
-    meaningfulActions: meta.meaningfulActions || 0,
-    eligible: reward.eligible,
-    blockedReason: reward.blockedReason || null,
-    baseCurrency: reward.baseCurrency || 0,
-    baseXp: reward.baseXp || 0,
-    rewardReasons: reward.rewardReasons || [],
-    levelBefore: reward.levelBefore,
-    levelAfter: reward.levelAfter,
-    streakBefore: reward.streakBefore,
-    streakAfter: reward.streakAfter,
-    breakdown: reward.breakdown || [],
-    reward,
-    ephemeral: !!u.ephemeral,
-  };
-}
 function applyResolvedProgress(u, reward, meta){
-  normalizeUserRewardState(u);
-  if (useSupabase && u && !u.ephemeral) ensureSupabaseRuntimeState(u);
-  if (reward.eligible){
-    u.coins = (u.coins || 0) + (reward.currency || 0);
-    if (useSupabase && !u.ephemeral && reward.currency){
-      // 记录本进程已向玩家确认的奖励增量；购买 RPC 回调合并时可避免
-      // 用数据库旧余额覆盖一笔正在排队的奖励。
-      u._supabaseLocalRewardCurrency = (Number(u._supabaseLocalRewardCurrency) || 0) + (Number(reward.currency) || 0);
-    }
-    u.xp = reward.xpAfter;
-    u.level = reward.levelAfter;
-    u.streak = reward.streakAfter;
-    u.bestStreak = reward.bestStreakAfter;
-    u.dailyFirstWinDate = reward.dailyFirstWinDateAfter;
-    u.dailyAICurrencyKey = reward.dailyAICurrencyKeyAfter;
-    u.dailyAICurrencyEarned = reward.dailyAICurrencyEarnedAfter;
-    u.xpCurveVersion = REWARD_CONFIG.level.curveVersion;
-    if (!u.played) u.played = {};
-    u.played[reward.gameId] = (u.played[reward.gameId] || 0) + 1;
-    u.total = (u.total || 0) + 1;
-    if (reward.result === 'win'){
-      if (!u.wins || typeof u.wins !== 'object') u.wins = {};
-      u.wins[reward.gameId] = (u.wins[reward.gameId] || 0) + 1;
-      u.totalWins = (u.totalWins || 0) + 1;
-    }
-    updateServerDaily(u, reward.result === 'win');
-    updateServerAchievements(u);
-  } else if (reward.blockedReason === 'afk') {
-    u.streak = reward.streakAfter;
-  }
-  if (meta.resultId){
-    u.recentResults = Array.isArray(u.recentResults) ? u.recentResults : [];
-    if (!u.recentResults.includes(meta.resultId)) u.recentResults = u.recentResults.concat(meta.resultId).slice(-500);
-  }
-  const row = rewardRowFrom(u, reward, meta);
-  db.history.push(row);
-  db.rewardHistory.push(row);
-  if (reward.currency) row.economyRow = recordEconomyChange(u, 'match_reward', reward.currency, meta.resultId, {
-    game: reward.gameId, mode: reward.mode, matchId: meta.matchId || null, result: reward.result,
-    rewardReasons: reward.rewardReasons,
-  }, false);
-  recordAnalytics(reward.eligible ? 'reward_granted' : 'reward_blocked', {
-    uid: u.uid,
-    matchId: meta.matchId,
-    game: reward.gameId,
-    mode: reward.mode,
-    metadata: { resultId: meta.resultId, currency: reward.currency, xp: reward.xp, reason: reward.blockedReason || null },
-  });
-  if (reward.repeatTier === 'reduced' || reward.repeatTier === 'exhausted' || reward.breakdown.some(item => item.code === 'ai_daily_cap')){
-    recordAnalytics('reward_reduced', {
-      uid: u.uid, matchId: meta.matchId, game: reward.gameId, mode: reward.mode,
-      metadata: { resultId: meta.resultId, repeatTier: reward.repeatTier },
-    });
-  }
-  if (reward.dailyFirstWinGranted){
-    recordAnalytics('daily_first_win', { uid: u.uid, matchId: meta.matchId, game: reward.gameId, mode: reward.mode });
-  }
-  if (reward.levelAfter > reward.levelBefore){
-    recordAnalytics('level_up', {
-      uid: u.uid, matchId: meta.matchId, game: reward.gameId, mode: reward.mode,
-      metadata: { from: reward.levelBefore, to: reward.levelAfter },
-    });
-  }
-  trimAuditData();
-  return row;
+  if(!rewardProgression)return null;
+  if(useSupabase&&u&&!u.ephemeral)ensureSupabaseRuntimeState(u);
+  const outcome=rewardProgression.apply({user:u,reward,meta:meta||{}});
+  if(!outcome.ok){recordOperationalError('reward_progression_apply',new Error(outcome.reason));return null;}
+  return outcome.row||null;
 }
 function syncRewardRow(u, row){
-  if (!useSupabase || !u || !row || u.ephemeral) return Promise.resolve(true);
-  // 先写入本地 outbox，再发起远端事务；进程在网络回调前终止也可于下次启动续传。
-  const key = String(u.uid) + '|' + String(row.resultId);
-  if (!(db.pendingRewardSync || []).some(item => String(item.uid) + '|' + String(item.row && item.row.resultId) === key)){
-    db.pendingRewardSync.push({ uid: u.uid, row, queuedAt: Date.now(), ephemeral: !!u.ephemeral });
-    saveDB();
-  }
-  return sbApplyRewardTransaction(u, row).then(ok => {
-    if (ok){
-      db.pendingRewardSync = (db.pendingRewardSync || []).filter(item =>
-        !(String(item.uid) === String(u.uid) && String(item.row && item.row.resultId) === String(row.resultId)));
-      saveDB();
-    }
-    return ok;
-  });
+  if (!rewardEconomyBoundary) return Promise.resolve(true);
+  return rewardEconomyBoundary.enqueue({uid:u&&u.uid,user:u,row}).then(result => result.ok === true);
 }
 function retryPendingRewardSync(){
-  if (!useSupabase) return Promise.resolve([]);
-  const pending = (db.pendingRewardSync || []).slice();
-  return Promise.all(pending.map(item => {
-    const user = item && db.users[item.uid];
-    return user && item.row ? syncRewardRow(user, item.row) : Promise.resolve(false);
-  }));
+  if (!rewardEconomyBoundary) return Promise.resolve([]);
+  return rewardEconomyBoundary.retry({userResolver:uid=>db.users[uid]});
 }
 async function sbFetchAILearningModel(uid, game){
   if (!useSupabase || !uid || !game) return null;
@@ -2612,7 +3387,7 @@ function drainAILearningGroup(uid, game){
   return run;
 }
 function syncAILearningResult(user, resultId, learning){
-  if (!useSupabase || !user || user.ephemeral || !learning || learning.duplicate ||
+  if (!useSupabase || !user || user.ephemeral || testAdmin.shouldHidePublicUid(user.uid) || !learning || learning.duplicate ||
       !learning.model || !Array.isArray(learning.experiences) || !learning.experiences.length) return Promise.resolve(true);
   const key = user.uid + '|' + resultId;
   if (!(db.pendingAILearningSync || []).some(item => item.uid + '|' + item.resultId === key)){
@@ -2642,6 +3417,12 @@ function retryPendingAILearningSync(){
 function stopRoomAuthorities(r){
   if (!r) return;
   stopRoomGameplayTimer(r);
+  clearRoomMatchSocialState(r);
+  disposeRoomEngagementIntegrity(r);
+  clearTankSnapshotDelayTimers(r);
+  if (r.tankSnapshotStream && typeof r.tankSnapshotStream.dispose === 'function') r.tankSnapshotStream.dispose();
+  r.tankSnapshotStream = null;
+  r.tankLastBroadcastTick = -1;
   r.tankAuthority = null;
   r.tetrisAuthority = null;
   r.xiangqiClock = null;
@@ -2649,6 +3430,18 @@ function stopRoomAuthorities(r){
   r.tetrisRuleAuthority = null;
   r.xiangqiRuleAuthority = null;
   r.monopolyRuleAuthority = null;
+}
+function clearRoomMatchSocialState(r){
+  if (!r) return;
+  if(r.matchExpressionDelayTimers instanceof Set){for(const timer of r.matchExpressionDelayTimers)clearTimeout(timer);r.matchExpressionDelayTimers.clear();}
+  if(r.matchChatDelayTimers instanceof Set){for(const timer of r.matchChatDelayTimers)clearTimeout(timer);r.matchChatDelayTimers.clear();}
+  r.matchExpressionSeen = new Map();
+  r.matchExpressionRates = new Map();
+  r.matchExpressionCounts = new Map();
+  r.matchChatEvents = [];
+  r.matchChatSeen = new Map();
+  r.matchChatRates = new Map();
+  r.matchChatCounts = new Map();
 }
 function stopRoomGameplayTimer(r){
   if (!r) return;
@@ -2663,7 +3456,223 @@ function sessionSupports(session, protocol){
   return values.includes(protocol)||values.includes(String(protocol).replace(/-/g,'_'));
 }
 const RULE_AUTHORITY_V2_ENABLED=String(process.env.ENABLE_RULE_AUTHORITY_V2||'1')!=='0';
+const TETRIS_ADVANCED_SCORING_ENABLED=String(process.env.TETRIS_GUIDELINE_SCORING||'1')!=='0';
+// Transport-only experiment.  It never changes Tank Authority, and every
+// recipient keeps the original full snapshot fallback until this is enabled.
+const TANK_SNAPSHOT_DELTA_V2_ENABLED=String(process.env.ENABLE_TANK_SNAPSHOT_DELTA_V2||'0')==='1';
+// Independent, server-only shadow audit. It has no protocol/capability or
+// Reward effect and observes only inputs already accepted by Tank Authority.
+const ENGAGEMENT_INTEGRITY_SHADOW_ENABLED=String(process.env.ENABLE_ENGAGEMENT_INTEGRITY_SHADOW||'0')==='1';
+const ENGAGEMENT_INTEGRITY_COHORT_LIMIT=2;
+const ENGAGEMENT_INTEGRITY_EVENT_CAPACITY=256;
+const ENGAGEMENT_INTEGRITY_COHORTS=Object.freeze(['human','ai']);
+// At 10 live snapshots/second, the maximum 30-second spectator delay needs
+// at most 300 queued room frames. Keep one shared timer per frame (not one per
+// spectator) and a small scheduling margin so memory remains deterministic.
+const TANK_SNAPSHOT_DELAY_TIMER_LIMIT=320;
 function roomSupports(r, protocol){return RULE_AUTHORITY_V2_ENABLED&&!!r&&[...r.clients.keys()].every(session=>sessionSupports(session,protocol));}
+
+function noteEngagementIntegrityError(){
+  incrementGameplayMetric('engagementIntegrityErrors');
+}
+function activeEngagementIntegrityAnalyzerCount(){
+  let count=0;
+  for(const room of rooms.values()){
+    const state=room&&room.engagementIntegrityShadow;
+    if(state&&state.analyzers instanceof Map)count+=Math.min(ENGAGEMENT_INTEGRITY_COHORT_LIMIT,state.analyzers.size);
+  }
+  return count;
+}
+function disposeRoomEngagementIntegrity(r){
+  const state=r&&r.engagementIntegrityShadow;
+  if(!state){if(r)r.engagementIntegrityShadow=null;return 0;}
+  let disposed=0;
+  if(state.analyzers instanceof Map){
+    for(const analyzer of state.analyzers.values()){
+      try{if(analyzer&&typeof analyzer.dispose==='function')analyzer.dispose();disposed++;}
+      catch(_error){noteEngagementIntegrityError();}
+    }
+    state.analyzers.clear();
+  }
+  r.engagementIntegrityShadow=null;
+  return disposed;
+}
+function startRoomEngagementIntegrity(r){
+  disposeRoomEngagementIntegrity(r);
+  if(!ENGAGEMENT_INTEGRITY_SHADOW_ENABLED||!r||r.game!=='tank'||!r.tankAuthority||r.testAdminSandbox===true)return false;
+  const analyzers=new Map();
+  try{
+    if(humanRoomSeats(r).length)analyzers.set('human',EngagementIntegrityAnalyzer.create({enabled:true,capacity:ENGAGEMENT_INTEGRITY_EVENT_CAPACITY}));
+    if(aiRoomSeats(r).length)analyzers.set('ai',EngagementIntegrityAnalyzer.create({enabled:true,capacity:ENGAGEMENT_INTEGRITY_EVENT_CAPACITY}));
+    if(analyzers.size<1||analyzers.size>ENGAGEMENT_INTEGRITY_COHORT_LIMIT)throw new Error('invalid_cohort_count');
+    r.engagementIntegrityShadow={
+      analyzers,
+      reconnectEpochs:Array.from({length:5},()=>0),
+      reconnectPending:Array.from({length:5},()=>false),
+    };
+    return true;
+  }catch(_error){
+    for(const analyzer of analyzers.values()){try{if(analyzer&&typeof analyzer.dispose==='function')analyzer.dispose();}catch{}}
+    analyzers.clear();
+    r.engagementIntegrityShadow=null;
+    noteEngagementIntegrityError();
+    return false;
+  }
+}
+function markRoomEngagementIntegrityReconnect(r,actorSlot){
+  const state=r&&r.engagementIntegrityShadow;
+  if(!state||!Number.isInteger(actorSlot)||actorSlot<0||actorSlot>=5)return false;
+  const current=Number(state.reconnectEpochs&&state.reconnectEpochs[actorSlot])||0;
+  state.reconnectEpochs[actorSlot]=Math.min(Number.MAX_SAFE_INTEGER,current+1);
+  state.reconnectPending[actorSlot]=true;
+  return true;
+}
+function tankEngagementActionClass(value){
+  try{
+    const input=value&&typeof value==='object'&&!Array.isArray(value)?value:{};
+    let up=input.up===true,down=input.down===true,left=input.left===true,right=input.right===true;
+    const fire=input.fire===true;
+    if(up&&down){up=false;down=false;}
+    if(left&&right){left=false;right=false;}
+    const vertical=up?'up':down?'down':'';
+    const horizontal=left?'left':right?'right':'';
+    const direction=vertical&&horizontal?vertical+'-'+horizontal:(vertical||horizontal||'idle');
+    return fire?(direction==='idle'?'fire':direction+'-fire'):direction;
+  }catch(_error){return null;}
+}
+function observeAcceptedTankInput(r,actorSlot,actorClass,actionClass,acceptedAt,firstSequence,excluded){
+  if(!ENGAGEMENT_INTEGRITY_SHADOW_ENABLED)return false;
+  if(excluded===true){incrementGameplayMetric('engagementIntegrityExcludedTestAdmin');return false;}
+  const state=r&&r.engagementIntegrityShadow;
+  if(!state||!(state.analyzers instanceof Map)||!ENGAGEMENT_INTEGRITY_COHORTS.includes(actorClass))return false;
+  const analyzer=state.analyzers.get(actorClass);
+  if(!analyzer||typeof analyzer.record!=='function')return false;
+  const reconnectEpoch=Number(state.reconnectEpochs&&state.reconnectEpochs[actorSlot])||0;
+  const reconnecting=state.reconnectPending&&state.reconnectPending[actorSlot]===true;
+  try{
+    const summary=Object.freeze({
+      gameId:'tank',
+      mode:humanRoomSeats(r).length>=2?'online':'ai',
+      actorSlot,
+      actorClass,
+      sourceClass:'tank-authority',
+      actionClass,
+      acceptedAt,
+      sequenceClass:reconnecting?'reconnect':firstSequence?'first':'monotonic',
+      reconnectEpoch,
+      inputModality:'unobserved',
+    });
+    const observed=analyzer.record(summary);
+    if(!observed||observed.accepted!==true){noteEngagementIntegrityError();return false;}
+    if(reconnecting)state.reconnectPending[actorSlot]=false;
+    incrementGameplayMetric(actorClass==='ai'?'engagementIntegrityAiAccepted':'engagementIntegrityHumanAccepted');
+    return true;
+  }catch(_error){noteEngagementIntegrityError();return false;}
+}
+function boundedEngagementMetric(value,scale=1){
+  const numeric=Number(value);
+  if(!Number.isFinite(numeric)||numeric<0)return null;
+  return Math.min(Number.MAX_SAFE_INTEGER,Math.round(numeric*scale));
+}
+function recordEngagementIntegrityAudit(cohort,snapshot){
+  if(!snapshot||snapshot.auditOnly!==true)return noteEngagementIntegrityError();
+  const accepted=boundedEngagementMetric(snapshot.acceptedCount);
+  const observedMs=boundedEngagementMetric(snapshot.observedMs);
+  const apm=boundedEngagementMetric(snapshot.APM,1000);
+  const entropy=boundedEngagementMetric(snapshot.entropy,1000);
+  const confidence=boundedEngagementMetric(snapshot.confidence,1000);
+  if([accepted,observedMs,apm,entropy,confidence].some(value=>value===null))return noteEngagementIntegrityError();
+  if(cohort==='ai'){
+    incrementGameplayMetric('engagementIntegrityAiFinalized');
+    incrementGameplayMetric('engagementIntegrityAiFinalizedAccepted',accepted);
+    incrementGameplayMetric('engagementIntegrityAiObservedMs',observedMs);
+    incrementGameplayMetric('engagementIntegrityAiApmMilliTotal',apm);
+    incrementGameplayMetric('engagementIntegrityAiEntropyMilliTotal',entropy);
+    incrementGameplayMetric('engagementIntegrityAiConfidenceMilliTotal',confidence);
+  }else{
+    incrementGameplayMetric('engagementIntegrityHumanFinalized');
+    incrementGameplayMetric('engagementIntegrityHumanFinalizedAccepted',accepted);
+    incrementGameplayMetric('engagementIntegrityHumanObservedMs',observedMs);
+    incrementGameplayMetric('engagementIntegrityHumanApmMilliTotal',apm);
+    incrementGameplayMetric('engagementIntegrityHumanEntropyMilliTotal',entropy);
+    incrementGameplayMetric('engagementIntegrityHumanConfidenceMilliTotal',confidence);
+  }
+  if(snapshot.saturated===true)incrementGameplayMetric('engagementIntegritySaturatedAudits');
+}
+function finalizeRoomEngagementIntegrity(r){
+  const state=r&&r.engagementIntegrityShadow;
+  if(!state||!(state.analyzers instanceof Map))return false;
+  for(const [cohort,analyzer] of state.analyzers){
+    try{recordEngagementIntegrityAudit(cohort,analyzer.snapshot());}
+    catch(_error){noteEngagementIntegrityError();}
+  }
+  incrementGameplayMetric('engagementIntegrityFinalizedMatches');
+  disposeRoomEngagementIntegrity(r);
+  return true;
+}
+function clearTankSnapshotDelayTimers(r){
+  if(!r||!(r.tankSnapshotDelayTimers instanceof Set))return 0;
+  const count=r.tankSnapshotDelayTimers.size;
+  for(const timer of r.tankSnapshotDelayTimers)clearTimeout(timer);
+  r.tankSnapshotDelayTimers.clear();
+  return count;
+}
+function forgetTankSnapshotRecipient(r, session){
+  if (!r || !session || !r.tankSnapshotStream || typeof r.tankSnapshotStream.forget !== 'function') return false;
+  const outcome=r.tankSnapshotStream.forget(session.sessionId);
+  return !!(outcome&&outcome.accepted);
+}
+function tankSnapshotMessageFor(r, session, state, forceKeyframe){
+  if (r&&r.tankSnapshotStream&&r.tankSnapshotStream.enabled===true&&sessionSupports(session,TANK_SNAPSHOT_DELTA_PROTOCOL)){
+    const encoded=r.tankSnapshotStream.encodeFor(session.sessionId,state,{forceKeyframe:forceKeyframe===true});
+    if(encoded&&encoded.accepted===true&&encoded.envelope)return{type:'tank_snapshot',payload:encoded.envelope};
+  }
+  return{type:'tank_snapshot',payload:state};
+}
+function deliverTankSnapshot(r, session, state, forceKeyframe){
+  if(!session||session.alive===false){forgetTankSnapshotRecipient(r,session);return false;}
+  const text=JSON.stringify(tankSnapshotMessageFor(r,session,state,forceKeyframe));
+  session.sendText(text);
+  return true;
+}
+function scheduleDelayedTankSnapshot(r,state,delayMs){
+  if(!r||!state||!(r.spectators instanceof Map)||!r.spectators.size)return false;
+  const delay=Math.max(0,Math.min(30000,Number(delayMs)||0));
+  if(!delay)return false;
+  if(!(r.tankSnapshotDelayTimers instanceof Set))r.tankSnapshotDelayTimers=new Set();
+  while(r.tankSnapshotDelayTimers.size>=TANK_SNAPSHOT_DELAY_TIMER_LIMIT){
+    const oldest=r.tankSnapshotDelayTimers.values().next().value;
+    clearTimeout(oldest);r.tankSnapshotDelayTimers.delete(oldest);
+  }
+  const expectedMatchId=String(state.matchId||'');
+  const expectedRoomId=String(r.id||'');
+  const recipients=[...r.spectators.entries()].slice(0,Math.max(1,Number(r.maxSpectators)||50)).map(([session,marker])=>({session,marker}));
+  const timer=setTimeout(()=>{
+    if(r.tankSnapshotDelayTimers instanceof Set)r.tankSnapshotDelayTimers.delete(timer);
+    if(!expectedMatchId||String(r.matchId||'')!==expectedMatchId||String(state.matchId||'')!==expectedMatchId)return;
+    for(const recipient of recipients){
+      const session=recipient.session;
+      if(!session||session.alive===false||String(session.spectatorRoom||'')!==expectedRoomId||
+          !(r.spectators instanceof Map)||r.spectators.get(session)!==recipient.marker)continue;
+      deliverTankSnapshot(r,session,state,false);
+    }
+  },delay);
+  r.tankSnapshotDelayTimers.add(timer);
+  if(timer&&timer.unref)timer.unref();
+  return true;
+}
+function broadcastTankSnapshot(r, state){
+  if(!r||!state)return;
+  for(const session of r.clients.keys()){
+    if(session.alive===false){forgetTankSnapshotRecipient(r,session);continue;}
+    deliverTankSnapshot(r,session,state,false);
+  }
+  if(r.spectators){
+    const delay=Math.max(0,Number(r.spectatorDelayMs)||0);
+    if(delay)scheduleDelayedTankSnapshot(r,state,delay);
+    else for(const session of r.spectators.keys())deliverTankSnapshot(r,session,state,false);
+  }
+}
 function gameplayMetadata(r){
   if (!r || !r.started) return null;
   if (r.tankAuthority){
@@ -2710,6 +3719,21 @@ function settleAuthoritativeRoom(r, order, cause){
   const results = authoritativeResults(order);
   settleRoomResult(r, results, { cause:cause || 'authoritative_gameplay' });
 }
+// Rule timers use the same Match Protocol seam as client actions. The helper
+// deliberately returns `null` only during bootstrap/rollback, allowing the
+// legacy inline path to remain a safe compatibility fallback; a handled but
+// failed boundary result stays fail-closed and is not replayed inline.
+function runMatchProtocolTransition(room, game){
+  if (!matchProtocolBoundary || !room) return null;
+  try {
+    const outcome=matchProtocolBoundary.transition({
+      type:String(game || '') + '_transition', room, session:room.host || null,
+      payload:{ matchId:room.matchId },
+    });
+    if(outcome&&outcome.handled&&outcome.ok===false)stopRoomGameplayTimer(room);
+    return outcome;
+  } catch (_error) { return { handled:true, ok:false, reason:'match_protocol_unavailable' }; }
+}
 function startRoomAuthorities(r){
   stopRoomAuthorities(r);
   if (!r || !r.started || !r.matchId) return;
@@ -2718,10 +3742,29 @@ function startRoomAuthorities(r){
       matchId:r.matchId, playerCount:activeSeatCount(r), startedAt:r.startedAt,
       durationMs:Math.max(10000, Number(process.env.TANK_MATCH_DURATION_MS) || 180000),
     });
+    startRoomEngagementIntegrity(r);
+    // Delta transport is an optional receiver-specific adapter.  The
+    // Authority remains the sole snapshot source and a construction failure
+    // deliberately leaves the existing full JSON broadcast path intact.
+    r.tankSnapshotStream = null;
+    r.tankLastBroadcastTick = -1;
+    if(TANK_SNAPSHOT_DELTA_V2_ENABLED){
+      try{
+        r.tankSnapshotStream=createTankSnapshotStream({
+          enabled:true,
+          keyframeEveryTicks:Number(process.env.TANK_SNAPSHOT_DELTA_KEYFRAME_TICKS),
+          maxRecipients:Number(process.env.TANK_SNAPSHOT_DELTA_MAX_RECIPIENTS),
+          maxFramesPerRecipient:Number(process.env.TANK_SNAPSHOT_DELTA_MAX_FRAMES),
+        });
+      }catch(_error){r.tankSnapshotStream=null;}
+    }
     r.gameplayTimer = setInterval(() => {
       if (!r.started || !r.tankAuthority) return;
       const state = r.tankAuthority.advance(Date.now());
-       if (state.serverTick % 2 === 0){incrementGameplayMetric('tankSnapshots');broadcast(r, { type:'tank_snapshot', payload:state });}
+      if (state.serverTick % 2 === 0 && state.serverTick > r.tankLastBroadcastTick){
+        r.tankLastBroadcastTick=state.serverTick;
+        incrementGameplayMetric('tankSnapshots');broadcastTankSnapshot(r,state);
+      }
       if (state.finished && !r.gameplayResultSent){
         r.gameplayResultSent = true;
         broadcast(r, { type:'tank_result', payload:{ matchId:r.matchId, order:state.order, stats:state.players } });
@@ -2732,10 +3775,13 @@ function startRoomAuthorities(r){
   } else if (r.game === 'tetris'){
     const startAt = Date.now() + 3000;
     const matchEndAt=startAt+Math.max(15000,Number(process.env.TETRIS_MATCH_DURATION_MS)||300000);
-    if(roomSupports(r,PROTOCOL_VERSIONS.tetrisRules)){
+    if(TETRIS_ADVANCED_SCORING_ENABLED&&roomSupports(r,PROTOCOL_VERSIONS.tetrisRules)){
       r.tetrisRuleAuthority=new TetrisRuleAuthority({matchId:r.matchId,playerCount:activeSeatCount(r),startAt,matchEndAt,matchSeed:r.matchId});
       r.gameplayTimer=setInterval(()=>{
-        if(!r.started||!r.tetrisRuleAuthority)return;const advanced=r.tetrisRuleAuthority.advance(Date.now());
+        if(!r.started||!r.tetrisRuleAuthority)return;
+        const routed=runMatchProtocolTransition(r,'tetris');
+        if(routed&&routed.handled)return;
+        const advanced=r.tetrisRuleAuthority.advance(Date.now());
         if(advanced.changed){incrementGameplayMetric('tetrisSnapshots');broadcast(r,advanced.stateEvent||r.tetrisRuleAuthority.stateEvent());}
         if(advanced.result&&!r.gameplayResultSent){r.gameplayResultSent=true;broadcast(r,advanced.result);settleAuthoritativeRoom(r,advanced.result.order,'tetris_rule_authority');stopRoomGameplayTimer(r);}
       },50);
@@ -2747,7 +3793,7 @@ function startRoomAuthorities(r){
     const initialMs=Math.max(1000,Number(process.env.XIANGQI_CLOCK_MS)||10*60*1000);
     if(roomSupports(r,PROTOCOL_VERSIONS.xiangqiRules)){
       r.xiangqiRuleAuthority=new XiangqiRuleAuthority({matchId:r.matchId,startedAt:r.startedAt,initialMs});
-      r.gameplayTimer=setInterval(()=>{if(!r.started||!r.xiangqiRuleAuthority||r.gameplayResultSent)return;const advanced=r.xiangqiRuleAuthority.advance(Date.now());if(advanced.event){r.gameplayResultSent=true;broadcast(r,advanced.event);if(advanced.result)settleAuthoritativeRoom(r,advanced.result.order,'xiangqi_rule_timeout');stopRoomGameplayTimer(r);}},250);
+      r.gameplayTimer=setInterval(()=>{if(!r.started||!r.xiangqiRuleAuthority||r.gameplayResultSent)return;const routed=runMatchProtocolTransition(r,'xiangqi');if(routed&&routed.handled)return;const advanced=r.xiangqiRuleAuthority.advance(Date.now());if(advanced.event){r.gameplayResultSent=true;broadcast(r,advanced.event);if(advanced.result)settleAuthoritativeRoom(r,advanced.result.order,'xiangqi_rule_timeout');stopRoomGameplayTimer(r);}},250);
     }else{
       r.xiangqiClock=new XiangqiClockAuthority({matchId:r.matchId,startedAt:r.startedAt,initialMs});
       r.gameplayTimer=setInterval(()=>{if(!r.started||!r.xiangqiClock||r.gameplayResultSent)return;const timeout=r.xiangqiClock.timeout(Date.now());if(!timeout)return;r.gameplayResultSent=true;broadcast(r,timeout);settleAuthoritativeRoom(r,[timeout.payload.winner,timeout.payload.loser],'xiangqi_clock_timeout');stopRoomGameplayTimer(r);},250);
@@ -2755,7 +3801,7 @@ function startRoomAuthorities(r){
   } else if (r.game === 'monopoly'){
     if(roomSupports(r,PROTOCOL_VERSIONS.monopolyRules)){
       r.monopolyRuleAuthority=new MonopolyRuleAuthority({matchId:r.matchId,playerCount:activeSeatCount(r),matchSeed:r.matchId,auctionDurationMs:Math.max(1000,Number(process.env.MONOPOLY_AUCTION_MS)||5000)});
-      r.gameplayTimer=setInterval(()=>{if(!r.started||!r.monopolyRuleAuthority)return;const advanced=r.monopolyRuleAuthority.advance(Date.now());if(advanced.event)broadcast(r,advanced.event);if(advanced.result&&!r.gameplayResultSent){r.gameplayResultSent=true;broadcast(r,advanced.result);settleAuthoritativeRoom(r,advanced.result.order,'monopoly_rule_authority');stopRoomGameplayTimer(r);}},100);
+      r.gameplayTimer=setInterval(()=>{if(!r.started||!r.monopolyRuleAuthority)return;const routed=runMatchProtocolTransition(r,'monopoly');if(routed&&routed.handled)return;const advanced=r.monopolyRuleAuthority.advance(Date.now());if(advanced.event)broadcast(r,advanced.event);if(advanced.result&&!r.gameplayResultSent){r.gameplayResultSent=true;broadcast(r,advanced.result);settleAuthoritativeRoom(r,advanced.result.order,'monopoly_rule_authority');stopRoomGameplayTimer(r);}},100);
     }else{
       r.monopolyAuction=new MonopolyAuctionAuthority({matchId:r.matchId,playerCount:activeSeatCount(r),durationMs:Math.max(1000,Number(process.env.MONOPOLY_AUCTION_MS)||5000)});r.monopolyTurn=0;
       r.gameplayTimer=setInterval(()=>{if(!r.started||!r.monopolyAuction)return;const closed=r.monopolyAuction.close(Date.now());if(closed)broadcast(r,closed);},100);
@@ -2763,11 +3809,25 @@ function startRoomAuthorities(r){
   }
   if (r.gameplayTimer && r.gameplayTimer.unref) r.gameplayTimer.unref();
 }
-function startRoomMatch(r){
-  compactRoomPlayers(r);
-  const playerCount = activeSeatCount(r);
+function announceRoomMatch(r){
+  const playerCount=activeSeatCount(r);
+  if (!r.testAdminSandbox) recordAnalytics('match_started', {
+    matchId: r.matchId,
+    game: r.game,
+    mode: 'online',
+    metadata: { participantCount:playerCount, humanCount:humanRoomSeats(r).length, aiCount:aiRoomSeats(r).length },
+  });
+  broadcast(r, { type:'started', game:r.game, size:playerCount, players:activeRoomSeats(r).map(seat => seat.seatId), seats:ensureRoomSeats(r).map(publicSeat), matchId:r.matchId, gameplay:gameplayMetadata(r), presentation:gameplayPresentation(r) });
+  broadcastLobby();
+}
+function startRoomMatch(r, options={}){
+  if(options.skipCompact!==true){
+    const compacted=compactRoomPlayers(r);
+    if(!compacted||!compacted.ok)return false;
+  }
   r.started = true;
-  r.matchId = crypto.randomBytes(12).toString('base64url');
+  const reservedMatchId=String(options&&options.matchId||'');
+  r.matchId = reservedMatchId || crypto.randomBytes(12).toString('base64url');
   r.resultClaims = new Map();
   r.settled = false;
   r.disputed = false;
@@ -2785,17 +3845,18 @@ function startRoomMatch(r){
   r.gameplayResultSent = false;
   r.gameSnapshot = null;
   r.tetrisPresentation = new Map();
+  r.matchExpressionSeen = new Map();
+  r.matchExpressionRates = new Map();
+  r.matchExpressionCounts = new Map();
+  r.matchChatEvents = [];
+  r.matchChatSeen = new Map();
+  r.matchChatRates = new Map();
+  r.matchChatCounts = new Map();
   r.tournamentBinding = null;
   r.finalResult = null;
   startRoomAuthorities(r);
-  recordAnalytics('match_started', {
-    matchId: r.matchId,
-    game: r.game,
-    mode: 'online',
-    metadata: { participantCount:playerCount, humanCount:humanRoomSeats(r).length, aiCount:aiRoomSeats(r).length },
-  });
-  broadcast(r, { type:'started', game:r.game, size:playerCount, players:activeRoomSeats(r).map(seat => seat.seatId), seats:ensureRoomSeats(r).map(publicSeat), matchId:r.matchId, gameplay:gameplayMetadata(r), presentation:gameplayPresentation(r) });
-  broadcastLobby();
+  if(options.deferAnnounce!==true)announceRoomMatch(r);
+  return true;
 }
 function roomResultError(r, msg, reason){
   for (const c of r.clients.keys()) c.sendText(JSON.stringify({ type: 'result_error', msg, reason, matchId: r.matchId }));
@@ -2804,7 +3865,24 @@ function settleRoomResult(r, results, options = {}){
   if (r.settled) return;
   r.settled = true;
   stopRoomGameplayTimer(r);
+  clearRoomMatchSocialState(r);
   const now = Date.now();
+  if (r.testAdminSandbox === true){
+    const sandboxParticipants = [...r.clients.entries()].map(([session, slot]) => ({ session, slot, user: session.uid && db.users[session.uid] })).filter(x => x.user);
+    r.resultRewards = r.resultRewards instanceof Map ? r.resultRewards : new Map();
+    for (const p of sandboxParticipants){
+      const mine = Array.isArray(results) ? results.find(x => x.slot === p.slot) : null;
+      const result = options.forceResult || playerResult(results, mine, activeSeatCount(r));
+      const reward = testAdmin.sandboxReward({gameId:r.game, mode:'ai', result, placement:result === 'win' ? 1 : 2, participantCount:sandboxParticipants.length, level:p.user.level, xp:p.user.xp});
+      const resultId = r.matchId + ':' + p.slot;
+      r.resultRewards.set(p.slot, reward);
+      p.session.sendText(JSON.stringify({type:'result_ok',matchId:r.matchId,payload:{profile:profileObj(p.user),reward,resultId,virtual:true}}));
+    }
+    r.finalResult={matchId:r.matchId,game:r.game,results:(Array.isArray(results)?results:[]).map(item=>({slot:item.slot,rank:item.rank})),cause:options.cause||'sandbox'};
+    broadcast(r,{type:'match_result',payload:r.finalResult});
+    finalizeRoomEngagementIntegrity(r);
+    return;
+  }
   const progress = roomProgress(r);
   const isTournamentMatch=!!r.tournamentBinding;
   const globalEligibility = isTournamentMatch?{eligible:false,blockedReason:'tournament_mode'}:(options.eligibility || roomRewardEligibility(r, now));
@@ -2892,6 +3970,9 @@ function settleRoomResult(r, results, options = {}){
       payload: { profile: profileObj(p.user), reward: p.reward, resultId: p.resultMeta.resultId },
     }));
   }
+  // Reward resolution and public result receipts stay first. The shadow path
+  // can only take an audit snapshot after those existing effects complete.
+  finalizeRoomEngagementIntegrity(r);
   r.finalResult={matchId:r.matchId,game:r.game,results:results.map(item=>({slot:item.slot,rank:item.rank})),cause:options.cause||'consensus'};
   saveReplayForRoom(r, r.finalResult);
   broadcast(r,{type:'match_result',payload:r.finalResult});
@@ -2900,7 +3981,9 @@ function settleRoomResult(r, results, options = {}){
 }
 function saveReplayForRoom(r, finalResult){
   if (!r || !r.matchId || !Array.isArray(r.moveLog) || !r.moveLog.length) return null;
-  const uids=[...r.clients.keys()].map(session=>session.uid).filter(Boolean),createdAt=Date.now(),visibility=normalizeRoomVisibility(r.visibility);
+  const uids=[...r.clients.keys()].map(session=>session.uid).filter(Boolean);
+  if (uids.some(testAdmin.shouldHidePublicUid)) return null;
+  const createdAt=Date.now(),visibility=normalizeRoomVisibility(r.visibility);
   const replay={version:'replay-v1.1',replayId:'rep_'+crypto.randomBytes(10).toString('base64url'),matchId:r.matchId,game:r.game,createdAt,expiresAt:createdAt+REPLAY_TTL_MS,publicAt:visibility==='public'?createdAt+REPLAY_PUBLIC_DELAY_MS:0,visibility,uids,shareTokenHash:null,shareExpiresAt:0,moveLog:r.moveLog.map(event=>({seq:event.seq,player:event.player,payload:event.payload})),moveLogTruncated:!!r.moveLogTruncated,finalResult:{...finalResult}};
   db.replays=(db.replays||[]).filter(item=>item&&item.matchId!==r.matchId);db.replays.push(replay);trimAuditData();saveDB();
   recordAnalytics('replay_created',{matchId:r.matchId,game:r.game,metadata:{replayId:replay.replayId,eventCount:replay.moveLog.length,truncated:replay.moveLogTruncated}});
@@ -3050,7 +4133,7 @@ function beginSoloMatch(session, user, payload){
     return;
   }
   if (existing && !existing.completed){
-    recordAnalytics('match_invalidated', {
+    if (!testAdmin.shouldHidePublicUid(user.uid)) recordAnalytics('match_invalidated', {
       uid: user.uid, matchId: existing.matchId, game: existing.game, mode: 'ai',
       metadata: { reason: 'ai_match_restarted' },
     });
@@ -3071,9 +4154,10 @@ function beginSoloMatch(session, user, payload){
     pendingAIDecisions: new Map(),
     confirmedAIDecisionIds: new Set(),
     completed: false,
+    testAdminSandbox:testAdmin.hasCapability(user.uid, 'test_admin_sandbox_match'),
   };
   soloMatches.set(user.uid, match);
-  recordAnalytics('match_started', { uid: user.uid, matchId: match.matchId, game, mode: 'ai' });
+  if (!match.testAdminSandbox) recordAnalytics('match_started', { uid: user.uid, matchId: match.matchId, game, mode: 'ai' });
   sendSoloStarted(session, match);
 }
 function recordSoloProgress(session, user, payload){
@@ -3093,6 +4177,7 @@ function recordSoloProgress(session, user, payload){
   match.updatedAt = Date.now();
 }
 function confirmSoloAIDecision(session, user, payload){
+  if (testAdmin.shouldHidePublicUid(user && user.uid)) return;
   const match = soloMatches.get(user.uid);
   const game = String(payload && payload.game || '');
   const matchId = String(payload && payload.matchId || '');
@@ -3170,6 +4255,12 @@ function settleSoloMatch(session, user, payload){
   const match = soloMatches.get(user.uid);
   if (!match || match.completed || match.game !== game || match.matchId !== matchId || match.resultId !== resultId){
     soloResultError(session, '人机对局票据不存在、已完成或已过期', matchId, resultId, 'solo_ticket_unavailable');
+    return;
+  }
+  if (match.testAdminSandbox || testAdmin.hasCapability(user.uid, 'test_admin_sandbox_match')){
+    const reward = testAdmin.sandboxReward({gameId:game,mode:'ai',result,level:user.level,xp:user.xp,participantCount:2});
+    match.completed = true; match.updatedAt = Date.now(); soloMatches.delete(user.uid);
+    session.sendText(JSON.stringify({type:'result_ok',payload:{profile:profileObj(user),resultId,matchId,reward,replayed:false,virtual:true}}));
     return;
   }
   const now = Date.now();
@@ -3283,6 +4374,190 @@ function broadcast(room, msg, except){
   }
 }
 
+function matchExpressionError(session, reason, eventId, retryAfter){
+  const messages={
+    unsupported_capability:'当前客户端不支持局内表达',persistent_account_required:'局内表达需要正式账号',spectator_readonly:'观战模式不能发送局内表达',
+    not_in_room:'当前不在对局房间',match_not_active:'对局尚未开始',invalid_match:'对局已变化，请重试',invalid_event_id:'表达请求编号无效',
+    invalid_expression:'表达内容无效',invalid_target:'表达目标无效',blocked:'你与目标玩家存在屏蔽关系',rate_limited:'表达太频繁，请稍后再试',
+  };
+  session.sendText(JSON.stringify({type:'match_expression_error',payload:{protocol:MATCH_EXPRESSION_PROTOCOL,eventId:String(eventId||''),reason,retryAfter:Math.max(0,Number(retryAfter)||0)},msg:messages[reason]||'局内表达发送失败',reason}));
+  return false;
+}
+function matchExpressionStores(room){
+  if(!(room.matchExpressionSeen instanceof Map))room.matchExpressionSeen=new Map();
+  if(!(room.matchExpressionRates instanceof Map))room.matchExpressionRates=new Map();
+  if(!(room.matchExpressionCounts instanceof Map))room.matchExpressionCounts=new Map();
+  if(!(room.matchExpressionDelayTimers instanceof Set))room.matchExpressionDelayTimers=new Set();
+}
+function matchExpressionRetryAfter(room,uid,now){
+  matchExpressionStores(room);
+  const recent=(room.matchExpressionRates.get(uid)||[]).map(Number).filter(at=>Number.isFinite(at)&&now-at<60000);
+  room.matchExpressionRates.set(uid,recent);
+  const ten=recent.filter(at=>now-at<10000);
+  if(ten.length>=4)return Math.max(1,Math.ceil((ten[0]+10000-now)/1000));
+  if(recent.length>=12)return Math.max(1,Math.ceil((recent[0]+60000-now)/1000));
+  if((Number(room.matchExpressionCounts.get(uid))||0)>=80)return 60;
+  return 0;
+}
+function matchExpressionRecipientAllowed(session,senderUid){
+  if(!session||!session.alive||!session.uid)return false;
+  const user=db.users[session.uid];
+  if(!user||!userHasTokenHash(user,session.tokenHash))return false;
+  return session.uid===senderUid||!socialBlockedBetween(session.uid,senderUid);
+}
+function deliverMatchExpression(room,event){
+  const text=JSON.stringify({type:'match_expression',payload:event});
+  for(const session of room.clients.keys())if(matchExpressionRecipientAllowed(session,event.senderUid))session.sendText(text);
+  if(!(room.spectators instanceof Map))return;
+  const delay=Math.max(0,Number(room.spectatorDelayMs)||0);
+  for(const session of room.spectators.keys()){
+    if(!matchExpressionRecipientAllowed(session,event.senderUid))continue;
+    if(!delay)session.sendText(text);
+    else{
+      matchExpressionStores(room);
+      const timer=setTimeout(()=>{room.matchExpressionDelayTimers.delete(timer);if(room.started&&!room.settled&&String(room.matchId)===String(event.matchId)&&room.spectators&&room.spectators.has(session)&&matchExpressionRecipientAllowed(session,event.senderUid))session.sendText(text);},delay);
+      room.matchExpressionDelayTimers.add(timer);
+      if(timer&&timer.unref)timer.unref();
+    }
+  }
+}
+function handleMatchExpression(session,payload){
+  const user=session.uid&&db.users[session.uid],eventId=String(payload&&payload.eventId||'');
+  if(!session.capabilities||!session.capabilities.has(MATCH_EXPRESSION_PROTOCOL))return matchExpressionError(session,'unsupported_capability',eventId);
+  if(!user||user.ephemeral)return matchExpressionError(session,'persistent_account_required',eventId);
+  if(session.spectatorRoom)return matchExpressionError(session,'spectator_readonly',eventId);
+  if(!session.room)return matchExpressionError(session,'not_in_room',eventId);
+  const room=rooms.get(session.room);
+  if(!room||!room.clients.has(session))return matchExpressionError(session,'not_in_room',eventId);
+  if(!room.started||room.settled||!room.matchId)return matchExpressionError(session,'match_not_active',eventId);
+  if(String(payload&&payload.matchId||'')!==String(room.matchId))return matchExpressionError(session,'invalid_match',eventId);
+  if(!MATCH_EXPRESSION_EVENT_RE.test(eventId))return matchExpressionError(session,'invalid_event_id',eventId);
+  const kind=String(payload&&payload.kind||''),expressionId=String(payload&&payload.expressionId||'');
+  if(!((kind==='emoji'&&MATCH_EXPRESSION_EMOJI_IDS.has(expressionId))||(kind==='quick'&&MATCH_EXPRESSION_QUICK_IDS.has(expressionId))))return matchExpressionError(session,'invalid_expression',eventId);
+  const senderSeat=seatForSession(room,session);
+  if(!senderSeat||senderSeat.type!=='human')return matchExpressionError(session,'not_in_room',eventId);
+  let targetSeat=null,target=null;
+  if(payload&&payload.targetSeat!==undefined&&payload.targetSeat!==null&&payload.targetSeat!==''){
+    targetSeat=Number(payload.targetSeat);target=Number.isInteger(targetSeat)&&ensureRoomSeats(room)[targetSeat];
+    if(!target||target.type==='empty')return matchExpressionError(session,'invalid_target',eventId);
+    if(target.type==='human'&&target.userId&&socialBlockedBetween(user.uid,target.userId))return matchExpressionError(session,'blocked',eventId);
+  }
+  matchExpressionStores(room);
+  const seenKey=user.uid+'|'+eventId,existing=room.matchExpressionSeen.get(seenKey);
+  if(existing){session.sendText(JSON.stringify({type:'match_expression_ok',payload:{protocol:MATCH_EXPRESSION_PROTOCOL,eventId,matchId:room.matchId,replayed:true}}));return true;}
+  const now=Date.now(),retryAfter=matchExpressionRetryAfter(room,user.uid,now);
+  if(retryAfter)return matchExpressionError(session,'rate_limited',eventId,retryAfter);
+  const event={protocol:MATCH_EXPRESSION_PROTOCOL,matchId:String(room.matchId),eventId,senderUid:user.uid,player:Number(senderSeat.seatId),targetSeat:targetSeat===null?null:targetSeat,kind,expressionId,createdAt:now};
+  room.matchExpressionSeen.set(seenKey,event);
+  while(room.matchExpressionSeen.size>300)room.matchExpressionSeen.delete(room.matchExpressionSeen.keys().next().value);
+  const rates=room.matchExpressionRates.get(user.uid)||[];rates.push(now);room.matchExpressionRates.set(user.uid,rates.slice(-12));
+  room.matchExpressionCounts.set(user.uid,(Number(room.matchExpressionCounts.get(user.uid))||0)+1);
+  deliverMatchExpression(room,event);
+  session.sendText(JSON.stringify({type:'match_expression_ok',payload:{protocol:MATCH_EXPRESSION_PROTOCOL,eventId,matchId:room.matchId,replayed:false}}));
+  return true;
+}
+
+function matchChatError(session,reason,messageId,retryAfter){
+  const messages={
+    unsupported_capability:'当前客户端不支持房间聊天',persistent_account_required:'房间聊天需要正式账号',spectator_readonly:'观战模式只能阅读房间聊天',
+    not_in_room:'当前不在对局房间',match_not_active:'对局尚未开始',invalid_match:'对局已变化，请重试',invalid_message_id:'消息请求编号无效',
+    empty_message:'消息不能为空',message_too_long:'房间消息最多 160 个字符',idempotency_conflict:'重复消息编号与原内容冲突',rate_limited:'消息太频繁，请稍后再试',
+  };
+  session.sendText(JSON.stringify({type:'match_chat_error',payload:{protocol:MATCH_CHAT_PROTOCOL,messageId:String(messageId||''),reason,retryAfter:Math.max(0,Number(retryAfter)||0)},msg:messages[reason]||'房间消息发送失败',reason}));
+  return false;
+}
+function matchChatStores(room){
+  if(!Array.isArray(room.matchChatEvents))room.matchChatEvents=[];
+  if(!(room.matchChatSeen instanceof Map))room.matchChatSeen=new Map();
+  if(!(room.matchChatRates instanceof Map))room.matchChatRates=new Map();
+  if(!(room.matchChatCounts instanceof Map))room.matchChatCounts=new Map();
+  if(!(room.matchChatDelayTimers instanceof Set))room.matchChatDelayTimers=new Set();
+}
+function normalizeMatchChatText(input){
+  return normalizeChatText(input);
+}
+function validMatchChatText(text){
+  const count=[...text].length,lines=text.split('\n').length;
+  if(!count)return{ok:false,reason:'empty_message'};
+  if(count>160||Buffer.byteLength(text,'utf8')>640||lines>4)return{ok:false,reason:'message_too_long'};
+  return{ok:true};
+}
+function matchChatRetryAfter(room,uid,now){
+  matchChatStores(room);
+  const recent=(room.matchChatRates.get(uid)||[]).map(Number).filter(at=>Number.isFinite(at)&&now-at<60000);
+  room.matchChatRates.set(uid,recent);
+  const ten=recent.filter(at=>now-at<10000);
+  if(ten.length>=4)return Math.max(1,Math.ceil((ten[0]+10000-now)/1000));
+  if(recent.length>=12)return Math.max(1,Math.ceil((recent[0]+60000-now)/1000));
+  if((Number(room.matchChatCounts.get(uid))||0)>=80)return 60;
+  return 0;
+}
+function matchChatRoomForSession(session){
+  const playerRoom=session&&session.room&&rooms.get(session.room);
+  if(playerRoom&&playerRoom.clients&&playerRoom.clients.has(session))return playerRoom;
+  const spectatorRoom=session&&session.spectatorRoom&&rooms.get(session.spectatorRoom);
+  if(spectatorRoom&&spectatorRoom.spectators&&spectatorRoom.spectators.has(session))return spectatorRoom;
+  return null;
+}
+function matchChatRecipientAllowed(session,senderUid){
+  return matchExpressionRecipientAllowed(session,senderUid);
+}
+function matchChatVisibleEvents(room,session){
+  matchChatStores(room);
+  const spectator=!!(session.spectatorRoom&&room.spectators&&room.spectators.has(session));
+  const cutoff=spectator?Date.now()-Math.max(0,Number(room.spectatorDelayMs)||0):Infinity;
+  return room.matchChatEvents.filter(event=>Number(event.createdAt)<=cutoff&&matchChatRecipientAllowed(session,event.senderUid)).slice(-MATCH_CHAT_MAX_EVENTS);
+}
+function deliverMatchChat(room,event){
+  const text=JSON.stringify({type:'match_chat_message',payload:event});
+  for(const session of room.clients.keys())if(matchChatRecipientAllowed(session,event.senderUid))session.sendText(text);
+  if(!(room.spectators instanceof Map))return;
+  const delay=Math.max(0,Number(room.spectatorDelayMs)||0);
+  for(const session of room.spectators.keys()){
+    if(!matchChatRecipientAllowed(session,event.senderUid))continue;
+    if(!delay)session.sendText(text);
+    else{
+      matchChatStores(room);
+      const timer=setTimeout(()=>{room.matchChatDelayTimers.delete(timer);if(room.started&&!room.settled&&String(room.matchId)===String(event.matchId)&&room.spectators&&room.spectators.has(session)&&matchChatRecipientAllowed(session,event.senderUid))session.sendText(text);},delay);
+      room.matchChatDelayTimers.add(timer);if(timer&&timer.unref)timer.unref();
+    }
+  }
+}
+function handleMatchChatSync(session,payload){
+  const messageId=String(payload&&payload.messageId||'');
+  if(!session.capabilities||!session.capabilities.has(MATCH_CHAT_PROTOCOL))return matchChatError(session,'unsupported_capability',messageId);
+  const user=session.uid&&db.users[session.uid];if(!user||!userHasTokenHash(user,session.tokenHash))return matchChatError(session,'persistent_account_required',messageId);
+  const room=matchChatRoomForSession(session);if(!room)return matchChatError(session,'not_in_room',messageId);
+  if(!room.started||room.settled||!room.matchId)return matchChatError(session,'match_not_active',messageId);
+  if(String(payload&&payload.matchId||'')!==String(room.matchId))return matchChatError(session,'invalid_match',messageId);
+  session.sendText(JSON.stringify({type:'match_chat_state',payload:{protocol:MATCH_CHAT_PROTOCOL,matchId:String(room.matchId),messages:matchChatVisibleEvents(room,session)}}));
+  return true;
+}
+function handleMatchChatSend(session,payload){
+  const user=session.uid&&db.users[session.uid],messageId=String(payload&&payload.messageId||'');
+  if(!session.capabilities||!session.capabilities.has(MATCH_CHAT_PROTOCOL))return matchChatError(session,'unsupported_capability',messageId);
+  if(!user||user.ephemeral)return matchChatError(session,'persistent_account_required',messageId);
+  if(session.spectatorRoom)return matchChatError(session,'spectator_readonly',messageId);
+  if(!session.room)return matchChatError(session,'not_in_room',messageId);
+  const room=rooms.get(session.room);if(!room||!room.clients.has(session))return matchChatError(session,'not_in_room',messageId);
+  if(!room.started||room.settled||!room.matchId)return matchChatError(session,'match_not_active',messageId);
+  if(String(payload&&payload.matchId||'')!==String(room.matchId))return matchChatError(session,'invalid_match',messageId);
+  if(!MATCH_CHAT_MESSAGE_RE.test(messageId))return matchChatError(session,'invalid_message_id',messageId);
+  const text=normalizeMatchChatText(payload&&payload.text),valid=validMatchChatText(text);if(!valid.ok)return matchChatError(session,valid.reason,messageId);
+  const senderSeat=seatForSession(room,session);if(!senderSeat||senderSeat.type!=='human')return matchChatError(session,'not_in_room',messageId);
+  matchChatStores(room);
+  const seenKey=user.uid+'|'+messageId,existing=room.matchChatSeen.get(seenKey);
+  if(existing){if(existing.text!==text)return matchChatError(session,'idempotency_conflict',messageId);session.sendText(JSON.stringify({type:'match_chat_ok',payload:{protocol:MATCH_CHAT_PROTOCOL,messageId,matchId:room.matchId,replayed:true}}));return true;}
+  const now=Date.now(),retryAfter=matchChatRetryAfter(room,user.uid,now);if(retryAfter)return matchChatError(session,'rate_limited',messageId,retryAfter);
+  const event={protocol:MATCH_CHAT_PROTOCOL,matchId:String(room.matchId),messageId,senderUid:user.uid,player:Number(senderSeat.seatId),text,createdAt:now};
+  room.matchChatSeen.set(seenKey,event);while(room.matchChatSeen.size>300)room.matchChatSeen.delete(room.matchChatSeen.keys().next().value);
+  room.matchChatEvents.push(event);room.matchChatEvents=room.matchChatEvents.slice(-MATCH_CHAT_MAX_EVENTS);
+  const rates=room.matchChatRates.get(user.uid)||[];rates.push(now);room.matchChatRates.set(user.uid,rates.slice(-12));room.matchChatCounts.set(user.uid,(Number(room.matchChatCounts.get(user.uid))||0)+1);
+  deliverMatchChat(room,event);
+  session.sendText(JSON.stringify({type:'match_chat_ok',payload:{protocol:MATCH_CHAT_PROTOCOL,messageId,matchId:room.matchId,replayed:false}}));
+  return true;
+}
+
 function controlledAISeat(room, session, value){
   const seatId = Number(value);
   const seat = Number.isInteger(seatId) && ensureRoomSeats(room)[seatId];
@@ -3345,6 +4620,7 @@ class Session {
     this.detachedAt = 0;
     this.resumeUntil = 0;
     this.reconnectTimer = null;
+    this.roomRemovalRetryTimer = null;
     this.lastSeen = Date.now();
     this.messageTimes = [];
     this.authBusy = false;
@@ -3388,7 +4664,7 @@ class Session {
       } else if (len === 127){
         if (this.buffer.length < 10) return;
         const big = this.buffer.readBigUInt64BE(2);
-        if (big > 0x10000) { this.close(); return; }
+      if (big > 0x10000) { this.close(); return; }
         len = Number(big);
         offset = 10;
       }
@@ -3419,6 +4695,22 @@ class Session {
       try { this.socket.destroy(); } catch {}
       return;
     }
+    if(type==='test_room_graph_recovery_status'&&process.env.NODE_ENV==='test'){
+      this.sendText(JSON.stringify({
+        type:'test_room_graph_recovery_status',
+        payload:{
+          queueSize:roomGraphRecoveryQueue.size,timerActive:roomGraphRecoveryTimer!==null,
+          sourceResetFaultArmed:!!(tournamentTestFaults&&tournamentTestFaults.sourceResetWritesRemaining),
+          abortReleaseFailuresRemaining:tournamentTestFaults?tournamentTestFaults.abortReleaseFailuresRemaining:0,
+        },
+      }));
+      return;
+    }
+    const recoveryGuardRoom=this.room&&rooms.get(this.room);
+    if(recoveryGuardRoom&&recoveryGuardRoom.presenceQuarantined&&ROOM_PRESENCE_QUARANTINED_MUTATIONS.has(type)){
+      this.sendText(JSON.stringify({type:'error',msg:'房间状态正在安全恢复，请稍后重试',reason:'room_presence_quarantined'}));
+      return;
+    }
     if (type === 'hello'){
       this.capabilities = new Set(Array.isArray(payload && payload.capabilities) ? payload.capabilities.map(String).slice(0,100) : []);
       const uid = String(payload && payload.uid || '');
@@ -3432,7 +4724,7 @@ class Session {
       if (u && userHasToken(u, token)){
         this.uid = uid;
         this.tokenHash = tokenHash;
-        const guestTimer=ephemeralCleanupTimers.get(uid);if(guestTimer){clearTimeout(guestTimer);ephemeralCleanupTimers.delete(uid);}
+        cancelEphemeralCleanup(uid);
       } else {
         this.uid = null;
         this.tokenHash = null;
@@ -3443,7 +4735,7 @@ class Session {
         rewardVersion: REWARD_CONFIG.version,
         capabilities: ['reward_breakdown','ai_reward_ticket','replay-v1.1','tournament-orchestrator-v1.1',...gameplayCapabilities(),
           'tank_authority_v1','tetris_battle_authority_v1','spectator_room_v1','tournament_orchestrator_v1','xiangqi_clock_v1','monopoly_auction_v1','game_cosmetic_presentation_v1',
-          'ai_decision_confirm_v1','seat_protocol_v2','ready_v1','ai_seat_v1','room_visibility_v1','social_graph_v1'],
+          'ai_decision_confirm_v1','seat_protocol_v2','ready_v1','ai_seat_v1','room_visibility_v1','social_graph_v1','direct-chat-v1',MATCH_EXPRESSION_PROTOCOL,MATCH_CHAT_PROTOCOL,...(PLAYLINE_ENABLED?[PLAYLINE_PROTOCOL]:[])],
       }));
       if (this.uid) tryResumeSession(this);
       broadcastLeaderboard();
@@ -3503,7 +4795,7 @@ class Session {
         frame: 0,
         effect: 0,
         achievements: [], playmates: {}, daily: { play: 0, win: 0, streak: 0 }, nameFx: 0,
-        owned: starterOwned, gameCosmetics: normalizeGameCosmetics(payload && payload.gameCosmetics),
+        owned: starterOwned, gameCosmetics: normalizeGameCosmetics(payload && payload.gameCosmetics), playerCharacter: normalizePlayerCharacter(),
         xp: 0, level: 1, streak: 0, bestStreak: 0, coins: 0, played: {}, total: 0, wins: {}, totalWins: 0,
         recentResults: [], purchaseRequests: [], soloRate: [], pin_hash: ph,
         dailyFirstWinDate: '', dailyAICurrencyKey: '', dailyAICurrencyEarned: 0,
@@ -3557,9 +4849,22 @@ class Session {
     }
     if (type === 'profile_get'){
       const uid = String((payload && payload.uid) || '');
-      const u = uid && db.users[uid];
-      const canReadPrivate = !!(u && uid === this.uid && userHasTokenHash(u, this.tokenHash));
-      this.sendText(JSON.stringify({ type: 'profile_data', payload: u ? (canReadPrivate ? profileObj(u, this.uid) : publicProfileObj(u, this.uid)) : null }));
+      const view = authProfileBoundary.profile({ action:'read', targetUid:uid, viewerUid:this.uid, viewerTokenHash:this.tokenHash });
+      this.sendText(JSON.stringify({ type: 'profile_data', payload: view.ok ? view.profile : null }));
+      return;
+    }
+    if (type === 'profile_compare'){
+      const viewer = this.requirePersistentUser();
+      if (!viewer) return;
+      const targetUid = String(payload && (payload.uid || payload.targetUid) || ''), requestId = String(payload && payload.requestId || '').slice(0,96), target = db.users[targetUid];
+      const comparison = /^[A-Za-z0-9_-]{8,96}$/.test(requestId)
+        ? authProfileBoundary.profile({ action:'compare', viewer, target, requestId, targetUid })
+        : { ok:false, reason:'profile_compare_forbidden' };
+      if (!comparison.ok){
+        this.sendText(JSON.stringify({type:'profile_compare_error',payload:{requestId,targetUid,reason:'profile_compare_forbidden'}}));
+        return;
+      }
+      this.sendText(JSON.stringify({type:'profile_compare_data',payload:{requestId:comparison.requestId,targetUid:comparison.targetUid,self:comparison.self,friend:comparison.friend}}));
       return;
     }
     if (type === 'daily_tasks_get'){
@@ -3579,6 +4884,9 @@ class Session {
       const task = DAILY_TASK_DEFS.find(item=>item.id===taskId);
       const state = ensureServerDailyTasks(u);
       if (!task){this.sendText(JSON.stringify({type:'daily_task_error',msg:'任务不存在',reason:'task_not_found'}));return;}
+      if (testAdmin.hasCapability(u.uid, 'test_admin_profile')){
+        this.sendText(JSON.stringify({type:'daily_task_claimed',payload:{...dailyTasksPayload(u),claimId,reward:0,virtual:true,profile:profileObj(u)}}));return;
+      }
       if (state.claimIds[claimId]){this.sendText(JSON.stringify({type:'daily_task_claimed',payload:{...dailyTasksPayload(u),replayed:true,claimId}}));return;}
       if (state.claimed.includes(taskId)){this.sendText(JSON.stringify({type:'daily_task_claimed',payload:{...dailyTasksPayload(u),alreadyClaimed:true,claimId}}));return;}
       if ((Number(state[task.kind])||0) < task.target){this.sendText(JSON.stringify({type:'daily_task_error',msg:'任务尚未完成',reason:'task_incomplete'}));return;}
@@ -3637,15 +4945,21 @@ class Session {
       const id = Number(payload && payload.id);
       const requestId = String(payload && payload.requestId || '');
       if (requestId && !/^[A-Za-z][A-Za-z0-9_-]{7,120}$/.test(requestId)){
-        this.sendText(JSON.stringify({ type: 'purchase_error', msg: '购买请求标识无效', reason: 'invalid_purchase_id' }));
+        this.sendText(JSON.stringify({ type: 'purchase_error', payload:{category,id,requestId:''}, msg: '购买请求标识无效', reason: 'invalid_purchase_id' }));
+        return;
+      }
+      const price = SHOP_PRICES[category] && SHOP_PRICES[category][id];
+      if (!Number.isInteger(id) || !Number.isInteger(price)){
+        this.sendText(JSON.stringify({ type: 'purchase_error', payload:{category,id,requestId}, msg: '商品不存在', reason: 'product_not_found' }));
+        return;
+      }
+      if (testAdmin.hasCapability(u.uid, 'test_admin_all_catalog_items')){
+        this.sendText(JSON.stringify({ type: 'purchase_ok', payload: {
+          category, id, requestId, alreadyOwned: true, virtual: true, profile: profileObj(u),
+        } }));
         return;
       }
       u.purchaseRequests = Array.isArray(u.purchaseRequests) ? u.purchaseRequests : [];
-      const price = SHOP_PRICES[category] && SHOP_PRICES[category][id];
-      if (!Number.isInteger(id) || !Number.isInteger(price)){
-        this.sendText(JSON.stringify({ type: 'purchase_error', msg: '商品不存在', reason: 'product_not_found' }));
-        return;
-      }
       u.owned = normalizeOwned(u.owned);
       if (useSupabase && !u.ephemeral){
         ensureSupabaseRuntimeState(u);
@@ -3653,7 +4967,7 @@ class Session {
         const purchaseRequestsAtStart = Array.isArray(u.purchaseRequests) ? u.purchaseRequests.slice() : [];
         sbApplyPurchaseTransaction(u, category, id, price, purchaseRef).then(result => {
           if (!result){
-            this.sendText(JSON.stringify({ type: 'purchase_error', msg: '购买同步失败，请稍后重试', reason: 'purchase_sync_failed' }));
+            this.sendText(JSON.stringify({ type: 'purchase_error', payload:{category,id,requestId:purchaseRef}, msg: '购买同步失败，请稍后重试', reason: 'purchase_sync_failed' }));
             return;
           }
           // 奖励可能在购买 RPC 排队期间先在本地确认、但尚未进入远端；
@@ -3675,7 +4989,7 @@ class Session {
             u.owned = mergedOwned;
             u.purchaseRequests = mergedRequests;
             saveDB();
-            this.sendText(JSON.stringify({ type: 'purchase_error', msg: '余额不足，请完成有效对局获取 💵', reason: 'insufficient_balance' }));
+            this.sendText(JSON.stringify({ type: 'purchase_error', payload:{category,id,requestId:purchaseRef}, msg: 'G Coins 余额不足，请完成有效对局获取 G Coins', reason: 'insufficient_balance' }));
             return;
           }
           u.coins = Math.max(0, Number(result.coins) || 0) + rewardDebt;
@@ -3687,24 +5001,24 @@ class Session {
           saveDB();
           this.sendText(JSON.stringify({
             type: 'purchase_ok',
-            payload: { category, id, replayed: result.duplicate === true, alreadyOwned: result.alreadyOwned === true, profile: profileObj(u) },
+            payload: { category, id, requestId:purchaseRef, replayed: result.duplicate === true, alreadyOwned: result.alreadyOwned === true, profile: profileObj(u) },
           }));
           broadcastLeaderboard();
         });
         return;
       }
       if (requestId && u.purchaseRequests.includes(requestId)){
-        this.sendText(JSON.stringify({ type: 'purchase_ok', payload: { category, id, replayed: true, profile: profileObj(u) } }));
+        this.sendText(JSON.stringify({ type: 'purchase_ok', payload: { category, id, requestId, replayed: true, profile: profileObj(u) } }));
         return;
       }
       if (ownsItem(u, category, id)){
         if (requestId) u.purchaseRequests = u.purchaseRequests.concat(requestId).slice(-100);
         saveDB(); sbSyncProfile(u);
-        this.sendText(JSON.stringify({ type: 'purchase_ok', payload: { category, id, alreadyOwned: true, profile: profileObj(u) } }));
+        this.sendText(JSON.stringify({ type: 'purchase_ok', payload: { category, id, requestId, alreadyOwned: true, profile: profileObj(u) } }));
         return;
       }
       if ((u.coins || 0) < price){
-        this.sendText(JSON.stringify({ type: 'purchase_error', msg: '余额不足，先去赢几局吧', reason: 'insufficient_balance' }));
+        this.sendText(JSON.stringify({ type: 'purchase_error', payload:{category,id,requestId}, msg: '余额不足，先去赢几局吧', reason: 'insufficient_balance' }));
         return;
       }
       u.coins -= price;
@@ -3716,19 +5030,14 @@ class Session {
       });
       saveDB();
       sbSyncProfile(u);
-      this.sendText(JSON.stringify({ type: 'purchase_ok', payload: { category, id, profile: profileObj(u) } }));
+      this.sendText(JSON.stringify({ type: 'purchase_ok', payload: { category, id, requestId, profile: profileObj(u) } }));
       broadcastLeaderboard();
       return;
     }
     if (type === 'logout'){
       const u = this.requireUser();
       if (!u) return;
-      if (this.tokenHash && Array.isArray(u.authTokens)){
-        u.authTokens = u.authTokens.filter(record => {
-          const parsed = parseAuthTokenRecord(record);
-          return !parsed || !secureEqual(parsed.hash, this.tokenHash);
-        });
-      }
+      authProfileBoundary.session({ action:'revoke', user:u, tokenHash:this.tokenHash });
       if (this.spectatorRoom) this.leaveSpectator();
       if (this.room) this.leaveRoom();
       this.uid = null; this.tokenHash = null;
@@ -3759,8 +5068,33 @@ class Session {
     if(type==='companion_checkin'){
       const user=this.requireUser();if(!user)return;
       const today=dayKey(),already=user.companionCheckinDay===today;
+      if (testAdmin.shouldHidePublicUid(user.uid)){this.sendText(JSON.stringify({type:'companion_checkin_ok',payload:{day:today,already:true,ephemeral:false,virtual:true}}));return;}
       if(!already){user.companionCheckinDay=today;saveDB();if(!user.ephemeral)sbSyncAuthProfile(user);}
       this.sendText(JSON.stringify({type:'companion_checkin_ok',payload:{day:today,already,ephemeral:!!user.ephemeral}}));return;
+    }
+    if(type==='playline_list'){
+      if(!this.capabilities||!this.capabilities.has(PLAYLINE_PROTOCOL))return playlineError(this,'playline_list',{reason:'unsupported_capability'});
+      handlePlaylineList(this,payload).catch(error=>{recordOperationalError('playline_list',error);playlineError(this,'playline_list',{reason:'server_unavailable'});});return;
+    }
+    if(type==='playline_publish'){
+      if(!this.capabilities||!this.capabilities.has(PLAYLINE_PROTOCOL))return playlineError(this,'playline_publish',{reason:'unsupported_capability'},payload&&payload.clientPostId);
+      handlePlaylinePublish(this,payload).catch(error=>{recordOperationalError('playline_publish',error);playlineError(this,'playline_publish',{reason:'server_unavailable'},payload&&payload.clientPostId);});return;
+    }
+    if(type==='playline_remove'){
+      if(!this.capabilities||!this.capabilities.has(PLAYLINE_PROTOCOL))return playlineError(this,'playline_remove',{reason:'unsupported_capability'});
+      handlePlaylineRemove(this,payload).catch(error=>{recordOperationalError('playline_remove',error);playlineError(this,'playline_remove',{reason:'server_unavailable'});});return;
+    }
+    if(type==='chat_list'){
+      handleChatList(this,payload).catch(error=>{recordOperationalError('direct_chat_list',error);chatError(this,'chat_list','server_unavailable','',3);});return;
+    }
+    if(type==='chat_history'){
+      handleChatHistory(this,payload).catch(error=>{recordOperationalError('direct_chat_history',error);chatError(this,'chat_history','server_unavailable','',3);});return;
+    }
+    if(type==='chat_send'){
+      handleChatSend(this,payload).catch(error=>{recordOperationalError('direct_chat_send',error);chatError(this,'chat_send','server_unavailable',payload&&payload.clientMessageId,3);});return;
+    }
+    if(type==='chat_read'){
+      handleChatRead(this,payload).catch(error=>{recordOperationalError('direct_chat_read',error);chatError(this,'chat_read','server_unavailable','',3);});return;
     }
     if (type === 'social_get'){
       if (!this.requirePersistentUser()) return;
@@ -3769,7 +5103,7 @@ class Session {
     }
     if (type === 'friend_request'){
       if (!this.requirePersistentUser()) return;
-      socialSendRequest(this, payload && payload.toUid);
+      socialSendRequest(this, payload && (payload.toUid || payload.uid));
       return;
     }
     if (type === 'friend_request_action'){
@@ -3794,6 +5128,10 @@ class Session {
     }
     if (type === 'report'){
       if (!this.requirePersistentUser()) return;
+      if (payload && payload.contextType === 'playline'){
+        socialReportPlayline(this,payload).catch(error=>{recordOperationalError('playline_report',error);socialError(this,'动态举报暂不可用','server_unavailable');});
+        return;
+      }
       socialReport(this, payload || {});
       return;
     }
@@ -3844,13 +5182,17 @@ class Session {
       if (!this.requireUser()) return;
       if (this.room) return;
       if (this.spectatorRoom) this.leaveSpectator();
+      const testSandbox = testAdmin.hasCapability(this.uid, 'test_admin_sandbox_match');
+      const roomAccess = testAdmin.roomAccess({ actorUid:this.uid, participantUids:[] });
+      if (!roomAccess.ok){ this.sendText(JSON.stringify({ type:'error', msg:'测试管理员房间权限受限', reason:roomAccess.reason })); return; }
       let roomId = genCode();
       while (rooms.has(roomId)) roomId = genCode();
       const cap = Math.min(5, Math.max(2, parseInt(payload && payload.capacity, 10) || 2));
       const r = {
         id: roomId, host: this, clients: new Map([[this, 0]]), game: null, capacity: cap,
         seats:Array.from({length:cap}, (_, seatId) => seatId === 0 ? humanSeatFromSession(this, 0, true) : emptySeat(seatId)),
-        visibility:normalizeRoomVisibility(payload && payload.visibility), allowSpectators:payload && payload.allowSpectators !== false,
+        visibility:testSandbox ? 'private' : normalizeRoomVisibility(payload && payload.visibility), allowSpectators:testSandbox ? false : payload && payload.allowSpectators !== false,
+        testAdminSandbox:testSandbox,
         started: false, matchId: null, resultClaims: new Map(), settled: false, disputed: false,
         moveSeq: 0, moveLog: [], moveLogBytes: 0, moveLogTruncated: false,
         tankInputSeq: {}, tankAuthoritySeq: 0, tankFinalSent: false,
@@ -3859,10 +5201,18 @@ class Session {
         spectatorDelayMs:Math.max(0,Math.min(30000,Number(process.env.SPECTATOR_DELAY_MS)||0)), gameSnapshot:null,
         tetrisPresentation:new Map(),
       };
-      rooms.set(roomId, r);
-      this.room = roomId;
-      this.player = 0;
-      this.sendText(JSON.stringify({ type:'created', room:roomId, player:0, capacity:cap, payload:roomPayload(r) }));
+      const registered = roomPresenceBoundary.room({action:'register',room:r});
+      if (!registered.ok){
+        this.sendText(JSON.stringify({ type:'error', msg:'房间暂不可用', reason:registered.reason || 'room_registration_failed' }));
+        return;
+      }
+      const member = (registered.members || []).find(item => item.sessionId === this.sessionId);
+      if (!member){
+        roomPresenceBoundary.room({action:'unregister',roomId});
+        this.sendText(JSON.stringify({ type:'error', msg:'房间暂不可用', reason:'room_registration_failed' }));
+        return;
+      }
+      this.sendText(JSON.stringify({ type:'created', room:roomId, player:member.player, capacity:cap, payload:roomPayload(r) }));
       broadcastRoom(r);
       broadcastLobby();
       return;
@@ -3874,28 +5224,32 @@ class Session {
     }
     if (type === 'spectate'){
       if (!this.requireUser()) return;
-      if (this.room){ this.sendText(JSON.stringify({ type:'spectator_error', msg:'请先离开当前玩家席位', reason:'account_is_player' })); return; }
+      if (this.room||this.player!==null){ this.sendText(JSON.stringify({ type:'spectator_error', msg:'请先离开当前玩家席位', reason:'account_is_player' })); return; }
       const roomId = String(payload && payload.room || '').trim().toUpperCase();
       const target = rooms.get(roomId);
-      if (!target || !target.allowSpectators){ this.sendText(JSON.stringify({ type:'spectator_error', msg:'该房间不存在或未开放观战', reason:'spectating_disabled' })); return; }
+      if (!target){ this.sendText(JSON.stringify({ type:'spectator_error', msg:'房间不存在', reason:'room_not_found' })); return; }
+      const access = testAdmin.roomAccess({ actorUid:this.uid, participantUids:[...target.clients.keys()].map(c=>c.uid).filter(Boolean), roomTestOnly:target.testAdminSandbox === true, spectator:true });
+      if (!access.ok){ this.sendText(JSON.stringify({ type:'spectator_error', msg:'测试管理员房间与正式玩家隔离', reason:access.reason })); return; }
+      if (!target.allowSpectators){ this.sendText(JSON.stringify({ type:'spectator_error', msg:'该房间不存在或未开放观战', reason:'spectating_disabled' })); return; }
       if (this.uid && [...target.clients.keys()].some(c => c.uid && !socialAllowedBetween(this.uid, c.uid))){ this.sendText(JSON.stringify({ type:'social_error', msg:'你与房间内成员存在屏蔽关系，无法观战', payload:{ reason:'blocked' } })); return; }
       if (this.spectatorRoom) this.leaveSpectator();
       target.spectators = target.spectators instanceof Map ? target.spectators : new Map();
       if (target.spectators.size >= (target.maxSpectators || 20)){ this.sendText(JSON.stringify({ type:'spectator_error', msg:'观众席已满', reason:'spectator_capacity' })); return; }
       target.spectators.set(this, { uid:this.uid, joinedAt:Date.now() });
       this.spectatorRoom = target.id;
-      this.player = null;
       this.sendText(JSON.stringify({ type:'spectating', payload:{ ...spectatorSnapshot(target), spectator:true, player:null } }));
       broadcastRoom(target); broadcastLobby();
       return;
     }
     if (type === 'spectate_join'){
       if (!this.requireUser()) return;
-      if (this.room){ this.sendText(JSON.stringify({ type:'spectator_error', msg:'已占用玩家席位，不能同时观战', reason:'account_is_player' })); return; }
+      if (this.room||this.player!==null){ this.sendText(JSON.stringify({ type:'spectator_error', msg:'已占用玩家席位，不能同时观战', reason:'account_is_player' })); return; }
       if (this.spectatorRoom){ this.sendText(JSON.stringify({ type:'spectator_error', msg:'请先退出当前观战房间', reason:'already_spectating' })); return; }
       const roomId = String(payload && (payload.roomId || payload.room) || '').trim().toUpperCase();
       const target = rooms.get(roomId);
       if (!target){ this.sendText(JSON.stringify({ type:'spectator_error', msg:'房间不存在', reason:'room_not_found' })); return; }
+      const access = testAdmin.roomAccess({ actorUid:this.uid, participantUids:[...target.clients.keys()].map(c=>c.uid).filter(Boolean), roomTestOnly:target.testAdminSandbox === true, spectator:true });
+      if (!access.ok){ this.sendText(JSON.stringify({ type:'spectator_error', msg:'测试管理员房间与正式玩家隔离', reason:access.reason })); return; }
       if (!target.allowSpectators){ this.sendText(JSON.stringify({ type:'spectator_error', msg:'该房间未开放观战', reason:'spectating_disabled' })); return; }
       if (!target.started || !target.matchId){ this.sendText(JSON.stringify({ type:'spectator_error', msg:'对局尚未开始', reason:'match_not_started' })); return; }
       const requestedMatchId=String(payload && payload.matchId || '');
@@ -3929,17 +5283,27 @@ class Session {
     }
     if (type === 'spectate_leave'){
       if (!this.requireUser()) return;
-      this.leaveSpectator();
+      this.leaveSpectator(true);
       return;
     }
     if (type === 'tournament_create'){
       if (!this.requireUser()) return;
-      const ids = Array.isArray(payload && payload.participants) ? payload.participants.map(String) : [];
+      let ids = Array.isArray(payload && payload.participants) ? payload.participants.map(String) : [];
       const gameId=String(payload && payload.gameId || '');
-      if (!ids.includes(this.uid) || ids.length < 3 || ids.some(uid=>!db.users[uid])){ this.sendText(JSON.stringify({ type:'tournament_error', msg:'赛事参与者无效', reason:'invalid_participants' })); return; }
+      const externalOwner = testAdmin.hasCapability(this.uid, 'tournament_create');
+      if (externalOwner){
+        const access = testAdmin.tournamentCreateAccess(this.uid, ids);
+        if (!access.ok){ this.sendText(JSON.stringify({ type:'tournament_error', msg:'赛事参与者无效', reason:access.reason })); return; }
+        ids = access.participantUids.slice();
+      } else if (!ids.includes(this.uid) || ids.length < 3 || ids.some(uid=>!db.users[uid])){
+        this.sendText(JSON.stringify({ type:'tournament_error', msg:'赛事参与者无效', reason:'invalid_participants' })); return;
+      }
+      if (ids.length < 3 || ids.some(uid=>!db.users[uid] || db.users[uid].ephemeral)){
+        this.sendText(JSON.stringify({ type:'tournament_error', msg:'赛事参与者无效', reason:'invalid_participants' })); return;
+      }
       try {
         const tournamentId='tour_'+crypto.randomBytes(9).toString('base64url');
-        const guarded=tournamentGuard.create({tournamentId,ownerUid:this.uid,gameId,participants:ids});
+        const guarded=tournamentGuard.create({tournamentId,ownerUid:this.uid,gameId,participants:ids,allowExternalOwner:externalOwner});
         if(!guarded.ok){this.sendText(JSON.stringify({type:'tournament_error',msg:'赛事创建受限：'+guarded.reason,reason:guarded.reason}));return;}
         const tournament=new TournamentOrchestrator({ tournamentId, gameId, participants:ids, rounds:3 });
         const entry={ ownerUid:this.uid, tournament };tournaments.set(tournamentId,entry);broadcastTournament(entry);
@@ -3973,7 +5337,11 @@ class Session {
       const bound=tournamentGuard.bindMatch(tournamentId,pairingId,{matchId:matchRoom.matchId,gameId:matchRoom.game,players:roomPlayers});
       if(!bound.ok){this.sendText(JSON.stringify({type:'tournament_error',msg:'绑定失败：'+bound.reason,reason:bound.reason}));return;}
       const attached=entry.tournament.attachMatchRoom(pairingId,matchRoom.id,{source:'tournament',gameId:matchRoom.game,serverMatchId:matchRoom.matchId});
-      if(!attached.ok){this.sendText(JSON.stringify({type:'tournament_error',msg:'赛事桌位绑定失败',reason:'pairing_bind_failed'}));return;}
+      if(!attached.ok){
+        const rollback=tournamentGuard.unbindMatch(tournamentId,pairingId,{matchId:matchRoom.matchId,source:'server_rollback'});
+        this.sendText(JSON.stringify({type:'tournament_error',msg:'赛事桌位绑定失败',reason:rollback.ok?'pairing_bind_failed':'tournament_binding_rollback_failed'}));
+        return;
+      }
       matchRoom.tournamentBinding={tournamentId,pairingId,matchId:matchRoom.matchId,players:roomPlayers.slice()};
       broadcastTournament(entry);
       return;
@@ -3998,17 +5366,21 @@ class Session {
       const tournamentId=String(payload && payload.tournamentId || '');
       const entry=tournaments.get(tournamentId);
       const guardState=entry&&tournamentGuard.snapshot(tournamentId);
-      if (!entry || !guardState || ['expired','declined','cancelled'].includes(guardState.status) || !entry.tournament.participants.some(item=>item.id===this.uid)){ this.sendText(JSON.stringify({ type:'tournament_error', msg:'赛事不存在、已过期或无权访问', reason:'tournament_unavailable' })); return; }
+      if (!entry || !guardState || ['expired','declined','cancelled'].includes(guardState.status) || (entry.ownerUid!==this.uid && !entry.tournament.participants.some(item=>item.id===this.uid))){ this.sendText(JSON.stringify({ type:'tournament_error', msg:'赛事不存在、已过期或无权访问', reason:'tournament_unavailable' })); return; }
       if(type==='tournament_result'){this.sendText(JSON.stringify({type:'tournament_error',msg:'赛事结果只能由已绑定的真实房间自动回传',reason:'server_result_required'}));return;}
       if (type!=='tournament_get' && entry.ownerUid!==this.uid){ this.sendText(JSON.stringify({ type:'tournament_error', msg:'只有赛事创建者可以推进赛事', reason:'owner_only' })); return; }
       let result={ok:true};
       if(type==='tournament_start'){
         const ready=tournamentParticipantSessions(entry);
         if(!ready.ok){this.sendText(JSON.stringify({type:'tournament_error',msg:'赛事无法自动建桌：'+ready.reason,reason:ready.reason}));return;}
-        result=tournamentGuard.start(tournamentId,this.uid);
-        if(result.ok&&entry.tournament.start()===false)result={ok:false,reason:'invalid_status'};
-        if(result.ok&&!registerTournamentPairings(entry))result={ok:false,reason:'pairing_registration_failed'};
-        if(result.ok){const created=autoCreateTournamentRound(entry,ready);if(!created.ok)result=created;}
+        if(tournamentRoundCanRetry(entry,guardState)){
+          const created=autoCreateTournamentRound(entry,ready);if(!created.ok)result=created;
+        }else{
+          result=tournamentGuard.start(tournamentId,this.uid);
+          if(result.ok&&entry.tournament.start()===false)result={ok:false,reason:'invalid_status'};
+          if(result.ok&&!registerTournamentPairings(entry))result={ok:false,reason:'pairing_registration_failed'};
+          if(result.ok){const created=autoCreateTournamentRound(entry,ready);if(!created.ok)result=created;}
+        }
       }
       else if(type==='tournament_next'){
         const ready=tournamentParticipantSessions(entry);
@@ -4028,6 +5400,18 @@ class Session {
       return;
     }
     if (!this.requireUser()) return;
+    if (type === 'match_expression'){
+      handleMatchExpression(this,payload);
+      return;
+    }
+    if(type==='match_chat_send'){
+      handleMatchChatSend(this,payload);
+      return;
+    }
+    if(type==='match_chat_sync'){
+      handleMatchChatSync(this,payload);
+      return;
+    }
     if (this.spectatorRoom){
       if (['move','bot_move','tank_input','bot_tank_input','tetris_lock_claim','tetris_attack_claim','tetris_ko_claim','tetris_action','xiangqi_action','monopoly_action','monopoly_auction_open','monopoly_bid','game_state','start','restart','end_game','select_game','ready','room_settings','add_ai','remove_ai'].includes(type)){
         this.sendText(JSON.stringify({ type:'spectator_error', msg:'观战模式为只读，不能发送游戏输入', reason:'spectator_readonly' }));
@@ -4041,19 +5425,27 @@ class Session {
       if (r.started) return;
       const seat = seatForSession(r, this);
       if (!seat || seat.type !== 'human') return;
-      seat.ready = seat.host ? true : payload && payload.ready !== false;
+      const changed = roomPresenceBoundary.room({action:'set_ready',room:r,session:this,ready:payload && payload.ready !== false});
+      if (!changed.ok) return;
       broadcastRoom(r); broadcastLobby();
       return;
     }
     if (type === 'room_settings'){
       if (this !== r.host || r.started) return;
+      if (r.testAdminSandbox){
+        r.visibility = 'private';
+        r.allowSpectators = false;
+        this.sendText(JSON.stringify({ type:'error', msg:'测试沙盒固定为私有且不允许观战', reason:'test_admin_isolated' }));
+        broadcastRoom(r); broadcastLobby();
+        return;
+      }
       if (payload && payload.visibility !== undefined) r.visibility = normalizeRoomVisibility(payload.visibility);
       if (payload && payload.allowSpectators !== undefined) r.allowSpectators = payload.allowSpectators === true;
       if (!r.allowSpectators && r.spectators instanceof Map){
         for (const spectator of r.spectators.keys()){
           spectatorAccessGuard.leave(spectator.sessionId);
           spectator.spectatorRoom = null;
-          spectator.sendText(JSON.stringify({ type:'spectator_left', payload:{ room:r.id, reason:'disabled' } }));
+          spectator.sendText(JSON.stringify({ type:'spectate_left', payload:{ room:r.id, reason:'disabled' } }));
         }
         r.spectators.clear();
       }
@@ -4062,60 +5454,30 @@ class Session {
     }
     if (type === 'add_ai'){
       if (this !== r.host || r.started) return;
-      const seat = firstEmptySeat(r);
-      const max = r.game && GAME_MAX[r.game] || r.capacity;
-      if (!seat || activeSeatCount(r) >= Math.min(r.capacity, max)){
-        this.sendText(JSON.stringify({ type:'error', msg:'没有可用的 AI 席位', reason:'no_ai_seat' })); return;
-      }
       const difficulty = normalizeAIDifficulty(payload && payload.difficulty);
       const persona = normalizeAIPersona(payload && payload.persona);
-      r.seats[seat.seatId] = {
-        seatId:seat.seatId, type:'ai', userId:null, nickname:AI_PERSONAS[persona].name || 'AI', avatar:141,
-        ready:true, host:false, online:true, aiDifficulty:difficulty, aiPersona:persona, controllerUid:this.uid,
-      };
+      const added = roomPresenceBoundary.room({action:'add_ai',room:r,session:this,difficulty,persona,ai:{nickname:AI_PERSONAS[persona].name || 'AI',avatar:141}});
+      if (!added.ok){ this.sendText(JSON.stringify({ type:'error', msg:'没有可用的 AI 席位', reason:added.reason || 'no_ai_seat' })); return; }
       broadcastRoom(r); broadcastLobby();
       return;
     }
     if (type === 'remove_ai'){
       if (this !== r.host || r.started) return;
       const seatId = Number(payload && payload.seatId);
-      const seat = ensureRoomSeats(r)[seatId];
-      if (!Number.isInteger(seatId) || !seat || seat.type !== 'ai') return;
-      r.seats[seatId] = emptySeat(seatId);
-      compactRoomPlayers(r);
+      const removed = roomPresenceBoundary.room({action:'remove_ai',room:r,session:this,seatId});
+      if (!removed.ok) return;
+      for (const item of removed.reassigned || []) {
+        const session = [...(r.clients instanceof Map ? r.clients.keys() : [])].find(candidate => candidate && candidate.uid === item.uid && (!item.sessionId || candidate.sessionId === item.sessionId));
+        if (session) session.sendText(JSON.stringify({type:'player_reassigned',payload:{player:item.player}}));
+      }
       broadcastRoom(r); broadcastLobby();
       return;
     }
-    if (type === 'tetris_action'){
-      const authority=r.tetrisRuleAuthority;
-      if(!authority){incrementGameplayMetric('protocolErrors');this.sendText(JSON.stringify({type:'gameplay_error',payload:protocolError(PROTOCOL_VERSIONS.tetrisRules,'ERR_PROTOCOL_VERSION')}));return;}
-      if(!payload||String(payload.matchId||'')!==String(r.matchId||'')){incrementGameplayMetric('protocolErrors');this.sendText(JSON.stringify({type:'gameplay_error',payload:protocolError(PROTOCOL_VERSIONS.tetrisRules,'ERR_INVALID_STATE',{reason:'invalid_match'})}));return;}
-      const accepted=authority.acceptAction(this.player,payload,Date.now());
-      if(!accepted.ok){incrementGameplayMetric('invalidTetrisActions');incrementGameplayMetric('protocolErrors');this.sendText(JSON.stringify({type:'gameplay_error',payload:protocolError(PROTOCOL_VERSIONS.tetrisRules,accepted.reason,{reason:accepted.reason})}));return;}
-      incrementGameplayMetric('tetrisInputs');if(accepted.battle)incrementGameplayMetric('garbageEvents');
-      recordRoomAction(r,this.player,{protocol:PROTOCOL_VERSIONS.tetrisRules,action:payload&&payload.action});if(accepted.battle)broadcast(r,{type:'tetris_rule_battle',payload:{matchId:r.matchId,revision:authority.revision,...accepted.battle}});broadcast(r,accepted.stateEvent||authority.stateEvent());
-      if(accepted.result&&!r.gameplayResultSent){r.gameplayResultSent=true;broadcast(r,accepted.result);settleAuthoritativeRoom(r,accepted.result.order,'tetris_rule_authority');stopRoomGameplayTimer(r);}return;
-    }
-    if (type === 'xiangqi_action'){
-      const authority=r.xiangqiRuleAuthority;
-      if(!authority){incrementGameplayMetric('protocolErrors');this.sendText(JSON.stringify({type:'gameplay_error',payload:protocolError(PROTOCOL_VERSIONS.xiangqiRules,'ERR_PROTOCOL_VERSION')}));return;}
-      if(!payload||String(payload.matchId||'')!==String(r.matchId||'')){incrementGameplayMetric('protocolErrors');this.sendText(JSON.stringify({type:'gameplay_error',payload:protocolError(PROTOCOL_VERSIONS.xiangqiRules,'ERR_INVALID_STATE',{reason:'invalid_match'})}));return;}
-      const accepted=authority.acceptMove(this.player,payload,Date.now());
-      if(!accepted.ok){incrementGameplayMetric('invalidXiangqiMoves');incrementGameplayMetric('protocolErrors');if(accepted.timeout){incrementGameplayMetric('clockTimeouts');r.gameplayResultSent=true;broadcast(r,accepted.timeout);settleAuthoritativeRoom(r,[accepted.timeout.payload.winner,accepted.timeout.payload.loser],'xiangqi_rule_timeout');stopRoomGameplayTimer(r);}else this.sendText(JSON.stringify({type:'gameplay_error',payload:protocolError(PROTOCOL_VERSIONS.xiangqiRules,accepted.reason,{reason:accepted.reason})}));return;}
-      incrementGameplayMetric('xiangqiMoves');
-      recordRoomAction(r,this.player,{protocol:PROTOCOL_VERSIONS.xiangqiRules,from:payload&&payload.from,to:payload&&payload.to});broadcast(r,accepted.event);if(accepted.result&&!r.gameplayResultSent){r.gameplayResultSent=true;broadcast(r,accepted.result);settleAuthoritativeRoom(r,accepted.result.order,'xiangqi_rule_authority');stopRoomGameplayTimer(r);}return;
-    }
-    if (type === 'monopoly_action'){
-      const authority=r.monopolyRuleAuthority;
-      if(!authority){incrementGameplayMetric('protocolErrors');this.sendText(JSON.stringify({type:'gameplay_error',payload:protocolError(PROTOCOL_VERSIONS.monopolyRules,'ERR_PROTOCOL_VERSION')}));return;}
-      if(!payload||String(payload.matchId||'')!==String(r.matchId||'')){incrementGameplayMetric('protocolErrors');this.sendText(JSON.stringify({type:'gameplay_error',payload:protocolError(PROTOCOL_VERSIONS.monopolyRules,'ERR_INVALID_STATE',{reason:'invalid_match'})}));return;}
-      const accepted=authority.acceptAction(this.player,payload,Date.now());
-      if(!accepted.ok){incrementGameplayMetric('protocolErrors');this.sendText(JSON.stringify({type:'gameplay_error',payload:protocolError(PROTOCOL_VERSIONS.monopolyRules,accepted.reason,{reason:accepted.reason})}));return;}
-      incrementGameplayMetric('monopolyActions');if(payload&&payload.action&&payload.action.type==='pass')incrementGameplayMetric('auctionCount');
-      r.monopolyTurn=authority.state.current;recordRoomAction(r,this.player,{protocol:PROTOCOL_VERSIONS.monopolyRules,action:payload&&payload.action});broadcast(r,accepted.event);if(accepted.result&&!r.gameplayResultSent){r.gameplayResultSent=true;broadcast(r,accepted.result);settleAuthoritativeRoom(r,accepted.result.order,'monopoly_rule_authority');stopRoomGameplayTimer(r);}return;
-    }
+    const matchProtocolOutcome=matchProtocolBoundary.command({type,room:r,session:this,payload});
+    if(matchProtocolOutcome.handled)return;
     if (type === 'invite'){
       if (this !== r.host) return;
+      if (r.testAdminSandbox){ this.sendText(JSON.stringify({ type:'error', msg:'测试沙盒不开放正式邀请', reason:'test_admin_isolated' })); return; }
       const toUid = payload && payload.toUid;
       if (!toUid) return;
       if (!db.users[toUid] || db.users[toUid].ephemeral){
@@ -4147,13 +5509,22 @@ class Session {
       if (this !== r.host) return;
       const g = payload && payload.game;
       if (!g) return;
+      // A retried selection of the already active game is a protocol no-op.
+      // READY commands arrive on each player's WebSocket independently; if a
+      // duplicate host command reset seats, cross-socket delivery could erase
+      // valid READY state that was accepted moments earlier.
+      if (r.game === g){
+        this.sendText(JSON.stringify({ type:'room_update', payload:roomPayload(r) }));
+        return;
+      }
       const curSize = activeSeatCount(r);
       if (!GAME_MAX[g] || curSize > GAME_MAX[g]){
         this.sendText(JSON.stringify({ type: 'error', msg: '该游戏最多支持 ' + (GAME_MAX[g] || 0) + ' 人，当前已加入 ' + curSize + ' 人', reason: 'game_capacity' }));
         return;
       }
       r.game = g;
-      for (const seat of humanRoomSeats(r)) seat.ready = !!seat.host;
+      const reset = roomPresenceBoundary.room({action:'reset_ready',room:r,session:this});
+      if (!reset.ok) return;
       broadcastRoom(r);
       broadcastLobby();
       maybeAutoStart(r);
@@ -4165,7 +5536,8 @@ class Session {
         if (activeSeatCount(r) === 2) settleRoomForfeit(r, this, 'forfeit');
         else settleRoomNoContest(r, 'host_cancelled');
       }
-      resetRoomMatch(r);
+      const reset=resetRoomMatch(r);
+      if(!reset.ok){this.sendText(JSON.stringify({type:'error',msg:'房间状态暂不可用',reason:reset.reason||'room_presence_unavailable'}));return;}
       r.game = null;
       broadcast(r, { type: 'end_game' });
       broadcastRoom(r);
@@ -4179,7 +5551,7 @@ class Session {
         this.sendText(JSON.stringify({ type:'error', msg:'请确认人数符合游戏规则且所有真人玩家都已 READY', reason:'room_not_ready' }));
         return;
       }
-      startRoomMatch(r);
+      if(!startRoomMatch(r))this.sendText(JSON.stringify({type:'error',msg:'房间状态暂不可用',reason:'room_presence_unavailable'}));
       return;
     }
     if (type === 'bot_move'){
@@ -4192,6 +5564,11 @@ class Session {
       r.aiInputSeq = r.aiInputSeq || {};
       const seq = (Number(r.aiInputSeq[seat.seatId]) || 0) + 1;
       if (r.xiangqiRuleAuthority){
+        const routed=matchProtocolBoundary&&matchProtocolBoundary.command({
+          type:'xiangqi_action',room:r,session:this,player:seat.seatId,
+          payload:{matchId:r.matchId,seq,from:move.from,to:move.to},
+        });
+        if(routed&&routed.handled){if(routed.ok)r.aiInputSeq[seat.seatId]=seq;return;}
         const accepted = r.xiangqiRuleAuthority.acceptMove(seat.seatId, { matchId:r.matchId, seq, from:move.from, to:move.to }, Date.now());
         if (!accepted.ok){ this.sendText(JSON.stringify({ type:'gameplay_error', payload:{ protocol:PROTOCOL_VERSIONS.xiangqiRules, reason:accepted.reason } })); return; }
         r.aiInputSeq[seat.seatId] = seq;
@@ -4202,6 +5579,11 @@ class Session {
       if (r.monopolyRuleAuthority){
         const action = Array.isArray(move.roll) ? { type:'roll' } : (['buy','pass','settle'].includes(move.decision) ? { type:move.decision } : null);
         if (!action){ this.sendText(JSON.stringify({ type:'gameplay_error', payload:{ protocol:PROTOCOL_VERSIONS.monopolyRules, reason:'ERR_INVALID_MOVE' } })); return; }
+        const routed=matchProtocolBoundary&&matchProtocolBoundary.command({
+          type:'monopoly_action',room:r,session:this,player:seat.seatId,
+          payload:{matchId:r.matchId,seq,action},
+        });
+        if(routed&&routed.handled){if(routed.ok)r.aiInputSeq[seat.seatId]=seq;return;}
         const accepted = r.monopolyRuleAuthority.acceptAction(seat.seatId, { matchId:r.matchId, seq, action }, Date.now());
         if (!accepted.ok){ this.sendText(JSON.stringify({ type:'gameplay_error', payload:{ protocol:PROTOCOL_VERSIONS.monopolyRules, reason:accepted.reason } })); return; }
         r.aiInputSeq[seat.seatId] = seq;
@@ -4218,8 +5600,11 @@ class Session {
       if (!seat || !r.started || r.game !== 'tank' || !r.tankAuthority){
         this.sendText(JSON.stringify({ type:'gameplay_error', payload:{ protocol:'tank-authority-v1', reason:'unauthorized_bot' } })); return;
       }
-      const accepted = r.tankAuthority.acceptInput(seat.seatId, payload, Date.now());
+      const acceptedAt=Date.now();
+      const accepted = r.tankAuthority.acceptInput(seat.seatId, payload, acceptedAt);
       if (!accepted.ok){ this.sendText(JSON.stringify({ type:'gameplay_error', payload:{ protocol:'tank-authority-v1', reason:accepted.reason } })); return; }
+      observeAcceptedTankInput(r,seat.seatId,'ai',tankEngagementActionClass(payload&&payload.input),acceptedAt,accepted.ack===1,
+        r.testAdminSandbox===true||testAdmin.shouldHidePublicUid(this.uid));
       recordRoomAction(r, seat.seatId, { act:'input', input:payload && payload.input });
       return;
     }
@@ -4231,6 +5616,11 @@ class Session {
       }
       r.aiInputSeq = r.aiInputSeq || {};
       const seq = (Number(r.aiInputSeq[seat.seatId]) || 0) + 1;
+      const routed=matchProtocolBoundary&&matchProtocolBoundary.command({
+        type:'tetris_action',room:r,session:this,player:seat.seatId,
+        payload:{matchId:r.matchId,seq,action:payload&&payload.action},
+      });
+      if(routed&&routed.handled){if(routed.ok)r.aiInputSeq[seat.seatId]=seq;return;}
       const accepted = authority.acceptAction(seat.seatId, { matchId:r.matchId, seq, action:payload && payload.action }, Date.now());
       if (!accepted.ok){ this.sendText(JSON.stringify({ type:'gameplay_error', payload:{ protocol:PROTOCOL_VERSIONS.tetrisRules, reason:accepted.reason } })); return; }
       r.aiInputSeq[seat.seatId] = seq;
@@ -4245,11 +5635,14 @@ class Session {
         this.sendText(JSON.stringify({ type:'gameplay_error', payload:{ protocol:'tank-authority-v1', reason:'not_active' } }));
         return;
       }
-      const accepted = r.tankAuthority.acceptInput(this.player, payload, Date.now());
+      const acceptedAt=Date.now();
+      const accepted = r.tankAuthority.acceptInput(this.player, payload, acceptedAt);
       if (!accepted.ok){
         this.sendText(JSON.stringify({ type:'gameplay_error', payload:{ protocol:'tank-authority-v1', reason:accepted.reason } }));
         return;
       }
+      observeAcceptedTankInput(r,this.player,'human',tankEngagementActionClass(payload&&payload.input),acceptedAt,accepted.ack===1,
+        r.testAdminSandbox===true||testAdmin.shouldHidePublicUid(this.uid));
       recordRoomAction(r, this.player, { act:'input', input:payload && payload.input });
       incrementGameplayMetric('tankInputs');
       return;
@@ -4434,10 +5827,17 @@ class Session {
       r.gameplayResultSent = false;
       r.gameSnapshot = null;
       r.tetrisPresentation = new Map();
+      r.matchExpressionSeen = new Map();
+      r.matchExpressionRates = new Map();
+      r.matchExpressionCounts = new Map();
+      r.matchChatEvents = [];
+      r.matchChatSeen = new Map();
+      r.matchChatRates = new Map();
+      r.matchChatCounts = new Map();
       r.tournamentBinding = null;
       r.finalResult = null;
       startRoomAuthorities(r);
-      recordAnalytics('match_started', {
+      if (!r.testAdminSandbox) recordAnalytics('match_started', {
         matchId: r.matchId, game: r.game, mode: 'online',
         metadata: { participantCount:activeSeatCount(r), humanCount:humanRoomSeats(r).length, aiCount:aiRoomSeats(r).length, restarted:true },
       });
@@ -4450,54 +5850,60 @@ class Session {
       this.sendText(JSON.stringify({ type: 'error', msg: '房间不存在', reason: 'room_not_found' }));
       return;
     }
-    if (r.started){
-      this.sendText(JSON.stringify({ type: 'error', msg: '对局已开始', reason: 'match_started' }));
-      return;
-    }
-    if (activeSeatCount(r) >= r.capacity || !firstEmptySeat(r)){
-      this.sendText(JSON.stringify({ type: 'error', msg: '房间已满', reason: 'room_full' }));
-      return;
-    }
-    if (r.game && GAME_MAX[r.game] && activeSeatCount(r) + 1 > GAME_MAX[r.game]){
-      this.sendText(JSON.stringify({ type: 'error', msg: '当前已选择的游戏最多支持 ' + GAME_MAX[r.game] + ' 人', reason: 'selected_game_capacity' }));
-      return;
-    }
-    if (this.uid && [...r.clients.keys()].some(c => c.uid === this.uid)){
-      this.sendText(JSON.stringify({ type: 'error', msg: '同一账号不能重复加入同一房间', reason: 'duplicate_room_account' }));
-      return;
-    }
-    if (this.uid && [...r.clients.keys()].some(c => c.uid && !socialAllowedBetween(this.uid, c.uid))){
-      this.sendText(JSON.stringify({ type:'social_error', msg:'你与房间内成员存在屏蔽关系，无法加入该房间', payload:{ reason:'blocked' } }));
-      return;
-    }
-    if (this.room){
-      this.sendText(JSON.stringify({ type: 'error', msg: '你已在房间中', reason: 'already_in_room' }));
-      return;
-    }
+    const access = testAdmin.roomAccess({ actorUid:this.uid, participantUids:[...r.clients.keys()].map(c=>c.uid).filter(Boolean), roomTestOnly:r.testAdminSandbox === true });
+    if (!access.ok){ this.sendText(JSON.stringify({ type:'error', msg:'测试管理员房间与正式玩家隔离', reason:access.reason })); return; }
     if (this.spectatorRoom) this.leaveSpectator();
-    const idx = firstEmptySeat(r).seatId;
-    r.clients.set(this, idx);
-    r.seats[idx] = humanSeatFromSession(this, idx, false);
-    this.room = roomId;
-    this.player = idx;
+    const joined = roomPresenceBoundary.room({action:'join',room:r,session:this});
+    if (!joined.ok){
+      const messages = {
+        room_not_found:'房间不存在', match_started:'对局已开始', room_full:'房间已满',
+        selected_game_capacity:'当前已选择的游戏最多支持 ' + (GAME_MAX[r.game] || 0) + ' 人',
+        duplicate_room_account:'同一账号不能重复加入同一房间', already_in_room:'你已在房间中',
+      };
+      if (joined.channel === 'social' || joined.reason === 'blocked'){
+        this.sendText(JSON.stringify({type:'social_error',msg:'你与房间内成员存在屏蔽关系，无法加入该房间',payload:{reason:'blocked'}}));
+      } else {
+        this.sendText(JSON.stringify({type:'error',msg:messages[joined.reason] || '当前无法加入房间',reason:joined.reason}));
+      }
+      return;
+    }
+    const idx = joined.player;
     this.sendText(JSON.stringify({ type:'joined', room:roomId, player:idx, payload:roomPayload(r) }));
     broadcastRoom(r);
     if (fromInvite) r.host.sendText(JSON.stringify({ type: 'invite_result', payload: { accepted: true } }));
     broadcastLobby();
     maybeAutoStart(r);
   }
-  leaveRoom(){
-    if (!this.room) return;
+  leaveRoom(options={}){
+    if (!this.room) return true;
     const r = rooms.get(this.room);
-    if (!r){ this.room = null; this.player = null; return; }
+    if (!r){ return roomPresenceBoundary.room({action:'retire_session',session:this,allowUnregistered:true}).ok; }
     const wasHost = this === r.host;
     const departedPlayer = r.clients.get(this);
     if (r.started && !r.settled) settleRoomForfeit(r, this, 'forfeit');
-    r.clients.delete(this);
-    if (Number.isInteger(departedPlayer)) ensureRoomSeats(r)[departedPlayer] = emptySeat(departedPlayer);
-    this.room = null;
-    this.player = null;
-    if (!r.clients.size){
+    forgetTankSnapshotRecipient(r,this);
+    const membership = roomPresenceBoundary.room({action:'remove',room:r,session:this,deleteWhenEmpty:true,allowUnregistered:true});
+    if (!membership.ok){
+      if(options.quarantineSweep===true)return false;
+      const attempts=Number(this.roomPresenceRetryAttempts)||0;
+      if(attempts>=ROOM_PRESENCE_RETRY_LIMIT){
+        this.roomRemovalRetryTimer=null;this.roomRemovalQuarantined=true;r.presenceQuarantined=true;
+        enqueueRoomGraphRecovery('leave:'+this.sessionId,{
+          room:r,
+          recover:()=>this.leaveRoom({quarantineSweep:true}),
+          onRecovered:()=>{this.roomRemovalQuarantined=false;if(![...roomGraphRecoveryQueue.values()].some(record=>record.room===r))r.presenceQuarantined=false;},
+        });
+        if(this.alive)this.sendText(JSON.stringify({type:'error',msg:'房间状态已进入安全恢复队列',reason:'room_presence_quarantined'}));
+        broadcast(r,{type:'error',msg:'房间状态已进入安全恢复队列',reason:'room_presence_quarantined'});
+        return false;
+      }
+      this.roomPresenceRetryAttempts=attempts+1;
+      scheduleRoomRemovalRetryTimer(this,r,roomPresenceRetryDelay(attempts+1));
+      return false;
+    }
+    cancelRoomRemovalRetryTimer(this);
+    this.roomPresenceRetryAttempts=0;this.roomRemovalQuarantined=false;
+    if (membership.closed){
       const spectators = r.spectators ? [...r.spectators.keys()] : [];
       for (const spectator of spectators){
         spectatorAccessGuard.leave(spectator.sessionId);
@@ -4505,27 +5911,26 @@ class Session {
         spectator.sendText(JSON.stringify({ type:'peer_left', payload:{ roomClosed:true, player:departedPlayer } }));
       }
       stopRoomAuthorities(r);
-      rooms.delete(r.id);
       broadcastLobby();
       cleanupEphemeralUser(this.uid);
-      return;
+      return true;
     }
-    let hostChanged = false;
-    if (wasHost){ r.host = [...r.clients.entries()].sort((a,b) => a[1] - b[1])[0][0]; hostChanged = true; }
-    resetRoomMatch(r);
-    compactRoomPlayers(r);
-    updateAIControllers(r);
+    const hostChanged = !!membership.hostChanged || wasHost;
+    const reset=resetRoomMatch(r);
+    if(!reset.ok)broadcast(r,{type:'error',msg:'房间状态暂不可用',reason:reset.reason||'room_presence_unavailable'});
+    notifyRoomReassignments(r,membership.reassigned);
     broadcast(r, { type:'peer_left', payload:{ roomClosed:false, player:departedPlayer } });
     if (hostChanged) broadcast(r, { type:'host_changed', payload:{ uid:r.host.uid, player:r.clients.get(r.host) } });
     broadcastRoom(r);
     broadcastLobby();
+    return true;
   }
-  leaveSpectator(){
+  leaveSpectator(notify){
     if(!this.spectatorRoom)return;
-    const r=rooms.get(this.spectatorRoom);this.spectatorRoom=null;
+    const roomId=this.spectatorRoom,r=rooms.get(roomId);this.spectatorRoom=null;
     spectatorAccessGuard.leave(this.sessionId);
-    if(!r||!r.spectators)return;
-    r.spectators.delete(this);broadcastRoom(r);broadcastLobby();
+    if(r&&r.spectators){forgetTankSnapshotRecipient(r,this);r.spectators.delete(this);broadcastRoom(r);broadcastLobby();}
+    if(notify&&this.alive)this.sendText(JSON.stringify({type:'spectate_left',payload:{room:roomId}}));
   }
   close(intentional){
     if (!this.alive) return;
@@ -4534,7 +5939,7 @@ class Session {
     sessions.delete(this);
     if(this.spectatorRoom)this.leaveSpectator();
     const retained = !intentional && detachForReconnect(this);
-    if (!retained) this.leaveRoom();
+    if (!retained){ cancelReconnectTimer(this); this.leaveRoom(); }
     try { this.socket.destroy(); } catch {}
     if (!retained) scheduleEphemeralCleanup(uid,60000);
   }
@@ -4562,49 +5967,94 @@ server.on('upgrade', (req, socket) => {
   socket.on('error', () => session.close());
 });
 
-const heartbeatSweep = setInterval(() => {
-  const now = Date.now();
-  for (const session of [...sessions]){
-    const user=session.uid&&db.users[session.uid];
-    if(user&&user.ephemeral&&Number(user.guestExpiresAt||0)<=now){session.sendText(JSON.stringify({type:'auth_error',msg:'访客会话已到期',reason:'session_expired'}));session.close(true);scheduleEphemeralCleanup(user.uid,1000);continue;}
-    if (session.alive && now - session.lastSeen >= HEARTBEAT_TIMEOUT_MS) session.close();
-  }
-  for (const room of rooms.values()){
-    if (!room.started || room.settled) continue;
-    const progress = roomProgress(room);
-    if (now - Number(progress.lastActionAt || progress.startedAt || now) >= MATCH_IDLE_TIMEOUT_MS){
-      settleRoomNoContest(room, 'afk_timeout');
-      recordAnalytics('match_afk', { matchId: room.matchId, game: room.game, mode: 'online', metadata: { roomWide: true } });
+const HEARTBEAT_SWEEP_TIMER_OWNER='heartbeat-sweep';
+const HEARTBEAT_SWEEP_INTERVAL_MS=Math.min(10000,Math.max(1000,Math.floor(HEARTBEAT_TIMEOUT_MS/4)));
+const heartbeatSweepIsolation=createHeartbeatSweepIsolation({
+  recordError:recordOperationalError,
+  recordFallback:()=>incrementGameplayMetric('serverErrors'),
+});
+const heartbeatSweep=serverClockTimer.schedule({
+  owner:HEARTBEAT_SWEEP_TIMER_OWNER,
+  delayMs:HEARTBEAT_SWEEP_INTERVAL_MS,
+  repeat:true,
+  run:({now})=>{
+    for (const session of [...sessions]){
+      heartbeatSweepIsolation.run('heartbeat_session_sweep',()=>{
+        const user=session.uid&&db.users[session.uid];
+        if(user&&user.ephemeral&&Number(user.guestExpiresAt||0)<=now){
+          heartbeatSweepIsolation.run('heartbeat_guest_expiry_notify',()=>session.sendText(JSON.stringify({type:'auth_error',msg:'访客会话已到期',reason:'session_expired'})));
+          heartbeatSweepIsolation.run('heartbeat_guest_expiry_close',()=>session.close(true));
+          heartbeatSweepIsolation.run('heartbeat_guest_expiry_cleanup',()=>scheduleEphemeralCleanup(user.uid,1000));
+          return;
+        }
+        if(session.alive&&now-session.lastSeen>=HEARTBEAT_TIMEOUT_MS){
+          heartbeatSweepIsolation.run('heartbeat_session_timeout_close',()=>session.close());
+        }
+      });
     }
-  }
-  tournamentGuard.cleanup(now);
-  for(const [tournamentId,entry] of tournaments){
-    const state=tournamentGuard.snapshot(tournamentId,now);
-    if(!state||['expired','declined','cancelled'].includes(state.status)||
-        (state.status==='finished'&&now-Number(state.lastActivityAt||0)>60*60*1000)){
-      if(state)broadcastTournament(entry);
-      tournaments.delete(tournamentId);
+    for(const room of rooms.values()){
+      heartbeatSweepIsolation.run('heartbeat_room_idle_sweep',()=>{
+        if(!room.started||room.settled)return;
+        const progress=roomProgress(room);
+        if(now-Number(progress.lastActionAt||progress.startedAt||now)>=MATCH_IDLE_TIMEOUT_MS){
+          settleRoomNoContest(room,'afk_timeout');
+          recordAnalytics('match_afk',{matchId:room.matchId,game:room.game,mode:'online',metadata:{roomWide:true}});
+        }
+      });
     }
-  }
-  clearExpiredResumes();
-}, Math.min(10000, Math.max(1000, Math.floor(HEARTBEAT_TIMEOUT_MS / 4))));
-if (heartbeatSweep.unref) heartbeatSweep.unref();
+    heartbeatSweepIsolation.run('heartbeat_tournament_cleanup',()=>tournamentGuard.cleanup(now));
+    for(const [tournamentId,entry] of tournaments){
+      heartbeatSweepIsolation.run('heartbeat_tournament_sweep',()=>{
+        const state=tournamentGuard.snapshot(tournamentId,now);
+        if(!state||['expired','declined','cancelled'].includes(state.status)||
+            (state.status==='finished'&&now-Number(state.lastActivityAt||0)>60*60*1000)){
+          if(state)broadcastTournament(entry);
+          tournaments.delete(tournamentId);
+        }
+      });
+    }
+    heartbeatSweepIsolation.run('heartbeat_resume_expiry_sweep',()=>clearExpiredResumes(now));
+  },
+});
+if(!heartbeatSweep.ok)recordOperationalError('heartbeat_sweep_schedule',new Error(heartbeatSweep.reason||'clock_timer_unavailable'));
 
-const metricsHistorySweep=setInterval(()=>{
-  try{captureGameplayMetrics(false);}catch(error){recordOperationalError('metrics_history_capture',error);}
-},METRICS_HISTORY_INTERVAL_MS);
-if(metricsHistorySweep.unref)metricsHistorySweep.unref();
+const metricsHistorySweep=serverClockTimer.schedule({
+  owner:'operational-metrics-history',
+  delayMs:METRICS_HISTORY_INTERVAL_MS,
+  repeat:true,
+  run:()=>{
+    try{const snapshot=operationalMetricsBoundary.capture(false);if(clusterCoordinator.enabled)clusterCoordinator.recordMetrics(snapshot);}catch(error){recordOperationalError('metrics_history_capture',error);}
+  },
+});
+if(!metricsHistorySweep.ok)recordOperationalError('metrics_history_schedule',new Error(metricsHistorySweep.reason));
+server.once('close',()=>serverClockTimer.dispose());
 
-sbLoadProfiles().finally(() => {
-  server.listen(PORT, () => {
-    try{captureGameplayMetrics(true);}catch(error){recordOperationalError('metrics_initial_capture',error);}
-    console.log('小游戏合集在线服务已启动: http://localhost:' + PORT + (useSupabase ? '（Supabase 数据库已连接）' : '（本地 JSON 存储）'));
+async function bootstrapConfiguredTestAdmin(){
+  if (!testAdmin.enabled) return;
+  const boot = await testAdmin.bootstrap({
+    users:db.users,
+    createStarterUser:testAdminStarterUser,
+    persist:()=>{ saveDB(); return true; },
   });
+  if (!boot.ok) throw new Error(TestAdmin.TEST_ADMIN_REASON);
+  const adminUser = db.users[testAdmin.uid];
+  let remotePersisted = true;
+  if (boot.created) remotePersisted = await sbCreateProfile(adminUser);
+  else if (boot.passwordUpdated) remotePersisted = await sbSyncAuthProfile(adminUser);
+  if (useSupabase && remotePersisted !== true) throw new Error(TestAdmin.TEST_ADMIN_REASON);
+}
+sbLoadProfiles().then(bootstrapConfiguredTestAdmin).then(() => clusterCoordinator.start()).then(() => server.listen(PORT, () => {
+  try{const snapshot=operationalMetricsBoundary.capture(true);if(clusterCoordinator.enabled)clusterCoordinator.recordMetrics(snapshot);}catch(error){recordOperationalError('metrics_initial_capture',error);}
+  console.log('小游戏合集在线服务已启动: http://localhost:' + PORT + (useSupabase ? '（Supabase 数据库已连接）' : '（本地 JSON 存储）'));
+})).catch(error => {
+  serverClockTimer.dispose();
+  console.error('测试管理员启动引导失败（reason=' + TestAdmin.TEST_ADMIN_REASON + '）');
+  process.exitCode = 1;
 });
 // outbox 失败后不依赖下一次重启；同一 resultId 的 RPC 是幂等的，可安全重试。
 if (useSupabase){
-  const rewardSyncSweep = setInterval(() => { retryPendingRewardSync(); }, REWARD_SYNC_RETRY_MS);
+  const rewardSyncSweep = setInterval(() => { if(clusterCoordinator.isLeader())retryPendingRewardSync(); }, REWARD_SYNC_RETRY_MS);
   if (rewardSyncSweep.unref) rewardSyncSweep.unref();
-  const aiLearningSyncSweep = setInterval(() => { retryPendingAILearningSync(); }, REWARD_SYNC_RETRY_MS);
+  const aiLearningSyncSweep = setInterval(() => { if(clusterCoordinator.isLeader())retryPendingAILearningSync(); }, REWARD_SYNC_RETRY_MS);
   if (aiLearningSyncSweep.unref) aiLearningSyncSweep.unref();
 }

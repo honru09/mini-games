@@ -1,0 +1,24 @@
+{
+  "status": "ACCEPTED",
+  "startedAt": "2026-08-17T18:00:00+09:00",
+  "updatedAt": "2026-08-17T19:26:00+09:00",
+  "steps": [
+    {"id": "mainline-read", "status": "completed", "evidence": ["requirements/GHOST_GAME_MAINLINE_COMMAND.md", "requirements/MAINLINE_CONTROL_ROUTING.json"]},
+    {"id": "skill-install", "status": "completed", "evidence": ["C:/Users/wangxr/.codex/skills/add-audio/SKILL.md", "C:/Users/wangxr/.codex/skills/game-audio/SKILL.md", "C:/Users/wangxr/.codex/skills/audiocraft-audio-generation/SKILL.md", "C:/Users/wangxr/.codex/skills/fal-ai-media/SKILL.md", "C:/Users/wangxr/.codex/skills/sound-effects/SKILL.md"]},
+    {"id": "repo-audit", "status": "completed", "evidence": ["external-ai-skill-research.md"]},
+    {"id": "governance", "status": "completed", "evidence": ["requirements/skills-registry.json", "node scripts/validate-project-state.js", "node qa/approval-gate-policy.js"]},
+    {"id": "focused-verification", "status": "completed", "evidence": ["npm run test:technical-optimization-t3", "node qa/dom-smoke.js", "node scripts/build.js --check", "git diff --check"]}
+  ],
+  "blocked": [
+    "fal.ai generation: MCP and FAL_KEY unavailable",
+    "ElevenLabs generation: ELEVENLABS_API_KEY unavailable",
+    "AudioCraft generation: supported Python/PyTorch/ffmpeg environment unavailable"
+  ],
+  "skipped": [
+    "audio asset generation",
+    "full runtime implementation",
+    "second browser/physical devices/real network/production evidence",
+    "commit/push/deploy"
+  ],
+  "evidence": ["external-ai-skill-research.md"]
+}

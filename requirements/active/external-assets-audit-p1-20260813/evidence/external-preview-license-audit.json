@@ -1,0 +1,1882 @@
+{
+  "schemaVersion": 1,
+  "createdAt": "2026-08-13T23:16:58+09:00",
+  "rolePreviewCount": 64,
+  "uiPreviewCount": 354,
+  "contactSheets": [
+    "requirements/active/external-assets-audit-p1-20260813/evidence/role-previews-contact-sheet-all-64.jpg",
+    "requirements/active/external-assets-audit-p1-20260813/evidence/ui-previews-contact-sheet-01.jpg",
+    "requirements/active/external-assets-audit-p1-20260813/evidence/ui-previews-contact-sheet-02.jpg",
+    "requirements/active/external-assets-audit-p1-20260813/evidence/ui-previews-contact-sheet-03.jpg",
+    "requirements/active/external-assets-audit-p1-20260813/evidence/ui-previews-contact-sheet-04.jpg",
+    "requirements/active/external-assets-audit-p1-20260813/evidence/ui-previews-contact-sheet-05.jpg",
+    "requirements/active/external-assets-audit-p1-20260813/evidence/ui-previews-contact-sheet-06.jpg"
+  ],
+  "licenseLikeTextPackages": 64,
+  "licenseFiles": 256,
+  "licenseAudit": [
+    {
+      "zip": "1.zip",
+      "files": [
+        {
+          "path": "License.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        }
+      ]
+    },
+    {
+      "zip": "2.zip",
+      "files": [
+        {
+          "path": "TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        }
+      ]
+    },
+    {
+      "zip": "3.zip",
+      "files": [
+        {
+          "path": "TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        }
+      ]
+    },
+    {
+      "zip": "4.zip",
+      "files": [
+        {
+          "path": "TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "TXT/readme.txt",
+          "bytes": 48,
+          "sha256": "f6bd1fe88cdbd1473315e99e9dd8a83aeb79f9ffba4c0304f379e50cc6f13c22",
+          "textExcerpt": "Cipitillo https://www.dafont.com/cipitillo.font"
+        }
+      ]
+    },
+    {
+      "zip": "5.zip",
+      "files": [
+        {
+          "path": "TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        }
+      ]
+    },
+    {
+      "zip": "6.zip",
+      "files": [
+        {
+          "path": "TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        }
+      ]
+    },
+    {
+      "zip": "7.zip",
+      "files": [
+        {
+          "path": "TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        }
+      ]
+    },
+    {
+      "zip": "8.zip",
+      "files": [
+        {
+          "path": "license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        }
+      ]
+    },
+    {
+      "zip": "9.zip",
+      "files": [
+        {
+          "path": "license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        }
+      ]
+    },
+    {
+      "zip": "10.zip",
+      "files": [
+        {
+          "path": "Archer_1/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Archer_1/TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        },
+        {
+          "path": "Archer_2/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Archer_2/TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        },
+        {
+          "path": "Archer_3/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Archer_3/TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        }
+      ]
+    },
+    {
+      "zip": "11.zip",
+      "files": [
+        {
+          "path": "License.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "readme.txt",
+          "bytes": 96,
+          "sha256": "a9d59fa8f9ba3849a73a6b1e70ea7de388688d431b4f08059bb22d6d7135ffc8",
+          "textExcerpt": "Font that was used for the background of the preview: https://www.dafont.com/digital-disco.font"
+        }
+      ]
+    },
+    {
+      "zip": "12.zip",
+      "files": [
+        {
+          "path": "Archer_1/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Archer_1/TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        },
+        {
+          "path": "Archer_2/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Archer_2/TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        },
+        {
+          "path": "Archer_3/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Archer_3/TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        }
+      ]
+    },
+    {
+      "zip": "13.zip",
+      "files": [
+        {
+          "path": "Seller_1/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Seller_1/TXT/readme.txt",
+          "bytes": 48,
+          "sha256": "f6bd1fe88cdbd1473315e99e9dd8a83aeb79f9ffba4c0304f379e50cc6f13c22",
+          "textExcerpt": "Cipitillo https://www.dafont.com/cipitillo.font"
+        },
+        {
+          "path": "Seller_2/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Seller_2/TXT/readme.txt",
+          "bytes": 48,
+          "sha256": "f6bd1fe88cdbd1473315e99e9dd8a83aeb79f9ffba4c0304f379e50cc6f13c22",
+          "textExcerpt": "Cipitillo https://www.dafont.com/cipitillo.font"
+        },
+        {
+          "path": "Seller_3/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Seller_3/TXT/readme.txt",
+          "bytes": 48,
+          "sha256": "f6bd1fe88cdbd1473315e99e9dd8a83aeb79f9ffba4c0304f379e50cc6f13c22",
+          "textExcerpt": "Cipitillo https://www.dafont.com/cipitillo.font"
+        },
+        {
+          "path": "Seller_4/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Seller_4/TXT/readme.txt",
+          "bytes": 48,
+          "sha256": "f6bd1fe88cdbd1473315e99e9dd8a83aeb79f9ffba4c0304f379e50cc6f13c22",
+          "textExcerpt": "Cipitillo https://www.dafont.com/cipitillo.font"
+        }
+      ]
+    },
+    {
+      "zip": "14.zip",
+      "files": [
+        {
+          "path": "Archer_1/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Archer_1/TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        },
+        {
+          "path": "Archer_2/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Archer_2/TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        },
+        {
+          "path": "Archer_3/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Archer_3/TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        }
+      ]
+    },
+    {
+      "zip": "15.zip",
+      "files": [
+        {
+          "path": "license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        }
+      ]
+    },
+    {
+      "zip": "16.zip",
+      "files": [
+        {
+          "path": "Archer_1/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Archer_1/TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        },
+        {
+          "path": "Archer_2/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Archer_2/TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        },
+        {
+          "path": "Archer_3/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Archer_3/TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        }
+      ]
+    },
+    {
+      "zip": "17.zip",
+      "files": [
+        {
+          "path": "TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "TXT/readme.txt",
+          "bytes": 48,
+          "sha256": "f6bd1fe88cdbd1473315e99e9dd8a83aeb79f9ffba4c0304f379e50cc6f13c22",
+          "textExcerpt": "Cipitillo https://www.dafont.com/cipitillo.font"
+        }
+      ]
+    },
+    {
+      "zip": "18.zip",
+      "files": [
+        {
+          "path": "TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        }
+      ]
+    },
+    {
+      "zip": "19.zip",
+      "files": [
+        {
+          "path": "Assistant/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Assistant/TXT/readme.txt",
+          "bytes": 48,
+          "sha256": "f6bd1fe88cdbd1473315e99e9dd8a83aeb79f9ffba4c0304f379e50cc6f13c22",
+          "textExcerpt": "Cipitillo https://www.dafont.com/cipitillo.font"
+        },
+        {
+          "path": "Citizen/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Citizen/TXT/readme.txt",
+          "bytes": 48,
+          "sha256": "f6bd1fe88cdbd1473315e99e9dd8a83aeb79f9ffba4c0304f379e50cc6f13c22",
+          "textExcerpt": "Cipitillo https://www.dafont.com/cipitillo.font"
+        },
+        {
+          "path": "Inspector/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Inspector/TXT/readme.txt",
+          "bytes": 48,
+          "sha256": "f6bd1fe88cdbd1473315e99e9dd8a83aeb79f9ffba4c0304f379e50cc6f13c22",
+          "textExcerpt": "Cipitillo https://www.dafont.com/cipitillo.font"
+        },
+        {
+          "path": "TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "TXT/readme.txt",
+          "bytes": 48,
+          "sha256": "f6bd1fe88cdbd1473315e99e9dd8a83aeb79f9ffba4c0304f379e50cc6f13c22",
+          "textExcerpt": "Cipitillo https://www.dafont.com/cipitillo.font"
+        }
+      ]
+    },
+    {
+      "zip": "20.zip",
+      "files": [
+        {
+          "path": "TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        }
+      ]
+    },
+    {
+      "zip": "21.zip",
+      "files": [
+        {
+          "path": "Blacksmith/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Blacksmith/TXT/readme.txt",
+          "bytes": 48,
+          "sha256": "f6bd1fe88cdbd1473315e99e9dd8a83aeb79f9ffba4c0304f379e50cc6f13c22",
+          "textExcerpt": "Cipitillo https://www.dafont.com/cipitillo.font"
+        },
+        {
+          "path": "Herbalist/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Herbalist/TXT/readme.txt",
+          "bytes": 48,
+          "sha256": "f6bd1fe88cdbd1473315e99e9dd8a83aeb79f9ffba4c0304f379e50cc6f13c22",
+          "textExcerpt": "Cipitillo https://www.dafont.com/cipitillo.font"
+        },
+        {
+          "path": "Hunter/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Hunter/TXT/readme.txt",
+          "bytes": 48,
+          "sha256": "f6bd1fe88cdbd1473315e99e9dd8a83aeb79f9ffba4c0304f379e50cc6f13c22",
+          "textExcerpt": "Cipitillo https://www.dafont.com/cipitillo.font"
+        },
+        {
+          "path": "Jeweler/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Jeweler/TXT/readme.txt",
+          "bytes": 48,
+          "sha256": "f6bd1fe88cdbd1473315e99e9dd8a83aeb79f9ffba4c0304f379e50cc6f13c22",
+          "textExcerpt": "Cipitillo https://www.dafont.com/cipitillo.font"
+        }
+      ]
+    },
+    {
+      "zip": "22.zip",
+      "files": [
+        {
+          "path": "TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        }
+      ]
+    },
+    {
+      "zip": "23.zip",
+      "files": [
+        {
+          "path": "Blacksmith/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Blacksmith/TXT/readme.txt",
+          "bytes": 48,
+          "sha256": "f6bd1fe88cdbd1473315e99e9dd8a83aeb79f9ffba4c0304f379e50cc6f13c22",
+          "textExcerpt": "Cipitillo https://www.dafont.com/cipitillo.font"
+        },
+        {
+          "path": "Healer/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Healer/TXT/readme.txt",
+          "bytes": 48,
+          "sha256": "f6bd1fe88cdbd1473315e99e9dd8a83aeb79f9ffba4c0304f379e50cc6f13c22",
+          "textExcerpt": "Cipitillo https://www.dafont.com/cipitillo.font"
+        },
+        {
+          "path": "Hunter/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Hunter/TXT/readme.txt",
+          "bytes": 48,
+          "sha256": "f6bd1fe88cdbd1473315e99e9dd8a83aeb79f9ffba4c0304f379e50cc6f13c22",
+          "textExcerpt": "Cipitillo https://www.dafont.com/cipitillo.font"
+        },
+        {
+          "path": "Jeweler/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Jeweler/TXT/readme.txt",
+          "bytes": 48,
+          "sha256": "f6bd1fe88cdbd1473315e99e9dd8a83aeb79f9ffba4c0304f379e50cc6f13c22",
+          "textExcerpt": "Cipitillo https://www.dafont.com/cipitillo.font"
+        }
+      ]
+    },
+    {
+      "zip": "24.zip",
+      "files": [
+        {
+          "path": "TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        }
+      ]
+    },
+    {
+      "zip": "25.zip",
+      "files": [
+        {
+          "path": "Reaper_Man_1/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Reaper_Man_1/TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        },
+        {
+          "path": "Reaper_Man_2/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Reaper_Man_2/TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        },
+        {
+          "path": "Reaper_Man_3/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Reaper_Man_3/TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        }
+      ]
+    },
+    {
+      "zip": "26.zip",
+      "files": [
+        {
+          "path": "Skeleton_1/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Skeleton_1/TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        },
+        {
+          "path": "Skeleton_2/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Skeleton_2/TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        },
+        {
+          "path": "Skeleton_3/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Skeleton_3/TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        }
+      ]
+    },
+    {
+      "zip": "27.zip",
+      "files": [
+        {
+          "path": "Astrologer/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Astrologer/TXT/readme.txt",
+          "bytes": 48,
+          "sha256": "f6bd1fe88cdbd1473315e99e9dd8a83aeb79f9ffba4c0304f379e50cc6f13c22",
+          "textExcerpt": "Cipitillo https://www.dafont.com/cipitillo.font"
+        },
+        {
+          "path": "Citizen/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Citizen/TXT/readme.txt",
+          "bytes": 48,
+          "sha256": "f6bd1fe88cdbd1473315e99e9dd8a83aeb79f9ffba4c0304f379e50cc6f13c22",
+          "textExcerpt": "Cipitillo https://www.dafont.com/cipitillo.font"
+        },
+        {
+          "path": "Publican/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Publican/TXT/readme.txt",
+          "bytes": 48,
+          "sha256": "f6bd1fe88cdbd1473315e99e9dd8a83aeb79f9ffba4c0304f379e50cc6f13c22",
+          "textExcerpt": "Cipitillo https://www.dafont.com/cipitillo.font"
+        }
+      ]
+    },
+    {
+      "zip": "28.zip",
+      "files": [
+        {
+          "path": "TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        }
+      ]
+    },
+    {
+      "zip": "29.zip",
+      "files": [
+        {
+          "path": "Elementals_1/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Elementals_1/TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        },
+        {
+          "path": "Elementals_2/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Elementals_2/TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        },
+        {
+          "path": "Elementals_3/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Elementals_3/TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        }
+      ]
+    },
+    {
+      "zip": "30.zip",
+      "files": [
+        {
+          "path": "Assassin/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Assassin/TXT/readme.txt",
+          "bytes": 48,
+          "sha256": "f6bd1fe88cdbd1473315e99e9dd8a83aeb79f9ffba4c0304f379e50cc6f13c22",
+          "textExcerpt": "Cipitillo https://www.dafont.com/cipitillo.font"
+        },
+        {
+          "path": "Blacksmith/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Blacksmith/TXT/readme.txt",
+          "bytes": 48,
+          "sha256": "f6bd1fe88cdbd1473315e99e9dd8a83aeb79f9ffba4c0304f379e50cc6f13c22",
+          "textExcerpt": "Cipitillo https://www.dafont.com/cipitillo.font"
+        },
+        {
+          "path": "Healer/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Healer/TXT/readme.txt",
+          "bytes": 48,
+          "sha256": "f6bd1fe88cdbd1473315e99e9dd8a83aeb79f9ffba4c0304f379e50cc6f13c22",
+          "textExcerpt": "Cipitillo https://www.dafont.com/cipitillo.font"
+        },
+        {
+          "path": "Jeweler/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Jeweler/TXT/readme.txt",
+          "bytes": 48,
+          "sha256": "f6bd1fe88cdbd1473315e99e9dd8a83aeb79f9ffba4c0304f379e50cc6f13c22",
+          "textExcerpt": "Cipitillo https://www.dafont.com/cipitillo.font"
+        }
+      ]
+    },
+    {
+      "zip": "31.zip",
+      "files": [
+        {
+          "path": "Assistant/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Assistant/TXT/readme.txt",
+          "bytes": 48,
+          "sha256": "f6bd1fe88cdbd1473315e99e9dd8a83aeb79f9ffba4c0304f379e50cc6f13c22",
+          "textExcerpt": "Cipitillo https://www.dafont.com/cipitillo.font"
+        },
+        {
+          "path": "Citizen/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Citizen/TXT/readme.txt",
+          "bytes": 48,
+          "sha256": "f6bd1fe88cdbd1473315e99e9dd8a83aeb79f9ffba4c0304f379e50cc6f13c22",
+          "textExcerpt": "Cipitillo https://www.dafont.com/cipitillo.font"
+        },
+        {
+          "path": "Inspector/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Inspector/TXT/readme.txt",
+          "bytes": 48,
+          "sha256": "f6bd1fe88cdbd1473315e99e9dd8a83aeb79f9ffba4c0304f379e50cc6f13c22",
+          "textExcerpt": "Cipitillo https://www.dafont.com/cipitillo.font"
+        }
+      ]
+    },
+    {
+      "zip": "32.zip",
+      "files": [
+        {
+          "path": "Blacksmith/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Blacksmith/TXT/readme.txt",
+          "bytes": 48,
+          "sha256": "f6bd1fe88cdbd1473315e99e9dd8a83aeb79f9ffba4c0304f379e50cc6f13c22",
+          "textExcerpt": "Cipitillo https://www.dafont.com/cipitillo.font"
+        },
+        {
+          "path": "Healer/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Healer/TXT/readme.txt",
+          "bytes": 48,
+          "sha256": "f6bd1fe88cdbd1473315e99e9dd8a83aeb79f9ffba4c0304f379e50cc6f13c22",
+          "textExcerpt": "Cipitillo https://www.dafont.com/cipitillo.font"
+        },
+        {
+          "path": "Jeweler/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Jeweler/TXT/readme.txt",
+          "bytes": 48,
+          "sha256": "f6bd1fe88cdbd1473315e99e9dd8a83aeb79f9ffba4c0304f379e50cc6f13c22",
+          "textExcerpt": "Cipitillo https://www.dafont.com/cipitillo.font"
+        },
+        {
+          "path": "Spy/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Spy/TXT/readme.txt",
+          "bytes": 48,
+          "sha256": "f6bd1fe88cdbd1473315e99e9dd8a83aeb79f9ffba4c0304f379e50cc6f13c22",
+          "textExcerpt": "Cipitillo https://www.dafont.com/cipitillo.font"
+        },
+        {
+          "path": "TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "TXT/readme.txt",
+          "bytes": 48,
+          "sha256": "f6bd1fe88cdbd1473315e99e9dd8a83aeb79f9ffba4c0304f379e50cc6f13c22",
+          "textExcerpt": "Cipitillo https://www.dafont.com/cipitillo.font"
+        }
+      ]
+    },
+    {
+      "zip": "33.zip",
+      "files": [
+        {
+          "path": "TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        }
+      ]
+    },
+    {
+      "zip": "34.zip",
+      "files": [
+        {
+          "path": "TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        }
+      ]
+    },
+    {
+      "zip": "35.zip",
+      "files": [
+        {
+          "path": "TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        }
+      ]
+    },
+    {
+      "zip": "36.zip",
+      "files": [
+        {
+          "path": "TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        }
+      ]
+    },
+    {
+      "zip": "37.zip",
+      "files": [
+        {
+          "path": "TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "TXT/readme.txt",
+          "bytes": 48,
+          "sha256": "f6bd1fe88cdbd1473315e99e9dd8a83aeb79f9ffba4c0304f379e50cc6f13c22",
+          "textExcerpt": "Cipitillo https://www.dafont.com/cipitillo.font"
+        }
+      ]
+    },
+    {
+      "zip": "38.zip",
+      "files": [
+        {
+          "path": "TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        }
+      ]
+    },
+    {
+      "zip": "39.zip",
+      "files": [
+        {
+          "path": "TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "TXT/readme.txt",
+          "bytes": 40,
+          "sha256": "0f801cce4fc314f42bca7ee5d6e33ff6bdccc25d3ac8b94883f314b1cf05275c",
+          "textExcerpt": "Dimbo https://www.dafont.com/dimbo.font"
+        }
+      ]
+    },
+    {
+      "zip": "40.zip",
+      "files": [
+        {
+          "path": "TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        }
+      ]
+    },
+    {
+      "zip": "41.zip",
+      "files": [
+        {
+          "path": "TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        }
+      ]
+    },
+    {
+      "zip": "42.zip",
+      "files": [
+        {
+          "path": "TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        }
+      ]
+    },
+    {
+      "zip": "43.zip",
+      "files": [
+        {
+          "path": "TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        }
+      ]
+    },
+    {
+      "zip": "44.zip",
+      "files": [
+        {
+          "path": "TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        }
+      ]
+    },
+    {
+      "zip": "45.zip",
+      "files": [
+        {
+          "path": "TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        }
+      ]
+    },
+    {
+      "zip": "46.zip",
+      "files": [
+        {
+          "path": "TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        }
+      ]
+    },
+    {
+      "zip": "47.zip",
+      "files": [
+        {
+          "path": "TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        }
+      ]
+    },
+    {
+      "zip": "48.zip",
+      "files": [
+        {
+          "path": "TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        }
+      ]
+    },
+    {
+      "zip": "49.zip",
+      "files": [
+        {
+          "path": "TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        }
+      ]
+    },
+    {
+      "zip": "50.zip",
+      "files": [
+        {
+          "path": "Dark_Elves_1/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Dark_Elves_1/TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        },
+        {
+          "path": "Dark_Elves_2/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Dark_Elves_2/TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        },
+        {
+          "path": "Dark_Elves_3/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Dark_Elves_3/TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        },
+        {
+          "path": "TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        }
+      ]
+    },
+    {
+      "zip": "51.zip",
+      "files": [
+        {
+          "path": "Fallen_Angels_1/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Fallen_Angels_1/TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        },
+        {
+          "path": "Fallen_Angels_2/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Fallen_Angels_2/TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        },
+        {
+          "path": "Fallen_Angels_3/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Fallen_Angels_3/TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        },
+        {
+          "path": "TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        }
+      ]
+    },
+    {
+      "zip": "52.zip",
+      "files": [
+        {
+          "path": "Satyr_1/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Satyr_1/TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        },
+        {
+          "path": "Satyr_2/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Satyr_2/TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        },
+        {
+          "path": "Satyr_3/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Satyr_3/TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        },
+        {
+          "path": "TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        }
+      ]
+    },
+    {
+      "zip": "53.zip",
+      "files": [
+        {
+          "path": "Demons_of_Darkness_1/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Demons_of_Darkness_1/TXT/readme.txt",
+          "bytes": 40,
+          "sha256": "0f801cce4fc314f42bca7ee5d6e33ff6bdccc25d3ac8b94883f314b1cf05275c",
+          "textExcerpt": "Dimbo https://www.dafont.com/dimbo.font"
+        },
+        {
+          "path": "Demons_of_Darkness_2/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Demons_of_Darkness_2/TXT/readme.txt",
+          "bytes": 40,
+          "sha256": "0f801cce4fc314f42bca7ee5d6e33ff6bdccc25d3ac8b94883f314b1cf05275c",
+          "textExcerpt": "Dimbo https://www.dafont.com/dimbo.font"
+        },
+        {
+          "path": "Demons_of_Darkness_3/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Demons_of_Darkness_3/TXT/readme.txt",
+          "bytes": 40,
+          "sha256": "0f801cce4fc314f42bca7ee5d6e33ff6bdccc25d3ac8b94883f314b1cf05275c",
+          "textExcerpt": "Dimbo https://www.dafont.com/dimbo.font"
+        },
+        {
+          "path": "TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "TXT/readme.txt",
+          "bytes": 40,
+          "sha256": "0f801cce4fc314f42bca7ee5d6e33ff6bdccc25d3ac8b94883f314b1cf05275c",
+          "textExcerpt": "Dimbo https://www.dafont.com/dimbo.font"
+        }
+      ]
+    },
+    {
+      "zip": "54.zip",
+      "files": [
+        {
+          "path": "Gnoll/Gnoll_1/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Gnoll/Gnoll_1/TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        },
+        {
+          "path": "Gnoll/Gnoll_2/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Gnoll/Gnoll_2/TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        },
+        {
+          "path": "Gnoll/Gnoll_3/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Gnoll/Gnoll_3/TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        },
+        {
+          "path": "TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "TXT/readme.txt",
+          "bytes": 40,
+          "sha256": "0f801cce4fc314f42bca7ee5d6e33ff6bdccc25d3ac8b94883f314b1cf05275c",
+          "textExcerpt": "Dimbo https://www.dafont.com/dimbo.font"
+        }
+      ]
+    },
+    {
+      "zip": "55.zip",
+      "files": [
+        {
+          "path": "TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "TXT/readme.txt",
+          "bytes": 40,
+          "sha256": "0f801cce4fc314f42bca7ee5d6e33ff6bdccc25d3ac8b94883f314b1cf05275c",
+          "textExcerpt": "Dimbo https://www.dafont.com/dimbo.font"
+        }
+      ]
+    },
+    {
+      "zip": "56.zip",
+      "files": [
+        {
+          "path": "TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "TXT/readme.txt",
+          "bytes": 40,
+          "sha256": "0f801cce4fc314f42bca7ee5d6e33ff6bdccc25d3ac8b94883f314b1cf05275c",
+          "textExcerpt": "Dimbo https://www.dafont.com/dimbo.font"
+        }
+      ]
+    },
+    {
+      "zip": "57.zip",
+      "files": [
+        {
+          "path": "TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "TXT/readme.txt",
+          "bytes": 40,
+          "sha256": "0f801cce4fc314f42bca7ee5d6e33ff6bdccc25d3ac8b94883f314b1cf05275c",
+          "textExcerpt": "Dimbo https://www.dafont.com/dimbo.font"
+        }
+      ]
+    },
+    {
+      "zip": "58.zip",
+      "files": [
+        {
+          "path": "Golem_1/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Golem_1/TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        },
+        {
+          "path": "Golem_2/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Golem_2/TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        },
+        {
+          "path": "Golem_3/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Golem_3/TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        },
+        {
+          "path": "TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "TXT/readme.txt",
+          "bytes": 40,
+          "sha256": "0f801cce4fc314f42bca7ee5d6e33ff6bdccc25d3ac8b94883f314b1cf05275c",
+          "textExcerpt": "Dimbo https://www.dafont.com/dimbo.font"
+        }
+      ]
+    },
+    {
+      "zip": "59.zip",
+      "files": [
+        {
+          "path": "Ghoul/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Ghoul/TXT/readme.txt",
+          "bytes": 40,
+          "sha256": "0f801cce4fc314f42bca7ee5d6e33ff6bdccc25d3ac8b94883f314b1cf05275c",
+          "textExcerpt": "Dimbo https://www.dafont.com/dimbo.font"
+        },
+        {
+          "path": "Lich/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Lich/TXT/readme.txt",
+          "bytes": 40,
+          "sha256": "0f801cce4fc314f42bca7ee5d6e33ff6bdccc25d3ac8b94883f314b1cf05275c",
+          "textExcerpt": "Dimbo https://www.dafont.com/dimbo.font"
+        },
+        {
+          "path": "Mummy/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Mummy/TXT/readme.txt",
+          "bytes": 40,
+          "sha256": "0f801cce4fc314f42bca7ee5d6e33ff6bdccc25d3ac8b94883f314b1cf05275c",
+          "textExcerpt": "Dimbo https://www.dafont.com/dimbo.font"
+        }
+      ]
+    },
+    {
+      "zip": "60.zip",
+      "files": [
+        {
+          "path": "Pirate/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Pirate/TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        },
+        {
+          "path": "Rogue/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Rogue/TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        },
+        {
+          "path": "Thief/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Thief/TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        },
+        {
+          "path": "TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "TXT/readme.txt",
+          "bytes": 40,
+          "sha256": "0f801cce4fc314f42bca7ee5d6e33ff6bdccc25d3ac8b94883f314b1cf05275c",
+          "textExcerpt": "Dimbo https://www.dafont.com/dimbo.font"
+        }
+      ]
+    },
+    {
+      "zip": "61.zip",
+      "files": [
+        {
+          "path": "TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "TXT/readme.txt",
+          "bytes": 40,
+          "sha256": "0f801cce4fc314f42bca7ee5d6e33ff6bdccc25d3ac8b94883f314b1cf05275c",
+          "textExcerpt": "Dimbo https://www.dafont.com/dimbo.font"
+        }
+      ]
+    },
+    {
+      "zip": "62.zip",
+      "files": [
+        {
+          "path": "Devil/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Devil/TXT/readme.txt",
+          "bytes": 40,
+          "sha256": "0f801cce4fc314f42bca7ee5d6e33ff6bdccc25d3ac8b94883f314b1cf05275c",
+          "textExcerpt": "Dimbo https://www.dafont.com/dimbo.font"
+        },
+        {
+          "path": "Hell_Knight/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Hell_Knight/TXT/readme.txt",
+          "bytes": 40,
+          "sha256": "0f801cce4fc314f42bca7ee5d6e33ff6bdccc25d3ac8b94883f314b1cf05275c",
+          "textExcerpt": "Dimbo https://www.dafont.com/dimbo.font"
+        },
+        {
+          "path": "Succubus/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Succubus/TXT/readme.txt",
+          "bytes": 47,
+          "sha256": "c6b46450c1ed28f1b5581b16903df196b6f27e16b12c1f89444a38641a0b8ba3",
+          "textExcerpt": "Moon Get! https://www.dafont.com/moon-get.font"
+        }
+      ]
+    },
+    {
+      "zip": "63.zip",
+      "files": [
+        {
+          "path": "Death_Knight/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Death_Knight/TXT/readme.txt",
+          "bytes": 40,
+          "sha256": "0f801cce4fc314f42bca7ee5d6e33ff6bdccc25d3ac8b94883f314b1cf05275c",
+          "textExcerpt": "Dimbo https://www.dafont.com/dimbo.font"
+        },
+        {
+          "path": "Skeleton/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Skeleton/TXT/readme.txt",
+          "bytes": 40,
+          "sha256": "0f801cce4fc314f42bca7ee5d6e33ff6bdccc25d3ac8b94883f314b1cf05275c",
+          "textExcerpt": "Dimbo https://www.dafont.com/dimbo.font"
+        },
+        {
+          "path": "TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "TXT/readme.txt",
+          "bytes": 40,
+          "sha256": "0f801cce4fc314f42bca7ee5d6e33ff6bdccc25d3ac8b94883f314b1cf05275c",
+          "textExcerpt": "Dimbo https://www.dafont.com/dimbo.font"
+        },
+        {
+          "path": "Zombie/TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "Zombie/TXT/readme.txt",
+          "bytes": 40,
+          "sha256": "0f801cce4fc314f42bca7ee5d6e33ff6bdccc25d3ac8b94883f314b1cf05275c",
+          "textExcerpt": "Dimbo https://www.dafont.com/dimbo.font"
+        }
+      ]
+    },
+    {
+      "zip": "64.zip",
+      "files": [
+        {
+          "path": "TXT/license.txt",
+          "bytes": 35,
+          "sha256": "0c0f673571adbb935c734ac17fbc6e51fb4368a225b915aa25031712b03960d4",
+          "textExcerpt": "https://craftpix.net/file-licenses/"
+        },
+        {
+          "path": "TXT/readme.txt",
+          "bytes": 40,
+          "sha256": "0f801cce4fc314f42bca7ee5d6e33ff6bdccc25d3ac8b94883f314b1cf05275c",
+          "textExcerpt": "Dimbo https://www.dafont.com/dimbo.font"
+        }
+      ]
+    }
+  ],
+  "inventoryRecordCount": 836,
+  "inventorySha256": "b794cacc4aac4cf5781c9f4b07df391630ef5bcf6217d297b2c5553c965a22aa",
+  "limits": [
+    "contact sheets prove preview exposure, not artistic approval",
+    "license excerpts are evidence for later manual review, not an automatic commercial-use decision",
+    "PSD/AI/EPS layers remain unparsed"
+  ]
+}

@@ -339,6 +339,11 @@ async function main(){
       ENABLE_RULE_AUTHORITY_V2: '0',
       SUPABASE_URL: 'http://127.0.0.1:' + fakePort,
       SUPABASE_KEY: TEST_KEY,
+      // The server prefers SERVICE_ROLE_KEY. Explicitly clear inherited
+      // production credentials so this fake PostgREST test never emits them.
+      SUPABASE_SERVICE_ROLE_KEY: '',
+      SUPABASE_DB_URL: '',
+      SUPABASE_RESTORE_DB_URL: '',
       DEEPSEEK_KEY: '',
       ALLOWED_ORIGINS: '',
       REWARD_TEST_MIN_DURATION_MS: '0',

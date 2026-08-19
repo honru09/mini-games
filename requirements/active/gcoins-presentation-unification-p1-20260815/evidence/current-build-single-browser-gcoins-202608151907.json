@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-08-15T19:25:42+09:00",
+  "claim": "historical_as_of_build_single_browser_gcoins_presentation_partial",
+  "currency": "historical_as_of",
+  "build": {
+    "path": "public/index.html",
+    "sha256": "3D0532737A932B505DDDE04EFB565B527EE63FD9E660CDAD4648B38E6559062D",
+    "characters": 1582693,
+    "bytes": 1597229
+  },
+  "serviceWorker": {
+    "finalCacheGeneration": "ghost-game-shell-v13-20260815",
+    "finalCaches": ["ghost-game-shell-v13-20260815"],
+    "waiting": null,
+    "upgradeObserved": [
+      "v11 active with stale cached locale and v12 waiting reproduced the raw shop_available_label symptom",
+      "closing the last v11 client allowed v12 to activate and v13 to install without forced skipWaiting",
+      "closing the last v12 client allowed v13 to activate and delete older ghost-game caches"
+    ],
+    "exactZhLocaleAfterActivation": "可用余额"
+  },
+  "environment": {
+    "browserSurface": "Codex in-app Chromium",
+    "browserCount": 1,
+    "url": "http://localhost:8080/",
+    "accountType": "existing formal QA account; no account creation",
+    "deviceEvidenceKind": "desktop browser plus one CSS viewport override"
+  },
+  "surfaces": {
+    "profile": {"label":"余额","amount":"1 G Coins","rawKeyCount":0},
+    "shopZh": {"label":"可用余额","amount":"1 G Coins","samplePrices":["10 G Coins","12 G Coins","14 G Coins","16 G Coins","18 G Coins"],"rawKeyCount":0},
+    "leaderboard": {"atomicAmountsVisible":true,"rawKeyCount":0},
+    "roomLobbyPlayers": {"atomicAmountsVisible":true,"sampleAmounts":["1 G Coins","0 G Coins"],"rawKeyCount":0},
+    "shopEn": {"label":"Available balance","amount":"1 G Coins","rawKeyCount":0},
+    "shopUk": {"label":"Доступний баланс","amount":"1 G Coins","rawKeyCount":0}
+  },
+  "mobileVisibleInspection": {
+    "viewport": {"width":390,"height":844},
+    "language": "uk-UA",
+    "theme": "dark",
+    "pageHorizontalOverflow": 0,
+    "dialogHorizontalOverflow": 0,
+    "rawKeyCount": 0,
+    "amountAriaSamples": ["1 G Coins","1 G Coins","1 G Coins","1 G Coins","1 G Coins"],
+    "result": "visible Shop header, balance, horizontal category rail, preview card and two-column catalog inspected without overlap"
+  },
+  "console": {"warnErrorCount":0},
+  "cleanup": {"viewportReset":true,"finalRoute":"profile","theme":"light","lang":"zh-CN","rawKeyCount":0,"horizontalOverflow":0},
+  "notGranted": [
+    "full_current_five_viewport_route_matrix",
+    "second_browser",
+    "physical_android",
+    "physical_iphone",
+    "physical_tablet",
+    "real_network_shaping",
+    "screen_reader_device_matrix",
+    "human_golden_set",
+    "production_verification",
+    "release"
+  ],
+  "gateDisposition": "ECO-012 remains partial; GATE-DEVICE-BROWSER-NETWORK and GATE-ART-GOLDEN-SET remain BLOCKED"
+}

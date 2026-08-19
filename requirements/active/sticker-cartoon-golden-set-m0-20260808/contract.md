@@ -20,10 +20,11 @@
 - Avatar `0–55` 与 `100–147`、Premium Background `20–31` 及六款游戏 runtime ID 不变。
 - 视觉切换不改变 WebSocket 消息、resultId、matchId、奖励幂等、重连或 Supabase schema。
 
-## Review gates
+## Owner clearance and optional review
 
-- Art Bible Review → Golden Set Style Review → IP Similarity Review → Integration/Performance/A11y → Feature Flag Release。
-- 任一 Gate 失败都回到上一阶段，不扩大批量生产范围。
+- M0 North Star → 稳定 ID/版本/SHA/provenance → 机器技术/视觉/相似风险审查 → Integration/Performance/A11y → fallback/feature flag/回滚 → `OWNER_AUTHORIZED_ART_CLEARANCE`。
+- 人工清稿、Reviewer B、IP/法律意见与逐资产 Golden Set 为 `OPTIONAL_ADVISORY_EVIDENCE`，可提出返工或风险但不阻塞原创资产开发；任何未执行咨询都不得伪造 PASS。
+- 任一机器必备项或所有者清除失败都回到上一阶段，不扩大批量生产范围；`blocked-license / EXTERNAL_REFERENCE_ONLY` 永不进入此轨道。
 
 ## Golden Set frozen selection
 
@@ -36,4 +37,4 @@
 
 - 总闸门：`mg_art_sticker_m0_v1`。
 - 分闸门：`mg_ui_sticker_v1`、`mg_persona_sticker_v1`、`mg_avatar_golden_v1`、`mg_art_gomoku_sticker_v1`、`mg_art_ludo_sticker_v1`。
-- 人工 Golden Set 决议前全部 `defaultEnabled=false`；关闭时完整回退现有 soft-3D / CSS / Canvas / DOM / Emoji。
+- 每个具体候选取得 `OWNER_AUTHORIZED_ART_CLEARANCE` 前保持 `defaultEnabled=false`；取得清除后可作为可逆 default-on 候选，所有旗标仍必须支持一键关闭并完整回退现有 soft-3D / CSS / Canvas / DOM / Emoji。任何发布仍需用户当前明确命令。

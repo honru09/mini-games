@@ -4,9 +4,9 @@
 'use strict';
 
 const url = String(process.env.SUPABASE_URL || '').replace(/\/+$/, '');
-const key = String(process.env.SUPABASE_KEY || '');
+const key = String(process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY || '');
 if (!url || !key){
-  console.error('SUPABASE_URL 与 SUPABASE_KEY 未设置；请提供服务端 service_role 凭证，不能在本地猜测或生成。');
+  console.error('SUPABASE_URL 与 SUPABASE_SERVICE_ROLE_KEY 未设置；请提供服务端 service_role 凭证，不能在本地猜测或生成。');
   process.exit(2);
 }
 if (!/^https:\/\/[^/]+\.supabase\.co$/i.test(url)){
@@ -69,6 +69,14 @@ async function checkAILearningRpc(){
   const text = await res.text();
   return res.status === 400 && /invalid_ai_learning_payload/i.test(text);
 }
+async function probeRpc(name, body, expected){
+  const res = await fetch(url + '/rest/v1/rpc/' + name, {
+    method:'POST', headers:{apikey:key,Authorization:'Bearer '+key,Accept:'application/json','Content-Type':'application/json'},
+    body:JSON.stringify(body),signal:AbortSignal.timeout(10000),
+  });
+  const text=await res.text();
+  return expected(res.status,text);
+}
 (async () => {
   const base = await check('profiles?select=uid&limit=1');
   if (!base.ok){
@@ -95,6 +103,13 @@ async function checkAILearningRpc(){
     ['analytics_events', 'analytics_events?select=event,uid,match_id&limit=1'],
     ['ai_learning_models', 'ai_learning_models?select=uid,game,model_version,skill_version,revision,weights,trust,stats&limit=1'],
     ['ai_learning_experiences', 'ai_learning_experiences?select=uid,game,result_id,decision_index,state_hash,ai_outcome,used_for_training&limit=1'],
+    ['direct_messages', 'direct_messages?select=id,seq,conversation_id,sender_uid,recipient_uid,client_message_id,created_at&limit=1'],
+    ['direct_message_reads', 'direct_message_reads?select=conversation_id,uid,peer_uid,last_read_seq,updated_at&limit=1'],
+    ['cluster_instances', 'cluster_instances?select=instance_id,deployment_id,heartbeat_at,expires_at&limit=1'],
+    ['cluster_leases', 'cluster_leases?select=lease_key,holder_instance_id,fencing_token,lease_until&limit=1'],
+    ['platform_events', 'platform_events?select=id,topic,dedupe_key,origin_instance_id,created_at,expires_at&limit=1'],
+    ['cluster_event_cursors', 'cluster_event_cursors?select=consumer_id,topic,last_event_id,updated_at&limit=1'],
+    ['metrics_snapshots', 'metrics_snapshots?select=id,instance_id,generated_at,created_at&limit=1'],
   ]){
     const result = await check(tableCheck[1]);
     if (!result.ok){
@@ -118,7 +133,18 @@ async function checkAILearningRpc(){
     process.exitCode = 1;
     return;
   }
-  console.log('必需字段与奖励/购买/AI 学习 RPC 检查通过（含个性化 AI 模型与经验表）。');
+  const rpcProbes = [
+    ['send_direct_message_v1',{p_id:'',p_conversation_id:'',p_a_uid:'',p_b_uid:'',p_sender_uid:'',p_recipient_uid:'',p_client_message_id:'',p_body:''},(status,text)=>status===200&&/conversation_unavailable/i.test(text)],
+    ['apply_direct_message_read_v1',{p_conversation_id:'',p_uid:'',p_peer_uid:'',p_last_read_seq:0},(status,text)=>status===400&&/invalid_direct_message_read/i.test(text)],
+    ['claim_cluster_lease_v1',{p_lease_key:'',p_instance_id:'',p_ttl_seconds:0,p_deployment_id:'',p_metadata:{}},(status,text)=>status===400&&/invalid_cluster_lease_request/i.test(text)],
+    ['append_platform_event_v1',{p_topic:'',p_dedupe_key:'',p_payload:{},p_origin_instance_id:'',p_lease_key:null,p_fencing_token:null},(status,text)=>status===400&&/invalid_platform_event/i.test(text)],
+    ['get_direct_message_by_id_v1',{p_id:'__missing_status_probe__'},(status,text)=>status===200&&/^\s*null\s*$/.test(text)],
+    ['cleanup_cluster_data_v1',{p_instance_id:'__missing_status_probe__',p_fencing_token:0},(status,text)=>status===400&&/stale_cluster_fencing_token/i.test(text)],
+  ];
+  for(const [name,body,predicate] of rpcProbes){
+    if(!(await probeRpc(name,body,predicate))){console.error(name+' RPC 不存在、权限异常或入口校验漂移（响应已隐藏）。');process.exitCode=1;return;}
+  }
+  console.log('必需字段与奖励/购买/AI 学习/Direct Chat/Cluster/PubSub/Telemetry RPC 检查通过。');
 })().catch(err => {
   console.error('Supabase 检查失败：' + (err && err.message || String(err)));
   process.exitCode = 1;

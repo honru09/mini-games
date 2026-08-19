@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "task": "t7-server-boundary-clock-injection-p8-20260818",
+  "state": "IMPLEMENTED_LOCAL",
+  "requirements": ["TECH-039", "TECH-040", "TECH-052"],
+  "scope": "Six existing Server Boundary explicit now injections only",
+  "steps": [
+    {"id":"P8-1","status":"complete","name":"冻结单一 serverNow seam 与六个 Boundary owner"},
+    {"id":"P8-2","status":"complete","name":"迁移六个 server/index.js 构造接线并修正 Reward owner 注释"},
+    {"id":"P8-3","status":"complete","name":"扩展 Timer Audit 防止 Boundary raw Date.now 接线回归"},
+    {"id":"P8-4","status":"complete","name":"运行 focused、Quality Gates、完整回归与确定性构建"},
+    {"id":"P8-5","status":"complete","name":"同步台账、状态、白皮书、分类报告与三日志"}
+  ],
+  "next": "按 owner 迁移低风险 lifecycle timer；heartbeat/outbox/gameplay/transport 继续后置分批",
+  "release": "LOCAL_ONLY / NOT_RELEASED",
+  "rollback": "restore six constructor now closures; keep all Boundary modules, data and P6 clock module"
+}

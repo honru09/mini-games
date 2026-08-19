@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "taskId": "adr-governance-p1-20260813",
+  "requirements": ["TECH-039"],
+  "stage": "CLOSE",
+  "disposition": "NOW_CLOSURE",
+  "status": "COMPLETED_LOCAL",
+  "scope": "建立 ADR 目录、模板、状态与敏感信息规则及自动化合同；不作具体生产架构决策，不修改产品运行时、协议、数据库或线上配置。",
+  "steps": [
+    {"id":"ADR-1","status":"completed","title":"冻结 ADR 触发条件与状态语义"},
+    {"id":"ADR-2","status":"completed","title":"加入 README、模板、active task 与专项 QA"},
+    {"id":"ADR-3","status":"completed","title":"同步台账、PROJECT_STATUS、报告和三份日志"},
+    {"id":"ADR-4","status":"completed","title":"运行专项与本地全链回归"}
+  ],
+  "release": "LOCAL_ONLY_NO_COMMIT_NO_PUSH_NO_DEPLOY",
+  "rollback": "删除 ADR 目录、QA 与 active task，恢复 TECH-039 为 planned；不触碰运行时和数据。"
+}

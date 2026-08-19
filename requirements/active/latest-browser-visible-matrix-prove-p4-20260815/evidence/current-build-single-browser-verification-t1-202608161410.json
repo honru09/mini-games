@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "claim": "historical_as_of_mislabeled_t1_artifact",
+  "currency": "historical_as_of",
+  "provenanceCorrection": "This filename was created for T1 but its content was overwritten with the T2 build at 2026-08-16T15:30:00+09:00; it is retained only as an explicit historical artifact and is never a current-build pointer.",
+  "capturedAt": "2026-08-16T15:30:00+09:00",
+  "environment": {
+    "browser": "Codex In-app Chromium",
+    "browserCount": 1,
+    "url": "http://localhost:8080/",
+    "credentials": "not captured"
+  },
+  "build": {
+    "characters": 1647354,
+    "bytes": 1661897,
+    "sha256": "1B26D7D58DCC6B4A9BE55BE09C0D787E1B1AF08CBD6C54D4175BF73064F2D1DF"
+  },
+  "coverage": {
+    "viewports": [
+      {"name":"desktop","width":1440,"height":900},
+      {"name":"compact","width":1024,"height":768},
+      {"name":"tablet","width":768,"height":1024},
+      {"name":"phone","width":390,"height":844},
+      {"name":"landscape","width":844,"height":390}
+    ],
+    "routes": ["home","games","playline","profile"],
+    "routeMatrix": {
+      "cases": 20,
+      "allExpectedRoutesVisible": true,
+      "zeroHorizontalOverflow": true,
+      "zeroRawKeyLeak": true
+    },
+    "gameStages": {
+      "games": ["gomoku","ludo","monopoly","tank","tetris","xiangqi"],
+      "allStageShellsVisible": true,
+      "allSeatRailsPresent": true,
+      "allCommandSlotsPresent": true,
+      "zeroHorizontalOverflow": true,
+      "mode": "local AI; returned through in-stage back control"
+    },
+    "languages": {
+      "en-US": {"instantSwitch": true,"rawSystemKeyLeak": false,"onlyChineseLine":"🇨🇳 中文 language option"},
+      "uk-UA": {"instantSwitch": true,"rawSystemKeyLeak": false,"onlyChineseLine":"🇨🇳 中文 language option"},
+      "restored": "zh-CN"
+    },
+    "themes": {"dark": true,"restored":"light"},
+    "reducedMotion": {"emulated": true,"route":"games","overflow":false},
+    "forcedColors": {"emulated": true,"route":"home","overflow":false},
+    "consoleWarningsErrors": [],
+    "viewportOverrideReset": true
+  },
+  "notGranted": [
+    "second real browser",
+    "physical Android/iPhone/Tablet",
+    "real network shaping",
+    "real Supabase/multi-instance",
+    "screen-reader hardware",
+    "human art cleanup/Reviewer B/IP/Golden Set",
+    "production/latest-online-build verification"
+  ],
+  "boundary": "Historical mislabeled artifact only; this evidence does not release or unlock any shared Gate."
+}

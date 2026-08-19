@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "taskId": "ui-repair-p06-guest-affordance-p0-20260810",
+  "status": "completed_local",
+  "completed": ["scope freeze", "shop/social/invite client affordance", "specialized regression", "master final review", "quality gates", "full npm test", "status/report/log synchronization"],
+  "pending": ["second desktop browser", "Android/iPhone/Tablet", "real network shaping", "user release command"],
+  "verification": {
+    "specialized": ["node qa/ui-guest-affordance-contract.js", "node qa/ui-profile-social-contract.js", "npm run test:shop-contract", "npm run test:i18n", "node qa/dom-smoke.js"],
+    "quality": ["npm run quality:gates", "git diff --check"],
+    "full": "npm test (131.0s, exit 0)",
+    "buildBytes": 917621,
+    "buildSha256": "810A5D419A31AA796238E7B47D93CCBA08246CDBBD65BE47CF71D6A43780B7A8"
+  },
+  "externalGates": ["second desktop browser", "Android/iPhone/Tablet", "real network shaping"],
+  "published": false
+}

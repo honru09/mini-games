@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "task": "t7-match-protocol-boundary-p3-20260817",
+  "state": "VERIFIED_LOCAL",
+  "goal": "在不改变既有 wire、Rule Authority、Reward/Replay 与旧协议回退的前提下收口 Match Protocol 深模块。",
+  "steps": [
+    {"id":"P3-1","status":"complete","name":"Interface/Adapter 与 action/transition dispatch"},
+    {"id":"P3-2","status":"complete","name":"match/generation/sequence/revision fences 与错误净化"},
+    {"id":"P3-3","status":"complete","name":"effect ordering、终局幂等与 room/Authority checkpoint rollback"},
+    {"id":"P3-4","status":"complete","name":"server/index 真人、AI、timer 接线与 legacy fallback"},
+    {"id":"P3-5","status":"complete","name":"专项、联机、安全、回退与 T7 回归"},
+    {"id":"P3-6","status":"pending","name":"真实设备/网络/Supabase/多实例与发布证据"}
+  ],
+  "next": "Chat/Playline ownership",
+  "release": "LOCAL_ONLY / NOT_RELEASED"
+}

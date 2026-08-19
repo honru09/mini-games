@@ -1,0 +1,25 @@
+{
+  "status": "IMPLEMENTED_LOCAL_SINGLE_BROWSER_PARTIAL_EVIDENCE",
+  "historicalPolicyNote": "historical-as-of 2026-08-16：本文中的旧 BLOCKED、人工美术、Reviewer B、IP/法律与逐资产 Golden Set 状态仅代表当时快照。原创 Ghost-native 资产满足 OWNER_AUTHORIZED_ART_CLEARANCE 后可进行可逆 default-on runtime 接入；人工清稿、独立自然人 Reviewer B、IP/法律意见与逐资产 Golden Set 均为 OPTIONAL_ADVISORY_EVIDENCE，未执行时不得冒充 PASS；设备/第二浏览器/真实网络与 Supabase Gate 当前为 NON_BLOCKING_FOR_DEVELOPMENT / RELEASE_EVIDENCE_PENDING；外部 blocked-license / EXTERNAL_REFERENCE_ONLY 素材永久禁止复制、派生、作为生成输入、接入 runtime 或发布；任何发布仍须当前用户明确命令。",
+  "startedAt": "2026-08-15T02:20:00+09:00",
+  "updatedAt": "2026-08-16T23:15:00+09:00",
+  "policyReconciledAt": "2026-08-16",
+  "currentStep": "TANK3D-6",
+  "completed": ["RECON", "DESIGN_IT_TWICE", "DESIGN_DECISION", "REQUIREMENT_FREEZE", "IMPLEMENT", "FOCUSED_TESTS", "INDEPENDENT_REVIEW", "VISIBLE_VERIFY", "FULL_REGRESSION", "REPORT_SYNC"],
+  "pending": [],
+  "gates": {
+    "GATE-DEVICE-BROWSER-NETWORK": "NON_BLOCKING_FOR_DEVELOPMENT / RELEASE_EVIDENCE_PENDING",
+    "GATE-SUPABASE-PRODUCTION": "NON_BLOCKING_FOR_DEVELOPMENT / RELEASE_EVIDENCE_PENDING",
+    "GATE-ART-GOLDEN-SET": "OPEN_BY_OWNER_AUTHORIZATION"
+  },
+  "historicalGateSnapshot": {
+    "date": "2026-08-15",
+    "gates": {
+      "GATE-DEVICE-BROWSER-NETWORK": "BLOCKED",
+      "GATE-SUPABASE-PRODUCTION": "BLOCKED",
+      "GATE-ART-GOLDEN-SET": "BLOCKED"
+    },
+    "meaning": "当时的 Gate 快照；不覆盖 2026-08-16 的开发开放政策，也不冒充发布证据完成。"
+  },
+  "release": "LOCAL_ACCEPTED_AWAITING_RELEASE_COMMAND"
+}

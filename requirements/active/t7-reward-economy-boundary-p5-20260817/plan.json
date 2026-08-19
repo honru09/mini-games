@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "task": "t7-reward-economy-boundary-p5-20260817",
+  "state": "VERIFIED_LOCAL",
+  "requirements": ["ECO-001", "ECO-006", "ECO-024", "TECH-040", "TECH-052"],
+  "steps": [
+    {"id":"P5-1","status":"complete","name":"冻结 outbox/幂等/串行/重试 Interface 与回滚边界"},
+    {"id":"P5-2","status":"complete","name":"JSON runtime 与 isolated memory Adapter"},
+    {"id":"P5-3","status":"complete","name":"server/index.js syncRewardRow/retryPendingRewardSync 接线"},
+    {"id":"P5-4","status":"complete","name":"专项边界、失败/duplicate/Test Admin/敏感字段回归"},
+    {"id":"P5-5","status":"complete","name":"完整 npm test、Quality Gates、报告/日志收口"},
+    {"id":"P5-6","status":"pending","name":"真实 Supabase/RLS/多实例/备份恢复与发布证据"}
+  ],
+  "next": "进入 server 全局 clock/Timer 与 Reward 数值/profile projection 深化；真实 DATA/设备/网络 Gate 后置",
+  "release": "LOCAL_ONLY / NOT_RELEASED",
+  "rollback": "remove boundary wiring and focused QA; retain pendingRewardSync and apply_reward_v1 data"
+}

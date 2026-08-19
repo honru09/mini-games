@@ -1,0 +1,15 @@
+{
+  "status": "LOCAL_ACCEPTED_AWAITING_RELEASE_COMMAND",
+  "updatedAt": "2026-08-15T09:45:14+09:00",
+  "requirements": ["GAME-051", "TECH-049", "GAME-044"],
+  "steps": [
+    {"id":"TANK3D-1","task":"完整 RECON、素材 Gate 与既有测试核对","status":"completed","owner":"master"},
+    {"id":"TANK3D-2","task":"三套 Terra Max Interface 设计与 Master 裁决","status":"completed","owner":"master + 3 Terra Max"},
+    {"id":"TANK3D-3","task":"冻结 scope/contract/ownership/acceptance/shared change","status":"completed","owner":"master"},
+    {"id":"TANK3D-4","task":"Presenter、Tank bridge、Three Adapter、CSS 与 QA 实现","status":"completed","owner":"Terra Max builder"},
+    {"id":"TANK3D-5","task":"专项与共享回归、独立 Standards/Spec 审查及修正","status":"completed","owner":"Terra Max reviewers + master"},
+    {"id":"TANK3D-6","task":"单浏览器可见复核、全链、双构建、报告/日志收口","status":"completed","owner":"master"}
+  ],
+  "rollback": "删除精确 opt-in 或 Presenter/Renderer island 即回到现有 DOM Tank；任何 failure 立即隐藏 slot 并恢复 DOM paint。",
+  "forbidden": ["commit", "push", "deploy", "ART-035 runtime", "server/shared/protocol/reward/replay/AI/database mutation"]
+}

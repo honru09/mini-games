@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "taskId": "gcoins-source-redesign-p1-20260814",
+  "status": "OWNER_AUTHORIZED_ART_CLEARANCE_LOCAL_RUNTIME",
+  "startedAt": "2026-08-14T10:30:00+09:00",
+  "updatedAt": "2026-08-16T23:30:00+09:00",
+  "selectedCandidate": "ART-026-GCOINS-P1-CANDIDATE-B",
+  "steps": [
+    {"id":"GCP1-1","status":"completed","evidence":["requirements/GHOST_GAME_MAINLINE_COMMAND.md","requirements/MAINLINE_CONTROL_ROUTING.json","requirements/ART_APPROVAL_MATRIX.md"]},
+    {"id":"GCP1-2","status":"completed","evidence":["art-source/brand/ghost-game/currency/gcoins-p1-20260814/PROMPT_AND_PROVENANCE.md"]},
+    {"id":"GCP1-3","status":"completed","evidence":["art-source/brand/ghost-game/currency/gcoins-p1-20260814/TECHNICAL_REVIEW_Reviewer_A.md","requirements/active/gcoins-source-redesign-p1-20260814/evidence/local-technical-verification-20260814.json"]},
+    {"id":"GCP1-4","status":"completed","evidence":["node qa/g-coins-contract.js","node qa/art-approval-matrix-contract.js","node scripts/asset-library-audit.js","node scripts/validate-project-state.js","node qa/mainline-control-plane.js","npm run reports:progress","node qa/progress-ledger.js","npm run quality:gates","npm test (151s)","deterministic double build: 1362068 characters / 1376602 bytes / BFBD2109B77B1F4C5E070DAB6B98C806E25AD621ACBE3E2E83AD5C5FB7130CAE","git diff --check"]}
+  ],
+  "blocked": [],
+  "ownerClearance": {
+    "status": "OWNER_AUTHORIZED_ART_CLEARANCE",
+    "record": "requirements/active/gcoins-source-redesign-p1-20260814/OWNER_AUTHORIZED_ART_CLEARANCE-20260816.md",
+    "runtimeAssetId": "P-GCOINS-ICON-V1",
+    "featureFlag": "mg_art_gcoins_p1_v1",
+    "fallbackAssetId": "P-003"
+  },
+  "optionalAdvisoryEvidence": {"status":"NOT_EXECUTED","items":["human editable cleanup","independent natural-person Reviewer B","IP/legal advice","per-asset Golden Set"],"blocking":false},
+  "releaseEvidencePending": ["second real browser", "physical-device art matrix", "real network", "screen-reader device", "explicit current user release command"],
+  "externalAssetPolicy": "blocked-license / EXTERNAL_REFERENCE_ONLY assets are permanently disabled",
+  "historicalAsOf": {"date":"2026-08-14","status":"COMPLETED_LOCAL_GATE_BLOCKED","blocked":["human editable cleanup","independent Reviewer B","IP Similarity Review","user Golden Set"],"meaning":"Former candidate-only/default-off human prerequisites; audit history only."},
+  "published": false,
+  "boundary": "Candidate B source remains reference-only; its existing four derived PNGs are mirrored into a local reversible Manifest/runtime candidate. P0, P-003, economy, protocol, database and release are unchanged; current batch remains LOCAL_ONLY / NOT_RELEASED."
+}

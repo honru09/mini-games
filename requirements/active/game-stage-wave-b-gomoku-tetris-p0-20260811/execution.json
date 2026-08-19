@@ -1,0 +1,8 @@
+{
+  "taskId": "game-stage-wave-b-gomoku-tetris-p0-20260811",
+  "state": "LOCAL_ACCEPTED_AWAITING_BROWSER_REFRESH",
+  "updatedAt": "2026-08-11T13:56:36+09:00",
+  "completed": ["仓库/线上/本地浏览器差距审计", "五子棋与 Tetris 当前截图复核", "IN/OUT/Authority/回滚冻结", "五子棋 Wave B 游戏文件纵切与专项 QA", "Tetris Wave B 游戏文件纵切与专项 QA", "Master 共享 CSS、响应式布局与严格 Wave A 回滚", "完整 npm test 与双构建"],
+  "inProgress": ["最新浏览器连接器可见复核"],
+  "release": "LOCAL_ONLY_NO_COMMIT_NO_PUSH_NO_DEPLOY"
+}

@@ -113,6 +113,31 @@ check('481-768px 商城分类栏可横向滚动且不换行',
 check('481-768px 商城商品按钮至少 44x44px',
   hasDeclaration(shopButtonTablet, 'min-height', '44px') && hasDeclaration(shopButtonTablet, 'min-width', '44px'));
 
+const tabletTouch = extractBalancedBlock(
+  template,
+  /@media\s*\(\s*max-width\s*:\s*1024px\s*\)\s*\{/i,
+);
+const tabletTouchControls = ruleBody(tabletTouch, /[^{}]*\.btn[^{}]*\.app-nav-button[^{}]*\.shop-tab[^{}]*\{/);
+check('<=1024px 平板触控合同覆盖主要按钮且至少 44x44px',
+  /\.btn\b/.test(tabletTouch) && /\.app-nav-button\b/.test(tabletTouch) &&
+  hasDeclaration(tabletTouchControls, 'min-height', '44px') && hasDeclaration(tabletTouchControls, 'min-width', '44px'));
+
+const finalTabletTouchHeader = /@media\s*\(\s*max-width\s*:\s*1024px\s*\)\s*\{/ig;
+let finalTabletTouchMatch = null;
+for (const candidate of template.matchAll(finalTabletTouchHeader)) finalTabletTouchMatch = candidate;
+const finalTabletTouch = finalTabletTouchMatch
+  ? extractBalancedBlock(template.slice(finalTabletTouchMatch.index), /@media\s*\(\s*max-width\s*:\s*1024px\s*\)\s*\{/i)
+  : '';
+const finalHeaderTouchControls = ruleBody(finalTabletTouch, /\.ghost-brand-button\s*,\s*\.desktop-app-nav\s+\.app-nav-button\s*,\s*\.header-actions\s+\.btn\s*\{/);
+const finalHeaderActionTouch = ruleBody(finalTabletTouch, /\.header-actions\s+\.btn\s*\{/);
+check('<=1024px 最终顶栏触控合同位于紧凑组件覆盖之后',
+  finalTabletTouchMatch &&
+  finalTabletTouchMatch.index > template.lastIndexOf('.app-nav-button{min-height:38px') &&
+  finalTabletTouchMatch.index > template.lastIndexOf('.header-actions .btn{min-width:42px'));
+check('<=1024px 最终顶栏品牌、导航与操作至少保持 44px',
+  hasDeclaration(finalHeaderTouchControls, 'min-height', '44px') &&
+  hasDeclaration(finalHeaderActionTouch, 'min-width', '44px'));
+
 /* 最终触控合同必须放在组件样式后，并覆盖常用按钮、输入、头像和背景。 */
 const touchHeader = /@media\s*\(\s*max-width\s*:\s*768px\s*\)\s*\{/ig;
 let touchMatch = null;

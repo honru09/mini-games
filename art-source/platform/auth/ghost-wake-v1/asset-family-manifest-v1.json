@@ -1,0 +1,324 @@
+{
+  "schemaVersion": 1,
+  "familyId": "P-AUTH-LAUNCH-ART-V1",
+  "productionUnitId": "P0-01",
+  "familyName": "认证页主视觉与启动 Loading",
+  "artworkVersion": 1,
+  "status": "OWNER_AUTHORIZED_ART_CLEARANCE_LOCAL_ONLY_NOT_RELEASED",
+  "recordedAt": "2026-08-17",
+  "authority": {
+    "productionLedger": "art-source/production/ghost-game-art-program-v1/production-ledger-v1.json",
+    "mainlineCommand": "requirements/GHOST_GAME_MAINLINE_COMMAND.md",
+    "routing": "requirements/MAINLINE_CONTROL_ROUTING.json",
+    "visualNorthStarDecision": "requirements/active/sticker-cartoon-golden-set-m0-20260808/USER_VISUAL_NORTH_STAR_DECISION-20260816.md",
+    "runtimeManifest": "public/assets/manifests/asset_manifest.json"
+  },
+  "visualNorthStar": [
+    {
+      "path": "art-source/ui/sticker-v1/component-demo.png",
+      "sha256": "135DB655DC400FB35F960045B510EE450E007CCFAD03E308DEBF65E222DB1F61",
+      "bytes": 153840,
+      "format": "png",
+      "width": 1600,
+      "height": 900,
+      "alpha": "none"
+    },
+    {
+      "path": "art-source/ui/sticker-v1/generated/core-ui-style-board-draft-v1.png",
+      "sha256": "184E24BFD5C52F54FA240366787A0751E5078038E4FBDA17B91C61219F2B4DE5",
+      "bytes": 1408445,
+      "format": "png",
+      "width": 1672,
+      "height": 941,
+      "alpha": "none"
+    }
+  ],
+  "derivation": {
+    "method": "project-owned deterministic SVG construction plus deterministic composite/resize from already owner-cleared Honru runtime masters",
+    "generator": {
+      "path": "scripts/generate-auth-art-v1.js",
+      "sha256": "8F16DCF79C85DAF99DA6055A30A683A37CEACDD7EC1F7FC5F78414C82BC0617E",
+      "bytes": 25367
+    },
+    "verificationRuntime": {
+      "sharp": "0.35.3",
+      "libvips": "8.18.3",
+      "webp": "1.6.0",
+      "png": "1.6.58"
+    },
+    "builtInImagegenAttempt": {
+      "result": "FAILED_NO_OUTPUT_ACCEPTED",
+      "error": "HTTP 401 authentication token invalidated",
+      "repositoryTaskId": null,
+      "decision": "No task ID was invented; no failed-call output entered this family; no API-key CLI or third-party generation path was used."
+    },
+    "m0Use": "The two M0 files governed palette, outline, shape and finish decisions; the generator did not sample or composite their pixels.",
+    "externalInputUse": "NONE"
+  },
+  "externalReferenceDisposition": {
+    "status": "EXTERNAL_REFERENCE_ONLY / blocked-license",
+    "semanticCoverageOnly": [
+      "light/dark and desktop/mobile authentication contexts",
+      "login/register/legacy migration/guest entry states",
+      "welcome/wait/error/connecting/recovered/first-start semantics",
+      "availability/occupied/password/migration/connected/offline-retry status semantics",
+      "boot/retry/PWA splash/maskable/offline launch contexts"
+    ],
+    "prohibited": [
+      "external pixels or layers",
+      "external characters or compositions",
+      "copying, tracing, cropping or recoloring",
+      "use as an image-generation input",
+      "runtime wiring or release"
+    ]
+  },
+  "projectOwnedRasterInputs": [
+    {
+      "state": "waiting-invite",
+      "path": "public/assets/brand/honru/states-v1/honru-waiting-invite-v1.webp",
+      "sha256": "2D37A33808256E21E26F94B261475163857B0F10C341DD26B28F950FCE2845CC",
+      "bytes": 44554,
+      "width": 1254,
+      "height": 1254,
+      "usedBy": ["login-welcome"]
+    },
+    {
+      "state": "check-in",
+      "path": "public/assets/brand/honru/states-v1/honru-check-in-v1.webp",
+      "sha256": "5A6AA7A3F2006B4090AB1DE3CE58854AEC13AE0075015E939EE346C3F48E562B",
+      "bytes": 42506,
+      "width": 1254,
+      "height": 1254,
+      "usedBy": ["register-create"]
+    },
+    {
+      "state": "recover",
+      "path": "public/assets/brand/honru/states-v1/honru-recover-v1.webp",
+      "sha256": "81C19AFD5FFF044BDB898064365B6B6382F2D0922BD59302EA26D36D11FCCB0B",
+      "bytes": 40002,
+      "width": 1254,
+      "height": 1254,
+      "usedBy": ["legacy-migrate", "recovered", "honru-boot-retry-signal"]
+    },
+    {
+      "state": "idle",
+      "path": "public/assets/brand/honru/states-v1/honru-idle-v1.webp",
+      "sha256": "4848AD3F295CF0732A1C47268E1B077BF6B085861E76BDC024C1306383BBDB01",
+      "bytes": 40424,
+      "width": 1254,
+      "height": 1254,
+      "usedBy": ["guest-safe-entry", "honru-boot-controller-hug"]
+    },
+    {
+      "state": "thinking",
+      "path": "public/assets/brand/honru/states-v1/honru-thinking-v1.webp",
+      "sha256": "DDBB994ABA43E5F65CB06B7683D7B93CF6256E6317781026FBE89B00BBFBD005",
+      "bytes": 39372,
+      "width": 1254,
+      "height": 1254,
+      "usedBy": ["connecting"]
+    },
+    {
+      "state": "surprised",
+      "path": "public/assets/brand/honru/states-v1/honru-surprised-v1.webp",
+      "sha256": "F37E800D9DC71940954F2B1E1A02CD362E1AD4AF21BA424F0A866BAC02AAA744",
+      "bytes": 40204,
+      "width": 1254,
+      "height": 1254,
+      "usedBy": ["credential-error"]
+    },
+    {
+      "state": "playful",
+      "path": "public/assets/brand/honru/states-v1/honru-playful-v1.webp",
+      "sha256": "475C777830DB09A5E22AB380EE7D62C60295F858DF37B18E740D6EBBCC54F8B1",
+      "bytes": 41116,
+      "width": 1254,
+      "height": 1254,
+      "usedBy": ["first-start"]
+    }
+  ],
+  "sourceMasters": [
+    {"assetId":"ART-AUTH-GHOST-WAKE-BACKDROP-V1","path":"art-source/platform/auth/ghost-wake-v1/source/auth-ghost-wake-light-desktop-v1.svg","sha256":"C8EDB6D9426D1AFC125CFCEB83D297577DF25830352DEF50DD3DE159B028654F","bytes":3230,"format":"svg","width":1920,"height":1080,"alpha":"opaque composition"},
+    {"assetId":"ART-AUTH-GHOST-WAKE-BACKDROP-V1","path":"art-source/platform/auth/ghost-wake-v1/source/auth-ghost-wake-dark-desktop-v1.svg","sha256":"4885BE379DA25E7A97E629D8AFE2100699DC946FD24DA88D8ECAA1FA9580575D","bytes":3088,"format":"svg","width":1920,"height":1080,"alpha":"opaque composition"},
+    {"assetId":"ART-AUTH-GHOST-WAKE-BACKDROP-V1","path":"art-source/platform/auth/ghost-wake-v1/source/auth-ghost-wake-light-mobile-v1.svg","sha256":"8553B6046D9F772A1BF8E6DD5A0BD17C10DAD4E69617B4B7E100F62134E00CC0","bytes":2116,"format":"svg","width":900,"height":1200,"alpha":"opaque composition"},
+    {"assetId":"ART-AUTH-GHOST-WAKE-BACKDROP-V1","path":"art-source/platform/auth/ghost-wake-v1/source/auth-ghost-wake-dark-mobile-v1.svg","sha256":"ECFAF818961A03DBEDD623C6B04E920189447BFA8C8119AA8FA4C8DCCC12AB28","bytes":2022,"format":"svg","width":900,"height":1200,"alpha":"opaque composition"},
+    {"assetId":"ART-AUTH-HONRU-SCENES-V1","path":"art-source/platform/auth/ghost-wake-v1/alpha/honru-auth-login-welcome-v1.png","sha256":"8CB03614F6DC0C15A44B29BA624E3F023CF2259FC044142764D037A9B8A1CF96","bytes":21040,"format":"png","width":512,"height":512,"alpha":"indexed color type 3 plus tRNS; decoded true alpha; transparent corners"},
+    {"assetId":"ART-AUTH-HONRU-SCENES-V1","path":"art-source/platform/auth/ghost-wake-v1/alpha/honru-auth-register-create-v1.png","sha256":"123BF09FAEE6F40D989D7D4BDE3137753303A6399359B92CF8964AD175757990","bytes":20611,"format":"png","width":512,"height":512,"alpha":"indexed color type 3 plus tRNS; decoded true alpha; transparent corners"},
+    {"assetId":"ART-AUTH-HONRU-SCENES-V1","path":"art-source/platform/auth/ghost-wake-v1/alpha/honru-auth-legacy-migrate-v1.png","sha256":"4AE411E90804D1000883A6DB4E684D08E02AE6066E573BC63B15874ACA697291","bytes":19162,"format":"png","width":512,"height":512,"alpha":"indexed color type 3 plus tRNS; decoded true alpha; transparent corners"},
+    {"assetId":"ART-AUTH-HONRU-SCENES-V1","path":"art-source/platform/auth/ghost-wake-v1/alpha/honru-auth-guest-safe-entry-v1.png","sha256":"A94E6EB49687B8440DB6229084EED3A403B6BA2A0C024D0DC7FB8B92ADE72EB9","bytes":18030,"format":"png","width":512,"height":512,"alpha":"indexed color type 3 plus tRNS; decoded true alpha; transparent corners"},
+    {"assetId":"ART-AUTH-HONRU-SCENES-V1","path":"art-source/platform/auth/ghost-wake-v1/alpha/honru-auth-connecting-v1.png","sha256":"45B08FB8D4E1806788A49DF6F6B9724C9E9F12F36BB4B201826AD5ECE8F5109B","bytes":20728,"format":"png","width":512,"height":512,"alpha":"indexed color type 3 plus tRNS; decoded true alpha; transparent corners"},
+    {"assetId":"ART-AUTH-HONRU-SCENES-V1","path":"art-source/platform/auth/ghost-wake-v1/alpha/honru-auth-credential-error-v1.png","sha256":"6E6758E6ED2FFC96226DA868AA1A4B34BB0056D4E9E070523844AD2A86637F36","bytes":19864,"format":"png","width":512,"height":512,"alpha":"indexed color type 3 plus tRNS; decoded true alpha; transparent corners"},
+    {"assetId":"ART-AUTH-HONRU-SCENES-V1","path":"art-source/platform/auth/ghost-wake-v1/alpha/honru-auth-recovered-v1.png","sha256":"EF8F801F694AEA53BB6A75418145AA4B6DCAA5C4513335B3D3A4519F86EBCA84","bytes":19991,"format":"png","width":512,"height":512,"alpha":"indexed color type 3 plus tRNS; decoded true alpha; transparent corners"},
+    {"assetId":"ART-AUTH-HONRU-SCENES-V1","path":"art-source/platform/auth/ghost-wake-v1/alpha/honru-auth-first-start-v1.png","sha256":"9BD16C850BD64D0D9F550ACBCF16688BA8C31980D0B2C6E5AE891AC94956FA70","bytes":20138,"format":"png","width":512,"height":512,"alpha":"indexed color type 3 plus tRNS; decoded true alpha; transparent corners"},
+    {"assetId":"ART-BOOT-HONRU-CONTROLLER-V1","path":"art-source/platform/loading/ghost-boot-v1/alpha/honru-boot-controller-hug-v1.png","sha256":"D9C2D3293EA0579012420E9DD01175581102013C48FB354C22D21FB259D12BFD","bytes":17981,"format":"png","width":512,"height":512,"alpha":"indexed color type 3 plus tRNS; decoded true alpha; transparent corners"},
+    {"assetId":"ART-BOOT-HONRU-CONTROLLER-V1","path":"art-source/platform/loading/ghost-boot-v1/alpha/honru-boot-retry-signal-v1.png","sha256":"6355E2DBB6F495B448DB9AE582042BD327A6CCA560BAAFC0C32E42F687C32829","bytes":22225,"format":"png","width":512,"height":512,"alpha":"indexed color type 3 plus tRNS; decoded true alpha; transparent corners"},
+    {"assetId":"ART-AUTH-STATUS-ICONS-V1","path":"art-source/platform/auth/status-v1/username-available-v1.svg","sha256":"8C3538F5A4673937A4F71AEF41210247ECA2AD7D6FB99BF6CF1D9524A9A35B33","bytes":941,"format":"svg","width":64,"height":64,"alpha":"transparent canvas"},
+    {"assetId":"ART-AUTH-STATUS-ICONS-V1","path":"art-source/platform/auth/status-v1/username-occupied-v1.svg","sha256":"FB087D0F5F94351CB25291E1D7405E22F6DB209723651AB7AA6C1679E522BF50","bytes":939,"format":"svg","width":64,"height":64,"alpha":"transparent canvas"},
+    {"assetId":"ART-AUTH-STATUS-ICONS-V1","path":"art-source/platform/auth/status-v1/password-error-v1.svg","sha256":"90AEF88F48AC23E4C22E7C3D2D41E665902C0BD5D38FD45F41D1B44F48E368DB","bytes":949,"format":"svg","width":64,"height":64,"alpha":"transparent canvas"},
+    {"assetId":"ART-AUTH-STATUS-ICONS-V1","path":"art-source/platform/auth/status-v1/migration-success-v1.svg","sha256":"AA9455E79F91CF0A93DD37DF7622E3F53001511E55EC5393C9713DBA3F95ACC9","bytes":1035,"format":"svg","width":64,"height":64,"alpha":"transparent canvas"},
+    {"assetId":"ART-AUTH-STATUS-ICONS-V1","path":"art-source/platform/auth/status-v1/connected-v1.svg","sha256":"D630D20AF7A7EFBC58F74D657703601E78BA64F64F178BBAAF5F9C365B097D9C","bytes":567,"format":"svg","width":64,"height":64,"alpha":"transparent canvas"},
+    {"assetId":"ART-AUTH-STATUS-ICONS-V1","path":"art-source/platform/auth/status-v1/offline-retry-v1.svg","sha256":"446F43E11F8B8979E5D877322459CD13BD8E5FD5B1FD0BEB1059E122CD80775F","bytes":821,"format":"svg","width":64,"height":64,"alpha":"transparent canvas"},
+    {"assetId":"ART-PWA-GHOST-WAKE-V1","path":"art-source/platform/pwa/ghost-wake-v1/source/ghost-wake-splash-light-v1.svg","sha256":"F41007429D2A65715671368E5EB5260416D2552BFEF48FA2A871ED27CCEAF2AC","bytes":2104,"format":"svg","width":2048,"height":2732,"alpha":"opaque composition"},
+    {"assetId":"ART-PWA-GHOST-WAKE-V1","path":"art-source/platform/pwa/ghost-wake-v1/source/ghost-wake-splash-dark-v1.svg","sha256":"E06F6A13C570747A5764FBF4A7772F4F0CF3DB8E248036C92A144CF97337F027","bytes":1650,"format":"svg","width":2048,"height":2732,"alpha":"opaque composition"},
+    {"assetId":"ART-PWA-GHOST-WAKE-V1","path":"art-source/platform/pwa/ghost-wake-v1/source/ghost-game-maskable-v1.svg","sha256":"795B1E5F7D5F27280FADED936BA77A1F79C985C35FB0B2F4A6D85DAD789FEFF0","bytes":925,"format":"svg","width":512,"height":512,"alpha":"opaque composition"}
+  ],
+  "intermediateEvidence": [
+    {"path":"art-source/platform/auth/ghost-wake-v1/alpha/auth-ghost-wake-light-desktop-v1.png","sha256":"74AE290BEDC46177E7C7F7A2536208DF89CAECF4C69FB8C83BC43EADBFBF7305","bytes":33097,"format":"png","width":1920,"height":1080,"alpha":"none"},
+    {"path":"art-source/platform/auth/ghost-wake-v1/alpha/auth-ghost-wake-dark-desktop-v1.png","sha256":"208B86809BB9095B168E0BE15B150BF7403005B242D3C6D487A75ACCCDC426A0","bytes":32809,"format":"png","width":1920,"height":1080,"alpha":"none"},
+    {"path":"art-source/platform/auth/ghost-wake-v1/alpha/auth-ghost-wake-light-mobile-v1.png","sha256":"CF0F2C43474429BC882B1BB80C2AF1024809B6D23AB1622BB6595AA02A30D1A0","bytes":19980,"format":"png","width":900,"height":1200,"alpha":"none"},
+    {"path":"art-source/platform/auth/ghost-wake-v1/alpha/auth-ghost-wake-dark-mobile-v1.png","sha256":"96148E3710EA96D2FE4A4740FFB6C42C98909C4C56D3DB3C182B0982523832B4","bytes":18964,"format":"png","width":900,"height":1200,"alpha":"none"},
+    {"path":"art-source/platform/pwa/ghost-wake-v1/derived/ghost-wake-splash-light-2048x2732-v1.png","sha256":"7D3ADFAC1D3C1788886810B0BCBCF1238E7156CE31E4C24E21EED36902AD39CB","bytes":40200,"format":"png","width":2048,"height":2732,"alpha":"none"},
+    {"path":"art-source/platform/pwa/ghost-wake-v1/derived/ghost-wake-splash-dark-2048x2732-v1.png","sha256":"CDB5EC341DA9D81CA1F0B39C2BBF2E396C00942FD68649727574A44888D5496B","bytes":40399,"format":"png","width":2048,"height":2732,"alpha":"none"}
+  ],
+  "runtimeAssets": [
+    {
+      "assetId": "P-AUTH-GHOST-WAKE-BACKDROP-V1",
+      "sourceAssetId": "ART-AUTH-GHOST-WAKE-BACKDROP-V1",
+      "license": "project-owned-deterministic-vector",
+      "featureFlags": ["mg_art_p0_01_v1", "mg_art_auth_ghost_wake_v1"],
+      "defaultEnabled": true,
+      "fallback": "existing #ambient-scene CSS cloud/star environment, then P-001-GHOST-MARK",
+      "byteBudget": 262144,
+      "actualBytes": 164676,
+      "variants": [
+        {"key":"light-desktop","path":"public/assets/ui/auth/ghost-wake-v1/backgrounds/auth-ghost-wake-light-desktop-v1.webp","sha256":"8F1DC0801641465BF35F6A17DBCBD96E64E66A6D5E478CBA98B1DB409F466712","bytes":26756,"format":"webp-vp8","width":1920,"height":1080,"alpha":"none"},
+        {"key":"dark-desktop","path":"public/assets/ui/auth/ghost-wake-v1/backgrounds/auth-ghost-wake-dark-desktop-v1.webp","sha256":"7EC9E35717FB654357F17166DF15B579218DCC41F1D93E16E2AA99CDD87DB327","bytes":26878,"format":"webp-vp8","width":1920,"height":1080,"alpha":"none"},
+        {"key":"light-mobile","path":"public/assets/ui/auth/ghost-wake-v1/backgrounds/auth-ghost-wake-light-mobile-v1.webp","sha256":"D5755928CD31498D89D24F6FB26D41172B78394A243C2A7D351DBF54D45DB368","bytes":13642,"format":"webp-vp8","width":900,"height":1200,"alpha":"none"},
+        {"key":"dark-mobile","path":"public/assets/ui/auth/ghost-wake-v1/backgrounds/auth-ghost-wake-dark-mobile-v1.webp","sha256":"1F9DEC01B4FFD1219ED5681D351CBFADD30430D70693F3EA86C267FE16E3343A","bytes":15062,"format":"webp-vp8","width":900,"height":1200,"alpha":"none"},
+        {"key":"light-desktop-static","path":"public/assets/ui/auth/ghost-wake-v1/backgrounds/auth-ghost-wake-light-desktop-v1-static.webp","sha256":"8F1DC0801641465BF35F6A17DBCBD96E64E66A6D5E478CBA98B1DB409F466712","bytes":26756,"format":"webp-vp8","width":1920,"height":1080,"alpha":"none"},
+        {"key":"dark-desktop-static","path":"public/assets/ui/auth/ghost-wake-v1/backgrounds/auth-ghost-wake-dark-desktop-v1-static.webp","sha256":"7EC9E35717FB654357F17166DF15B579218DCC41F1D93E16E2AA99CDD87DB327","bytes":26878,"format":"webp-vp8","width":1920,"height":1080,"alpha":"none"},
+        {"key":"light-mobile-static","path":"public/assets/ui/auth/ghost-wake-v1/backgrounds/auth-ghost-wake-light-mobile-v1-static.webp","sha256":"D5755928CD31498D89D24F6FB26D41172B78394A243C2A7D351DBF54D45DB368","bytes":13642,"format":"webp-vp8","width":900,"height":1200,"alpha":"none"},
+        {"key":"dark-mobile-static","path":"public/assets/ui/auth/ghost-wake-v1/backgrounds/auth-ghost-wake-dark-mobile-v1-static.webp","sha256":"1F9DEC01B4FFD1219ED5681D351CBFADD30430D70693F3EA86C267FE16E3343A","bytes":15062,"format":"webp-vp8","width":900,"height":1200,"alpha":"none"}
+      ]
+    },
+    {
+      "assetId": "P-AUTH-HONRU-SCENES-V1",
+      "sourceAssetId": "ART-AUTH-HONRU-SCENES-V1",
+      "license": "project-owned-derived-from-owner-cleared-honru",
+      "featureFlags": ["mg_art_p0_01_v1", "mg_art_auth_honru_scenes_v1"],
+      "defaultEnabled": true,
+      "fallback": "mapped P-HONRU-STATES-V1 state, then P-002-HONRU-MASCOT-V1",
+      "byteBudget": 393216,
+      "actualBytes": 232962,
+      "variants": [
+        {"key":"login-welcome-160","path":"public/assets/ui/auth/ghost-wake-v1/honru/login-welcome-160-v1.webp","sha256":"DCED92DDEF7AE0B745200E30EE9A928732935B1F5736E9F084FC0C0E0E481549","bytes":6192,"format":"webp-vp8x","width":160,"height":160,"alpha":"true"},
+        {"key":"login-welcome-240","path":"public/assets/ui/auth/ghost-wake-v1/honru/login-welcome-240-v1.webp","sha256":"EBA9C6D106CC106593711CD3B43A190B084D1106D1668BAFF07B225E86E8621C","bytes":9990,"format":"webp-vp8x","width":240,"height":240,"alpha":"true"},
+        {"key":"login-welcome-320","path":"public/assets/ui/auth/ghost-wake-v1/honru/login-welcome-320-v1.webp","sha256":"2A3BA570605F9649FF500510D4220A7CD9FC7563712C858180EB6D6626ABF637","bytes":14564,"format":"webp-vp8x","width":320,"height":320,"alpha":"true"},
+        {"key":"register-create-160","path":"public/assets/ui/auth/ghost-wake-v1/honru/register-create-160-v1.webp","sha256":"15F8E947C4C76E1668221686EBBC104498858E23CD9CD0B6051D6AD8ABDD8D3B","bytes":5542,"format":"webp-vp8x","width":160,"height":160,"alpha":"true"},
+        {"key":"register-create-240","path":"public/assets/ui/auth/ghost-wake-v1/honru/register-create-240-v1.webp","sha256":"F721DC6132FED6C230839862E4D0ABD8D245F6E6E493227088E64AC13BCC9AF8","bytes":8658,"format":"webp-vp8x","width":240,"height":240,"alpha":"true"},
+        {"key":"register-create-320","path":"public/assets/ui/auth/ghost-wake-v1/honru/register-create-320-v1.webp","sha256":"3899FE3C085F4201F3F182796C8D49D2FE5BB35B9F602EAC7DEBB2AF01D587E0","bytes":12522,"format":"webp-vp8x","width":320,"height":320,"alpha":"true"},
+        {"key":"legacy-migrate-160","path":"public/assets/ui/auth/ghost-wake-v1/honru/legacy-migrate-160-v1.webp","sha256":"0C4CB055DBF911B0987995A49ED3B92B8DC5787D79C79F673CB8A83A9FDA5729","bytes":5090,"format":"webp-vp8x","width":160,"height":160,"alpha":"true"},
+        {"key":"legacy-migrate-240","path":"public/assets/ui/auth/ghost-wake-v1/honru/legacy-migrate-240-v1.webp","sha256":"7776B8D734DE82E4E9627AAA63D5F6F522C93223BAC7814127941B34CCC2BBC9","bytes":8266,"format":"webp-vp8x","width":240,"height":240,"alpha":"true"},
+        {"key":"legacy-migrate-320","path":"public/assets/ui/auth/ghost-wake-v1/honru/legacy-migrate-320-v1.webp","sha256":"3AA698FE25E0DC579A18B38DF3EDD943E146C7718DB801517B51918CBDFB2824","bytes":11860,"format":"webp-vp8x","width":320,"height":320,"alpha":"true"},
+        {"key":"guest-safe-entry-160","path":"public/assets/ui/auth/ghost-wake-v1/honru/guest-safe-entry-160-v1.webp","sha256":"8C2CD6AE3FEA166593C41B61458C4D71E5F205A83BA04A78FFFAF4A9D74EF1E9","bytes":5018,"format":"webp-vp8x","width":160,"height":160,"alpha":"true"},
+        {"key":"guest-safe-entry-240","path":"public/assets/ui/auth/ghost-wake-v1/honru/guest-safe-entry-240-v1.webp","sha256":"88730227EF2D8A9F87573ABCD4B1ACDB5EA3D1D8E34D7DCAC179477CF0194E73","bytes":7978,"format":"webp-vp8x","width":240,"height":240,"alpha":"true"},
+        {"key":"guest-safe-entry-320","path":"public/assets/ui/auth/ghost-wake-v1/honru/guest-safe-entry-320-v1.webp","sha256":"4DCFDDA7F78F0ECF667C3118174BA6E3ED5A50D3DE8AC79FD78B7BB84BC901E6","bytes":11352,"format":"webp-vp8x","width":320,"height":320,"alpha":"true"},
+        {"key":"connecting-160","path":"public/assets/ui/auth/ghost-wake-v1/honru/connecting-160-v1.webp","sha256":"A88AB367C63557956ACFBF17A71EF5A559D8789F9E8C2A821A4287F68BC7D7DD","bytes":7626,"format":"webp-vp8x","width":160,"height":160,"alpha":"true"},
+        {"key":"connecting-240","path":"public/assets/ui/auth/ghost-wake-v1/honru/connecting-240-v1.webp","sha256":"076679254926B18BE9FC3829F570F25DCC7D9D93295B7D1875A6A1F02A22CAA0","bytes":12638,"format":"webp-vp8x","width":240,"height":240,"alpha":"true"},
+        {"key":"connecting-320","path":"public/assets/ui/auth/ghost-wake-v1/honru/connecting-320-v1.webp","sha256":"084D1D2047F063565E6CCA1A5F1D1BB75DCC234894BEE69D1D88D3F75AC7FDB0","bytes":17990,"format":"webp-vp8x","width":320,"height":320,"alpha":"true"},
+        {"key":"credential-error-160","path":"public/assets/ui/auth/ghost-wake-v1/honru/credential-error-160-v1.webp","sha256":"656DCC0B854516A6B9BABAA2CEF1CE8F56150E599F304F1B425272791CD63AA7","bytes":5722,"format":"webp-vp8x","width":160,"height":160,"alpha":"true"},
+        {"key":"credential-error-240","path":"public/assets/ui/auth/ghost-wake-v1/honru/credential-error-240-v1.webp","sha256":"EC0AE1B1E75E888DD3C81041531F1CC64812C6DA289B7FC5CE15C3CAF577F841","bytes":9122,"format":"webp-vp8x","width":240,"height":240,"alpha":"true"},
+        {"key":"credential-error-320","path":"public/assets/ui/auth/ghost-wake-v1/honru/credential-error-320-v1.webp","sha256":"B200025A171B1E839A8134D34EB095760596FD474604C6FF1F18F64456786EEC","bytes":13446,"format":"webp-vp8x","width":320,"height":320,"alpha":"true"},
+        {"key":"recovered-160","path":"public/assets/ui/auth/ghost-wake-v1/honru/recovered-160-v1.webp","sha256":"FA8B9DD35D5027B30C5E64680E4E1233DE8CD1F312DF8AC8A536A24F5343EA47","bytes":5830,"format":"webp-vp8x","width":160,"height":160,"alpha":"true"},
+        {"key":"recovered-240","path":"public/assets/ui/auth/ghost-wake-v1/honru/recovered-240-v1.webp","sha256":"5F3A9E5C11E5F275DC2B3B8A71ABC3AD8244F395936EA0447928765C3C249336","bytes":9560,"format":"webp-vp8x","width":240,"height":240,"alpha":"true"},
+        {"key":"recovered-320","path":"public/assets/ui/auth/ghost-wake-v1/honru/recovered-320-v1.webp","sha256":"C2F60E55A9A1A40BCA5E663CEE5C713A4D682455BC559420BB10C4A726F6FACC","bytes":13852,"format":"webp-vp8x","width":320,"height":320,"alpha":"true"},
+        {"key":"first-start-160","path":"public/assets/ui/auth/ghost-wake-v1/honru/first-start-160-v1.webp","sha256":"6FCDA7A61D73CF36D0DAB1C7F7469B66FCC1C9C2C3358A47AFC18AACDED45C00","bytes":6256,"format":"webp-vp8x","width":160,"height":160,"alpha":"true"},
+        {"key":"first-start-240","path":"public/assets/ui/auth/ghost-wake-v1/honru/first-start-240-v1.webp","sha256":"EB2863A30D030A087F4D5EBF3173399E1B16CEC8AB4CCDF63C7681D295532C5E","bytes":9842,"format":"webp-vp8x","width":240,"height":240,"alpha":"true"},
+        {"key":"first-start-320","path":"public/assets/ui/auth/ghost-wake-v1/honru/first-start-320-v1.webp","sha256":"B19C6620858500BCCEA28FA34EF0F43ED454338A213B2BE2A98A908ACA8FF581","bytes":14046,"format":"webp-vp8x","width":320,"height":320,"alpha":"true"}
+      ]
+    },
+    {
+      "assetId": "P-BOOT-HONRU-CONTROLLER-V1",
+      "sourceAssetId": "ART-BOOT-HONRU-CONTROLLER-V1",
+      "license": "project-owned-derived-from-owner-cleared-honru",
+      "featureFlags": ["mg_art_p0_01_v1", "mg_art_boot_honru_v1"],
+      "defaultEnabled": true,
+      "fallback": "P-001-GHOST-MARK inside existing indeterminate HTML/CSS boot card",
+      "byteBudget": 131072,
+      "actualBytes": 76306,
+      "variants": [
+        {"key":"honru-boot-controller-hug-160","path":"public/assets/ui/loading/ghost-boot-v1/honru-boot-controller-hug-160-v1.webp","sha256":"7D6A5346C527A31412C1FB18FDA0F251B284DE484E694C613904DED562522D04","bytes":6176,"format":"webp-vp8x","width":160,"height":160,"alpha":"true"},
+        {"key":"honru-boot-controller-hug-240","path":"public/assets/ui/loading/ghost-boot-v1/honru-boot-controller-hug-240-v1.webp","sha256":"48F3F14B66C4BC3F17DA8A287462C975B01F27FC076FE6361729455AF1399560","bytes":9660,"format":"webp-vp8x","width":240,"height":240,"alpha":"true"},
+        {"key":"honru-boot-controller-hug-320","path":"public/assets/ui/loading/ghost-boot-v1/honru-boot-controller-hug-320-v1.webp","sha256":"D4EC1F4241CB1E050182EB3632332241CBE4CC6C4C806FFE475FFBAFE12FDF37","bytes":14182,"format":"webp-vp8x","width":320,"height":320,"alpha":"true"},
+        {"key":"honru-boot-retry-signal-160","path":"public/assets/ui/loading/ghost-boot-v1/honru-boot-retry-signal-160-v1.webp","sha256":"702F64FBC74EA6DFDE09DE5143CDF54087C5E824D30F8ABB96428D3850186550","bytes":8968,"format":"webp-vp8x","width":160,"height":160,"alpha":"true"},
+        {"key":"honru-boot-retry-signal-240","path":"public/assets/ui/loading/ghost-boot-v1/honru-boot-retry-signal-240-v1.webp","sha256":"3EBB41B73980D8D7515D670B362DDAF54DC3DF593B42CEBB91C2189FA65EB253","bytes":15184,"format":"webp-vp8x","width":240,"height":240,"alpha":"true"},
+        {"key":"honru-boot-retry-signal-320","path":"public/assets/ui/loading/ghost-boot-v1/honru-boot-retry-signal-320-v1.webp","sha256":"DA84C9B49A6E017C970A4100CFD43D4FB81E77CB87307EAE06E32F1D99ADE7DC","bytes":22136,"format":"webp-vp8x","width":320,"height":320,"alpha":"true"}
+      ]
+    },
+    {
+      "assetId": "P-AUTH-STATUS-ICONS-V1",
+      "sourceAssetId": "ART-AUTH-STATUS-ICONS-V1",
+      "license": "project-owned-deterministic-vector",
+      "featureFlags": ["mg_art_p0_01_v1", "mg_art_auth_status_icons_v1"],
+      "defaultEnabled": true,
+      "fallback": "existing readable HTML status plus shape/color CSS dot",
+      "byteBudget": 12288,
+      "actualBytes": 5252,
+      "variants": [
+        {"key":"username-available","path":"public/assets/ui/auth/status-v1/username-available-v1.svg","sha256":"8C3538F5A4673937A4F71AEF41210247ECA2AD7D6FB99BF6CF1D9524A9A35B33","bytes":941,"format":"svg","width":64,"height":64,"alpha":"transparent canvas"},
+        {"key":"username-occupied","path":"public/assets/ui/auth/status-v1/username-occupied-v1.svg","sha256":"FB087D0F5F94351CB25291E1D7405E22F6DB209723651AB7AA6C1679E522BF50","bytes":939,"format":"svg","width":64,"height":64,"alpha":"transparent canvas"},
+        {"key":"password-error","path":"public/assets/ui/auth/status-v1/password-error-v1.svg","sha256":"90AEF88F48AC23E4C22E7C3D2D41E665902C0BD5D38FD45F41D1B44F48E368DB","bytes":949,"format":"svg","width":64,"height":64,"alpha":"transparent canvas"},
+        {"key":"migration-success","path":"public/assets/ui/auth/status-v1/migration-success-v1.svg","sha256":"AA9455E79F91CF0A93DD37DF7622E3F53001511E55EC5393C9713DBA3F95ACC9","bytes":1035,"format":"svg","width":64,"height":64,"alpha":"transparent canvas"},
+        {"key":"connected","path":"public/assets/ui/auth/status-v1/connected-v1.svg","sha256":"D630D20AF7A7EFBC58F74D657703601E78BA64F64F178BBAAF5F9C365B097D9C","bytes":567,"format":"svg","width":64,"height":64,"alpha":"transparent canvas"},
+        {"key":"offline-retry","path":"public/assets/ui/auth/status-v1/offline-retry-v1.svg","sha256":"446F43E11F8B8979E5D877322459CD13BD8E5FD5B1FD0BEB1059E122CD80775F","bytes":821,"format":"svg","width":64,"height":64,"alpha":"transparent canvas"}
+      ]
+    },
+    {
+      "assetId": "P-PWA-GHOST-WAKE-V1",
+      "sourceAssetId": "ART-PWA-GHOST-WAKE-V1",
+      "license": "project-owned-deterministic-vector",
+      "featureFlags": ["mg_art_p0_01_v1", "mg_art_auth_ghost_wake_v1"],
+      "defaultEnabled": true,
+      "fallback": "existing ghost-game-192.png / ghost-game-512.png, P-001-GHOST-MARK and CSS environment",
+      "byteBudget": 98304,
+      "actualBytes": 54365,
+      "variants": [
+        {"key":"maskable-192","path":"public/assets/brand/pwa/ghost-wake-v1/ghost-game-maskable-192-v1.png","sha256":"11E655B34351B4FFABF63BD8AB36E539C92678F8F4DFB233F787E6A3E501D406","bytes":4509,"format":"png-indexed-color-type-3","width":192,"height":192,"alpha":"none; fully opaque"},
+        {"key":"maskable-512","path":"public/assets/brand/pwa/ghost-wake-v1/ghost-game-maskable-512-v1.png","sha256":"835141EA727B6F7EC1A3DD321C00433B57756328E95700B955BFF20E8BCEC6A6","bytes":11854,"format":"png-indexed-color-type-3","width":512,"height":512,"alpha":"none; fully opaque"},
+        {"key":"splash-light","path":"public/assets/brand/pwa/ghost-wake-v1/ghost-wake-splash-light-v1.webp","sha256":"6B9F942D8729099FDD2D59CA414840AE38D30E240BF7371127FA0111BF67C865","bytes":20316,"format":"webp-vp8x","width":1080,"height":1920,"alpha":"no transparent pixels; outer resize edge includes partial alpha"},
+        {"key":"splash-dark","path":"public/assets/brand/pwa/ghost-wake-v1/ghost-wake-splash-dark-v1.webp","sha256":"4E361968B88343195BCA3F3871235C4F11EC46C989D59A6922D7C747D638F046","bytes":17686,"format":"webp-vp8x","width":1080,"height":1920,"alpha":"no transparent pixels; outer resize edge includes partial alpha"}
+      ]
+    }
+  ],
+  "reviewArtifacts": [
+    {"path":"art-source/platform/auth/ghost-wake-v1/review/auth-honru-scenes-contact-sheet-v1.png","sha256":"C1840F717832675CAC6DE2B26E3664BAB9378BFD6AFDFDD63F4C2A290E890CA5","bytes":79630,"format":"png","width":1120,"height":620,"alpha":"none","runtime":false},
+    {"path":"art-source/platform/auth/status-v1/review/auth-status-icons-contact-sheet-v1.png","sha256":"FDB95DBD225C3BD12C4322FE89E3FF954C9A474F1CEC30DED751D8FEA25447DA","bytes":18928,"format":"png","width":570,"height":440,"alpha":"none","runtime":false},
+    {"path":"art-source/platform/loading/ghost-boot-v1/review/boot-honru-scenes-contact-sheet-v1.png","sha256":"DD338362860A14A08A5D703B5F264DFD181738D3970ACECD4D38C3D79968A553","bytes":29113,"format":"png","width":640,"height":350,"alpha":"none","runtime":false}
+  ],
+  "fallbackFiles": [
+    {"path":"art-source/platform/auth/ghost-wake-v1/fallback/ghost-game-mark-fallback.svg","sha256":"DF7D06E492B23CD35199596499550797BAE828F30820E18A0F96745B5244B452","bytes":1173,"format":"svg","width":64,"height":64},
+    {"path":"public/assets/ui/auth/ghost-wake-v1/fallback/ghost-game-mark-fallback.svg","sha256":"DF7D06E492B23CD35199596499550797BAE828F30820E18A0F96745B5244B452","bytes":1173,"format":"svg","width":64,"height":64},
+    {"path":"public/assets/ui/loading/ghost-boot-v1/fallback/ghost-game-mark-fallback.svg","sha256":"DF7D06E492B23CD35199596499550797BAE828F30820E18A0F96745B5244B452","bytes":1173,"format":"svg","width":64,"height":64}
+  ],
+  "totals": {
+    "sourceMasterFiles": 23,
+    "sourceMasterBytes": 220157,
+    "intermediateEvidenceFiles": 6,
+    "intermediateEvidenceBytes": 185449,
+    "reviewFiles": 3,
+    "reviewBytes": 127671,
+    "runtimeVariants": 48,
+    "runtimeVariantBytes": 533561,
+    "runtimeUniqueContentBytes": 451223,
+    "runtimeBudgetBytes": 897024,
+    "firstScreenCandidateBytes": 55502
+  },
+  "clearance": {
+    "record": "art-source/platform/auth/ghost-wake-v1/OWNER_AUTHORIZED_ART_CLEARANCE.md",
+    "technicalReview": "art-source/platform/auth/ghost-wake-v1/TECHNICAL_REVIEW_Reviewer_A.md",
+    "provenance": "art-source/platform/auth/ghost-wake-v1/PROMPT_AND_PROVENANCE.md",
+    "machineTechnicalVisualSimilarityReview": "PASS_WITH_RECORDED_LIMITS",
+    "independentHumanReviewerB": "OPTIONAL_ADVISORY_EVIDENCE / NOT_EXECUTED",
+    "ipLegalOpinion": "OPTIONAL_ADVISORY_EVIDENCE / NOT_EXECUTED",
+    "humanCleanup": "OPTIONAL_ADVISORY_EVIDENCE / NOT_EXECUTED",
+    "additionalPerAssetGoldenSet": "OPTIONAL_ADVISORY_EVIDENCE / NOT_EXECUTED",
+    "secondBrowserPhysicalDevicesRealNetwork": "RELEASE_EVIDENCE_PENDING / NOT_EXECUTED",
+    "release": "EXPLICIT_CURRENT_USER_COMMAND_REQUIRED"
+  },
+  "rollback": {
+    "scope": "Disable the family flag or the affected child flag; do not delete user data or alter rules/protocol/economy.",
+    "chain": "P0-01 runtime variant -> prior Honru/brand runtime asset -> DOM/CSS/SVG/Unicode fallback",
+    "failureModes": ["flag disabled or invalid", "manifest unavailable", "path rejected", "hash mismatch", "load/decode failure"],
+    "releaseEffect": "NONE; this record does not commit, push, deploy or write production data."
+  }
+}

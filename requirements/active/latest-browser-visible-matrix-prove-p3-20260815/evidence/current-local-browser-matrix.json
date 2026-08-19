@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-08-15T18:14:00.063+09:00",
+  "claim": "historical_as_of_build_single_browser_partial",
+  "currency": "historical_as_of",
+  "build": {
+    "path": "public/index.html",
+    "sha256": "0A6FE8494AA5B14188D006E2FCDFA97AA7DAB438E127A6442FFF298BC5B1CDB4",
+    "characters": 1580313,
+    "bytes": 1594847
+  },
+  "environment": {
+    "browserSurface": "Codex in-app Chromium",
+    "browserCount": 1,
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
+    "platform": "Win32",
+    "url": "http://localhost:8080/"
+  },
+  "coverage": {
+    "kind": "full_historical_as_of_single_browser_matrix",
+    "fullRouteMatrixCurrentBuild": false,
+    "surfaces": ["home","games","playline","profile","shop","direct_messages","achievements","room_lobby","six_game_stages","auth_forced_colors"],
+    "viewports": [
+      {"width":1440,"height":900,"devicePixelRatio":1},
+      {"width":1024,"height":768,"devicePixelRatio":1},
+      {"width":768,"height":1024,"devicePixelRatio":1},
+      {"width":390,"height":844,"devicePixelRatio":1},
+      {"width":844,"height":390,"devicePixelRatio":1}
+    ],
+    "languages": ["zh-CN","en-US","uk-UA"],
+    "themes": ["light","dark"],
+    "forcedColors": true,
+    "reducedMotion": true
+  },
+  "sourceEvidence": [
+    {"path":"requirements/active/latest-browser-visible-matrix-prove-p3-20260815/evidence/current-build-single-browser-verification-202608151814.json","scope":"historical_as_of_full_single_browser_matrix","currency":"historical_as_of","supportsFullRouteMatrix":true},
+    {"path":"requirements/active/pwa-offline-i18n-repair-p1-20260815/evidence/local-browser-offline-i18n-20260815.json","scope":"pwa_offline_i18n","currency":"historical_as_of_recorded_build_only","supportsFullRouteMatrix":false}
+  ],
+  "historicalEvidence": [
+    {"path":"requirements/active/latest-browser-visible-matrix-prove-p2-20260815/evidence/current-build-single-browser-verification-202608151637.json","buildSha256":"4141BBAC492D361AEC2A777D76FD1AACC0600866307709B26568C62EC8780850","classification":"historical_as_of_build_only"},
+    {"path":"requirements/active/latest-browser-visible-matrix-prove-p1-20260814/evidence/local-single-browser-verification-202608140615.json","buildSha256":"BFBD2109B77B1F4C5E070DAB6B98C806E25AD621ACBE3E2E83AD5C5FB7130CAE","classification":"historical_as_of_build_only"}
+  ],
+  "notGranted": ["second_browser","physical_android","physical_iphone","physical_tablet","real_network_shaping","two_formal_friend_dm_browsers","physical_performance_audio_recovery","production_verification","release"],
+  "gateDisposition": "GATE-DEVICE-BROWSER-NETWORK remains BLOCKED"
+}

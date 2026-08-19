@@ -1,0 +1,35 @@
+{
+  "taskId": "gcoins-presentation-unification-p1-20260815",
+  "status": "completed",
+  "requirements": ["ECO-012", "UI-027"],
+  "steps": [
+    {"id":"P1-1","title":"RECON 全量金额消费者、合法 fallback 与经济边界","dependsOn":[],"status":"completed"},
+    {"id":"P1-2","title":"实现复合金额深模块并一次迁移全部用户可见消费者","dependsOn":["P1-1"],"status":"completed"},
+    {"id":"P1-3","title":"集中补 CSS、三语言外围标签与静态/VM 回归","dependsOn":["P1-2"],"status":"completed"},
+    {"id":"P1-4","title":"专项、相关 UI、i18n、Quality Gates 与确定性构建","dependsOn":["P1-3"],"status":"completed"},
+    {"id":"P1-5","title":"当前构建单浏览器可见抽查与模拟清理","dependsOn":["P1-4"],"status":"completed"},
+    {"id":"P1-6","title":"台账、路由、报告、三日志与中文简报收口","dependsOn":["P1-5"],"status":"completed"}
+  ],
+  "risks": [
+    "把展示 refactor 误扩成经济或协议字段迁移",
+    "Test Admin 私有无限余额泄漏到公开表面",
+    "复合节点造成辅助技术重复朗读",
+    "Shop/Profile 手工结构遗漏或移动端挤压",
+    "把合法资源失败 fallback 或历史测试文案错误删除",
+    "未经审批 P1 图标误入 Manifest"
+  ],
+  "tests": [
+    "node qa/g-coins-contract.js",
+    "node qa/g-coins-presentation.js",
+    "node qa/shop-contract.js",
+    "node qa/shop-design-system-closure.js",
+    "node qa/profile-design-system-contract.js",
+    "node qa/dom-smoke.js",
+    "npm run test:i18n",
+    "npm run quality:gates",
+    "deterministic double build",
+    "git diff --check"
+  ],
+  "rollback": "Remove the composite amount helper and restore per-consumer icon/value assembly; retain P-003, 💵 fallback, source-only art, fields, prices, rewards and history.",
+  "release": "LOCAL_ONLY_NO_COMMIT_NO_PUSH_NO_DEPLOY"
+}

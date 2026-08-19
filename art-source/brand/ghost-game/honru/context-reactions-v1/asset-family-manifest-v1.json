@@ -1,0 +1,898 @@
+{
+  "schemaVersion": 1,
+  "productionUnitId": "P0-08",
+  "familyId": "P-HONRU-CONTEXT-REACTIONS-V1",
+  "sourceAssetId": "ART-HONRU-CONTEXT-REACTIONS-V1",
+  "artworkVersion": 1,
+  "status": "OWNER_AUTHORIZED_ART_CLEARANCE",
+  "license": "project-owned-derived-from-owner-approved-ai-generated-honru",
+  "generationMethod": "deterministic Sharp composition from the approved Q-hand Honru alpha mother; no external generation endpoint used for derivatives",
+  "identityLock": {
+    "preserve": [
+      "three flame-shaped head peaks",
+      "white/cream palette",
+      "pale cheek blush",
+      "D-pad left eye",
+      "four-button right eye",
+      "smile",
+      "two lower feet",
+      "proportions and composition"
+    ],
+    "hands": "single smooth circular/oval Q-version ghost puffs; no fingers, thumb, palm, knuckles, nails or gaps"
+  },
+  "externalReferencePolicy": "No EXTERNAL_REFERENCE_ONLY / blocked-license pixels or layers were read, copied, traced or transmitted for these derivatives.",
+  "sourceChromaMother": {
+    "path": "art-source/brand/ghost-game/honru/context-reactions-v1/source/honru-hand-corrected-master-v1.png",
+    "sha256": "6E670901E2B34A06CC8A0C30FD376E8CD385E8B3E1E550B40E0A175506135144",
+    "bytes": 1092133,
+    "width": 1254,
+    "height": 1254,
+    "format": "png",
+    "alpha": false,
+    "role": "owner-approved-generation-master"
+  },
+  "sourceMother": {
+    "path": "art-source/brand/ghost-game/honru/context-reactions-v1/derived/honru-hand-corrected-master-v1-alpha.png",
+    "sha256": "1105F7302C60E810CF86C29D1846B54174A64A6FCC35E9AC7E0C10882607BB49",
+    "bytes": 566250,
+    "width": 1254,
+    "height": 1254,
+    "format": "png",
+    "alpha": true,
+    "role": "approved-identity-anchor"
+  },
+  "contextIds": [
+    "ready",
+    "your-turn",
+    "thinking",
+    "throw",
+    "hit",
+    "capture",
+    "score",
+    "combo",
+    "warning",
+    "reconnect",
+    "spectator",
+    "win",
+    "lose",
+    "draw",
+    "rematch",
+    "celebration"
+  ],
+  "quickProtocolIds": [
+    "quick_hello",
+    "quick_good_luck",
+    "quick_nice",
+    "quick_wow",
+    "quick_thanks",
+    "quick_again"
+  ],
+  "quickGroups": {
+    "quick_hello": [
+      "quick_hello_a",
+      "quick_hello_b",
+      "quick_hello_c"
+    ],
+    "quick_good_luck": [
+      "quick_good_luck_a",
+      "quick_good_luck_b",
+      "quick_good_luck_c"
+    ],
+    "quick_nice": [
+      "quick_nice_a",
+      "quick_nice_b",
+      "quick_nice_c"
+    ],
+    "quick_wow": [
+      "quick_wow_a",
+      "quick_wow_b"
+    ],
+    "quick_thanks": [
+      "quick_thanks_a",
+      "quick_thanks_b"
+    ],
+    "quick_again": [
+      "quick_again_a",
+      "quick_again_b",
+      "quick_again_c"
+    ]
+  },
+  "contextSources": [
+    {
+      "path": "art-source/brand/ghost-game/honru/context-reactions-v1/derived/context-states/honru-context-ready-v1.png",
+      "sha256": "58B6A4C948E474757C76A18EFDE6B009102013F091DBC371685B94E1DB572355",
+      "bytes": 66120,
+      "width": 512,
+      "height": 512,
+      "format": "png",
+      "alpha": true,
+      "id": "ready",
+      "bakedText": false,
+      "sourceMotherSha256": "1105F7302C60E810CF86C29D1846B54174A64A6FCC35E9AC7E0C10882607BB49"
+    },
+    {
+      "path": "art-source/brand/ghost-game/honru/context-reactions-v1/derived/context-states/honru-context-your-turn-v1.png",
+      "sha256": "9712A14BDDD999038E8AB3D0699746A1996BE9ABE55F14113F137990F9765BA3",
+      "bytes": 65578,
+      "width": 512,
+      "height": 512,
+      "format": "png",
+      "alpha": true,
+      "id": "your-turn",
+      "bakedText": false,
+      "sourceMotherSha256": "1105F7302C60E810CF86C29D1846B54174A64A6FCC35E9AC7E0C10882607BB49"
+    },
+    {
+      "path": "art-source/brand/ghost-game/honru/context-reactions-v1/derived/context-states/honru-context-thinking-v1.png",
+      "sha256": "F7B247F119D8CF76D240657EEC4B0BE0DF0A16BF643CFA99631606B89478CEDF",
+      "bytes": 61623,
+      "width": 512,
+      "height": 512,
+      "format": "png",
+      "alpha": true,
+      "id": "thinking",
+      "bakedText": false,
+      "sourceMotherSha256": "1105F7302C60E810CF86C29D1846B54174A64A6FCC35E9AC7E0C10882607BB49"
+    },
+    {
+      "path": "art-source/brand/ghost-game/honru/context-reactions-v1/derived/context-states/honru-context-throw-v1.png",
+      "sha256": "76BCE8758BE16DEAA4D7ACF33A07501AC242D9C05E82DDCF57AF537ED21DA0AE",
+      "bytes": 57795,
+      "width": 512,
+      "height": 512,
+      "format": "png",
+      "alpha": true,
+      "id": "throw",
+      "bakedText": false,
+      "sourceMotherSha256": "1105F7302C60E810CF86C29D1846B54174A64A6FCC35E9AC7E0C10882607BB49"
+    },
+    {
+      "path": "art-source/brand/ghost-game/honru/context-reactions-v1/derived/context-states/honru-context-hit-v1.png",
+      "sha256": "7C2A5A020C75118B7C8A2F6304B0A8B9C1A92D6E05AFDF29402326C75EE72796",
+      "bytes": 59033,
+      "width": 512,
+      "height": 512,
+      "format": "png",
+      "alpha": true,
+      "id": "hit",
+      "bakedText": false,
+      "sourceMotherSha256": "1105F7302C60E810CF86C29D1846B54174A64A6FCC35E9AC7E0C10882607BB49"
+    },
+    {
+      "path": "art-source/brand/ghost-game/honru/context-reactions-v1/derived/context-states/honru-context-capture-v1.png",
+      "sha256": "C507E53406424951FF7F2914AF80F452FA3E7F9CC9E965514A70741055F2FD8D",
+      "bytes": 65298,
+      "width": 512,
+      "height": 512,
+      "format": "png",
+      "alpha": true,
+      "id": "capture",
+      "bakedText": false,
+      "sourceMotherSha256": "1105F7302C60E810CF86C29D1846B54174A64A6FCC35E9AC7E0C10882607BB49"
+    },
+    {
+      "path": "art-source/brand/ghost-game/honru/context-reactions-v1/derived/context-states/honru-context-score-v1.png",
+      "sha256": "B5636DB74A5C69AF690CF9DDDE8CC43726375B5DF23007D805AD967B9914B708",
+      "bytes": 64266,
+      "width": 512,
+      "height": 512,
+      "format": "png",
+      "alpha": true,
+      "id": "score",
+      "bakedText": false,
+      "sourceMotherSha256": "1105F7302C60E810CF86C29D1846B54174A64A6FCC35E9AC7E0C10882607BB49"
+    },
+    {
+      "path": "art-source/brand/ghost-game/honru/context-reactions-v1/derived/context-states/honru-context-combo-v1.png",
+      "sha256": "D923D06FD053D2F4FD37B5686788C309B9249AF3D7B8E6F1F02FB9AFCEF339E6",
+      "bytes": 61059,
+      "width": 512,
+      "height": 512,
+      "format": "png",
+      "alpha": true,
+      "id": "combo",
+      "bakedText": false,
+      "sourceMotherSha256": "1105F7302C60E810CF86C29D1846B54174A64A6FCC35E9AC7E0C10882607BB49"
+    },
+    {
+      "path": "art-source/brand/ghost-game/honru/context-reactions-v1/derived/context-states/honru-context-warning-v1.png",
+      "sha256": "913E14FAD0BCCC5F11A48328910379D4AA64EDC6345B78648F90EFB9582C23D5",
+      "bytes": 57356,
+      "width": 512,
+      "height": 512,
+      "format": "png",
+      "alpha": true,
+      "id": "warning",
+      "bakedText": false,
+      "sourceMotherSha256": "1105F7302C60E810CF86C29D1846B54174A64A6FCC35E9AC7E0C10882607BB49"
+    },
+    {
+      "path": "art-source/brand/ghost-game/honru/context-reactions-v1/derived/context-states/honru-context-reconnect-v1.png",
+      "sha256": "705C34C48749E84C96659B01B91E6135CBB782359FC533689ED1DA5AB3CF76E4",
+      "bytes": 61812,
+      "width": 512,
+      "height": 512,
+      "format": "png",
+      "alpha": true,
+      "id": "reconnect",
+      "bakedText": false,
+      "sourceMotherSha256": "1105F7302C60E810CF86C29D1846B54174A64A6FCC35E9AC7E0C10882607BB49"
+    },
+    {
+      "path": "art-source/brand/ghost-game/honru/context-reactions-v1/derived/context-states/honru-context-spectator-v1.png",
+      "sha256": "83A53A68C66D3F297CF5637ECA72853EA3D7E6210ECB9FC155A66481A5895AFD",
+      "bytes": 60223,
+      "width": 512,
+      "height": 512,
+      "format": "png",
+      "alpha": true,
+      "id": "spectator",
+      "bakedText": false,
+      "sourceMotherSha256": "1105F7302C60E810CF86C29D1846B54174A64A6FCC35E9AC7E0C10882607BB49"
+    },
+    {
+      "path": "art-source/brand/ghost-game/honru/context-reactions-v1/derived/context-states/honru-context-win-v1.png",
+      "sha256": "7410E055559012EE7696C320B40EF8BB26C4A747B202CBC8906F5A414FC18AF9",
+      "bytes": 60034,
+      "width": 512,
+      "height": 512,
+      "format": "png",
+      "alpha": true,
+      "id": "win",
+      "bakedText": false,
+      "sourceMotherSha256": "1105F7302C60E810CF86C29D1846B54174A64A6FCC35E9AC7E0C10882607BB49"
+    },
+    {
+      "path": "art-source/brand/ghost-game/honru/context-reactions-v1/derived/context-states/honru-context-lose-v1.png",
+      "sha256": "079E4EF8DA736C1DBB57D233E633619C5074E2C669D6167FA497896AED95BC06",
+      "bytes": 61287,
+      "width": 512,
+      "height": 512,
+      "format": "png",
+      "alpha": true,
+      "id": "lose",
+      "bakedText": false,
+      "sourceMotherSha256": "1105F7302C60E810CF86C29D1846B54174A64A6FCC35E9AC7E0C10882607BB49"
+    },
+    {
+      "path": "art-source/brand/ghost-game/honru/context-reactions-v1/derived/context-states/honru-context-draw-v1.png",
+      "sha256": "35B7703CE9F2F847166B537303E2E486B1D5111A527656699BECF820B3EBD051",
+      "bytes": 56041,
+      "width": 512,
+      "height": 512,
+      "format": "png",
+      "alpha": true,
+      "id": "draw",
+      "bakedText": false,
+      "sourceMotherSha256": "1105F7302C60E810CF86C29D1846B54174A64A6FCC35E9AC7E0C10882607BB49"
+    },
+    {
+      "path": "art-source/brand/ghost-game/honru/context-reactions-v1/derived/context-states/honru-context-rematch-v1.png",
+      "sha256": "49CF3C6649C4703E0990350A17B2A17D75FFA7BC54B87884F8BBB4C483D3ACD9",
+      "bytes": 57704,
+      "width": 512,
+      "height": 512,
+      "format": "png",
+      "alpha": true,
+      "id": "rematch",
+      "bakedText": false,
+      "sourceMotherSha256": "1105F7302C60E810CF86C29D1846B54174A64A6FCC35E9AC7E0C10882607BB49"
+    },
+    {
+      "path": "art-source/brand/ghost-game/honru/context-reactions-v1/derived/context-states/honru-context-celebration-v1.png",
+      "sha256": "532EC7DE72EC54886C9415C66A9A9D4A147B94D0801B9E4B1AFF2C062EA61BA7",
+      "bytes": 64278,
+      "width": 512,
+      "height": 512,
+      "format": "png",
+      "alpha": true,
+      "id": "celebration",
+      "bakedText": false,
+      "sourceMotherSha256": "1105F7302C60E810CF86C29D1846B54174A64A6FCC35E9AC7E0C10882607BB49"
+    }
+  ],
+  "quickSources": [
+    {
+      "path": "art-source/brand/ghost-game/honru/context-reactions-v1/derived/quick-stickers/honru-quick-hello-a-v1.png",
+      "sha256": "8D0FC88B5D0660D64391F2A32E4A51308A6570D997C07AC4BE2AFD2F5B30AB76",
+      "bytes": 18149,
+      "width": 256,
+      "height": 256,
+      "format": "png",
+      "alpha": true,
+      "id": "quick_hello_a",
+      "protocolId": "quick_hello",
+      "variant": "A",
+      "bakedText": false,
+      "sourceMotherSha256": "1105F7302C60E810CF86C29D1846B54174A64A6FCC35E9AC7E0C10882607BB49"
+    },
+    {
+      "path": "art-source/brand/ghost-game/honru/context-reactions-v1/derived/quick-stickers/honru-quick-hello-b-v1.png",
+      "sha256": "48CF5AEF823882A81BB431865352EC02EC62BC48850690B0F737455D27C02DCC",
+      "bytes": 18134,
+      "width": 256,
+      "height": 256,
+      "format": "png",
+      "alpha": true,
+      "id": "quick_hello_b",
+      "protocolId": "quick_hello",
+      "variant": "B",
+      "bakedText": false,
+      "sourceMotherSha256": "1105F7302C60E810CF86C29D1846B54174A64A6FCC35E9AC7E0C10882607BB49"
+    },
+    {
+      "path": "art-source/brand/ghost-game/honru/context-reactions-v1/derived/quick-stickers/honru-quick-hello-c-v1.png",
+      "sha256": "98D5FAA7B7803079243D3DE1EE40B5082FF8CF7987D67B9221B38FF750596837",
+      "bytes": 17985,
+      "width": 256,
+      "height": 256,
+      "format": "png",
+      "alpha": true,
+      "id": "quick_hello_c",
+      "protocolId": "quick_hello",
+      "variant": "C",
+      "bakedText": false,
+      "sourceMotherSha256": "1105F7302C60E810CF86C29D1846B54174A64A6FCC35E9AC7E0C10882607BB49"
+    },
+    {
+      "path": "art-source/brand/ghost-game/honru/context-reactions-v1/derived/quick-stickers/honru-quick-good-luck-a-v1.png",
+      "sha256": "E8E776575592C13923E42DD3EFF432531A6B401273DF4790A5A1A735015929FC",
+      "bytes": 18933,
+      "width": 256,
+      "height": 256,
+      "format": "png",
+      "alpha": true,
+      "id": "quick_good_luck_a",
+      "protocolId": "quick_good_luck",
+      "variant": "A",
+      "bakedText": false,
+      "sourceMotherSha256": "1105F7302C60E810CF86C29D1846B54174A64A6FCC35E9AC7E0C10882607BB49"
+    },
+    {
+      "path": "art-source/brand/ghost-game/honru/context-reactions-v1/derived/quick-stickers/honru-quick-good-luck-b-v1.png",
+      "sha256": "FBDFCCD9C9EC6F179E5E81A44A2765BA1652479AE7889B2FF2BB97C9916D9953",
+      "bytes": 18747,
+      "width": 256,
+      "height": 256,
+      "format": "png",
+      "alpha": true,
+      "id": "quick_good_luck_b",
+      "protocolId": "quick_good_luck",
+      "variant": "B",
+      "bakedText": false,
+      "sourceMotherSha256": "1105F7302C60E810CF86C29D1846B54174A64A6FCC35E9AC7E0C10882607BB49"
+    },
+    {
+      "path": "art-source/brand/ghost-game/honru/context-reactions-v1/derived/quick-stickers/honru-quick-good-luck-c-v1.png",
+      "sha256": "6A26DCBE5C088FC62DDDDC64A39F1271287DDB1F05D6C01F264E99AE361D93E6",
+      "bytes": 18891,
+      "width": 256,
+      "height": 256,
+      "format": "png",
+      "alpha": true,
+      "id": "quick_good_luck_c",
+      "protocolId": "quick_good_luck",
+      "variant": "C",
+      "bakedText": false,
+      "sourceMotherSha256": "1105F7302C60E810CF86C29D1846B54174A64A6FCC35E9AC7E0C10882607BB49"
+    },
+    {
+      "path": "art-source/brand/ghost-game/honru/context-reactions-v1/derived/quick-stickers/honru-quick-nice-a-v1.png",
+      "sha256": "913C8D0EFD239B28AAD3E5C093AAD22C7895C51DA1875D1B8E397292479492E7",
+      "bytes": 17192,
+      "width": 256,
+      "height": 256,
+      "format": "png",
+      "alpha": true,
+      "id": "quick_nice_a",
+      "protocolId": "quick_nice",
+      "variant": "A",
+      "bakedText": false,
+      "sourceMotherSha256": "1105F7302C60E810CF86C29D1846B54174A64A6FCC35E9AC7E0C10882607BB49"
+    },
+    {
+      "path": "art-source/brand/ghost-game/honru/context-reactions-v1/derived/quick-stickers/honru-quick-nice-b-v1.png",
+      "sha256": "63B54CDF5A8AEEF9A97C1C8333BD37F278E176D095A08565E2C6F68F3E49D841",
+      "bytes": 18707,
+      "width": 256,
+      "height": 256,
+      "format": "png",
+      "alpha": true,
+      "id": "quick_nice_b",
+      "protocolId": "quick_nice",
+      "variant": "B",
+      "bakedText": false,
+      "sourceMotherSha256": "1105F7302C60E810CF86C29D1846B54174A64A6FCC35E9AC7E0C10882607BB49"
+    },
+    {
+      "path": "art-source/brand/ghost-game/honru/context-reactions-v1/derived/quick-stickers/honru-quick-nice-c-v1.png",
+      "sha256": "86ADF30F1975B38C6D82265848D42C0F6925AC1CC097628018DA875D91E83151",
+      "bytes": 18416,
+      "width": 256,
+      "height": 256,
+      "format": "png",
+      "alpha": true,
+      "id": "quick_nice_c",
+      "protocolId": "quick_nice",
+      "variant": "C",
+      "bakedText": false,
+      "sourceMotherSha256": "1105F7302C60E810CF86C29D1846B54174A64A6FCC35E9AC7E0C10882607BB49"
+    },
+    {
+      "path": "art-source/brand/ghost-game/honru/context-reactions-v1/derived/quick-stickers/honru-quick-wow-a-v1.png",
+      "sha256": "F9D39A48B9A8CDF11595A46047AB68BC7443EEEB8771E0207D6484198E2B2F2C",
+      "bytes": 18301,
+      "width": 256,
+      "height": 256,
+      "format": "png",
+      "alpha": true,
+      "id": "quick_wow_a",
+      "protocolId": "quick_wow",
+      "variant": "A",
+      "bakedText": false,
+      "sourceMotherSha256": "1105F7302C60E810CF86C29D1846B54174A64A6FCC35E9AC7E0C10882607BB49"
+    },
+    {
+      "path": "art-source/brand/ghost-game/honru/context-reactions-v1/derived/quick-stickers/honru-quick-wow-b-v1.png",
+      "sha256": "152DCF070A62FC10DB5EEBD198BE839E729C06A7E728B3E084BA06BF1A6D71C4",
+      "bytes": 18788,
+      "width": 256,
+      "height": 256,
+      "format": "png",
+      "alpha": true,
+      "id": "quick_wow_b",
+      "protocolId": "quick_wow",
+      "variant": "B",
+      "bakedText": false,
+      "sourceMotherSha256": "1105F7302C60E810CF86C29D1846B54174A64A6FCC35E9AC7E0C10882607BB49"
+    },
+    {
+      "path": "art-source/brand/ghost-game/honru/context-reactions-v1/derived/quick-stickers/honru-quick-thanks-a-v1.png",
+      "sha256": "31433B58EECBE70F56D843B7C342BBEDFF468A0B6FF6115294F197067EC0F40F",
+      "bytes": 18522,
+      "width": 256,
+      "height": 256,
+      "format": "png",
+      "alpha": true,
+      "id": "quick_thanks_a",
+      "protocolId": "quick_thanks",
+      "variant": "A",
+      "bakedText": false,
+      "sourceMotherSha256": "1105F7302C60E810CF86C29D1846B54174A64A6FCC35E9AC7E0C10882607BB49"
+    },
+    {
+      "path": "art-source/brand/ghost-game/honru/context-reactions-v1/derived/quick-stickers/honru-quick-thanks-b-v1.png",
+      "sha256": "EFAA26AD4F76C57797CC917348510784178432C41D4A978C70EF8A20B306D5FE",
+      "bytes": 18166,
+      "width": 256,
+      "height": 256,
+      "format": "png",
+      "alpha": true,
+      "id": "quick_thanks_b",
+      "protocolId": "quick_thanks",
+      "variant": "B",
+      "bakedText": false,
+      "sourceMotherSha256": "1105F7302C60E810CF86C29D1846B54174A64A6FCC35E9AC7E0C10882607BB49"
+    },
+    {
+      "path": "art-source/brand/ghost-game/honru/context-reactions-v1/derived/quick-stickers/honru-quick-again-a-v1.png",
+      "sha256": "1E3EF7EB9F5939C196CD67CC919CEC0B0624DDB1E5264DF46915DCB164E1A683",
+      "bytes": 18673,
+      "width": 256,
+      "height": 256,
+      "format": "png",
+      "alpha": true,
+      "id": "quick_again_a",
+      "protocolId": "quick_again",
+      "variant": "A",
+      "bakedText": false,
+      "sourceMotherSha256": "1105F7302C60E810CF86C29D1846B54174A64A6FCC35E9AC7E0C10882607BB49"
+    },
+    {
+      "path": "art-source/brand/ghost-game/honru/context-reactions-v1/derived/quick-stickers/honru-quick-again-b-v1.png",
+      "sha256": "B0EA193E69AD1D69597C185BC1327652CFB9B0EBE1E3B13D4222F23562D4D55D",
+      "bytes": 18789,
+      "width": 256,
+      "height": 256,
+      "format": "png",
+      "alpha": true,
+      "id": "quick_again_b",
+      "protocolId": "quick_again",
+      "variant": "B",
+      "bakedText": false,
+      "sourceMotherSha256": "1105F7302C60E810CF86C29D1846B54174A64A6FCC35E9AC7E0C10882607BB49"
+    },
+    {
+      "path": "art-source/brand/ghost-game/honru/context-reactions-v1/derived/quick-stickers/honru-quick-again-c-v1.png",
+      "sha256": "B30C767588BC1984B0D5B97EA98F15BB1D9ACDBE3814CEAC3292D6D1C96AFF3F",
+      "bytes": 18302,
+      "width": 256,
+      "height": 256,
+      "format": "png",
+      "alpha": true,
+      "id": "quick_again_c",
+      "protocolId": "quick_again",
+      "variant": "C",
+      "bakedText": false,
+      "sourceMotherSha256": "1105F7302C60E810CF86C29D1846B54174A64A6FCC35E9AC7E0C10882607BB49"
+    }
+  ],
+  "runtimeContexts": [
+    {
+      "path": "public/assets/brand/honru/context-reactions-v1/contexts/honru-context-ready-v1.webp",
+      "sha256": "692B22AD79918149BEA459F9A283DFD6E6C2E5F0971F8B8C06ED4102585A60A7",
+      "bytes": 32328,
+      "width": 320,
+      "height": 320,
+      "format": "webp",
+      "alpha": true,
+      "id": "ready",
+      "bakedText": false
+    },
+    {
+      "path": "public/assets/brand/honru/context-reactions-v1/contexts/honru-context-your-turn-v1.webp",
+      "sha256": "6A2BC56905DB60DDB9879110D82249FEF235A6450219DC419CFC943E1101538A",
+      "bytes": 33518,
+      "width": 320,
+      "height": 320,
+      "format": "webp",
+      "alpha": true,
+      "id": "your-turn",
+      "bakedText": false
+    },
+    {
+      "path": "public/assets/brand/honru/context-reactions-v1/contexts/honru-context-thinking-v1.webp",
+      "sha256": "879633EEE91F9AB252D5794E91FD28F2C043E4FF47C8F39F848FA3B8028EBC81",
+      "bytes": 22414,
+      "width": 320,
+      "height": 320,
+      "format": "webp",
+      "alpha": true,
+      "id": "thinking",
+      "bakedText": false
+    },
+    {
+      "path": "public/assets/brand/honru/context-reactions-v1/contexts/honru-context-throw-v1.webp",
+      "sha256": "420F633BF82B402E9E455120D907AD1607EAE789A7B86D2663D5F1D032DC4BC4",
+      "bytes": 16002,
+      "width": 320,
+      "height": 320,
+      "format": "webp",
+      "alpha": true,
+      "id": "throw",
+      "bakedText": false
+    },
+    {
+      "path": "public/assets/brand/honru/context-reactions-v1/contexts/honru-context-hit-v1.webp",
+      "sha256": "E71F0B2181F797D3B47CA1367A986154A0863A1BE68B716CD80C5D9FC4D0880D",
+      "bytes": 21396,
+      "width": 320,
+      "height": 320,
+      "format": "webp",
+      "alpha": true,
+      "id": "hit",
+      "bakedText": false
+    },
+    {
+      "path": "public/assets/brand/honru/context-reactions-v1/contexts/honru-context-capture-v1.webp",
+      "sha256": "DE31FEC0E19F06F4C08D40923C2430B837C29E3927262DD00F09B4AD2E4F0055",
+      "bytes": 33716,
+      "width": 320,
+      "height": 320,
+      "format": "webp",
+      "alpha": true,
+      "id": "capture",
+      "bakedText": false
+    },
+    {
+      "path": "public/assets/brand/honru/context-reactions-v1/contexts/honru-context-score-v1.webp",
+      "sha256": "4DF3E740E9AA1B33661742962542960E30085B41CC6711982863233BE6374323",
+      "bytes": 28346,
+      "width": 320,
+      "height": 320,
+      "format": "webp",
+      "alpha": true,
+      "id": "score",
+      "bakedText": false
+    },
+    {
+      "path": "public/assets/brand/honru/context-reactions-v1/contexts/honru-context-combo-v1.webp",
+      "sha256": "A562334CFD6952320DCE983AA54B402401B753204F3874189A63291FD76501DD",
+      "bytes": 25322,
+      "width": 320,
+      "height": 320,
+      "format": "webp",
+      "alpha": true,
+      "id": "combo",
+      "bakedText": false
+    },
+    {
+      "path": "public/assets/brand/honru/context-reactions-v1/contexts/honru-context-warning-v1.webp",
+      "sha256": "054A5280532985E7E4F1318FD8AD4174796343E1B99D3287F9493F2AC9719A27",
+      "bytes": 15622,
+      "width": 320,
+      "height": 320,
+      "format": "webp",
+      "alpha": true,
+      "id": "warning",
+      "bakedText": false
+    },
+    {
+      "path": "public/assets/brand/honru/context-reactions-v1/contexts/honru-context-reconnect-v1.webp",
+      "sha256": "20F792B463261F8927A692FFC5D6009E73E1175E1B9617EE9812810C09A566A1",
+      "bytes": 24292,
+      "width": 320,
+      "height": 320,
+      "format": "webp",
+      "alpha": true,
+      "id": "reconnect",
+      "bakedText": false
+    },
+    {
+      "path": "public/assets/brand/honru/context-reactions-v1/contexts/honru-context-spectator-v1.webp",
+      "sha256": "0CF83D0E90D77E718D482975B033DE5BA3CCE6B05E1DA66586BA84520C7BC317",
+      "bytes": 19044,
+      "width": 320,
+      "height": 320,
+      "format": "webp",
+      "alpha": true,
+      "id": "spectator",
+      "bakedText": false
+    },
+    {
+      "path": "public/assets/brand/honru/context-reactions-v1/contexts/honru-context-win-v1.webp",
+      "sha256": "3D8EA1E532414E3682F71C363A6122AD0EFFCCDE1FB857FF5151CA2A329B0AD4",
+      "bytes": 28666,
+      "width": 320,
+      "height": 320,
+      "format": "webp",
+      "alpha": true,
+      "id": "win",
+      "bakedText": false
+    },
+    {
+      "path": "public/assets/brand/honru/context-reactions-v1/contexts/honru-context-lose-v1.webp",
+      "sha256": "BBD91C7C0998F8A940D668C4EAE3C525AB87942216DB6E67599FACE5FFB59B44",
+      "bytes": 22124,
+      "width": 320,
+      "height": 320,
+      "format": "webp",
+      "alpha": true,
+      "id": "lose",
+      "bakedText": false
+    },
+    {
+      "path": "public/assets/brand/honru/context-reactions-v1/contexts/honru-context-draw-v1.webp",
+      "sha256": "5A1A9AE5C0CE4F08CBD288BA141B6182371AC2D82854ECAC54B2BDE9D15318BE",
+      "bytes": 14706,
+      "width": 320,
+      "height": 320,
+      "format": "webp",
+      "alpha": true,
+      "id": "draw",
+      "bakedText": false
+    },
+    {
+      "path": "public/assets/brand/honru/context-reactions-v1/contexts/honru-context-rematch-v1.webp",
+      "sha256": "36D315D25898E95164EFA4060A77F6A773DC51BB1680B14021B8DA5B05DE05FA",
+      "bytes": 15948,
+      "width": 320,
+      "height": 320,
+      "format": "webp",
+      "alpha": true,
+      "id": "rematch",
+      "bakedText": false
+    },
+    {
+      "path": "public/assets/brand/honru/context-reactions-v1/contexts/honru-context-celebration-v1.webp",
+      "sha256": "2DD6141287CAB6E1CA0ED2472ABF977BE19A5D7E4E54E256A39BB941D1A20A16",
+      "bytes": 34778,
+      "width": 320,
+      "height": 320,
+      "format": "webp",
+      "alpha": true,
+      "id": "celebration",
+      "bakedText": false
+    }
+  ],
+  "quickAtlas": {
+    "path": "public/assets/brand/honru/context-reactions-v1/honru-quick-atlas-v1.webp",
+    "sha256": "CC9E35D6A43E32779E3D85435D82ABE969D05DAD7B78DC95A70494BCFCE3BBE2",
+    "bytes": 241524,
+    "width": 1024,
+    "height": 1024,
+    "format": "webp",
+    "alpha": true,
+    "bakedText": false,
+    "columns": 4,
+    "rows": 4,
+    "cell": 256,
+    "cells": {
+      "quick_hello_a": {
+        "x": 0,
+        "y": 0,
+        "w": 256,
+        "h": 256,
+        "protocol_id": "quick_hello",
+        "variant": "A"
+      },
+      "quick_hello_b": {
+        "x": 256,
+        "y": 0,
+        "w": 256,
+        "h": 256,
+        "protocol_id": "quick_hello",
+        "variant": "B"
+      },
+      "quick_hello_c": {
+        "x": 512,
+        "y": 0,
+        "w": 256,
+        "h": 256,
+        "protocol_id": "quick_hello",
+        "variant": "C"
+      },
+      "quick_good_luck_a": {
+        "x": 768,
+        "y": 0,
+        "w": 256,
+        "h": 256,
+        "protocol_id": "quick_good_luck",
+        "variant": "A"
+      },
+      "quick_good_luck_b": {
+        "x": 0,
+        "y": 256,
+        "w": 256,
+        "h": 256,
+        "protocol_id": "quick_good_luck",
+        "variant": "B"
+      },
+      "quick_good_luck_c": {
+        "x": 256,
+        "y": 256,
+        "w": 256,
+        "h": 256,
+        "protocol_id": "quick_good_luck",
+        "variant": "C"
+      },
+      "quick_nice_a": {
+        "x": 512,
+        "y": 256,
+        "w": 256,
+        "h": 256,
+        "protocol_id": "quick_nice",
+        "variant": "A"
+      },
+      "quick_nice_b": {
+        "x": 768,
+        "y": 256,
+        "w": 256,
+        "h": 256,
+        "protocol_id": "quick_nice",
+        "variant": "B"
+      },
+      "quick_nice_c": {
+        "x": 0,
+        "y": 512,
+        "w": 256,
+        "h": 256,
+        "protocol_id": "quick_nice",
+        "variant": "C"
+      },
+      "quick_wow_a": {
+        "x": 256,
+        "y": 512,
+        "w": 256,
+        "h": 256,
+        "protocol_id": "quick_wow",
+        "variant": "A"
+      },
+      "quick_wow_b": {
+        "x": 512,
+        "y": 512,
+        "w": 256,
+        "h": 256,
+        "protocol_id": "quick_wow",
+        "variant": "B"
+      },
+      "quick_thanks_a": {
+        "x": 768,
+        "y": 512,
+        "w": 256,
+        "h": 256,
+        "protocol_id": "quick_thanks",
+        "variant": "A"
+      },
+      "quick_thanks_b": {
+        "x": 0,
+        "y": 768,
+        "w": 256,
+        "h": 256,
+        "protocol_id": "quick_thanks",
+        "variant": "B"
+      },
+      "quick_again_a": {
+        "x": 256,
+        "y": 768,
+        "w": 256,
+        "h": 256,
+        "protocol_id": "quick_again",
+        "variant": "A"
+      },
+      "quick_again_b": {
+        "x": 512,
+        "y": 768,
+        "w": 256,
+        "h": 256,
+        "protocol_id": "quick_again",
+        "variant": "B"
+      },
+      "quick_again_c": {
+        "x": 768,
+        "y": 768,
+        "w": 256,
+        "h": 256,
+        "protocol_id": "quick_again",
+        "variant": "C"
+      }
+    }
+  },
+  "reviewBoards": [
+    {
+      "path": "art-source/brand/ghost-game/honru/context-reactions-v1/review/honru-context-contact-sheet-v1.png",
+      "sha256": "6B167590466BAFE85AF19C7E61F86456691AE8CA373C83561232F5286F99DABA",
+      "bytes": 227447,
+      "width": 1280,
+      "height": 1280,
+      "format": "png",
+      "alpha": false,
+      "role": "context-contact-sheet"
+    },
+    {
+      "path": "art-source/brand/ghost-game/honru/context-reactions-v1/review/honru-quick-contact-sheet-v1.png",
+      "sha256": "CB093D7F9287D874E8669E14A45EE2718E8B96CC3C80888543F4AF57DA8F8D45",
+      "bytes": 183499,
+      "width": 1024,
+      "height": 1024,
+      "format": "png",
+      "alpha": false,
+      "role": "quick-contact-sheet"
+    },
+    {
+      "path": "art-source/brand/ghost-game/honru/context-reactions-v1/review/honru-context-reactions-poster-v1.png",
+      "sha256": "35691BEBF2731D5FE9D6DB7952B2D68D325B778B7A4628B2FB58612E4ABC421D",
+      "bytes": 208502,
+      "width": 1600,
+      "height": 900,
+      "format": "png",
+      "alpha": false,
+      "role": "family-poster"
+    }
+  ],
+  "featureFlags": {
+    "operator": "all",
+    "enabledValue": "1",
+    "defaultEnabled": true,
+    "ids": [
+      "mg_art_honru_context_reactions_v1",
+      "mg_art_honru_quick_stickers_v1"
+    ]
+  },
+  "metrics": {
+    "contextSourceCount": 16,
+    "runtimeContextCount": 16,
+    "quickSourceCount": 16,
+    "quickAtlasCellCount": 16,
+    "reviewBoardCount": 3,
+    "runtimeBytes": 629746,
+    "runtimeByteBudget": 2097152,
+    "withinBudget": true
+  },
+  "fallback": {
+    "context": "new context -> mapped P-HONRU-STATES-V1 state -> P-002-HONRU-MASCOT-V1 SVG",
+    "quick": "new quick atlas cell -> localized quick text; existing emoji path remains independent"
+  },
+  "a11y": "All bitmaps are decorative and contain no baked text; localized HTML labels remain authoritative.",
+  "authorityBoundary": "Presentation only. No protocol, Rule Authority, Reward, Replay, AI, Analytics, Direct Chat, Match Chat or persistence fields are added or changed."
+}

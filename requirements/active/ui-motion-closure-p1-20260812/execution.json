@@ -1,0 +1,37 @@
+{
+  "taskId": "ui-motion-closure-p1-20260812",
+  "status": "VERIFYING",
+  "startedAt": "2026-08-12T10:29:39+09:00",
+  "updatedAt": "2026-08-12T11:14:00+09:00",
+  "steps": [
+    "RECON completed by Master; three long-running Terra read-only audits were interrupted without adopting conclusions",
+    "gsap-core, gsap-timeline, gsap-performance, gsap-plugins, codebase-design, playroom-recon and playroom-plan read in full",
+    "UI-028 and TECH-054 reused; no new Requirement ID",
+    "deep module and cross-file contract frozen before implementation",
+    "three Terra Max implementation/review attempts returned no files or usable conclusion before bounded interruption; no unreviewed result was adopted",
+    "Master implemented and corrected the runtime after explicit CHANGE_REQUEST preserved synchronous route commit and next-frame focus compatibility",
+    "route motion specialized tests, Quality Gates and full npm test passed; deterministic double build recorded"
+  ],
+  "blocked": [],
+  "skipped": [
+    "browser visual verification: Codex MCP transport returns Transport closed before plugin initialization",
+    "independent Terra Max reviewer verdict unavailable after bounded attempts",
+    "second desktop browser",
+    "Android/iPhone/Tablet",
+    "real network shaping",
+    "commit/push/Pages/Render"
+  ],
+  "evidence": [
+    "node scripts/project-recon.js --check",
+    "public/src/core/02-app-shell.js:571-622",
+    "public/index-template.html:1518-1522,1873-1973",
+    "MOTION_TOKENS.json",
+    "requirements/active/gsap-motion-governance-p0-20260811",
+    "requirements/PRODUCT_REQUIREMENTS_LEDGER.json:UI-028,TECH-054",
+    "npm run test:route-motion (66 assertions plus syntax)",
+    "npm run quality:gates",
+    "npm test (176.6s)",
+    "public/index.html 1312603 characters / 1327152 bytes / SHA-256 1C802828EF5E799358F8199163428AD2BFBC5572CD90997999E82EC80B887DF3"
+  ],
+  "release": "LOCAL_ONLY_NO_COMMIT_NO_PUSH_NO_DEPLOY"
+}

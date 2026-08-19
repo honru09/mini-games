@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "taskId": "performance-budget-p1-20260813",
+  "status": "completed_local",
+  "verification": {
+    "specialized": ["node qa/performance-budget-contract.js"],
+    "pendingFinal": [],
+    "completedFinal": ["npm run test:performance-budget", "npm run reports:progress", "node qa/progress-ledger.js", "node qa/mainline-control-plane.js", "npm run quality:gates", "npm test (137.3s)", "node scripts/build.js", "git diff --check"]
+  },
+  "published": false,
+  "boundary": "性能预算治理合同与 QA；不修改产品运行时、游戏规则、协议、经济、数据库、素材 runtime 或线上配置。"
+}

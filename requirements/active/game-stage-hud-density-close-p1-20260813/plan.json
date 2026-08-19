@@ -1,0 +1,17 @@
+{
+  "taskId": "game-stage-hud-density-close-p1-20260813",
+  "requirements": ["GAME-048", "GAME-049", "GAME-050", "GAME-051", "GAME-052", "UI-027", "UI-028"],
+  "stage": "CLOSE",
+  "disposition": "NOW_CLOSURE",
+  "status": "COMPLETED_LOCAL_WITH_EXTERNAL_GATES_REMAINING",
+  "scope": "补齐六款 Game Stage 共享状态条、状态优先级与状态变化反馈；仅修改表现层 DOM/CSS、i18n 与可懒加载的 GSAP Motion Adapter，不修改规则、Authority、Protocol、Reward、Replay、数据库、公开字段或未审批美术 runtime。",
+  "steps": [
+    {"id":"HUD-1","status":"completed","title":"审计六款状态 rail 与共享 Game Stage 命令区"},
+    {"id":"HUD-2","status":"completed","title":"实现 State Strip、状态 kind 与响应式可读结构"},
+    {"id":"HUD-3","status":"completed","title":"接入 GSAP Core/Timeline 表现桥、reduced-motion 与清理合同"},
+    {"id":"HUD-4","status":"completed","title":"专项 QA、三语、构建与质量 Gate 回归"},
+    {"id":"HUD-5","status":"pending","title":"最新浏览器、第二浏览器、真机与真实网络可见验收"}
+  ],
+  "release": "LOCAL_ONLY_NO_COMMIT_NO_PUSH_NO_DEPLOY",
+  "boundary": "State Strip 与状态反馈是表现层；自动化通过不等于最新浏览器、真机、低端性能或生产发布证据。"
+}

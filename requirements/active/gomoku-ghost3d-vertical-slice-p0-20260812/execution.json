@@ -1,0 +1,50 @@
+{
+  "taskId": "gomoku-ghost3d-vertical-slice-p0-20260812",
+  "requirement": "TECH-049",
+  "status": "ACCEPTED_LOCAL_SINGLE_BROWSER_PARTIAL",
+  "implementationStatus": "implemented",
+  "updatedAt": "2026-08-17T18:40:17+09:00",
+  "runtimeFlag": "mg_ghost3d_gomoku_v1 === '1'",
+  "defaultEnabled": false,
+  "renderer": "Three.js r185 / 0.185.1",
+  "motion": "GSAP 3.15.0 core only",
+  "runtimeArt": "procedural-only",
+  "automatedEvidence": [
+    "node qa/tabletop-camera-rig-contract.js PASS",
+    "npm run test:gomoku-ghost3d PASS (ESM graph 55 / Renderer 84 / bridge / layout / cache)",
+    "node qa/tabletop-perspective-contract.js PASS",
+    "node qa/game-stage-density-process-gomoku.js PASS",
+    "node qa/ghost3d-foundation.js PASS",
+    "node qa/dom-smoke.js PASS",
+    "current build 1874091 characters / 1888634 bytes / SHA-256 D294FE21641DFDF4780E70335B6D73A84C1F35CD5D533373DF4ECE61A0973E28",
+    "npm run test:gomoku-ghost3d (ESM graph 55 / Renderer 78 / bridge / layout / cache)",
+    "npm run quality:gates",
+    "npm test (153.6s current build)",
+    "double build 1362068 characters / 1376602 bytes / SHA-256 BFBD2109B77B1F4C5E070DAB6B98C806E25AD621ACBE3E2E83AD5C5FB7130CAE"
+  ],
+  "visualEvidence": {
+    "class": "VISUAL_VERIFIED_SINGLE_BROWSER_PARTIAL_GATE_EVIDENCE",
+    "browser": "Codex in-app Chromium",
+    "url": "http://localhost:8080/#/games",
+    "scope": [
+      "default-off Wave B Canvas/keyboard/touch fallback",
+      "temporary local opt-in Three r185 BALANCED first successful render and ready canvas",
+      "real pointer/raycast selection routed into the existing Gomoku move path",
+      "AI reply after local move",
+      "CDP prefers-reduced-motion static playable opt-in path",
+      "console warn/error = 0"
+    ],
+    "revertedAfterVerification": [
+      "mg_ghost3d_gomoku_v1 removed",
+      "mg_ghost3d_gomoku_quality_v1 removed",
+      "CDP reduced-motion emulation cleared"
+    ],
+    "screenshotPolicy": "Ephemeral local screenshots were visually inspected during the session but are intentionally not listed as durable repository evidence; this JSON records only reproducible scope and outcome."
+  },
+  "cameraLanguageEvidence": "requirements/active/gomoku-ghost3d-vertical-slice-p0-20260812/evidence/camera-language-golden-slice-202608171840.json",
+  "httpEvidence": "localhost entry/ESM/Three/WebGL/GSAP/SW all 200 with text/javascript or text/html MIME",
+  "deviceEvidence": "NOT_EXECUTED: second desktop browser and physical Android/iPhone/Tablet",
+  "networkEvidence": "NOT_EXECUTED: real latency/jitter/loss/reordering and physical performance measurement",
+  "goldenSetEvidence": "NOT_EXECUTED",
+  "release": "LOCAL_ONLY_NO_COMMIT_NO_PUSH_NO_DEPLOY"
+}

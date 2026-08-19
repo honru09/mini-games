@@ -1,0 +1,13 @@
+# Progression Identity P1 冻结合同
+
+1. 称号只能由服务端权威 `wins` 派生；客户端 profile mutation 不得写入 `wins`、`totalWins` 或 `mastery`。
+2. 六款游戏固定使用 `1/10/50/100/1000` 五档；未知游戏和异常数值不得进入投影。
+3. 历史账号不新增数据库迁移或授予任务；相同 `wins` 必须始终得到相同称号，重复读取无副作用。
+4. 投影不得包含金币、XP、价格、owned、奖励或其他私有经济字段。
+5. 本人主页和公开 Profile 只展示当前已解锁称号及下一档目标；玩家原文与系统翻译继续隔离。
+6. 三语言 key 同构，移动端长称号允许安全换行；正式图片徽章必须逐族补齐稳定 ID/版本/SHA/provenance、机器技术/视觉/相似风险、fallback、feature flag 与回滚并取得 `OWNER_AUTHORIZED_ART_CLEARANCE`，之后才可进入可逆 default-on runtime。
+7. 不改 Reward、Supabase、规则、协议、AI、Replay；本批仅本地实现，不发布。
+8. 人工清稿、独立自然人 Reviewer B、IP/法律意见与逐资产 Golden Set 为 `OPTIONAL_ADVISORY_EVIDENCE / NOT_EXECUTED`；缺失不得阻塞图片徽章开发或 runtime，也不得伪造成 PASS。
+9. 外部 `blocked-license` / `EXTERNAL_REFERENCE_ONLY` 素材永久禁用；设备/网络/Supabase 只保留 `RELEASE_EVIDENCE_PENDING`，发布仍须当前用户明确命令。
+
+Historical-as-of（2026-08-10）：旧第 6 条要求正式图片徽章“必须单独通过人工/IP/Golden Set 审批”。该 candidate-only/default-off 人工前置仅保留为历史审计，不覆盖当前 owner-clearance 轨道。

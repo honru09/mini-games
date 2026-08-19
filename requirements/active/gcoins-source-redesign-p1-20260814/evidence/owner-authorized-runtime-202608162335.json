@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "taskId": "gcoins-source-redesign-p1-20260814",
+  "evidenceKind": "OWNER_AUTHORIZED_ART_CLEARANCE_LOCAL_RUNTIME",
+  "recordedAt": "2026-08-16T23:35:00+09:00",
+  "status": "LOCAL_ONLY / NOT_RELEASED",
+  "asset": {
+    "runtimeId": "P-GCOINS-ICON-V1",
+    "sourceAssetId": "ART-026-GCOINS-P1-CANDIDATE-B",
+    "artworkVersion": 1,
+    "sourcePath": "art-source/brand/ghost-game/currency/gcoins-p1-20260814/source/gcoins-p1-candidate-b-chroma.png",
+    "sourceSha256": "6a99bea413410f62520a2abe16ce3ab341c9e0337bd21a383350fc9f578dd04a",
+    "alphaPath": "art-source/brand/ghost-game/currency/gcoins-p1-20260814/alpha/gcoins-p1-candidate-b-alpha.png",
+    "alphaSha256": "d62909d4827d427d5e499299fb2a7e839866a3ddc9e7b701d53c3e1cc542854c",
+    "runtimePaths": {
+      "44": "public/assets/ui/currency/gcoins-v1/gcoins-icon-44-v1.png",
+      "64": "public/assets/ui/currency/gcoins-v1/gcoins-icon-64-v1.png",
+      "96": "public/assets/ui/currency/gcoins-v1/gcoins-icon-96-v1.png",
+      "192": "public/assets/ui/currency/gcoins-v1/gcoins-icon-192-v1.png"
+    },
+    "runtimeSha256": {
+      "44": "a4c2be71b239faeb90a298811942c72f68a8ab58de8d4ace8a6cfecbb8a9309e",
+      "64": "02af42f61f99e626747e35cda5198aabe0a4714cb6da42f84fc2c11da98fb648",
+      "96": "5f40724c81fef77ea067f48cdab5650231f701fc63f23c31e76d41ed7538fc25",
+      "192": "aac1ddc47eb931a612e1ef9acf97d1215ebbdb591e818ca0cfdc33b15d40f421"
+    },
+    "manifestPath": "public/assets/manifests/asset_manifest.json",
+    "clearanceRecord": "requirements/active/gcoins-source-redesign-p1-20260814/OWNER_AUTHORIZED_ART_CLEARANCE-20260816.md",
+    "featureFlag": "mg_art_gcoins_p1_v1",
+    "fallbackAssetId": "P-003"
+  },
+  "visualReview": {
+    "method": "Codex local visible inspection of source, Alpha, review board, and 44/64/96/192 derivatives",
+    "result": "acceptable_for_reversible_local_runtime",
+    "checks": [
+      "six-corner silhouette remains coherent",
+      "one left D-pad and four right buttons remain distinguishable at 44px",
+      "light/dark/checker review board has no visible green fringe or broken alpha",
+      "no text, watermark, extra token, or obvious generation artifact"
+    ],
+    "recordedRisks": [
+      "limited generated metallic highlight",
+      "common fire-plus-hex-badge visual vocabulary; similarity/legal review not executed"
+    ],
+    "humanCleanup": "NOT_EXECUTED",
+    "reviewerB": "NOT_EXECUTED",
+    "ipLegal": "NOT_EXECUTED",
+    "goldenSet": "NOT_EXECUTED"
+  },
+  "tests": {
+    "node qa/g-coins-contract.js": "PASS",
+    "node qa/g-coins-presentation.js": "PASS",
+    "node qa/g-coins-runtime.js": "PASS",
+    "node scripts/asset-library-audit.js": "PASS",
+    "node qa/asset-manifest-v2.js": "PASS",
+    "node qa/approval-gate-policy.js": "PASS",
+    "node qa/art-approval-matrix-contract.js": "PASS",
+    "node qa/mainline-control-plane.js": "PASS",
+    "node scripts/build.js --check": "PASS"
+  },
+  "build": {
+    "characters": 1866294,
+    "bytes": 1880837,
+    "sha256": "324922B8E8275D599B4D15FF83C1665C83155E4496BC9B9E3A4AE0A0C5B478E6",
+    "deterministicCheck": true
+  },
+  "releaseEvidencePending": [
+    "second real browser",
+    "physical Android/iPhone/Tablet",
+    "real network shaping",
+    "screen-reader device",
+    "explicit current user release command"
+  ]
+}

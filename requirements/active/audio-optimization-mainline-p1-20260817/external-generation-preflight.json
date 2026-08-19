@@ -1,0 +1,121 @@
+{
+  "schemaVersion": 1,
+  "preflightId": "AUDIO-EXTERNAL-GENERATION-PREFLIGHT-V1",
+  "task": "audio-optimization-mainline-p1-20260817",
+  "status": "NOT_READY_NOT_EXECUTED",
+  "checkedAt": "2026-08-18",
+  "checkedAtPrecision": "day",
+  "method": "read-only local environment, configured-tool inventory, upstream git ls-remote revision capture and local SKILL.md hashing; no model download or generation request",
+  "credentialPolicy": "presence-only; secret values are never read into or written to this file",
+  "sourceLockRegistry": "audio-candidate-register.json#sourceLocks",
+  "sourceLockStatus": "FIVE_USER_REQUESTED_SOURCES_PINNED_WITH_REVISION_AND_LOCAL_SKILL_HASH_WHERE_APPLICABLE",
+  "environment": {
+    "osGate": {
+      "observed": "Windows",
+      "audiocraftSupportedTarget": "Linux-or-macOS",
+      "status": "BLOCKED_PLATFORM_MATRIX"
+    },
+    "python": {
+      "version": "3.14.4",
+      "status": "BLOCKED_VERSION_MATRIX"
+    },
+    "gpu": {
+      "model": "RTX 2060",
+      "vramGb": 6,
+      "status": "OBSERVED_NOT_SUFFICIENT_TO_PROVE_GENERATION"
+    },
+    "ffmpeg": {
+      "present": false,
+      "status": "MISSING"
+    },
+    "pythonPackages": {
+      "audiocraft": false,
+      "torch": false,
+      "torchaudio": false,
+      "transformers": false,
+      "status": "MISSING"
+    }
+  },
+  "providers": {
+    "audiocraft": {
+      "candidateIds": ["AUDIOCRAFT-RESEARCH-SFX-TEXTURE-V1", "AUDIOCRAFT-RESEARCH-MUSIC-BED-V1"],
+      "credentialPresent": "OPTIONAL_ABSENT",
+      "requiredCredentialNames": [],
+      "optionalCredentialNames": ["HF_TOKEN", "HUGGINGFACE_HUB_TOKEN"],
+      "publicCheckpointAuthentication": "OPTIONAL_NON_BLOCKING",
+      "dependenciesReady": false,
+      "mcpAvailable": false,
+      "licenseStatus": "RESEARCH_ONLY_CC_BY_NC_4_0",
+      "generationStatus": "NOT_EXECUTED",
+      "nativeOutputPlan": {"AudioGenSampleRateHz": 16000, "MusicGenSampleRateHz": 32000, "deliverySampleRateHz": 44100, "resampleStatus": "PLANNED_NOT_EXECUTED"},
+      "reasonCodes": ["DEPENDENCIES_MISSING", "FFMPEG_MISSING", "PLATFORM_MATRIX_UNMET", "PYTHON_VERSION_MATRIX_UNMET", "GPU_MEMORY_NOT_PROVEN", "MODEL_LICENSE_BLOCKED"]
+    },
+    "elevenlabs": {
+      "candidateIds": ["ELEVENLABS-SFX-CORE-V1"],
+      "credentialPresent": false,
+      "requiredCredentialNames": ["ELEVENLABS_API_KEY"],
+      "dependenciesReady": "REMOTE_API_NOT_CHECKED",
+      "mcpAvailable": false,
+      "licenseStatus": "PROVIDER_TERMS_NOT_REVIEWED",
+      "generationStatus": "NOT_EXECUTED",
+      "reasonCodes": ["CREDENTIAL_MISSING", "NO_GENERATION_TOOL_CONFIGURED", "OUTPUT_RIGHTS_NOT_REVIEWED"]
+    },
+    "fal-ai": {
+      "candidateIds": ["FAL-AUDIO-SFX-VARIANTS-V1"],
+      "credentialPresent": false,
+      "requiredCredentialNames": ["FAL_KEY"],
+      "dependenciesReady": "REMOTE_API_NOT_CHECKED",
+      "mcpAvailable": false,
+      "licenseStatus": "PROVIDER_MODEL_TERMS_NOT_REVIEWED",
+      "generationStatus": "NOT_EXECUTED",
+      "reasonCodes": ["CREDENTIAL_MISSING", "MCP_UNAVAILABLE", "COST_ESTIMATE_NOT_RUN", "OUTPUT_RIGHTS_NOT_REVIEWED"]
+    },
+    "game-creator": {
+      "candidateIds": ["GAME-CREATOR-PROCEDURAL-DESIGN-REFERENCE-V1"],
+      "credentialPresent": "NOT_APPLICABLE",
+      "requiredCredentialNames": [],
+      "dependenciesReady": true,
+      "mcpAvailable": false,
+      "licenseStatus": "REFERENCE_ONLY_NO_THIRD_PARTY_BINARY",
+      "generationStatus": "NOT_APPLICABLE_REFERENCE_ONLY",
+      "reasonCodes": ["PROCEDURAL_RUNTIME_ALREADY_PROVIDED_BY_INTERNAL_ADAPTER"]
+    }
+  },
+  "observedSecrets": {
+    "FAL_KEY": false,
+    "ELEVENLABS_API_KEY": false,
+    "HF_TOKEN": false,
+    "HUGGINGFACE_HUB_TOKEN": false,
+    "recordedValues": false
+  },
+  "generationAudit": {
+    "requestsSent": false,
+    "providerJobIds": [],
+    "outputs": [],
+    "outputHashes": [],
+    "publicArtifacts": [],
+    "manifestCandidates": []
+  },
+  "runtimeSafetySnapshot": {
+    "publicAudioBinariesFound": false,
+    "unapprovedManifestAudioReferencesFound": false,
+    "providerSdkOrCredentialReferencesInPublic": false,
+    "candidatePromptsInPublic": false,
+    "proceduralFallbackRequired": true,
+    "sixGameFallbackContract": "unified-procedural-v1 + webaudio-fallback"
+  },
+  "nextGate": [
+    "provide required fal.ai and ElevenLabs credentials through environment-only secret injection; AudioCraft public checkpoint token remains optional",
+    "use a supported AudioCraft Linux/macOS environment and independently clear model license",
+    "run cost estimate before any fal job",
+    "generate into a source-only quarantine outside public/",
+    "archive actual output hash, provenance, license decision and reviewer evidence",
+    "promote only approved immutable files through Manifest + feature flag + rollback",
+    "re-run qa/audio-generation-governance.js and full audio/build gates"
+  ],
+  "nonClaims": [
+    "This preflight does not prove a provider outage; it records local absence of credentials/tools.",
+    "GPU presence does not prove AudioCraft compatibility or successful generation.",
+    "No external AI output was generated or imported."
+  ]
+}

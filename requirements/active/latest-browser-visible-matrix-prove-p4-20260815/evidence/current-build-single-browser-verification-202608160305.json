@@ -1,0 +1,105 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-08-16T03:05:07+09:00",
+  "claim": "historical_as_of_build_single_browser_visible_matrix",
+  "currency": "historical_as_of",
+  "scope": "single Codex in-app Chromium historical as-of build only",
+  "fullRouteMatrixCurrentBuild": false,
+  "build": {
+    "path": "public/index.html",
+    "sha256": "963F83511200AC16AA309EC1FA5BE243F01FB5CADD4DD5E2B41D7B718C8B686B",
+    "characters": 1597548,
+    "bytes": 1612091,
+    "httpMirrors": ["http://localhost:8080/"]
+  },
+  "environment": {
+    "browserSurface": "Codex in-app Chromium",
+    "browserCount": 1,
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
+    "platform": "Win32",
+    "url": "http://localhost:8080/",
+    "accountType": "existing formal QA account; no account creation",
+    "deviceEvidenceKind": "CSS viewport emulation only"
+  },
+  "routeMatrix": [
+    {"name":"desktop","width":1440,"height":900,"routes":["home","games","playline","profile"],"horizontalOverflowMax":0,"rawKeyCountMax":0,"scrollYMax":0,"desktopNav":true,"mobileNav":false},
+    {"name":"tablet-landscape","width":1024,"height":768,"routes":["home","games","playline","profile"],"horizontalOverflowMax":0,"rawKeyCountMax":0,"scrollYMax":0,"desktopNav":true,"mobileNav":false},
+    {"name":"tablet-portrait","width":768,"height":1024,"routes":["home","games","playline","profile"],"horizontalOverflowMax":0,"rawKeyCountMax":0,"scrollYMax":0,"desktopNav":true,"mobileNav":false},
+    {"name":"phone-portrait","width":390,"height":844,"routes":["home","games","playline","profile"],"horizontalOverflowMax":0,"rawKeyCountMax":0,"scrollYMax":0,"desktopNav":false,"mobileNav":true},
+    {"name":"phone-landscape","width":844,"height":390,"routes":["home","games","playline","profile"],"horizontalOverflowMax":0,"rawKeyCountMax":0,"scrollYMax":0,"desktopNav":true,"mobileNav":false}
+  ],
+  "deepScroll": {
+    "viewport": {"width":390,"height":844},
+    "profileBeforeRouteChange": 1600,
+    "crossRouteTarget": "games",
+    "crossRouteScrollY": 0,
+    "gamesBeforeSameRouteSelection": 1200,
+    "sameRouteScrollY": 0,
+    "historyAndInitialHashOptOut": "covered by qa/route-scroll-plural.js",
+    "gameStageIndependentScroll": "unchanged and regression-covered"
+  },
+  "surfaces": {
+    "profile": {"visible":true,"balanceAria":"1 G Coins","balanceComposite":true,"rawKeyCount":0,"horizontalOverflow":0},
+    "directMessages": {"dialog":true,"status":"消息服务已连接","rawKeyCount":0,"horizontalOverflow":0,"closeHidesDialog":true},
+    "shop": {"dialog":true,"sampleAmounts":["1 G Coins","10 G Coins","12 G Coins","14 G Coins","16 G Coins","18 G Coins"],"rawKeyCount":0,"horizontalOverflow":0,"closeHidesDialog":true},
+    "achievements": {"dialog":true,"name":"🏆 成就","rawKeyCount":0,"horizontalOverflow":0,"closeRemovesDialog":true},
+    "roomLobby": {"visible":true,"connectionStatus":"已连接服务器，可创建或加入房间","playerRows":68,"sampleAmounts":["1 G Coins"],"rawKeyCount":0,"horizontalOverflow":0}
+  },
+  "gameStages": [
+    {"game":"五子棋","id":"gomoku","seatCount":2,"stage":true,"arena":true,"command":true,"back":true,"scrollY":0,"horizontalOverflow":0,"rawKeyCount":0},
+    {"game":"飞行棋","id":"ludo","seatCount":2,"stage":true,"arena":true,"command":true,"back":true,"scrollY":0,"horizontalOverflow":0,"rawKeyCount":0},
+    {"game":"迷你大富翁","id":"monopoly","seatCount":2,"stage":true,"arena":true,"command":true,"back":true,"scrollY":0,"horizontalOverflow":0,"rawKeyCount":0},
+    {"game":"坦克大战","id":"tank","seatCount":2,"stage":true,"arena":true,"command":true,"back":true,"scrollY":0,"horizontalOverflow":0,"rawKeyCount":0},
+    {"game":"俄罗斯方块","id":"tetris","seatCount":2,"stage":true,"arena":true,"command":true,"back":true,"scrollY":0,"horizontalOverflow":0,"rawKeyCount":0},
+    {"game":"象棋","id":"xiangqi","seatCount":2,"stage":true,"arena":true,"command":true,"back":true,"scrollY":0,"horizontalOverflow":0,"rawKeyCount":0}
+  ],
+  "monopolyResponsive": [
+    {"viewport":"390x844","density":"compact","frameWidth":292,"cells":24,"visualLabels":"hidden","propertyGlyph":"grid","centerHud":"hidden","diceCount":1,"diceParent":"monopoly-wave-b-command","propertyAria":"蓝湾 · ¥300","propertyTitle":"蓝湾 · ¥300","horizontalOverflow":0,"scrollY":0},
+    {"viewport":"844x390","density":"micro","frameWidth":166,"cells":24,"visualLabels":"hidden","propertyGlyph":"grid","centerHud":"hidden","diceCount":1,"diceParent":"monopoly-wave-b-command","propertyAria":"蓝湾 · ¥300","propertyTitle":"蓝湾 · ¥300","horizontalOverflow":0,"scrollY":0}
+  ],
+  "languageTheme": {
+    "languages": [
+      {"lang":"zh-CN","rawKeyCount":0},
+      {"lang":"en-US","visibleRecords":["1 game · 1 win · 100%","2 games · 0 wins · 0%"],"rawKeyCount":0},
+      {"lang":"uk-UA","visibleRecords":["1 гра · 1 перемога · 100%","2 гри · 0 перемог · 0%"],"rawKeyCount":0}
+    ],
+    "pluralRegressionCounts": [1,2,5,11,21,22,25],
+    "pluralRegressionFamilies": ["games","wins","remaining_wins","profile_played_together"],
+    "themes": [
+      {"theme":"light","horizontalOverflow":0},
+      {"theme":"dark","horizontalOverflow":0},
+      {"theme":"light","restored":true}
+    ]
+  },
+  "reducedMotion": {
+    "emulated": true,
+    "matched": true,
+    "homeAmbientAnimation": "none",
+    "routeTransitionDuration": "1e-05s",
+    "route": "games",
+    "horizontalOverflow": 0,
+    "scrollY": 0,
+    "rawKeyCount": 0,
+    "resetAfterCapture": true
+  },
+  "forcedColors": {
+    "emulated": true,
+    "matched": true,
+    "brandDisplay": "flex",
+    "brandVisibility": "visible",
+    "horizontalOverflow": 0,
+    "rawKeyCount": 0,
+    "resetAfterCapture": true
+  },
+  "gCoins": {
+    "profileComposite": {"aria":"1 G Coins","visibleText":"1"},
+    "shopSampleAria": ["1 G Coins","10 G Coins","12 G Coins","14 G Coins","16 G Coins","18 G Coins"],
+    "leaderboardAtomicAmountsVisible": true,
+    "roomLobbyPlayerAtomicAmountsVisible": true,
+    "rawKeyCount": 0
+  },
+  "console": {"warnErrorAfterCapture":0,"exceptionsObserved":0},
+  "cleanup": {"viewportReset":true,"mediaReset":true,"finalViewport":{"width":1280,"height":720},"finalRoute":"home","theme":"light","lang":"zh-CN","gameActive":false,"dialogCount":0,"scrollY":0},
+  "notGranted": ["second_browser","physical_android","physical_iphone","physical_tablet","real_network_shaping","two_formal_friend_dm_browsers","physical_performance_audio_recovery","production_verification","real_supabase","human_art_review","release"],
+  "gateDisposition": "GATE-DEVICE-BROWSER-NETWORK remains BLOCKED"
+}

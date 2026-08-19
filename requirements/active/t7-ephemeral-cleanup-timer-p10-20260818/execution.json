@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "task": "t7-ephemeral-cleanup-timer-p10-20260818",
+  "state": "VERIFIED_LOCAL",
+  "recordedAt": "2026-08-18T21:41:00+09:00",
+  "implemented": [
+    "server/index.js ephemeral cleanup uses per-UID ServerClockTimer lease",
+    "qa/timer-audit.js owner/cancel/no-native-timeout regression contract"
+  ],
+  "verified": [
+    "node --check server/index.js",
+    "node qa/timer-audit.js (TIMER_AUDIT_ALL_PASS)",
+    "node --experimental-websocket qa/ghost-auth-online.js (GHOST_AUTH_ONLINE_ALL_PASS)",
+    "node qa/connection-route-resilience.js (CONNECTION_ROUTE_RESILIENCE_ALL_PASS)",
+    "node --experimental-websocket qa/e2e-online.js (E2E_ALL_PASS)",
+    "node scripts/build.js --check (chars=2077538 utf8Bytes=2092161 sha256=82D85384C5AF1061B3B60E5BB197E9F75A9A57FCD10DD30096E2C88C248FE90E)",
+    "npm run quality:gates (QUALITY_GATES_FAST_ALL_PASS)",
+    "npm test (exit 0; complete pretest/test/posttest chain)",
+    "git diff --check"
+  ],
+  "pending": [],
+  "notExecuted": [
+    "remaining lifecycle/heartbeat/outbox/gameplay/transport timer owners",
+    "current browser/second browser/physical devices/real network",
+    "real Supabase/RLS/concurrency/backup/restore/multi-instance",
+    "commit/push/GitHub Pages/Render/deploy"
+  ],
+  "scopeLimit": "Guest ephemeral cleanup timer ownership only; no account wire or persistence policy change",
+  "release": "LOCAL_ONLY / NOT_RELEASED"
+}

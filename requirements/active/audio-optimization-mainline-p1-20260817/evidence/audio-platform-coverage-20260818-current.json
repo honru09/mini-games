@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "evidenceId": "AUDIO-PLATFORM-COVERAGE-20260818-CURRENT",
+  "capturedAt": "2026-08-18T22:49:33.1643406+09:00",
+  "verifiedAt": "2026-08-18T23:00:27.9306824+09:00",
+  "currency": "current_local_capture",
+  "status": "PASS_WITH_SHARED_GATES_PENDING",
+  "build": {
+    "path": "public/index.html",
+    "characters": 2077538,
+    "bytes": 2092161,
+    "sha256": "1CFC9A4E7D2F5CB16B7180437D6BA8080E0338B42E73AA614E4568CE51C31ACB",
+    "identitySemantics": "current mutable shared-worktree snapshot; audio source/build presence was verified at capture, but this is not a commit or release identity"
+  },
+  "coverage": {
+    "totalCues": 84,
+    "toneFamilies": 56,
+    "musicBeds": 3,
+    "newPlatformCues": 13,
+    "platformAssertions": 8,
+    "areas": [
+      "settings/theme/language/volume",
+      "shop purchase success/error/timeout",
+      "equip commits",
+      "social accepted/rejected mutations",
+      "Playline publish/remove/error",
+      "match expression and match chat",
+      "daily reward-bearing claim with claim-id dedupe",
+      "profile save"
+    ]
+  },
+  "commands": [
+    {"command": "npm run test:audio", "status": "pass", "summary": "84 cues; 56 tone families; 3 music beds; AUDIO_PLATFORM_COVERAGE_ALL_PASS assertions=8 cues=13"},
+    {"command": "node qa/audio-platform-coverage.js", "status": "pass", "summary": "AUDIO_PLATFORM_COVERAGE_ALL_PASS assertions=8 cues=13"},
+    {"command": "node scripts/build.js --check", "status": "pass", "characters": 2077538, "bytes": 2092161, "sha256": "1CFC9A4E7D2F5CB16B7180437D6BA8080E0338B42E73AA614E4568CE51C31ACB"},
+    {"command": "npm run test:e2e", "status": "pass", "summary": "E2E_ALL_PASS on the current capture"},
+    {"command": "npm run quality:gates", "status": "blocked_shared_worktree", "summary": "audio gates pass; shared rerun reports Room Presence boundary drift, stale TECH-027 report identity, renderer cache/PWA cache contract drift and other non-audio renderer-batch failures"},
+    {"command": "node qa/progress-ledger.js", "status": "blocked_shared_worktree", "summary": "TECH-027 generated report does not contain the current build identity"},
+    {"command": "node qa/brief-report-contract.js", "status": "pass", "summary": "BRIEF_REPORT_CONTRACT_ALL_PASS reports=89"},
+    {"command": "node qa/mainline-control-plane.js", "status": "pass", "summary": "MAINLINE_CONTROL_PLANE_ALL_PASS requirements=242"}
+  ],
+  "claims": [
+    "the current deterministic build still contains GhostAudioRuntime, emitUiAudioCue and all 13 new platform cue call sites",
+    "audio-specific inventory, Authority, privacy, generation governance, runtime, tone-profile and platform coverage contracts pass",
+    "current online E2E passes without changing Rule, Authority, Protocol, Reward, Replay, AI, Chat or database boundaries",
+    "the shared quality/progress failures are recorded as non-audio worktree drift and are not silently promoted to audio failures",
+    "this evidence does not claim audible quality, second-browser/device/PWA recovery, real network, production Supabase, external generated binaries, or release readiness"
+  ],
+  "externalGates": {
+    "audiocraft": "NOT_EXECUTED",
+    "elevenlabs": "NOT_EXECUTED",
+    "falAi": "NOT_EXECUTED",
+    "secondBrowser": "NOT_EXECUTED",
+    "physicalDevices": "NOT_EXECUTED",
+    "pwaLockScreenAndOutputSwitch": "NOT_EXECUTED",
+    "realNetwork": "NOT_EXECUTED",
+    "productionSupabase": "NOT_EXECUTED",
+    "commitPushDeploy": "NOT_EXECUTED"
+  },
+  "sharedWorktreeNote": {
+    "status": "OPEN_UNRELATED_TO_AUDIO",
+    "failuresObserved": [
+      "Room Presence boundary tournament rollback assertion",
+      "TECH-027 generated report missing current build identity",
+      "renderer cache contracts for Gomoku/Ludo/Monopoly/Xiangqi/Tetris/Tank",
+      "PWA offline i18n renderer-cache version assertion"
+    ],
+    "boundary": "Renderer entry, loader, Service Worker, PWA, Room Presence and generated TECH-027 report files were not changed by the audio closure. Their current-batch owners must repair the shared drift before a full project quality-gates PASS can be claimed."
+  }
+}

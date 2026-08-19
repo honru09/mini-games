@@ -1,0 +1,11 @@
+{
+  "module": "server/boundaries/room-presence.js",
+  "interface": ["room(command)", "presence(command)"],
+  "adapters": ["createJsonRuntimeRoomPresenceAdapter", "createMemoryRoomPresenceAdapter"],
+  "caller": "server/index.js",
+  "qa": "qa/room-presence-boundary.js",
+  "sharedRequirements": ["TECH-040", "TECH-052"],
+  "invariants": ["capacity_2_to_5", "lowest_empty_seat_then_compact", "host_transfer_and_ai_controller", "detached_token_bound_resume", "presence_privacy_heartbeat_fail_closed", "pure_projection_no_canonical_write", "deep_frozen_dto", "atomic_multi_source_multi_target_rehome", "unified_spectate_left", "bounded_single_recovery_queue"],
+  "regressionEvidence": ["canonical_adapter_reference", "old_session_cleanup", "stale_resume_rejection", "duplicate_room_and_active_session_retire_fail_closed", "multi_room_rollback_receipt", "tournament_quarantine_recovery", "error_fail_closed"],
+  "forbidden": ["wire mutation", "authority mutation", "reward mutation", "Supabase production write", "external asset runtime"]
+}

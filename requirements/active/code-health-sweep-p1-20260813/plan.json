@@ -1,0 +1,17 @@
+{
+  "taskId": "code-health-sweep-p1-20260813",
+  "requirements": ["TECH-040"],
+  "stage": "CLOSE",
+  "disposition": "NOW_CLOSURE",
+  "status": "COMPLETED_LOCAL_WITH_CONTINUOUS_HEALTH_GATE",
+  "scope": "只审计源码、脚本入口、Flag、QA 注册、资产引用与文档漂移；发现缺陷时仅做可回归的本地治理修复。",
+  "in": ["stale flags", "orphan scripts", "asset/runtime manifest references", "package QA entry consistency", "local status/report drift"],
+  "out": ["game rules", "protocol", "reward/economy", "database/Supabase", "unapproved art runtime", "commit/push/deploy"],
+  "steps": [
+    {"id":"HEALTH-1","status":"completed","title":"RECON 仓库健康面与历史临时文件"},
+    {"id":"HEALTH-2","status":"completed","title":"建立可重复的健康扫描证据"},
+    {"id":"HEALTH-3","status":"completed","title":"修复确认的本地治理漂移并回归"},
+    {"id":"HEALTH-4","status":"completed","title":"同步台账、报告和三日志"}
+  ],
+  "release": "LOCAL_ONLY_NO_COMMIT_NO_PUSH_NO_DEPLOY"
+}

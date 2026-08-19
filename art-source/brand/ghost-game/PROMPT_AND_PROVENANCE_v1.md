@@ -3,6 +3,10 @@
 记录时间：2026-08-08 20:54 +09:00
 用途：P0 品牌标识与 Honru 概念探索归档。
 
+## 2026-08-16 治理同步
+
+原创 Ghost-native 候选不再等待人工清稿、自然人 Reviewer B、IP/法律意见或逐资产 Golden Set 才能继续开发。候选在 M0 North Star、稳定 ID/版本/SHA/provenance、机器技术/视觉/相似风险审查、fallback、feature flag 与回滚齐全后，可取得 `OWNER_AUTHORIZED_ART_CLEARANCE` 并进入可逆 default-on runtime。上述人工项目是 `OPTIONAL_ADVISORY_EVIDENCE`，缺失不得阻塞，也不得冒充 PASS。外部 `blocked-license` / `EXTERNAL_REFERENCE_ONLY` 素材永久禁用；任何发布仍须当前用户明确命令。
+
 ## Ghost Game Mark / Wordmark
 
 - 资产 ID：`brand.ghost-game.mark.v1`、`brand.ghost-game.wordmark.v1`
@@ -35,7 +39,7 @@ It must remain identifiable at 24px and reverse cleanly between black and white.
 - SHA-256：`d1c9b2486e82bc5d7e94df90f1182e285e2f5b59ba788b9896a14bca112c1da9`
 - 尺寸 / 像素格式：`1254×1254` / `24-bit RGB`，没有真实 Alpha；可见棋盘格属于像素内容。
 - 来源：Codex 内置图像生成，项目自有生成结果；没有输入第三方图片。
-- 运行时状态：`SOURCE_ONLY / DO_NOT_SHIP`。
+- 当前状态：该 2026-08-08 生成候选仍因伪透明棋盘格、无真实 Alpha 与小尺寸复杂度而未取得逐族 `OWNER_AUTHORIZED_ART_CLEARANCE`，继续只作来源/失败分析，不进入 runtime。`SOURCE_ONLY / DO_NOT_SHIP` 是该具体缺陷候选的 historical-as-of 原始结论，不是人工审查前置政策。
 
 原始逐字 Prompt 未嵌入 PNG，不能从文件恢复。以下为依据生成意图整理的可复现规范化 Prompt，不冒充原始逐字记录：
 
@@ -56,7 +60,7 @@ Provide generous safe area for later manual cleanup and animation separation.
 
 1. 候选图的棋盘格是伪透明背景，且文件无 Alpha；必须重新抠图或重绘。
 2. 火焰外沿、手部、投影和局部灰阶偏复杂，不适合作为 24–64px 标识。
-3. 在进入运行时前需完成手工闭线、真正透明底、三档尺寸重修形、动作分层与第二位 IP reviewer 签字。
+3. 在进入运行时前需完成可复核的闭线、真正透明底、三档尺寸修形、动作分层、机器相似风险审查、fallback/flag/回滚并取得 `OWNER_AUTHORIZED_ART_CLEARANCE`；人工清稿、第二位 Reviewer 与 IP/法律意见只作为可选咨询。
 4. 禁止把用户参考截图、商业游戏表情或第三方角色作为编辑输入。
 
 ## Honru 确定性运行时母版
@@ -67,7 +71,9 @@ Provide generous safe area for later manual cleanup and animation separation.
 - SHA-256：`42c6442efc3d86ef6d939d936bff3c83a59c46c63002fa817ea4551da3a2de64`（母版与运行时副本一致）
 - 来源：从空白画布手工构造的确定性 SVG；未描摹、未矢量化生成式候选，也没有使用用户截图或第三方图像作为编辑输入。
 - 设计约束：黑白双值、闭合路径、左眼十字键、右眼四点键、通用小弧笑、幽灵火焰外轮廓与简化双手；无服饰、徽记、武器、文字、滤镜或外链。
-- 运行时状态：`P0_ALLOWED`；正式商标/角色注册前仍需独立 Reviewer B。
+- 运行时状态：`P0_ALLOWED`；独立 Reviewer B 与商标/IP 法律意见可补充风险建议，但不是现有确定性 SVG runtime 或后续 owner-cleared 候选的开发前置。
+
+Historical-as-of（2026-08-08）：本记录最初把“正式商标/角色注册前仍需独立 Reviewer B”和人工清理写成准入条件。该旧 candidate-only 审查顺序保留用于解释当时决策，不覆盖当前 `OWNER_AUTHORIZED_ART_CLEARANCE` 政策。
 
 ## 拒绝资产
 

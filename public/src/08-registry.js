@@ -15,8 +15,10 @@ if (typeof module !== 'undefined' && module.exports){
 }
 
 if (typeof document !== 'undefined'){
+  if (typeof initUnifiedAudioRuntime === 'function') initUnifiedAudioRuntime();
   initAssetFallbacks();
   initStaticPlatformIcons();
+  if (typeof initAuthArtRuntime === 'function') initAuthArtRuntime();
   loadRoster();
   renderMe();
   renderLeaderboard();

@@ -5,7 +5,7 @@ services:
     name: mini-games-online
     runtime: node
     plan: free
-    # Reward Resolver 当前由单个 Node 写入者计算；扩容前必须先完成数据库版本冲突重算。
+    # Cluster/PubSub 工程基线已具备，但真实 Supabase 迁移、恢复演练和并发验收通过前仍固定单实例。
     numInstances: 1
     rootDir: .
     buildCommand: npm install
@@ -21,5 +21,18 @@ services:
         sync: false
       - key: DEEPSEEK_KEY
         sync: false
+      # 测试管理员只由服务端环境变量精确绑定；值必须在 Dashboard/API 中单独写入，禁止进入仓库。
+      - key: TEST_ADMIN_ENABLED
+        sync: false
+      - key: TEST_ADMIN_UID
+        sync: false
+      - key: TEST_ADMIN_USERNAME
+        sync: false
+      - key: TEST_ADMIN_PASSWORD
+        sync: false
+      - key: ENABLE_CLUSTER_COORDINATION
+        value: "0"
+      - key: TETRIS_GUIDELINE_SCORING
+        value: "1"
       - key: ALLOWED_ORIGINS
         value: https://honru09.github.io

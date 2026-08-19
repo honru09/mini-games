@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "taskId": "ui-repair-p07-profile-loading-p0-20260810",
+  "owners": {
+    "implementation": ["public/src/shop/05-profile.js", "public/src/online/03-websocket.js", "public/locales/zh-CN.json", "public/locales/en-US.json", "public/locales/uk-UA.json", "qa/ui-profile-loading-contract.js", "package.json"],
+    "integration": ["public/index-template.html", "public/index.html", "PROJECT_STATUS.json", "requirements/PRODUCT_REQUIREMENTS_LEDGER.json", "AGENTS.md", "README.md", "WHITEPAPER.md", "LOG-新增.md", "LOG-修改.md", "LOG-删除.md", "简易报告/*"]
+  },
+  "forbidden": ["server/**", "supabase/**", "shared/rules/**", "art-source/**", "public/assets/manifests/asset_manifest.json"]
+}

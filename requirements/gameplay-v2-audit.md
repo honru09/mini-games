@@ -69,10 +69,11 @@
 ## 6. 仍然明确未完成的事项
 
 1. 提供真实 `SUPABASE_URL` 与仅服务端 `service_role` secret，执行 schema 迁移、并发/RLS/备份/回滚验收。
-2. 将赛事编排层与生产赛程、自动建桌、单盘结果回传完全打通。
-3. 完整 Tetris Rule Replay Authority、延迟观战回放和赛季系统。
-4. 好友关系、聊天/举报/屏蔽，以及微信小程序、App、桌面发行。
-5. 多实例部署前，把 Reward Resolver 与 AI 学习 outbox 迁移为数据库内版本冲突重算或单写者架构。
+2. Tetris v3 已完成 T-Spin/B2B/Combo/Perfect Clear 高级战斗子集；仍缺 T-Spin Mini/逐格 Drop 分等完整 Guideline 余项、高级延迟观战回放和赛季系统。
+3. 执行当前版本第二桌面浏览器、Android、iPhone、Tablet、真实网络整形与 30 分钟会话矩阵。
+4. 冻结远端素材库提供商、桶、CORS、生命周期与成本后再执行外部上传。
+5. 数据库租约/fencing、Direct Chat ID-only PubSub 与指标快照工程基线已实现；多实例部署前仍需真实 Supabase 并发、Reward/AI 分布式 outbox 和外部遥测接收端验收。
+6. PWA 基线已实现；微信小程序、原生 App 与桌面商店发行仍需账户/证书/真机。
 
 ## 7. 维护规则
 

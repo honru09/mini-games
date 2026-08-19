@@ -1,7 +1,15 @@
 ﻿node_modules/
 data/
+.tmp-chrome-wavec/
+.codex-tmp/
 *.log
 .codex-tmp/
+.ops-backups/
+.release-work/
+.env
+.env.*
+!.env.example
+*.dump
 
 # 工具生成物与 Office 临时锁文件不进入版本库
 __pycache__/

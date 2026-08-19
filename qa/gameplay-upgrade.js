@@ -9,6 +9,10 @@ const ROOT = path.join(__dirname, '..');
 const UTILS = fs.readFileSync(path.join(ROOT, 'public', 'src', 'core', '01-utils.js'), 'utf8');
 const ASSETS = fs.readFileSync(path.join(ROOT, 'public', 'src', 'core', '06-assets.js'), 'utf8');
 const FRAMEWORK = fs.readFileSync(path.join(ROOT, 'public', 'src', 'core', '03-game-framework.js'), 'utf8');
+const INPUT_GATE = fs.readFileSync(path.join(ROOT, 'public', 'src', 'core', '16-gameplay-input-gate.js'), 'utf8');
+const FEEDBACK_BUS = fs.readFileSync(path.join(ROOT, 'public', 'src', 'core', '15-feedback-bus.js'), 'utf8');
+const LOCAL_FEEDBACK_ADAPTER = fs.readFileSync(path.join(ROOT, 'public', 'src', 'core', '17-local-feedback-adapter.js'), 'utf8');
+const TANK_PREDICTION_ADAPTER = fs.readFileSync(path.join(ROOT, 'public', 'src', 'core', '20-tank-prediction-adapter.js'), 'utf8');
 const TETRIS_RULES = fs.readFileSync(path.join(ROOT, 'shared', 'rules', 'tetris.js'), 'utf8');
 const ONLINE_SOURCE = fs.readFileSync(path.join(ROOT, 'public', 'src', 'online', '03-websocket.js'), 'utf8');
 const TEMPLATE = fs.readFileSync(path.join(ROOT, 'public', 'index-template.html'), 'utf8');
@@ -59,6 +63,7 @@ function findText(root,text){
 function harness(file,factory,count,settings){
   settings=settings||{};
   const area=makeElement('div'),extra=makeElement('div'),body=makeElement('body'),docListeners={};
+  const audioStats={contexts:0,oscillators:0,panners:[],resumes:0,closes:0};
   const document={body,documentElement:makeElement('html'),createElement:makeElement,getElementById:id=>id==='toast-wrap'?body:null,querySelectorAll:()=>[],
     addEventListener(type,fn){(docListeners[type]=docListeners[type]||[]).push(fn);},removeEventListener(){},
     dispatch(type,event){for(const fn of docListeners[type]||[])fn(event||{});}};
@@ -66,9 +71,62 @@ function harness(file,factory,count,settings){
     location:{protocol:'http:',host:'localhost:8080'},setTimeout,clearTimeout,setInterval,clearInterval,AbortController,AbortSignal,
     fetch:async(_url,init)=>{const request=JSON.parse(String(init&&init.body||'{}'));return{ok:true,status:200,json:async()=>({choice:request.options&&request.options[0]})};},
     __area:area,__extra:extra};
+  if(settings.trackFeedbackBus)sandbox.AudioContext=function FakeAudioContext(){
+    audioStats.contexts++;this.currentTime=0;this.destination={};
+    this.resume=()=>{audioStats.resumes++;};this.close=()=>{audioStats.closes++;};
+    this.createOscillator=()=>{audioStats.oscillators++;return{frequency:{setValueAtTime(){}},connect(){},disconnect(){},start(){},stop(){},onended:null};};
+    this.createGain=()=>({gain:{setValueAtTime(){}},connect(){},disconnect(){}});
+    this.createStereoPanner=()=>{const record={value:0};audioStats.panners.push(record);return{pan:{setValueAtTime(value){record.value=value;}},connect(){},disconnect(){}};};
+  };
   sandbox.window={devicePixelRatio:1,location:sandbox.location,matchMedia:query=>({matches:!!settings.reducedMotion&&query==='(prefers-reduced-motion: reduce)'})};
   const context=vm.createContext(sandbox);
   vm.runInContext(UTILS,context,{filename:'01-utils.js'});vm.runInContext(ASSETS,context,{filename:'06-assets.js'});
+  vm.runInContext(FEEDBACK_BUS,context,{filename:'15-feedback-bus.js'});
+  vm.runInContext(INPUT_GATE,context,{filename:'16-gameplay-input-gate.js'});
+  vm.runInContext(LOCAL_FEEDBACK_ADAPTER,context,{filename:'17-local-feedback-adapter.js'});
+  vm.runInContext(TANK_PREDICTION_ADAPTER,context,{filename:'20-tank-prediction-adapter.js'});
+  if(settings.trackInputGate)vm.runInContext(`
+    globalThis.__inputGateStats={creates:0,resets:0,submits:0,flushes:0,disposes:0,lastIntent:null};
+    const __originalInputGateCreate=GameplayInputGate.create;
+    globalThis.GameplayInputGate=Object.freeze({create(options){
+      __inputGateStats.creates++;
+      const gate=__originalInputGateCreate(options);
+      return Object.freeze({
+        reset(config){__inputGateStats.resets++;return gate.reset(config);},
+        submit(intent){__inputGateStats.submits++;__inputGateStats.lastIntent=JSON.parse(JSON.stringify(intent));return gate.submit(intent);},
+        flush(){__inputGateStats.flushes++;return gate.flush();},
+        dispose(){__inputGateStats.disposes++;return gate.dispose();}
+      });
+    }});
+  `,context,{filename:'input-gate-observer.js'});
+  if(settings.trackFeedbackBus)vm.runInContext(`
+    globalThis.__feedbackBusStats={creates:0,emits:0,lastCue:null};
+    const __originalFeedbackBusCreate=FeedbackBus.create;
+    globalThis.FeedbackBus=Object.freeze({create(options){
+      __feedbackBusStats.creates++;
+      const bus=__originalFeedbackBusCreate(options);
+      return Object.freeze({
+        emit(cue){__feedbackBusStats.emits++;__feedbackBusStats.lastCue=JSON.parse(JSON.stringify(cue));return bus.emit(cue);},
+        subscribe(listener){return bus.subscribe(listener);},
+        setEnvironment(patch){return bus.setEnvironment(patch);},
+        dispose(){return bus.dispose();}
+      });
+    }});
+  `,context,{filename:'feedback-bus-observer.js'});
+  if(settings.trackPrediction)vm.runInContext(`
+    globalThis.__predictionStats={creates:0,submits:0,accepts:0,resets:0,disposes:0,lastSubmit:null,lastAccept:null};
+    const __originalPredictionCreate=TankPredictionAdapter.create;
+    globalThis.TankPredictionAdapter=Object.freeze({create(options){
+      __predictionStats.creates++;
+      const adapter=__originalPredictionCreate(options);
+      return Object.freeze({
+        submitLocalInput(command){__predictionStats.submits++;__predictionStats.lastSubmit=JSON.parse(JSON.stringify(command));return adapter.submitLocalInput(command);},
+        acceptAuthority(snapshot){__predictionStats.accepts++;__predictionStats.lastAccept=JSON.parse(JSON.stringify(snapshot));return adapter.acceptAuthority(snapshot);},
+        reset(reason){__predictionStats.resets++;return adapter.reset(reason);},
+        dispose(){__predictionStats.disposes++;return adapter.dispose();}
+      });
+    }});
+  `,context,{filename:'tank-prediction-observer.js'});
   vm.runInContext(`
     function t(key,...args){return String(key)+(args.length?'('+args.join(',')+')':'');} function renderPlayers(){} function setStatus(){}
     const account={authToken:'qa'}; const online={room:null,isHost:false};
@@ -81,7 +139,7 @@ function harness(file,factory,count,settings){
   const opts={ai:new Set(),onEnd(value){results.push(value);},sendMove(value){sent.push(value);},sendRestart(){},isReplaying(){return false;},online:false,myIdx:0,isHost:true,destroyed:false,...(settings.opts||{})};
   context.__opts=opts;
   const game=vm.runInContext(`${factory}(__area,__extra,${count},__opts)`,context);
-  return{area,extra,document,context,game,opts,results,sent};
+  return{area,extra,document,context,game,opts,results,sent,inputGateStats:context.__inputGateStats||null,feedbackBusStats:context.__feedbackBusStats||null,predictionStats:context.__predictionStats||null,audioStats};
 }
 function binaryWells(snapshot){return snapshot.wells.every(well=>well.every(row=>row.every(value=>value===0||value===1)));}
 
@@ -207,7 +265,7 @@ function run(){
   tetris.states=tetris.states.map((state,id)=>({...state,id,alive:true,incoming:[],score:0,lines:0,tetrisCount:0,garbageSent:0,garbageReceived:0,placement:0}));
   h.game.onRestore(tetris);h.game.queueGarbage(0,3,1,'cancel-test');h.game.onMove({piece:0,x:0,y:14,rot:1},0);
   const battle=h.game.snapshot();
-  assert('俄罗斯方块：Tetris 4 行先抵消 3 行 Incoming 再发送 1 行',battle.states[0].tetrisCount===1&&battle.states[0].incoming.length===0&&battle.states[0].garbageSent===1&&battle.states[1].incoming.reduce((sum,item)=>sum+item.lines,0)===1,JSON.stringify(battle.states.map(s=>({sent:s.garbageSent,incoming:s.incoming}))));
+  assert('俄罗斯方块：Perfect Clear Tetris 12 行先抵消 3 行 Incoming 再发送 9 行',battle.states[0].tetrisCount===1&&battle.states[0].perfectClears===1&&battle.states[0].incoming.length===0&&battle.states[0].garbageSent===9&&battle.states[1].incoming.reduce((sum,item)=>sum+item.lines,0)===9,JSON.stringify(battle.states.map(s=>({sent:s.garbageSent,incoming:s.incoming}))));
   assert('俄罗斯方块：Alive Ring 目标确定且 wells 保持 0/1',h.game.getTarget(0)===1&&h.game.getTarget(2)===0&&binaryWells(battle));
   h.game.setSpectators(true);const beforeTetris=JSON.stringify(h.game.snapshot().states[0].active);const left=findText(h.extra,'⬅');if(left)left.dispatch('click');
   assert('俄罗斯方块：Spectator 不能操作主井',JSON.stringify(h.game.snapshot().states[0].active)===beforeTetris);
@@ -239,15 +297,21 @@ function run(){
   assert('俄罗斯方块联机：房主最终唯一名次驱动双方同一 claim',tetrisHost.results.length===1&&tetrisGuest.results.length===1&&JSON.stringify(hostRanks)===JSON.stringify(guestRanks)&&new Set(hostRanks.map(item=>item.rank)).size===2);
   tetrisHost.game.destroy();tetrisGuest.game.destroy();
 
-  const authorityTankInputs=[],authorityTankMatch='qa-tank-authority-client';
-  const authorityTank=harness('tank.js','gameTank',2,{opts:{online:true,myIdx:1,isHost:false,getMatchId:()=>authorityTankMatch,
-    gameplayMeta:{protocol:'tank-authority-v1',serverTick:0,startedAt:Date.now(),endAt:Date.now()+180000,season:'spring'},sendTankInput:payload=>authorityTankInputs.push(copy(payload))}});
+  const authorityTankInputs=[],authorityTankMatch='qa-tank-authority-client';let predictionSubmittedBeforeSend=true,authorityTank=null;
+  authorityTank=harness('tank.js','gameTank',2,{trackInputGate:true,trackFeedbackBus:true,trackPrediction:true,opts:{online:true,myIdx:1,isHost:false,getMatchId:()=>authorityTankMatch,
+    technicalFeatures:{gameplayInputGateV1:true,feedbackBusV1:true,tankSpatialAudioV1:true,tankPredictionV1:true},gameplayMeta:{protocol:'tank-authority-v1',serverTick:0,startedAt:Date.now(),endAt:Date.now()+180000,season:'spring'},sendTankInput:payload=>{predictionSubmittedBeforeSend=predictionSubmittedBeforeSend&&authorityTank.context.__predictionStats.submits>authorityTankInputs.length;authorityTankInputs.push(copy(payload));}}});
   authorityTank.document.dispatch('keydown',{key:'d',preventDefault(){}});
   assert('坦克 Authority Client：只发送 Input/Seq，不发送坐标',authorityTankInputs.length===1&&authorityTankInputs[0].input.right===true&&authorityTankInputs[0].seq===1&&!Object.prototype.hasOwnProperty.call(authorityTankInputs[0],'x'));
+  assert('坦克 Prediction Adapter：输入先进入默认关闭纵切再沿旧 wire 发送',predictionSubmittedBeforeSend&&authorityTank.predictionStats&&authorityTank.predictionStats.creates===1&&authorityTank.predictionStats.submits===1&&authorityTank.predictionStats.lastSubmit.matchId===authorityTankMatch);
+  assert('坦克 InputGate：九方向 control_state 经语义 Gate 后保持完整 Authority 输入',authorityTank.inputGateStats&&authorityTank.inputGateStats.submits===1&&authorityTank.inputGateStats.flushes===1&&authorityTank.inputGateStats.lastIntent.type==='control_state'&&authorityTank.inputGateStats.lastIntent.direction==='right'&&authorityTank.inputGateStats.lastIntent.firing===false);
+  authorityTank.document.dispatch('keydown',{key:' ',preventDefault(){}});
+  assert('坦克 InputGate：移动与按住开火组合不被拆分或丢失',authorityTankInputs.length===2&&authorityTankInputs[1].seq===2&&authorityTankInputs[1].input.right===true&&authorityTankInputs[1].input.fire===true&&authorityTank.inputGateStats.lastIntent.direction==='right'&&authorityTank.inputGateStats.lastIntent.firing===true);
   const authorityTankBase=authorityTank.game.snapshot();
   const serverTankState={protocol:'tank-authority-v1',matchId:authorityTankMatch,serverTick:4,serverNow:Date.now(),startedAt:Date.now()-1000,endAt:Date.now()+179000,remainingMs:179000,season:'winter',
-    players:authorityTankBase.tanks.map((tank,id)=>({...tank,x:id===1?8.5:tank.x,kills:id===1?2:0})),projectiles:[],destructibles:authorityTankBase.grid,ack:[0,1],finished:false,order:null};
+    players:authorityTankBase.tanks.map((tank,id)=>({...tank,x:id===1?8.5:tank.x,kills:id===1?2:0,shots:id===1?tank.shots+1:tank.shots})),projectiles:[],destructibles:authorityTankBase.grid,ack:[0,1],finished:false,order:null};
   assert('坦克 Authority Client：Snapshot Reconciliation 生效',authorityTank.game.onAuthoritySnapshot(serverTankState)===true&&Math.abs(authorityTank.game.snapshot().tanks[1].x-authorityTankBase.tanks[1].x)>.1);
+  assert('坦克 Prediction Adapter：只消费已接受 Authority snapshot 并保留旧回退',authorityTank.predictionStats.accepts===1&&authorityTank.predictionStats.lastAccept.protocol==='tank-authority-v1');
+  assert('坦克 FeedbackBus：仅在 Authority 接受镜像后触发左右声像',authorityTank.feedbackBusStats&&authorityTank.feedbackBusStats.emits===1&&authorityTank.feedbackBusStats.lastCue.type==='tank_fire'&&authorityTank.feedbackBusStats.lastCue.pan>0&&authorityTank.audioStats.oscillators===1&&authorityTank.audioStats.panners[0].value>0);
   authorityTank.game.onAuthorityResult({matchId:authorityTankMatch,order:[1,0],stats:serverTankState.players});
   assert('坦克 Authority Client：Server Final 不再提交客户端 claim',authorityTank.game.snapshot().winner===1&&authorityTank.results.length===0);authorityTank.game.destroy();
 
@@ -274,15 +338,28 @@ function run(){
   authorityTetris.game.onAuthorityResult({matchId:authorityTetrisMatch,order:[0,1]});
   assert('Tetris Authority Client：Server Placement 不再提交客户端 claim',authorityTetris.game.snapshot().winner===0&&authorityTetris.results.length===0);authorityTetris.game.destroy();
 
-  const tetrisRuleMatch='qa-tetris-rule-v2-i18n',tetrisRuleStart=Date.now()-100;
-  const tetrisRule=harness('tetris.js','gameTetris',2,{opts:{online:true,myIdx:0,isHost:true,getMatchId:()=>tetrisRuleMatch,
-    gameplayMeta:{protocol:'tetris-rule-v2',startAt:tetrisRuleStart,matchEndAt:tetrisRuleStart+300000,matchSeed:tetrisRuleMatch,rulesetVersion:'tetris-rule-v2'},sendTetrisAction(){}}});
+  const tetrisRuleActions=[],tetrisRuleMatch='qa-tetris-rule-v3-i18n',tetrisRuleStart=Date.now()-100;
+  const tetrisRule=harness('tetris.js','gameTetris',2,{trackInputGate:true,opts:{online:true,myIdx:0,isHost:true,getMatchId:()=>tetrisRuleMatch,
+    technicalFeatures:{gameplayInputGateV1:true},gameplayMeta:{protocol:'tetris-rule-v3',startAt:tetrisRuleStart,matchEndAt:tetrisRuleStart+300000,matchSeed:tetrisRuleMatch,rulesetVersion:'tetris-rule-v3'},sendTetrisAction(payload){tetrisRuleActions.push(copy(payload));}}});
   const ruleApi=tetrisRule.context.TetrisRules,ruleStates=[0,1].map(player=>ruleApi.createInitialState({seed:tetrisRuleMatch,player}));
   ruleStates[1]=ruleApi.applyAction(ruleStates[1],{type:'garbage',lines:3,attackId:'qa-garbage'}).state;
-  const ruleSnapshot={protocol:'tetris-rule-v2',matchId:tetrisRuleMatch,startAt:tetrisRuleStart,matchEndAt:tetrisRuleStart+300000,matchSeed:tetrisRuleMatch,rulesetVersion:'tetris-rule-v2',revision:1,serverNow:Date.now(),
-    players:ruleStates.map((state,player)=>({player,seq:0,hash:'qa-'+player,state:JSON.parse(ruleApi.serialize(state)),incoming:[],alive:true,koTime:null,placement:0})),finished:false,order:null,inputCount:0};
-  const ruleApplied=tetrisRule.game.onTetrisRuleState(ruleSnapshot),garbageEvent=findText(tetrisRule.area,'tetris_event_garbage(3)');
-  assert('Tetris Rule v2：Garbage 事件保留 lines 并使用现有本地化 key',ruleApplied===true&&tetrisRule.game.snapshot().states[1].lastEvent==='+3 GARBAGE'&&!!garbageEvent);
+  const ruleSnapshot=(revision,controlledSeq,matchId=tetrisRuleMatch)=>({protocol:'tetris-rule-v3',matchId,startAt:tetrisRuleStart,matchEndAt:tetrisRuleStart+300000,matchSeed:tetrisRuleMatch,rulesetVersion:'tetris-rule-v3',revision,serverNow:Date.now(),
+    players:ruleStates.map((state,player)=>({player,seq:player===0?controlledSeq:0,hash:'qa-'+player,state:JSON.parse(ruleApi.serialize(state)),incoming:[],alive:true,koTime:null,placement:0})),finished:false,order:null,inputCount:0});
+  const baselineRuleSnapshot=ruleSnapshot(1,0);
+  const baselineApplied=tetrisRule.game.onTetrisRuleState(baselineRuleSnapshot);
+  const wrongMatchSnapshot=ruleSnapshot(99,99,'wrong-match');
+  const staleRevisionSnapshot=ruleSnapshot(0,99);
+  const malformedLowSeqSnapshot=ruleSnapshot(2,-1);
+  const rejectedRuleSnapshots=tetrisRule.game.onTetrisRuleState(wrongMatchSnapshot)===false&&
+    tetrisRule.game.onTetrisRuleState(staleRevisionSnapshot)===false&&
+    tetrisRule.game.onTetrisRuleState(malformedLowSeqSnapshot)===false&&tetrisRuleActions.length===0;
+  const acceptedRuleSnapshot=ruleSnapshot(4,7);
+  const ruleApplied=tetrisRule.game.onTetrisRuleState(acceptedRuleSnapshot),garbageEvent=findText(tetrisRule.area,'tetris_event_garbage(3)');
+  assert('Tetris Rule v3：错误 match、旧 revision 与畸形低 seq 快照不会污染下一次控制序列',baselineApplied===true&&rejectedRuleSnapshots&&ruleApplied===true&&tetrisRuleActions.length===0);
+  assert('Tetris Rule v3：Garbage 事件保留 lines 并使用现有本地化 key',ruleApplied===true&&tetrisRule.game.snapshot().states[1].lastEvent==='+3 GARBAGE'&&!!garbageEvent);
+  const ruleLeft=findText(tetrisRule.extra,'⬅');if(ruleLeft)ruleLeft.dispatch('click');
+  assert('Tetris Rule v3：重连规则快照回填当前玩家 seq，下一次真实控制发送 seq=8',ruleApplied===true&&tetrisRuleActions.length===1&&tetrisRuleActions[0].seq===8&&tetrisRuleActions[0].action&&tetrisRuleActions[0].action.type==='left',JSON.stringify(tetrisRuleActions));
+  assert('Tetris InputGate：离散 move_left 经语义 Gate 且不改 Authority seq',tetrisRule.inputGateStats&&tetrisRule.inputGateStats.resets>=2&&tetrisRule.inputGateStats.submits===1&&tetrisRule.inputGateStats.flushes===1&&tetrisRule.inputGateStats.lastIntent.type==='move_left');
   tetrisRule.game.destroy();
 
   const authorityClockMatch='qa-clock-client';

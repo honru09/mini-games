@@ -1,0 +1,17 @@
+{
+  "taskId": "shop-design-system-close-p1-20260813",
+  "requirements": ["UI-021", "UI-027", "UI-028", "ECO-012", "ECO-015"],
+  "stage": "CLOSE",
+  "disposition": "NOW_CLOSURE",
+  "status": "COMPLETED_LOCAL_WITH_EXTERNAL_GATES_REMAINING",
+  "scope": "商城 Design System、经济展示与本地可访问性收口；不改商品目录、价格、协议、数据库或未审批美术。",
+  "steps": [
+    {"id":"SHOP-1","status":"completed","title":"复核商城信息架构、动态背景、购买反馈与 G Coins 可见残留"},
+    {"id":"SHOP-2","status":"completed","title":"共享 overlay topmost registry，修复父子弹层 Esc/Tab 与焦点恢复"},
+    {"id":"SHOP-3","status":"completed","title":"保留商城 tab/商品预览，购买刷新与语言切换不丢 pending 状态"},
+    {"id":"SHOP-4","status":"completed","title":"修复可达旧货币文案、三语赛事/AI 上限文案与访客测试合同漂移"},
+    {"id":"SHOP-5","status":"completed","title":"专项、Quality Gates、完整 npm test、构建稳定性与本地浏览器复核"},
+    {"id":"SHOP-6","status":"not_executed","title":"第二浏览器、真机、真实网络、forced-colors、visible reduced-motion、正式 G Coins 美术审批"}
+  ],
+  "release": "LOCAL_ONLY_NO_COMMIT_NO_PUSH_NO_DEPLOY"
+}

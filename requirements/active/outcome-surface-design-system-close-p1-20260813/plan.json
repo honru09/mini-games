@@ -1,0 +1,18 @@
+{
+  "taskId": "outcome-surface-design-system-close-p1-20260813",
+  "requirements": ["UI-027", "UI-028", "ECO-015"],
+  "stage": "CLOSE",
+  "disposition": "NOW_CLOSURE",
+  "status": "COMPLETED_LOCAL_WITH_EXTERNAL_GATES_REMAINING",
+  "scope": "统一 Victory、Reward Breakdown 与 Achievements 的 Ghost-native Outcome Surface 信息层级、可访问生命周期和有限 GSAP 动效；只吸收外部 Q 版 UI 的层级与反馈节奏，不导入或临摹 reference-only 素材。",
+  "authorityBoundary": "不修改 Reward Authority、奖励数值、Rule、Authority、Protocol、Replay、Supabase、商城价格或未经审批美术。",
+  "steps": [
+    {"id":"OUTCOME-1","status":"completed","title":"复核三套旧面板、共享 Overlay、三语言、GSAP Adapter 与素材许可边界"},
+    {"id":"OUTCOME-2","status":"completed","title":"先建立共享语义层级、动效清理、移动安全区与 a11y 专项合同"},
+    {"id":"OUTCOME-3","status":"completed","title":"实施 Ghost-native Victory、Reward、Achievement 面板与有限 Timeline"},
+    {"id":"OUTCOME-4","status":"completed","title":"运行专项、i18n、DOM、Reward/Security、Quality Gates 与完整测试"},
+    {"id":"OUTCOME-5","status":"completed","title":"Master 审核差异并同步台账、报告、简报和三日志"},
+    {"id":"OUTCOME-6","status":"not_executed","title":"第二浏览器、真机、真实网络、forced-colors、visible reduced-motion 与 Golden Set"}
+  ],
+  "release": "LOCAL_ONLY_NO_COMMIT_NO_PUSH_NO_DEPLOY"
+}

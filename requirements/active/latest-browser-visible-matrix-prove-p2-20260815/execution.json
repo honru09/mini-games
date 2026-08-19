@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "taskId": "latest-browser-visible-matrix-prove-p2-20260815",
+  "status": "completed_local_single_browser_current_build",
+  "completed": [
+    "current-build anti-stale evidence contract including full source-artifact verification",
+    "five viewport Home/Games/Playline/Profile matrix",
+    "Shop/DM/Achievement/Room Lobby lifecycle",
+    "six Game Stage entry/exit",
+    "three languages and light/dark",
+    "visible reduced-motion and forced-colors authentication",
+    "44x44 authentication and <=1024 header/navigation final cascade",
+    "zero raw keys, zero horizontal overflow, scrollY=0 and final CDP event audit",
+    "media and device metrics emulation reset",
+    "TECH-027, routing, status and generated report sync",
+    "quality gates and full npm test",
+    "deterministic double build 1579909 characters / 1594443 bytes / 4141BBAC492D361AEC2A777D76FD1AACC0600866307709B26568C62EC8780850"
+  ],
+  "pending": [
+    "TECH-028 second desktop browser",
+    "TECH-029 physical Android/iPhone/Tablet",
+    "TECH-030 real network shaping",
+    "SOC-029 two-account friend DM in two browsers",
+    "GAME-040 physical performance/audio/recovery",
+    "production/release"
+  ],
+  "published": false
+}

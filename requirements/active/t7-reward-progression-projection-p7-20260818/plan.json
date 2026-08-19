@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "task": "t7-reward-progression-projection-p7-20260818",
+  "state": "VERIFIED_LOCAL",
+  "requirements": ["ECO-001", "ECO-006", "ECO-024", "TECH-040", "TECH-052"],
+  "scope": "Resolved reward profile/daily/achievement projection only",
+  "steps": [
+    {"id":"P7-1","status":"complete","name":"冻结单一 apply Interface、Projection fields、固定 at 与 Adapter/rollback 边界"},
+    {"id":"P7-2","status":"complete","name":"实现 reward-progression-v1 Module、JSON runtime Adapter 与 Memory Adapter"},
+    {"id":"P7-3","status":"complete","name":"将 online/solo applyResolvedProgress 接入兼容薄包装，保持 P5/wire/claim owner"},
+    {"id":"P7-4","status":"complete","name":"新增跨日、幂等、阻断、访客、hostile input 与 Adapter failure 专项 QA"},
+    {"id":"P7-5","status":"complete","name":"运行完整 Quality Gates、npm test、确定性双构建并统一事实包"},
+    {"id":"P7-6","status":"complete","name":"完成事实同步并交接到 Server Boundary Clock Injection P8；外部 Gate 继续独立保留"}
+  ],
+  "next": "P8 复用 ServerClockTimer 迁移现有 Server Boundary 显式 now 注入；不切入 Supabase/设备/发布",
+  "release": "LOCAL_ONLY / NOT_RELEASED",
+  "rollback": "恢复 applyResolvedProgress 旧实现，移除 P7 module/QA/package wiring，不删除数据或 outbox"
+}

@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-08-15T09:45:14+09:00",
+  "captureProvenance": "Primary reviewer observations in one Codex in-app Chromium against the latest local working tree after the final Tank P5 fixes; this is partial visible evidence, not an independent second-browser or physical-device review.",
+  "environment": {
+    "url": "http://127.0.0.1:8080/",
+    "browser": "Codex in-app Chromium",
+    "build": "latest local working tree",
+    "production": false
+  },
+  "result": "PARTIAL_VISIBLE_EVIDENCE",
+  "requirements": ["GAME-051", "TECH-049", "GAME-044"],
+  "scenarios": {
+    "defaultOff": {
+      "featureFlag": null,
+      "ghost3dSlotCount": 0,
+      "canvasCount": 0,
+      "domTankCount": 2,
+      "domTerrainCount": 68,
+      "domPlayable": true,
+      "horizontalOverflowPixels": 0
+    },
+    "temporaryHighOptIn": {
+      "featureFlag": "1",
+      "slotReady": true,
+      "canvasPresent": true,
+      "canvasAriaHidden": true,
+      "canvasPointerEvents": "none",
+      "rendererInputCommands": 0,
+      "domTankCount": 2,
+      "dPadButtonPixels": [44, 44, 44, 44],
+      "domControlsRemainPlayable": true
+    },
+    "viewportMatrix": [
+      {"viewport": [1440, 900], "canvasReady": true, "horizontalOverflowPixels": 0},
+      {"viewport": [1024, 768], "canvasReady": true, "horizontalOverflowPixels": 0},
+      {"viewport": [390, 844], "canvasReady": true, "horizontalOverflowPixels": 0},
+      {"viewport": [844, 390], "canvasReady": true, "horizontalOverflowPixels": 0}
+    ],
+    "realInput": {
+      "boardClickProducedProjectile": true,
+      "domFirePathRemainedOwner": true,
+      "canvasDidNotInterceptInput": true,
+      "joystickAndDpadVisible": true,
+      "keyboardPathRemainedAvailable": true,
+      "physicalTouchExecuted": false
+    },
+    "reducedMotion": {
+      "slotAnimation": "none",
+      "slotTransitionDuration": "0s",
+      "canvasAnimation": "none",
+      "canvasTransitionDuration": "0s",
+      "gameplayRemainedOperable": true,
+      "postFinalFixVisibleRecheck": "NOT_EXECUTED"
+    },
+    "console": {"warnings": 0, "errors": 0},
+    "cleanup": {
+      "temporaryFeatureFlagCleared": true,
+      "viewportOverrideReset": true,
+      "mediaSimulationCleared": true,
+      "localRuntimeRestoredToExactOptIn": true,
+      "temporaryHarnessRemoved": true
+    }
+  },
+  "notExecuted": [
+    "independent second desktop browser",
+    "physical Android/iPhone/Tablet and touch",
+    "real network shaping",
+    "real low-end FPS/GPU/thermal/memory",
+    "five-player live visible session",
+    "post-final-fix visible reduced-motion re-emulation",
+    "Reviewer B/IP Review/Golden Set",
+    "production deployment"
+  ],
+  "gates": {
+    "GATE-DEVICE-BROWSER-NETWORK": "BLOCKED",
+    "GATE-SUPABASE-PRODUCTION": "BLOCKED",
+    "GATE-ART-GOLDEN-SET": "BLOCKED"
+  },
+  "release": "LOCAL_ACCEPTED_AWAITING_RELEASE_COMMAND"
+}

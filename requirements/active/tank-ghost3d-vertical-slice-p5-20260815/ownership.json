@@ -1,0 +1,31 @@
+{
+  "master": "analysis, split, scheduling, supervision, integration, final audit",
+  "builder": "gpt-5.6-terra reasoning_effort=max",
+  "owned": [
+    "public/src/games/tank-ghost3d-presenter.js",
+    "public/three/tank-entry.js",
+    "public/src/games/tank.js",
+    "qa/tank-ghost3d-*.js",
+    "requirements/active/tank-ghost3d-vertical-slice-p5-20260815/**"
+  ],
+  "sharedControlled": [
+    "public/index-template.html",
+    "scripts/build.js",
+    "scripts/quality-gates.js",
+    "package.json",
+    "public/sw.js",
+    "public/index.html"
+  ],
+  "forbidden": [
+    "server/**",
+    "shared/**",
+    "supabase/**",
+    "public/src/online/03-websocket.js",
+    "public/src/core/08-ghost3d-foundation.js",
+    "public/assets/**",
+    "art-source/games/tank/**",
+    "git commit",
+    "git push",
+    "deployment"
+  ]
+}

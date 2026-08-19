@@ -1,0 +1,9 @@
+{
+  "taskId":"shop-design-system-close-p1-20260813",
+  "timestamp":"2026-08-13T19:00:00+09:00",
+  "status":"local_pass",
+  "tests":["qa/overlay-dialog-accessibility.js","qa/shop-language-refresh-contract.js","npm run test:shop-contract","npm run test:g-coins","npm run quality:gates","npm test"],
+  "build":{"bytes":1356934,"sha256":"B1E3509AB28CC03FF43C22FB43A069F8D031083A1C3664B5FC2D270C8B80662"},
+  "deployment":{"published":false,"onlineBaseline":"bd49e6d5481819a7d0ab8d0829f9eeebf3869ee4"},
+  "externalGates":["GATE-DEVICE-BROWSER-NETWORK","GATE-ART-GOLDEN-SET"]
+}

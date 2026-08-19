@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "task": "t7-chat-playline-boundary-p4-20260817",
+  "state": "WIRED_LOCAL_VERIFIED",
+  "module": "server/boundaries/chat-playline.js",
+  "interface": ["chat(command)", "playline(command)"],
+  "adapters": ["createMemoryChatPlaylineAdapter", "createJsonRuntimeChatPlaylineAdapter"],
+  "caller": "server/index.js (local JSON lane wired; Supabase Direct Chat RPC fallback retained)",
+  "qa": "qa/chat-playline-boundary.js",
+  "requirements": ["TECH-039", "TECH-040", "TECH-052"],
+  "authority": ["direct-chat-v1 policy", "existing server/playline.js module"],
+  "forbidden": [
+    "wire redesign",
+    "client/index.html changes",
+    "Supabase schema or production write",
+    "Cluster delivery mutation",
+    "Reward/Economy mutation",
+    "Replay or Analytics persistence",
+    "content-governance expansion",
+    "release or deployment"
+  ],
+  "integration": {
+    "status": "VERIFIED_LOCAL",
+    "suggestedLegacyAdapterShape": "{chatMessages, chatReads, nextChatSeq}",
+    "fallback": "use existing Supabase transactional Direct Chat handlers when real Supabase is configured"
+  }
+}

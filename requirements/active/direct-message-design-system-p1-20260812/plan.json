@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "taskId": "direct-message-design-system-p1-20260812",
+  "requirements": ["UI-024", "UI-027", "UI-028", "SOC-012", "TECH-054"],
+  "stage": "CLOSE",
+  "disposition": "NOW_CLOSURE",
+  "status": "VERIFYING",
+  "steps": [
+    {"id":"DMDS-1","status":"completed","title":"RECON 现有 DirectMessage、Profile、Design System 与 GSAP seam"},
+    {"id":"DMDS-2","status":"completed","title":"冻结单一 DirectMessage Interface、四阶段 Surface Motion 与 OUT 边界"},
+    {"id":"DMDS-3","status":"completed","title":"红测锁定信息层级、raw/i18n、响应式和 Motion 生命周期"},
+    {"id":"DMDS-4","status":"completed","title":"实现会话/对话结构、发送状态、时间、手机安全区与 GSAP Adapter"},
+    {"id":"DMDS-5","status":"completed","title":"主负责人修正关闭竞态、时间语言、文案语义和 blocked-environment lazy load"},
+    {"id":"DMDS-6","status":"completed","title":"最终完整测试、双构建、台账报告与三日志同步"},
+    {"id":"DMDS-7","status":"not_executed","title":"浏览器、第二浏览器、真机、真实网络与可见 reduced-motion 外部门禁"}
+  ],
+  "release": "LOCAL_ONLY_NO_COMMIT_NO_PUSH_NO_DEPLOY"
+}

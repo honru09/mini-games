@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "task": "t7-room-presence-boundary-p2-20260817",
+  "status": "VERIFIED_LOCAL",
+  "requirements": ["TECH-040", "TECH-052"],
+  "in": ["room membership", "seat projection", "presence privacy", "reconnect replacement", "two Adapters", "multi-room tournament graph transaction", "bounded recovery queue"],
+  "out": ["wire changes", "Rule/Authority/Reward/Replay", "Supabase production", "frontend", "release"],
+  "rollback": "remove boundary injection and restore previous inline wrappers; preserve JSON/WS behavior",
+  "evidence": [
+    "server/boundaries/room-presence.js",
+    "qa/room-presence-boundary.js",
+    "qa/tournament-atomic-online.js",
+    "qa/tournament-recovery-online.js",
+    "qa/spectator-room.js",
+    "requirements/active/t7-room-presence-boundary-p2-20260817/acceptance.md",
+    "npm run test:room-presence-boundary",
+    "npm run test:seats",
+    "npm run test:reconnect",
+    "npm run test:social",
+    "npm run test:spectator",
+    "npm run test:tournament-auto-online",
+    "npm run test:tournament-recovery-online"
+  ],
+  "unexecuted": ["second browser", "physical devices", "real network shaping", "real Supabase/multi-instance", "commit/push/deploy"]
+}

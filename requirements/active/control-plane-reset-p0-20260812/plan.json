@@ -1,0 +1,15 @@
+{
+  "taskId": "control-plane-reset-p0-20260812",
+  "status": "COMPLETED_LOCAL",
+  "risk": "LOW",
+  "owner": "Master",
+  "phases": [
+    {"id":"CP-1","title":"读取总指挥入口、台账和当前状态漂移","status":"completed","dependsOn":[]},
+    {"id":"CP-2","title":"建立四类主线路由与三条共享 Gate","status":"completed","dependsOn":["CP-1"]},
+    {"id":"CP-3","title":"将 TECH-027 当前连接器缺口恢复为可见 partial 语义","status":"completed","dependsOn":["CP-1"]},
+    {"id":"CP-4","title":"报告生成器、台账 QA 与 npm 单项入口接入路由","status":"completed","dependsOn":["CP-2","CP-3"]},
+    {"id":"CP-5","title":"状态/日志/主负责人审核后进入 CLOSE","status":"completed","dependsOn":["CP-4"]}
+  ],
+  "rollback": "删除本批新增 routing/active task/QA 文件，恢复 ledger 的 2026-08-11 报告指针；不触碰运行时代码、用户数据或发布节点。"
+}
+

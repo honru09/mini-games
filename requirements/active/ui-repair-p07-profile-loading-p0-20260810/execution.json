@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "taskId": "ui-repair-p07-profile-loading-p0-20260810",
+  "status": "completed_local",
+  "completed": ["scope freeze", "authoritative request/loading implementation", "stale response regression", "quality gates", "full npm test", "status/report/log synchronization"],
+  "pending": ["second desktop browser", "Android/iPhone/Tablet", "real network shaping", "user release command"],
+  "verification": {
+    "specialized": ["node qa/ui-profile-loading-contract.js", "node qa/ui-profile-social-contract.js", "node qa/profile-route-contract.js", "npm run test:i18n", "node qa/dom-smoke.js"],
+    "full": "npm test (172.2s, exit 0)",
+    "buildBytes": 920073,
+    "buildSha256": "492036CBC9783566C58FC81887533B6E275EFE947727C0BCDC470D3FBEBFA761"
+  },
+  "externalGates": ["second desktop browser", "Android/iPhone/Tablet", "real network shaping"],
+  "published": false
+}

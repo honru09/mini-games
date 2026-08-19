@@ -1,0 +1,92 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-08-15T18:14:00.063+09:00",
+  "claim": "historical_as_of_build_single_browser_visible_matrix",
+  "currency": "historical_as_of",
+  "scope": "single Codex in-app Chromium historical as-of build only",
+  "fullRouteMatrixCurrentBuild": false,
+  "build": {
+    "path": "public/index.html",
+    "sha256": "0A6FE8494AA5B14188D006E2FCDFA97AA7DAB438E127A6442FFF298BC5B1CDB4",
+    "characters": 1580313,
+    "bytes": 1594847,
+    "httpMirrors": ["http://localhost:8080/", "http://127.0.0.1:8090/"]
+  },
+  "environment": {
+    "browserSurface": "Codex in-app Chromium",
+    "browserCount": 1,
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
+    "platform": "Win32",
+    "url": "http://localhost:8080/",
+    "accountType": "existing formal QA account; no account creation",
+    "deviceEvidenceKind": "CSS viewport emulation only"
+  },
+  "routeMatrix": [
+    {"name":"desktop","width":1440,"height":900,"routes":["home","games","playline","profile"],"horizontalOverflowMax":0,"rawKeyCountMax":0,"scrollYMax":0,"desktopNav":true,"mobileNav":false,"minControlWidth":47.9,"minControlHeight":38},
+    {"name":"tablet-landscape","width":1024,"height":768,"routes":["home","games","playline","profile"],"horizontalOverflowMax":0,"rawKeyCountMax":0,"scrollYMax":0,"desktopNav":true,"mobileNav":false,"minControlWidth":47.9,"minControlHeight":44},
+    {"name":"tablet-portrait","width":768,"height":1024,"routes":["home","games","playline","profile"],"horizontalOverflowMax":0,"rawKeyCountMax":0,"scrollYMax":0,"desktopNav":true,"mobileNav":false,"minControlWidth":47.9,"minControlHeight":44},
+    {"name":"phone-portrait","width":390,"height":844,"routes":["home","games","playline","profile"],"horizontalOverflowMax":0,"rawKeyCountMax":0,"scrollYMax":0,"desktopNav":false,"mobileNav":true,"minControlWidth":44,"minControlHeight":44},
+    {"name":"phone-landscape","width":844,"height":390,"routes":["home","games","playline","profile"],"horizontalOverflowMax":0,"rawKeyCountMax":0,"scrollYMax":0,"desktopNav":true,"mobileNav":false,"minControlWidth":47.9,"minControlHeight":44}
+  ],
+  "surfaces": {
+    "directMessages": {"dialog":true,"width":920,"height":420,"bodyScrollLock":true,"rawKeyCount":0,"horizontalOverflow":0,"closeHidesDialog":true,"closeRestoresFocusTo":"global messages button"},
+    "shop": {"dialog":true,"name":"🛍️ 个性商城","width":1080,"height":840,"bodyScrollLock":true,"rawKeyCount":0,"horizontalOverflow":0,"closeHidesDialog":true},
+    "achievements": {"dialog":true,"name":"🏆 成就","width":600,"height":522.5,"bodyScrollLock":true,"rawKeyCount":0,"horizontalOverflow":0,"closeRemovesDialog":true},
+    "roomLobby": {"visible":true,"headings":["房间大厅","🚪 我的房间","🎮 浏览房间","👥 玩家列表","社交"],"actions":["create room","browse rooms","join private room"],"rawKeyCount":0,"horizontalOverflow":0}
+  },
+  "gameStages": [
+    {"game":"五子棋","title":"五子棋","seatCount":2,"stage":true,"arena":true,"command":true,"back":true,"gameActive":true,"scrollY":0,"horizontalOverflow":0,"rawKeyCount":0},
+    {"game":"飞行棋","title":"飞行棋","seatCount":2,"stage":true,"arena":true,"command":true,"back":true,"gameActive":true,"scrollY":0,"horizontalOverflow":0,"rawKeyCount":0},
+    {"game":"迷你大富翁","title":"迷你大富翁","seatCount":2,"stage":true,"arena":true,"command":true,"back":true,"gameActive":true,"scrollY":0,"horizontalOverflow":0,"rawKeyCount":0},
+    {"game":"坦克大战","title":"坦克大战","seatCount":2,"stage":true,"arena":true,"command":true,"back":true,"gameActive":true,"scrollY":0,"horizontalOverflow":0,"rawKeyCount":0},
+    {"game":"俄罗斯方块","title":"俄罗斯方块","seatCount":2,"stage":true,"arena":true,"command":true,"back":true,"gameActive":true,"scrollY":0,"horizontalOverflow":0,"rawKeyCount":0},
+    {"game":"象棋","title":"象棋","seatCount":2,"stage":true,"arena":true,"command":true,"back":true,"gameActive":true,"scrollY":0,"horizontalOverflow":0,"rawKeyCount":0}
+  ],
+  "languageTheme": [
+    {"lang":"zh-CN","heading":"游戏中心","rawKeyCount":0,"horizontalOverflow":0},
+    {"lang":"en-US","heading":"Game Center","rawKeyCount":0,"horizontalOverflow":0},
+    {"lang":"uk-UA","heading":"Ігровий центр","rawKeyCount":0,"horizontalOverflow":0},
+    {"theme":"light","textPrimary":"#0a0d12","surface":"#fdfefe","horizontalOverflow":0},
+    {"theme":"dark","textPrimary":"#f8f9fb","surface":"#0e121a","horizontalOverflow":0},
+    {"theme":"light","textPrimary":"#0a0d12","surface":"#fdfefe","horizontalOverflow":0,"restored":true}
+  ],
+  "reducedMotion": {
+    "emulated": true,
+    "homeAmbientAnimation": "none",
+    "homeHeroAnimation": "none",
+    "runningHomeAnimations": 0,
+    "game": "五子棋",
+    "runningStageAnimations": 0,
+    "stageReduced": true,
+    "horizontalOverflow": 0,
+    "stageHorizontalOverflow": 0,
+    "scrollY": 0,
+    "stageScrollY": 0,
+    "resetAfterCapture": true
+  },
+  "forcedColors": {
+    "emulated": true,
+    "viewport": {"width":1440,"height":900},
+    "authenticationToolbarMinimum": {"width":44,"height":44},
+    "tabsMinimumHeight": 44,
+    "inputMinimumHeight": 44,
+    "logo": {"width":72,"height":72,"display":"block","visibility":"visible","opacity":"1","lightFilter":"none","darkTheme":"dark","darkFilter":"brightness(0) invert(1)","darkVisible":true},
+    "keyboardFocus": {"tag":"BUTTON","text":"登录","visible":true,"outlineWidth":"3px","outlineStyle":"solid","outlineOffset":"2px"},
+    "languages": [
+      {"lang":"en-US","rawKeyCount":0,"horizontalOverflow":0},
+      {"lang":"uk-UA","rawKeyCount":0,"horizontalOverflow":0},
+      {"lang":"zh-CN","rawKeyCount":0,"horizontalOverflow":0}
+    ],
+    "rawKeyCountMax": 0,
+    "horizontalOverflowMax": 0,
+    "resetAfterCapture": true
+  },
+  "console": {"appWarnErrorAfterCapture":0,"authWarnErrorAfterCapture":0,"exceptionsObserved":0},
+  "visibleInspection": {
+    "phonePortraitGames": "390x844 current build screenshot inspected; no overlap or horizontal overflow",
+    "routeClickRace": "one 350ms mobile automation click landed on adjacent Playline while Route Motion was still settling; stable 650ms semantic click correctly opened Games and no product defect was inferred"
+  },
+  "cleanup": {"viewportReset":true,"mediaReset":true,"finalRoute":"home","theme":"light","lang":"zh-CN","gameActive":false},
+  "notGranted": ["second_browser","physical_android","physical_iphone","physical_tablet","real_network_shaping","two_formal_friend_dm_browsers","physical_performance_audio_recovery","production_verification","release"],
+  "gateDisposition": "GATE-DEVICE-BROWSER-NETWORK remains BLOCKED"
+}

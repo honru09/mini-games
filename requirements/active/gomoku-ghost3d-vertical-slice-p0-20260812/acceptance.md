@@ -1,0 +1,23 @@
+# Gomoku Ghost3D Vertical Slice P0 Acceptance
+
+- [x] Ghost3D Foundation 窄 Interface 已在前置任务完成并保持不变。
+- [x] Three/GSAP 固定版本 vendor、许可证、SHA-256 provenance 与封闭 ESM 图已建立。
+- [x] 五子棋语义 frame/input/motion/lifecycle bridge 默认关闭，Wave B 永久保留。
+- [x] 首次成功 render 后才 ready/pointer-active；失败前不得抢占输入。
+- [x] HIGH 首镜头使用 labeled GSAP timeline；LOW/reduced-motion 静态 settle。
+- [x] render failure、context loss、fresh recovery、dispose 和 pointer fallback 有专项断言。
+- [x] 五项 Gomoku Ghost3D 专项测试进入 `package.json`、pretest/full test 与快速 Quality Gates。
+- [x] `public/sw.js` 只升级 cache version，不预缓存 Three/GSAP 大模块。
+- [x] i18n、DOM、Gomoku、Wave B/C、Foundation、Quality Gates 与完整 `npm test` 曾在本批较早构建通过（2026-08-14，153.6 秒）；此条仅保留历史基线。
+- [x] 较早双构建稳定为 1,362,068 characters / 1,376,602 bytes / SHA-256 `BFBD2109B77B1F4C5E070DAB6B98C806E25AD621ACBE3E2E83AD5C5FB7130CAE`；此条仅保留修复前基线。
+- [x] 2026-08-14 单一 Codex in-app Chromium 本地可见复核：默认关闭仍为 Wave B Canvas grid/键盘/触控；临时精确 opt-in 后 Three r185 的首帧 ready、BALANCED 15×15 实体棋盘、Raycast 落子、AI 回合和 console warn/error=0 均可见；CDP reduced-motion 下仍为静态可操作路径。验证结束后已删除 local flag 并清除媒体模拟。
+- [ ] 上述只属于 `VISUAL_VERIFIED_SINGLE_BROWSER_PARTIAL_GATE_EVIDENCE`，不能作为第二浏览器、真机、真实网络、真实性能、正式美术或生产证明。
+- [ ] 第二浏览器、Android/iPhone/Tablet、真实网络、性能预算和 Golden Set 保持共享 Gate。
+- [x] 台账、PROJECT_STATUS、AGENTS、WHITEPAPER、主线路由、七份报告、简报和三日志同步；单浏览器可见证据见 `evidence/single-browser-visible-verification-202608140900.json`。
+- [x] 之后真实 Chromium 暴露的 Game Stage DOM GSAP core-only 警告和 Three `PCFSoftShadowMap` 弃用已分别改为官方 `index.js + CSSPlugin` 与 `PCFShadowMap`；SW cache 升至 v6，专门图/缓存/Renderer/HUD 回归已通过。
+- [x] 修复后的完整 `npm test`（139.6 秒）与确定性双构建已在当前树重新运行；两次均为 1,362,068 characters / 1,376,602 bytes / SHA-256 `BFBD2109B77B1F4C5E070DAB6B98C806E25AD621ACBE3E2E83AD5C5FB7130CAE`。
+- [x] 截至 2026-08-14，修复后的真实浏览器控制台/输入复核曾因 Browser 连接不可用而保持 `NOT_EXECUTED`；该历史阻塞已由下方 2026-08-17 当前构建窄范围证据更新，但旧记录仍不代表完整矩阵。
+- [x] 2026-08-17 当前构建新增 CameraRig、落子冲击环、3D 胜线与 `winning_line / terminal` 结果镜头；浏览器实测发现并修复“结算弹层同步遮住胜线镜头”的表现冲突。权威结果与 HUD 仍同步更新，只有 ready 且可动画的 3D 路径将阻塞弹层有限延后；LOW、reduced-motion、default-off 与 renderer-unready 仍立即展示。
+- [x] 当前单一 Codex in-app Chromium 已复核 HIGH opt-in、胜线/终局、reduced-motion、WebGL context loss fresh canvas recovery、390x844、844x390、零横溢出、退出清理、default-off Canvas fallback 与 console warn/error=0；证据见 `evidence/camera-language-golden-slice-202608171840.json`。
+- [ ] 上述新增记录仍仅为 `VISUAL_VERIFIED_SINGLE_BROWSER_LOCAL_PARTIAL`；第二浏览器、物理真机、真实网络、低端性能、正式美术与发布证据保持未执行。
+- [x] 不 commit、不 push、不部署。

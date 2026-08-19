@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "taskId": "asset-library-governance-p1-20260813",
+  "status": "completed_local",
+  "verification": {"specialized": ["node qa/asset-library-governance.js", "node scripts/asset-library-audit.js"], "pendingFinal": [], "completedFinal": ["npm run reports:progress", "node qa/progress-ledger.js", "node qa/mainline-control-plane.js", "npm run quality:gates", "npm test (146.8s)", "node scripts/build.js", "git diff --check"]},
+  "published": false,
+  "boundary": "素材治理合同与 QA；不生成图片、不修改 Manifest、不启用远端存储，不改变运行时规则/协议/经济/数据库。"
+}

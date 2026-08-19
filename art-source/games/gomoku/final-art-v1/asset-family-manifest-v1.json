@@ -1,0 +1,555 @@
+{
+  "schemaVersion": 1,
+  "productionUnitId": "P0-06",
+  "familyId": "G-02-GOMOKU-FINAL-ART-V1",
+  "sourceAssetId": "ART-GOMOKU-FINAL-ART-V1",
+  "artworkVersion": 1,
+  "status": "OWNER_AUTHORIZED_ART_CLEARANCE",
+  "license": "project-owned-deterministic-vector",
+  "externalReferencePolicy": "EXTERNAL_REFERENCE_ONLY / blocked-license files were not read, copied, traced, recolored, used as generation inputs, or connected to runtime.",
+  "boards": [
+    "wood",
+    "stone",
+    "ink",
+    "grass"
+  ],
+  "pieces": [
+    "black-white",
+    "jade",
+    "crystal",
+    "glow",
+    "obsidian"
+  ],
+  "vfx": [
+    "last-move",
+    "placement-impact",
+    "five-line",
+    "draw-settle",
+    "ai-thinking",
+    "spectate",
+    "reconnect"
+  ],
+  "cameras": [
+    "desktop",
+    "mobile"
+  ],
+  "sourceMasters": [
+    {
+      "key": "board-wood",
+      "path": "art-source/games/gomoku/final-art-v1/source/board-wood-v1.svg",
+      "sha256": "1AA2158A238F09641B9D6670E064EACA3FA235E53D1353DA9DCD7F845B69B527",
+      "bytes": 6418,
+      "width": 1056,
+      "height": 1056,
+      "alpha": false
+    },
+    {
+      "key": "board-stone",
+      "path": "art-source/games/gomoku/final-art-v1/source/board-stone-v1.svg",
+      "sha256": "6A4478E2DD3624BEEAF95C29A3A8742AF6F7699D66271F956DFC7A2F360B35FE",
+      "bytes": 5480,
+      "width": 1056,
+      "height": 1056,
+      "alpha": false
+    },
+    {
+      "key": "board-ink",
+      "path": "art-source/games/gomoku/final-art-v1/source/board-ink-v1.svg",
+      "sha256": "3C3E443F34BD4A8773883DAE689C2214194DAE7923FFE8A0E6C96C6AF1DE2D23",
+      "bytes": 3558,
+      "width": 1056,
+      "height": 1056,
+      "alpha": false
+    },
+    {
+      "key": "board-grass",
+      "path": "art-source/games/gomoku/final-art-v1/source/board-grass-v1.svg",
+      "sha256": "DCEF671C6D733F2153E90794DCF97124BA6DE20D5864C1505C91FD2BD4813E06",
+      "bytes": 13793,
+      "width": 1056,
+      "height": 1056,
+      "alpha": false
+    },
+    {
+      "key": "piece-black-white",
+      "path": "art-source/games/gomoku/final-art-v1/source/piece-black-white-v1.svg",
+      "sha256": "4E20216E1891AFC1832F48FC2F2CEF057F3AF1E6FEADD3B6FA89CC47D0FC8DD4",
+      "bytes": 1456,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "piece-jade",
+      "path": "art-source/games/gomoku/final-art-v1/source/piece-jade-v1.svg",
+      "sha256": "8F7D096ABC63579EA1DAD904030206CD7485E223383B6DE7478EE3F6582BA755",
+      "bytes": 1442,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "piece-crystal",
+      "path": "art-source/games/gomoku/final-art-v1/source/piece-crystal-v1.svg",
+      "sha256": "88106A515899BE0BB85D83FAE551AA5914FEAD1AC5102299AEE2E47603F9CB38",
+      "bytes": 1448,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "piece-glow",
+      "path": "art-source/games/gomoku/final-art-v1/source/piece-glow-v1.svg",
+      "sha256": "95E37CF85406AE4B6CC98B91175DC1BE82A9DE97C28CC2C2990CEC85694C466F",
+      "bytes": 1442,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "piece-obsidian",
+      "path": "art-source/games/gomoku/final-art-v1/source/piece-obsidian-v1.svg",
+      "sha256": "CC416857A4A1BF2FEE2E814C3DC1DCFF5C34E638711C4F1F66A475DF59135F55",
+      "bytes": 1450,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "vfx-last-move",
+      "path": "art-source/games/gomoku/final-art-v1/source/vfx-last-move-v1.svg",
+      "sha256": "4EE9A714A8DE15F3ECAE8B2BD4FF3CA36F922B1948AD96B0D5E93C4D3A0E5C88",
+      "bytes": 1014,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "vfx-placement-impact",
+      "path": "art-source/games/gomoku/final-art-v1/source/vfx-placement-impact-v1.svg",
+      "sha256": "D47A1906FD8B29D3FED4C3A8B0EB5D21585C382D909E1AA0A3B2AFD165D8C7FF",
+      "bytes": 2829,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "vfx-five-line",
+      "path": "art-source/games/gomoku/final-art-v1/source/vfx-five-line-v1.svg",
+      "sha256": "C34C0A88305402896AAF6952052B2577A804FC2141F1CF195E688BB8DF5EB720",
+      "bytes": 1564,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "vfx-draw-settle",
+      "path": "art-source/games/gomoku/final-art-v1/source/vfx-draw-settle-v1.svg",
+      "sha256": "5D91E87EC7BEA6C975171E80C8F75FD840D1DE88BDC49E3415836D4A0A92A6FD",
+      "bytes": 1043,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "vfx-ai-thinking",
+      "path": "art-source/games/gomoku/final-art-v1/source/vfx-ai-thinking-v1.svg",
+      "sha256": "10E44805F78D9DF1090AB91D96436C61D8BD0BE8EC843AFA3C81F8DD137DA581",
+      "bytes": 1064,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "vfx-spectate",
+      "path": "art-source/games/gomoku/final-art-v1/source/vfx-spectate-v1.svg",
+      "sha256": "00EF40D6DDC60EE241C417B34F898B3E9E4DC8E5DAC937B29C1497A321E3E69C",
+      "bytes": 1209,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "vfx-reconnect",
+      "path": "art-source/games/gomoku/final-art-v1/source/vfx-reconnect-v1.svg",
+      "sha256": "60D5DC64812C4AE1F1ACAB5168F89D6E3A37FF1026BB4229F205FB8F712240F0",
+      "bytes": 1320,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "camera-desktop",
+      "path": "art-source/games/gomoku/final-art-v1/source/camera-desktop-v1.svg",
+      "sha256": "114D2A560F2EBBC2C5EEB1A813121FD997DF7B63055BA696870AF801163F9064",
+      "bytes": 608,
+      "width": 1280,
+      "height": 720,
+      "alpha": false
+    },
+    {
+      "key": "camera-mobile",
+      "path": "art-source/games/gomoku/final-art-v1/source/camera-mobile-v1.svg",
+      "sha256": "491248ACC5DD0E50B523BB8B42457286B9218EDAA683E312578D9710F10FB4B8",
+      "bytes": 604,
+      "width": 720,
+      "height": 960,
+      "alpha": false
+    }
+  ],
+  "runtimeVariants": [
+    {
+      "key": "board-wood",
+      "path": "public/assets/games/gomoku/final-art-v1/board-wood-v1.webp",
+      "sha256": "3FC9E3F5A51D7931E7AE24F7F15DD6B10BF5BA45E1E86211B55B5A56F317CB04",
+      "bytes": 37164,
+      "width": 1056,
+      "height": 1056,
+      "alpha": false
+    },
+    {
+      "key": "board-wood-static",
+      "path": "public/assets/games/gomoku/final-art-v1/board-wood-static-v1.webp",
+      "sha256": "3FC9E3F5A51D7931E7AE24F7F15DD6B10BF5BA45E1E86211B55B5A56F317CB04",
+      "bytes": 37164,
+      "width": 1056,
+      "height": 1056,
+      "alpha": false
+    },
+    {
+      "key": "board-stone",
+      "path": "public/assets/games/gomoku/final-art-v1/board-stone-v1.webp",
+      "sha256": "AD5940177A943D951F06E55F680B8B30D5FD0F2551ECED711AEF432C9EA4CF8C",
+      "bytes": 24774,
+      "width": 1056,
+      "height": 1056,
+      "alpha": false
+    },
+    {
+      "key": "board-stone-static",
+      "path": "public/assets/games/gomoku/final-art-v1/board-stone-static-v1.webp",
+      "sha256": "AD5940177A943D951F06E55F680B8B30D5FD0F2551ECED711AEF432C9EA4CF8C",
+      "bytes": 24774,
+      "width": 1056,
+      "height": 1056,
+      "alpha": false
+    },
+    {
+      "key": "board-ink",
+      "path": "public/assets/games/gomoku/final-art-v1/board-ink-v1.webp",
+      "sha256": "D6109CD5F1546AB9330FD192EEBB1A6DDD93658DBD2B0CBBD20166B36D3A2714",
+      "bytes": 25228,
+      "width": 1056,
+      "height": 1056,
+      "alpha": false
+    },
+    {
+      "key": "board-ink-static",
+      "path": "public/assets/games/gomoku/final-art-v1/board-ink-static-v1.webp",
+      "sha256": "D6109CD5F1546AB9330FD192EEBB1A6DDD93658DBD2B0CBBD20166B36D3A2714",
+      "bytes": 25228,
+      "width": 1056,
+      "height": 1056,
+      "alpha": false
+    },
+    {
+      "key": "board-grass",
+      "path": "public/assets/games/gomoku/final-art-v1/board-grass-v1.webp",
+      "sha256": "20CDF36ACC18B3D81BC9048DC91457FF2EAB514097679EA767D62A509F4B2063",
+      "bytes": 21530,
+      "width": 1056,
+      "height": 1056,
+      "alpha": false
+    },
+    {
+      "key": "board-grass-static",
+      "path": "public/assets/games/gomoku/final-art-v1/board-grass-static-v1.webp",
+      "sha256": "20CDF36ACC18B3D81BC9048DC91457FF2EAB514097679EA767D62A509F4B2063",
+      "bytes": 21530,
+      "width": 1056,
+      "height": 1056,
+      "alpha": false
+    },
+    {
+      "key": "piece-black-white",
+      "path": "public/assets/games/gomoku/final-art-v1/piece-black-white-v1.webp",
+      "sha256": "8CDEA7D768259FC1CC49D587D3272870ED03224DDAAC8AEC42ECA9DEF91FDD62",
+      "bytes": 8132,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "piece-black-white-static",
+      "path": "public/assets/games/gomoku/final-art-v1/piece-black-white-static-v1.webp",
+      "sha256": "8CDEA7D768259FC1CC49D587D3272870ED03224DDAAC8AEC42ECA9DEF91FDD62",
+      "bytes": 8132,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "piece-jade",
+      "path": "public/assets/games/gomoku/final-art-v1/piece-jade-v1.webp",
+      "sha256": "C0B4CCFBF83879D7878BACB0F8B04CC3CEC5C2D4179090A85F3C43877020BFE4",
+      "bytes": 10038,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "piece-jade-static",
+      "path": "public/assets/games/gomoku/final-art-v1/piece-jade-static-v1.webp",
+      "sha256": "C0B4CCFBF83879D7878BACB0F8B04CC3CEC5C2D4179090A85F3C43877020BFE4",
+      "bytes": 10038,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "piece-crystal",
+      "path": "public/assets/games/gomoku/final-art-v1/piece-crystal-v1.webp",
+      "sha256": "E86B5E2FB3082329ACDF503EE5B45129DE6CB416EE6DE682C8118F9236415E09",
+      "bytes": 10864,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "piece-crystal-static",
+      "path": "public/assets/games/gomoku/final-art-v1/piece-crystal-static-v1.webp",
+      "sha256": "E86B5E2FB3082329ACDF503EE5B45129DE6CB416EE6DE682C8118F9236415E09",
+      "bytes": 10864,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "piece-glow",
+      "path": "public/assets/games/gomoku/final-art-v1/piece-glow-v1.webp",
+      "sha256": "5E99CE0E0206A68ACB933C2015CB71CEFD4D587D9CA58BBC13B27D612F276886",
+      "bytes": 11342,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "piece-glow-static",
+      "path": "public/assets/games/gomoku/final-art-v1/piece-glow-static-v1.webp",
+      "sha256": "5E99CE0E0206A68ACB933C2015CB71CEFD4D587D9CA58BBC13B27D612F276886",
+      "bytes": 11342,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "piece-obsidian",
+      "path": "public/assets/games/gomoku/final-art-v1/piece-obsidian-v1.webp",
+      "sha256": "4E6D0DA96703C6F3B85B335E2C77C062FDAC4FD9259C1ABC4BE5A3681994A0B6",
+      "bytes": 7886,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "piece-obsidian-static",
+      "path": "public/assets/games/gomoku/final-art-v1/piece-obsidian-static-v1.webp",
+      "sha256": "4E6D0DA96703C6F3B85B335E2C77C062FDAC4FD9259C1ABC4BE5A3681994A0B6",
+      "bytes": 7886,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "vfx-last-move",
+      "path": "public/assets/games/gomoku/final-art-v1/vfx-last-move-v1.webp",
+      "sha256": "82BB66C66E2B936A8DFC4C51328260DEFD17E924A461F206120417F2C2924181",
+      "bytes": 11228,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "vfx-last-move-static",
+      "path": "public/assets/games/gomoku/final-art-v1/vfx-last-move-static-v1.webp",
+      "sha256": "82BB66C66E2B936A8DFC4C51328260DEFD17E924A461F206120417F2C2924181",
+      "bytes": 11228,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "vfx-placement-impact",
+      "path": "public/assets/games/gomoku/final-art-v1/vfx-placement-impact-v1.webp",
+      "sha256": "5F0749CB243CADACD7089DACBC7345D1434CB0B3E43BEF2B48DB65562395913E",
+      "bytes": 13886,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "vfx-placement-impact-static",
+      "path": "public/assets/games/gomoku/final-art-v1/vfx-placement-impact-static-v1.webp",
+      "sha256": "5F0749CB243CADACD7089DACBC7345D1434CB0B3E43BEF2B48DB65562395913E",
+      "bytes": 13886,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "vfx-five-line",
+      "path": "public/assets/games/gomoku/final-art-v1/vfx-five-line-v1.webp",
+      "sha256": "DE80C5A9A37B04FF65CB4A3B214BDE02F5960532AC2D383B8D1FEBC6AC46D058",
+      "bytes": 8908,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "vfx-five-line-static",
+      "path": "public/assets/games/gomoku/final-art-v1/vfx-five-line-static-v1.webp",
+      "sha256": "DE80C5A9A37B04FF65CB4A3B214BDE02F5960532AC2D383B8D1FEBC6AC46D058",
+      "bytes": 8908,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "vfx-draw-settle",
+      "path": "public/assets/games/gomoku/final-art-v1/vfx-draw-settle-v1.webp",
+      "sha256": "933585BE15607BC461724192B770883CFB4449703217AA990BB8D665525534E9",
+      "bytes": 11588,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "vfx-draw-settle-static",
+      "path": "public/assets/games/gomoku/final-art-v1/vfx-draw-settle-static-v1.webp",
+      "sha256": "933585BE15607BC461724192B770883CFB4449703217AA990BB8D665525534E9",
+      "bytes": 11588,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "vfx-ai-thinking",
+      "path": "public/assets/games/gomoku/final-art-v1/vfx-ai-thinking-v1.webp",
+      "sha256": "E0C15C87DA625FA52B977F0175ADD356B36232BE062769BB271D4F55F4775B4A",
+      "bytes": 11452,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "vfx-ai-thinking-static",
+      "path": "public/assets/games/gomoku/final-art-v1/vfx-ai-thinking-static-v1.webp",
+      "sha256": "E0C15C87DA625FA52B977F0175ADD356B36232BE062769BB271D4F55F4775B4A",
+      "bytes": 11452,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "vfx-spectate",
+      "path": "public/assets/games/gomoku/final-art-v1/vfx-spectate-v1.webp",
+      "sha256": "0E2703D23981C4FAA7C5E6BAE2E287EA3A59E6DDDE47F4DD9F475565A6116754",
+      "bytes": 7916,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "vfx-spectate-static",
+      "path": "public/assets/games/gomoku/final-art-v1/vfx-spectate-static-v1.webp",
+      "sha256": "0E2703D23981C4FAA7C5E6BAE2E287EA3A59E6DDDE47F4DD9F475565A6116754",
+      "bytes": 7916,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "vfx-reconnect",
+      "path": "public/assets/games/gomoku/final-art-v1/vfx-reconnect-v1.webp",
+      "sha256": "93DBEE69AEC399FB57990CD0CDB7D9AC286CD264F540B0FB0169D7E427EDB5DC",
+      "bytes": 7950,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "vfx-reconnect-static",
+      "path": "public/assets/games/gomoku/final-art-v1/vfx-reconnect-static-v1.webp",
+      "sha256": "93DBEE69AEC399FB57990CD0CDB7D9AC286CD264F540B0FB0169D7E427EDB5DC",
+      "bytes": 7950,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "camera-desktop",
+      "path": "public/assets/games/gomoku/final-art-v1/camera-desktop-v1.webp",
+      "sha256": "DF65E1093066B911D292FA2796AC12C5629D05FF45C94D885742EAFAE7A10DFB",
+      "bytes": 4518,
+      "width": 1280,
+      "height": 720,
+      "alpha": false
+    },
+    {
+      "key": "camera-desktop-static",
+      "path": "public/assets/games/gomoku/final-art-v1/camera-desktop-static-v1.webp",
+      "sha256": "DF65E1093066B911D292FA2796AC12C5629D05FF45C94D885742EAFAE7A10DFB",
+      "bytes": 4518,
+      "width": 1280,
+      "height": 720,
+      "alpha": false
+    },
+    {
+      "key": "camera-mobile",
+      "path": "public/assets/games/gomoku/final-art-v1/camera-mobile-v1.webp",
+      "sha256": "97C3CD3F1885D585A48027D3CA4C7EE03A584AA8F147A4B040A1B8A28B3C59F8",
+      "bytes": 4552,
+      "width": 720,
+      "height": 960,
+      "alpha": false
+    },
+    {
+      "key": "camera-mobile-static",
+      "path": "public/assets/games/gomoku/final-art-v1/camera-mobile-static-v1.webp",
+      "sha256": "97C3CD3F1885D585A48027D3CA4C7EE03A584AA8F147A4B040A1B8A28B3C59F8",
+      "bytes": 4552,
+      "width": 720,
+      "height": 960,
+      "alpha": false
+    }
+  ],
+  "reviewBoards": [
+    {
+      "path": "art-source/games/gomoku/final-art-v1/review/gomoku-final-contact-sheet-v1.png",
+      "sha256": "24D1E96CF65E18FCFA4E8C730870E885D6111FCB4A89F6DBB11578DA9535913C",
+      "bytes": 36345,
+      "width": 1200,
+      "height": 900
+    }
+  ],
+  "featureFlags": {
+    "operator": "all",
+    "enabledValue": "1",
+    "defaultEnabled": true,
+    "ids": [
+      "mg_art_gomoku_final_v1"
+    ]
+  },
+  "metrics": {
+    "sourceMasterCount": 18,
+    "runtimeVariantCount": 36,
+    "reviewBoardCount": 1,
+    "runtimeVariantBytes": 477912,
+    "runtimeByteBudget": 4194304,
+    "withinBudget": true
+  },
+  "fallback": {
+    "chain": "Gomoku final art -> Wave A/M0 board -> Canvas/CSS -> procedural Ghost3D"
+  },
+  "authority": "presentation-only; board grid, stones, last move and winning line remain rule/Canvas/renderer semantic state"
+}

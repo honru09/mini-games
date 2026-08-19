@@ -26,6 +26,8 @@
 
 `设备｜系统/浏览器｜方向｜场景｜平均 FPS｜长帧数｜发热｜结果｜问题链接`
 
+每条真实设备/浏览器证据还必须记录：`buildSha256`、`buildBytes`、浏览器与系统精确版本、方向、PWA/普通标签页、音频状态、后台/锁屏恢复、网络配置、截图/录像路径和失败链接。当前构建的可机读单浏览器矩阵索引到 `requirements/active/latest-browser-visible-matrix-prove-p4-20260815/evidence/current-local-browser-matrix.json`；单一 in-app Chromium、CSS viewport 或本地受控传输不得填写为第二浏览器、物理设备或真实网络。
+
 只有实际完成上述实机测试并填写证据后，才可把本文件状态改为 `EXECUTED`。
 
 ## 第三阶段已完成的定点预览（不升级矩阵状态）

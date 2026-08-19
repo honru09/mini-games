@@ -1,17 +1,20 @@
 {
   "schemaVersion": 1,
   "task": "honru-expression-kit-v1-20260809",
-  "state": "VERIFYING",
+  "state": "LOCAL_OWNER_CLEARED_DEFAULT_ON_NOT_RELEASED",
   "risk": "MEDIUM",
-  "dependsOn": ["honru-character-master-v2-20260809:source-only", "sticker-cartoon-runtime-integration-p1-20260809:verified-default-off"],
+  "dependsOn": ["honru-runtime-integration-p2-20260809:owner-cleared-default-on"],
+  "currentPolicy": "P-HONRU-STATES-V1 已取得 OWNER_AUTHORIZED_ART_CLEARANCE 并在当前本地 runtime 可逆 default-on；人工清稿、独立自然人 Reviewer B、IP/法律意见与逐资产 Golden Set 为 OPTIONAL_ADVISORY_EVIDENCE，不阻塞开发或 runtime。外部 blocked-license / EXTERNAL_REFERENCE_ONLY 素材永久禁用，发布仍需当前用户明确命令。",
   "steps": [
     {"id":"recon","status":"completed","dependsOn":[],"risk":"low","tests":["AGENTS/PROJECT_STATUS/ownership/recent commits/source audit"],"rollback":"no changes"},
     {"id":"freeze","status":"completed","dependsOn":["recon"],"risk":"medium","tests":["IN/OUT/identity/alpha/runtime boundary frozen"],"rollback":"delete unopened task package"},
     {"id":"generate","status":"completed","dependsOn":["freeze"],"risk":"medium","tests":["nine states, identity invariants, no text/third-party traits"],"rollback":"retain only chroma sources or reject candidates"},
     {"id":"alpha-and-derived","status":"completed","dependsOn":["generate"],"risk":"medium","tests":["RGBA, transparent corners, green fringe, 192/96/64/44 readability"],"rollback":"keep source-only chroma evidence"},
     {"id":"provenance-and-catalog","status":"completed","dependsOn":["alpha-and-derived"],"risk":"medium","tests":["hash, dimensions, prompt/model/task id, asset-library audit"],"rollback":"remove unapproved entries"},
-    {"id":"runtime-prep","status":"completed","dependsOn":["provenance-and-catalog"],"risk":"high","tests":["default-off flag and state map static contract; no protocol/rule coupling"],"rollback":"remove prep contract; keep source-only"},
+    {"id":"runtime-prep","status":"completed","dependsOn":["provenance-and-catalog"],"risk":"high","tests":["historical default-off flag and state map static contract; no protocol/rule coupling"],"rollback":"remove prep contract; keep source-only"},
     {"id":"verification","status":"completed","dependsOn":["runtime-prep"],"risk":"high","tests":["asset audit, validate:project, quality:gates, npm test"],"rollback":"disable flag and revert task changes"},
-    {"id":"review","status":"pending","dependsOn":["verification"],"risk":"high","tests":["human preview and IP review"],"rollback":"keep reference-only"}
-  ]
+    {"id":"owner-cleared-runtime","status":"completed","dependsOn":["verification"],"risk":"high","tests":["OWNER_AUTHORIZED_ART_CLEARANCE","Manifest-backed default-on","dual kill switches","v1 SVG fallback","current single-browser narrow evidence"],"rollback":"set mg_art_honru_states_v1=0 or use the permanent v1 SVG fallback"},
+    {"id":"review","status":"optional_advisory_not_executed","dependsOn":[],"risk":"advisory","tests":["optional human cleanup, natural-person Reviewer B, IP/legal advice and per-asset Golden Set"],"rollback":"not applicable","blocking":false}
+  ],
+  "historicalAsOf": {"date":"2026-08-09","state":"VERIFYING_DEFAULT_OFF","meaning":"Former source-only/default-off plan with human/IP review pending; audit history only."}
 }

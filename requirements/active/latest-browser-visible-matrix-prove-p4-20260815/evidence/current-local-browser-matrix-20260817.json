@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-08-17T19:45:00+09:00",
+  "claim": "historical_as_of_build_single_browser_partial",
+  "currency": "historical_as_of",
+  "build": {"path": "public/index.html", "sha256": "915A97F3F6A877CC3C9D08775C27167E4522170EE76A8AAD05C2FDD91B8C8EFC", "characters": 1890905, "bytes": 1905466},
+  "environment": {"browserSurface": "Codex in-app Chromium", "browserCount": 1, "url": "http://localhost:8091/?build-check=clock-honru-final#/home"},
+  "coverage": {
+    "kind": "full_historical_as_of_single_browser_matrix",
+    "fullRouteMatrixCurrentBuild": false,
+    "surfaces": ["home", "games", "playline", "profile", "shop", "direct_messages", "achievements", "room_lobby", "six_game_stages", "forced_colors"],
+    "viewports": [{"width": 1440, "height": 900, "devicePixelRatio": 1}, {"width": 1024, "height": 768, "devicePixelRatio": 1}, {"width": 768, "height": 1024, "devicePixelRatio": 1}, {"width": 390, "height": 844, "devicePixelRatio": 1}, {"width": 844, "height": 390, "devicePixelRatio": 1}],
+    "languages": ["zh-CN", "en-US", "uk-UA"],
+    "themes": ["light", "dark"],
+    "forcedColors": true,
+    "reducedMotion": true,
+    "deepScrollReset": true,
+    "monopolyCompactMicro": true,
+    "pluralCounts": [1, 2, 5, 11, 21, 22, 25],
+    "gCoinsSurfaces": ["profile", "shop", "leaderboard", "room_lobby_players"]
+  },
+  "sourceEvidence": [{"path": "requirements/active/latest-browser-visible-matrix-prove-p4-20260815/evidence/current-build-single-browser-verification-202608171945.json", "scope": "historical_as_of_full_single_browser_matrix", "currency": "historical_as_of", "supportsFullRouteMatrix": true}],
+  "historicalEvidence": [
+    {"path": "requirements/active/latest-browser-visible-matrix-prove-p4-20260815/evidence/current-local-browser-matrix.json", "buildSha256": "324922B8E8275D599B4D15FF83C1665C83155E4496BC9B9E3A4AE0A0C5B478E6", "classification": "historical_as_of_build_only"},
+    {"path": "requirements/active/latest-browser-visible-matrix-prove-p4-20260815/evidence/current-build-single-browser-verification-t2-202608161530.json", "buildSha256": "1B26D7D58DCC6B4A9BE55BE09C0D787E1B1AF08CBD6C54D4175BF73064F2D1DF", "classification": "historical_as_of_build_only"},
+    {"path": "requirements/active/latest-browser-visible-matrix-prove-p4-20260815/evidence/current-build-single-browser-verification-202608160305.json", "buildSha256": "963F83511200AC16AA309EC1FA5BE243F01FB5CADD4DD5E2B41D7B718C8B686B", "classification": "historical_as_of_build_only"}
+  ],
+  "notGranted": ["second_browser", "physical_android", "physical_iphone", "physical_tablet", "real_network_shaping", "two_formal_friend_dm_browsers", "physical_performance_audio_recovery", "production_verification", "real_supabase", "human_art_review", "release"],
+  "gateDisposition": "GATE-DEVICE-BROWSER-NETWORK development OPEN / release evidence RELEASE_EVIDENCE_PENDING",
+  "provenanceCorrection": "The 915A97F3 build was fully checked in one Codex in-app Chromium on 2026-08-17. Later concurrent source changes produced a different local build, so this artifact is retained only as historical-as-of evidence."
+}

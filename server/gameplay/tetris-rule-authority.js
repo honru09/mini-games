@@ -57,7 +57,7 @@ class TetrisRuleAuthority {
   playerSnapshot(player){const state=this.states[player];return{player,seq:this.lastSeq[player],hash:Rules.hashState(state),state:JSON.parse(Rules.serialize(state)),incoming:this.incoming[player].map(item=>({...item})),alive:!state.terminal,koTime:this.koTime[player],placement:this.placements[player]};}
   snapshot(now=Date.now()){return{protocol:this.protocol,matchId:this.matchId,startAt:this.startAt,matchEndAt:this.matchEndAt,matchSeed:this.matchSeed,rulesetVersion:this.protocol,revision:this.revision,serverNow:now,players:this.states.map((_,player)=>this.playerSnapshot(player)),finished:this.finished,order:this.order?this.order.slice():null,inputCount:this.inputLog.length};}
   stateEvent(now=Date.now()){return{type:'tetris_rule_state',payload:this.snapshot(now)};}
-  result(now=Date.now()){return{type:'tetris_result',matchId:this.matchId,protocol:this.protocol,revision:this.revision,serverNow:now,order:this.order.slice(),stats:this.states.map((state,player)=>({player,score:state.score,lines:state.lines,pieces:state.pieces,boardHeight:this.boardHeight(state),placement:this.placements[player],hash:Rules.hashState(state)}))};}
+  result(now=Date.now()){return{type:'tetris_result',matchId:this.matchId,protocol:this.protocol,scoringVersion:Rules.SCORING_VERSION,revision:this.revision,serverNow:now,order:this.order.slice(),stats:this.states.map((state,player)=>({player,score:state.score,lines:state.lines,level:state.level,combo:state.combo,backToBackCount:state.backToBackCount,tSpins:state.tSpins,tetrises:state.tetrises,perfectClears:state.perfectClears,pieces:state.pieces,boardHeight:this.boardHeight(state),placement:this.placements[player],hash:Rules.hashState(state)}))};}
 }
 
 module.exports={TetrisRuleAuthority};

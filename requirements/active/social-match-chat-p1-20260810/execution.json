@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "taskId": "social-match-chat-p1-20260810",
+  "status": "completed_local",
+  "startedAt": "2026-08-10T11:08:31+09:00",
+  "updatedAt": "2026-08-10T11:47:00+09:00",
+  "completed": [
+    "match-chat-v1 protocol and capability",
+    "server authority, text normalization, idempotency, rate limits and per-recipient Block filtering",
+    "bounded in-match memory history and spectator delay",
+    "Game Stage history, unread, composer, bubbles, report and local mute",
+    "in-memory draft preservation and lifecycle cleanup",
+    "three-language, accessibility and reduced-motion contracts",
+    "specialized, legacy Social Match and full regression",
+    "2026-08-16 policy reconciliation: owner-cleared Honru Emoji may be reversible default-on in match-expression-v1, while match-chat-v1 remains a text-only protocol"
+  ],
+  "verification": {
+    "specialized": [
+      "node qa/match-chat-contract.js",
+      "node --experimental-websocket qa/match-chat-online.js",
+      "npm run test:social-match",
+      "node qa/game-stage-contract.js"
+    ],
+    "full": "npm test (142.6s, exit 0)",
+    "buildSource": "scripts/build.js",
+    "buildBytes": 923629,
+    "physicalFileBytes": 937519,
+    "buildSha256": "1A709832AD0320518DB9E944AEEA70BD508231FF56FF6BCF2B88B7436694C305",
+    "doubleBuildIdentical": true
+  },
+  "pending": [
+    "second desktop browser",
+    "Android/iPhone/Tablet",
+    "real network shaping",
+    "visible browser reduced-motion",
+    "a separate versioned protocol/security/persistence review if match-chat ever sends Emoji tokens or images",
+    "user release command"
+  ],
+  "artBoundary": "P-HONRU-EMOJI-V1 has OWNER_AUTHORIZED_ART_CLEARANCE and a reversible default-on match-expression runtime; this does not add image fields to match-chat-v1.",
+  "optionalAdvisoryEvidence": {"status":"NOT_EXECUTED","items":["human cleanup","independent natural-person Reviewer B","IP/legal advice","per-asset Golden Set"],"blocking":false},
+  "externalAssetPolicy": "blocked-license / EXTERNAL_REFERENCE_ONLY assets are permanently disabled",
+  "releasePolicy": "Second browser, physical devices and real network remain RELEASE_EVIDENCE_PENDING; any new release requires an explicit current user command.",
+  "historicalAsOf": {"date":"2026-08-10","pending":["approved Honru Emoji artwork after human/IP/Golden Set review"],"meaning":"Former candidate-only/default-off human prerequisite; audit history only."},
+  "dataBoundary": "match text is current-room memory only and excluded from moveLog, Replay, rewards, AI learning, Analytics, database, localStorage and ordinary logs",
+  "published": false
+}

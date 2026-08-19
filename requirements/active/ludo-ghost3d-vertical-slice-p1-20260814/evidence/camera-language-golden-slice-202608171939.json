@@ -1,0 +1,52 @@
+{
+  "evidenceId": "ludo-camera-language-golden-slice-202608171939",
+  "capturedAt": "2026-08-17T19:53:24+09:00",
+  "classification": "VISUAL_VERIFIED_SINGLE_BROWSER_LOCAL_PARTIAL",
+  "requirements": ["GAME-043", "TECH-049"],
+  "build": {
+    "path": "public/index.html",
+    "characters": 1877813,
+    "utf8Bytes": 1892356,
+    "sha256": "9E616D26D95762196C5811A662CD345AA20885C2A867263CBF4C43101D076F5A",
+    "ludoRendererSha256": "3D9DD102B5883EACB30EF04863216DE7773D65D4F354375674A0284EF8171704"
+  },
+  "implementation": [
+    "Ludo renderer now consumes the shared TabletopCameraRig for entrance, action-follow, impact, finish portrait, overview restore and result shots",
+    "the existing single piece_moved event remains the only gameplay motion; capture and finish stay bounded substages",
+    "ranking emits one revision-bound presentation-only terminal event after the accepted terminal frame",
+    "winner-base podium pulse and result camera are finite, killable and static under LOW/reduced-motion",
+    "the blocking podium dialog waits 520ms HIGH or 420ms BALANCED only when the animated renderer was ready before terminal host restart; fallback paths remain immediate",
+    "the cancellable outcome timer is epoch-owned but excluded from whenIdle so camera presentation cannot delay Rule/Replay completion"
+  ],
+  "automated": [
+    "npm run test:ludo-ghost3d PASS (ESM graph 49 / Renderer 84 / bridge / layout / cache)",
+    "node qa/tabletop-camera-rig-contract.js PASS",
+    "node qa/gomoku-ghost3d-* PASS after shared CameraRig/build changes"
+  ],
+  "browser": {
+    "name": "Codex in-app Chromium",
+    "url": "http://localhost:8080/",
+    "scope": [
+      "temporary HIGH opt-in reached ludo ghost3dReady=true with the 52-cell procedural board, read-only Three dice and permanent DOM dice command",
+      "a clean restored near-terminal state waited for renderer readiness before the final move",
+      "ranking process reached generation 3 with zero result dialogs at approximately 500ms, leaving the board and podium camera readable",
+      "the podium result dialog appeared after the finite result beat",
+      "the exact final build repeated ranking generation 5 with zero dialogs at 500ms and one dialog after the finite delay",
+      "after local flags were removed, a fresh Ludo game retained its Wave B board and created no Ghost3D slot",
+      "final browser console warning/error count was zero",
+      "synthetic local terminal checks did not submit reward/result claims",
+      "no horizontal overflow or console warning/error was observed in the current desktop viewport"
+    ],
+    "qaIsolation": [
+      "online.connected and online._authenticated were temporarily disabled around the synthetic final move and restored",
+      "mg_ghost3d_ludo_v1 and mg_ghost3d_ludo_quality_v1 were removed after verification"
+    ]
+  },
+  "limitations": [
+    "single local Chromium only",
+    "no second desktop browser, physical device/touch, real network or low-end performance evidence",
+    "procedural geometry is not final approved production art",
+    "not committed, pushed, deployed or production verified"
+  ],
+  "release": "LOCAL_ONLY_NOT_RELEASED"
+}

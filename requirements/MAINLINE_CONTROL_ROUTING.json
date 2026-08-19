@@ -1,0 +1,320 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-08-19T12:02:00+09:00",
+  "authority": {
+    "command": "requirements/GHOST_GAME_MAINLINE_COMMAND.md",
+    "atomicRequirementSource": "requirements/PRODUCT_REQUIREMENTS_LEDGER.json",
+    "releasePolicy": "explicit-user-command-only",
+    "currentStage": "CLOSE",
+    "nextStage": "PROVE"
+  },
+  "approvalPolicy": {
+    "source": "requirements/AUTOMATED_AND_HUMAN_GATE_POLICY.md",
+    "defaultDecision": "CONTINUE_WITH_MACHINE_EVIDENCE",
+    "autoAdvanceAuthorizedAt": "2026-08-16",
+    "compositeGateRule": "machine-verifiable subchecks auto-advance to TECHNICAL_PASS; device and Supabase Gates are NON_BLOCKING_FOR_DEVELOPMENT with developmentStatus OPEN and releaseStatus RELEASE_EVIDENCE_PENDING while real-environment evidence is missing; the Art Gate is OPEN_BY_OWNER_AUTHORIZATION after OWNER_AUTHORIZED_ART_CLEARANCE and still requires an explicit current owner release command",
+    "machineContinuable": [
+      "TECHNICAL_REVIEWER",
+      "HASH_AND_PROVENANCE",
+      "ALPHA_CONTAMINATION_DIMENSIONS",
+      "CONTRAST_SMALL_SIZE_READABILITY",
+      "A11Y_I18N",
+      "PERFORMANCE_FALLBACK",
+      "MANIFEST_CACHE_SECURITY",
+      "AUTOMATED_REGRESSION",
+      "LOCAL_BROWSER_EVIDENCE",
+      "PROTOCOL_COMPATIBILITY_AND_ROLLBACK",
+      "RENDERER_RESOURCE_LIFECYCLE",
+      "WORKER_CANCELLATION_AND_PRIVACY",
+      "BUILD_AND_TEST_ISOLATION"
+    ],
+    "externalEnvironmentRequired": [
+      "SECOND_REAL_BROWSER",
+      "PHYSICAL_ANDROID_IPHONE_TABLET",
+      "REAL_NETWORK_SHAPING",
+      "REAL_PRODUCTION_SUPABASE_AND_MULTI_INSTANCE"
+    ],
+    "optionalAdvisoryEvidence": [
+      "ART_HUMAN_CLEANUP",
+      "INDEPENDENT_HUMAN_REVIEWER_B",
+      "IP_LEGAL_FINAL_DECISION",
+      "USER_GOLDEN_SET_DECISION"
+    ],
+    "releaseAuthorization": "EXPLICIT_CURRENT_USER_COMMAND_ONLY",
+    "ownerAuthorizedDevelopmentLane": {
+      "enabled": true,
+      "authorizedAt": "2026-08-16",
+      "mode": "BATCHED_OWNER_AUTHORIZED_ART_CLEARANCE_AND_TECHNICAL_IMPLEMENTATION",
+      "meaning": "产品负责人已授权主代理自行推进机器可验证开发与内部预览，不再逐项等待确认；原创 Ghost-native 候选在用户已确认的 M0 North Star、稳定 ID、版本、SHA、provenance、机器技术/视觉/相似风险审查、fallback 与回滚合同齐全时可获得 OWNER_AUTHORIZED_ART_CLEARANCE，进入可逆 default-on runtime 候选。",
+      "nonClaims": ["不冒充独立自然人 Reviewer B", "不伪造 IP/法律结论或 PASS", "不把可选风险咨询写成已完成", "不授予 commit/push/Pages/Render/生产数据写入"],
+      "batchReview": "阶段末统一运行专项回归、Quality Gates、完整 npm test 与确定性构建；中途仅在安全/兼容/数据风险时停止。"
+    }
+  },
+  "stageOrder": [
+    "CONTROL",
+    "CLOSE",
+    "PROVE",
+    "DATA",
+    "ART",
+    "PARITY",
+    "LOOP",
+    "COMMUNITY",
+    "PLATFORM"
+  ],
+  "dispositions": {
+    "NOW_CLOSURE": {
+      "label": "当前收口",
+      "meaning": "当前阶段允许继续施工或回归；已验证项只作为基线维护，未验证项必须按既定边界补齐本地实现与证据。"
+    },
+    "EXTERNAL_GATE": {
+      "label": "外部门禁",
+      "meaning": "发布证据必须获得真实设备或真实生产数据环境；自动化、静态合同和历史截图不能替代该门禁。原创美术适用单独的所有者清除轨道。"
+    },
+    "NON_BLOCKING_FOR_DEVELOPMENT": {
+      "label": "开发开放、发布证据待决",
+      "meaning": "缺外部环境时，开发、内部预览、机器回归与可逆原创候选接入可以继续；设备与 Supabase 发布仍保持 RELEASE_EVIDENCE_PENDING。原创美术可按所有者清除轨道开放，但不能伪造人工或法律结论。"
+    },
+    "DEFERRED_MAINLINE": {
+      "label": "主线后置",
+      "meaning": "需求保留在当前产品范围内，但必须遵循总指挥阶段顺序，不与 CONTROL/CLOSE 批次混合施工。"
+    },
+    "FUTURE_EXPANSION": {
+      "label": "未来扩展",
+      "meaning": "明确记录但不进入当前产品收口；只有六款基线、生产 Gate 和主线前序达成后才重新冻结。"
+    }
+  },
+  "semanticStatusContract": {
+    "rule": "ledger.status 描述已落盘的实现/证据边界，routing disposition 描述下一步执行顺序；两者不得相互冒充。",
+    "visibleEvidence": "代码、静态合同、DOM/VM 和无截图自动化只能证明实现或合同。涉及页面、动效、3D、真机、浏览器或人工美术的可见声明，必须保留真实可见证据或 NOT_EXECUTED。",
+    "externalEvidence": "真实 Supabase、真实设备/第二浏览器/真实网络只能在对应 Gate 记录可复核证据后解除；这些外部环境证据与原创美术的所有者清除轨道分开记录。",
+    "artOwnerClearance": "原创 Ghost-native 资产可在 M0 North Star、稳定 ID、版本、SHA、provenance、机器技术/视觉/相似风险审查、fallback 与回滚可复核时获得 OWNER_AUTHORIZED_ART_CLEARANCE。人工清稿、Reviewer B、IP/法律意见与额外 Golden Set 只能记录为 OPTIONAL_ADVISORY_EVIDENCE，缺失时不得伪造为 PASS。",
+    "releaseEvidence": "任何本地 implemented/verified 或 OWNER_AUTHORIZED_ART_CLEARANCE 结论均不自行触发发布；发布仍只由当前用户明确命令授权。"
+  },
+  "sharedGates": {
+    "GATE-DEVICE-BROWSER-NETWORK": {
+      "label": "第二浏览器、真机与真实网络",
+      "status": "NON_BLOCKING_FOR_DEVELOPMENT",
+      "developmentStatus": "OPEN",
+      "releaseStatus": "RELEASE_EVIDENCE_PENDING",
+      "stage": "PROVE",
+      "owner": "用户提供或连接可用浏览器/设备/整形环境；项目侧只准备脚本、矩阵与证据目录。",
+      "requiredEvidence": [
+        "第二桌面浏览器双正式账号 UI 流程",
+        "Android、iPhone Safari、Tablet 横竖屏与 PWA/音频/恢复",
+        "真实 50/100/200ms 延迟、抖动、丢包、乱序整形",
+        "最新本地构建的浏览器可见、双主题、三语言和 reduced-motion 复核"
+      ],
+      "releaseEffect": "缺真实设备/网络证据时，涉及可见体验的本地能力保持 implemented/partial；不得用静态或单一浏览器证据提升为跨设备 visual verified，也不得作为发布依据。",
+      "partialEvidence": [
+        "2026-08-18 SHA-256 915A97F3…B8C8EFC 的单一 Codex in-app Chromium 完整矩阵现为 historical-as-of：五档视口 × Home/Games/Playline/Profile 20/20、Shop/DM/成就/房间大厅、六款 Game Stage、三语言、双主题、visible reduced-motion、forced-colors、深滚动回顶、零横溢出、零裸 key 与 console 0；当前 82D85384…248FE90E 尚无匹配浏览器完整矩阵，0F7CD4F9…7079D95 也已降为历史快照，且该历史证据不是第二浏览器或真机",
+        "requirements/active/latest-browser-visible-matrix-prove-p4-20260815/evidence/current-local-browser-matrix-20260817.json",
+        "requirements/active/latest-browser-visible-matrix-prove-p4-20260815/evidence/current-build-single-browser-verification-202608171945.json",
+        "2026-08-17 SHA-256 324922B8…B478E6 的单一 Codex in-app Chromium Honru/Emoji 窄证据现为 historical-as-of：idle/check-in、十枚 Emoji 选择器、头像气泡、目标席位投掷、visible reduced-motion、390×844、三语言、双主题与该场景 console 0；两个 hostname 会话只用于存储隔离，不是第二浏览器，也不冒充当前构建",
+        "requirements/active/latest-browser-visible-matrix-prove-p4-20260815/evidence/current-build-single-browser-verification-202608162346.json",
+        "requirements/active/honru-emoji-runtime-p0-20260811/current-build-single-browser-honru-art-202608162216.json",
+        "2026-08-14 单一 Codex in-app Chromium 的历史 BFBD2109… 构建五档 CSS viewport、四区、共享弹层、六款 Game Stage、三语言、双主题和 CDP visible reduced-motion 矩阵；只作为 as-of 历史证据",
+        "requirements/active/latest-browser-visible-matrix-prove-p1-20260814/evidence/local-single-browser-verification-202608140615.json",
+        "2026-08-16 T3 SHA-256 014E2886…07067 / 1,720,249 bytes 的单一 Codex in-app Chromium 568×726 四路由、Tetris/Tank 默认关闭、零横溢出/裸 key 与最终清理窄回归已随 T4 构建产生降为 historical-as-of；当前 T4 SHA-256 3C714ECA…3811EE 尚无浏览器可见证据，T2/P4 完整矩阵也只保留为历史，证据不解除共享 Gate",
+        "requirements/active/latest-browser-visible-matrix-prove-p4-20260815/evidence/current-build-single-browser-verification-t3-202608161627.json",
+        "requirements/active/latest-browser-visible-matrix-prove-p4-20260815/evidence/current-build-single-browser-verification-t2-202608161530.json",
+        "requirements/active/latest-browser-visible-matrix-prove-p4-20260815/evidence/current-build-single-browser-verification-202608160305.json",
+        "requirements/active/latest-browser-visible-matrix-prove-p4-20260815/evidence/current-local-browser-matrix.json",
+        "2026-08-15 单一 Codex in-app Chromium 对 SHA-256 0A6FE849…1CDB4 / 1,594,847 bytes 完成五档四区 20/20、Shop/DM/成就/房间大厅、六款 Game Stage、三语言、双主题、visible reduced-motion、forced-colors、零横溢出、零裸 key、scrollY=0 与 console 0；现为 historical as-of，只补 TECH-027 的历史构建单浏览器部分证据，不解除共享 Gate",
+        "requirements/active/latest-browser-visible-matrix-prove-p3-20260815/evidence/current-build-single-browser-verification-202608151814.json",
+        "requirements/active/latest-browser-visible-matrix-prove-p3-20260815/evidence/current-local-browser-matrix.json",
+        "2026-08-15 单一 Codex in-app Chromium 对当时 SHA-256 3D053273…9062D / 1,597,229 bytes 完成 Profile/Shop/排行榜/玩家列表 G Coins、三语、双主题与 390×844 黑夜乌克兰语窄范围可见复核；现为 historical as-of，只保留 v13/G Coins 专项事实，不冒充当前完整矩阵或 PWA 跨设备更新验收",
+        "requirements/active/gcoins-presentation-unification-p1-20260815/evidence/current-build-single-browser-gcoins-202608151907.json",
+        "2026-08-15 单一 Codex in-app Chromium 对当时记录的 SHA-256 4141BBAC…0850 采集五档四区、Shop/DM/成就/房间大厅、六款 Game Stage、三语言、双主题、visible reduced-motion、forced-colors 与 console 0；现为 historical as-of，只补 TECH-027 的历史单浏览器部分证据",
+        "requirements/active/latest-browser-visible-matrix-prove-p2-20260815/evidence/current-build-single-browser-verification-202608151637.json",
+        "2026-08-14 同一 Codex in-app Chromium 对当时记录构建的 Gomoku Ghost3D default-off fallback、临时 BALANCED opt-in Three 首帧/Raycast/AI 和 CDP reduced-motion 可见复核；historical as-of，只补 TECH-049 的单浏览器部分证据",
+        "requirements/active/gomoku-ghost3d-vertical-slice-p0-20260812/evidence/single-browser-visible-verification-202608140900.json",
+        "2026-08-14 同一 Codex in-app Chromium 对当时记录构建的 Ludo Ghost3D default-off Wave B、临时 HIGH opt-in、390×844/1440×900、实时 viewport 重算、visible reduced-motion 和零 console warn/error 部分证据；historical as-of，只补 GAME-043/GAME-049/TECH-049 的单浏览器证据",
+        "requirements/active/ludo-ghost3d-vertical-slice-p1-20260814/evidence/single-browser-visible-verification-202608141951.json",
+        "2026-08-14 同一 Codex in-app Chromium 对当时记录构建的 Monopoly Ghost3D default-off、临时 HIGH 2–5 人、1440×900/1024×768/390×844/844×390、实时 viewport、三语、双主题、DOM roll/buy/pass/bid、visible reduced-motion 与零 console warn/error 部分证据；historical as-of，只补 GAME-050/TECH-049 的单浏览器证据",
+        "requirements/active/monopoly-ghost3d-vertical-slice-p2-20260814/evidence/single-browser-visible-verification-202608142150.json",
+        "2026-08-14 至 2026-08-15 同一 Codex in-app Chromium 对当时记录构建的 Xiangqi Ghost3D default-off、临时 opt-in、1440×900/1024×768/390×844/844×390、三语、双主题、真实键盘 cue、visible reduced-motion 与零 console warn/error 部分证据；historical as-of，只补 GAME-052/TECH-049 的单浏览器证据",
+        "requirements/active/xiangqi-ghost3d-vertical-slice-p3-20260814/evidence/single-browser-visible-verification-202608150003.json",
+        "2026-08-15 同一 Codex in-app Chromium 对当时记录构建的 Tetris Ghost3D default-off、临时 opt-in、2/4 人、1440×900/1024×768/390×844/844×390/583×726、三语、双主题、真实键盘与 Hard Drop、visible reduced-motion 和零 console warn/error 部分证据；historical as-of，只补 GAME-048/TECH-049 的单浏览器证据",
+        "requirements/active/tetris-ghost3d-vertical-slice-p4-20260815/evidence/single-browser-visible-verification-202608150145.json",
+        "2026-08-15 同一 Codex in-app Chromium 对当时记录构建的 Tank Ghost3D default-off、临时 HIGH、1440×900/1024×768/390×844/844×390、44px D-pad、DOM 开火、Canvas pointer-through、零横溢出与 console warn/error=0 部分证据；historical as-of，只补 GAME-051/GAME-044/TECH-049 的单浏览器证据",
+        "requirements/active/tank-ghost3d-vertical-slice-p5-20260815/evidence/single-browser-visible-verification-202608150945.json",
+        "2026-08-15 当时 Games 路由 697×726 本地页面、六款游戏卡、三档 AI 难度、房间大厅入口与零横向溢出部分证据；现为 historical as-of，只补 PROVE 共享 Gate 的本地准备",
+        "requirements/active/latest-browser-visible-matrix-prove-p1-20260814/evidence/local-games-route-verification-202608151014.json",
+        "2026-08-15 同一 Codex in-app Chromium 的 Service Worker v10 waiting → 关闭旧客户端 → v11 激活、真实断网启动和 zh-CN/en-US/uk-UA 连续切换 0 裸 key 历史证据；后续 v13 waiting/activate 与 G Coins 三语刷新只见当时窄范围专项证据，现同为 historical as-of，P4 不替代 PWA 跨设备更新验收",
+        "requirements/active/pwa-offline-i18n-repair-p1-20260815/evidence/local-browser-offline-i18n-20260815.json",
+        "2026-08-15 受控本地传输预检：Tetris 序号乱序/重复、Tank 测试 harness epoch、旧 WebSocket callback 隔离与 DM 数值序排序均通过；仅为确定性本地预检，不是真实网络整形。当时 TECH-030 与共享 Gate 仍以 BLOCKED 记录；该措辞仅为 historical-as-of，当前开发状态为 OPEN、发布证据为 RELEASE_EVIDENCE_PENDING",
+        "requirements/active/controlled-local-transport-preflight-p0-20260815/evidence/controlled-local-transport-preflight-202608151737.json",
+        "2026-08-15 PROVE 第二浏览器可用性预检：当时只连接一个 Codex in-app Chromium；没有把同浏览器第二标签冒充独立浏览器。当时 Gate 仍以 BLOCKED 记录；该措辞仅为 historical-as-of，当前开发状态为 OPEN、发布证据为 RELEASE_EVIDENCE_PENDING",
+        "requirements/active/latest-browser-visible-matrix-prove-p1-20260814/evidence/second-browser-availability-preflight-202608151602.json"
+      ]
+    },
+    "GATE-SUPABASE-PRODUCTION": {
+      "label": "真实 Supabase、RLS、备份恢复与多实例",
+      "status": "NON_BLOCKING_FOR_DEVELOPMENT",
+      "developmentStatus": "OPEN",
+      "releaseStatus": "RELEASE_EVIDENCE_PENDING",
+      "stage": "DATA",
+      "owner": "用户提供生产项目和仅服务端凭证；运维脚本默认 dry-run，真实迁移/恢复仅在隔离与确认边界内执行。",
+      "requiredEvidence": [
+        "加密且访问受限的备份",
+        "事务迁移、RLS、原子 RPC、并发与幂等验收",
+        "隔离目标恢复演练与非破坏回滚",
+        "多实例租约、单写者、Direct Chat PubSub 与线上浏览器验证"
+      ],
+      "releaseEffect": "缺真实生产数据证据时，JSON/fake PostgREST/单实例回退不可被描述为生产持久化或多实例一致性，也不得作为发布依据。",
+      "partialEvidence": [
+        "2026-08-14 DATA 只读预检：PostgreSQL 工具可用、默认 dry-run 零连接零写入、同 project-ref 恢复目标 fail-closed",
+        "requirements/active/supabase-production-data-preflight-p0-20260814/evidence/local-data-preflight-202608140702.json"
+      ]
+    },
+    "GATE-ART-GOLDEN-SET": {
+      "label": "原创 Ghost-native 所有者美术清除",
+      "status": "OPEN_BY_OWNER_AUTHORIZATION",
+      "developmentStatus": "OPEN",
+      "releaseStatus": "EXPLICIT_OWNER_RELEASE_COMMAND_REQUIRED",
+      "stage": "ART",
+      "owner": "项目所有者已确认 M0 North Star；主代理可按 OWNER_AUTHORIZED_ART_CLEARANCE 整理原创 Ghost-native 候选、Prompt、hash、provenance、机器风险审查、fallback 与回滚，不得冒充人工/IP/法律或 Golden Set 结论。",
+      "requiredEvidence": [
+        "用户已确认的 M0 North Star",
+        "稳定 ID、版本、源 SHA-256 与 provenance",
+        "机器技术/视觉/相似风险审查与小尺寸可读性",
+        "fallback、feature flag 与一键回滚",
+        "当前用户明确发布命令"
+      ],
+      "advisoryEvidence": [
+        "人工清稿与小尺寸复核（可选风险咨询）",
+        "独立 Reviewer B 技术审阅（可选风险咨询）",
+        "IP Similarity / 法律意见（可选风险咨询）",
+        "逐资产 Golden Set 记录（可选风险咨询）"
+      ],
+      "releaseEffect": "取得 OWNER_AUTHORIZED_ART_CLEARANCE 的原创 Ghost-native 候选可进入可逆 default-on runtime 和未来发布候选；发布仍需当前用户明确命令，且不得把未执行的人工/IP/Golden Set 咨询写成 PASS。外部 reference-only/blocked-license 素材继续保持许可与 runtime 禁止边界，但用户授权的受控全信息 reference lane 可将任务相关文件、预览、PSD/AI/EPS 结构与语义库存提供给已安装 Skill；每个输入登记 sourcePath/sourceSha256/provider/model/taskId/transmissionScope，外部影响候选先保持 SOURCE_ONLY_EXTERNAL_INFLUENCED 并完成相似性与 provenance 复核。",
+      "partialEvidence": [
+        "2026-08-16 用户已确认项目自有 M0 两图为全产品唯一视觉 North Star，附件与仓库文件逐字节一致；该证据是 OWNER_AUTHORIZED_ART_CLEARANCE 的视觉方向前提，不伪造逐资产人工清稿、独立自然人 Reviewer B、IP/法律意见、额外 Golden Set 或真机矩阵为已完成",
+        "requirements/active/sticker-cartoon-golden-set-m0-20260808/USER_VISUAL_NORTH_STAR_DECISION-20260816.md",
+        "2026-08-14 G Coins P1 A/B/C 三方向 source-only 候选、Candidate B 机器 Alpha 与 44/64/96/192px 三底色技术检查；不等于人工清稿或 Golden Set",
+        "requirements/active/gcoins-source-redesign-p1-20260814/evidence/local-technical-verification-20260814.json"
+      ]
+    }
+  },
+  "routingGroups": [
+    {
+      "id": "control-baseline",
+      "disposition": "NOW_CLOSURE",
+      "stage": "CONTROL",
+      "workMode": "REGRESSION_BASELINE",
+      "summary": "已验证或已冻结的当前产品基线；只维护回归、状态、证据和发布边界，不把它们伪装成下一批新功能。",
+      "ids": [
+        "ART-001", "ART-003", "ART-012", "ART-013", "ART-031",
+        "UI-001", "UI-002", "UI-003", "UI-004", "UI-005", "UI-006", "UI-008", "UI-013", "UI-014", "UI-015", "UI-016", "UI-029", "UI-030", "UI-033", "UI-034", "UI-036", "UI-038",
+        "GAME-001", "GAME-002", "GAME-003", "GAME-004", "GAME-005", "GAME-006", "GAME-007", "GAME-008", "GAME-010", "GAME-011", "GAME-012", "GAME-013", "GAME-014", "GAME-016", "GAME-019", "GAME-020", "GAME-021", "GAME-022", "GAME-024", "GAME-025", "GAME-027", "GAME-029", "GAME-030", "GAME-032", "GAME-037",
+        "SOC-002", "SOC-003", "SOC-004", "SOC-005", "SOC-006", "SOC-007", "SOC-008", "SOC-009", "SOC-010", "SOC-011", "SOC-013", "SOC-015", "SOC-016", "SOC-018", "SOC-019",
+        "ECO-001", "ECO-002", "ECO-003", "ECO-004", "ECO-005", "ECO-007", "ECO-008", "ECO-009", "ECO-010", "ECO-011", "ECO-016", "ECO-018", "ECO-019", "ECO-020", "ECO-025",
+        "TECH-001", "TECH-002", "TECH-003", "TECH-004", "TECH-005", "TECH-006", "TECH-007", "TECH-008", "TECH-009", "TECH-010", "TECH-011", "TECH-012", "TECH-013", "TECH-014", "TECH-015", "TECH-026", "TECH-038", "TECH-045", "TECH-046", "TECH-047", "TECH-052", "TECH-053"
+      ]
+    },
+    {
+      "id": "close-local",
+      "disposition": "NOW_CLOSURE",
+      "stage": "CLOSE",
+      "workMode": "LOCAL_IMPLEMENT_AND_PROVE",
+      "summary": "现有 UI、2.5D Game Stage、性能、资产治理与本地证据的收口项；Ghost3D Foundation 仅冻结兼容/可选实验层，保持 Rule/Authority/Protocol/Reward/Replay、未取得 OWNER_AUTHORIZED_ART_CLEARANCE 的原创候选与外部受限素材边界。",
+      "ids": [
+        "ART-020", "ART-021", "ART-028", "ART-030",
+        "UI-007", "UI-009", "UI-019", "UI-020", "UI-021", "UI-022", "UI-023", "UI-024", "UI-025", "UI-026", "UI-027", "UI-028", "UI-035", "UI-037",
+        "GAME-041", "GAME-042", "GAME-043", "GAME-044", "GAME-045", "GAME-048", "GAME-049", "GAME-050", "GAME-051", "GAME-052",
+        "SOC-001", "SOC-012", "SOC-014",
+        "ECO-012", "ECO-013", "ECO-014", "ECO-015", "ECO-028",
+        "TECH-019", "TECH-031", "TECH-033", "TECH-037", "TECH-039", "TECH-040", "TECH-041", "TECH-049", "TECH-050", "TECH-051", "TECH-054"
+      ]
+    },
+    {
+      "id": "art-golden-set-gate",
+      "disposition": "NON_BLOCKING_FOR_DEVELOPMENT",
+      "releaseDisposition": "EXPLICIT_OWNER_RELEASE_COMMAND_REQUIRED",
+      "stage": "ART",
+      "gate": "GATE-ART-GOLDEN-SET",
+      "workMode": "CONTINUE_ORIGINAL_ART_WITH_OWNER_CLEARANCE_AND_OPTIONAL_RISK_ADVICE",
+      "summary": "原创 Ghost-native 源稿或方案可在 M0 North Star、稳定 ID/SHA/provenance、机器技术/视觉/相似风险审查、fallback 与回滚齐全后获得 OWNER_AUTHORIZED_ART_CLEARANCE，继续 runtime default-on 候选与发布候选准备。人工/IP/Golden Set 仅作为可选风险咨询，不得伪造成 PASS；外部受限素材仍不获得 runtime 或发布许可，但用户授权的受控全信息 reference lane 可提供任务相关输入给 Skill，并逐项记录 sourcePath/sourceSha256/provider/model/taskId/transmissionScope。",
+      "ids": [
+        "ART-002", "ART-004", "ART-005", "ART-006", "ART-007", "ART-008", "ART-009", "ART-010", "ART-011", "ART-019", "ART-024", "ART-026", "ART-032", "ART-035", "ART-036"
+      ]
+    },
+    {
+      "id": "device-browser-network-gate",
+      "disposition": "NON_BLOCKING_FOR_DEVELOPMENT",
+      "releaseDisposition": "EXTERNAL_GATE",
+      "stage": "PROVE",
+      "gate": "GATE-DEVICE-BROWSER-NETWORK",
+      "workMode": "CONTINUE_DEVELOPMENT_AND_PREPARE_REAL_ENVIRONMENT_RELEASE_EVIDENCE",
+      "summary": "最新本地运行时的浏览器可见复核、第二浏览器、真机和真实网络仍是同一高扇出发布证明 Gate；缺环境时继续可验证开发、矩阵、脚本和可逆修正。",
+      "ids": [
+        "UI-031", "GAME-040", "SOC-029", "TECH-027", "TECH-028", "TECH-029", "TECH-030"
+      ]
+    },
+    {
+      "id": "supabase-production-gate",
+      "disposition": "NON_BLOCKING_FOR_DEVELOPMENT",
+      "releaseDisposition": "EXTERNAL_GATE",
+      "stage": "DATA",
+      "gate": "GATE-SUPABASE-PRODUCTION",
+      "workMode": "CONTINUE_DEVELOPMENT_AND_PREPARE_PRODUCTION_RELEASE_EVIDENCE",
+      "summary": "真实数据、RLS、备份恢复与多实例仍只通过一个生产证据 Gate 解除；缺凭证时继续合同、fake adapter、回滚演练准备和可逆修正，单实例或 fake adapter 不可越级为生产事实。",
+      "ids": [
+        "GAME-009", "SOC-027", "SOC-028", "ECO-006", "TECH-016", "TECH-017", "TECH-018", "TECH-020", "TECH-021", "TECH-022"
+      ]
+    },
+    {
+      "id": "deferred-art",
+      "disposition": "DEFERRED_MAINLINE",
+      "stage": "ART",
+      "workMode": "SEQUENCED_OWNER_AUTHORIZED_ART_EXPANSION",
+      "summary": "正式美术扩张和角色/Emoji runtime 接入按主线顺序推进；原创 Ghost-native 资产逐族完成 OWNER_AUTHORIZED_ART_CLEARANCE 后即可进入可逆 runtime 候选，不等待真实 Supabase 或可选的人工清稿、Reviewer B、IP/法律意见、逐资产 Golden Set。外部受限素材只保留元数据登记与相似风险审计，直接素材仍不进入 Skill 输入或 runtime。",
+      "ids": [
+        "ART-014", "ART-015", "ART-016", "ART-017", "ART-018", "ART-022", "ART-023", "ART-025", "ART-027", "ART-033", "ART-034",
+        "UI-012", "UI-017", "UI-018",
+        "GAME-023", "GAME-038",
+        "SOC-017", "SOC-031",
+        "ECO-029"
+      ]
+    },
+    {
+      "id": "deferred-data-and-parity",
+      "disposition": "DEFERRED_MAINLINE",
+      "stage": "PARITY",
+      "workMode": "SEQUENCED_AFTER_GHOST3D_FOUNDATION",
+      "summary": "规则权威、反作弊、性能与资产交付的下一层深化，必须建立在 2.5D Presentation Demo、真实数据和现有 fallback 边界之上；Three.js 只作为冻结的可选实验层。",
+      "ids": [
+        "ART-029",
+        "GAME-015", "GAME-017", "GAME-018",
+        "TECH-032", "TECH-034", "TECH-044"
+      ]
+    },
+    {
+      "id": "deferred-loop-and-community",
+      "disposition": "DEFERRED_MAINLINE",
+      "stage": "LOOP",
+      "workMode": "SEQUENCED_AFTER_PARITY",
+      "summary": "Quick Play、教学、回放深化、经济观测、信任治理和受限 Playline 生产闭环在基础体验和数据 Gate 后单独冻结。",
+      "ids": [
+        "UI-010", "UI-011", "UI-032",
+        "GAME-026", "GAME-031", "GAME-033", "GAME-034", "GAME-035", "GAME-036", "GAME-046",
+        "SOC-025", "SOC-026", "SOC-030", "SOC-032", "SOC-033",
+        "ECO-017", "ECO-023", "ECO-024", "ECO-026",
+        "TECH-023", "TECH-024", "TECH-025"
+      ]
+    },
+    {
+      "id": "future-expansion",
+      "disposition": "FUTURE_EXPANSION",
+      "stage": "PLATFORM",
+      "workMode": "DO_NOT_START_DURING_CURRENT_PRODUCT_CLOSURE",
+      "summary": "新社交面、赛季化、原生/商店、平台 SDK、新目录与替代渲染试点均保留需求，不进入当前主线。",
+      "ids": [
+        "GAME-028", "GAME-039", "GAME-047",
+        "SOC-020", "SOC-021", "SOC-022", "SOC-023", "SOC-024",
+        "ECO-021", "ECO-022", "ECO-027",
+        "TECH-035", "TECH-036", "TECH-042", "TECH-043", "TECH-048"
+      ]
+    }
+  ]
+}

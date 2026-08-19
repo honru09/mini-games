@@ -1,0 +1,99 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-08-17T00:28:00+09:00",
+  "claim": "historical_as_of_build_single_browser_visible_matrix_p4",
+  "currency": "historical_as_of",
+  "scope": "single Codex in-app Chromium historical as-of build only",
+  "fullRouteMatrixCurrentBuild": false,
+  "build": {
+    "path": "public/index.html",
+    "sha256": "324922B8E8275D599B4D15FF83C1665C83155E4496BC9B9E3A4AE0A0C5B478E6",
+    "characters": 1866294,
+    "bytes": 1880837,
+    "httpMirrors": ["http://127.0.0.1:8092/"]
+  },
+  "environment": {
+    "browserSurface": "Codex in-app Chromium",
+    "browserCount": 1,
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
+    "platform": "Win32",
+    "accountType": "ephemeral local guest QA session; no persistent account",
+    "deviceEvidenceKind": "CSS/DevTools viewport emulation only"
+  },
+  "coverage": {
+    "kind": "full_historical_as_of_single_browser_matrix",
+    "fullRouteMatrixCurrentBuild": false,
+    "surfaces": ["home","games","playline","profile","shop","direct_messages","achievements","room_lobby","six_game_stages","forced_colors"],
+    "viewports": [
+      {"width":1440,"height":900,"devicePixelRatio":1},
+      {"width":1024,"height":768,"devicePixelRatio":1},
+      {"width":768,"height":1024,"devicePixelRatio":1},
+      {"width":390,"height":844,"devicePixelRatio":1},
+      {"width":844,"height":390,"devicePixelRatio":1}
+    ],
+    "languages": ["zh-CN","en-US","uk-UA"],
+    "themes": ["light","dark"],
+    "forcedColors": true,
+    "reducedMotion": true,
+    "deepScrollReset": true,
+    "monopolyCompactMicro": true,
+    "pluralCounts": [1,2,5,11,21,22,25],
+    "gCoinsSurfaces": ["profile","shop","leaderboard","room_lobby_players"]
+  },
+  "routeMatrix": [
+    {"name":"desktop","width":1440,"height":900,"routes":["home","games","playline","profile"],"horizontalOverflowMax":0,"rawKeyCountMax":0,"scrollYMax":0,"desktopNav":true,"mobileNav":false},
+    {"name":"tablet-landscape","width":1024,"height":768,"routes":["home","games","playline","profile"],"horizontalOverflowMax":0,"rawKeyCountMax":0,"scrollYMax":0,"desktopNav":true,"mobileNav":false},
+    {"name":"tablet-portrait","width":768,"height":1024,"routes":["home","games","playline","profile"],"horizontalOverflowMax":0,"rawKeyCountMax":0,"scrollYMax":0,"desktopNav":true,"mobileNav":false},
+    {"name":"phone-portrait","width":390,"height":844,"routes":["home","games","playline","profile"],"horizontalOverflowMax":0,"rawKeyCountMax":0,"scrollYMax":0,"desktopNav":false,"mobileNav":true},
+    {"name":"phone-landscape","width":844,"height":390,"routes":["home","games","playline","profile"],"horizontalOverflowMax":0,"rawKeyCountMax":0,"scrollYMax":0,"desktopNav":true,"mobileNav":false}
+  ],
+  "routeDetails": {
+    "desktop": {"pageWidths":{"home":1208,"games":1208,"playline":1208,"profile":1208},"pageVisibleAll":true},
+    "tablet-landscape": {"pageWidths":{"home":948,"games":948,"playline":948,"profile":948},"pageVisibleAll":true},
+    "tablet-portrait": {"pageWidths":{"home":707,"games":707,"playline":707,"profile":707},"pageVisibleAll":true},
+    "phone-portrait": {"pageWidths":{"home":355,"games":355,"playline":355,"profile":355},"pageVisibleAll":true},
+    "phone-landscape": {"pageWidths":{"home":778,"games":778,"playline":778,"profile":778},"pageVisibleAll":true}
+  },
+  "deepScroll": {
+    "viewport": {"width":390,"height":844},
+    "profileBeforeRouteChange": 1200,
+    "crossRouteTarget": "games",
+    "crossRouteScrollY": 0,
+    "gamesBeforeSameRouteSelection": 900,
+    "sameRouteScrollY": 0
+  },
+  "surfaces": {
+    "profile": {"visible":true,"balanceAria":"0 G Coins","rawKeyCount":0,"horizontalOverflow":0},
+    "directMessages": {"dialog":true,"status":"消息服务已连接","rawKeyCount":0,"horizontalOverflow":0,"closeHidesDialog":true},
+    "shop": {"dialog":true,"sampleAmounts":["10 G Coins","12 G Coins","14 G Coins","16 G Coins","18 G Coins"],"rawKeyCount":0,"horizontalOverflow":0,"closeHidesDialog":true},
+    "achievements": {"dialog":true,"name":"🏆 成就","rawKeyCount":0,"horizontalOverflow":0,"closeHidesDialog":true},
+    "roomLobby": {"visible":true,"connectionStatus":"已连接服务器，可创建或加入房间","rawKeyCount":0,"horizontalOverflow":0}
+  },
+  "gameStages": [
+    {"game":"五子棋","id":"gomoku","seatCount":2,"stage":true,"arena":true,"command":true,"back":true,"scrollY":0,"horizontalOverflow":0,"rawKeyCount":0},
+    {"game":"飞行棋","id":"ludo","seatCount":2,"stage":true,"arena":true,"command":true,"back":true,"scrollY":0,"horizontalOverflow":0,"rawKeyCount":0},
+    {"game":"迷你大富翁","id":"monopoly","seatCount":2,"stage":true,"arena":true,"command":true,"back":true,"scrollY":0,"horizontalOverflow":0,"rawKeyCount":0},
+    {"game":"坦克大战","id":"tank","seatCount":2,"stage":true,"arena":true,"command":true,"back":true,"scrollY":0,"horizontalOverflow":0,"rawKeyCount":0},
+    {"game":"俄罗斯方块","id":"tetris","seatCount":2,"stage":true,"arena":true,"command":true,"back":true,"scrollY":0,"horizontalOverflow":0,"rawKeyCount":0},
+    {"game":"象棋","id":"xiangqi","seatCount":2,"stage":true,"arena":true,"command":true,"back":true,"scrollY":0,"horizontalOverflow":0,"rawKeyCount":0}
+  ],
+  "languageTheme": {
+    "pluralRegressionCounts":[1,2,5,11,21,22,25],
+    "languages":[
+      {"lang":"zh-CN","rawKeyCount":0},
+      {"lang":"en-US","title":"With Honru, your next game starts now","visibleRecords":["1 game · 1 win · 100%"],"rawKeyCount":0},
+      {"lang":"uk-UA","title":"З Honru наступна гра починається зараз","visibleRecords":["2 гри · 0 перемог · 0%"],"rawKeyCount":0}
+    ],
+    "themes":[{"theme":"light","horizontalOverflow":0},{"theme":"dark","horizontalOverflow":0},{"theme":"light","restored":true}]
+  },
+  "monopolyResponsive": [
+    {"viewport":"390x844","density":"compact","frameWidth":283,"cells":24,"visualLabels":"hidden","propertyGlyph":"grid","centerHud":"hidden","diceCount":1,"diceParent":"monopoly-wave-b-command","propertyAria":"蓝湾 · ¥300","propertyTitle":"蓝湾 · ¥300","horizontalOverflow":0,"scrollY":0},
+    {"viewport":"844x390","density":"micro","frameWidth":156,"cells":24,"visualLabels":"hidden","propertyGlyph":"grid","centerHud":"hidden","diceCount":1,"diceParent":"monopoly-wave-b-command","propertyAria":"蓝湾 · ¥300","propertyTitle":"蓝湾 · ¥300","horizontalOverflow":0,"scrollY":0}
+  ],
+  "reducedMotion": {"emulated":true,"matched":true,"homeAmbientAnimation":"none","route":"games","horizontalOverflow":0,"rawKeyCount":0,"resetAfterCapture":true},
+  "forcedColors": {"emulated":true,"matched":true,"brandDisplay":"flex","brandVisibility":"visible","route":"games","horizontalOverflow":0,"rawKeyCount":0,"resetAfterCapture":true},
+  "console": {"warnErrorAfterCapture":0,"exceptionsObserved":0},
+  "cleanup": {"viewportReset":true,"mediaReset":true,"finalViewport":{"width":1280,"height":720},"finalRoute":"home","theme":"light","lang":"zh-CN","gameActive":false,"dialogCount":0,"scrollY":0},
+  "notGranted": ["second_browser","physical_android","physical_iphone","physical_tablet","real_network_shaping","two_formal_friend_dm_browsers","physical_performance_audio_recovery","production_verification","real_supabase","optional_human_art_review","release"],
+  "gateDisposition": "GATE-DEVICE-BROWSER-NETWORK development OPEN / release evidence RELEASE_EVIDENCE_PENDING"
+}

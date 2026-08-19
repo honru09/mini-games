@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "evidenceId": "AUDIO-LOCAL-REGRESSION-20260817",
+  "capturedAt": "2026-08-18T00:49:00.4805186+09:00",
+  "currency": "historical_as_of_capture",
+  "status": "PASS_WITH_EXTERNAL_GATES_PENDING",
+  "build": {
+    "path": "public/index.html",
+    "characters": 2061199,
+    "bytes": 2075822,
+    "sha256": "297C9362A77B451E303D10B22AFC478F92632B2AE019E9A8CBBD8720C19EC856",
+    "identitySemantics": "immutable historical snapshot captured after a passing build --check; it is not a promise that a shared dirty worktree will retain this hash"
+  },
+  "commands": [
+    {"command": "npm run test:audio", "status": "pass", "assertions": {"inventory": 6, "authority": 8, "feedback": 26, "generationGovernance": 52, "runtime": 10, "toneProfiles": 6, "platform": 11, "unifiedAdapter": 11}},
+    {"command": "npm run test:i18n", "status": "pass", "localeKeys": 1680},
+    {"command": "node scripts/build.js --check", "status": "pass", "sha256": "297C9362A77B451E303D10B22AFC478F92632B2AE019E9A8CBBD8720C19EC856", "characters": 2061199, "bytes": 2075822},
+    {"command": "node qa/audio-cue-inventory.js --strict", "status": "pass", "gameModules": 6, "legacyDirectCalls": 0, "findingCount": 0},
+    {"command": "node qa/progress-ledger.js", "status": "pass", "summary": "PROGRESS_LEDGER_ALL_PASS requirements=242 sources=76 dependencyEdges=267"},
+    {"command": "node qa/brief-report-contract.js", "status": "pass", "summary": "BRIEF_REPORT_CONTRACT_ALL_PASS reports=85"},
+    {"command": "node qa/mainline-control-plane.js", "status": "pass", "summary": "MAINLINE_CONTROL_PLANE_ALL_PASS requirements=242"},
+    {"command": "node qa/dom-smoke.js", "status": "pass"},
+    {"command": "npm run test:e2e", "status": "pass", "summary": "E2E_ALL_PASS"},
+    {"command": "node --experimental-websocket qa/engagement-integrity-online.js", "status": "pass_on_isolated_rerun", "summary": "ENGAGEMENT_INTEGRITY_ONLINE_ALL_PASS"},
+    {"command": "node qa/xiangqi-ghost3d-contract.js", "status": "pass", "summary": "XIANGQI_GHOST3D_CONTRACT_ALL_PASS; live stale/duplicate audio regression covered"},
+    {"command": "node qa/tank-ghost3d-contract.js", "status": "pass", "assertions": 54, "summary": "TANK_GHOST3D_CONTRACT_ALL_PASS; conflicting receipt audio baseline regression covered"},
+    {"command": "npm run quality:gates", "status": "pass", "summary": "QUALITY_GATES_ALL_PASS"},
+    {"command": "npm test", "status": "pass", "summary": "exit_code=0; full pretest/test/posttest aggregate including online, PWA, governance and build evidence"}
+  ],
+  "claims": [
+    "local semantic cue, adapter, lifecycle, settings, six-game and platform contracts are machine-tested",
+    "the recorded build identity is historical-as-of-capture because the shared dirty worktree may continue changing after evidence capture",
+    "the full aggregate suite completed with exit code 0 in the final serial run",
+    "no external audio binary, provider job id, output hash or secret was created",
+    "this file does not claim audible quality, a second browser, physical device, PWA lock-screen recovery, real network or release readiness"
+  ],
+  "externalGates": {
+    "audiocraft": "NOT_EXECUTED",
+    "elevenlabs": "NOT_EXECUTED",
+    "falAi": "NOT_EXECUTED",
+    "secondBrowser": "NOT_EXECUTED",
+    "physicalDevices": "NOT_EXECUTED",
+    "pwaLockScreenAndOutputSwitch": "NOT_EXECUTED",
+    "realNetwork": "NOT_EXECUTED",
+    "commitPushDeploy": "NOT_EXECUTED"
+  }
+}

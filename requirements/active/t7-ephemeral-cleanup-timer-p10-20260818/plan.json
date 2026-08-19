@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "task": "t7-ephemeral-cleanup-timer-p10-20260818",
+  "state": "VERIFIED_LOCAL",
+  "requirements": ["TECH-039", "TECH-040", "TECH-052"],
+  "steps": [
+    {"id":"P10-1","status":"complete","name":"冻结访客 cleanup owner、取消和回滚边界"},
+    {"id":"P10-2","status":"complete","name":"迁移一次性 ServerClockTimer lease 与显式取消路径"},
+    {"id":"P10-3","status":"complete","name":"运行账号、连接恢复、Timer Audit 与联机 E2E 回归"},
+    {"id":"P10-4","status":"complete","name":"等待并行前端/3D窗口稳定后统一 Quality Gates 与完整 npm test"}
+  ],
+  "next": "完成跨窗口构建稳定后收口 P10，再评估下一个低风险 lifecycle owner",
+  "release": "LOCAL_ONLY / NOT_RELEASED",
+  "rollback": "restore native guest timeout and clearTimeout path; keep P6/P8/P9 seams"
+}

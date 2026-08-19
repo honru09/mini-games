@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "taskId": "asset-library-governance-p1-20260813",
+  "requirements": ["TECH-031"],
+  "stage": "CLOSE",
+  "disposition": "NOW_CLOSURE",
+  "status": "COMPLETED_LOCAL_WITH_REMOTE_GATE_REMAINING",
+  "scope": "补齐素材库 catalog/Manifest 双层事实源、审批状态、哈希和远端对象键边界；不新增图片、不改变 Manifest、不启用远端存储。",
+  "steps": [
+    {"id":"ASSET-1","status":"completed","title":"审阅现有 catalog/schema/Manifest/asset audit"},
+    {"id":"ASSET-2","status":"completed","title":"加入双层事实源合同、active task 与专项 QA"},
+    {"id":"ASSET-3","status":"completed","title":"同步台账、状态、报告、简报和三份日志"},
+    {"id":"ASSET-4","status":"completed","title":"运行专项与本地全链回归"}
+  ],
+  "release": "LOCAL_ONLY_NO_COMMIT_NO_PUSH_NO_DEPLOY",
+  "rollback": "删除本批合同、QA 与 active task，恢复 TECH-031 为 partial；不触碰任何素材或 Manifest。"
+}

@@ -1,0 +1,37 @@
+{
+  "taskId": "ui-motion-closure-p1-20260812",
+  "verifiedAt": "2026-08-12T11:14:00+09:00",
+  "state": "LOCAL_IMPLEMENTED_VERIFYING",
+  "requirements": ["UI-028", "TECH-054"],
+  "specialized": {
+    "command": "npm run test:route-motion",
+    "status": "PASS",
+    "assertions": {
+      "contract": 18,
+      "bridgeRuntime": 17,
+      "adapter": 11,
+      "esmGraph": 16,
+      "cache": 4
+    }
+  },
+  "qualityGates": "PASS",
+  "fullTest": {"status":"PASS","durationSeconds":176.6},
+  "build": {
+    "characters": 1312603,
+    "filesystemBytes": 1327152,
+    "sha256": "1C802828EF5E799358F8199163428AD2BFBC5572CD90997999E82EC80B887DF3",
+    "doubleBuildStable": true
+  },
+  "http": [
+    {"path":"/route-motion-entry.js","status":200,"contentType":"text/javascript; charset=utf-8"},
+    {"path":"/vendor/gsap/3.15.0/esm/index.js","status":200,"contentType":"text/javascript; charset=utf-8"},
+    {"path":"/vendor/gsap/3.15.0/esm/CSSPlugin.js","status":200,"contentType":"text/javascript; charset=utf-8"},
+    {"path":"/vendor/gsap/3.15.0/esm/gsap-core.js","status":200,"contentType":"text/javascript; charset=utf-8"}
+  ],
+  "browser": "NOT_EXECUTED_TRANSPORT_CLOSED_BEFORE_PLUGIN_INITIALIZATION",
+  "devices": "NOT_EXECUTED",
+  "visibleReducedMotion": "NOT_EXECUTED",
+  "lowEndPerformance": "NOT_EXECUTED",
+  "reviewer": "TERRA_MAX_REQUESTED_BUT_NO_USABLE_RESULT_RETURNED",
+  "release": "LOCAL_ONLY_NO_COMMIT_NO_PUSH_NO_DEPLOY"
+}

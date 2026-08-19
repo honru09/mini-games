@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-08-15T16:21:21.7378019+09:00",
+  "claim": "single_browser_partial_evidence",
+  "scope": "forced-colors authentication page only",
+  "build": {
+    "path": "public/index.html",
+    "sha256": "3AA3D9233DA8D66F38D3F298F510AA28C622B2AAA64DAF7AD886519DF878F38A",
+    "characters": 1579734,
+    "bytes": 1594268
+  },
+  "environment": {
+    "browserSurface": "Codex in-app Chromium",
+    "browserCount": 1,
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
+    "platform": "Win32",
+    "url": "http://127.0.0.1:8090/?offline-i18n=11-active",
+    "viewport": {
+      "width": 1280,
+      "height": 720,
+      "devicePixelRatio": 1
+    },
+    "forcedColorsActive": true
+  },
+  "observed": {
+    "touchTargets": {
+      "toolbar": {
+        "minimumWidth": 44,
+        "minimumHeight": 44
+      },
+      "tabs": {
+        "minimumHeight": 44
+      },
+      "authenticationInputs": {
+        "minimumHeight": 44
+      }
+    },
+    "logo": {
+      "width": 72,
+      "height": 72,
+      "visibleInLight": true,
+      "visibleInDark": true
+    },
+    "inputContrast": {
+      "foreground": "rgb(255, 255, 255)",
+      "background": "rgb(0, 0, 0)",
+      "border": "rgb(255, 255, 255)"
+    },
+    "keyboardFocus": {
+      "visible": true,
+      "outlineWidth": "3px",
+      "outlineStyle": "solid",
+      "outlineOffset": "2px"
+    },
+    "languages": [
+      {
+        "lang": "zh-CN",
+        "heading": "进入你的游戏宇宙",
+        "rawKeyCount": 0,
+        "horizontalOverflow": 0
+      },
+      {
+        "lang": "en-US",
+        "heading": "Enter your game universe",
+        "rawKeyCount": 0,
+        "horizontalOverflow": 0
+      },
+      {
+        "lang": "uk-UA",
+        "heading": "Увійдіть у свій ігровий всесвіт",
+        "rawKeyCount": 0,
+        "horizontalOverflow": 0
+      }
+    ],
+    "themes": [
+      {
+        "theme": "light",
+        "logoVisible": true,
+        "horizontalOverflow": 0
+      },
+      {
+        "theme": "dark",
+        "logoVisible": true,
+        "horizontalOverflow": 0
+      }
+    ],
+    "cdpConsoleEventsAfterReload": 0,
+    "cdpExceptionsAfterReload": 0,
+    "mediaResetAfterCapture": {
+      "forcedColors": false,
+      "reducedMotion": false
+    }
+  },
+  "notGranted": [
+    "second_browser",
+    "physical_android",
+    "physical_iphone",
+    "physical_tablet",
+    "real_network_shaping",
+    "cross_browser_forced_colors",
+    "production_verification"
+  ],
+  "gateDisposition": "GATE-DEVICE-BROWSER-NETWORK remains BLOCKED",
+  "notes": [
+    "This evidence cannot be used as a full Home/Games/Playline/Profile or six-Game-Stage visible matrix.",
+    "A second tab in the same Chromium instance was not treated as a second browser."
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "taskId": "code-health-sweep-p1-20260813",
+  "status": "completed_local",
+  "completed": [
+    "registered code health QA",
+    "registered persistence/AI hardening and social guard QA",
+    "preserved documented Render and live WebSocket operations scripts via allowlist",
+    "removed superseded Theme Contrast duplicate contract",
+    "removed one-shot isolated publishing helper",
+    "removed stale unused Honru manifest flag",
+    "synchronized asset library manifest hash"
+  ],
+  "verification": {
+    "health": "npm run test:health (exit 0)",
+    "pendingFinal": ["npm run quality:gates", "npm test", "deterministic build and hash"]
+  },
+  "published": false,
+  "boundary": "local governance only; no game rules, protocol, economy, Supabase, unapproved art runtime, commit, push or deployment"
+}

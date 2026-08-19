@@ -1,0 +1,17 @@
+{
+  "taskId": "latest-browser-visible-matrix-prove-p1-20260814",
+  "requirements": ["TECH-027"],
+  "stage": "PROVE",
+  "gate": "GATE-DEVICE-BROWSER-NETWORK",
+  "status": "COMPLETED_LOCAL_SINGLE_BROWSER",
+  "scope": "使用当前可用的 Codex in-app browser，对最新本地构建执行单浏览器桌面/平板/手机、四区、三语言、双主题、visible reduced-motion 与代表性弹层/Game Stage 可见矩阵。",
+  "notGranted": ["TECH-028 second browser", "TECH-029 physical devices", "TECH-030 real network shaping", "SOC-029 two-account friend DM", "GAME-040 physical FPS/heat/audio/recovery", "production or release"],
+  "steps": [
+    {"id":"PROVE-1","status":"completed","title":"冻结单浏览器矩阵、可观察信号和证据目录"},
+    {"id":"PROVE-2","status":"completed","title":"执行桌面/平板/手机横竖屏四区与共享弹层矩阵"},
+    {"id":"PROVE-3","status":"completed","title":"执行三语言、双主题、visible reduced-motion 与控制台复核"},
+    {"id":"PROVE-4","status":"completed","title":"执行六款 Game Stage 入口与退出生命周期可见抽查"},
+    {"id":"PROVE-5","status":"completed","title":"同步 TECH-027、共享 Gate 部分证据、简报和三日志"}
+  ],
+  "release": "LOCAL_ONLY_NO_COMMIT_NO_PUSH_NO_DEPLOY"
+}

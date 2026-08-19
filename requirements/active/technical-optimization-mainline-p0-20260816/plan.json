@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "task": "technical-optimization-mainline-p0-20260816",
+  "state": "AUTHORIZED_T7_PARTIAL",
+  "release": "LOCAL_ONLY_NOT_RELEASED",
+  "currentStage": "CLOSE",
+  "waves": [
+    {"id":"T0","status":"implemented","goal":"需求冻结、去重归类、深模块 Interface、Gate 自动推进边界","requirements":["TECH-052","GAME-013","TECH-030","TECH-044","GAME-044","TECH-049","TECH-033","TECH-034","GAME-037","GAME-038","GAME-014","GAME-005","GAME-007","GAME-010","GAME-016","ECO-004","ECO-005","TECH-023","TECH-024","TECH-025","TECH-040","TECH-039"]},
+    {"id":"T1","status":"implemented","goal":"UI-030 缩放缺陷、ClientDiagnosticsRing 本地无网络纵切与 RendererRuntimeGovernor 基线/测量","requirements":["UI-030","TECH-023","TECH-025","TECH-049","TECH-033","TECH-034"]},
+    {"id":"T2","status":"implemented","goal":"GameModuleLoader、deterministic build check 与 SW intent-only 安全预热","requirements":["TECH-033","TECH-039"],"evidence":["requirements/ADR/002-game-module-loader-cache-build.md","public/src/core/14-game-module-loader.js","public/sw.js","scripts/build.js","qa/game-module-loader.js","qa/build-check-write.js","qa/sw-game-module-preheat.js","requirements/active/latest-browser-visible-matrix-prove-p4-20260815/evidence/current-build-single-browser-verification-t2-202608161530.json"]},
+    {"id":"T3","status":"implemented","goal":"FeedbackBus 生命周期硬化、Tetris/Tank InputGate 与 Tank 左右声像 default-off 纵切","requirements":["GAME-037","GAME-038","GAME-014","GAME-044"],"evidence":["public/src/core/15-feedback-bus.js","public/src/core/16-gameplay-input-gate.js","public/src/core/17-local-feedback-adapter.js","public/src/games/tetris.js","public/src/games/tank.js","qa/feedback-bus.js","qa/gameplay-input-gate.js","qa/local-feedback-adapter.js","qa/gameplay-upgrade.js","qa/tank-controls.js","requirements/active/technical-optimization-mainline-p0-20260816/t3-feedback-input-interface.md"]},
+    {"id":"T4","status":"implemented","goal":"Xiangqi 优先、Gomoku 后续的 Worker Broker、置换表与版本化开局库","requirements":["GAME-005","GAME-007","GAME-010","GAME-016","TECH-033"],"evidence":["public/src/core/18-board-ai-kernel.js","public/src/core/19-board-ai-worker-broker.js","public/workers/board-ai-worker-v1.js","public/src/games/xiangqi.js","public/src/games/gomoku.js","qa/board-ai-kernel.js","qa/board-ai-worker-vm.js","qa/board-ai-worker-broker.js","qa/board-ai-worker-integration.js","qa/board-ai-game-xiangqi.js","qa/board-ai-game-gomoku.js","npm run test:technical-optimization-t4","scripts/build.js"]},
+    {"id":"T5","status":"implemented","goal":"TankSnapshotWireCodec 协商、全量恢复与 Tank Prediction Adapter","requirements":["GAME-013","TECH-030","TECH-044","GAME-044"],"evidence":["shared/protocol/tank-snapshot-wire-codec.js","server/gameplay/tank-snapshot-stream.js","public/src/core/20-tank-prediction-adapter.js","public/src/online/03-websocket.js","public/src/games/tank.js","qa/tank-snapshot-wire-codec.js","qa/tank-snapshot-stream.js","qa/tank-snapshot-client.js","qa/tank-prediction-adapter.js","qa/tank-snapshot-delta-online.js","qa/tank-snapshot-default-off-online.js","requirements/PROTOCOL_REGISTRY.md","npm run test:technical-optimization-t5","scripts/build.js"]},
+    {"id":"T6","status":"implemented","goal":"Tank Authority Action Entropy/APM shadow audit P0；分 cohort、默认关闭、只读数值指标；绝不改 Reward","requirements":["TECH-044","ECO-004","ECO-005"],"evidence":["server/gameplay/engagement-integrity.js","server/index.js","qa/engagement-integrity.js","qa/engagement-integrity-online.js","requirements/active/technical-optimization-mainline-p0-20260816/t6-engagement-integrity-interface.md","npm run test:technical-optimization-t6","npm run quality:gates"],"boundary":"仅 Tank Authority P0；Tetris/Xiangqi/Monopoly 扩展、真实误报真值、生产遥测与 Reward Policy 独立版本化仍未开始。"},
+    {"id":"T7","status":"partial","goal":"六个 Server Boundary、Node fresh-child、P5 outbox、P6 Clock/Timer、P7 Reward Projection、P8 Boundary Clock Injection、P9 Room Graph Recovery、P10 Ephemeral Cleanup、P11 Reconnect Lifecycle 与 P12 Heartbeat Sweep Timer","requirements":["TECH-040","TECH-052","TECH-039"],"evidence":["requirements/ADR/003-server-boundary-adapters-metrics.md","requirements/active/t7-auth-profile-boundary-p1-20260816","requirements/active/t7-room-presence-boundary-p2-20260817","requirements/active/t7-match-protocol-boundary-p3-20260817","requirements/active/t7-chat-playline-boundary-p4-20260817","requirements/active/t7-reward-economy-boundary-p5-20260817","requirements/active/t7-server-clock-timer-p6-20260817","requirements/active/t7-reward-progression-projection-p7-20260818","requirements/active/t7-server-boundary-clock-injection-p8-20260818","requirements/active/t7-room-graph-recovery-timer-p9-20260818","requirements/active/t7-ephemeral-cleanup-timer-p10-20260818","requirements/active/t7-reconnect-lifecycle-timer-p11-20260818","requirements/active/t7-heartbeat-sweep-timer-p12-20260819","server/boundaries/reward-progression.js","server/boundaries/server-clock-timer.js","server/boundaries/heartbeat-sweep-isolation.js","qa/reward-progression.js","qa/server-clock-timer.js","qa/heartbeat-sweep.js","qa/timer-audit.js","qa/tournament-atomic-online.js","qa/ghost-auth-online.js","qa/connection-route-resilience.js","qa/reconnect-online.js","qa/e2e-online.js","npm run test:technical-optimization-t7","npm run quality:gates","npm test (dedicated QA ports)"],"boundary":"P7–P12 已完成本地实现与专项回归；P12 的 Quality Gates 与完整 npm test 待本批末统一记录。其余 token TTL/outbox/gameplay/transport timer 与外部证据未执行，TECH-040 保持 partial。"}
+  ],
+  "clockTimerP6": {
+    "status": "focused_verified_local",
+    "scope": "Operational Metrics injected now and cadence only",
+    "requirements": ["TECH-039", "TECH-040", "TECH-052"],
+    "evidence": ["requirements/active/t7-server-clock-timer-p6-20260817", "server/boundaries/server-clock-timer.js", "qa/server-clock-timer.js", "qa/timer-audit.js", "npm run test:server-clock-timer"],
+    "remaining": "Metrics generatedAt and all other server-wide Date.now/Timer owners remain outside P6"
+  },
+  "rewardProgressionP7": {
+    "status": "verified_local",
+    "scope": "resolved Reward profile/daily/achievement/history/ledger/Analytics projection",
+    "evidence": ["requirements/active/t7-reward-progression-projection-p7-20260818", "server/boundaries/reward-progression.js", "qa/reward-progression.js"]
+  },
+  "boundaryClockInjectionP8": {
+    "status": "verified_local",
+    "scope": "six existing Boundary explicit now injections",
+    "evidence": ["requirements/active/t7-server-boundary-clock-injection-p8-20260818", "server/index.js", "qa/timer-audit.js"],
+    "remaining": "lifecycle, heartbeat, outbox cadence, gameplay tick, transport deadline and Metrics generatedAt"
+  },
+  "roomGraphRecoveryTimerP9": {
+    "status": "verified_local",
+    "scope": "room-graph-recovery periodic sweep owner lease only",
+    "requirements": ["TECH-039", "TECH-040", "TECH-052"],
+    "evidence": ["requirements/active/t7-room-graph-recovery-timer-p9-20260818", "server/index.js", "qa/timer-audit.js", "qa/tournament-atomic-online.js"],
+    "remaining": "heartbeat, guest/reconnect, chat/expression delay, reward/AI outbox, gameplay tick and transport deadline"
+  },
+  "ephemeralCleanupTimerP10": {
+    "status": "implemented_local",
+    "scope": "per-UID guest ephemeral cleanup one-shot lease only",
+    "requirements": ["TECH-039", "TECH-040", "TECH-052"],
+    "evidence": ["requirements/active/t7-ephemeral-cleanup-timer-p10-20260818", "server/index.js", "qa/timer-audit.js", "qa/ghost-auth-online.js", "qa/connection-route-resilience.js", "qa/e2e-online.js"],
+    "pending": "none; cross-window stable build, Quality Gates and complete npm test are recorded at P10/P11 closeout",
+    "remaining": "heartbeat, reconnect grace, chat/expression delay, reward/AI outbox, gameplay tick and transport deadline"
+  },
+  "reconnectLifecycleTimerP11": {
+    "status": "verified_local",
+    "scope": "per-session reconnect grace/Presence retry and room-removal retry lease ownership",
+    "requirements": ["TECH-039", "TECH-040", "TECH-052"],
+    "evidence": ["requirements/active/t7-reconnect-lifecycle-timer-p11-20260818", "server/index.js", "server/boundaries/room-presence.js", "qa/timer-audit.js", "qa/connection-route-resilience.js", "qa/reconnect-online.js", "qa/e2e-online.js"],
+    "remaining": "heartbeat, formal token TTL, other Room/Tournament lifecycle, chat/expression delay, reward/AI outbox, gameplay tick, transport deadline and Metrics generatedAt"
+  },
+  "heartbeatSweepTimerP12": {
+    "status": "implemented_local",
+    "scope": "single heartbeat-sweep repeat owner, sampled now and per-domain liveness isolation",
+    "requirements": ["TECH-039", "TECH-040", "TECH-052"],
+    "evidence": ["requirements/active/t7-heartbeat-sweep-timer-p12-20260819", "server/index.js", "server/boundaries/heartbeat-sweep-isolation.js", "qa/heartbeat-sweep.js", "qa/timer-audit.js", "qa/reconnect-online.js", "qa/tournament-auto-online.js", "qa/e2e-online.js"],
+    "pending": "quality gates and complete npm test at batch closeout",
+    "remaining": "formal token TTL, other Room/Tournament lifecycle, chat/expression delay, reward/AI outbox, gameplay tick, transport deadline and Metrics generatedAt"
+  },
+  "sharedAcceptanceGaps": ["UI-027 mobile text expansion and typography","UI-030 thumb zone/touch conflict/haptic accessibility","UI-031 physical-device evidence"],
+  "externalEvidenceStillRequired": ["second real browser","physical Android/iPhone/Tablet","real network shaping","real production Supabase/multi-instance"],
+  "optionalArtAdvisoryEvidence": ["art cleanup","independent natural-person Reviewer B","IP/legal advice","per-asset Golden Set record"],
+  "rollback": "each wave independently default-off or shadow with old JSON/DOM/inline/synchronous fallback preserved"
+}

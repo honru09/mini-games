@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-08-15T17:37:07+09:00",
+  "finalizedAt": "2026-08-15T17:50:25+09:00",
+  "evidenceClass": "CONTROLLED_LOCAL_DETERMINISTIC_SIMULATION_ONLY",
+  "claim": "accepted_local_controlled_transport_preflight",
+  "realNetwork": false,
+  "realShapingTool": null,
+  "requirements": ["TECH-030", "GAME-048"],
+  "build": {
+    "path": "public/index.html",
+    "characters": 1580313,
+    "bytes": 1594847,
+    "sha256": "0A6FE8494AA5B14188D006E2FCDFA97AA7DAB438E127A6442FFF298BC5B1CDB4",
+    "visibleMatrix": "NOT_EXECUTED_AFTER_BUILD_CHANGE"
+  },
+  "coverage": {
+    "tetrisAuthorityOutOfOrder": true,
+    "tetrisReconnectSenderSeq": true,
+    "tetrisRejectedSnapshotIsolation": true,
+    "tankDisconnectInputClear": true,
+    "tankLocalEpochPreAuthorityDrop": true,
+    "directChatNumericSeqAndDedupe": true,
+    "oldWebSocketCallbackIsolation": true,
+    "sameConnectionCapabilityRetention": true,
+    "realNetworkShaping": false
+  },
+  "files": [
+    {"path":"public/src/games/tetris.js","bytes":106358,"sha256":"6686C6FBFB206632297D8F79C36C9C564772847A8DA854A33F06D6CED96A875E"},
+    {"path":"public/src/online/03-websocket.js","bytes":118329,"sha256":"D1259775056333ECF89922B3A5304C25C46425412E7AAD05DBD4A793EA0F1EAC"},
+    {"path":"server/gameplay/tetris-rule-authority.js","bytes":7963,"sha256":"F13761B8AD3F69C577463F832C4EC36DCC2BB9A84B652ED903FA9B0FA8180610"},
+    {"path":"server/gameplay/tank-sim.js","bytes":10058,"sha256":"DF92133118CB46E303B101297C09AEB7E3F5C1BAA8896D82D5317C53561BDCCB"},
+    {"path":"qa/controlled-transport-preflight.js","bytes":10511,"sha256":"4AC68AFDB4DA6699BAE8AF110EE4D5448F4672A56BB9C0FBED2E5E751B8DE745"},
+    {"path":"qa/gameplay-upgrade.js","bytes":35544,"sha256":"D67A6F49F342549680335E944BEB881820B8B7B5A924E2FD84F0CFE44708C668"}
+  ],
+  "tests": [
+    {"command":"node qa/controlled-transport-preflight.js","status":"PASS"},
+    {"command":"node qa/gameplay-upgrade.js","status":"PASS"},
+    {"command":"node qa/network-chaos.js","status":"PASS"},
+    {"command":"node qa/social-match-client-lifecycle.js","status":"PASS"},
+    {"command":"node qa/connection-route-resilience.js","status":"PASS"},
+    {"command":"node qa/tank-authority.js","status":"PASS"},
+    {"command":"node --experimental-websocket qa/reconnect-online.js","status":"PASS"},
+    {"command":"node --experimental-websocket qa/rule-authority-online.js","status":"PASS"},
+    {"command":"npm test","status":"PASS","durationSeconds":169.4},
+    {"command":"npm run quality:gates","status":"PASS"},
+    {"command":"npm run build (deterministic double build)","status":"PASS","runs":2}
+  ],
+  "notGranted": [
+    "TECH-028 second browser",
+    "TECH-029 physical devices",
+    "TECH-030 real network shaping",
+    "SOC-029 two-account friend DM",
+    "GAME-040 physical performance/audio/recovery",
+    "current-build full visible matrix",
+    "production or release"
+  ],
+  "gateDisposition": "GATE-DEVICE-BROWSER-NETWORK remains BLOCKED"
+}

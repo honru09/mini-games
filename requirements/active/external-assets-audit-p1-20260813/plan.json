@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "taskId": "external-assets-audit-p1-20260813",
+  "stage": "CLOSE",
+  "disposition": "NOW_CLOSURE",
+  "status": "completed_local_reference_only",
+  "requirements": ["ART-028", "ART-030"],
+  "related": ["UI-021", "UI-027", "UI-028"],
+  "steps": [
+    {"id":"EXT-1","status":"completed","title":"扫描两处外部素材目录与 ZIP 内部结构"},
+    {"id":"EXT-2","status":"completed","title":"统计动作族、PNG 帧、UI 源稿/预览配对、尺寸与体积"},
+    {"id":"EXT-3","status":"completed","title":"建立 reference-only 登记与选择性原创重绘规划"},
+    {"id":"EXT-4","status":"completed","title":"记录 PSD/AI 解析与授权核验限制、回滚和后续 Gate"},
+    {"id":"EXT-5","status":"completed","title":"审阅全部角色/UI 预览接触表并核对许可证文本与内容哈希"},
+    {"id":"EXT-6","status":"completed","title":"同步最终审阅结论、质量数字并进入下一条 CLOSE 主线"},
+    {"id":"EXT-7","status":"completed","title":"补齐 288 PSD、361 AI 与 3170 EPS 的只读分层/对象结构库存并复核解析边界"}
+  ],
+  "externalGates": ["GATE-ART-GOLDEN-SET"],
+  "release": "LOCAL_ONLY_NO_COMMIT_NO_PUSH_NO_DEPLOY",
+  "rollback": "删除登记、active task 和报告；不触碰运行时 Manifest、源码或现有素材。"
+}

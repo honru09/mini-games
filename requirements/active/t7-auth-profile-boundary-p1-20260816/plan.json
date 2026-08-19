@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "task": "t7-auth-profile-boundary-p1-20260816",
+  "state": "VERIFIED_LOCAL",
+  "release": "LOCAL_ONLY_NOT_RELEASED",
+  "requirements": ["TECH-039", "TECH-040", "TECH-052"],
+  "steps": [
+    {"id":"A0","status":"completed","goal":"Recon current auth/profile ownership, adapters, wire, persistence and tests"},
+    {"id":"A1","status":"completed","goal":"Freeze Interface, Adapter, clock, authority, IN/OUT and rollback"},
+    {"id":"A2","status":"completed","goal":"Implement AuthProfileBoundary plus runtime and in-memory Adapters"},
+    {"id":"A3","status":"completed","goal":"Integrate narrow server/index seam without wire or persistence changes"},
+    {"id":"A4","status":"completed","goal":"Run boundary, auth, security, profile compare and Supabase compatibility QA"}
+  ],
+  "risks": [
+    "server/index.js is shared/high risk and already dirty",
+    "token normalization mutates user records during verification",
+    "public profile omission drift could expose private fields",
+    "Test Admin virtual profile and social comparison must preserve isolation",
+    "old PIN and guest paths must keep current persistence semantics"
+  ],
+  "rollback": "Remove the import/Adapter initialization and restore the former inline token/profile helpers; no schema or user-data rollback required."
+}

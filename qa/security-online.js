@@ -394,12 +394,14 @@ async function verifyMonopolyHostSettle(host, guest){
     host.waitAfter(hostEndMark, message => message.type === 'end_game', '权限测试前结束五子棋'),
     guest.waitAfter(guestEndMark, message => message.type === 'end_game', '对手同步结束五子棋'),
   ]);
-  const hostStartMark = host.mark();
-  const guestStartMark = guest.mark();
   const selectedMark = host.mark();
   host.send({ type: 'select_game', payload: { game: 'monopoly' } });
   await host.waitAfter(selectedMark, message => message.type === 'room_update' && payloadOf(message).game === 'monopoly', '房主确认大富翁已选择');
+  const readyMark = host.mark();
   guest.send({ type: 'ready', payload: { ready: true } });
+  await host.waitAfter(readyMark, message => message.type === 'room_update' && payloadOf(message).canStart === true, '大富翁 READY 投影');
+  const hostStartMark = host.mark();
+  const guestStartMark = guest.mark();
   host.send({ type: 'start' });
   await Promise.all([
     host.waitAfter(hostStartMark, message => message.type === 'started' || isReject(message), '房主开始大富翁权限测试'),
@@ -420,11 +422,13 @@ async function verifyTankAuthority(host, guest){
     host.waitAfter(endHostMark,message=>message.type==='end_game','坦克中继测试前结束大富翁'),
     guest.waitAfter(endGuestMark,message=>message.type==='end_game','对手结束大富翁'),
   ]);
-  const hostStartMark=host.mark(),guestStartMark=guest.mark();
   const selectedMark = host.mark();
   host.send({type:'select_game',payload:{game:'tank'}});
   await host.waitAfter(selectedMark,message=>message.type==='room_update'&&payloadOf(message).game==='tank','房主确认坦克已选择');
+  const readyMark = host.mark();
   guest.send({type:'ready',payload:{ready:true}});
+  await host.waitAfter(readyMark,message=>message.type==='room_update'&&payloadOf(message).canStart===true,'坦克 READY 投影');
+  const hostStartMark=host.mark(),guestStartMark=guest.mark();
   host.send({type:'start'});
   const [hostStarted,guestStarted]=await Promise.all([
     host.waitAfter(hostStartMark,message=>message.type==='started'||isReject(message),'房主开始坦克中继测试'),
@@ -459,9 +463,11 @@ async function startSelectedMatch(host, guest, previousMatchId){
   const selectedMark = host.mark();
   host.send({ type: 'select_game', payload: { game: 'gomoku' } });
   await host.waitAfter(selectedMark, message => message.type === 'room_update' && payloadOf(message).game === 'gomoku', '房主确认五子棋已选择');
+  const readyMark = host.mark();
+  guest.send({ type: 'ready', payload: { ready: true } });
+  await host.waitAfter(readyMark, message => message.type === 'room_update' && payloadOf(message).canStart === true, '五子棋 READY 投影');
   const hostMark = host.mark();
   const guestMark = guest.mark();
-  guest.send({ type: 'ready', payload: { ready: true } });
   host.send({ type: 'start' });
   const [hostStarted, guestStarted] = await Promise.all([
     host.waitAfter(hostMark, message => message.type === 'started' || isReject(message), '房主收到 started'),
@@ -605,9 +611,11 @@ async function verifyThreePlayerSettlement(wsUrl){
   const selectedMark = host.mark();
   host.send({ type: 'select_game', payload: { game: 'monopoly' } });
   await host.waitAfter(selectedMark, message => message.type === 'room_update' && payloadOf(message).game === 'monopoly', '三人房确认大富翁已选择');
-  const startedMarks = players.map(client => client.mark());
+  const readyMark = host.mark();
   second.send({ type:'ready', payload:{ ready:true } });
   third.send({ type:'ready', payload:{ ready:true } });
+  await host.waitAfter(readyMark, message => message.type === 'room_update' && payloadOf(message).canStart === true, '三人房 READY 投影');
+  const startedMarks = players.map(client => client.mark());
   host.send({ type:'start' });
   const started = await Promise.all(players.map((client, index) => client.waitAfter(startedMarks[index],
     message => message.type === 'started' || isReject(message), '三人局 started ' + index)));
@@ -796,6 +804,9 @@ async function runAccountAndProfileTests(wsUrl){
       level: 99,
       total: 999999,
       played: { gomoku: 999999 },
+      wins: { gomoku: 999999 },
+      totalWins: 999999,
+      mastery: { byGame: { gomoku: { current: { nameKey: 'forged' } } } },
       pin_hash: hackedPinHash,
       owned: { avatars: [55], frames: [8], effects: [4], backgrounds: [10] },
     },
@@ -864,6 +875,10 @@ async function runResultAndPurchaseTests(context){
     '服务端购买头像 30',
   );
   check('合法商城购买成功', purchaseResponse.type === 'purchase_ok', JSON.stringify(purchaseResponse));
+  check('purchase 回执关联服务端确认的 requestId/category/id',
+    purchaseResponse.payload && purchaseResponse.payload.requestId === requestId &&
+      purchaseResponse.payload.category === 'avatars' && purchaseResponse.payload.id === 30,
+    JSON.stringify(purchaseResponse.payload));
   const afterPurchase = await getProfile(authA, context.a.uid);
   check('purchase 忽略伪造 price 并按服务端定价扣 💵10',
     Number(beforePurchase.coins || 0) - Number(afterPurchase.coins || 0) === 10,

@@ -1,0 +1,32 @@
+{
+  "taskId": "latest-browser-visible-matrix-prove-p3-20260815",
+  "status": "LOCAL_CURRENT_BUILD_SINGLE_BROWSER_COMPLETE",
+  "stage": "PROVE",
+  "requirements": ["TECH-027"],
+  "steps": [
+    {"id":"P3-1","title":"校验磁盘与两个 localhost 服务的当前构建字节","dependsOn":[],"status":"completed"},
+    {"id":"P3-2","title":"采集五档四区与共享表面","dependsOn":["P3-1"],"status":"completed"},
+    {"id":"P3-3","title":"采集六款 Game Stage 进入退出","dependsOn":["P3-2"],"status":"completed"},
+    {"id":"P3-4","title":"采集三语双主题 reduced-motion forced-colors 与 console","dependsOn":["P3-3"],"status":"completed"},
+    {"id":"P3-5","title":"清理模拟状态并同步证据、台账、报告与日志","dependsOn":["P3-4"],"status":"completed"},
+    {"id":"P3-6","title":"第二浏览器、真机、真实网络与真实性能","dependsOn":["P3-5"],"status":"blocked_external_gate"}
+  ],
+  "risks": [
+    "单浏览器 CSS viewport 被误写为真实设备",
+    "构建变化使证据陈旧",
+    "账号或用户正文进入证据",
+    "媒体/viewport 模拟未复位",
+    "浏览器自动化只验证 DOM 而忽略真实可见结果"
+  ],
+  "tests": [
+    "browser current-build five-viewport visible matrix",
+    "node qa/prove-current-build-evidence-contract.js",
+    "node qa/mainline-control-plane.js",
+    "node qa/progress-ledger.js",
+    "node qa/brief-report-contract.js",
+    "npm run quality:gates",
+    "git diff --check"
+  ],
+  "rollback": "Remove only P3 evidence/index updates and restore P2 historical pointer; retain all runtime code, prior evidence and user data.",
+  "release": "LOCAL_ONLY_NO_COMMIT_NO_PUSH_NO_DEPLOY"
+}

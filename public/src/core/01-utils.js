@@ -25,62 +25,86 @@ function releaseModalScrollLock(owner){
   if (modalScrollLockCount === 0 && document.body) document.body.classList.remove('modal-scroll-locked');
 }
 
-/* ---------------- 轻量音效（WebAudio，零资源加载） ---------------- */
-let _actx = null;
-function sfx(kind){
-  try {
-    const AC = (typeof AudioContext !== 'undefined' && AudioContext) || (typeof webkitAudioContext !== 'undefined' && webkitAudioContext);
-    if (!AC) return;
-    if (!_actx) _actx = new AC();
-    if (_actx.state === 'suspended') _actx.resume();
-    const cfg = {
-      click: { f: 520, dur: .05, vol: .06, type: 'sine' },
-      move:  { f: 680, dur: .06, vol: .05, type: 'triangle' },
-      pop:   { f: 440, dur: .04, vol: .04, type: 'sine' },
-      place: { f: 540, dur: .09, vol: .07, type: 'triangle' },
-      capture:{ f: 220, dur: .12, vol: .08, type: 'sawtooth' },
-      score: { f: 760, dur: .10, vol: .07, type: 'triangle' },
-      win:   { f: 880, dur: .20, vol: .09, type: 'triangle' },
-      lose:  { f: 320, dur: .16, vol: .06, type: 'sine' },
-    }[kind] || { f: 440, dur: .05, vol: .05, type: 'sine' };
-    const t = _actx.currentTime;
-    const osc = _actx.createOscillator();
-    const gain = _actx.createGain();
-    osc.type = cfg.type;
-    osc.frequency.setValueAtTime(cfg.f, t);
-    if (kind === 'win') osc.frequency.exponentialRampToValueAtTime(cfg.f * 1.5, t + .12);
-    gain.gain.setValueAtTime(cfg.vol, t);
-    gain.gain.exponentialRampToValueAtTime(.0001, t + cfg.dur);
-    osc.connect(gain).connect(_actx.destination);
-    osc.start(t);
-    osc.stop(t + cfg.dur + .03);
-  } catch {}
+/* ---------------- 统一语义反馈兼容层 ----------------
+ * 旧调用方保留同名函数，但不再直接创建 AudioContext 或震动。
+ * 只有 FeedbackBus 接受的 presentation cue 才能到达统一 Adapter；
+ * 浏览器解锁由 22-audio-runtime.js 的真实用户手势处理。
+ */
+const LEGACY_FEEDBACK_CUES = Object.freeze({
+  click:'ui_confirm', tap:'ui_confirm', pop:'ui_confirm', move:'ludo_move',
+  place:'gomoku_place', capture:'match_terminal', score:'coins_gain',
+  win:'match_win', lose:'match_loss', shoot:'tank_fire'
+});
+let _audioCueSequence = 0;
+let _uiAudioSequence = 0;
+function audioCueId(prefix, context){
+  const source = context && typeof context === 'object' ? (context.actionId || context.cueId || context.id) : '';
+  if (typeof source === 'string' && /^[A-Za-z0-9][A-Za-z0-9._:-]{0,63}$/.test(source)) return source;
+  _audioCueSequence = (_audioCueSequence + 1) % 1000000;
+  return String(prefix || 'audio') + '-' + _audioCueSequence;
 }
-/* 震动反馈（移动端；桌面端静默忽略） */
-function haptic(kind){
+/*
+ * Platform controls use the same semantic bus as gameplay, but they must not
+ * manufacture IDs from user text, UIDs, room names, or protocol payloads.
+ * Keep a tiny local monotonic namespace for accepted UI/server outcomes.
+ */
+function emitUiAudioCue(type, intensity){
+  const safeType=String(type||'ui_confirm').replace(/[^A-Za-z0-9_:-]/g,'').slice(0,32)||'ui_confirm';
+  _uiAudioSequence=(_uiAudioSequence+1)%1000000;
+  return emitPresentationAudio(safeType,{actionId:'ui-'+safeType+'-'+_uiAudioSequence},Number.isFinite(intensity)?intensity:.55);
+}
+function emitPresentationAudio(type, context, intensity, pan){
   try {
-    if (typeof navigator === 'undefined' || !navigator.vibrate) return;
-    const map = { light: 8, medium: [12, 30, 12], strong: [20, 40, 20, 40, 20], win: [30, 60, 30, 60, 40], lose: [60, 40, 60] };
-    navigator.vibrate(map[kind] || map.light);
+    if (typeof emitAudioCue !== 'function') return { accepted:false, reason:'unavailable' };
+    const options = { id:audioCueId(type,context), intensity:Number.isFinite(intensity) ? intensity : 1 };
+    if (Number.isFinite(pan)) options.pan = pan;
+    return emitAudioCue(type, options);
+  } catch { return { accepted:false, reason:'error' }; }
+}
+function emitAcceptedAudioCue(type, context, intensity, pan){
+  const result = emitPresentationAudio(type, context, intensity, pan);
+  // Lightweight VM/test hosts and an early boot before the audio runtime is
+  // installed have no `emitAudioCue` bridge. Preserve the historical
+  // presentation seam in that narrow unavailable case; muted/hidden/disabled
+  // results from a real bridge must not be replayed through a second path.
+  if (result && result.accepted === false && result.reason === 'unavailable' && typeof playFeedback === 'function') {
+    const fallbackContext = context && typeof context === 'object' ? { ...context, audioType:type } : { audioType:type };
+    const fallbackKind = fallbackContext.reaction || 'tap';
+    return playFeedback(fallbackKind, fallbackContext);
+  }
+  try {
+    const reaction = context && typeof context === 'object' ? context.reaction : null;
+    if (reaction && typeof triggerHonruGameReaction === 'function') triggerHonruGameReaction(reaction, context);
   } catch {}
+  return result;
+}
+function playPresentationMusic(track){
+  try {
+    if (typeof GhostAudioRuntime === 'undefined' || !GhostAudioRuntime || typeof GhostAudioRuntime.playMusic !== 'function') return { accepted:false, reason:'unavailable' };
+    return GhostAudioRuntime.playMusic(track);
+  } catch { return { accepted:false, reason:'error' }; }
+}
+function resetPresentationAudio(scope){
+  try {
+    if (typeof GhostAudioRuntime === 'undefined' || !GhostAudioRuntime || typeof GhostAudioRuntime.reset !== 'function') return { accepted:false, reason:'unavailable' };
+    return GhostAudioRuntime.reset(String(scope || 'presentation'));
+  } catch { return { accepted:false, reason:'error' }; }
+}
+function sfx(kind, context){
+  const type = LEGACY_FEEDBACK_CUES[String(kind || '')] || 'ui_confirm';
+  return emitPresentationAudio(type, context, kind === 'win' ? .95 : kind === 'lose' ? .75 : 1);
+}
+function haptic(kind, context){
+  const type = kind === 'win' ? 'match_win' : kind === 'lose' ? 'match_loss' : kind === 'strong' ? 'match_terminal' : 'ui_toggle';
+  return emitPresentationAudio(type, context, kind === 'light' ? .35 : kind === 'medium' ? .65 : 1);
 }
 /* 分级反馈：关键操作重反馈，普通操作轻反馈 */
-function playFeedback(kind){
-  const fx = {
-    tap:     { sfx: 'click',  haptic: 'light' },
-    move:    { sfx: 'move',   haptic: 'light' },
-    place:   { sfx: 'place',  haptic: 'medium' },
-    capture: { sfx: 'capture',haptic: 'strong' },
-    score:   { sfx: 'score',  haptic: 'medium' },
-    win:     { sfx: 'win',    haptic: 'win' },
-    lose:    { sfx: 'lose',   haptic: 'lose' },
-  }[kind] || { sfx: 'click', haptic: 'light' };
-  sfx(fx.sfx); haptic(fx.haptic);
-}
-if (typeof document !== 'undefined' && document.addEventListener){
-  document.addEventListener('click', function(e){
-    if (e.target && e.target.closest && e.target.closest('.btn')) sfx('click');
-  });
+function playFeedback(kind, context){
+  const requestedCue = context && typeof context === 'object' ? context.audioType : null;
+  const cue = typeof requestedCue === 'string' ? requestedCue : ({ tap:'ui_confirm', move:'ludo_move', place:'gomoku_place', capture:'match_terminal', score:'coins_gain', win:'match_win', lose:'match_loss', shoot:'tank_fire' }[kind] || 'ui_confirm');
+  const result = emitPresentationAudio(cue, context, kind === 'win' || kind === 'capture' ? .95 : 1);
+  try { if (typeof triggerHonruGameReaction === 'function') triggerHonruGameReaction(kind, context); } catch {}
+  return result;
 }
 const THEME_LIST = [
   { id: 'light', icon: '☀️', name: 'Day', nameZh: '白天', nameKey:'theme_light' },
@@ -92,13 +116,16 @@ function themeMeta(id){
 function normalizeTheme(theme){
   const value = String(theme || 'light');
   if (value === 'light' || value === 'ocean' || value === 'forest' || value === 'sakura') return 'light';
-  return 'dark';
+  if (value === 'dark' || value === 'midnight' || value === 'cyber') return 'dark';
+  return 'light';
 }
 function applyTheme(theme){
   theme = normalizeTheme(theme);
   if (document.documentElement && document.documentElement.setAttribute){
     document.documentElement.setAttribute('data-theme', theme);
   }
+  const themeColor=document.getElementById&&document.getElementById('pwa-theme-color');
+  if(themeColor)themeColor.setAttribute('content',theme==='dark'?'#05070b':'#eaf3fa');
   const btn = $('btn-theme');
   if (btn){
     const meta = themeMeta(theme);
@@ -106,6 +133,7 @@ function applyTheme(theme){
     if (typeof setButtonIcon === 'function') setButtonIcon(btn, theme === 'light' ? 'moon' : 'sun', '', { ariaLabel:label, title:label, size:19 });
     else { btn.textContent = meta.icon; btn.title = label; }
   }
+  if(typeof refreshPlatformScene==='function')refreshPlatformScene(typeof ghostAppRoute!=='undefined'?ghostAppRoute:'home');
 }
 function themeName(meta){ return meta && meta.nameKey ? t(meta.nameKey) : (meta ? meta.name : ''); }
 function initTheme(){
@@ -170,19 +198,35 @@ function toast(msg){
   wrap.appendChild(t);
   setTimeout(() => t.remove(), 1900);
 }
-function showModal(title, lines, btnText){
+function mountModalIllustration(card, semantic, tone){
+  if(!card||typeof resolveModalIllustrationUrl!=='function')return false;
+  const safeSemantic=String(semantic||'rules'),safeTone=String(tone||'neutral');
+  const art=document.createElement('img');art.className='modal-header-art';art.alt='';art.setAttribute('aria-hidden','true');art.dataset.modalArtSemantic=safeSemantic;art.dataset.modalArtTone=safeTone;art.dataset.modalArtState='loading';
+  if(typeof card.insertBefore==='function')card.insertBefore(art,card.firstChild||null);else card.appendChild(art);
+  const fallback=()=>{art.dataset.modalArtState='fallback';if(typeof art.removeAttribute==='function')art.removeAttribute('src');else art.src='';};
+  resolveModalIllustrationUrl(safeSemantic,safeTone,'240',typeof prefersReducedMotion==='function'&&prefersReducedMotion()).then(url=>{
+    if(!art.isConnected)return;
+    if(!url){fallback();return;}
+    art.onload=()=>{if(art.isConnected)art.dataset.modalArtState='ready';};art.onerror=fallback;art.src=url;
+  }).catch(fallback);
+  return true;
+}
+function showModal(title, lines, btnText, artSemantic, artTone){
   const bd = el('div','modal-backdrop');
   const card = el('div','modal-card');
+  if (typeof mountModalIllustration === 'function') mountModalIllustration(card, artSemantic || 'rules', artTone || 'neutral');
   card.appendChild(el('h3', null, title));
   const ul = el('ul','lines');
   lines.forEach(l => ul.appendChild(el('li', null, l)));
   card.appendChild(ul);
   const ok = el('button','btn btn-primary', btnText || t('ok'));
-  ok.addEventListener('click', () => bd.remove());
+  let closeModal = () => { if (bd.remove) bd.remove(); return true; };
+  ok.addEventListener('click', () => closeModal());
   card.appendChild(ok);
   bd.appendChild(card);
-  bd.addEventListener('click', e => { if (e.target === bd) bd.remove(); });
   document.body.appendChild(bd);
+  closeModal = setupAccessibleOverlayDialog(bd, card, ok, title);
+  return closeModal;
 }
 function pipsHTML(v){
   const map = {1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
@@ -470,16 +514,22 @@ function aiPick(options){
 }
 
 /* ---------------- Loading 工具 ---------------- */
-function loadingNode(text){
+function loadingNode(text, context){
   const wrap = el('div','loading-inline');
-  wrap.appendChild(el('div','loading-spinner'));
+  const semantic=String(context||'page'),spinner=el('div','loading-spinner');wrap.dataset.loadingContext=semantic;
+  if(typeof resolveLoadingArtUrl==='function'){
+    const art=document.createElement('img');art.className='loading-art';art.alt='';art.setAttribute('aria-hidden','true');art.dataset.loadingArtState='loading';wrap.appendChild(art);
+    const fallback=()=>{art.dataset.loadingArtState='fallback';if(typeof art.removeAttribute==='function')art.removeAttribute('src');else art.src='';};
+    resolveLoadingArtUrl(semantic,'160').then(url=>{if(!art.isConnected)return;if(!url){fallback();return;}art.onload=()=>{if(art.isConnected)art.dataset.loadingArtState='ready';};art.onerror=fallback;art.src=url;}).catch(fallback);
+  }
+  wrap.appendChild(spinner);
   if (text) wrap.appendChild(el('span', null, text));
   return wrap;
 }
-function setLoading(target, text){
+function setLoading(target, text, context){
   if (!target) return;
   target.innerHTML = '';
-  target.appendChild(loadingNode(text));
+  target.appendChild(loadingNode(text, context));
 }
 function clearLoading(target){
   if (!target) return;
@@ -487,82 +537,234 @@ function clearLoading(target){
 }
 
 /* ---------------- 开局倒计时 ---------------- */
+let _audioCountdownSequence = 0;
+let _activeAudioCountdown = null;
+function cancelCountdown(){
+  const active = _activeAudioCountdown;
+  if (!active) return false;
+  _activeAudioCountdown = null;
+  if (active.interval !== null) clearInterval(active.interval);
+  if (active.removalTimeout !== null) clearTimeout(active.removalTimeout);
+  if (active.overlay && typeof active.overlay.remove === 'function') active.overlay.remove();
+  return true;
+}
 function runCountdown(){
+  cancelCountdown();
   const area = $('board-area');
   if (!area) return;
+  const audioSequence = ++_audioCountdownSequence;
+  if (typeof playPresentationMusic === 'function') playPresentationMusic('game');
+  emitPresentationAudio('match_countdown', { actionId:'countdown-' + audioSequence + '-3' }, .72);
   const ov = el('div', 'overlay cd-overlay');
   const num = el('div', 'cd-num', '3');
   ov.appendChild(num);
   area.appendChild(ov);
+  const active = { sequence:audioSequence, interval:null, removalTimeout:null, overlay:ov };
+  _activeAudioCountdown = active;
   let n = 3;
-  const iv = setInterval(() => {
+  active.interval = setInterval(() => {
+    if (_activeAudioCountdown !== active) return;
     n--;
     if (n > 0){
+      emitPresentationAudio('match_countdown', { actionId:'countdown-' + audioSequence + '-' + n }, .72);
       num.textContent = n;
       num.style.animation = 'none';
       void num.offsetWidth;
       num.style.animation = '';
     } else {
-      clearInterval(iv);
+      clearInterval(active.interval);
+      active.interval = null;
+      emitPresentationAudio('match_start', { actionId:'countdown-' + audioSequence + '-start' }, .9);
       ov.classList.add('fade');
-      setTimeout(() => ov.remove(), 260);
+      active.removalTimeout = setTimeout(() => {
+        if (_activeAudioCountdown === active) _activeAudioCountdown = null;
+        ov.remove();
+      }, 260);
     }
   }, 700);
+  return () => {
+    if (_activeAudioCountdown !== active) return false;
+    return cancelCountdown();
+  };
 }
 
 
 /* ====== 统一胜利叠加层 ====== */
+function setupAccessibleOverlayDialog(overlay, card, initialFocus, label, onClosed){
+  if (!overlay || !card || typeof document === 'undefined') return () => false;
+  // All overlays share one small registry so nested dialogs have a single
+  // active owner for Escape/Tab.  The registry lives on document to preserve
+  // the seam across source concatenation and lightweight VM harnesses.
+  const registry = document.__mgAccessibleDialogRegistry || (document.__mgAccessibleDialogRegistry = []);
+  const prune = () => {
+    for (let i = registry.length - 1; i >= 0; i--){
+      const entry = registry[i];
+      if (!entry || !entry.overlay || entry.overlay.isConnected === false) registry.splice(i, 1);
+    }
+  };
+  prune();
+  const previousFocus = document.activeElement;
+  const focusSelector = 'button:not([disabled]),[href],input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
+  card.setAttribute('role', 'dialog');
+  card.setAttribute('aria-modal', 'true');
+  if (label) card.setAttribute('aria-label', String(label));
+  let closed = false;
+  const entry = { overlay, card, close:null };
+  registry.push(entry);
+  const isTopmost = () => { prune(); return registry[registry.length - 1] === entry; };
+  const focusables = () => typeof card.querySelectorAll === 'function'
+    ? Array.from(card.querySelectorAll(focusSelector)).filter(node => node && !node.disabled && !node.hidden && node.tabIndex !== -1)
+    : [];
+  const close = () => {
+    if (closed) return false;
+    closed = true;
+    const index = registry.indexOf(entry);
+    if (index >= 0) registry.splice(index, 1);
+    if (typeof document.removeEventListener === 'function') document.removeEventListener('keydown', onKeydown, { capture:true });
+    if (typeof overlay.removeEventListener === 'function') overlay.removeEventListener('click', onBackground);
+    if (overlay.__accessibleDialogClose === close) delete overlay.__accessibleDialogClose;
+    if (typeof overlay.remove === 'function') overlay.remove();
+    try { if (typeof onClosed === 'function') onClosed(); } catch {}
+    try { if (previousFocus && previousFocus.isConnected !== false && typeof previousFocus.focus === 'function') previousFocus.focus({ preventScroll:true }); } catch {}
+    return true;
+  };
+  entry.close = close;
+  const onBackground = event => { if (event.target === overlay) close(); };
+  const onKeydown = event => {
+    if (!isTopmost()) return;
+    if (event.key === 'Escape') { if (event.preventDefault) event.preventDefault(); close(); return; }
+    if (event.key !== 'Tab') return;
+    const items = focusables();
+    if (!items.length) return;
+    const current = document.activeElement, index = items.indexOf(current);
+    if (event.shiftKey && index <= 0) { if (event.preventDefault) event.preventDefault(); items[items.length - 1].focus(); }
+    else if (!event.shiftKey && (index < 0 || index === items.length - 1)) { if (event.preventDefault) event.preventDefault(); items[0].focus(); }
+  };
+  overlay.__accessibleDialogClose = close;
+  if (typeof overlay.addEventListener === 'function') overlay.addEventListener('click', onBackground);
+  if (typeof document.addEventListener === 'function') document.addEventListener('keydown', onKeydown, { capture:true });
+  const first = initialFocus || focusables()[0];
+  try { if (first && typeof first.focus === 'function') first.focus({ preventScroll:true }); } catch { try { if (first) first.focus(); } catch {} }
+  return close;
+}
+
+function outcomeMotionApi(){
+  try { return typeof globalThis !== 'undefined' ? globalThis.GhostSurfaceMotion : null; }
+  catch (_error) { return null; }
+}
+function runOutcomeSurfaceMotion(surface, phase, root, panel, items){
+  const motion = outcomeMotionApi();
+  if (!motion || typeof motion.run !== 'function') return false;
+  try {
+    motion.run({
+      surface,
+      phase,
+      root,
+      panel,
+      items:Array.isArray(items) ? items.filter(Boolean).slice(0, 16) : [],
+    });
+    return true;
+  } catch (_error) { return false; }
+}
+function settleOutcomeSurfaceMotion(surface, reason){
+  const motion = outcomeMotionApi();
+  if (!motion || typeof motion.settle !== 'function') return false;
+  try { motion.settle(surface, reason || 'settle'); return true; }
+  catch (_error) { return false; }
+}
+
+function closeVictoryOverlay(area){
+  if (!area) return false;
+  const overlay = area.__victoryOverlayDialog ||
+    (typeof area.querySelector === 'function' ? area.querySelector('.victory-overlay') : null);
+  if (!overlay) return false;
+  let closed = false;
+  if (typeof overlay.__accessibleDialogClose === 'function') closed = overlay.__accessibleDialogClose();
+  else if (typeof overlay.remove === 'function') { overlay.remove(); closed = true; }
+  if (area.__victoryOverlayDialog === overlay) delete area.__victoryOverlayDialog;
+  return closed;
+}
+
 function showVictoryOverlay(area, opts) {
-  // opts: { winner, winnerName, subtitle, emoji, coins, slot, playerCount, onRestart, onShare, onInvite }
-  const ov = el('div', 'overlay victory-overlay');
-  const card = el('div', 'overlay-card victory-card');
-  
-  // 大动画图标
-  const big = el('div', 'victory-emoji', opts.emoji || '🏆');
-  card.appendChild(big);
-  sfx(opts.coins ? 'win' : 'pop');
-  
-  // 标题
+  // opts: { winner, winnerName, subtitle, emoji, coins, podium, slot, playerCount,
+  //   viewerSlot, draw, audioType, audioId, onRestart, onShare, onInvite }
+  opts = opts || {};
+  closeVictoryOverlay(area);
+  const ov = el('div', 'overlay victory-overlay ghost-outcome-backdrop');
+  const card = el('div', 'overlay-card victory-card ghost-outcome-surface ghost-outcome-victory');
+  const explicitAudioType = ['match_draw', 'match_win', 'match_loss', 'match_terminal'].includes(String(opts.audioType || ''))
+    ? String(opts.audioType)
+    : '';
+  const viewerSlot = opts.viewerSlot !== null && opts.viewerSlot !== undefined && Number.isInteger(Number(opts.viewerSlot)) ? Number(opts.viewerSlot) : null;
+  const winnerSlot = opts.winner !== null && opts.winner !== undefined && Number.isInteger(Number(opts.winner)) ? Number(opts.winner) : null;
+  const outcomeAudioType = explicitAudioType || (opts.draw === true || opts.outcome === 'draw'
+    ? 'match_draw'
+    : viewerSlot !== null && winnerSlot !== null
+      ? (viewerSlot === winnerSlot ? 'match_win' : 'match_loss')
+      : (opts.coins ? 'match_win' : 'match_terminal'));
+  const outcomeKind = outcomeAudioType === 'match_loss' ? 'loss' : outcomeAudioType === 'match_draw' ? 'draw' : outcomeAudioType === 'match_win' ? 'win' : 'complete';
+  card.setAttribute('data-outcome-kind', outcomeKind);
+
+  const header = el('header', 'ghost-outcome-header');
+  const big = el('div', 'victory-emoji ghost-outcome-mark', opts.emoji || '✦');
+  big.setAttribute('aria-hidden', 'true');
+  header.appendChild(big);
+  const copy = el('div', 'ghost-outcome-copy');
+  copy.appendChild(el('div', 'ghost-outcome-eyebrow', t('outcome_match_complete')));
+  const outcomeGameId = String(typeof currentGameId === 'string' ? currentGameId : 'game')
+    .replace(/[^A-Za-z0-9._:-]/g, '-').slice(0, 18) || 'game';
+  const outcomeWinnerId = winnerSlot === null ? 'draw' : String(winnerSlot);
+  const requestedOutcomeId = String(opts.audioId || '').replace(/[^A-Za-z0-9._:-]/g, '-').slice(0, 48);
+  const outcomeId = requestedOutcomeId || ('victory-' + outcomeGameId + '-' + outcomeWinnerId + '-' + outcomeAudioType.replace('match_', ''));
+  if (typeof emitPresentationAudio === 'function') emitPresentationAudio(outcomeAudioType, {
+    actionId:audioCueId(outcomeId)
+  }, outcomeAudioType === 'match_win' ? .95 : outcomeAudioType === 'match_loss' ? .82 : outcomeAudioType === 'match_draw' ? .8 : .8);
+  if (typeof playPresentationMusic === 'function') playPresentationMusic('result');
+
   const title = el('h3', 'victory-title', opts.winnerName 
     ? t('result_named_winner',opts.winnerName)
     : t('result_winner', (opts.winner || 0) + 1));
-  card.appendChild(title);
-  
-  // 副标题
+  copy.appendChild(title);
   if (opts.subtitle) {
-    card.appendChild(el('p', 'victory-subtitle', opts.subtitle));
+    copy.appendChild(typeof elRaw === 'function' ? elRaw('p', 'victory-subtitle', opts.subtitle) : el('p', 'victory-subtitle', opts.subtitle));
   }
-  
-  // 胜利彩带；正式奖励异步由服务端 Reward Breakdown 展示。
-  if (opts.coins) {
-    // 彩带粒子（CSS 动画，零依赖）
-    const CONF_COLORS = ['#f59e0b','#ef4444','#22d3ee','#a78bfa','#f472b6','#34d399','#fbbf24'];
-    for (let i = 0; i < 14; i++){
-      const cf = el('div','confetti');
-      cf.style.left = (8 + Math.random() * 84) + '%';
-      cf.style.background = CONF_COLORS[i % CONF_COLORS.length];
-      const setCssVar = (k, v) => { if (cf.style && cf.style.setProperty) cf.style.setProperty(k, v); else if (cf.style) cf.style[k] = v; };
-      setCssVar('--conf-dur', (1.8 + Math.random() * 1.2) + 's');
-      setCssVar('--conf-fall', (300 + Math.random() * 180) + 'px');
-      setCssVar('--conf-rot', (300 + Math.random() * 500) + 'deg');
-      cf.style.animationDelay = (Math.random() * 0.35) + 's';
-      ov.appendChild(cf);
-    }
+  header.appendChild(copy);
+  card.appendChild(header);
+
+  const motionItems = [header];
+  if (Array.isArray(opts.podium) && opts.podium.length){
+    const podium = el('ol', 'victory-podium ghost-outcome-detail');
+    podium.setAttribute('aria-label', t('victory_podium_label'));
+    opts.podium.slice().sort((a,b) => Number(a.rank) - Number(b.rank)).forEach(item => {
+      const row = el('li', 'victory-podium-row ghost-outcome-detail-item');
+      row.setAttribute('data-rank', String(item.rank));
+      row.appendChild(el('span', 'victory-podium-rank', t('victory_podium_rank',item.rank)));
+      row.appendChild(typeof elRaw === 'function' ? elRaw('strong', 'victory-podium-name', item.name || '') : el('strong', 'victory-podium-name', item.name || ''));
+      podium.appendChild(row);
+      motionItems.push(row);
+    });
+    card.appendChild(podium);
   }
-  
-  // 按钮行
-  const btnRow = el('div', 'victory-btns');
+
+  const btnRow = el('div', 'victory-btns ghost-outcome-actions');
+  let closeVictory = () => { if (ov.remove) ov.remove(); return true; };
   
   const again = el('button', 'btn btn-primary victory-btn', t('come_back'));
   again.addEventListener('click', () => {
-    ov.remove();
+    closeVictory();
+    if (typeof playPresentationMusic === 'function') playPresentationMusic('game');
+    try { if (typeof clearHonruGameReaction === 'function') clearHonruGameReaction(); } catch {}
     if (opts.onRestart) opts.onRestart();
+    try { if (typeof triggerHonruGameReaction === 'function') triggerHonruGameReaction('rematch', { source:'outcome-restart' }); } catch {}
   });
   btnRow.appendChild(again);
   
   if (opts.onInvite) {
     const invite = el('button', 'btn victory-btn', t('invite_player'));
-    invite.addEventListener('click', opts.onInvite);
+    invite.addEventListener('click', () => {
+      if (typeof setHonruPlatformReaction === 'function') setHonruPlatformReaction('waiting-invite');
+      opts.onInvite();
+    });
     btnRow.appendChild(invite);
   }
   
@@ -573,19 +775,26 @@ function showVictoryOverlay(area, opts) {
   }
   
   card.appendChild(btnRow);
+  motionItems.push(btnRow);
   ov.appendChild(card);
-  
-  // 点击背景关闭
-  ov.addEventListener('click', e => { 
-    if (e.target === ov) { ov.remove(); }
-  });
-  
   area.appendChild(ov);
+  closeVictory = setupAccessibleOverlayDialog(ov, card, again, title.textContent, () => {
+    settleOutcomeSurfaceMotion('victory-dialog', 'closed');
+    if (area.__victoryOverlayDialog === ov) delete area.__victoryOverlayDialog;
+  });
+  area.__victoryOverlayDialog = ov;
+  runOutcomeSurfaceMotion('victory-dialog', 'open', ov, card, motionItems);
+  return closeVictory;
 }
 
 
 /* ====== 分享 & 邀请 ====== */
 function shareGameLink(gameId, roomCode) {
+  if (!roomCode && typeof Playline !== 'undefined' && Playline && typeof Playline.prefill === 'function') {
+    Playline.prefill({ kind:'game_share', gameId:String(gameId || '') });
+    if (typeof setAppRoute === 'function') setAppRoute('playline');
+    return;
+  }
   const base = location.origin + location.pathname;
   let url = base;
   if (roomCode) {

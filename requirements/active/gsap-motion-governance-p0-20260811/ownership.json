@@ -1,0 +1,6 @@
+{
+  "taskId": "gsap-motion-governance-p0-20260811",
+  "master": ["AGENTS.md", "requirements/PRODUCT_REQUIREMENTS_LEDGER.json", "requirements/skills-registry.json", "public/index-template.html"],
+  "agent": ["requirements/active/gsap-motion-governance-p0-20260811"],
+  "forbiddenWithoutMaster": ["package.json", "scripts/build.js", "public/sw.js", "server", "shared/rules"]
+}

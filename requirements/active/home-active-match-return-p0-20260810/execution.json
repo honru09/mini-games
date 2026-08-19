@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "taskId": "home-active-match-return-p0-20260810",
+  "status": "LOCAL_VERIFIED",
+  "startedAt": "2026-08-10T17:15:00+09:00",
+  "updatedAt": "2026-08-10T17:28:00+09:00",
+  "completed": ["recon", "contract", "same-instance return UI", "stale-state lifecycle", "three-language responsive presentation", "specialized and full regression"],
+  "reviewCorrections": ["added typeof guard so legacy isolated Home VM contracts do not throw when the new helper is not loaded"],
+  "verification": {"specialized":"PASS", "npmTest":"PASS 199.8s", "build":"974130 characters / 988467 bytes / SHA-256 8ECE8C16D5AE051DE59A31D9FA14949FF607675504059BC26BD050BE505F81E8"},
+  "boundary": "same-instance active Game Stage return only; not cross-device, cross-restart or durable recovery",
+  "published": false
+}

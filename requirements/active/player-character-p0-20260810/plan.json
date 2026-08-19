@@ -1,0 +1,13 @@
+{
+  "status":"REQUIREMENT_FROZEN",
+  "dependencies":["SOC-001","UI-022","GAME-012"],
+  "steps":[
+    {"id":"PC-1","task":"冻结 Player Character v1 模块接口、白名单、隐私和 fallback","status":"completed"},
+    {"id":"PC-2","task":"实现纯模块与专项单元测试","status":"completed"},
+    {"id":"PC-3","task":"集成档案、公开 Profile、Room Seat 与客户端缓存","status":"completed"},
+    {"id":"PC-4","task":"运行安全/重连/联机/三语/完整回归并同步台账报告日志","status":"completed"}
+  ],
+  "risks":["客户端伪造未拥有装备","公开投影泄露经济字段","旧档案迁移覆盖身份或资产","Seat/Profile 投影漂移","后续大富翁把表现写进规则快照"],
+  "tests":["qa/player-character-contract.js","qa/game-cosmetic-profile.js","qa/room-seats.js","qa/security-online.js","qa/reconnect-online.js","qa/e2e-online.js","npm run test:i18n","node qa/dom-smoke.js","npm run quality:gates","npm test"],
+  "rollback":"移除 player-character 模块和只读投影字段；旧档案忽略新增字段，Avatar/Frame/GameCosmetics 与六款规则继续工作。"
+}

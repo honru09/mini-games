@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "taskId": "performance-budget-p1-20260813",
+  "requirements": ["TECH-033"],
+  "stage": "CLOSE",
+  "disposition": "NOW_CLOSURE",
+  "status": "COMPLETED_LOCAL",
+  "scope": "建立 Shell/Game Stage/GSAP 动效/素材/列表预算与证据边界；不声称真实设备 FPS，不修改产品运行时或线上配置。",
+  "steps": [
+    {"id":"PERF-1","status":"completed","title":"读取 gsap-performance skill 并冻结性能规则"},
+    {"id":"PERF-2","status":"completed","title":"加入性能预算合同、active task 与专项 QA"},
+    {"id":"PERF-3","status":"completed","title":"同步台账、状态、报告、简报和三份日志"},
+    {"id":"PERF-4","status":"completed","title":"运行专项与本地全链回归"}
+  ],
+  "release": "LOCAL_ONLY_NO_COMMIT_NO_PUSH_NO_DEPLOY",
+  "rollback": "删除性能合同、QA 与 active task，恢复 TECH-033 为 partial；不触碰运行时和数据。"
+}

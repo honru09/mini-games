@@ -1,0 +1,51 @@
+{
+  "evidenceId": "tank-camera-language-current-build-202608172134",
+  "capturedAt": "2026-08-17T21:34:41+09:00",
+  "classification": "VISUAL_VERIFIED_SINGLE_BROWSER_LOCAL_PARTIAL",
+  "requirements": ["GAME-051", "TECH-049", "TECH-054"],
+  "build": {
+    "path": "public/index.html",
+    "characters": 1982386,
+    "utf8Bytes": 1997009,
+    "sha256": "2C8D4F8B28255C15358C81122DFF9BE0479A0FD4DF3A75F8EAAB02A2CD95F1F1",
+    "rendererSha256": "F86D0CC65A4B9AB7377072E2E26DE85593557800577F227C5B50F7B3306C4AAD"
+  },
+  "implementation": [
+    "Tank now consumes the shared orthographic TabletopCameraRig for entrance, action-follow, impact, overview and result shots",
+    "movement, fire, hit and KO beats are derived only from accepted local commits or accepted tank-authority-v1 receipts; terminal result is bound to the accepted terminal frame and authoritative winner",
+    "Rule/result ownership stays synchronous; HIGH/BALANCED result presentation may hold only the DOM victory surface for 420/320ms",
+    "LOW, fallback and reduced-motion apply the equivalent camera/result pose immediately",
+    "bounded terrain/tank/projectile pools, interpolation without extrapolation, inert canvas and DOM joystick/D-pad/fire controls remain intact"
+  ],
+  "automated": [
+    "npm run test:tank-ghost3d PASS (ESM 32 / Renderer 70 / Presenter 52 / layout 18 / cache)",
+    "node qa/ghost3d-foundation.js PASS",
+    "node qa/tabletop-camera-rig-contract.js PASS",
+    "node qa/tank-controls.js and node qa/tank-prediction-adapter.js PASS",
+    "node qa/game-stage-input-continuity.js PASS",
+    "node qa/game-module-loader.js, node qa/sw-game-module-preheat.js and node qa/pwa-offline-i18n.js PASS"
+  ],
+  "browser": {
+    "name": "Codex in-app Chromium",
+    "url": "http://localhost:8080/",
+    "scope": [
+      "temporary HIGH opt-in on the current build reached one ready inert canvas for the bounded Arena with zero horizontal overflow",
+      "DOM fire input remained usable and the accepted action camera returned to overview after the finite beat",
+      "a same-origin reduced-motion QA iframe retained one static ready canvas with the complete orthographic Arena visible",
+      "console warning/error count was zero"
+    ],
+    "qaIsolation": [
+      "temporary local QA pages wrote only the five Ghost3D/Wave B flags, then removed all five keys before leaving the browser",
+      "no account credential, session token, reward claim, or production endpoint was touched",
+      "temporary QA pages were deleted from public after the run"
+    ]
+  },
+  "limitations": [
+    "single local Chromium and one desktop viewport only",
+    "no second browser, physical Android/iPhone/Tablet, real network shaping or low-end FPS/GPU/memory evidence",
+    "terminal winner shot was proven by Presenter/Renderer contracts rather than a visible synthetic result in this capture",
+    "procedural geometry is not approved production art",
+    "not committed, pushed, deployed or production verified"
+  ],
+  "release": "LOCAL_ONLY_NOT_RELEASED"
+}

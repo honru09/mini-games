@@ -2,7 +2,7 @@
 
 ## Goal
 
-在当前视觉商城 P0 完整验收并部署后，以仓库六款游戏、两种正式玩法、稳定商品 ID 和现有服务端权威边界为事实源，建立 `Pocket Tabletop Sticker × Expressive Sticker Cartoon` 的 Art Bible v1、Design System v3、Motion System v1 与 Golden Set 闸门。Golden Set 必须同时证明 Persona、Avatar、平台 UI、五子棋和飞行棋属于同一原创视觉世界，未通过评审不得批量翻新 48 Avatar 或其余游戏。
+以仓库六款游戏、两种正式玩法、稳定商品 ID 和现有服务端权威边界为事实源，建立 `Pocket Tabletop Sticker × Expressive Sticker Cartoon` 的 Art Bible v1、Design System v3、Motion System v1 与所有者清除轨道。M0 North Star、稳定 ID/版本/SHA/provenance、机器技术/视觉/相似风险审查、fallback、feature flag 与回滚共同形成 `OWNER_AUTHORIZED_ART_CLEARANCE`；取得逐族清除后即可批量推进 Persona、Avatar、平台 UI 与六款游戏的可逆 runtime 候选。Golden Set、人工清稿、Reviewer B 与 IP/法律意见仅为可选风险咨询，不得阻塞开发或伪造成 PASS。
 
 ## IN
 

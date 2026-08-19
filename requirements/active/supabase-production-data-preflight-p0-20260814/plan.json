@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "taskId": "supabase-production-data-preflight-p0-20260814",
+  "stage": "DATA",
+  "gate": "GATE-SUPABASE-PRODUCTION",
+  "status": "ACCEPTED_LOCAL_PREFLIGHT",
+  "steps": [
+    {"id":"DATA-1","status":"completed","title":"冻结十项既有 Requirement 与 IN/OUT"},
+    {"id":"DATA-2","status":"completed","title":"只读检查凭证存在性、PostgreSQL 工具和 dry-run"},
+    {"id":"DATA-3","status":"completed","title":"红绿修复同 project-ref 恢复隔离缺陷"},
+    {"id":"DATA-4","status":"completed","title":"运行 Schema、Production Readiness 与 fake Adapter 专项"},
+    {"id":"DATA-5","status":"completed","title":"同步 Gate、状态、报告、日志并完成全链回归"},
+    {"id":"DATA-X","status":"blocked","title":"真实备份、迁移、RLS、并发、恢复、回滚与双实例验收"}
+  ],
+  "release": "LOCAL_ONLY_NO_COMMIT_NO_PUSH_NO_DEPLOY"
+}

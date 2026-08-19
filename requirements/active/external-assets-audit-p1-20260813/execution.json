@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "taskId": "external-assets-audit-p1-20260813",
+  "status": "completed_local_reference_only",
+  "evidence": [
+    "asset-library/external-source-register-20260813.json",
+    "requirements/active/external-assets-audit-p1-20260813/requirement.md",
+    "requirements/active/external-assets-audit-p1-20260813/evidence/external-preview-license-audit.json",
+    "requirements/active/external-assets-audit-p1-20260813/evidence/external-file-content-hashes.json",
+    "requirements/active/external-assets-audit-p1-20260813/evidence/external-layered-source-structure-audit-20260814.json",
+    "requirements/active/external-assets-audit-p1-20260813/evidence/external-psd-secondary-parser-verification-20260814.json",
+    "D:/BaiduNetdiskDownload/游戏素材/2D游戏角色素材RPG人物动画序列帧PNG透明图片休闲卡通Q版NPC怪物",
+    "D:/BaiduNetdiskDownload/游戏素材/卡通Q版休闲游戏UI界面手游弹窗按钮元素图标PSD分层设计素材模板/230717 游戏UI界面元素"
+  ],
+  "verification": {
+    "roleZipScan": "PASS: 64 ZIP / 48,281 entries / 44,145 PNG frames / 5.09 GiB",
+    "uiInventory": "PASS: 708 files / 263 PSD / 91 AI / 205 JPG / 149 PNG / 12.19 GiB",
+    "previewInspection": "PASS: representative character and UI previews visually inspected",
+    "allPreviews": "PASS: 64/64 role package previews and 354/354 UI previews reviewed through seven contact sheets",
+    "licenseTexts": "PASS: 256 License/README text files across all 64 ZIPs hashed and grouped; links point to CraftPix license and preview-font pages, but no automatic authorization conclusion",
+    "contentHashes": "PASS: SHA-256 for 836 files / 18,567,721,249 bytes; aggregate a7151ed3c6b32fd1306962accd42f8f838a8e5b8d1ea54f4fc4a56397842298f",
+    "psdAiLayers": "PASS: 3819/3819 layered/vector sources parsed read-only with zero failures; 288 PSD / 35,107 layer records / 7,553 groups / 1,078 text markers / 565 smart-object markers, plus 361 AI and 3,170 EPS complete-stream PDF/PostScript structure inventory; Illustrator proprietary semantics were not reconstructed",
+    "licenseAndIp": "NOT_EXECUTED: human authorization and IP review required",
+    "runtimeIntegration": "NOT_EXECUTED: intentionally blocked by policy",
+    "qualityGates": "PASS",
+    "fullNpmTest": "PASS: 232.4 seconds",
+    "build": "1,353,257 characters / 1,367,874 bytes / SHA-256 2E466A3B59CEC8B7B1323DC6FD61375395E2497BE8C837C0D01A789D02731E93",
+    "gitDiffCheck": "PASS",
+    "deepStructureSupplement": "PASS: primary full-stream audit 3819/3819 with zero failures; secondary psd-tools 1.18.0 verification 288/288 with zero errors",
+    "latestFullRegression": "PASS: npm test 139.6s",
+    "latestDeterministicBuild": "PASS: twice 1,362,068 characters / 1,376,602 bytes / SHA-256 BFBD2109B77B1F4C5E070DAB6B98C806E25AD621ACBE3E2E83AD5C5FB7130CAE"
+  },
+  "boundary": "仅外部素材目录级分析和参考规划；没有复制、解压、上传、Manifest 变更或运行时接入。",
+  "published": false,
+  "nextMainline": "CLOSE: continue local UI/Game Stage polish using only Ghost-native redraw contracts; external assets remain reference-only until GATE-ART-GOLDEN-SET."
+}

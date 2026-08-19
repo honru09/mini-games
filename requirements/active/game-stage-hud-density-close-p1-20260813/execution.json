@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "taskId": "game-stage-hud-density-close-p1-20260813",
+  "status": "completed_local_automated_repair_pending_browser_recheck",
+  "completed": [
+    "shared State Strip for local/AI/online/spectator and connection density",
+    "semantic status kind mapping for neutral/thinking/connection/warning/terminal",
+    "lazy GSAP Core/Timeline pulse adapter with reduced-motion/hidden/dispose cleanup",
+    "three-language copy and responsive Game Stage CSS",
+    "specialized QA registration, build and local regression"
+  ],
+  "verification": {
+    "specialized": ["node qa/game-stage-hud-density.js", "node qa/gomoku-ghost3d-renderer.js", "node qa/gomoku-ghost3d-cache.js", "node qa/gsap-dom-esm-graph.js", "node qa/route-motion-cache.js", "npm run test:game-stage-density-final", "npm run test:immersive-shell", "npm run test:i18n", "node --check public/src/core/12-game-stage-motion.js", "node --check public/game-stage-motion-entry.js", "npm run build"],
+    "pendingFinal": ["post-rebuild browser console and input recheck"],
+    "final": {
+      "npmRunQualityGates": "PASS (2026-08-14 after final report/log synchronization; repair-specific targeted checks also pass)",
+      "targetedGameStage": "PASS (2026-08-14: HUD, Ghost3D renderer/graph/contract/layout/cache, Wave C density and immersive shell)",
+      "npmTest": "PASS (139.6s, 2026-08-14; current tree after CSSPlugin/PCFShadowMap/SW v6 and documentation synchronization)",
+      "build": "PASS deterministic double build 1362068 characters / 1376602 bytes / BFBD2109B77B1F4C5E070DAB6B98C806E25AD621ACBE3E2E83AD5C5FB7130CAE",
+      "gitDiffCheck": "PASS (2026-08-14; line-ending notices only, no whitespace errors)"
+    }
+  },
+  "published": false,
+  "acceptanceGap": {
+    "kind": "DEFECT_AND_VISIBLE_ACCEPTANCE_GAP",
+    "belongsTo": ["GAME-048", "UI-028", "TECH-054"],
+    "observed": "A real in-app Chromium session reproduced GSAP Core warnings when the Game Stage DOM adapter animated y/scale/autoAlpha/clearProps through the core-only entry; the Gomoku Three renderer also emitted the r185 PCFSoftShadowMap deprecation.",
+    "repair": "Game Stage now imports the official DOM index with CSSPlugin, Gomoku uses PCFShadowMap, the service worker cache advanced to v6, and static graph/cache regressions cover the repaired dependency graph.",
+    "remainingEvidence": "Post-rebuild browser console and interaction recheck is NOT_EXECUTED because the browser connection became unavailable. This is not a new product requirement and does not release any shared Gate."
+  },
+  "boundary": "presentation-only local closure; no rules, Authority, protocol, reward, Replay, database, unapproved art runtime, commit, push or deployment"
+}

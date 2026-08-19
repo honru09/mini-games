@@ -1,0 +1,19 @@
+{
+  "taskId": "control-plane-reset-p0-20260812",
+  "state": "COMPLETED_LOCAL",
+  "updatedAt": "2026-08-12T03:21:21+09:00",
+  "completed": [
+    "读取 Ghost Game 主线总指挥入口与 242 项原子台账",
+    "建立四类主线路由和九阶段执行顺序",
+    "建立 GATE-DEVICE-BROWSER-NETWORK、GATE-SUPABASE-PRODUCTION、GATE-ART-GOLDEN-SET",
+    "将 TECH-027 最新 Transport closed 缺口回写为 partial",
+    "接入进度报告生成器与 mainline-control-plane QA",
+    "生成 2026-08-12 总报告及六份分类报告"
+  ],
+  "tests": [
+    {"command":"node qa/mainline-control-plane.js","result":"PASS"},
+    {"command":"node scripts/generate-progress-reports.js","result":"PASS files=7 requirements=242"}
+  ],
+  "release": "LOCAL_ONLY_NO_COMMIT_NO_PUSH_NO_DEPLOY",
+  "next": "CLOSE/Ghost3D Foundation：Renderer Contract 与五子棋 3D vertical slice；先复核现有控制平面，不解除任何外部门禁。"
+}

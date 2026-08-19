@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
   "task": "honru-expression-kit-v1-20260809",
-  "state": "VERIFYING",
+  "state": "LOCAL_OWNER_CLEARED_DEFAULT_ON_NOT_RELEASED",
   "startedAt": "2026-08-09T02:30:00+09:00",
-  "updatedAt": "2026-08-09T03:06:00+09:00",
+  "updatedAt": "2026-08-17T00:39:00+09:00",
   "verifiedCommit": null,
   "releasedCommit": null,
   "progress": {
@@ -12,10 +12,14 @@
     "generate": {"status":"implemented","evidence":["9 built-in ImageGen task IDs","chroma/*.png"]},
     "alpha": {"status":"verified","evidence":["alpha/*.png","flat/*.png","derived/*.png","evidence/source-alpha-audit-202608090320.json"]},
     "provenance": {"status":"verified","evidence":["PROMPT_AND_PROVENANCE_v1.md","asset-library/catalog.json","scripts/asset-library-audit.js"]},
-    "runtimePrep": {"status":"implemented","evidence":["contract.md default-off mg_art_honru_states_v1 boundary"]},
+    "runtimePrep": {"status":"implemented","evidence":["contract.md historical default-off mg_art_honru_states_v1 boundary"]},
     "verification": {"status":"verified","evidence":["node scripts/asset-library-audit.js","npm run validate:project","npm run quality:gates","npm test"]},
-    "review": {"status":"partial","evidence":["TECHNICAL_REVIEW_draft-v1.md","IP_REVIEW_draft-v1.md"],"missing":["user preview decision","Reviewer B"]}
+    "ownerAuthorizedRuntime": {"status":"verified_local_default_on","evidence":["art-source/brand/ghost-game/honru/states-v1/OWNER_AUTHORIZED_ART_CLEARANCE-20260816.md","requirements/active/honru-runtime-integration-p2-20260809/execution.json","public/assets/manifests/asset_manifest.json","qa/honru-runtime-contract.js","requirements/active/honru-emoji-runtime-p0-20260811/current-build-single-browser-honru-art-202608162216.json"]},
+    "review": {"status":"optional_advisory_not_executed","evidence":["TECHNICAL_REVIEW_draft-v1.md","IP_REVIEW_draft-v1.md"],"missing":["human cleanup","independent natural-person Reviewer B","IP/legal advice","per-asset Golden Set"],"blocking":false}
   },
-  "notExecuted": ["human preview decision","Reviewer B","real device matrix","real Supabase/RLS/backup/rollback"],
-  "blocked": []
+  "notExecuted": ["optional human cleanup","optional independent natural-person Reviewer B","optional IP/legal advice","optional per-asset Golden Set","second desktop browser","physical Android/iPhone/Tablet","real network and low-end performance","real Supabase/RLS/backup/rollback","current default-on production release"],
+  "blocked": [],
+  "externalAssetPolicy":"blocked-license / EXTERNAL_REFERENCE_ONLY assets are permanently disabled",
+  "currentBoundary":"P-HONRU-STATES-V1 is owner-cleared and reversible default-on in the current local build with dual kill switches and v1 SVG fallback; optional advice is not PASS and not a runtime prerequisite; release remains explicit-current-user-command-only.",
+  "historicalAsOf":{"date":"2026-08-09","state":"VERIFYING_DEFAULT_OFF","meaning":"Former source-only/default-off plan with human preview and Reviewer B pending; audit history only."}
 }

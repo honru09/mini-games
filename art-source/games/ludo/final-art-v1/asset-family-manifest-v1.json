@@ -1,0 +1,1012 @@
+{
+  "schemaVersion": 1,
+  "productionUnitId": "P0-07",
+  "familyId": "G-07-LUDO-FINAL-ART-V1",
+  "sourceAssetId": "ART-LUDO-FINAL-ART-V1",
+  "artworkVersion": 1,
+  "status": "OWNER_AUTHORIZED_ART_CLEARANCE",
+  "license": "project-owned-deterministic-vector",
+  "externalReferencePolicy": "EXTERNAL_REFERENCE_ONLY / blocked-license files were not read, copied, traced, recolored, used as generation inputs, or connected to runtime.",
+  "boards": [
+    "classic",
+    "sky",
+    "night",
+    "grass"
+  ],
+  "factions": [
+    "red",
+    "blue",
+    "green",
+    "yellow"
+  ],
+  "poses": [
+    "takeoff",
+    "cruise",
+    "land"
+  ],
+  "routeAtoms": [
+    "safe",
+    "start",
+    "finish"
+  ],
+  "vfx": [
+    "takeoff",
+    "capture-impact",
+    "extra-turn",
+    "return-home",
+    "finish"
+  ],
+  "podiums": [
+    "2p",
+    "3p",
+    "4p"
+  ],
+  "skins": [
+    "jet",
+    "paper",
+    "ghost",
+    "mech"
+  ],
+  "cameras": [
+    "desktop",
+    "mobile"
+  ],
+  "sourceMasters": [
+    {
+      "key": "board-classic",
+      "path": "art-source/games/ludo/final-art-v1/source/board-classic-v1.svg",
+      "sha256": "5D07FED83AD6E7F8AB5B75AF8A9152E31387AE709EF646E7F020D2ABD07089A3",
+      "bytes": 14995,
+      "width": 1056,
+      "height": 1056,
+      "alpha": false
+    },
+    {
+      "key": "board-sky",
+      "path": "art-source/games/ludo/final-art-v1/source/board-sky-v1.svg",
+      "sha256": "742A4BC7CF9D98B9843985DF4DEE02BE5335EB9A81D3DD1EAF62154876BBB363",
+      "bytes": 14987,
+      "width": 1056,
+      "height": 1056,
+      "alpha": false
+    },
+    {
+      "key": "board-night",
+      "path": "art-source/games/ludo/final-art-v1/source/board-night-v1.svg",
+      "sha256": "ADF84547BB5B5BFBF9C6FBDE3584B5FBED7F7E2FD21AB7D19EFFAC2F8ED582E0",
+      "bytes": 15070,
+      "width": 1056,
+      "height": 1056,
+      "alpha": false
+    },
+    {
+      "key": "board-grass",
+      "path": "art-source/games/ludo/final-art-v1/source/board-grass-v1.svg",
+      "sha256": "A6F941DD6058B390735C9FBB9276384E76014EEC1850F4A8EB764F1B5DABA9F1",
+      "bytes": 25177,
+      "width": 1056,
+      "height": 1056,
+      "alpha": false
+    },
+    {
+      "key": "aircraft-red-takeoff",
+      "path": "art-source/games/ludo/final-art-v1/source/aircraft-red-takeoff-v1.svg",
+      "sha256": "8D96313890046B5403EAF1B107ABAEC257E955591C9B1C700B7E38E0F44ED38C",
+      "bytes": 1307,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "aircraft-red-cruise",
+      "path": "art-source/games/ludo/final-art-v1/source/aircraft-red-cruise-v1.svg",
+      "sha256": "2CA38C52517088047B353A1CCA3C3E51FE7925886B123B5BFEF9647D64EC35BC",
+      "bytes": 1131,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "aircraft-red-land",
+      "path": "art-source/games/ludo/final-art-v1/source/aircraft-red-land-v1.svg",
+      "sha256": "334E11E2C70CE16A4B509DACA6FF99C20E4E603A8A2C59E77F57B33508F93912",
+      "bytes": 1369,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "aircraft-blue-takeoff",
+      "path": "art-source/games/ludo/final-art-v1/source/aircraft-blue-takeoff-v1.svg",
+      "sha256": "1A6002163B32BF728699465DDAACB474E74E9FA7BC17E77962BB03B4B857EF4A",
+      "bytes": 1309,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "aircraft-blue-cruise",
+      "path": "art-source/games/ludo/final-art-v1/source/aircraft-blue-cruise-v1.svg",
+      "sha256": "0B726D497155957E8036995D35DE45CC02763FB728481058CAB6B658AFA6F684",
+      "bytes": 1133,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "aircraft-blue-land",
+      "path": "art-source/games/ludo/final-art-v1/source/aircraft-blue-land-v1.svg",
+      "sha256": "6F19E356990A6BDA7D9B0981AF597C521B758072C2FDE38A3E4179BFE669CBA9",
+      "bytes": 1371,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "aircraft-green-takeoff",
+      "path": "art-source/games/ludo/final-art-v1/source/aircraft-green-takeoff-v1.svg",
+      "sha256": "71FE647B821045B1D7EDCA3BD1846C0D9856DC6D26AEA2CBDBF1D46EAC5CFF43",
+      "bytes": 1311,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "aircraft-green-cruise",
+      "path": "art-source/games/ludo/final-art-v1/source/aircraft-green-cruise-v1.svg",
+      "sha256": "61DA530F6DFC815DCBA769315864E86FED0139F2BAECEE64C8C3B6845A740B16",
+      "bytes": 1135,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "aircraft-green-land",
+      "path": "art-source/games/ludo/final-art-v1/source/aircraft-green-land-v1.svg",
+      "sha256": "D39DA108109BC2FD2F1BF883D1BDB8FFADF0D69B16B111B9B9601FAC1DF10199",
+      "bytes": 1373,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "aircraft-yellow-takeoff",
+      "path": "art-source/games/ludo/final-art-v1/source/aircraft-yellow-takeoff-v1.svg",
+      "sha256": "5FBB3B65BD4156F5ED81208DED52E5C799BF246D11633941F53E231AC2C86658",
+      "bytes": 1313,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "aircraft-yellow-cruise",
+      "path": "art-source/games/ludo/final-art-v1/source/aircraft-yellow-cruise-v1.svg",
+      "sha256": "B8742591C03097FDBAD15B0ADBAF5E8A88AF9854CE4570173F67A19FC91C59B1",
+      "bytes": 1137,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "aircraft-yellow-land",
+      "path": "art-source/games/ludo/final-art-v1/source/aircraft-yellow-land-v1.svg",
+      "sha256": "175E360775AB91AD5A02B6456F58E63FF832B74F1FAE57537F64662332A78FC8",
+      "bytes": 1375,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "route-safe",
+      "path": "art-source/games/ludo/final-art-v1/source/route-safe-v1.svg",
+      "sha256": "143C613BD1D902E0879782626BF3E9701084650EB05BC94885515BF28A2AC9E3",
+      "bytes": 1083,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "route-start",
+      "path": "art-source/games/ludo/final-art-v1/source/route-start-v1.svg",
+      "sha256": "456496DE061D84CBE911B90F2659A451E2489FC24E90EE4F94BA90BA6F2FAB9F",
+      "bytes": 1056,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "route-finish",
+      "path": "art-source/games/ludo/final-art-v1/source/route-finish-v1.svg",
+      "sha256": "9137295A690D4F954B9B6B4AA9476C0B3321519AA470F79FFBB7B40B7CA1A3FE",
+      "bytes": 1103,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "die-atlas",
+      "path": "art-source/games/ludo/final-art-v1/source/die-atlas-v1.svg",
+      "sha256": "D51BE8F3F479DDCDF55DB598B8DCE1A833C155F913B854086BF17BF06289E353",
+      "bytes": 2094,
+      "width": 768,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "vfx-takeoff",
+      "path": "art-source/games/ludo/final-art-v1/source/vfx-takeoff-v1.svg",
+      "sha256": "BF6552DF194C4BC6FF4F79347DA488E1E9B9928C0D53977C7A24F66C593CBE95",
+      "bytes": 884,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "vfx-capture-impact",
+      "path": "art-source/games/ludo/final-art-v1/source/vfx-capture-impact-v1.svg",
+      "sha256": "0BA98A73F909DFBA471C00E77016688E8222137698EB86DCA12AF1F0692F1F94",
+      "bytes": 2431,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "vfx-extra-turn",
+      "path": "art-source/games/ludo/final-art-v1/source/vfx-extra-turn-v1.svg",
+      "sha256": "9DE91CE4FDC0C2C398F8BBF180C9D25EECFBB070575E423308E860E988AEA42A",
+      "bytes": 1068,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "vfx-return-home",
+      "path": "art-source/games/ludo/final-art-v1/source/vfx-return-home-v1.svg",
+      "sha256": "6121CBBF7A87FFBA27B5F285D47671A669E76E06D3142D2C6F92DD10897896B0",
+      "bytes": 1149,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "vfx-finish",
+      "path": "art-source/games/ludo/final-art-v1/source/vfx-finish-v1.svg",
+      "sha256": "8577986C2285B4B1B83E8E023F82F2F16BA52B313664E0DE75C6B6660C34032F",
+      "bytes": 1030,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "podium-2p",
+      "path": "art-source/games/ludo/final-art-v1/source/podium-2p-v1.svg",
+      "sha256": "E099F59AF58ABC98846FD7FE3EDDC927D1A5519C573B2132185E5DD3E60C165C",
+      "bytes": 1303,
+      "width": 760,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "podium-3p",
+      "path": "art-source/games/ludo/final-art-v1/source/podium-3p-v1.svg",
+      "sha256": "91D591FABBD952BB9AD5226C0DDD3B1382C3E8396B97D290559AF506BC55CBDE",
+      "bytes": 1648,
+      "width": 760,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "podium-4p",
+      "path": "art-source/games/ludo/final-art-v1/source/podium-4p-v1.svg",
+      "sha256": "ED3C464BE46F0DD86B1D8BB9ADBE67D09409DEAE99F533C0EB97F835CE5F4D5C",
+      "bytes": 1992,
+      "width": 760,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "skin-jet",
+      "path": "art-source/games/ludo/final-art-v1/source/skin-jet-v1.svg",
+      "sha256": "850C17BB0874197E27CC12B0758D978B4F75A797F82BABA2EF515B00EB4B660C",
+      "bytes": 899,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "skin-paper",
+      "path": "art-source/games/ludo/final-art-v1/source/skin-paper-v1.svg",
+      "sha256": "B6C9E50165C1D9BFA3F822F6F246097B2236B217121591DBF9D1FC79895C4C59",
+      "bytes": 1059,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "skin-ghost",
+      "path": "art-source/games/ludo/final-art-v1/source/skin-ghost-v1.svg",
+      "sha256": "97BB5EBAF0402BE973B64B31F98229EE4980EDEFD3745BDA8132C2B3602479B7",
+      "bytes": 1001,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "skin-mech",
+      "path": "art-source/games/ludo/final-art-v1/source/skin-mech-v1.svg",
+      "sha256": "864BE05BB63F7A0F229F2B0E104CB9F44F38A18BB5ECFA8B25B609C72BD0B379",
+      "bytes": 1160,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "camera-desktop",
+      "path": "art-source/games/ludo/final-art-v1/source/camera-desktop-v1.svg",
+      "sha256": "163D563A12AF94744B1C81E4CFEBF7FEFDA9C84E883F966027C72298033B0296",
+      "bytes": 596,
+      "width": 1280,
+      "height": 720,
+      "alpha": false
+    },
+    {
+      "key": "camera-mobile",
+      "path": "art-source/games/ludo/final-art-v1/source/camera-mobile-v1.svg",
+      "sha256": "9DF812E11EE7920C16F080B6322CB1D5E33BCF6BE6939DD910ABD1E3D627E522",
+      "bytes": 592,
+      "width": 720,
+      "height": 960,
+      "alpha": false
+    }
+  ],
+  "runtimeVariants": [
+    {
+      "key": "board-classic",
+      "path": "public/assets/games/ludo/final-art-v1/board-classic-v1.webp",
+      "sha256": "D801ED053C2B91B900E4395AEF11108E3B9CE04C6F992F37BB4F61477C01F8B8",
+      "bytes": 65558,
+      "width": 1056,
+      "height": 1056,
+      "alpha": false
+    },
+    {
+      "key": "board-classic-static",
+      "path": "public/assets/games/ludo/final-art-v1/board-classic-static-v1.webp",
+      "sha256": "D801ED053C2B91B900E4395AEF11108E3B9CE04C6F992F37BB4F61477C01F8B8",
+      "bytes": 65558,
+      "width": 1056,
+      "height": 1056,
+      "alpha": false
+    },
+    {
+      "key": "board-sky",
+      "path": "public/assets/games/ludo/final-art-v1/board-sky-v1.webp",
+      "sha256": "57A8D072E97FFE9003CFF7157713E6E07B52C51E67395A596015B1777906CA75",
+      "bytes": 64340,
+      "width": 1056,
+      "height": 1056,
+      "alpha": false
+    },
+    {
+      "key": "board-sky-static",
+      "path": "public/assets/games/ludo/final-art-v1/board-sky-static-v1.webp",
+      "sha256": "57A8D072E97FFE9003CFF7157713E6E07B52C51E67395A596015B1777906CA75",
+      "bytes": 64340,
+      "width": 1056,
+      "height": 1056,
+      "alpha": false
+    },
+    {
+      "key": "board-night",
+      "path": "public/assets/games/ludo/final-art-v1/board-night-v1.webp",
+      "sha256": "10AA75FC2CD983783B6517830EE1EE615B60AEB7626F6DA92A68C193C0F2C4A9",
+      "bytes": 57698,
+      "width": 1056,
+      "height": 1056,
+      "alpha": false
+    },
+    {
+      "key": "board-night-static",
+      "path": "public/assets/games/ludo/final-art-v1/board-night-static-v1.webp",
+      "sha256": "10AA75FC2CD983783B6517830EE1EE615B60AEB7626F6DA92A68C193C0F2C4A9",
+      "bytes": 57698,
+      "width": 1056,
+      "height": 1056,
+      "alpha": false
+    },
+    {
+      "key": "board-grass",
+      "path": "public/assets/games/ludo/final-art-v1/board-grass-v1.webp",
+      "sha256": "97D6FE62880AA6E47557EAC18682463B63157585584657A46075BBDE6CB81274",
+      "bytes": 71214,
+      "width": 1056,
+      "height": 1056,
+      "alpha": false
+    },
+    {
+      "key": "board-grass-static",
+      "path": "public/assets/games/ludo/final-art-v1/board-grass-static-v1.webp",
+      "sha256": "97D6FE62880AA6E47557EAC18682463B63157585584657A46075BBDE6CB81274",
+      "bytes": 71214,
+      "width": 1056,
+      "height": 1056,
+      "alpha": false
+    },
+    {
+      "key": "aircraft-red-takeoff",
+      "path": "public/assets/games/ludo/final-art-v1/aircraft-red-takeoff-v1.webp",
+      "sha256": "8715BC844AFE6C44BAE7572BBB177515DF177CBEE57D6BB69E12F0E050826ABB",
+      "bytes": 11826,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "aircraft-red-takeoff-static",
+      "path": "public/assets/games/ludo/final-art-v1/aircraft-red-takeoff-static-v1.webp",
+      "sha256": "8715BC844AFE6C44BAE7572BBB177515DF177CBEE57D6BB69E12F0E050826ABB",
+      "bytes": 11826,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "aircraft-red-cruise",
+      "path": "public/assets/games/ludo/final-art-v1/aircraft-red-cruise-v1.webp",
+      "sha256": "03C19A564F3A688E9226CEE6D4D6DDC6DFB3B0BB8AD559D5E65537E1B77D1E2F",
+      "bytes": 9492,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "aircraft-red-cruise-static",
+      "path": "public/assets/games/ludo/final-art-v1/aircraft-red-cruise-static-v1.webp",
+      "sha256": "03C19A564F3A688E9226CEE6D4D6DDC6DFB3B0BB8AD559D5E65537E1B77D1E2F",
+      "bytes": 9492,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "aircraft-red-land",
+      "path": "public/assets/games/ludo/final-art-v1/aircraft-red-land-v1.webp",
+      "sha256": "404A4337D681FD141C94BC0024D1E885376A07ED2185DEE29845CF2F175D8B48",
+      "bytes": 12766,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "aircraft-red-land-static",
+      "path": "public/assets/games/ludo/final-art-v1/aircraft-red-land-static-v1.webp",
+      "sha256": "404A4337D681FD141C94BC0024D1E885376A07ED2185DEE29845CF2F175D8B48",
+      "bytes": 12766,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "aircraft-blue-takeoff",
+      "path": "public/assets/games/ludo/final-art-v1/aircraft-blue-takeoff-v1.webp",
+      "sha256": "F6A4F2CF001C3DE9273D93FB413B7E81B843733EEF5920C6A596F23673D9309A",
+      "bytes": 11792,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "aircraft-blue-takeoff-static",
+      "path": "public/assets/games/ludo/final-art-v1/aircraft-blue-takeoff-static-v1.webp",
+      "sha256": "F6A4F2CF001C3DE9273D93FB413B7E81B843733EEF5920C6A596F23673D9309A",
+      "bytes": 11792,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "aircraft-blue-cruise",
+      "path": "public/assets/games/ludo/final-art-v1/aircraft-blue-cruise-v1.webp",
+      "sha256": "CBCD766076E70810803C85EEE0378735A3DAEC40D7E4A2E5875762F35A129888",
+      "bytes": 9876,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "aircraft-blue-cruise-static",
+      "path": "public/assets/games/ludo/final-art-v1/aircraft-blue-cruise-static-v1.webp",
+      "sha256": "CBCD766076E70810803C85EEE0378735A3DAEC40D7E4A2E5875762F35A129888",
+      "bytes": 9876,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "aircraft-blue-land",
+      "path": "public/assets/games/ludo/final-art-v1/aircraft-blue-land-v1.webp",
+      "sha256": "EA61F86DC8EB8B7DDCBFD879495236EB0A6816F83DD041E145A1B4E755B7723F",
+      "bytes": 13000,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "aircraft-blue-land-static",
+      "path": "public/assets/games/ludo/final-art-v1/aircraft-blue-land-static-v1.webp",
+      "sha256": "EA61F86DC8EB8B7DDCBFD879495236EB0A6816F83DD041E145A1B4E755B7723F",
+      "bytes": 13000,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "aircraft-green-takeoff",
+      "path": "public/assets/games/ludo/final-art-v1/aircraft-green-takeoff-v1.webp",
+      "sha256": "CC970FBD94C347F27E70813C3EA891028B5D6D18F8797EC34F55B73D2DCFC317",
+      "bytes": 11486,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "aircraft-green-takeoff-static",
+      "path": "public/assets/games/ludo/final-art-v1/aircraft-green-takeoff-static-v1.webp",
+      "sha256": "CC970FBD94C347F27E70813C3EA891028B5D6D18F8797EC34F55B73D2DCFC317",
+      "bytes": 11486,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "aircraft-green-cruise",
+      "path": "public/assets/games/ludo/final-art-v1/aircraft-green-cruise-v1.webp",
+      "sha256": "AA45197098DE5F634BE6F4BA38AFBDDCEF94AF498ED351AB4F4C26AB218163FF",
+      "bytes": 9292,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "aircraft-green-cruise-static",
+      "path": "public/assets/games/ludo/final-art-v1/aircraft-green-cruise-static-v1.webp",
+      "sha256": "AA45197098DE5F634BE6F4BA38AFBDDCEF94AF498ED351AB4F4C26AB218163FF",
+      "bytes": 9292,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "aircraft-green-land",
+      "path": "public/assets/games/ludo/final-art-v1/aircraft-green-land-v1.webp",
+      "sha256": "1A23BA332D2030AD7D9455CAA2C3F501BE03104D1C8783AF97892369D57B934C",
+      "bytes": 12626,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "aircraft-green-land-static",
+      "path": "public/assets/games/ludo/final-art-v1/aircraft-green-land-static-v1.webp",
+      "sha256": "1A23BA332D2030AD7D9455CAA2C3F501BE03104D1C8783AF97892369D57B934C",
+      "bytes": 12626,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "aircraft-yellow-takeoff",
+      "path": "public/assets/games/ludo/final-art-v1/aircraft-yellow-takeoff-v1.webp",
+      "sha256": "BF7AA1A921D07A67402A245816B7B45C997CCB4A709551F98E8B3680FF4394AB",
+      "bytes": 12294,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "aircraft-yellow-takeoff-static",
+      "path": "public/assets/games/ludo/final-art-v1/aircraft-yellow-takeoff-static-v1.webp",
+      "sha256": "BF7AA1A921D07A67402A245816B7B45C997CCB4A709551F98E8B3680FF4394AB",
+      "bytes": 12294,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "aircraft-yellow-cruise",
+      "path": "public/assets/games/ludo/final-art-v1/aircraft-yellow-cruise-v1.webp",
+      "sha256": "9F0D34AD38656B8D33ABD04BCAED4DC07A0C2200C33D09B726736C81202C0B80",
+      "bytes": 9764,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "aircraft-yellow-cruise-static",
+      "path": "public/assets/games/ludo/final-art-v1/aircraft-yellow-cruise-static-v1.webp",
+      "sha256": "9F0D34AD38656B8D33ABD04BCAED4DC07A0C2200C33D09B726736C81202C0B80",
+      "bytes": 9764,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "aircraft-yellow-land",
+      "path": "public/assets/games/ludo/final-art-v1/aircraft-yellow-land-v1.webp",
+      "sha256": "EF97B93FB7B4BBAA2FAA5CFE880FA35AFFE2C86B8E867F299D32EFFDA4884866",
+      "bytes": 12852,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "aircraft-yellow-land-static",
+      "path": "public/assets/games/ludo/final-art-v1/aircraft-yellow-land-static-v1.webp",
+      "sha256": "EF97B93FB7B4BBAA2FAA5CFE880FA35AFFE2C86B8E867F299D32EFFDA4884866",
+      "bytes": 12852,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "route-safe",
+      "path": "public/assets/games/ludo/final-art-v1/route-safe-v1.webp",
+      "sha256": "C444E3D805CED435B4BC5AA354AA97496C8A9D23C253CD12829344E2FC3D4C2E",
+      "bytes": 10536,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "route-safe-static",
+      "path": "public/assets/games/ludo/final-art-v1/route-safe-static-v1.webp",
+      "sha256": "C444E3D805CED435B4BC5AA354AA97496C8A9D23C253CD12829344E2FC3D4C2E",
+      "bytes": 10536,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "route-start",
+      "path": "public/assets/games/ludo/final-art-v1/route-start-v1.webp",
+      "sha256": "852E08E3CB18FF17AD701D14DC8ADF9FBA459F7059003E1705B09CB28FB779D4",
+      "bytes": 8382,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "route-start-static",
+      "path": "public/assets/games/ludo/final-art-v1/route-start-static-v1.webp",
+      "sha256": "852E08E3CB18FF17AD701D14DC8ADF9FBA459F7059003E1705B09CB28FB779D4",
+      "bytes": 8382,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "route-finish",
+      "path": "public/assets/games/ludo/final-art-v1/route-finish-v1.webp",
+      "sha256": "B9569E26FB5F17408B54105493A7BCD85D325A6102FF65C23D1D3322EAE5C0E0",
+      "bytes": 7060,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "route-finish-static",
+      "path": "public/assets/games/ludo/final-art-v1/route-finish-static-v1.webp",
+      "sha256": "B9569E26FB5F17408B54105493A7BCD85D325A6102FF65C23D1D3322EAE5C0E0",
+      "bytes": 7060,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "die-atlas",
+      "path": "public/assets/games/ludo/final-art-v1/die-atlas-v1.webp",
+      "sha256": "5B6459FF6AF219B984891A0AE61E943A5B906D04331A538AFA4EE6822C172695",
+      "bytes": 17046,
+      "width": 768,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "die-atlas-static",
+      "path": "public/assets/games/ludo/final-art-v1/die-atlas-static-v1.webp",
+      "sha256": "5B6459FF6AF219B984891A0AE61E943A5B906D04331A538AFA4EE6822C172695",
+      "bytes": 17046,
+      "width": 768,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "vfx-takeoff",
+      "path": "public/assets/games/ludo/final-art-v1/vfx-takeoff-v1.webp",
+      "sha256": "C91B57371F1D1778862D8F8307684ABE974F1814280F16640C51567F399FB5A2",
+      "bytes": 6534,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "vfx-takeoff-static",
+      "path": "public/assets/games/ludo/final-art-v1/vfx-takeoff-static-v1.webp",
+      "sha256": "C91B57371F1D1778862D8F8307684ABE974F1814280F16640C51567F399FB5A2",
+      "bytes": 6534,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "vfx-capture-impact",
+      "path": "public/assets/games/ludo/final-art-v1/vfx-capture-impact-v1.webp",
+      "sha256": "9110AAAB38D63962AF9F23CF4B0DB33694B66F6FE7F988FAC8B010B2BA36CC3E",
+      "bytes": 10248,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "vfx-capture-impact-static",
+      "path": "public/assets/games/ludo/final-art-v1/vfx-capture-impact-static-v1.webp",
+      "sha256": "9110AAAB38D63962AF9F23CF4B0DB33694B66F6FE7F988FAC8B010B2BA36CC3E",
+      "bytes": 10248,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "vfx-extra-turn",
+      "path": "public/assets/games/ludo/final-art-v1/vfx-extra-turn-v1.webp",
+      "sha256": "D8B0F63803F8AD14170F960BEC1EE2904361F786ED0F72A0ACE3DC0C9473258E",
+      "bytes": 13572,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "vfx-extra-turn-static",
+      "path": "public/assets/games/ludo/final-art-v1/vfx-extra-turn-static-v1.webp",
+      "sha256": "D8B0F63803F8AD14170F960BEC1EE2904361F786ED0F72A0ACE3DC0C9473258E",
+      "bytes": 13572,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "vfx-return-home",
+      "path": "public/assets/games/ludo/final-art-v1/vfx-return-home-v1.webp",
+      "sha256": "6EA38F6D5BA798AF861096F5244AB5607891890C844AB752523817F2472C0087",
+      "bytes": 8360,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "vfx-return-home-static",
+      "path": "public/assets/games/ludo/final-art-v1/vfx-return-home-static-v1.webp",
+      "sha256": "6EA38F6D5BA798AF861096F5244AB5607891890C844AB752523817F2472C0087",
+      "bytes": 8360,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "vfx-finish",
+      "path": "public/assets/games/ludo/final-art-v1/vfx-finish-v1.webp",
+      "sha256": "359DB2AECA5B6B3CC16562D9F8633C112B0834F514BABB2C84B1D190BC747609",
+      "bytes": 2954,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "vfx-finish-static",
+      "path": "public/assets/games/ludo/final-art-v1/vfx-finish-static-v1.webp",
+      "sha256": "359DB2AECA5B6B3CC16562D9F8633C112B0834F514BABB2C84B1D190BC747609",
+      "bytes": 2954,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "podium-2p",
+      "path": "public/assets/games/ludo/final-art-v1/podium-2p-v1.webp",
+      "sha256": "6C07B28D70C504BADA5B033B987D3FE96AA21F52D0BBAA4649EC41AECFB8CA64",
+      "bytes": 6722,
+      "width": 760,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "podium-2p-static",
+      "path": "public/assets/games/ludo/final-art-v1/podium-2p-static-v1.webp",
+      "sha256": "6C07B28D70C504BADA5B033B987D3FE96AA21F52D0BBAA4649EC41AECFB8CA64",
+      "bytes": 6722,
+      "width": 760,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "podium-3p",
+      "path": "public/assets/games/ludo/final-art-v1/podium-3p-v1.webp",
+      "sha256": "FAC6F6C161AB96262E8A30229CF1D9DDE7C57A538CC088B95FDB91C812C301E6",
+      "bytes": 9094,
+      "width": 760,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "podium-3p-static",
+      "path": "public/assets/games/ludo/final-art-v1/podium-3p-static-v1.webp",
+      "sha256": "FAC6F6C161AB96262E8A30229CF1D9DDE7C57A538CC088B95FDB91C812C301E6",
+      "bytes": 9094,
+      "width": 760,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "podium-4p",
+      "path": "public/assets/games/ludo/final-art-v1/podium-4p-v1.webp",
+      "sha256": "1E95EFB2C64292E4BCA32BD03DB7DA74B2C7C99AC6449D92D428C6A274BA5D79",
+      "bytes": 11284,
+      "width": 760,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "podium-4p-static",
+      "path": "public/assets/games/ludo/final-art-v1/podium-4p-static-v1.webp",
+      "sha256": "1E95EFB2C64292E4BCA32BD03DB7DA74B2C7C99AC6449D92D428C6A274BA5D79",
+      "bytes": 11284,
+      "width": 760,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "skin-jet",
+      "path": "public/assets/games/ludo/final-art-v1/skin-jet-v1.webp",
+      "sha256": "21F3CC3033F22948929DF6E0F9C04A5E412B15487A78DCC00F34CE55F15FD843",
+      "bytes": 16104,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "skin-jet-static",
+      "path": "public/assets/games/ludo/final-art-v1/skin-jet-static-v1.webp",
+      "sha256": "21F3CC3033F22948929DF6E0F9C04A5E412B15487A78DCC00F34CE55F15FD843",
+      "bytes": 16104,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "skin-paper",
+      "path": "public/assets/games/ludo/final-art-v1/skin-paper-v1.webp",
+      "sha256": "C9A41BF6A113EA060DE5823DE8D11B86616325010626CABAB26C3AA7D76C1D65",
+      "bytes": 16666,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "skin-paper-static",
+      "path": "public/assets/games/ludo/final-art-v1/skin-paper-static-v1.webp",
+      "sha256": "C9A41BF6A113EA060DE5823DE8D11B86616325010626CABAB26C3AA7D76C1D65",
+      "bytes": 16666,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "skin-ghost",
+      "path": "public/assets/games/ludo/final-art-v1/skin-ghost-v1.webp",
+      "sha256": "3C3C815E7CDD5F16AA9DF3767645F02FD16E94D7907F0293B3CDCBA8427182EF",
+      "bytes": 16284,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "skin-ghost-static",
+      "path": "public/assets/games/ludo/final-art-v1/skin-ghost-static-v1.webp",
+      "sha256": "3C3C815E7CDD5F16AA9DF3767645F02FD16E94D7907F0293B3CDCBA8427182EF",
+      "bytes": 16284,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "skin-mech",
+      "path": "public/assets/games/ludo/final-art-v1/skin-mech-v1.webp",
+      "sha256": "6397A816000D677654880C2D9736B6381052D04161905ADE02B17C79A1A2AF57",
+      "bytes": 16530,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "skin-mech-static",
+      "path": "public/assets/games/ludo/final-art-v1/skin-mech-static-v1.webp",
+      "sha256": "6397A816000D677654880C2D9736B6381052D04161905ADE02B17C79A1A2AF57",
+      "bytes": 16530,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "key": "camera-desktop",
+      "path": "public/assets/games/ludo/final-art-v1/camera-desktop-v1.webp",
+      "sha256": "E1371E9EB6AD91ABAFC8CFFD907B1367816FAD577A44C4684E4E4F09C6ED7853",
+      "bytes": 4374,
+      "width": 1280,
+      "height": 720,
+      "alpha": false
+    },
+    {
+      "key": "camera-desktop-static",
+      "path": "public/assets/games/ludo/final-art-v1/camera-desktop-static-v1.webp",
+      "sha256": "E1371E9EB6AD91ABAFC8CFFD907B1367816FAD577A44C4684E4E4F09C6ED7853",
+      "bytes": 4374,
+      "width": 1280,
+      "height": 720,
+      "alpha": false
+    },
+    {
+      "key": "camera-mobile",
+      "path": "public/assets/games/ludo/final-art-v1/camera-mobile-v1.webp",
+      "sha256": "AA268183D96FE5846D76866AD33D7FEE8E2FFA5196D46EC2C7CC06E3798CB1D4",
+      "bytes": 4182,
+      "width": 720,
+      "height": 960,
+      "alpha": false
+    },
+    {
+      "key": "camera-mobile-static",
+      "path": "public/assets/games/ludo/final-art-v1/camera-mobile-static-v1.webp",
+      "sha256": "AA268183D96FE5846D76866AD33D7FEE8E2FFA5196D46EC2C7CC06E3798CB1D4",
+      "bytes": 4182,
+      "width": 720,
+      "height": 960,
+      "alpha": false
+    }
+  ],
+  "reviewBoards": [
+    {
+      "path": "art-source/games/ludo/final-art-v1/review/ludo-final-contact-sheet-1-v1.png",
+      "sha256": "2FB5A78CA415C75F5FE72CBCDA9C64633CFE5969DA48DE087E3D4BDC8BEB62BA",
+      "bytes": 49650,
+      "width": 1200,
+      "height": 900
+    },
+    {
+      "path": "art-source/games/ludo/final-art-v1/review/ludo-final-contact-sheet-2-v1.png",
+      "sha256": "169B34709AE1DE2CB1A3B4749172C5DA6A17E4810A8B4083BF0BC903A49AAB76",
+      "bytes": 26062,
+      "width": 1200,
+      "height": 900
+    }
+  ],
+  "featureFlags": {
+    "operator": "all",
+    "enabledValue": "1",
+    "defaultEnabled": true,
+    "ids": [
+      "mg_art_ludo_final_v1"
+    ]
+  },
+  "metrics": {
+    "sourceMasterCount": 34,
+    "runtimeVariantCount": 68,
+    "reviewBoardCount": 2,
+    "runtimeVariantBytes": 1163616,
+    "runtimeByteBudget": 8388608,
+    "withinBudget": true
+  },
+  "fallback": {
+    "chain": "Ludo final art -> Wave A/CSS board -> DOM tokens and Three procedural die -> existing presentation adapter"
+  },
+  "authority": "presentation-only; 52-cell route, dice value, movable tokens, captures, HOME, ranking and snapshots remain rule/DOM/renderer semantic state"
+}

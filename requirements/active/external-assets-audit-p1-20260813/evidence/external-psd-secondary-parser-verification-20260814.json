@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "createdAt": "2026-08-14T10:27:15+09:00",
+  "mode": "READ_ONLY_SECONDARY_PARSER_NO_RENDER_NO_EXTRACTION",
+  "parser": {
+    "name": "psd-tools",
+    "version": "1.18.0",
+    "installBoundary": "isolated D-drive audit tool; not a project runtime dependency"
+  },
+  "directUiPsd": {
+    "documents": 263,
+    "parseErrors": 0,
+    "hierarchyNodes": 24172,
+    "groups": 6998,
+    "pixelLayers": 2398,
+    "shapeLayers": 13092,
+    "smartObjectLayers": 565,
+    "typeLayers": 1078,
+    "hueSaturationLayers": 27,
+    "levelsLayers": 14
+  },
+  "zipEmbeddedPsd": {
+    "documents": 25,
+    "parseErrors": 0,
+    "hierarchyNodes": 3382,
+    "groups": 536,
+    "artboards": 19,
+    "pixelLayers": 2789,
+    "shapeLayers": 38
+  },
+  "crossCheck": {
+    "documents": 288,
+    "parseErrors": 0,
+    "hierarchyNodes": 27554,
+    "groupOrArtboardNodes": 7553,
+    "rawLayerRecordsFromPrimaryParser": 35107,
+    "identity": "27554 hierarchy nodes + 7553 group/artboard closing records = 35107 raw layer records"
+  },
+  "boundary": [
+    "The secondary parser independently confirms document and hierarchy counts without decoding or exporting pixels.",
+    "Layer kinds are parser classifications, not a reconstruction of proprietary Illustrator/Photoshop editing semantics.",
+    "This evidence does not grant a license, prove originality, approve quality, or authorize runtime use."
+  ]
+}

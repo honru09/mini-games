@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-08-09T19:05:00+09:00",
+  "commit": "7fc6601e43df912a596dba671c9edcd8bfccf6a7",
+  "rollbackCommit": "2d91254c3bf82efb7033452b4c80cc044799e7e2",
+  "branch": "main",
+  "render": {
+    "deployId": "dep-d9s4u0v40ujc73cka1tg",
+    "status": "live",
+    "url": "https://mini-games-online.onrender.com",
+    "httpStatus": 200,
+    "httpMarkers": ["game-stage-command", "tabletop-art-runtime-wave-a"],
+    "honruChatDom": false,
+    "websocketSmoke": "PASS"
+  },
+  "pages": {
+    "workflowRunId": 31307142193,
+    "workflowUrl": "https://github.com/honru09/mini-games/actions/runs/31307142193",
+    "conclusion": "success",
+    "url": "https://honru09.github.io/mini-games/",
+    "httpStatus": 200,
+    "httpMarkers": ["game-stage-command", "tabletop-art-runtime-wave-a"],
+    "honruChatDom": false
+  },
+  "content": {
+    "pagesAndRenderByteIdentical": true,
+    "normalizedSha256": "0db35a5aa57605c2e61ea03be83ce38edc77a4930426b02f03ffdf6f15b8e770",
+    "normalizedMatchesLocalBuild": true,
+    "note": "GitHub/Render serve LF while the Windows worktree uses CRLF; normalized content is identical."
+  },
+  "browser": {
+    "surface": "Codex in-app Chromium",
+    "viewport": "1280x720",
+    "checks": ["pre-auth multilingual page", "ephemeral guest", "six game cards", "AI Gomoku Game Stage", "two seat cards", "Wave A Gomoku surface", "no page or arena horizontal overflow", "zero warning/error console entries", "zero Honru Chat UI nodes"],
+    "boundary": "online desktop browser smoke; not a second browser or physical-device result"
+  },
+  "releaseCandidate": "BLOCKED_EXTERNAL",
+  "notExecuted": ["real Supabase/RLS/concurrency/backup/restore/rollback", "second desktop browser", "physical Android/iPhone/Tablet", "real network shaping", "independent Reviewer B/IP/Golden Set", "real multi-instance coordination"]
+}

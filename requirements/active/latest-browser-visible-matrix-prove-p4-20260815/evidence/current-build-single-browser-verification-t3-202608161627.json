@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-08-16T16:27:00+09:00",
+  "claim": "historical_as_of_build_single_browser_narrow_t3",
+  "currency": "historical_as_of",
+  "scope": "single Codex in-app Chromium historical-as-of narrow T3 default-off regression only",
+  "build": {
+    "path": "public/index.html",
+    "sha256": "014E2886711070F7B14CCCDF78E981C14871536BAE32A1A6369E823A56507067",
+    "characters": 1705706,
+    "bytes": 1720249
+  },
+  "environment": {
+    "browserSurface": "Codex in-app Chromium",
+    "browserCount": 1,
+    "url": "http://localhost:8091/?build-check=202608161705#/home",
+    "viewport": {"width": 568, "height": 726},
+    "credentials": "existing temporary local QA session; no credential captured",
+    "servedBuildSignals": {
+      "feedbackBusSourceInScript": true,
+      "gameplayInputGateSourceInScript": true,
+      "localFeedbackAdapterSourceInScript": true
+    }
+  },
+  "coverage": {
+    "routes": [
+      {"route":"home","visible":true,"horizontalOverflow":0,"rawKeyCount":0,"dialogCount":0,"gameActive":false},
+      {"route":"games","visible":true,"horizontalOverflow":0,"rawKeyCount":0,"dialogCount":0,"gameActive":false},
+      {"route":"playline","visible":true,"horizontalOverflow":0,"rawKeyCount":0,"dialogCount":0,"gameActive":false},
+      {"route":"profile","visible":true,"horizontalOverflow":0,"rawKeyCount":0,"dialogCount":0,"gameActive":false}
+    ],
+    "gameStages": [
+      {"game":"tetris","mode":"local AI","stage":true,"arena":true,"command":true,"controls":7,"input":"move_left","statusVisible":true,"horizontalOverflow":0,"rawKeyCount":0,"backCleanup":true},
+      {"game":"tank","mode":"local AI","stage":true,"arena":true,"command":true,"dpadButtons":4,"joystick":true,"fire":true,"input":"dpad_right + fire","projectileVisible":true,"horizontalOverflow":0,"rawKeyCount":0,"backCleanup":true}
+    ],
+    "finalCleanup": {"route":"home","dialogCount":0,"gameActive":false,"theme":"light","lang":"zh-CN","horizontalOverflow":0,"rawKeyCount":0},
+    "console": "not captured by the available browser surface; no zero-console claim is made"
+  },
+  "notGranted": [
+    "full_current_five_viewport_matrix",
+    "second_browser",
+    "physical_android",
+    "physical_iphone",
+    "physical_tablet",
+    "real_network_shaping",
+    "physical_audio_recovery",
+    "production_verification",
+    "real_supabase",
+    "human_art_review",
+    "release"
+  ],
+  "gateDisposition": "T3 default-off historical-as-of narrow evidence only after T4 build; GATE-DEVICE-BROWSER-NETWORK remains BLOCKED"
+}

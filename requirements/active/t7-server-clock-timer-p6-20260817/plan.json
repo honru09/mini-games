@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "task": "t7-server-clock-timer-p6-20260817",
+  "state": "FOCUSED_VERIFIED_LOCAL",
+  "requirements": ["TECH-039", "TECH-040", "TECH-052"],
+  "scope": "Operational Metrics cadence and injected now only",
+  "steps": [
+    {"id":"P6-1","status":"complete","name":"冻结 now/schedule/dispose Interface、双 Adapter、owner cleanup 与回滚边界"},
+    {"id":"P6-2","status":"complete","name":"实现真实 Node Timer Adapter 与 Manual deterministic Adapter"},
+    {"id":"P6-3","status":"complete","name":"仅接入 Operational Metrics now 与 metricsHistorySweep cadence"},
+    {"id":"P6-4","status":"complete","name":"完成 Clock/Timer focused、Timer Audit、Metrics Module 与 Metrics online wire 验证"},
+    {"id":"P6-5","status":"complete","name":"建立 requirement/contract/plan/execution/acceptance 本地事实包"},
+    {"id":"P6-6","status":"complete","name":"修正既有 T5/T7 acceptance 与当前确定性构建绑定后运行完整主线合同、Quality Gates、npm test 与双构建"},
+    {"id":"P6-7","status":"pending","name":"按 owner 迁移其余 server clock/Timer；heartbeat、outbox 与 gameplay tick 后置"},
+    {"id":"P6-8","status":"pending","name":"真实 Supabase/多实例、设备/网络与显式发布证据"}
+  ],
+  "next": "进入 Reward/Progression Projection P7；随后再按显式 now 注入点和低风险 lifecycle owner 继续迁移，gameplay timers 最后处理",
+  "release": "LOCAL_ONLY / NOT_RELEASED",
+  "rollback": "restore Operational Metrics Date.now and native metrics setInterval; remove P6 clock/timer wiring; retain all metrics and player data"
+}

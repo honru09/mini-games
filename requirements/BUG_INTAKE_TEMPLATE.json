@@ -1,0 +1,20 @@
+{
+  "bugId": "BUG-YYYYMMDD-NNN",
+  "summary": "",
+  "severity": "P2",
+  "area": "ui|game|online|auth|social|shop|ai|art|tech",
+  "firstSeen": "YYYY-MM-DDTHH:mm:ss+09:00",
+  "environment": {"release": "", "browser": "unknown", "device": "unknown", "language": "zh-CN", "theme": "light", "network": "unknown"},
+  "steps": [],
+  "expected": "",
+  "actual": "",
+  "reproRate": "unknown",
+  "evidence": [],
+  "owner": "",
+  "linkedRequirements": [],
+  "status": "reported",
+  "fix": {"summary": "", "files": [], "commit": ""},
+  "regression": {"commands": [], "result": "NOT_EXECUTED"},
+  "rollback": "",
+  "notes": "不得写入凭证、密码、session token、管理员账号、私聊正文或未脱敏个人数据。"
+}

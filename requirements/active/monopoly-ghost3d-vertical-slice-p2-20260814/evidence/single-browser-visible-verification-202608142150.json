@@ -1,0 +1,145 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-08-14T21:50:22+09:00",
+  "environment": {
+    "url": "http://127.0.0.1:8080/?monopoly-p2=1",
+    "browser": "Codex in-app Chromium",
+    "build": "latest local working tree",
+    "account": "none; temporary local development entry only",
+    "production": false
+  },
+  "result": "PARTIAL_VISIBLE_EVIDENCE",
+  "requirements": ["GAME-050", "TECH-049"],
+  "scenarios": {
+    "defaultOff": {
+      "waveBMounted": true,
+      "ghost3dSlotCount": 0,
+      "ghost3dCanvasCount": 0,
+      "domDiceParent": "monopoly-wave-b-center",
+      "domDicePixels": [92.1, 92.1],
+      "horizontalOverflowPixels": 0
+    },
+    "twoToFivePlayers": [
+      { "players": 2, "seats": 2, "ready": true, "canvas": true },
+      { "players": 3, "seats": 3, "ready": true, "canvas": true },
+      { "players": 4, "seats": 4, "ready": true, "canvas": true },
+      { "players": 5, "seats": 5, "ready": true, "canvas": true }
+    ],
+    "viewportLanguageThemeMatrix": [
+      {
+        "viewport": [1440, 900],
+        "language": "zh-CN",
+        "theme": "light",
+        "framePixels": [621, 621],
+        "canvasPixels": [617, 616.9],
+        "frameWithinArena": true,
+        "horizontalOverflowPixels": 0
+      },
+      {
+        "viewport": [1024, 768],
+        "language": "en-US",
+        "theme": "dark",
+        "framePixels": [346.9, 346.9],
+        "canvasPixels": [342.8, 342.9],
+        "frameWithinArena": true,
+        "horizontalOverflowPixels": 0
+      },
+      {
+        "viewport": [390, 844],
+        "language": "uk-UA",
+        "theme": "light",
+        "framePixels": [234.2, 234.1],
+        "canvasPixels": [230.2, 230.1],
+        "frameWithinArena": true,
+        "horizontalOverflowPixels": 0
+      },
+      {
+        "viewport": [844, 390],
+        "language": "zh-CN",
+        "theme": "dark",
+        "framePixels": [170.1, 170.1],
+        "canvasPixels": [166.1, 166.1],
+        "frameWithinArena": true,
+        "horizontalOverflowPixels": 0
+      }
+    ],
+    "canvasBoundary": {
+      "ariaHidden": true,
+      "pointerEvents": "none",
+      "domDicePlacement": "dom-command",
+      "domDicePixels": [280, 68],
+      "domDiceCanvasOverlap": false,
+      "domDiceRealHitTarget": true,
+      "rawI18nKeyLeaks": 0,
+      "nonChineseLocaleChineseLeaks": 0
+    },
+    "normalMotionAndActions": {
+      "visibleProcessSequence": ["roll", "walk", "land", "buy"],
+      "rendererSemanticTimeline": "focus -> travel -> land -> settled",
+      "rendererTimelineEvidence": "qa/monopoly-ghost3d-renderer.js",
+      "buyAndPassPixels": [[97.2, 44], [62, 44]],
+      "purchaseResult": {
+        "playerMoneyBefore": 2000,
+        "playerMoneyAfter": 1550,
+        "propertyCountAfter": 1,
+        "nextTurnReached": true
+      }
+    },
+    "auctionInput": {
+      "harness": "temporary browser-local monopoly-auction-v1 instance",
+      "rendererState": "fail-closed Wave B, as expected for the legacy auction-only protocol",
+      "bidButtons": [
+        { "amount": 200, "pixels": [97, 44], "enabled": true },
+        { "amount": 350, "pixels": [97, 44], "enabled": true }
+      ],
+      "clickedAmount": 200,
+      "existingSendMonopolyBidSeamReceivedPayload": true
+    },
+    "reducedMotion": {
+      "mediaQueryMatched": true,
+      "rendererReady": true,
+      "slotAnimationName": "none",
+      "slotTransitionDuration": "0s",
+      "tokenTransitionDuration": "0s",
+      "frameTransform": "matrix(1, 0, 0, 1, 0, 0)",
+      "rollReachedCommittedBuyState": true,
+      "positionBefore": 0,
+      "positionAfter": 4
+    },
+    "console": {
+      "warnings": 0,
+      "errors": 0
+    },
+    "cleanup": {
+      "featureFlag": null,
+      "qualityFlag": null,
+      "waveBTemporaryFlag": null,
+      "reducedMotionEmulation": false,
+      "viewportOverrideReset": true,
+      "temporaryTabClosed": true
+    }
+  },
+  "browserFindingsCorrected": [
+    "DOM dice selector previously missed the real board-owned button and produced a 38px touch target",
+    "the opaque renderer visually impersonated a clickable die while input still depended on click-through",
+    "844x390 compact landscape clipped the board and dice",
+    "390x844 portrait stacked duplicate Arena metadata and forced internal board scrolling",
+    "1024x768 and live viewport changes could shrink-wrap or vertically stretch the renderer frame",
+    "the HIGH first frame previously created a non-semantic camera entrance timeline"
+  ],
+  "notExecuted": [
+    "second desktop browser",
+    "physical Android device",
+    "physical iPhone Safari",
+    "physical tablet",
+    "real network shaping",
+    "low-end FPS, GPU, thermal, and memory capture",
+    "Reviewer B, IP Review, or Golden Set",
+    "production deployment"
+  ],
+  "gates": {
+    "GATE-DEVICE-BROWSER-NETWORK": "BLOCKED",
+    "GATE-ART-GOLDEN-SET": "BLOCKED",
+    "GATE-SUPABASE-PRODUCTION": "BLOCKED"
+  }
+}

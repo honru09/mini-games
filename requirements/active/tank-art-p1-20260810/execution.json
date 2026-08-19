@@ -1,0 +1,14 @@
+{
+  "status":"PARTIAL_OWNER_CLEARANCE_PREPARATION",
+  "startedAt":"2026-08-10T05:20:00+09:00",
+  "updatedAt":"2026-08-10T05:42:00+09:00",
+  "policyReconciledAt":"2026-08-16",
+  "steps":[{"id":"TANKART-1","status":"completed","owner":"master"},{"id":"TANKART-2","status":"completed","owner":"master + gpt-image-2"},{"id":"TANKART-3","status":"pending","owner":"master + machine technical/visual/similarity review + owner clearance"},{"id":"TANKART-4","status":"pending","owner":"master reversible runtime integration"}],
+  "blocked":[],
+  "skipped":["runtime integration before OWNER_AUTHORIZED_ART_CLEARANCE","commit/push/Pages/Render"],
+  "optionalAdvisoryEvidence":{"status":"NOT_EXECUTED","items":["human editable cleanup","independent natural-person Reviewer B","IP/legal advice","per-asset Golden Set"],"blocking":false},
+  "releaseEvidencePending":["second real browser","physical Android/iPhone/Tablet","real network shaping","real low-end performance","explicit current user release command"],
+  "externalAssetPolicy":"blocked-license / EXTERNAL_REFERENCE_ONLY assets are permanently disabled",
+  "historicalAsOf":{"date":"2026-08-10","status":"PARTIAL_AWAITING_HUMAN_REVIEW","meaning":"Former human-review prerequisite and candidate-only/default-off state; audit history only."},
+  "evidence":["art-source/games/tank/tank-art-p1-20260810/PROMPT_AND_PROVENANCE.md","art-source/games/tank/tank-art-p1-20260810/tank-style-board-clean-draft-v2.png","art-source/games/tank/tank-art-p1-20260810/rejected/tank-style-board-draft-v1-symbol-noise.png","asset-library/catalog.json"]
+}

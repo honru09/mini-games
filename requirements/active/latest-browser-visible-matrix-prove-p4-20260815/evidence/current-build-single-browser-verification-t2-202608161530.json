@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-08-16T15:30:00+09:00",
+  "claim": "historical_as_of_build_single_browser_visible_matrix",
+  "currency": "historical_as_of",
+  "scope": "single Codex in-app Chromium historical as-of build only",
+  "fullRouteMatrixCurrentBuild": false,
+  "build": {
+    "path": "public/index.html",
+    "sha256": "1B26D7D58DCC6B4A9BE55BE09C0D787E1B1AF08CBD6C54D4175BF73064F2D1DF",
+    "characters": 1647354,
+    "bytes": 1661897
+  },
+  "environment": {
+    "browserSurface": "Codex in-app Chromium",
+    "browserCount": 1,
+    "url": "http://localhost:8091/?build-check=202608161530#/home",
+    "credentials": "temporary local QA account; no credential captured",
+    "servedBuildSignals": {
+      "gameModuleLoaderInScript": true,
+      "serviceWorkerPreheatContractInScript": true
+    }
+  },
+  "routeMatrix": [
+    {"name":"desktop","width":1440,"height":900,"devicePixelRatio":1,"routes":["home","games","playline","profile"],"horizontalOverflowMax":0,"rawKeyCountMax":0,"scrollYMax":0},
+    {"name":"compact","width":1024,"height":768,"devicePixelRatio":1,"routes":["home","games","playline","profile"],"horizontalOverflowMax":0,"rawKeyCountMax":0,"scrollYMax":0},
+    {"name":"tablet","width":768,"height":1024,"devicePixelRatio":1,"routes":["home","games","playline","profile"],"horizontalOverflowMax":0,"rawKeyCountMax":0,"scrollYMax":0},
+    {"name":"phone","width":390,"height":844,"devicePixelRatio":1,"routes":["home","games","playline","profile"],"horizontalOverflowMax":0,"rawKeyCountMax":0,"scrollYMax":0},
+    {"name":"landscape","width":844,"height":390,"devicePixelRatio":1,"routes":["home","games","playline","profile"],"horizontalOverflowMax":0,"rawKeyCountMax":0,"scrollYMax":0}
+  ],
+  "gameStages": [
+    {"game":"五子棋","stage":true,"arena":true,"command":true,"back":true,"seatRail":true,"commandButtons":6,"horizontalOverflow":0,"scrollY":0,"rawKeyCount":0},
+    {"game":"飞行棋","stage":true,"arena":true,"command":true,"back":true,"seatRail":true,"commandButtons":1,"horizontalOverflow":0,"scrollY":0,"rawKeyCount":0},
+    {"game":"迷你大富翁","stage":true,"arena":true,"command":true,"back":true,"seatRail":true,"commandButtons":1,"horizontalOverflow":0,"scrollY":0,"rawKeyCount":0},
+    {"game":"坦克大战","stage":true,"arena":true,"command":true,"back":true,"seatRail":true,"commandButtons":5,"horizontalOverflow":0,"scrollY":0,"rawKeyCount":0},
+    {"game":"俄罗斯方块","stage":true,"arena":true,"command":true,"back":true,"seatRail":true,"commandButtons":7,"horizontalOverflow":0,"scrollY":0,"rawKeyCount":0},
+    {"game":"象棋","stage":true,"arena":true,"command":true,"back":true,"seatRail":true,"commandButtons":0,"horizontalOverflow":0,"scrollY":0,"rawKeyCount":0}
+  ],
+  "deepScroll": {
+    "crossRouteScrollY": 0,
+    "sameRouteScrollY": 0,
+    "verified": true
+  },
+  "monopolyResponsive": [
+    {"viewport":"390x844","cells":24,"visualLabels":"hidden","centerHud":"hidden","diceCount":1,"propertyAria":true,"propertyTitle":true},
+    {"viewport":"844x390","cells":24,"visualLabels":"hidden","centerHud":"hidden","diceCount":1,"propertyAria":true,"propertyTitle":true}
+  ],
+  "languageTheme": {
+    "languages": [
+      {"lang":"en-US","instantSwitch":true,"rawSystemKeyLeak":false,"visibleRecords":["1 game · 1 win · 100%"]},
+      {"lang":"uk-UA","instantSwitch":true,"rawSystemKeyLeak":false,"visibleRecords":["2 гри · 0 перемог · 0%"]},
+      {"lang":"zh-CN","instantSwitch":true,"rawSystemKeyLeak":false}
+    ],
+    "pluralRegressionCounts":[1,2,5,11,21,22,25],
+    "themeTransitions":["dark","light"],
+    "restored":{"lang":"zh-CN","theme":"light"}
+  },
+  "reducedMotion": {
+    "emulated": true,
+    "homeAmbientAnimation": "none",
+    "overflow": 0,
+    "scrollY": 0
+  },
+  "forcedColors": {
+    "emulated": true,
+    "brandVisibility": "visible",
+    "overflow": 0,
+    "scrollY": 0
+  },
+  "console": {
+    "warnErrorAfterCapture": 0,
+    "entries": []
+  },
+  "cleanup": {
+    "dialogCount": 0,
+    "gameActive": false,
+    "theme": "light",
+    "lang": "zh-CN",
+    "viewportOverrideReset": true,
+    "scrollY": 0
+  },
+  "notGranted": [
+    "second_browser",
+    "physical_android",
+    "physical_iphone",
+    "physical_tablet",
+    "real_network_shaping",
+    "two_formal_friend_dm_browsers",
+    "physical_performance_audio_recovery",
+    "production_verification",
+    "real_supabase",
+    "human_art_review",
+    "release"
+  ],
+  "gateDisposition": "GATE-DEVICE-BROWSER-NETWORK remains BLOCKED; current single-browser evidence does not release any shared Gate"
+}

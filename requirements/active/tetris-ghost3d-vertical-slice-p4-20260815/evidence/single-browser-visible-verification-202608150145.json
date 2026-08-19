@@ -1,0 +1,174 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-08-15T02:10:30+09:00",
+  "observationWindow": "2026-08-15 local task run across the latest network interruption and post-review correction",
+  "captureProvenance": "Serialized from the primary reviewer's direct observations in one Codex in-app Chromium during the same active task, including a post-fix default-off/opt-in/input recheck. It is not an independent second-browser review and contains no screenshot claim.",
+  "environment": {
+    "url": "http://127.0.0.1:8080/",
+    "browser": "Codex in-app Chromium",
+    "build": "latest local working tree at observation time",
+    "account": "temporary local development account",
+    "production": false
+  },
+  "result": "PARTIAL_VISIBLE_EVIDENCE",
+  "requirements": ["GAME-048", "TECH-049"],
+  "scenarios": {
+    "defaultOff": {
+      "featureFlag": null,
+      "ghost3dSlotCount": 0,
+      "canvasCount": 0,
+      "domTouchControlCount": 7,
+      "domWellPlayable": true
+    },
+    "temporaryOptIn": {
+      "featureFlag": "1",
+      "twoPlayerObserved": true,
+      "fourPlayerObserved": true,
+      "slotReady": true,
+      "canvasPresent": true,
+      "canvasAriaHidden": true,
+      "canvasPointerEvents": "none",
+      "rendererInputCommands": 0,
+      "domTouchControlCount": 7,
+      "opponentCardsForFourPlayers": 3
+    },
+    "viewportMatrix": [
+      {
+        "viewport": [1440, 900],
+        "mainWellPixels": [347, 625],
+        "canvasCount": 1,
+        "domTouchControlCount": 7,
+        "horizontalOverflowPixels": 0
+      },
+      {
+        "viewport": [1024, 768],
+        "mainWellPixels": [277, 498],
+        "canvasCount": 1,
+        "domTouchControlCount": 7,
+        "horizontalOverflowPixels": 0
+      },
+      {
+        "viewport": [390, 844],
+        "mainWellPixels": [126, 226],
+        "canvasCount": 1,
+        "domTouchControlCount": 7,
+        "horizontalOverflowPixels": 0
+      },
+      {
+        "viewport": [844, 390],
+        "mainWellPixels": [72, 130],
+        "canvasCount": 1,
+        "domTouchControlCount": 7,
+        "horizontalOverflowPixels": 0
+      }
+    ],
+    "additionalPortraitLayout": {
+      "viewport": [583, 726],
+      "arenaPixels": [277, 502],
+      "commandPixels": [280, 502],
+      "mainWellPixels": [189, 341],
+      "opponentCards": 3,
+      "canvasReady": true,
+      "horizontalOverflowPixels": 0
+    },
+    "realInput": {
+      "keyboardArrowLeft": {
+        "beforeActiveCellLeftPixels": 56.808,
+        "afterActiveCellLeftPixels": 37.872,
+        "domStateChanged": true
+      },
+      "hardDrop": {
+        "submittedThroughDomGame": true,
+        "canvasRemainedReady": true
+      },
+      "touchControlsPresent": 7,
+      "physicalTouchExecuted": false
+    },
+    "languageThemeMatrix": {
+      "observedCases": [
+        {"language": "zh-CN", "theme": "light"},
+        {"language": "en-US", "theme": "dark"},
+        {"language": "uk-UA", "theme": "dark"}
+      ],
+      "ukrainianStageChineseSystemCopyCount": 0,
+      "rendererAddsLocalizedOrPlayerText": false
+    },
+    "reducedMotion": {
+      "mediaQueryMatched": true,
+      "slotAnimation": "none",
+      "slotTransitionDuration": "0s",
+      "canvasAnimation": "none",
+      "canvasTransitionDuration": "0s",
+      "canvasRemainedReady": true,
+      "gameplayRemainedOperable": true
+    },
+    "console": {
+      "warnings": 0,
+      "errors": 0
+    },
+    "postFixBrowserRecheck": {
+      "build": "latest local working tree after lock-consistency, recovery, import-graph, and GSAP-budget corrections",
+      "defaultOff": {
+        "slotCount": 0,
+        "canvasCount": 0,
+        "domTouchControlCount": 7,
+        "horizontalOverflowPixels": 0
+      },
+      "temporaryHighOptIn": {
+        "slotCount": 1,
+        "canvasCount": 1,
+        "slotReady": true,
+        "canvasPointerEvents": "none",
+        "domTouchControlCount": 7,
+        "horizontalOverflowPixels": 0
+      },
+      "keyboardArrowLeft": {
+        "domCellWidthPixels": 18.921875,
+        "beforeRepresentativeLeftPixels": 107.109375,
+        "afterRepresentativeLeftPixels": 88.171875,
+        "canvasRemainedReady": true
+      },
+      "reducedMotionVisibleRecheck": "NOT_EXECUTED_AFTER_FINAL_FIX / EARLIER_VISIBLE_EVIDENCE_AND_FINAL_AUTOMATED_CONTRACT_ONLY",
+      "temporarySameOriginHarnessDeleted": true
+    },
+    "cleanup": {
+      "temporaryQueryPreviewRemovedFromSource": true,
+      "runtimeGateRestoredToExactLocalStorageOptIn": true,
+      "temporaryFeatureFlagCleared": true,
+      "viewportOverrideReset": true,
+      "reducedMotionEmulation": false
+    }
+  },
+  "browserFindingsCorrected": [
+    "Tetromino rotation coordinates were aligned with the shared Rule Core",
+    "reconcile could not bypass the authority guard or relabel unknown source tags",
+    "resize work became cancellable and listener bindings survive a fresh generation",
+    "visibility restore cannot revive an inactive Game Shell",
+    "constructor-time or ordinary renderer failures cannot revive stale adapters or rebuild every frame",
+    "the optional layer no longer overrides the intended DOM-active-cell and KO z-order",
+    "the focused player is excluded from the opponent rail instead of appearing twice",
+    "portrait height classification and the 521-720px Arena/Command layout retain a playable main well",
+    "piece_locked now requires a Rule-Core-consistent before/after well transition and same-source continuity",
+    "context loss now creates a fresh Presenter generation with a static first frame",
+    "the production global import hook was removed and the ESM island remains a closed relative graph",
+    "HIGH and BALANCED motion now obey the 3/2 child-tween and 120/180/260ms token budgets"
+  ],
+  "notExecuted": [
+    "independent second desktop browser",
+    "physical Android device",
+    "physical iPhone Safari",
+    "physical tablet",
+    "physical touch-path verification",
+    "real network shaping",
+    "five-player live multiplayer visible verification",
+    "real low-end FPS, GPU, thermal, and memory capture",
+    "post-fix visible reduced-motion re-emulation",
+    "Reviewer B, IP Review, or Golden Set",
+    "production deployment"
+  ],
+  "gates": {
+    "GATE-DEVICE-BROWSER-NETWORK": "BLOCKED",
+    "GATE-ART-GOLDEN-SET": "BLOCKED",
+    "GATE-SUPABASE-PRODUCTION": "BLOCKED"
+  }
+}

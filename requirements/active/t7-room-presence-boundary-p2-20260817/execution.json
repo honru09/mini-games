@@ -1,0 +1,53 @@
+{
+  "status": "VERIFIED_LOCAL",
+  "startedAt": "2026-08-17T00:00:00+09:00",
+  "completedAt": "2026-08-17T00:00:00+09:00",
+  "implementation": [
+    "RoomPresenceBoundary owns seat normalization, membership transitions, host transfer, reconnect replacement, lobby projection and privacy-aware Presence",
+    "JSON runtime and isolated memory Adapters share one Interface",
+    "seat, update_ai_controllers, release_many and rehome_many keep public projection, AI ownership and tournament multi-room migration inside one atomic graph boundary",
+    "bounded retry and one on-demand roomGraphRecoveryQueue restore quarantined source/target graphs before Room and Lobby refresh",
+    "server/index.js keeps wire, broadcast, settlement, authority and spectator transport ownership"
+  ],
+  "tests": {
+    "roomPresenceBoundary": "PASS",
+    "roomPresenceBoundaryAssertions": 43,
+    "tournamentAtomicOnline": "PASS",
+    "tournamentAtomicOnlineAssertions": 17,
+    "tournamentUnitAutoRecovery": "PASS",
+    "roomSeats": "PASS",
+    "reconnect": "PASS",
+    "socialGraph": "PASS",
+    "spectatorRoom": "PASS",
+    "e2e": "PASS"
+  },
+  "regressions": [
+    "canonical Adapter room/session references reject stale caller-owned rooms",
+    "inspect and membership results are frozen DTOs without canonical room/session/details leakage",
+    "join/remove/detach/resume persistence failures restore room/session graphs",
+    "online_uids respects everyone/friends/nobody visibility and unknown mutation Sessions fail closed",
+    "multi-source release and multi-target rehome commit one canonical room/session graph or roll the whole graph back",
+    "tournament batch bind/attach uses precise rollback receipts and delays target wire until graph commit and Authority readiness",
+    "canonical, stale, non-target and Bye spectator state clears through the unified spectate_left wire",
+    "terminal and quarantine guard every room mutation; bounded recovery clears queue/timer and refreshes Room/Lobby",
+    "duplicate roomId and active canonical Session retirement fail closed",
+    "pure projections do not normalize canonical state; nested DTOs are deeply frozen",
+    "memory Adapter isolates unknown nested graphs while preserving Session identity and opaque handle semantics",
+    "re-selecting the current game preserves accepted READY state",
+    "resume retires old detached session fields, membership and reconnect timer",
+    "resume requires detached finite window, live registered replacement and same token hash",
+    "presence privacy/heartbeat and adapter/clock errors fail closed"
+  ],
+  "t7FollowUp": {
+    "matchProtocol": "VERIFIED_LOCAL / separate boundary; not owned by Room/Presence",
+    "evidence": [
+      "server/boundaries/match-protocol.js",
+      "server/index.js (command/transition wiring)",
+      "qa/match-protocol-boundary.js (21 assertions)",
+      "npm run test:match-protocol-boundary"
+    ],
+    "scope": "Match Protocol command/transition, JSON runtime and isolated memory Adapter, fences, deterministic effects and rollback are recorded independently; this active Room/Presence execution keeps its own ownership and 43-assertion evidence."
+  },
+  "release": "LOCAL_ONLY / NOT_RELEASED",
+  "unexecuted": ["Chat/Playline ownership", "Reward/Economy ownership", "server-wide clock/Timer virtualization", "second desktop browser and physical Android/iPhone/Tablet", "real network shaping", "real Supabase migrations/RLS/backup/restore and multi-instance evidence", "optional art advisory evidence", "commit/push/Pages/Render or production release"]
+}

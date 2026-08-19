@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "verifiedAt": "2026-08-09T12:43:00+09:00",
+  "releaseCommit": "94ae9771745c08ae33aac800a06575400a4650f4",
+  "honruP2Commit": "551b91a498560c94bf2aa3188c36adf099e445a6",
+  "rollbackCommit": "c0140c9a41c2edf65672d517b31603a371fba464",
+  "branch": "codex/player-chat-profile-p0",
+  "tests": {
+    "qualityGates": "pass",
+    "npmTest": "pass (104.3s on release tree)",
+    "stagedSecretScan": "pass"
+  },
+  "render": {
+    "deploymentId": "dep-d9rvbfv10e5c738tnclg",
+    "status": "live",
+    "commit": "94ae9771745c08ae33aac800a06575400a4650f4",
+    "url": "https://mini-games-online.onrender.com",
+    "httpStatus": 200,
+    "markers": ["player-chat-shell", "ghost-profile-route", "direct-chat-v1"],
+    "websocketSmoke": "pass: ephemeral registration, room, ready, move, three-player room, partial-capacity start and result"
+  },
+  "githubPages": {
+    "workflowRunId": 31292922140,
+    "status": "completed",
+    "conclusion": "success",
+    "commit": "94ae9771745c08ae33aac800a06575400a4650f4",
+    "url": "https://honru09.github.io/mini-games/",
+    "httpStatus": 200,
+    "markers": ["player-chat-shell", "ghost-profile-route", "direct-chat-v1"]
+  },
+  "visualBrowser": {
+    "status": "NOT_EXECUTED",
+    "reason": "Browser and Computer Use runtimes require node_repl; resolved Node 20.20.2 is below required 22.22.0"
+  },
+  "productionReadiness": {
+    "status": "BLOCKED",
+    "missing": [
+      "real Supabase migration/RLS/concurrency/backup/rollback",
+      "online two-account friend chat UI E2E",
+      "current browser and real-device matrix",
+      "real network shaping and 30-minute session",
+      "Honru/Sticker human Art Bible and IP review"
+    ]
+  }
+}

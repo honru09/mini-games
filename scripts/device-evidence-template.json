@@ -1,0 +1,19 @@
+{
+  "device": "",
+  "os": "",
+  "browser": "",
+  "orientation": "",
+  "buildSha256": "",
+  "buildBytes": 0,
+  "scenario": "",
+  "avgFPS": 0,
+  "longFrames": 0,
+  "heating": "",
+  "result": "",
+  "screenshotPath": "",
+  "networkConfig": "",
+  "pwaMode": false,
+  "audioState": "",
+  "backgroundRecovery": "",
+  "issues": []
+}

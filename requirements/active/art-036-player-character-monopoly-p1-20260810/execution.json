@@ -1,0 +1,13 @@
+{
+  "status":"SOURCE_ONLY_ACCEPTED_OWNER_CLEARANCE_PREPARATION",
+  "startedAt":"2026-08-10T07:10:00+09:00",
+  "updatedAt":"2026-08-17T00:39:00+09:00",
+  "steps":[{"id":"ART36-1","status":"completed"},{"id":"ART36-2","status":"completed"},{"id":"ART36-3","status":"completed"},{"id":"ART36-4","status":"planned"},{"id":"ART36-5","status":"optional_advisory_not_executed","blocking":false}],
+  "evidence":["art-source/player-character/art-036-player-character-monopoly-p1-20260810/player-character-direction-board-draft-v1.png","art-source/games/monopoly/art-036-player-character-monopoly-p1-20260810/monopoly-tabletop-direction-board-draft-v1.png","art-source/player-character/art-036-player-character-monopoly-p1-20260810/PROMPT_AND_PROVENANCE.md","asset-library/catalog.json","node scripts/asset-library-audit.js","node qa/asset-manifest-v2.js"],
+  "optionalAdvisoryEvidence":{"status":"NOT_EXECUTED","items":["human cleanup","independent natural-person Reviewer B","IP/legal advice","per-asset Golden Set"],"blocking":false},
+  "releaseEvidencePending":["second desktop browser","physical Android/iPhone/Tablet","real network and low-end performance","current production build verification"],
+  "blocked":[],
+  "externalAssetPolicy":"blocked-license / EXTERNAL_REFERENCE_ONLY assets are permanently disabled and never qualify for owner clearance",
+  "currentBoundary":"ART-036 remains source/reference-only because this asset family has not yet completed OWNER_AUTHORIZED_ART_CLEARANCE; optional human/IP advice is not the blocker. Runtime admission requires the owner-clearance machine evidence, fallback, feature flag and rollback contract, and release still requires an explicit current user command.",
+  "historicalAsOf":{"date":"2026-08-10","status":"SOURCE_ONLY_ACCEPTED_HUMAN_GATED","meaning":"The former plan combined human cleanup, Reviewer B, IP review and Golden Set with runtime admission; retained for audit only."}
+}

@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "taskId": "adr-governance-p1-20260813",
+  "status": "completed_local",
+  "verification": {
+    "specialized": ["node qa/adr-contract.js"],
+    "pendingFinal": [],
+    "completedFinal": ["npm run test:adr", "npm run reports:progress", "node qa/progress-ledger.js", "node qa/mainline-control-plane.js", "npm run quality:gates", "npm test (168.6s)", "node scripts/build.js", "git diff --check"]
+  },
+  "published": false,
+  "boundary": "ADR 治理文档与 QA；未作具体生产架构选择，不修改运行时、规则、协议、数据库、经济或线上配置。"
+}

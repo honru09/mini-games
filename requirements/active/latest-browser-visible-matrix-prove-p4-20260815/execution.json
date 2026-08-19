@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "taskId": "latest-browser-visible-matrix-prove-p4-20260815",
+  "status": "completed_local_not_released",
+  "startedAt": "2026-08-15T19:38:00+09:00",
+  "completed": [
+    "five viewport by four route real-navigation baseline 20/20",
+    "Shop, Direct Message, Achievement and Room Lobby baseline",
+    "six 390x844 solo Game Stage entry and safe exit baseline",
+    "zh-CN, en-US, uk-UA, light, dark, visible reduced-motion and console baseline",
+    "reproduced deep-scroll route retention, Monopoly mobile density and Ukrainian plural defects"
+  ],
+  "completedNow": [
+    "three grouped repairs and focused regression",
+    "post-repair current browser matrix and evidence",
+    "forced-colors, cleanup, i18n, quality gates, full npm test and double build",
+    "control-plane reports, brief and three logs"
+  ],
+  "verification": {
+    "e2e": "node --experimental-websocket qa/e2e-online.js -> E2E_ALL_PASS with selected_game_capacity authority assertion",
+    "fullTest": "npm test -> PASS in 168.0 seconds",
+    "qualityGates": "npm run quality:gates -> PASS in 19.7 seconds",
+    "i18n": "npm run test:i18n -> PASS in 1.2 seconds",
+    "deterministicBuild": "two builds -> 1597548 characters / 1612091 bytes / 963F83511200AC16AA309EC1FA5BE243F01FB5CADD4DD5E2B41D7B718C8B686B"
+  },
+  "notExecutedExternal": [
+    "external browser/device/network, Supabase and human art gates"
+  ],
+  "published": false
+}

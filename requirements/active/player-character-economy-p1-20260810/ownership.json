@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "task": "player-character-economy-p1-20260810",
+  "builder": "terra",
+  "owned": [
+    "requirements/active/player-character-economy-p1-20260810/**",
+    "server/player-character-economy.js",
+    "qa/player-character-economy-contract.js"
+  ],
+  "sharedDependencies": [
+    "server/index.js",
+    "server/player-character.js",
+    "server/reward-engine.js",
+    "supabase/schema.sql",
+    "qa/security-online.js",
+    "qa/game-cosmetic-profile.js",
+    "PROJECT_STATUS.json",
+    "requirements/PRODUCT_REQUIREMENTS_LEDGER.json"
+  ],
+  "sharedChangeRequests": [
+    "requirements/active/player-character-economy-p1-20260810/SHARED_CHANGE_REQUEST.md"
+  ],
+  "forbidden": [
+    "public/src/**",
+    "public/index.html",
+    "public/assets/**",
+    "asset-library/**",
+    "art-source/**",
+    "shared/rules/**",
+    "server/gameplay/**",
+    "server/reward-engine.js",
+    "supabase/schema.sql",
+    "server/index.js direct edit",
+    "production credentials",
+    "git commit",
+    "git push",
+    "Pages/Render deployment"
+  ]
+}
+

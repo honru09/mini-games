@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "taskId": "profile-journey-p1-20260810",
+  "owners": {
+    "projection": ["shared/progression/profile-journey.js"],
+    "consumer": ["public/src/core/02-app-shell.js", "public/index-template.html", "scripts/build.js"],
+    "i18n": ["public/locales/zh-CN.json", "public/locales/en-US.json", "public/locales/uk-UA.json"],
+    "qa": ["qa/profile-journey.js", "qa/profile-route-contract.js", "package.json"]
+  },
+  "forbidden": ["server/**", "supabase/**", "shared/rules/**", "public/src/shop/06-shop.js", "art-source/**", "public/assets/**"]
+}

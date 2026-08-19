@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "checkedAt": "2026-08-15T16:02:34+09:00",
+  "purpose": "PROVE second-real-browser availability preflight",
+  "availableBrowserSurfaces": [
+    {"name":"Codex In-app Browser","type":"iab","independentSecondBrowser":false}
+  ],
+  "result": "BLOCKED_EXTERNAL",
+  "reason": "Only one in-app Chromium browser surface is connected; a second tab in the same browser would not satisfy the independent second-browser gate.",
+  "actions": ["No duplicate tab was counted as a second browser.", "No extension, browser, or system setting was installed or changed."],
+  "notExecuted": ["Chrome or Edge extension browser","Firefox/Safari","two-browser formal-account UI","physical devices"]
+}

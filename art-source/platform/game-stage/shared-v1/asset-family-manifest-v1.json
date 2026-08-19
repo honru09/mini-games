@@ -1,0 +1,384 @@
+{
+  "schemaVersion": 1,
+  "productionUnitId": "P0-03",
+  "familyId": "P-GAME-STAGE-SHARED-ART-V1",
+  "sourceAssetId": "ART-GAME-STAGE-SHARED-ART-V1",
+  "artworkVersion": 1,
+  "status": "OWNER_AUTHORIZED_ART_CLEARANCE",
+  "license": "project-owned-deterministic-vector",
+  "externalReferencePolicy": "EXTERNAL_REFERENCE_ONLY / blocked-license files were not read, copied, traced, recolored, used as generation inputs, or connected to runtime.",
+  "featureFlags": {
+    "operator": "all",
+    "enabledValue": "1",
+    "defaultEnabled": true,
+    "ids": [
+      "mg_art_game_stage_shared_v1"
+    ]
+  },
+  "events": [
+    "stage_enter",
+    "ready",
+    "turn_start",
+    "accepted_move",
+    "capture",
+    "warning",
+    "reconnect",
+    "terminal",
+    "reward"
+  ],
+  "sourceMasters": [
+    {
+      "key": "surface",
+      "path": "art-source/platform/game-stage/shared-v1/source/surface-v1.svg",
+      "sha256": "B08440FA98D5D6F559101CFE53D17F72D8AB738815E2D38CFB2A4151A98AE680",
+      "bytes": 2364,
+      "width": 1280,
+      "height": 720,
+      "format": "svg",
+      "alpha": false
+    },
+    {
+      "key": "frame",
+      "path": "art-source/platform/game-stage/shared-v1/source/frame-v1.svg",
+      "sha256": "95DBAACC7815923BA2660B81005EC3A87F2F6BE0FD5B192588B9583341C6B0AF",
+      "bytes": 953,
+      "width": 1280,
+      "height": 720,
+      "format": "svg",
+      "alpha": true
+    },
+    {
+      "key": "stage_enter",
+      "path": "art-source/platform/game-stage/shared-v1/source/stage_enter-v1.svg",
+      "sha256": "C790D819D8794ABDADAADD6B56132F62F969E5850BD33FF6DEA2BDAC346EB637",
+      "bytes": 559,
+      "width": 256,
+      "height": 256,
+      "format": "svg",
+      "alpha": true
+    },
+    {
+      "key": "ready",
+      "path": "art-source/platform/game-stage/shared-v1/source/ready-v1.svg",
+      "sha256": "51BA0AA9D9EFD157F2BD3802FB96549DCFE91E6AA17CDFF52D3371DF2D98D0E4",
+      "bytes": 555,
+      "width": 256,
+      "height": 256,
+      "format": "svg",
+      "alpha": true
+    },
+    {
+      "key": "turn_start",
+      "path": "art-source/platform/game-stage/shared-v1/source/turn_start-v1.svg",
+      "sha256": "66041939A4D67A740CD58CFCFD7CB7BB7F016794DC237B663ED0400C20E9491B",
+      "bytes": 606,
+      "width": 256,
+      "height": 256,
+      "format": "svg",
+      "alpha": true
+    },
+    {
+      "key": "accepted_move",
+      "path": "art-source/platform/game-stage/shared-v1/source/accepted_move-v1.svg",
+      "sha256": "F534983E7504995EE0C4C22C11978E40F6F10AA43C80ADDD171BD7BE8D21A1E8",
+      "bytes": 572,
+      "width": 256,
+      "height": 256,
+      "format": "svg",
+      "alpha": true
+    },
+    {
+      "key": "capture",
+      "path": "art-source/platform/game-stage/shared-v1/source/capture-v1.svg",
+      "sha256": "1A4B45493027539B3FD9576954E1164387D81B99BEEF3AD2908F3B2A9B03578B",
+      "bytes": 561,
+      "width": 256,
+      "height": 256,
+      "format": "svg",
+      "alpha": true
+    },
+    {
+      "key": "warning",
+      "path": "art-source/platform/game-stage/shared-v1/source/warning-v1.svg",
+      "sha256": "B21CAF84B4311C988F60EC2EFB0EBA4208156BAE73F54958BB84BB870F864425",
+      "bytes": 551,
+      "width": 256,
+      "height": 256,
+      "format": "svg",
+      "alpha": true
+    },
+    {
+      "key": "reconnect",
+      "path": "art-source/platform/game-stage/shared-v1/source/reconnect-v1.svg",
+      "sha256": "479270BE28AE2AD5BE9DAE965DAD8EBBE5FA71BD2C0351B0BCE4EFD5F32604AC",
+      "bytes": 565,
+      "width": 256,
+      "height": 256,
+      "format": "svg",
+      "alpha": true
+    },
+    {
+      "key": "terminal",
+      "path": "art-source/platform/game-stage/shared-v1/source/terminal-v1.svg",
+      "sha256": "9000E5C97BD4A7071C54AED326B597076B4335176488215EE2BE149144C5D8AE",
+      "bytes": 656,
+      "width": 256,
+      "height": 256,
+      "format": "svg",
+      "alpha": true
+    },
+    {
+      "key": "reward",
+      "path": "art-source/platform/game-stage/shared-v1/source/reward-v1.svg",
+      "sha256": "0071CE64FF1E8A120EF16203E6FB768E3AB1A8948B3C2E1995DECEE8269D4956",
+      "bytes": 681,
+      "width": 256,
+      "height": 256,
+      "format": "svg",
+      "alpha": true
+    }
+  ],
+  "runtimeVariants": [
+    {
+      "key": "surface",
+      "path": "public/assets/ui/game-stage/shared-v1/surface-v1.webp",
+      "sha256": "F99D097F8619B2861D340F4C24FEC9121DAEECC930C0FEC0F556F8996C671200",
+      "bytes": 7028,
+      "width": 1280,
+      "height": 720,
+      "format": "webp",
+      "alpha": false
+    },
+    {
+      "key": "surface-static",
+      "path": "public/assets/ui/game-stage/shared-v1/surface-static-v1.webp",
+      "sha256": "F99D097F8619B2861D340F4C24FEC9121DAEECC930C0FEC0F556F8996C671200",
+      "bytes": 7028,
+      "width": 1280,
+      "height": 720,
+      "format": "webp",
+      "alpha": false
+    },
+    {
+      "key": "frame",
+      "path": "public/assets/ui/game-stage/shared-v1/frame-v1.webp",
+      "sha256": "C60A270CCDB1C7E9369F77F070A7937BD7A874467D3164F9F52458F07E0CCB42",
+      "bytes": 7982,
+      "width": 1280,
+      "height": 720,
+      "format": "webp",
+      "alpha": true
+    },
+    {
+      "key": "frame-static",
+      "path": "public/assets/ui/game-stage/shared-v1/frame-static-v1.webp",
+      "sha256": "C60A270CCDB1C7E9369F77F070A7937BD7A874467D3164F9F52458F07E0CCB42",
+      "bytes": 7982,
+      "width": 1280,
+      "height": 720,
+      "format": "webp",
+      "alpha": true
+    },
+    {
+      "key": "stage_enter",
+      "path": "public/assets/ui/game-stage/shared-v1/stage_enter-v1.webp",
+      "sha256": "F771B226D55FD7550FD3BB5BE0743630FA7151212358694A6AAF9E5562AA7275",
+      "bytes": 6318,
+      "width": 256,
+      "height": 256,
+      "format": "webp",
+      "alpha": true
+    },
+    {
+      "key": "stage_enter-static",
+      "path": "public/assets/ui/game-stage/shared-v1/stage_enter-static-v1.webp",
+      "sha256": "F771B226D55FD7550FD3BB5BE0743630FA7151212358694A6AAF9E5562AA7275",
+      "bytes": 6318,
+      "width": 256,
+      "height": 256,
+      "format": "webp",
+      "alpha": true
+    },
+    {
+      "key": "ready",
+      "path": "public/assets/ui/game-stage/shared-v1/ready-v1.webp",
+      "sha256": "3EFC99B985046C8380C7A0F8AF8D4CA0B2BE4C2BB9447AEBCAFC16024F77BBB1",
+      "bytes": 7416,
+      "width": 256,
+      "height": 256,
+      "format": "webp",
+      "alpha": true
+    },
+    {
+      "key": "ready-static",
+      "path": "public/assets/ui/game-stage/shared-v1/ready-static-v1.webp",
+      "sha256": "3EFC99B985046C8380C7A0F8AF8D4CA0B2BE4C2BB9447AEBCAFC16024F77BBB1",
+      "bytes": 7416,
+      "width": 256,
+      "height": 256,
+      "format": "webp",
+      "alpha": true
+    },
+    {
+      "key": "turn_start",
+      "path": "public/assets/ui/game-stage/shared-v1/turn_start-v1.webp",
+      "sha256": "E0AF703B3D73A0CBBB66BF5182D687097129CBA8BC43B70F0AA427A452F8FC1B",
+      "bytes": 8024,
+      "width": 256,
+      "height": 256,
+      "format": "webp",
+      "alpha": true
+    },
+    {
+      "key": "turn_start-static",
+      "path": "public/assets/ui/game-stage/shared-v1/turn_start-static-v1.webp",
+      "sha256": "E0AF703B3D73A0CBBB66BF5182D687097129CBA8BC43B70F0AA427A452F8FC1B",
+      "bytes": 8024,
+      "width": 256,
+      "height": 256,
+      "format": "webp",
+      "alpha": true
+    },
+    {
+      "key": "accepted_move",
+      "path": "public/assets/ui/game-stage/shared-v1/accepted_move-v1.webp",
+      "sha256": "11630F0B487B6E10AD59B49F667612C94EE03756FE3204D40F3AA37FBA81D68C",
+      "bytes": 7390,
+      "width": 256,
+      "height": 256,
+      "format": "webp",
+      "alpha": true
+    },
+    {
+      "key": "accepted_move-static",
+      "path": "public/assets/ui/game-stage/shared-v1/accepted_move-static-v1.webp",
+      "sha256": "11630F0B487B6E10AD59B49F667612C94EE03756FE3204D40F3AA37FBA81D68C",
+      "bytes": 7390,
+      "width": 256,
+      "height": 256,
+      "format": "webp",
+      "alpha": true
+    },
+    {
+      "key": "capture",
+      "path": "public/assets/ui/game-stage/shared-v1/capture-v1.webp",
+      "sha256": "45FFE5C057EEBD3E6013FB755F38856823C53E088D75B480FBE3C8E2EEC289D1",
+      "bytes": 8006,
+      "width": 256,
+      "height": 256,
+      "format": "webp",
+      "alpha": true
+    },
+    {
+      "key": "capture-static",
+      "path": "public/assets/ui/game-stage/shared-v1/capture-static-v1.webp",
+      "sha256": "45FFE5C057EEBD3E6013FB755F38856823C53E088D75B480FBE3C8E2EEC289D1",
+      "bytes": 8006,
+      "width": 256,
+      "height": 256,
+      "format": "webp",
+      "alpha": true
+    },
+    {
+      "key": "warning",
+      "path": "public/assets/ui/game-stage/shared-v1/warning-v1.webp",
+      "sha256": "F7F54921E4090227DA765DB3F06586594D3E125E870D75146CFF9B3C79A8E7CB",
+      "bytes": 7610,
+      "width": 256,
+      "height": 256,
+      "format": "webp",
+      "alpha": true
+    },
+    {
+      "key": "warning-static",
+      "path": "public/assets/ui/game-stage/shared-v1/warning-static-v1.webp",
+      "sha256": "F7F54921E4090227DA765DB3F06586594D3E125E870D75146CFF9B3C79A8E7CB",
+      "bytes": 7610,
+      "width": 256,
+      "height": 256,
+      "format": "webp",
+      "alpha": true
+    },
+    {
+      "key": "reconnect",
+      "path": "public/assets/ui/game-stage/shared-v1/reconnect-v1.webp",
+      "sha256": "D3D1C37FDACA4731284EB29826EE65F1A016D294B9AF833FB6A332095BD068B9",
+      "bytes": 7936,
+      "width": 256,
+      "height": 256,
+      "format": "webp",
+      "alpha": true
+    },
+    {
+      "key": "reconnect-static",
+      "path": "public/assets/ui/game-stage/shared-v1/reconnect-static-v1.webp",
+      "sha256": "D3D1C37FDACA4731284EB29826EE65F1A016D294B9AF833FB6A332095BD068B9",
+      "bytes": 7936,
+      "width": 256,
+      "height": 256,
+      "format": "webp",
+      "alpha": true
+    },
+    {
+      "key": "terminal",
+      "path": "public/assets/ui/game-stage/shared-v1/terminal-v1.webp",
+      "sha256": "BBAA929C6150DB84E4037502264A616E47DF502859EA5D588E1219512074382F",
+      "bytes": 6976,
+      "width": 256,
+      "height": 256,
+      "format": "webp",
+      "alpha": true
+    },
+    {
+      "key": "terminal-static",
+      "path": "public/assets/ui/game-stage/shared-v1/terminal-static-v1.webp",
+      "sha256": "BBAA929C6150DB84E4037502264A616E47DF502859EA5D588E1219512074382F",
+      "bytes": 6976,
+      "width": 256,
+      "height": 256,
+      "format": "webp",
+      "alpha": true
+    },
+    {
+      "key": "reward",
+      "path": "public/assets/ui/game-stage/shared-v1/reward-v1.webp",
+      "sha256": "B9AF68D8B29CADA774BDB5EA6D27AE5CAB8D6417422447EFCF81A87378FFDB26",
+      "bytes": 7838,
+      "width": 256,
+      "height": 256,
+      "format": "webp",
+      "alpha": true
+    },
+    {
+      "key": "reward-static",
+      "path": "public/assets/ui/game-stage/shared-v1/reward-static-v1.webp",
+      "sha256": "B9AF68D8B29CADA774BDB5EA6D27AE5CAB8D6417422447EFCF81A87378FFDB26",
+      "bytes": 7838,
+      "width": 256,
+      "height": 256,
+      "format": "webp",
+      "alpha": true
+    }
+  ],
+  "reviewBoards": [
+    {
+      "path": "art-source/platform/game-stage/shared-v1/review/game-stage-shared-contact-sheet-v1.png",
+      "sha256": "E2FC85339051A386BBE73E9E415AD73A435E9A8D0CAF028BC93588E2EA833D28",
+      "bytes": 30984,
+      "width": 960,
+      "height": 720
+    }
+  ],
+  "metrics": {
+    "sourceMasterCount": 11,
+    "runtimeVariantCount": 22,
+    "reviewBoardCount": 1,
+    "runtimeVariantBytes": 165048,
+    "runtimeByteBudget": 2097152,
+    "withinBudget": true
+  },
+  "fallback": {
+    "chain": "shared stage art -> static same-family art -> existing CSS/DOM stage -> P-001 Ghost Mark"
+  },
+  "a11y": "Decorative texture and event VFX are aria-hidden; state, scores, players and controls stay in HTML."
+}

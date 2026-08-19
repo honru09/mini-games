@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "task": "t7-heartbeat-sweep-timer-p12-20260819",
+  "state": "IMPLEMENTED_LOCAL",
+  "requirements": ["TECH-039", "TECH-040", "TECH-052"],
+  "scope": "heartbeat sweep timer owner, sampled epoch and synchronous per-domain liveness isolation",
+  "steps": [
+    {"id":"P12-1","status":"completed","title":"将 heartbeat 原生 interval 迁移为唯一 ServerClockTimer repeat owner"},
+    {"id":"P12-2","status":"completed","title":"统一 tick 时间样本并保持 guest/timeout/AFK/tournament/resume 语义"},
+    {"id":"P12-3","status":"completed","title":"增加可复用分域异常隔离与 scoped Timer Audit"},
+    {"id":"P12-4","status":"completed","title":"增加 Manual Clock 首 tick 故障与第二 tick liveness 动态合同"},
+    {"id":"P12-5","status":"completed","title":"运行 focused、连接、赛事与独立端口 E2E 回归"},
+    {"id":"P12-6","status":"pending","title":"统一 Quality Gates、完整 npm test 与治理终态同步"}
+  ],
+  "rollback": "恢复 heartbeat 原生 interval 与既有 sweep body；保留 ServerClockTimer、P8–P11 和其他窗口改动",
+  "release": "LOCAL_ONLY / NOT_RELEASED"
+}

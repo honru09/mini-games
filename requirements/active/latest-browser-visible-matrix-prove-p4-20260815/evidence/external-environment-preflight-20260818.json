@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-08-18T20:37:50.7229123+09:00",
+  "build": {
+    "path": "public/index.html",
+    "sha256": "0F7CD4F94730F3A90B32BE191549EF7858BF22940EBC05FD86994F15C7079D95",
+    "utf8Bytes": 2085121
+  },
+  "gate": "GATE-DEVICE-BROWSER-NETWORK",
+  "developmentStatus": "OPEN",
+  "releaseStatus": "RELEASE_EVIDENCE_PENDING",
+  "secondDesktopBrowser": {
+    "status": "NOT_EXECUTED",
+    "installed": [
+      {
+        "family": "Chrome",
+        "version": "151.0.7922.138",
+        "path": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
+      },
+      {
+        "family": "Edge",
+        "version": "151.0.4129.86",
+        "path": "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe"
+      }
+    ],
+    "connector": "FAILED_BEFORE_BROWSER_SELECTION",
+    "connectorReason": "failed_to_write_kernel_assets_path_not_found",
+    "claimBoundary": "Installed browser binaries and running processes are environment preflight only; no second-browser UI, WebGL, console, account, screenshot, or interaction evidence was captured."
+  },
+  "physicalDevices": {
+    "status": "NOT_EXECUTED",
+    "androidBridge": "UNAVAILABLE",
+    "iosDeviceBridge": "UNAVAILABLE",
+    "appleMobileDeviceService": "RUNNING",
+    "presentAndroidIphoneTabletDevices": 0,
+    "claimBoundary": "No physical Android, iPhone, iPad, or tablet was connected or recognized."
+  },
+  "realNetworkShaping": {
+    "status": "NOT_EXECUTED",
+    "profilesRequiredMs": [50, 100, 200],
+    "clumsy": "UNAVAILABLE",
+    "winDivert": "UNAVAILABLE",
+    "wslExecutable": "AVAILABLE",
+    "wslDistribution": "UNAVAILABLE",
+    "claimBoundary": "Network Chaos and Controlled Transport tests remain deterministic local preflight and are not real latency, jitter, loss, or reordering evidence."
+  },
+  "localEvidence": {
+    "technicalOptimizationT1": "PASS",
+    "sixGhost3DRenderers": "PASS",
+    "tankHotPathAllocationContract": "PASS",
+    "networkChaos": "PASS_LOCAL_PREFLIGHT_ONLY",
+    "controlledTransport": "PASS_LOCAL_PREFLIGHT_ONLY"
+  },
+  "releaseClaim": "NOT_GRANTED"
+}

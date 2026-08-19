@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "taskId": "home-identity-p1-20260810",
+  "status": "REQUIREMENT_FROZEN",
+  "steps": [
+    {"id":"recon","status":"completed","owner":"Terra","evidence":["recon.md","AGENTS.md","README.md","HIGH_RISK_FILES.md","PROJECT_STATUS.json","git status/log"]},
+    {"id":"contract","status":"completed","dependsOn":["recon"],"owner":"Terra","evidence":["requirement.md","contract.md","ownership.json"]},
+    {"id":"red-test","status":"completed","dependsOn":["contract"],"owner":"Terra","risk":"test must observe public pulse DOM and account boundary without implementation-only mocks","tests":["node qa/home-identity-p1-contract.js (expected red: 8 failures)"]},
+    {"id":"implementation","status":"completed","dependsOn":["red-test"],"owner":"Terra","risk":"shared dirty Home/template/locale files; preserve unrelated edits","files":["public/src/core/02-app-shell.js","public/index-template.html","public/locales/zh-CN.json","public/locales/en-US.json","public/locales/uk-UA.json","package.json"]},
+    {"id":"verification","status":"completed","dependsOn":["implementation"],"owner":"Terra + Master","tests":["node scripts/build.js","node qa/home-identity-p1-contract.js","node qa/home-engagement-contract.js","node qa/home-engagement-p1-contract.js","node qa/collection-rarity-catalog.js","node qa/victory-mastery.js","node qa/ui-identity-preview-contract.js","node qa/profile-route-contract.js","npm run test:i18n","node qa/dom-smoke.js","node qa/ui-responsive-contract.js","node qa/ghost-shell-contract.js","npm run pretest","npm run quality:gates","npm test (120.7s)","deterministic double build 971303 characters / 985572 bytes / SHA-256 963DEAEFC5B46621ACCE9B713444D3F3B7F5DC41C775990CD87BE36E501D69FF"]}
+  ],
+  "rollback":"Remove the identity section, its small render branch, locale keys, package registration and dedicated QA; do not touch server/protocol/data/assets.",
+  "release":"Local-only; no commit, push, Pages or Render deployment."
+}

@@ -1,0 +1,10 @@
+{
+  "module": "server/boundaries/match-protocol.js",
+  "interface": ["command(input)", "transition(input)"],
+  "adapters": ["createJsonRuntimeMatchProtocolAdapter", "createRuntimeMatchProtocolAdapter", "createMemoryMatchProtocolAdapter"],
+  "caller": "server/index.js",
+  "qa": "qa/match-protocol-boundary.js",
+  "requirements": ["TECH-039", "TECH-040", "TECH-052"],
+  "authority": "TetrisRuleAuthority / XiangqiRuleAuthority / MonopolyRuleAuthority",
+  "forbidden": ["wire redesign", "Rule Authority rewrite", "Reward/Economy mutation", "Replay persistence", "Chat/Playline", "Supabase production write", "external asset runtime"]
+}

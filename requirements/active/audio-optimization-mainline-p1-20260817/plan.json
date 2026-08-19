@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "task": "audio-optimization-mainline-p1-20260817",
+  "status": "IMPLEMENTED_LOCAL_NOT_RELEASED",
+  "parallelability": 0,
+  "stage": "CLOSE",
+  "requirements": ["GAME-037", "GAME-038"],
+  "dependencies": ["TECH-029", "TECH-033", "TECH-049", "GAME-040"],
+  "steps": [
+    {"id":"contract", "status":"completed", "goal":"冻结 cue、accepted-action、设置、变体、fallback、Manifest 和 rollback 合同"},
+    {"id":"adapter", "status":"completed", "goal":"实现 UnifiedFeedbackAdapter 并保留 FeedbackBus/LocalFeedbackAdapter 兼容入口"},
+    {"id":"settings", "status":"completed", "goal":"接入 SFX/Music/Haptics/Spatial/Reduced Effects 设置与三语 UI"},
+    {"id":"vertical-slice", "status":"completed", "goal":"完成 Tank + Gomoku accepted-action/Authority 纵切、一次性 cue、声像、后台恢复和 dispose"},
+    {"id":"six-game-migration", "status":"completed", "goal":"迁移 Ludo/Monopoly/Xiangqi/Tetris 并补齐 2–4 个确定性程序化变体"},
+    {"id":"platform-coverage-p2", "status":"completed", "goal":"把设置、商城/装备、社交、Playline、局内表达/房聊、每日任务和资料保存接入 accepted semantic cue，并加入隐私/去重专项 QA"},
+    {"id":"assets", "status":"completed_local_governance_only", "goal":"完成候选许可/provenance/feature flag 治理；外部素材未生成，程序化 fallback 保持运行时基线"},
+    {"id":"prove", "status":"partial_local", "goal":"完成静态/VM/本地构建与单浏览器准备；第二浏览器、真机、真实网络和 PWA 锁屏仍保持 NOT_EXECUTED"}
+  ],
+  "risks": [
+    "旧 sfx/playFeedback 与 accepted-action 可能重复触发",
+    "AudioCraft 权重 CC-BY-NC，不可直接作为商业资产",
+    "fal.ai/ElevenLabs 凭证和真实设备音频恢复仍不可用",
+    "PWA 后台/锁屏 AudioContext 恢复必须在真机验证"
+  ],
+  "tests": ["npm run test:audio", "node qa/audio-authority-contract.js", "node qa/audio-platform-coverage.js", "node qa/dom-smoke.js", "node scripts/build.js --check"],
+  "rollback": "关闭统一 Adapter 或对应外部候选的独立 default-off feature flag，取消订阅并由 emitAcceptedAudioCue 恢复兼容表现/无声路径；不声称当前存在逐游戏 runtime flag，删除本 active 目录不会修改协议、数据或用户资源。"
+}

@@ -88,30 +88,64 @@ function recentPlaymates(profile, limit){
 
 /* ---- 成就墙弹窗 ---- */
 function openAchievementsModal(){
-  const bd = el('div','modal-backdrop');
-  const card = el('div','modal-card');
-  card.style.width = '460px';
-  card.appendChild(el('h3', null, t('achievements_title')));
-  const grid = el('div','ach-grid');
+  const bd = el('div','modal-backdrop achievements-modal ghost-outcome-backdrop');
+  const card = el('div','modal-card achievements-modal-card ghost-outcome-surface ghost-outcome-achievements');
+  // Keep explicit close, Escape and backdrop dismissal on one idempotent
+  // lifecycle so the modal lock and opener focus are always restored once.
+  let closeModal = () => {
+    if (typeof releaseModalScrollLock === 'function') releaseModalScrollLock(bd);
+    if (bd && typeof bd.remove === 'function' && bd.isConnected !== false) { bd.remove(); return true; }
+    return false;
+  };
+  const header=el('header','ghost-outcome-header');
+  const mark=el('div','ghost-outcome-mark');
+  if(typeof progressionFeedbackNode==='function')mark.appendChild(progressionFeedbackNode('achievement',{size:'96',className:'achievement-header-art'}));else mark.textContent='✦';
+  mark.setAttribute('aria-hidden','true');header.appendChild(mark);
+  const copy=el('div','ghost-outcome-copy');copy.appendChild(el('div','ghost-outcome-eyebrow',t('outcome_achievement_archive')));
+  const heading=el('h3',null,t('achievements_title'));copy.appendChild(heading);header.appendChild(copy);card.appendChild(header);
+  const grid = el('div','ach-grid ghost-outcome-detail');
   const earned = achievementsEarned(account || {});
+  const earnedSet = new Set(earned);
+  const motionItems=[header];
+  const progress=el('div','achievement-progress ghost-outcome-progress');
+  const progressCopy=el('div','ghost-outcome-progress-copy');
+  progressCopy.appendChild(el('strong',null,t('achievements_progress',earned.length,ACHIEVEMENTS.length)));
+  progressCopy.appendChild(el('span',null,Math.round((earned.length/Math.max(1,ACHIEVEMENTS.length))*100)+'%'));
+  progress.appendChild(progressCopy);
+  const track=el('div','ghost-outcome-progress-track');track.setAttribute('role','progressbar');track.setAttribute('aria-valuemin','0');track.setAttribute('aria-valuemax',String(ACHIEVEMENTS.length));track.setAttribute('aria-valuenow',String(earned.length));
+  const fill=el('span','ghost-outcome-progress-fill');if(fill.style)fill.style.width=Math.min(100,(earned.length/Math.max(1,ACHIEVEMENTS.length))*100)+'%';track.appendChild(fill);progress.appendChild(track);card.appendChild(progress);motionItems.push(progress);
   ACHIEVEMENTS.forEach(a => {
-    const item = el('div','ach-item' + (earned.includes(a.id) ? ' earned' : ' locked'));
-    item.appendChild(el('span','ach-icon', a.icon));
+    const isEarned=earnedSet.has(a.id);
+    const item = el('div','ach-item ghost-outcome-detail-item' + (isEarned ? ' earned' : ' locked'));
+    item.appendChild(typeof progressionFeedbackNode==='function'
+      ? progressionFeedbackNode(isEarned?'achievement':'unlock',{size:'96',className:'ach-icon progression-achievement-art'})
+      : el('span','ach-icon',a.icon));
     const info = el('div','ach-info');
-    info.appendChild(el('div','ach-name', t(a.nameKey) + (earned.includes(a.id) ? ' · ' + t('achievement_unlocked') : '')));
+    info.appendChild(el('div','ach-name', t(a.nameKey)));
     info.appendChild(el('div','ach-desc', t(a.descKey)));
     item.appendChild(info);
+    item.appendChild(el('span','ach-state',t(isEarned?'achievement_unlocked':'profile_achievement_locked')));
     grid.appendChild(item);
+    motionItems.push(item);
   });
   card.appendChild(grid);
-  const earnedCount = earned.length;
-  card.appendChild(el('div','lb-note', t('achievements_progress', earnedCount, ACHIEVEMENTS.length)));
-  const close = el('button','btn',t('close'));
-  close.addEventListener('click', () => bd.remove());
-  card.appendChild(close);
+  const actions=el('div','ghost-outcome-actions');
+  const close = el('button','btn btn-primary',t('close'));
+  close.type = 'button';
+  close.addEventListener('click', () => closeModal());
+  actions.appendChild(close);card.appendChild(actions);motionItems.push(actions);
   bd.appendChild(card);
-  bd.addEventListener('click', e => { if (e.target === bd) bd.remove(); });
+  acquireModalScrollLock(bd);
   document.body.appendChild(bd);
+  if (typeof setupAccessibleOverlayDialog === 'function') {
+    closeModal = setupAccessibleOverlayDialog(bd, card, close, heading.textContent, () => {
+      if (typeof settleOutcomeSurfaceMotion === 'function') settleOutcomeSurfaceMotion('achievement-dialog', 'closed');
+      releaseModalScrollLock(bd);
+    });
+  } else {
+    bd.addEventListener('click', e => { if (e.target === bd) closeModal(); });
+  }
+  if (typeof runOutcomeSurfaceMotion === 'function') runOutcomeSurfaceMotion('achievement-dialog','open',bd,card,motionItems);
 }
 
 
@@ -146,22 +180,31 @@ function renderMyCard(){
   const info = el('div', 'my-card-info');
   const nm = el('div', 'my-card-name');
   nm.appendChild(nameFxNode(account, account.name + ' ' + langFlag(account.lang || currentLang)));
+  if (typeof appendTestAdminBadge === 'function') appendTestAdminBadge(nm,account,'card');
   info.appendChild(nm);
-  info.appendChild(el('div', 'my-card-title', title.icon + ' ' + socialTitleName(title) + ' · ' + t('level_short',lv)));
+  const levelText=typeof testAdminLevelShortText === 'function' ? testAdminLevelShortText(account,lv) : t('level_short',lv);
+  info.appendChild(el('div', 'my-card-title', title.icon + ' ' + socialTitleName(title) + ' · ' + levelText));
   head.appendChild(info);
   card.appendChild(head);
   // 数据行
   const stats = el('div', 'my-card-stats');
   const stat = (icon, label, val) => {
     const s = el('div', 'my-card-stat');
-    s.appendChild(el('span', null, icon));
-    const v = el('span', 'my-card-stat-val', String(val));
-    s.appendChild(v);
-    s.appendChild(el('span', 'my-card-stat-label', label));
+    const currency = icon === '__currency__' && typeof currencyAmountNode === 'function';
+    if (currency) s.appendChild(currencyAmountNode(val,{sizeClass:'sm',formattedText:typeof val === 'string' ? val : null,valueClass:'my-card-stat-val'}));
+    else {
+      s.appendChild(el('span', null, icon));
+      s.appendChild(el('span', 'my-card-stat-val', String(val)));
+    }
+    const labelNode = el('span', 'my-card-stat-label', label);
+    if (currency) labelNode.setAttribute('aria-hidden','true');
+    s.appendChild(labelNode);
     stats.appendChild(s);
   };
-  stat('💵', t('stat_currency'), p.coins || 0);
-  stat('⭐', 'XP', p.xp || 0);
+  const balance=typeof testAdminCurrencyText === 'function' ? testAdminCurrencyText(account) : (p.coins || 0);
+  const progressValue=typeof testAdminLevelValue === 'function' ? testAdminLevelValue(account,p.xp || 0) : (p.xp || 0);
+  stat('__currency__', t('stat_currency'), balance);
+  stat('⭐', 'XP', progressValue);
   const earnedCount = achievementsEarned(p).length;
   stat('🏆', t('stat_achievements'), earnedCount);
   stat('🔥', t('stat_streak'), p.streak || 0);
@@ -171,7 +214,9 @@ function renderMyCard(){
   const tasks = dailyProgress(p);
   const doneTasks = tasks.filter(t => t.done).length;
   const taskRow = el('div', 'my-card-tasks');
-  taskRow.appendChild(el('div', 'my-card-tasks-title', '📋 ' + t('daily_tasks_progress', doneTasks, tasks.length)));
+  const taskTitle=el('div','my-card-tasks-title');
+  if(typeof progressionFeedbackNode==='function')taskTitle.appendChild(progressionFeedbackNode('task',{size:'96',className:'my-card-task-art'}));else taskTitle.appendChild(el('span',null,'📋'));
+  taskTitle.appendChild(el('span',null,t('daily_tasks_progress',doneTasks,tasks.length)));taskRow.appendChild(taskTitle);
   const taskBar = el('div', 'my-card-taskbar');
   tasks.slice(0, 3).forEach(task => {
     const item = el('div', 'my-card-task' + (task.done ? ' done' : ''));
@@ -200,7 +245,7 @@ function renderMyCard(){
       } else {
         item.appendChild(elRaw('span', null, m.name));
       }
-      item.appendChild(el('span', 'my-card-mate-info', t('games_count', m.count)));
+      item.appendChild(el('span', 'my-card-mate-info', formatGamesCount(m.count)));
       item.addEventListener('click', () => openProfileModal(m.uid));
       list.appendChild(item);
     });

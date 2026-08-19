@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-08-15T10:14:03+09:00",
+  "captureProvenance": "Read-only DOM and layout observation in the connected local Codex in-app browser against http://127.0.0.1:8090/#/games; no production or cross-device claim.",
+  "result": "LOCAL_SINGLE_BROWSER_PARTIAL_EVIDENCE",
+  "route": "#/games",
+  "viewport": [697, 726],
+  "layout": {
+    "documentScrollWidth": 682,
+    "horizontalOverflowPixels": 0,
+    "documentScrollHeight": 1373
+  },
+  "visibleContract": {
+    "mainNavigation": ["首页", "游戏", "Playline", "主页"],
+    "gamesViewTabs": ["选择游戏", "房间大厅"],
+    "gameCardCount": 6,
+    "gameIdsVisible": ["gomoku", "ludo", "monopoly", "tank", "tetris", "xiangqi"],
+    "aiDifficultyCount": 3,
+    "directMessageEntryVisible": true,
+    "settingsEntryVisible": true
+  },
+  "notExecuted": [
+    "second desktop browser",
+    "physical Android/iPhone/Tablet",
+    "physical touch and PWA restore",
+    "real network shaping",
+    "forced-colors and low-end performance",
+    "production latest-build verification"
+  ],
+  "gate": "GATE-DEVICE-BROWSER-NETWORK",
+  "gateStatus": "BLOCKED"
+}

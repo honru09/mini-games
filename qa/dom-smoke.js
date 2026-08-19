@@ -9,6 +9,7 @@ const MANIFEST_PATH = path.join(ROOT, 'public', 'assets', 'manifests', 'asset_ma
 const html = fs.readFileSync(HTML_PATH, 'utf8');
 const script = html.match(/<script>([\s\S]*)<\/script>/)[1];
 const assetManifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf8'));
+const zhLocale = JSON.parse(fs.readFileSync(path.join(ROOT, 'public', 'locales', 'zh-CN.json'), 'utf8'));
 
 /* ---------- DOM 桩 ---------- */
 function makeCtxProxy(){
@@ -47,6 +48,7 @@ function makeEl(tag){
     addEventListener(type, fn){ (this._listeners[type] = this._listeners[type] || []).push(fn); },
     dispatch(type, ev){ (this._listeners[type] || []).forEach(fn => fn(ev || {})); },
     appendChild(c){ c.parent = this; this.children.push(c); return c; },
+    prepend(c){ c.parent = this; this.children.unshift(c); },
     remove(){
       if (!this.parent) return;
       const i = this.parent.children.indexOf(this);
@@ -76,8 +78,11 @@ function makeEl(tag){
     set(v){ classes.clear(); String(v).split(/\s+/).filter(Boolean).forEach(c => classes.add(c)); },
   });
   e.classList = {
-    add: c => classes.add(c),
-    remove: c => classes.delete(c),
+    // Native DOMTokenList accepts multiple tokens. Wave A deliberately marks a
+    // surface with its shared and release classes in one call, so the smoke DOM
+    // must model that browser contract rather than silently dropping the latter.
+    add: (...items) => items.forEach(c => classes.add(c)),
+    remove: (...items) => items.forEach(c => classes.delete(c)),
     toggle: (c, force) => {
       const on = force === undefined ? !classes.has(c) : !!force;
       if (on) classes.add(c); else classes.delete(c);
@@ -205,7 +210,8 @@ async function main(){
   /* 大厅渲染 */
   const initialTitle = html.match(/<title[^>]*data-i18n=["']app_title["'][^>]*>([^<]*)<\/title>/i);
   check('首屏静态标题与中文词典一致且不泄漏已删除玩法',
-    !!initialTitle && initialTitle[1].trim() === '小游戏合集');
+    !!initialTitle && initialTitle[1].trim() === zhLocale.app_title &&
+    !/(弹珠|跳棋|斗兽棋|贪吃蛇|井字棋)/.test(initialTitle[1]));
   check('大厅渲染 6 张精选游戏卡', $('game-grid').children.length === 6);
   check('运行时只注册 6 个精选游戏 ID',
     JSON.stringify(Object.keys(G.GAMES)) === JSON.stringify(['gomoku','ludo','monopoly','tank','tetris','xiangqi']));
@@ -226,7 +232,7 @@ async function main(){
   const englishAvatarAlt = G.avatarAltForQa(100);
   check('英文切换覆盖 Avatar v2 替代文本', !!englishAvatarAlt && !/[\u3400-\u9fff]/.test(englishAvatarAlt) && !/shop_item_/.test(englishAvatarAlt));
   G.aiMode = true; G.renderPersonaRow();
-  check('英文覆盖 AI 角色选择与大厅动态文字', untranslatedUi([$('game-grid'),$('persona-row'),$('my-card')]).length === 0);
+  check('英文覆盖 AI 难度选择与大厅动态文字', untranslatedUi([$('game-grid'),$('persona-row'),$('my-card')]).length === 0);
   G.aiMode = false;
   for (const id of ['gomoku','ludo','monopoly','tank','tetris','xiangqi']){
     G.playerCount = 2; G.showGame(id);
@@ -244,7 +250,7 @@ async function main(){
   check('乌克兰语切换覆盖 Avatar v2 替代文本', !!ukrainianAvatarAlt && !/[\u3400-\u9fff]/.test(ukrainianAvatarAlt) && !/shop_item_/.test(ukrainianAvatarAlt));
   check('历史 AI 对手名称按当前语言实时派生', G.aiMateDisplayName('ai_gambler', 'legacy-name') !== englishAiMateName && !/[\u3400-\u9fff]/.test(G.aiMateDisplayName('ai_gambler', 'legacy-name')));
   G.aiMode = true; G.renderPersonaRow();
-  check('乌克兰语覆盖 AI 角色选择与大厅动态文字', untranslatedUi([$('game-grid'),$('persona-row'),$('my-card')]).length === 0);
+  check('乌克兰语覆盖 AI 难度选择与大厅动态文字', untranslatedUi([$('game-grid'),$('persona-row'),$('my-card')]).length === 0);
   G.aiMode = false;
   for (const id of ['gomoku','ludo','monopoly','tank','tetris','xiangqi']){
     G.playerCount = 2; G.showGame(id);
@@ -274,18 +280,39 @@ async function main(){
   check('asset manifest 的 asset ID 唯一', new Set(manifestIds).size === manifestIds.length);
   check('asset manifest 的 integrated 文件全部存在', integratedPaths.every(file => file.startsWith('public/assets/') && fs.existsSync(path.join(ROOT, ...file.split('/')))));
 
+  // Wave A is default-on and deliberately takes precedence over frozen M0.
+  // Establish that live presentation path first; every M0/legacy assertion below
+  // then explicitly opts out so it continues to exercise its own rollback contract.
+  localStorage.removeItem('mg_art_tabletop_wave_a');
   localStorage.removeItem('mg_art_sticker_m0_v1');
   localStorage.removeItem('mg_art_gomoku_sticker_v1');
+  localStorage.removeItem('mg_art_gomoku_v1');
+  G.playerCount = 2; G.showGame('gomoku');
+  const tabletopDefaultCanvas = area().children[0];
+  check('Tabletop Wave A 默认启用 Cream/Ink 五子棋桌面且规则层仍由 Canvas 绘制',
+    tabletopDefaultCanvas && tabletopDefaultCanvas.tagName === 'CANVAS' &&
+    tabletopDefaultCanvas.classList.contains('tabletop-art-surface') &&
+    tabletopDefaultCanvas.classList.contains('tabletop-art-wave-a') &&
+    tabletopDefaultCanvas.dataset.tabletopSurface === 'wave-a' &&
+    tabletopDefaultCanvas.dataset.tabletopKind === 'gomoku-board' &&
+    tabletopDefaultCanvas.dataset.tabletopArt === 'wave-a' &&
+    tabletopDefaultCanvas.style.backgroundColor === '#F3E5C4' &&
+    !tabletopDefaultCanvas.classList.contains('game-art-v1'));
+
+  // Frozen M0 must still be able to prove its strict dual gate and all legacy
+  // fallbacks. Wave A uses one exact opt-out value, rather than becoming a
+  // hidden third M0 flag.
+  localStorage.setItem('mg_art_tabletop_wave_a','0');
   G.playerCount = 2; G.showGame('gomoku');
   let stickerCanvas = area().children[0];
-  check('M0 五子棋双闸门默认关闭并保留旧木纹', stickerCanvas.dataset.stickerArt === 'disabled' && stickerCanvas.classList.contains('game-art-v1') && !stickerCanvas.classList.contains('game-art-sticker-v1') && !stickerCanvas._stickerAssetProbe);
+  check('M0 五子棋双闸门默认关闭，Wave A 退出后保留旧木纹', stickerCanvas.dataset.stickerArt === 'disabled' && stickerCanvas.classList.contains('game-art-v1') && !stickerCanvas.classList.contains('game-art-sticker-v1') && !stickerCanvas._stickerAssetProbe);
   localStorage.setItem('mg_art_gomoku_sticker_v1','1'); G.showGame('gomoku'); stickerCanvas=area().children[0];
   check('M0 五子棋只有分闸门时仍关闭', stickerCanvas.dataset.stickerArt === 'disabled' && !stickerCanvas._stickerAssetProbe);
   localStorage.removeItem('mg_art_gomoku_sticker_v1'); localStorage.setItem('mg_art_sticker_m0_v1','1'); G.showGame('gomoku'); stickerCanvas=area().children[0];
   check('M0 五子棋只有总闸门时仍关闭', stickerCanvas.dataset.stickerArt === 'disabled' && !stickerCanvas._stickerAssetProbe);
   localStorage.setItem('mg_art_gomoku_sticker_v1','true'); G.showGame('gomoku'); stickerCanvas=area().children[0];
   check('M0 五子棋非严格 1 值不会误开', stickerCanvas.dataset.stickerArt === 'disabled' && !stickerCanvas._stickerAssetProbe);
-  const originalGetItem = localStorage.getItem; localStorage.getItem=()=>{ throw new Error('storage fixture'); }; G.showGame('gomoku'); stickerCanvas=area().children[0]; localStorage.getItem=originalGetItem;
+  const originalGetItem = localStorage.getItem; localStorage.getItem=key=>{ if (key === 'mg_art_tabletop_wave_a') return '0'; throw new Error('storage fixture'); }; G.showGame('gomoku'); stickerCanvas=area().children[0]; localStorage.getItem=originalGetItem;
   check('M0 localStorage 异常时默认关闭并保留旧回退', stickerCanvas.dataset.stickerArt === 'disabled' && stickerCanvas.classList.contains('game-art-v1') && !stickerCanvas._stickerAssetProbe);
   localStorage.setItem('mg_art_gomoku_sticker_v1','1');
   assetManifestMode='404'; G.showGame('gomoku'); stickerCanvas=area().children[0]; await sleep(10);
@@ -338,13 +365,17 @@ async function main(){
   stickerCanvas.dispatch('click',{clientX:(22+7*34),clientY:(22+7*34)});
   check('M0 资源失败期间仍可在中心合法落子', G.game.snapshot().hist.length === 1 && JSON.stringify(G.game.snapshot().hist[0]) === JSON.stringify([7,7]));
   localStorage.removeItem('mg_art_sticker_m0_v1'); localStorage.removeItem('mg_art_gomoku_sticker_v1'); localStorage.removeItem('mg_art_gomoku_v1'); assetManifestMode='ok';
+  G.showGame('gomoku');
+  const tabletopRollbackCanvas = area().children[0];
+  check('Tabletop Wave A 严格关闭后恢复旧木纹 Canvas', tabletopRollbackCanvas && tabletopRollbackCanvas.classList.contains('game-art-v1') && !tabletopRollbackCanvas.classList.contains('tabletop-art-wave-a') && !tabletopRollbackCanvas.dataset.tabletopSurface && !tabletopRollbackCanvas.dataset.tabletopArt);
+  localStorage.removeItem('mg_art_tabletop_wave_a');
 
   localStorage.setItem('mg_art_gomoku_v1', '0');
   G.renderHub();
   const rollbackGomokuCard = $('game-grid').children.find(card => card.dataset.gameId === 'gomoku');
   G.playerCount = 2; G.showGame('gomoku');
   check('五子棋 feature flag 关闭后回退 Emoji 大厅卡', rollbackGomokuCard && !rollbackGomokuCard.classList.contains('has-cover'));
-  check('五子棋 feature flag 关闭后仍可开局', area().children[0] && !area().children[0].classList.contains('game-art-v1'));
+  check('五子棋旧美术 feature flag 关闭后仍可由默认 Wave A 开局', area().children[0] && area().children[0].classList.contains('tabletop-art-wave-a') && !area().children[0].classList.contains('game-art-v1'));
   localStorage.removeItem('mg_art_gomoku_v1');
   G.renderHub();
 
@@ -370,11 +401,19 @@ async function main(){
   }
 
   G.playerCount = 2; G.showGame('gomoku');
-  check('五子棋 Canvas 接入木纹底材且规则层仍由 Canvas 绘制', area().children[0].classList.contains('game-art-v1'));
+  const gomokuTabletopCanvas = area().children[0];
+  check('五子棋默认接入 Tabletop Cream/Ink Canvas，规则层仍由 Canvas 绘制', gomokuTabletopCanvas && gomokuTabletopCanvas.tagName === 'CANVAS' && gomokuTabletopCanvas.classList.contains('tabletop-art-wave-a') && gomokuTabletopCanvas.dataset.tabletopKind === 'gomoku-board' && gomokuTabletopCanvas.dataset.tabletopArt === 'wave-a' && gomokuTabletopCanvas.style.backgroundColor === '#F3E5C4' && !gomokuTabletopCanvas.classList.contains('game-art-v1'));
 
   G.playerCount = 2; G.showGame('tetris');
+  const tetrisLayout = area().querySelector('.tetris-battle-layout');
+  const tetrisMainWell = area().querySelector('.main-board');
+  const tetrisActions = $('game-extra').querySelector('.tetris-actions');
+  const tetrisInitialSnapshot = G.game.snapshot();
+  check('俄罗斯方块本地舞台保留七项触控操作与 18x10 初始快照', tetrisActions && tetrisActions.children.length === 7 && tetrisInitialSnapshot.wells.every(well => well.length === 18 && well.every(row => row.length === 10)));
+  G.game.onRestore(tetrisInitialSnapshot);
+  check('俄罗斯方块状态恢复不替换布局、主井与操作节点', area().querySelector('.tetris-battle-layout') === tetrisLayout && area().querySelector('.main-board') === tetrisMainWell && $('game-extra').querySelector('.tetris-actions') === tetrisActions);
   let tetrisWell = area().querySelector('.tetris-well');
-  check('俄罗斯方块 DOM 井接入玻璃底材与 CSS 精确网格', tetrisWell && tetrisWell.classList.contains('game-art-v1'));
+  check('俄罗斯方块默认接入 Tabletop Cream/Ink 纸质井与 CSS 精确网格', tetrisWell && tetrisWell.classList.contains('tabletop-art-wave-a') && tetrisWell.dataset.tabletopSurface === 'wave-a' && tetrisWell.dataset.tabletopKind === 'tetris-well' && String(tetrisWell.style.backgroundImage || '').includes('rgba(33,25,35,.11)') && !tetrisWell.classList.contains('game-art-v1'));
   G.game.onMove({ piece: 0, x: 0, y: 17, rot: 0 }, 0);
   const tetrisSnapshot = G.game.snapshot();
   const tetrisValues = new Set(tetrisSnapshot.wells.flat(2));
@@ -382,11 +421,16 @@ async function main(){
   const tetrisSnapshotText = JSON.stringify(tetrisSnapshot);
   check('俄罗斯方块快照不写入美术状态', !/(cosmetic|blockSkin|backgroundSkin|presentation)/i.test(tetrisSnapshotText));
 
+  localStorage.setItem('mg_art_tabletop_wave_a', '0');
+  G.showGame('tetris');
+  tetrisWell = area().querySelector('.tetris-well');
+  check('Tabletop Wave A 严格关闭后恢复俄罗斯方块旧玻璃井', tetrisWell && tetrisWell.classList.contains('game-art-v1') && !tetrisWell.classList.contains('tabletop-art-wave-a') && !tetrisWell.dataset.tabletopSurface);
+
   localStorage.setItem('mg_art_tetris_v1', '0');
   G.showGame('tetris');
   tetrisWell = area().querySelector('.tetris-well');
   check('俄罗斯方块 feature flag 关闭后仍可开局并使用 CSS fallback', tetrisWell && !tetrisWell.classList.contains('game-art-v1'));
-  localStorage.removeItem('mg_art_tetris_v1');
+  localStorage.removeItem('mg_art_tetris_v1'); localStorage.removeItem('mg_art_tabletop_wave_a');
 
   /* 不支持的人数组合应被拦截 */
   G.playerCount = 3;
@@ -423,9 +467,11 @@ async function main(){
   check('飞行棋：完成一次起飞/移动', moved);
   check('飞行棋：轨道 52 格', ludoBoard.querySelectorAll('.tcell').length === 52);
   check('飞行棋：移动后骰子按钮重新可用', moved && !diceBtn.disabled);
-  const chipDots = $('player-bar').children.map(c => c.children[0].style.background);
-  check('飞行棋：4 人时玩家颜色正确（红/蓝/绿/黄）',
-    chipDots[0] === '#e5484d' && chipDots[1] === '#3b82f6' && chipDots[2] === '#22a06b' && chipDots[3] === '#f59e0b');
+  const stageSeatColors = $('player-bar').children.map(c => c.style['--stage-seat-color']);
+  const ludoBaseColors = ludoBoard.querySelectorAll('.ludo-base').map(base => base.style.borderColor);
+  check('飞行棋：4 人红/蓝/绿/黄保留在赛桌玩家栏与基地',
+    stageSeatColors[0] === '#e5484d' && stageSeatColors[1] === '#3b82f6' && stageSeatColors[2] === '#22a06b' && stageSeatColors[3] === '#f59e0b' &&
+    ludoBaseColors[0] === '#e5484d' && ludoBaseColors[1] === '#3b82f6' && ludoBaseColors[2] === '#22a06b' && ludoBaseColors[3] === '#f59e0b');
 
   /* 迷你大富翁：走 5 回合不报错 */
   G.playerCount = 3; G.showGame('monopoly');
@@ -554,15 +600,18 @@ async function main(){
     online.pendingSoloClaims = [];
   }
 
-  // AI 角色化（Phase 4）
-  check('AI_PERSONAS 定义 5 个角色', G.personas && G.personas.length === 5);
-  const personaBefore = G.currentPersona.id;
-  G.setAiPersona('gambler');
-  check('切换 AI 角色生效', G.currentPersona.id === 'gambler' && G.currentPersona === G.personas.find(persona => persona.id === 'gambler'));
-  G.setAiPersona(personaBefore);
+  // AI 对手只暴露三档强度；旧 persona 符号仅作跨模块兼容。
+  check('AI 难度目录定义简单、普通、困难三档',
+    G.personas && JSON.stringify(G.personas.map(item => item.id)) === JSON.stringify(['easy','normal','hard']));
+  const difficultyBefore = G.currentPersona.difficulty;
+  G.setAiPersona('hard');
+  check('切换困难 AI 生效且兼容层不恢复人格',
+    G.currentPersona.id === 'teacher' && G.currentPersona.difficulty === 'hard');
+  G.setAiPersona(difficultyBefore);
   G.aiMode = true;
   G.renderPersonaRow();
-  check('人机模式渲染角色选择卡', $('persona-row').children.length >= 2 && $('persona-row').querySelectorAll('.persona-card').length === 5);
+  check('人机模式渲染三张难度选择卡',
+    $('persona-row').children.length >= 2 && $('persona-row').querySelectorAll('.ai-difficulty-card').length === 3);
   G.aiMode = false;
   G.renderPersonaRow();
   check('联机模式隐藏 AI 角色选择', $('persona-row').classList.contains('hidden'));
@@ -578,9 +627,10 @@ async function main(){
       const node = stBd.querySelector(`[data-i18n="${key}"]`);
       return node && node.textContent;
     };
-    check('设置弹层内切换语言后标题与分区即时更新',
+    check('设置弹层内切换语言后标题与分区即时更新且无连接服务入口',
       localizedSetting('settings') === 'Settings' && localizedSetting('theme') === 'Theme' &&
-      localizedSetting('language') === 'Language' && localizedSetting('server_config') === 'Online Server' && localizedSetting('close') === 'Close');
+      localizedSetting('language') === 'Language' && localizedSetting('close') === 'Close' &&
+      localizedSetting('server_config') === null);
     check('设置页只持久化实际加载成功的账号语言', JSON.parse(localStorage.getItem('mg_account')).lang === 'en-US');
     const chineseButton = stBd.querySelectorAll('button').find(button => button.dataset.langCode === 'zh-CN');
     if (chineseButton) { chineseButton.dispatch('click'); await sleep(20); }

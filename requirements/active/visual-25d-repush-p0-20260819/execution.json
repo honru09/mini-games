@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "task": "visual-25d-repush-p0-20260819",
+  "recordedAt": "2026-08-19T12:02:00+09:00",
+  "implemented": [
+    "2.5D 生产方向已由用户指南裁决并写入总指挥/路由",
+    "DepthScene 三层 token 与精确 0 回滚",
+    "CameraSystem 八模式、Honru 空间行为、页面转场与 GameStage 语义事件接入构建",
+    "GSAP lazy timeline 适配器、性能/reduced-motion/销毁合同",
+    "Ghost3D 六款合同改为冻结可选层，不再阻塞 2.5D"
+  ],
+  "verified": [
+    "npm run test:visual-25d",
+    "node --check public/src/core/23-depth-scene.js",
+    "node --check public/src/core/25-camera-system.js",
+    "node --check public/src/core/26-ghost-mascot-motion.js",
+    "node --check public/src/core/27-page-transition.js",
+    "node --check public/src/core/28-game-stage-2_5d.js",
+    "node qa/ghost3d-default-on-contract.js (冻结可选层合同)"
+  ],
+  "pending": [
+    "当前构建稳定后的浏览器可见 Demo",
+    "第二浏览器/真机/真实网络与低端性能",
+    "六款推广和美术分层资产族消费",
+    "commit/push/Pages/Render/生产发布"
+  ],
+  "scopeLimit": "表现层与动效，不改变 Rule/Authority/Protocol/AI/Reward/Replay/Social/Persistence",
+  "release": "LOCAL_ONLY / NOT_RELEASED"
+}

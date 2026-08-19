@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "taskId": "ui-repair-p08-shop-layout-p0-20260810",
+  "status": "completed_local",
+  "completed": ["scope freeze", "shop density and try-on hierarchy", "responsive/static contract", "quality gates", "full npm test"],
+  "pending": ["in-app localhost browser permission", "second desktop browser", "Android/iPhone/Tablet", "real network shaping", "user release command"],
+  "verification": {
+    "specialized": ["node qa/ui-shop-layout-contract.js", "npm run test:i18n", "node qa/dom-smoke.js", "npm run quality:gates"],
+    "full": "npm test (130.3s, exit 0)",
+    "buildBytes": 920833,
+    "buildSha256": "65300B75CA057403B413B412E9A4F3FF1F9FA6CF541410D5A8A203F6D391D429"
+  },
+  "browser": {
+    "status": "blocked",
+    "reason": "in-app Browser localhost access blocked by saved host permission; no bypass attempted"
+  },
+  "review": {"status":"master_only","terraMax":"created but returned unreadable encrypted payload; no conclusion or code adopted"},
+  "published": false
+}

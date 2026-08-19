@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "taskId": "gomoku-ghost3d-vertical-slice-p0-20260812",
+  "requirement": "TECH-049",
+  "status": "VISUAL_VERIFIED_SINGLE_BROWSER_PARTIAL_GATE_EVIDENCE",
+  "environment": {
+    "browser": "Codex in-app Chromium",
+    "url": "http://localhost:8080/#/games",
+    "build": {
+      "characters": 1362068,
+      "filesystemBytes": 1376602,
+      "sha256": "BFBD2109B77B1F4C5E070DAB6B98C806E25AD621ACBE3E2E83AD5C5FB7130CAE"
+    },
+    "account": "existing local formal QA account; credentials not recorded"
+  },
+  "verified": [
+    "default-off flag removed: no Ghost3D slot; Wave B Canvas retained with role=grid and tabindex=0",
+    "temporary exact opt-in with BALANCED quality: one Ghost3D slot, first successful render ready=true, private Three canvas present",
+    "visible procedural 15x15 perspective board and physical black/white stones after pointer/Raycast selection",
+    "selection travelled through existing Gomoku logic; H7 UI feedback and AI turn were visible",
+    "CDP prefers-reduced-motion=reduce retained a ready Three slot, Wave B Canvas and touch controls; a local H8 selection remained playable",
+    "console warn/error = 0 during opt-in and fallback checks"
+  ],
+  "revertedAfterTest": [
+    "removed mg_ghost3d_gomoku_v1",
+    "removed mg_ghost3d_gomoku_quality_v1",
+    "cleared CDP reduced-motion emulation",
+    "navigated back to normal local Games route"
+  ],
+  "notExecuted": [
+    "second desktop browser",
+    "physical Android/iPhone/Tablet",
+    "real latency/jitter/loss/reordering",
+    "real frame time/FPS/GPU-memory/thermal/dispose measurement",
+    "GLB/texture/approved runtime art",
+    "Reviewer B/IP Review/user Golden Set",
+    "commit/push/Pages/Render"
+  ],
+  "boundary": "A single local browser evidence entry only. TECH-049 remains partial; GATE-DEVICE-BROWSER-NETWORK and GATE-ART-GOLDEN-SET remain BLOCKED."
+}

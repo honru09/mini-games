@@ -1,0 +1,3920 @@
+{
+  "schemaVersion": 1,
+  "createdAt": "2026-08-14T10:47:22+09:00",
+  "mode": "REVIEW_ONLY_DERIVED_CONTACT_SHEETS",
+  "families": [
+    {
+      "id": "honru-v2",
+      "root": "art-source/brand/ghost-game/honru/v2",
+      "fileCount": 10,
+      "visualFileCount": 7,
+      "rasterRenderedCount": 7,
+      "contactSheet": "requirements/active/art-approval-matrix-p1-20260814/evidence/original-honru-v2-all-images-contact-sheet.jpg",
+      "contactSheetSha256": "746effc0ea85166f78965b34db437fb741702825d434ee19cb45b0b656e802fc",
+      "files": [
+        {
+          "path": "art-source/brand/ghost-game/honru/v2/chroma/honru-character-master-v2-chroma-draft-v1.png",
+          "bytes": 1107894,
+          "sha256": "1f4a02bfbce503fd91cb0228e7da6dff4069443cdfeda6bf17ba9ccf301790eb",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/v2/derived/honru-character-master-v2-192px-draft-v1.png",
+          "bytes": 21813,
+          "sha256": "8059b7e0b19a160c44055d397b17061cdd021bb7048722617ad5d7717db49ea5",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/v2/derived/honru-character-master-v2-44px-draft-v1.png",
+          "bytes": 2742,
+          "sha256": "80bbe44cacc3a2b000d221da954cce284c4c60cdaaea0eba14557bdc07e06292",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/v2/derived/honru-character-master-v2-64px-draft-v1.png",
+          "bytes": 4669,
+          "sha256": "3af5e9bcaa3a20e44c28dc177075256d59560ea2b7fb6720bcd745c64bd3e588",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/v2/derived/honru-character-master-v2-96px-draft-v1.png",
+          "bytes": 8720,
+          "sha256": "dc4f9b61931149494bb0cca8809f319f2180278312024d23379d085de6c4302e",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/v2/honru-character-master-v2-flat-transparent-draft-v1.png",
+          "bytes": 40223,
+          "sha256": "9b9bd08f109ef83ba1da19007a6965d3caed3e3fa66b2a9a027c0120044fe971",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/v2/honru-character-master-v2-transparent-draft-v1.png",
+          "bytes": 558895,
+          "sha256": "08e7213a1f732140e0d6c6c61e09652526445f654494afc544f6e1052d2ca8a6",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/v2/IP_REVIEW_draft-v1.md",
+          "bytes": 1635,
+          "sha256": "4aec96e5fb75a79b4c252e83bf46f8ce8e952680a7505c92341f7e1b17c35f62",
+          "extension": ".md",
+          "textRead": true,
+          "lines": 32,
+          "headings": 4
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/v2/PROMPT_AND_PROVENANCE_v2.md",
+          "bytes": 6052,
+          "sha256": "fa4543c41f0e1946a06a19fe8464be9cfad48ed6787fcf7835170d16f9b70e90",
+          "extension": ".md",
+          "textRead": true,
+          "lines": 92,
+          "headings": 7
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/v2/TECHNICAL_REVIEW_draft-v1.md",
+          "bytes": 1969,
+          "sha256": "81c96e5f4d52fc9e926cecf9e2ae2984f43f9170bd38f3e101fa632abc62f3af",
+          "extension": ".md",
+          "textRead": true,
+          "lines": 35,
+          "headings": 4
+        }
+      ],
+      "records": [
+        {
+          "path": "art-source/brand/ghost-game/honru/v2/chroma/honru-character-master-v2-chroma-draft-v1.png",
+          "bytes": 1107894,
+          "sha256": "1f4a02bfbce503fd91cb0228e7da6dff4069443cdfeda6bf17ba9ccf301790eb",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/v2/derived/honru-character-master-v2-192px-draft-v1.png",
+          "bytes": 21813,
+          "sha256": "8059b7e0b19a160c44055d397b17061cdd021bb7048722617ad5d7717db49ea5",
+          "extension": ".png",
+          "width": 192,
+          "height": 192,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/v2/derived/honru-character-master-v2-44px-draft-v1.png",
+          "bytes": 2742,
+          "sha256": "80bbe44cacc3a2b000d221da954cce284c4c60cdaaea0eba14557bdc07e06292",
+          "extension": ".png",
+          "width": 44,
+          "height": 44,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/v2/derived/honru-character-master-v2-64px-draft-v1.png",
+          "bytes": 4669,
+          "sha256": "3af5e9bcaa3a20e44c28dc177075256d59560ea2b7fb6720bcd745c64bd3e588",
+          "extension": ".png",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/v2/derived/honru-character-master-v2-96px-draft-v1.png",
+          "bytes": 8720,
+          "sha256": "dc4f9b61931149494bb0cca8809f319f2180278312024d23379d085de6c4302e",
+          "extension": ".png",
+          "width": 96,
+          "height": 96,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/v2/honru-character-master-v2-flat-transparent-draft-v1.png",
+          "bytes": 40223,
+          "sha256": "9b9bd08f109ef83ba1da19007a6965d3caed3e3fa66b2a9a027c0120044fe971",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/v2/honru-character-master-v2-transparent-draft-v1.png",
+          "bytes": 558895,
+          "sha256": "08e7213a1f732140e0d6c6c61e09652526445f654494afc544f6e1052d2ca8a6",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        }
+      ]
+    },
+    {
+      "id": "honru-cleanup",
+      "root": "art-source/brand/ghost-game/honru/cleanup-candidate-v1",
+      "fileCount": 10,
+      "visualFileCount": 6,
+      "rasterRenderedCount": 6,
+      "contactSheet": "requirements/active/art-approval-matrix-p1-20260814/evidence/original-honru-cleanup-all-images-contact-sheet.jpg",
+      "contactSheetSha256": "89cd94a856f2a7b3fbf7b92e79e2e30195b0d3daac3c7b1c83fc7750937c3bf5",
+      "files": [
+        {
+          "path": "art-source/brand/ghost-game/honru/cleanup-candidate-v1/alpha/honru-cleanup-candidate-v1-alpha.png",
+          "bytes": 574703,
+          "sha256": "33470dd91bed1961cc99f8b30f36bd5872e0e214c1ceb43900b80b9aae90829c",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/cleanup-candidate-v1/chroma/honru-cleanup-candidate-v1-chroma.png",
+          "bytes": 1112456,
+          "sha256": "47219517f91f7e2655005ea9e0b9f6c46e900490d9f650ef06fc8fbba2646402",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/cleanup-candidate-v1/derived/honru-cleanup-candidate-v1-192px.png",
+          "bytes": 31703,
+          "sha256": "7b4e11517bb678c19250f3b9545dad740b9e214bd3db697d00178e66111a6ee0",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/cleanup-candidate-v1/derived/honru-cleanup-candidate-v1-44px.png",
+          "bytes": 2935,
+          "sha256": "e7682102dd8ca0e9e6ee0b5d3769b2673e8f5bf76a37921bdc02cc1aa1fb4876",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/cleanup-candidate-v1/derived/honru-cleanup-candidate-v1-64px.png",
+          "bytes": 5420,
+          "sha256": "f4d14f917ad3a21381efa547ee140ec85f7ed6b047959c12733075da096ccff2",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/cleanup-candidate-v1/derived/honru-cleanup-candidate-v1-96px.png",
+          "bytes": 10517,
+          "sha256": "baa02ecea487a3a75ae86752a8b6856483f16361720e7137b0faf966f0fa0258",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/cleanup-candidate-v1/GOLDEN_SET_DECISION_PENDING.md",
+          "bytes": 903,
+          "sha256": "9dddf23e03a4b0252cdde00a099b8bc4fb9366db68647446aebedca57b8b89f1",
+          "extension": ".md",
+          "textRead": true,
+          "lines": 16,
+          "headings": 1
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/cleanup-candidate-v1/IP_REVIEW_Reviewer_B_PENDING.md",
+          "bytes": 1007,
+          "sha256": "f76326adbcd9c6ee0f351c474413ebeaea9c76b5e14d27f06eaae30245f769ec",
+          "extension": ".md",
+          "textRead": true,
+          "lines": 32,
+          "headings": 3
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/cleanup-candidate-v1/PROMPT_AND_PROVENANCE.md",
+          "bytes": 2322,
+          "sha256": "e8f97b188c8c79a3680f58cbfc11560a5f6006e66e68e62008eeb7bc1fb16ba9",
+          "extension": ".md",
+          "textRead": true,
+          "lines": 26,
+          "headings": 3
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/cleanup-candidate-v1/TECHNICAL_REVIEW_Reviewer_A.md",
+          "bytes": 694,
+          "sha256": "7faf74dc6561c736ce5b09f849c10f0d0c8380552c45713526ed0746e0370ad2",
+          "extension": ".md",
+          "textRead": true,
+          "lines": 7,
+          "headings": 1
+        }
+      ],
+      "records": [
+        {
+          "path": "art-source/brand/ghost-game/honru/cleanup-candidate-v1/alpha/honru-cleanup-candidate-v1-alpha.png",
+          "bytes": 574703,
+          "sha256": "33470dd91bed1961cc99f8b30f36bd5872e0e214c1ceb43900b80b9aae90829c",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/cleanup-candidate-v1/chroma/honru-cleanup-candidate-v1-chroma.png",
+          "bytes": 1112456,
+          "sha256": "47219517f91f7e2655005ea9e0b9f6c46e900490d9f650ef06fc8fbba2646402",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/cleanup-candidate-v1/derived/honru-cleanup-candidate-v1-192px.png",
+          "bytes": 31703,
+          "sha256": "7b4e11517bb678c19250f3b9545dad740b9e214bd3db697d00178e66111a6ee0",
+          "extension": ".png",
+          "width": 192,
+          "height": 192,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/cleanup-candidate-v1/derived/honru-cleanup-candidate-v1-44px.png",
+          "bytes": 2935,
+          "sha256": "e7682102dd8ca0e9e6ee0b5d3769b2673e8f5bf76a37921bdc02cc1aa1fb4876",
+          "extension": ".png",
+          "width": 44,
+          "height": 44,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/cleanup-candidate-v1/derived/honru-cleanup-candidate-v1-64px.png",
+          "bytes": 5420,
+          "sha256": "f4d14f917ad3a21381efa547ee140ec85f7ed6b047959c12733075da096ccff2",
+          "extension": ".png",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/cleanup-candidate-v1/derived/honru-cleanup-candidate-v1-96px.png",
+          "bytes": 10517,
+          "sha256": "baa02ecea487a3a75ae86752a8b6856483f16361720e7137b0faf966f0fa0258",
+          "extension": ".png",
+          "width": 96,
+          "height": 96,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        }
+      ]
+    },
+    {
+      "id": "honru-states",
+      "root": "art-source/brand/ghost-game/honru/states-v1",
+      "fileCount": 67,
+      "visualFileCount": 64,
+      "rasterRenderedCount": 64,
+      "contactSheet": "requirements/active/art-approval-matrix-p1-20260814/evidence/original-honru-states-all-images-contact-sheet.jpg",
+      "contactSheetSha256": "35a186536f3682d52b5ac8c11cc2c8b549572354d5dcd11fa0949f1b6695f917",
+      "files": [
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/alpha/honru-check-in-alpha-draft-v1.png",
+          "bytes": 587424,
+          "sha256": "68b23a5de2ec5e0d80f794fb8f322794e71d2d45677b68186216a63ab81d9f42",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/alpha/honru-idle-alpha-draft-v1.png",
+          "bytes": 596734,
+          "sha256": "98f7622df877b9634c4604a20ab094c0a34c851f596707f6c32a45291c29eaf5",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/alpha/honru-lose-alpha-draft-v1.png",
+          "bytes": 548425,
+          "sha256": "708ee0a2a684623bae5e944796b57daa73d6f920fd08235e260190d909c6f917",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/alpha/honru-playful-alpha-draft-v1.png",
+          "bytes": 599405,
+          "sha256": "f059529f77da6bcf4671147c50ccee2d3988ff0576c88e04755b0799c91e35ce",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/alpha/honru-recover-alpha-draft-v1.png",
+          "bytes": 573473,
+          "sha256": "c88dfce65ec1110a2384923de827922b6debfea7ce3e03225d6fbb023dc65c01",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/alpha/honru-surprised-alpha-draft-v1.png",
+          "bytes": 545121,
+          "sha256": "54d34d41e47779ddcc41fb869bf5e3d5fa25932ad50fdbbcf628a21452694e82",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/alpha/honru-thinking-alpha-draft-v1.png",
+          "bytes": 563789,
+          "sha256": "da4f39544fcb0ecf49f67ec7ab16abf17699b89670208b655ff366da20dfff87",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/alpha/honru-waiting-invite-alpha-draft-v1.png",
+          "bytes": 651251,
+          "sha256": "1740484043de28d88d2923663f642f30181e4181e4c23850f82e6cdb2beef04e",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/alpha/honru-win-alpha-draft-v1.png",
+          "bytes": 636587,
+          "sha256": "d4ff17e9e956f3d6d400dd03d9dbd80830be2c4e8e245f489c9efb06aa340258",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/chroma/honru-check-in-chroma-draft-v1.png",
+          "bytes": 1128537,
+          "sha256": "a7fee0d0976a000e7786de6e512873ff23a198848b4b7474b7e4dd68050d5464",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/chroma/honru-idle-chroma-draft-v1.png",
+          "bytes": 1105464,
+          "sha256": "53aab1a379153800e949d8d19ddfb8240ec609a6c61e3638ce172be07eb324c2",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/chroma/honru-lose-chroma-draft-v1.png",
+          "bytes": 1093329,
+          "sha256": "cfa65977ed96e16b8b226f3f1705816e319b56fa87ce8404649fb032debe5121",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/chroma/honru-playful-chroma-draft-v1.png",
+          "bytes": 1116107,
+          "sha256": "08e4a5989cfcb2c5665c7e7d0310836385eace5467eacd71bcd4918bc632f98c",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/chroma/honru-recover-chroma-draft-v1.png",
+          "bytes": 1107103,
+          "sha256": "5693e9086b4762592b0def4bb57d893e40e76489bbb921226e7c5b1c3e1a14e7",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/chroma/honru-surprised-chroma-draft-v1.png",
+          "bytes": 1105231,
+          "sha256": "ccad811df1844f8cf60aabfab89e69900f7d00f024ed873d2a48284bb1566749",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/chroma/honru-thinking-chroma-draft-v1.png",
+          "bytes": 1102111,
+          "sha256": "f4c6f8708e778f10ab6602dcf176c3fbbd6a9249c023de7d8698d76d9224b6bb",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/chroma/honru-waiting-invite-chroma-draft-v1.png",
+          "bytes": 1139058,
+          "sha256": "6c4a60df86f6b3a619b9694b0e9de2cb564624ebfb638f0023212d62db11679d",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/chroma/honru-win-chroma-draft-v1.png",
+          "bytes": 1148244,
+          "sha256": "e9f5be26bfc4d3d7bf919a0515b34211cf52f3daa116c9ae4caba76c95b4bd07",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-check-in-flat-draft-v1-192px.png",
+          "bytes": 22736,
+          "sha256": "6df496cd166a8b8b19921932115d5435842bb5d934ac98c0ec6dc5f719f743e9",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-check-in-flat-draft-v1-44px.png",
+          "bytes": 2658,
+          "sha256": "a983256af876119abb4ea0328ece25aea88ffadec157afcd753ff88201036bc2",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-check-in-flat-draft-v1-64px.png",
+          "bytes": 4662,
+          "sha256": "73de9eb3cb242e7adc2400e7156a8201035f591b67c7fbce05d0c3f7bb1080f0",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-check-in-flat-draft-v1-96px.png",
+          "bytes": 8597,
+          "sha256": "3b3c9a96397f8708646681d08047fbc1cb5427aa74811ace16d9f5652df3bded",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-idle-flat-draft-v1-192px.png",
+          "bytes": 21671,
+          "sha256": "7bc2d83151a272ef243299ade80fa7161d3db83e351764e51f4c6435ec3ec5e7",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-idle-flat-draft-v1-44px.png",
+          "bytes": 2837,
+          "sha256": "2c9171b9243deecc39cf91944a6bb362622f00d08ff0ff49c33eb1ab39f3ca15",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-idle-flat-draft-v1-64px.png",
+          "bytes": 4870,
+          "sha256": "1fee5467986c72d3f1a8200fb039ac2f482d6aada39ef37421662e4d1eaa88cb",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-idle-flat-draft-v1-96px.png",
+          "bytes": 8668,
+          "sha256": "5a7840896164e195afcaed072c8c4e7cb94f869798da00abafafd3f239be6bfa",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-lose-flat-draft-v1-192px.png",
+          "bytes": 20694,
+          "sha256": "4fd0805a0ad6d8d973cb9ef7f7fe1018d296f4bae1a1649fe4565c1b7a16f273",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-lose-flat-draft-v1-44px.png",
+          "bytes": 2679,
+          "sha256": "4d1ea850bc3c32f7b00ba7a965a08a29393e0e6f861117fef595d83aa710e478",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-lose-flat-draft-v1-64px.png",
+          "bytes": 4522,
+          "sha256": "1baac5be9c9aaf95ddd4546c2d9934f2f7e4c07f6724d882df519a8f0638b556",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-lose-flat-draft-v1-96px.png",
+          "bytes": 8364,
+          "sha256": "a62bae21197dcd922eb5cef42bce9618b518f03d68ef76ea93a6000bd939015f",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-playful-flat-draft-v1-192px.png",
+          "bytes": 22698,
+          "sha256": "f517e1e0e36e2458eac6df55baa3467684b946763a87b6bafdd24ad217a7a15f",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-playful-flat-draft-v1-44px.png",
+          "bytes": 2868,
+          "sha256": "dc926a35c05377d666de6a2712819da6d6c898a412d2a89c79874304d794f487",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-playful-flat-draft-v1-64px.png",
+          "bytes": 5020,
+          "sha256": "d451b5128dfc775750c646907118fdceda8ef599fb79d879d1ff9cefd9ac1223",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-playful-flat-draft-v1-96px.png",
+          "bytes": 8970,
+          "sha256": "7ed30334e90b5ec95040e23df64d793a144f673fcf33f669b541e5fe2dbd17db",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-recover-flat-draft-v1-192px.png",
+          "bytes": 22078,
+          "sha256": "5795d45b60259e7f451416665d52b96f22b255b98c9e21732cbb61ffd05e83d0",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-recover-flat-draft-v1-44px.png",
+          "bytes": 2730,
+          "sha256": "41885b7bb6636278b1fed09356604135a21b2566da14b769fdac16f078656968",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-recover-flat-draft-v1-64px.png",
+          "bytes": 4692,
+          "sha256": "a706ec237d8be7cb5c9cade38240cc7c75332c1f70135e422222b380ec042a39",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-recover-flat-draft-v1-96px.png",
+          "bytes": 8718,
+          "sha256": "aca3c855572809c74f2d3e3268737da9b80e2492a94d6372834003f01c5c875d",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-surprised-flat-draft-v1-192px.png",
+          "bytes": 21667,
+          "sha256": "c3c7336c73a85290d9527010b6b59f35ffa175469b26d8599897cf60e5e13f20",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-surprised-flat-draft-v1-44px.png",
+          "bytes": 2677,
+          "sha256": "7aed36b0b461a2c695fcc329e563984f5c7aa1a78f55138e381d188b94ee3ccd",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-surprised-flat-draft-v1-64px.png",
+          "bytes": 4542,
+          "sha256": "1519dc382a721f51df31d02d178d57487af57856bfb4d76579613a4b8f40f21e",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-surprised-flat-draft-v1-96px.png",
+          "bytes": 8479,
+          "sha256": "743aa3147ca266d1265436265a19c68a10a7b1b2cc9ad3edaf0b63016c46ebad",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-thinking-flat-draft-v1-192px.png",
+          "bytes": 20823,
+          "sha256": "2bad8ba5bcf1835f572ae3f9f2cbb3081bd49fef3825addc6e58f906f0a627c6",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-thinking-flat-draft-v1-44px.png",
+          "bytes": 2738,
+          "sha256": "9dedc5e91b9dc1737599bc69831c8fa841d464c3adfa16864486c71ab8209b83",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-thinking-flat-draft-v1-64px.png",
+          "bytes": 4589,
+          "sha256": "553e8e3155943b46720558032f03bbc61a308995956bfb2e89651573c3ba36b1",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-thinking-flat-draft-v1-96px.png",
+          "bytes": 8216,
+          "sha256": "5a847e3d283240fcae77b00303dbd9515f7cd8f3a948972a39f6de785338a5ce",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-waiting-invite-flat-draft-v1-192px.png",
+          "bytes": 24050,
+          "sha256": "63a46febe9c0b8bee19074433605d67793cf737c64283d62d3ac7ede74ec33ad",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-waiting-invite-flat-draft-v1-44px.png",
+          "bytes": 3059,
+          "sha256": "9fce6c90dbbb21cd9e273ff3fcefd4fa2513231d72d396e2065a66662c9583d6",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-waiting-invite-flat-draft-v1-64px.png",
+          "bytes": 5291,
+          "sha256": "fc32bba09e00f4ad2838c4917f57a4c32c9e4dffa872843075e711c366f36ffc",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-waiting-invite-flat-draft-v1-96px.png",
+          "bytes": 9483,
+          "sha256": "faff0314df21d9226d31e6df211393f297b2997f0c9a6c81985f6550a863774a",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-win-flat-draft-v1-192px.png",
+          "bytes": 25610,
+          "sha256": "0d6da069e62a9f3b07465d4437dea3b1bba0c8702a446792b7014675a5070fae",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-win-flat-draft-v1-44px.png",
+          "bytes": 3089,
+          "sha256": "76360a50ffe4f9ea335e23be4df346e261a0b44eaeb2de51e6dc27d431973ebb",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-win-flat-draft-v1-64px.png",
+          "bytes": 5319,
+          "sha256": "80fc41749a3265e7c78f1f8c66b475b67d8428beb378c2fa0808caebe6787bcc",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-win-flat-draft-v1-96px.png",
+          "bytes": 9816,
+          "sha256": "8cc6f14da4309f09290ff850ea11cc0744c31c93130a1326a2301495fac9421a",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/flat/honru-check-in-flat-draft-v1.png",
+          "bytes": 39070,
+          "sha256": "b4bebe1c18837211b932cbdbfeb4a98724a8a8c32a4bf1450ed5e1ea61fa357c",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/flat/honru-idle-flat-draft-v1.png",
+          "bytes": 40458,
+          "sha256": "9fd41dce51a01ca079fd93726c95d71315c2636c7fe072913dcccf3bbf9abe27",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/flat/honru-lose-flat-draft-v1.png",
+          "bytes": 36848,
+          "sha256": "295c43d9fb9f8d73eb2bd028d9b335d7c900ae56b11b51be15d981633f94b223",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/flat/honru-playful-flat-draft-v1.png",
+          "bytes": 39479,
+          "sha256": "95b1f423ee77f39755374b93abe22feaced6d6e2b3f171c225d7074a8f2ea1c6",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/flat/honru-recover-flat-draft-v1.png",
+          "bytes": 38492,
+          "sha256": "68f4e7cf54c27d5b2faa140a35d0226f0c52255318eb315d32f0ebe80f985f96",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/flat/honru-surprised-flat-draft-v1.png",
+          "bytes": 37120,
+          "sha256": "87d9cf0c8232049108ca6cf1be1e70c08906bbcbad7e88caf09c8f2295eab432",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/flat/honru-thinking-flat-draft-v1.png",
+          "bytes": 37416,
+          "sha256": "d28b589e13e01539696161af1ce75478d6b8e111f30182ffc23b15396256e81e",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/flat/honru-waiting-invite-flat-draft-v1.png",
+          "bytes": 43720,
+          "sha256": "577a91ba467ff11e6c56ae19d827c070c5d7756856dd5abd446a877651f23d5d",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/flat/honru-win-flat-draft-v1.png",
+          "bytes": 46268,
+          "sha256": "55449a877843da04c1386302d965e45b3ced6cae55a8a37ac33f160da895c4ac",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/IP_REVIEW_draft-v1.md",
+          "bytes": 941,
+          "sha256": "7f7b62e386ce460d0a9c9f1907473befcacf73c1580a5ebe0324b48ddef595b8",
+          "extension": ".md",
+          "textRead": true,
+          "lines": 18,
+          "headings": 4
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/preview-honru-expression-kit-draft-v1.png",
+          "bytes": 221417,
+          "sha256": "8fd43dd7fb325f0d82624dac48fb8549fbdee4d3b2f9969b93ce91f58b4a5cc9",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/PROMPT_AND_PROVENANCE_v1.md",
+          "bytes": 5476,
+          "sha256": "2061a271da265f1a4478449ba028ffcce7bdc502d37aaa3e1126af92ad883660",
+          "extension": ".md",
+          "textRead": true,
+          "lines": 51,
+          "headings": 6
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/TECHNICAL_REVIEW_draft-v1.md",
+          "bytes": 1195,
+          "sha256": "4a3c94d552d2ef6dcd8e4fb47017243894125791b3793b7aaba18fda6c966922",
+          "extension": ".md",
+          "textRead": true,
+          "lines": 22,
+          "headings": 5
+        }
+      ],
+      "records": [
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/alpha/honru-check-in-alpha-draft-v1.png",
+          "bytes": 587424,
+          "sha256": "68b23a5de2ec5e0d80f794fb8f322794e71d2d45677b68186216a63ab81d9f42",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/alpha/honru-idle-alpha-draft-v1.png",
+          "bytes": 596734,
+          "sha256": "98f7622df877b9634c4604a20ab094c0a34c851f596707f6c32a45291c29eaf5",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/alpha/honru-lose-alpha-draft-v1.png",
+          "bytes": 548425,
+          "sha256": "708ee0a2a684623bae5e944796b57daa73d6f920fd08235e260190d909c6f917",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/alpha/honru-playful-alpha-draft-v1.png",
+          "bytes": 599405,
+          "sha256": "f059529f77da6bcf4671147c50ccee2d3988ff0576c88e04755b0799c91e35ce",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/alpha/honru-recover-alpha-draft-v1.png",
+          "bytes": 573473,
+          "sha256": "c88dfce65ec1110a2384923de827922b6debfea7ce3e03225d6fbb023dc65c01",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/alpha/honru-surprised-alpha-draft-v1.png",
+          "bytes": 545121,
+          "sha256": "54d34d41e47779ddcc41fb869bf5e3d5fa25932ad50fdbbcf628a21452694e82",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/alpha/honru-thinking-alpha-draft-v1.png",
+          "bytes": 563789,
+          "sha256": "da4f39544fcb0ecf49f67ec7ab16abf17699b89670208b655ff366da20dfff87",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/alpha/honru-waiting-invite-alpha-draft-v1.png",
+          "bytes": 651251,
+          "sha256": "1740484043de28d88d2923663f642f30181e4181e4c23850f82e6cdb2beef04e",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/alpha/honru-win-alpha-draft-v1.png",
+          "bytes": 636587,
+          "sha256": "d4ff17e9e956f3d6d400dd03d9dbd80830be2c4e8e245f489c9efb06aa340258",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/chroma/honru-check-in-chroma-draft-v1.png",
+          "bytes": 1128537,
+          "sha256": "a7fee0d0976a000e7786de6e512873ff23a198848b4b7474b7e4dd68050d5464",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/chroma/honru-idle-chroma-draft-v1.png",
+          "bytes": 1105464,
+          "sha256": "53aab1a379153800e949d8d19ddfb8240ec609a6c61e3638ce172be07eb324c2",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/chroma/honru-lose-chroma-draft-v1.png",
+          "bytes": 1093329,
+          "sha256": "cfa65977ed96e16b8b226f3f1705816e319b56fa87ce8404649fb032debe5121",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/chroma/honru-playful-chroma-draft-v1.png",
+          "bytes": 1116107,
+          "sha256": "08e4a5989cfcb2c5665c7e7d0310836385eace5467eacd71bcd4918bc632f98c",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/chroma/honru-recover-chroma-draft-v1.png",
+          "bytes": 1107103,
+          "sha256": "5693e9086b4762592b0def4bb57d893e40e76489bbb921226e7c5b1c3e1a14e7",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/chroma/honru-surprised-chroma-draft-v1.png",
+          "bytes": 1105231,
+          "sha256": "ccad811df1844f8cf60aabfab89e69900f7d00f024ed873d2a48284bb1566749",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/chroma/honru-thinking-chroma-draft-v1.png",
+          "bytes": 1102111,
+          "sha256": "f4c6f8708e778f10ab6602dcf176c3fbbd6a9249c023de7d8698d76d9224b6bb",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/chroma/honru-waiting-invite-chroma-draft-v1.png",
+          "bytes": 1139058,
+          "sha256": "6c4a60df86f6b3a619b9694b0e9de2cb564624ebfb638f0023212d62db11679d",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/chroma/honru-win-chroma-draft-v1.png",
+          "bytes": 1148244,
+          "sha256": "e9f5be26bfc4d3d7bf919a0515b34211cf52f3daa116c9ae4caba76c95b4bd07",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-check-in-flat-draft-v1-192px.png",
+          "bytes": 22736,
+          "sha256": "6df496cd166a8b8b19921932115d5435842bb5d934ac98c0ec6dc5f719f743e9",
+          "extension": ".png",
+          "width": 192,
+          "height": 192,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-check-in-flat-draft-v1-44px.png",
+          "bytes": 2658,
+          "sha256": "a983256af876119abb4ea0328ece25aea88ffadec157afcd753ff88201036bc2",
+          "extension": ".png",
+          "width": 44,
+          "height": 44,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-check-in-flat-draft-v1-64px.png",
+          "bytes": 4662,
+          "sha256": "73de9eb3cb242e7adc2400e7156a8201035f591b67c7fbce05d0c3f7bb1080f0",
+          "extension": ".png",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-check-in-flat-draft-v1-96px.png",
+          "bytes": 8597,
+          "sha256": "3b3c9a96397f8708646681d08047fbc1cb5427aa74811ace16d9f5652df3bded",
+          "extension": ".png",
+          "width": 96,
+          "height": 96,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-idle-flat-draft-v1-192px.png",
+          "bytes": 21671,
+          "sha256": "7bc2d83151a272ef243299ade80fa7161d3db83e351764e51f4c6435ec3ec5e7",
+          "extension": ".png",
+          "width": 192,
+          "height": 192,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-idle-flat-draft-v1-44px.png",
+          "bytes": 2837,
+          "sha256": "2c9171b9243deecc39cf91944a6bb362622f00d08ff0ff49c33eb1ab39f3ca15",
+          "extension": ".png",
+          "width": 44,
+          "height": 44,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-idle-flat-draft-v1-64px.png",
+          "bytes": 4870,
+          "sha256": "1fee5467986c72d3f1a8200fb039ac2f482d6aada39ef37421662e4d1eaa88cb",
+          "extension": ".png",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-idle-flat-draft-v1-96px.png",
+          "bytes": 8668,
+          "sha256": "5a7840896164e195afcaed072c8c4e7cb94f869798da00abafafd3f239be6bfa",
+          "extension": ".png",
+          "width": 96,
+          "height": 96,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-lose-flat-draft-v1-192px.png",
+          "bytes": 20694,
+          "sha256": "4fd0805a0ad6d8d973cb9ef7f7fe1018d296f4bae1a1649fe4565c1b7a16f273",
+          "extension": ".png",
+          "width": 192,
+          "height": 192,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-lose-flat-draft-v1-44px.png",
+          "bytes": 2679,
+          "sha256": "4d1ea850bc3c32f7b00ba7a965a08a29393e0e6f861117fef595d83aa710e478",
+          "extension": ".png",
+          "width": 44,
+          "height": 44,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-lose-flat-draft-v1-64px.png",
+          "bytes": 4522,
+          "sha256": "1baac5be9c9aaf95ddd4546c2d9934f2f7e4c07f6724d882df519a8f0638b556",
+          "extension": ".png",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-lose-flat-draft-v1-96px.png",
+          "bytes": 8364,
+          "sha256": "a62bae21197dcd922eb5cef42bce9618b518f03d68ef76ea93a6000bd939015f",
+          "extension": ".png",
+          "width": 96,
+          "height": 96,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-playful-flat-draft-v1-192px.png",
+          "bytes": 22698,
+          "sha256": "f517e1e0e36e2458eac6df55baa3467684b946763a87b6bafdd24ad217a7a15f",
+          "extension": ".png",
+          "width": 192,
+          "height": 192,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-playful-flat-draft-v1-44px.png",
+          "bytes": 2868,
+          "sha256": "dc926a35c05377d666de6a2712819da6d6c898a412d2a89c79874304d794f487",
+          "extension": ".png",
+          "width": 44,
+          "height": 44,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-playful-flat-draft-v1-64px.png",
+          "bytes": 5020,
+          "sha256": "d451b5128dfc775750c646907118fdceda8ef599fb79d879d1ff9cefd9ac1223",
+          "extension": ".png",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-playful-flat-draft-v1-96px.png",
+          "bytes": 8970,
+          "sha256": "7ed30334e90b5ec95040e23df64d793a144f673fcf33f669b541e5fe2dbd17db",
+          "extension": ".png",
+          "width": 96,
+          "height": 96,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-recover-flat-draft-v1-192px.png",
+          "bytes": 22078,
+          "sha256": "5795d45b60259e7f451416665d52b96f22b255b98c9e21732cbb61ffd05e83d0",
+          "extension": ".png",
+          "width": 192,
+          "height": 192,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-recover-flat-draft-v1-44px.png",
+          "bytes": 2730,
+          "sha256": "41885b7bb6636278b1fed09356604135a21b2566da14b769fdac16f078656968",
+          "extension": ".png",
+          "width": 44,
+          "height": 44,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-recover-flat-draft-v1-64px.png",
+          "bytes": 4692,
+          "sha256": "a706ec237d8be7cb5c9cade38240cc7c75332c1f70135e422222b380ec042a39",
+          "extension": ".png",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-recover-flat-draft-v1-96px.png",
+          "bytes": 8718,
+          "sha256": "aca3c855572809c74f2d3e3268737da9b80e2492a94d6372834003f01c5c875d",
+          "extension": ".png",
+          "width": 96,
+          "height": 96,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-surprised-flat-draft-v1-192px.png",
+          "bytes": 21667,
+          "sha256": "c3c7336c73a85290d9527010b6b59f35ffa175469b26d8599897cf60e5e13f20",
+          "extension": ".png",
+          "width": 192,
+          "height": 192,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-surprised-flat-draft-v1-44px.png",
+          "bytes": 2677,
+          "sha256": "7aed36b0b461a2c695fcc329e563984f5c7aa1a78f55138e381d188b94ee3ccd",
+          "extension": ".png",
+          "width": 44,
+          "height": 44,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-surprised-flat-draft-v1-64px.png",
+          "bytes": 4542,
+          "sha256": "1519dc382a721f51df31d02d178d57487af57856bfb4d76579613a4b8f40f21e",
+          "extension": ".png",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-surprised-flat-draft-v1-96px.png",
+          "bytes": 8479,
+          "sha256": "743aa3147ca266d1265436265a19c68a10a7b1b2cc9ad3edaf0b63016c46ebad",
+          "extension": ".png",
+          "width": 96,
+          "height": 96,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-thinking-flat-draft-v1-192px.png",
+          "bytes": 20823,
+          "sha256": "2bad8ba5bcf1835f572ae3f9f2cbb3081bd49fef3825addc6e58f906f0a627c6",
+          "extension": ".png",
+          "width": 192,
+          "height": 192,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-thinking-flat-draft-v1-44px.png",
+          "bytes": 2738,
+          "sha256": "9dedc5e91b9dc1737599bc69831c8fa841d464c3adfa16864486c71ab8209b83",
+          "extension": ".png",
+          "width": 44,
+          "height": 44,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-thinking-flat-draft-v1-64px.png",
+          "bytes": 4589,
+          "sha256": "553e8e3155943b46720558032f03bbc61a308995956bfb2e89651573c3ba36b1",
+          "extension": ".png",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-thinking-flat-draft-v1-96px.png",
+          "bytes": 8216,
+          "sha256": "5a847e3d283240fcae77b00303dbd9515f7cd8f3a948972a39f6de785338a5ce",
+          "extension": ".png",
+          "width": 96,
+          "height": 96,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-waiting-invite-flat-draft-v1-192px.png",
+          "bytes": 24050,
+          "sha256": "63a46febe9c0b8bee19074433605d67793cf737c64283d62d3ac7ede74ec33ad",
+          "extension": ".png",
+          "width": 192,
+          "height": 192,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-waiting-invite-flat-draft-v1-44px.png",
+          "bytes": 3059,
+          "sha256": "9fce6c90dbbb21cd9e273ff3fcefd4fa2513231d72d396e2065a66662c9583d6",
+          "extension": ".png",
+          "width": 44,
+          "height": 44,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-waiting-invite-flat-draft-v1-64px.png",
+          "bytes": 5291,
+          "sha256": "fc32bba09e00f4ad2838c4917f57a4c32c9e4dffa872843075e711c366f36ffc",
+          "extension": ".png",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-waiting-invite-flat-draft-v1-96px.png",
+          "bytes": 9483,
+          "sha256": "faff0314df21d9226d31e6df211393f297b2997f0c9a6c81985f6550a863774a",
+          "extension": ".png",
+          "width": 96,
+          "height": 96,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-win-flat-draft-v1-192px.png",
+          "bytes": 25610,
+          "sha256": "0d6da069e62a9f3b07465d4437dea3b1bba0c8702a446792b7014675a5070fae",
+          "extension": ".png",
+          "width": 192,
+          "height": 192,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-win-flat-draft-v1-44px.png",
+          "bytes": 3089,
+          "sha256": "76360a50ffe4f9ea335e23be4df346e261a0b44eaeb2de51e6dc27d431973ebb",
+          "extension": ".png",
+          "width": 44,
+          "height": 44,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-win-flat-draft-v1-64px.png",
+          "bytes": 5319,
+          "sha256": "80fc41749a3265e7c78f1f8c66b475b67d8428beb378c2fa0808caebe6787bcc",
+          "extension": ".png",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/derived/honru-win-flat-draft-v1-96px.png",
+          "bytes": 9816,
+          "sha256": "8cc6f14da4309f09290ff850ea11cc0744c31c93130a1326a2301495fac9421a",
+          "extension": ".png",
+          "width": 96,
+          "height": 96,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/flat/honru-check-in-flat-draft-v1.png",
+          "bytes": 39070,
+          "sha256": "b4bebe1c18837211b932cbdbfeb4a98724a8a8c32a4bf1450ed5e1ea61fa357c",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/flat/honru-idle-flat-draft-v1.png",
+          "bytes": 40458,
+          "sha256": "9fd41dce51a01ca079fd93726c95d71315c2636c7fe072913dcccf3bbf9abe27",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/flat/honru-lose-flat-draft-v1.png",
+          "bytes": 36848,
+          "sha256": "295c43d9fb9f8d73eb2bd028d9b335d7c900ae56b11b51be15d981633f94b223",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/flat/honru-playful-flat-draft-v1.png",
+          "bytes": 39479,
+          "sha256": "95b1f423ee77f39755374b93abe22feaced6d6e2b3f171c225d7074a8f2ea1c6",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/flat/honru-recover-flat-draft-v1.png",
+          "bytes": 38492,
+          "sha256": "68f4e7cf54c27d5b2faa140a35d0226f0c52255318eb315d32f0ebe80f985f96",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/flat/honru-surprised-flat-draft-v1.png",
+          "bytes": 37120,
+          "sha256": "87d9cf0c8232049108ca6cf1be1e70c08906bbcbad7e88caf09c8f2295eab432",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/flat/honru-thinking-flat-draft-v1.png",
+          "bytes": 37416,
+          "sha256": "d28b589e13e01539696161af1ce75478d6b8e111f30182ffc23b15396256e81e",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/flat/honru-waiting-invite-flat-draft-v1.png",
+          "bytes": 43720,
+          "sha256": "577a91ba467ff11e6c56ae19d827c070c5d7756856dd5abd446a877651f23d5d",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/flat/honru-win-flat-draft-v1.png",
+          "bytes": 46268,
+          "sha256": "55449a877843da04c1386302d965e45b3ced6cae55a8a37ac33f160da895c4ac",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/states-v1/preview-honru-expression-kit-draft-v1.png",
+          "bytes": 221417,
+          "sha256": "8fd43dd7fb325f0d82624dac48fb8549fbdee4d3b2f9969b93ce91f58b4a5cc9",
+          "extension": ".png",
+          "width": 660,
+          "height": 750,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        }
+      ]
+    },
+    {
+      "id": "honru-emoji",
+      "root": "art-source/brand/ghost-game/honru/emoji-v1",
+      "fileCount": 67,
+      "visualFileCount": 63,
+      "rasterRenderedCount": 63,
+      "contactSheet": "requirements/active/art-approval-matrix-p1-20260814/evidence/original-honru-emoji-all-images-contact-sheet.jpg",
+      "contactSheetSha256": "3d41721318728853552b7cf0597385f95aac9408c256dfaf68bed698ffefeabb",
+      "files": [
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/alpha/honru-emoji-angry-alpha-draft-v1.png",
+          "bytes": 596863,
+          "sha256": "d2d5c8d882b90077f2fd8ecb9673a2d58af63eb23463460d3a81e6352d0e8a3e",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/alpha/honru-emoji-cheer-alpha-draft-v1.png",
+          "bytes": 579943,
+          "sha256": "54893f913282b39e66adbf9d018ee96e61fe695e5aa843134fc9ab804a62a0c2",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/alpha/honru-emoji-cry-alpha-draft-v1.png",
+          "bytes": 591771,
+          "sha256": "f9805061309e9f40099ce926ab95b73050348674bf2f6e1c0e69aa38266a0b59",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/alpha/honru-emoji-game-alpha-draft-v1.png",
+          "bytes": 566548,
+          "sha256": "d187b335eec57b3ae7530ace1ed66416764918c8eeb22325e4ceb57b06254c38",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/alpha/honru-emoji-heart-alpha-draft-v1.png",
+          "bytes": 585898,
+          "sha256": "5176027d91885562847a612c486536745b2175a1f382cb1caccac2fcaf124a74",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/alpha/honru-emoji-oops-alpha-draft-v1.png",
+          "bytes": 611430,
+          "sha256": "efe5f1dd3f50822edd1e2a8e2d7e029eee9b0d14cc037185e5ee06ee4ed7cd31",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/alpha/honru-emoji-sly-alpha-draft-v1.png",
+          "bytes": 592147,
+          "sha256": "55dc15664ed9e022acc3d0b3f7ea22351d0d4db438c776d8b9f120bdaab9175a",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/alpha/honru-emoji-thumbsup-alpha-draft-v1.png",
+          "bytes": 577191,
+          "sha256": "47ca91aca893feaf8e5a2bdacb32c09235c90068f93be667e793025769497108",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/alpha/honru-emoji-wave-alpha-draft-v1.png",
+          "bytes": 593535,
+          "sha256": "2b9f4739461907872f6bef5b8cd7774b37d2eff3f35eeb96aa960515279686cf",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/alpha/honru-emoji-wow-alpha-draft-v1.png",
+          "bytes": 565816,
+          "sha256": "9316d71dd1a20c5b5320701dd053d37a472daad3557a9d817f805be7fa08d727",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/atlas/honru-emoji-atlas-draft-v1.png",
+          "bytes": 434114,
+          "sha256": "a767fd48b1b738e4b1939d8b368acc0df51dee7199af9db65c3899b4308d6ba7",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/chroma/honru-emoji-angry-chroma-draft-v1.png",
+          "bytes": 1123895,
+          "sha256": "21948f617f0c0c4402b8ec7c169714363db0eb1ad8373f4a3eee03eb5769589c",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/chroma/honru-emoji-cheer-chroma-draft-v1.png",
+          "bytes": 1126037,
+          "sha256": "6960dd29f97623154ebb0c96dd4fb054771f1724c040fea291455ec6e03fe841",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/chroma/honru-emoji-cry-chroma-draft-v1.png",
+          "bytes": 1129228,
+          "sha256": "fb2cca0b9ac3fa9b9bbbb727792c357d97c2ed52c7fe6acbc75301dc9a805ea7",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/chroma/honru-emoji-game-chroma-draft-v1.png",
+          "bytes": 1134782,
+          "sha256": "92c613506d402159bb75d5c6d9d28648695fee8dd618a3f5bd11e0f04471fc6a",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/chroma/honru-emoji-heart-chroma-draft-v1.png",
+          "bytes": 1127093,
+          "sha256": "d05ccae7a5251ce77adbf22bf7249feabeacea3dc223339e86d13d6b7f1aa4c2",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/chroma/honru-emoji-oops-chroma-draft-v1.png",
+          "bytes": 1124993,
+          "sha256": "7e30e50b1542504cf21d1222039276e75944335a5f45d0dc19a4d07b844a5267",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/chroma/honru-emoji-sly-chroma-draft-v1.png",
+          "bytes": 1118720,
+          "sha256": "af9122274885aece95ae7082c96e3a7af54fa3494632f2c49573a574ac908ed3",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/chroma/honru-emoji-thumbsup-chroma-draft-v1.png",
+          "bytes": 1114653,
+          "sha256": "f0fa26f191f56e13e693abf89e2721d09b9cc18f11166bbbb290ed1bc0019c0e",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/chroma/honru-emoji-wave-chroma-draft-v1.png",
+          "bytes": 1113300,
+          "sha256": "e3294822278adf1e49ed8177c1adb26d90a57c2042a22cc278320258faa611c8",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/chroma/honru-emoji-wow-chroma-draft-v1.png",
+          "bytes": 1131142,
+          "sha256": "43b8a8c87b239ff9bfb94b9615b88d3b06408dc2861d50b231fb5459d5f7aa21",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-angry-192px-draft-v1.png",
+          "bytes": 27193,
+          "sha256": "318c085a1e62311338318f3ead762634dabd3bf48333a771f7bb7b108cb4ba7a",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-angry-44px-draft-v1.png",
+          "bytes": 2755,
+          "sha256": "bae7f584e501fbac948436f4f84b2dea7365936d7e8fc9313c9222e7a4523a03",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-angry-64px-draft-v1.png",
+          "bytes": 4827,
+          "sha256": "67aee948e50f223601cdfc01f8c3679f1e4530c36a1b3c3bc57e821489d1c693",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-angry-96px-draft-v1.png",
+          "bytes": 9074,
+          "sha256": "97dc6d42e5f39eb770092081ec0970d08844f4d9e975d66d2dc797907bb860d8",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-cheer-192px-draft-v1.png",
+          "bytes": 26180,
+          "sha256": "17b10fa65555204d46ed6f119375353560a45cb5eca9626fd31f06ef1d748852",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-cheer-44px-draft-v1.png",
+          "bytes": 2742,
+          "sha256": "b131e26ee55c573f67fe4d77b6627b7e890f2797c79f4b5ad9073edf663fc438",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-cheer-64px-draft-v1.png",
+          "bytes": 4538,
+          "sha256": "4e977163e259e7881b02dc36e0839744c0190205b439bb32337a0b6acf54b215",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-cheer-96px-draft-v1.png",
+          "bytes": 8561,
+          "sha256": "5e2bd18d7ca37c7f7bbe48b755d233a1d57e31514b97c3df87adec8fdc5d3eb6",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-cry-192px-draft-v1.png",
+          "bytes": 27319,
+          "sha256": "eeb2a1dac7b912baa62410b3f003e5a3d339f535196174f8c9a8253013a41703",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-cry-44px-draft-v1.png",
+          "bytes": 2758,
+          "sha256": "f88656c8c396cc97a6190f723557255fac776be0b18b4251c54c168ac27ec60f",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-cry-64px-draft-v1.png",
+          "bytes": 4782,
+          "sha256": "7cf5c61f41d9947318a0f638ceb2eea04fc3c482e7926d002d0a45b6899ea8fb",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-cry-96px-draft-v1.png",
+          "bytes": 9059,
+          "sha256": "b36b0e2ccf447bca1b07b17824fce7dc586cb30d2c7198aec85be44fd15bc6ae",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-game-192px-draft-v1.png",
+          "bytes": 26518,
+          "sha256": "198980b32d0b1fe66ecfd3a8a8e013d823b1a7b8ba3d2f969a46ee34dc4205fb",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-game-44px-draft-v1.png",
+          "bytes": 2703,
+          "sha256": "42202f54cd2ab558371050b5079364076a5038cffa6a5aa27599552ab44e00a2",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-game-64px-draft-v1.png",
+          "bytes": 4714,
+          "sha256": "2dc35db5f86642c616bd28d77b7339db881d3fa5a275c2dfb850a58a6cb375a2",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-game-96px-draft-v1.png",
+          "bytes": 8741,
+          "sha256": "98ef1e978c168824cfbe1321f01ab44a7ff142c12bdf4fa6181c5bd711790359",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-heart-192px-draft-v1.png",
+          "bytes": 27879,
+          "sha256": "45daedaf2343381ed84e979470bcb59c3be7f49727fb30c351865505b9fda849",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-heart-44px-draft-v1.png",
+          "bytes": 2710,
+          "sha256": "6ce5e131ef4c86f0098ef95b920402ca0b77cbe24c411d56cc60dc4a49fdd589",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-heart-64px-draft-v1.png",
+          "bytes": 4696,
+          "sha256": "7895a7511789d95f4f9e9101d877d65fa6d9fd5a22154cba52a45c014f7c249d",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-heart-96px-draft-v1.png",
+          "bytes": 8957,
+          "sha256": "a0a08bad4d25681d4723d89eb37522905be4a2d8898e112d8b4889d05ce3c433",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-oops-192px-draft-v1.png",
+          "bytes": 28269,
+          "sha256": "d144bf98a96c9c7b1f7e305f85803b018aa2f016423d15f79d1c1e5f75eea393",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-oops-44px-draft-v1.png",
+          "bytes": 2917,
+          "sha256": "470917f274ded5b6067d24361ceebebc2a6f256ed2cebf40163730b67e4ee162",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-oops-64px-draft-v1.png",
+          "bytes": 4881,
+          "sha256": "8aa975af7909f8c1ceacc5e64a3359693f10090d5ab2e511a2052b93fce78492",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-oops-96px-draft-v1.png",
+          "bytes": 9369,
+          "sha256": "caeba0d62180a090102cda100487018785a9a50a22dfb5ab7f5664196a4983b1",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-sly-192px-draft-v1.png",
+          "bytes": 28099,
+          "sha256": "f1600f8ddfbf5799d2536d151fa5cde79c5e12a3b96570ffffb2cd58c5a5235b",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-sly-44px-draft-v1.png",
+          "bytes": 2809,
+          "sha256": "612b06a19793084b5f99c33b7f1cd7621e93fc9863d4e2425b7c09f2d4395a7f",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-sly-64px-draft-v1.png",
+          "bytes": 4792,
+          "sha256": "768c7a50a40912925fa0b17f91d6b34ae0d7dc93367ad341ae839fe6447afb1e",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-sly-96px-draft-v1.png",
+          "bytes": 9105,
+          "sha256": "e27b2606b5d84689073d6027fce01c49cf23a66a64f5611968ec75a2b448c1bf",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-thumbsup-192px-draft-v1.png",
+          "bytes": 27324,
+          "sha256": "19b9d48b3fbaf43a0abca14ea63bdedadd7bb788b0c82a9ba4efeb7640dd6b00",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-thumbsup-44px-draft-v1.png",
+          "bytes": 2703,
+          "sha256": "8559261bbad880d785ce19ef0223ace90f7a20161f2384a48a4f0e289c3db5c9",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-thumbsup-64px-draft-v1.png",
+          "bytes": 4660,
+          "sha256": "86392c8270e35815a52bd383eb6c195b83c34bca30293aabbbae6dfb9b1600b0",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-thumbsup-96px-draft-v1.png",
+          "bytes": 9050,
+          "sha256": "3b904e25dd8ddf6cfe6efae21a448f820993ec929455f4bfc71eb1fdb9f018ee",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-wave-192px-draft-v1.png",
+          "bytes": 26794,
+          "sha256": "ab74d5a8a8bc1bc4d126c4975864f18eae874a520b31b42e08900635187b271a",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-wave-44px-draft-v1.png",
+          "bytes": 2756,
+          "sha256": "1a5802099b0edf4b12fa0ce1b537e6981bbdc9fdbceb331f5efdda8c04965395",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-wave-64px-draft-v1.png",
+          "bytes": 4656,
+          "sha256": "c2c04ee082debfafaa447b22291ee5cdef6d96deb86cbf68921245c6d7eeb66d",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-wave-96px-draft-v1.png",
+          "bytes": 8786,
+          "sha256": "0265205527fa3b6796679688f35828721b2011cf24a692273f3bc43404952315",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-wow-192px-draft-v1.png",
+          "bytes": 25886,
+          "sha256": "6e46b1a994423e3a07dbcc1e8e7defcff52ce5d207b7af36f1ae34ab6b275b01",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-wow-44px-draft-v1.png",
+          "bytes": 2664,
+          "sha256": "6379deb6dfaedd6fa021e60bc911d960e134b13f4297f839441e5c6a44428210",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-wow-64px-draft-v1.png",
+          "bytes": 4468,
+          "sha256": "1fc09c547bb51c3af22d1a226312285fc0246ad88dbc499181abbad7d812951f",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-wow-96px-draft-v1.png",
+          "bytes": 8456,
+          "sha256": "4fd2d18540eb4659ff50d1ea232cd9e610c59e2bd343cc6fba8d9cc662a669fb",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/GOLDEN_SET_DECISION_PENDING.md",
+          "bytes": 980,
+          "sha256": "a4e558495902c9c782e6021f0f2077f71205f3df50345b78ad4d7e4cbf4221b3",
+          "extension": ".md",
+          "textRead": true,
+          "lines": 24,
+          "headings": 1
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/IP_REVIEW_Reviewer_B_PENDING.md",
+          "bytes": 1026,
+          "sha256": "7d1c0dcf21bd82753bfd50f0fc4050c8c5686e48b142bd10ed65c4bee237b530",
+          "extension": ".md",
+          "textRead": true,
+          "lines": 21,
+          "headings": 3
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/poster/honru-emoji-44px-strip-draft-v1.png",
+          "bytes": 26164,
+          "sha256": "412efa156d837b9831aa246c773f09b998b0b7ab97d97564e228e6683c5e95f5",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/poster/honru-emoji-poster-draft-v1.png",
+          "bytes": 115431,
+          "sha256": "4b22256408b4222b99ba53b94af65c82a96fc1571b891b9c45e4c0869801e01d",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/PROMPT_AND_PROVENANCE.md",
+          "bytes": 4879,
+          "sha256": "0fbdb5c6fc1dc637ac075e1ab25fb26575942410812ae61a6ed896c7acda37e2",
+          "extension": ".md",
+          "textRead": true,
+          "lines": 41,
+          "headings": 5
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/TECHNICAL_REVIEW_Reviewer_A.md",
+          "bytes": 1256,
+          "sha256": "ceed47f224eca5998ddc4af409fa6c705c99de4f5c6ab874c9298679a70db17d",
+          "extension": ".md",
+          "textRead": true,
+          "lines": 21,
+          "headings": 4
+        }
+      ],
+      "records": [
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/alpha/honru-emoji-angry-alpha-draft-v1.png",
+          "bytes": 596863,
+          "sha256": "d2d5c8d882b90077f2fd8ecb9673a2d58af63eb23463460d3a81e6352d0e8a3e",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/alpha/honru-emoji-cheer-alpha-draft-v1.png",
+          "bytes": 579943,
+          "sha256": "54893f913282b39e66adbf9d018ee96e61fe695e5aa843134fc9ab804a62a0c2",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/alpha/honru-emoji-cry-alpha-draft-v1.png",
+          "bytes": 591771,
+          "sha256": "f9805061309e9f40099ce926ab95b73050348674bf2f6e1c0e69aa38266a0b59",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/alpha/honru-emoji-game-alpha-draft-v1.png",
+          "bytes": 566548,
+          "sha256": "d187b335eec57b3ae7530ace1ed66416764918c8eeb22325e4ceb57b06254c38",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/alpha/honru-emoji-heart-alpha-draft-v1.png",
+          "bytes": 585898,
+          "sha256": "5176027d91885562847a612c486536745b2175a1f382cb1caccac2fcaf124a74",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/alpha/honru-emoji-oops-alpha-draft-v1.png",
+          "bytes": 611430,
+          "sha256": "efe5f1dd3f50822edd1e2a8e2d7e029eee9b0d14cc037185e5ee06ee4ed7cd31",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/alpha/honru-emoji-sly-alpha-draft-v1.png",
+          "bytes": 592147,
+          "sha256": "55dc15664ed9e022acc3d0b3f7ea22351d0d4db438c776d8b9f120bdaab9175a",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/alpha/honru-emoji-thumbsup-alpha-draft-v1.png",
+          "bytes": 577191,
+          "sha256": "47ca91aca893feaf8e5a2bdacb32c09235c90068f93be667e793025769497108",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/alpha/honru-emoji-wave-alpha-draft-v1.png",
+          "bytes": 593535,
+          "sha256": "2b9f4739461907872f6bef5b8cd7774b37d2eff3f35eeb96aa960515279686cf",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/alpha/honru-emoji-wow-alpha-draft-v1.png",
+          "bytes": 565816,
+          "sha256": "9316d71dd1a20c5b5320701dd053d37a472daad3557a9d817f805be7fa08d727",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/atlas/honru-emoji-atlas-draft-v1.png",
+          "bytes": 434114,
+          "sha256": "a767fd48b1b738e4b1939d8b368acc0df51dee7199af9db65c3899b4308d6ba7",
+          "extension": ".png",
+          "width": 1024,
+          "height": 768,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/chroma/honru-emoji-angry-chroma-draft-v1.png",
+          "bytes": 1123895,
+          "sha256": "21948f617f0c0c4402b8ec7c169714363db0eb1ad8373f4a3eee03eb5769589c",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/chroma/honru-emoji-cheer-chroma-draft-v1.png",
+          "bytes": 1126037,
+          "sha256": "6960dd29f97623154ebb0c96dd4fb054771f1724c040fea291455ec6e03fe841",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/chroma/honru-emoji-cry-chroma-draft-v1.png",
+          "bytes": 1129228,
+          "sha256": "fb2cca0b9ac3fa9b9bbbb727792c357d97c2ed52c7fe6acbc75301dc9a805ea7",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/chroma/honru-emoji-game-chroma-draft-v1.png",
+          "bytes": 1134782,
+          "sha256": "92c613506d402159bb75d5c6d9d28648695fee8dd618a3f5bd11e0f04471fc6a",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/chroma/honru-emoji-heart-chroma-draft-v1.png",
+          "bytes": 1127093,
+          "sha256": "d05ccae7a5251ce77adbf22bf7249feabeacea3dc223339e86d13d6b7f1aa4c2",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/chroma/honru-emoji-oops-chroma-draft-v1.png",
+          "bytes": 1124993,
+          "sha256": "7e30e50b1542504cf21d1222039276e75944335a5f45d0dc19a4d07b844a5267",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/chroma/honru-emoji-sly-chroma-draft-v1.png",
+          "bytes": 1118720,
+          "sha256": "af9122274885aece95ae7082c96e3a7af54fa3494632f2c49573a574ac908ed3",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/chroma/honru-emoji-thumbsup-chroma-draft-v1.png",
+          "bytes": 1114653,
+          "sha256": "f0fa26f191f56e13e693abf89e2721d09b9cc18f11166bbbb290ed1bc0019c0e",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/chroma/honru-emoji-wave-chroma-draft-v1.png",
+          "bytes": 1113300,
+          "sha256": "e3294822278adf1e49ed8177c1adb26d90a57c2042a22cc278320258faa611c8",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/chroma/honru-emoji-wow-chroma-draft-v1.png",
+          "bytes": 1131142,
+          "sha256": "43b8a8c87b239ff9bfb94b9615b88d3b06408dc2861d50b231fb5459d5f7aa21",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-angry-192px-draft-v1.png",
+          "bytes": 27193,
+          "sha256": "318c085a1e62311338318f3ead762634dabd3bf48333a771f7bb7b108cb4ba7a",
+          "extension": ".png",
+          "width": 192,
+          "height": 192,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-angry-44px-draft-v1.png",
+          "bytes": 2755,
+          "sha256": "bae7f584e501fbac948436f4f84b2dea7365936d7e8fc9313c9222e7a4523a03",
+          "extension": ".png",
+          "width": 44,
+          "height": 44,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-angry-64px-draft-v1.png",
+          "bytes": 4827,
+          "sha256": "67aee948e50f223601cdfc01f8c3679f1e4530c36a1b3c3bc57e821489d1c693",
+          "extension": ".png",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-angry-96px-draft-v1.png",
+          "bytes": 9074,
+          "sha256": "97dc6d42e5f39eb770092081ec0970d08844f4d9e975d66d2dc797907bb860d8",
+          "extension": ".png",
+          "width": 96,
+          "height": 96,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-cheer-192px-draft-v1.png",
+          "bytes": 26180,
+          "sha256": "17b10fa65555204d46ed6f119375353560a45cb5eca9626fd31f06ef1d748852",
+          "extension": ".png",
+          "width": 192,
+          "height": 192,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-cheer-44px-draft-v1.png",
+          "bytes": 2742,
+          "sha256": "b131e26ee55c573f67fe4d77b6627b7e890f2797c79f4b5ad9073edf663fc438",
+          "extension": ".png",
+          "width": 44,
+          "height": 44,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-cheer-64px-draft-v1.png",
+          "bytes": 4538,
+          "sha256": "4e977163e259e7881b02dc36e0839744c0190205b439bb32337a0b6acf54b215",
+          "extension": ".png",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-cheer-96px-draft-v1.png",
+          "bytes": 8561,
+          "sha256": "5e2bd18d7ca37c7f7bbe48b755d233a1d57e31514b97c3df87adec8fdc5d3eb6",
+          "extension": ".png",
+          "width": 96,
+          "height": 96,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-cry-192px-draft-v1.png",
+          "bytes": 27319,
+          "sha256": "eeb2a1dac7b912baa62410b3f003e5a3d339f535196174f8c9a8253013a41703",
+          "extension": ".png",
+          "width": 192,
+          "height": 192,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-cry-44px-draft-v1.png",
+          "bytes": 2758,
+          "sha256": "f88656c8c396cc97a6190f723557255fac776be0b18b4251c54c168ac27ec60f",
+          "extension": ".png",
+          "width": 44,
+          "height": 44,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-cry-64px-draft-v1.png",
+          "bytes": 4782,
+          "sha256": "7cf5c61f41d9947318a0f638ceb2eea04fc3c482e7926d002d0a45b6899ea8fb",
+          "extension": ".png",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-cry-96px-draft-v1.png",
+          "bytes": 9059,
+          "sha256": "b36b0e2ccf447bca1b07b17824fce7dc586cb30d2c7198aec85be44fd15bc6ae",
+          "extension": ".png",
+          "width": 96,
+          "height": 96,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-game-192px-draft-v1.png",
+          "bytes": 26518,
+          "sha256": "198980b32d0b1fe66ecfd3a8a8e013d823b1a7b8ba3d2f969a46ee34dc4205fb",
+          "extension": ".png",
+          "width": 192,
+          "height": 192,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-game-44px-draft-v1.png",
+          "bytes": 2703,
+          "sha256": "42202f54cd2ab558371050b5079364076a5038cffa6a5aa27599552ab44e00a2",
+          "extension": ".png",
+          "width": 44,
+          "height": 44,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-game-64px-draft-v1.png",
+          "bytes": 4714,
+          "sha256": "2dc35db5f86642c616bd28d77b7339db881d3fa5a275c2dfb850a58a6cb375a2",
+          "extension": ".png",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-game-96px-draft-v1.png",
+          "bytes": 8741,
+          "sha256": "98ef1e978c168824cfbe1321f01ab44a7ff142c12bdf4fa6181c5bd711790359",
+          "extension": ".png",
+          "width": 96,
+          "height": 96,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-heart-192px-draft-v1.png",
+          "bytes": 27879,
+          "sha256": "45daedaf2343381ed84e979470bcb59c3be7f49727fb30c351865505b9fda849",
+          "extension": ".png",
+          "width": 192,
+          "height": 192,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-heart-44px-draft-v1.png",
+          "bytes": 2710,
+          "sha256": "6ce5e131ef4c86f0098ef95b920402ca0b77cbe24c411d56cc60dc4a49fdd589",
+          "extension": ".png",
+          "width": 44,
+          "height": 44,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-heart-64px-draft-v1.png",
+          "bytes": 4696,
+          "sha256": "7895a7511789d95f4f9e9101d877d65fa6d9fd5a22154cba52a45c014f7c249d",
+          "extension": ".png",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-heart-96px-draft-v1.png",
+          "bytes": 8957,
+          "sha256": "a0a08bad4d25681d4723d89eb37522905be4a2d8898e112d8b4889d05ce3c433",
+          "extension": ".png",
+          "width": 96,
+          "height": 96,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-oops-192px-draft-v1.png",
+          "bytes": 28269,
+          "sha256": "d144bf98a96c9c7b1f7e305f85803b018aa2f016423d15f79d1c1e5f75eea393",
+          "extension": ".png",
+          "width": 192,
+          "height": 192,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-oops-44px-draft-v1.png",
+          "bytes": 2917,
+          "sha256": "470917f274ded5b6067d24361ceebebc2a6f256ed2cebf40163730b67e4ee162",
+          "extension": ".png",
+          "width": 44,
+          "height": 44,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-oops-64px-draft-v1.png",
+          "bytes": 4881,
+          "sha256": "8aa975af7909f8c1ceacc5e64a3359693f10090d5ab2e511a2052b93fce78492",
+          "extension": ".png",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-oops-96px-draft-v1.png",
+          "bytes": 9369,
+          "sha256": "caeba0d62180a090102cda100487018785a9a50a22dfb5ab7f5664196a4983b1",
+          "extension": ".png",
+          "width": 96,
+          "height": 96,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-sly-192px-draft-v1.png",
+          "bytes": 28099,
+          "sha256": "f1600f8ddfbf5799d2536d151fa5cde79c5e12a3b96570ffffb2cd58c5a5235b",
+          "extension": ".png",
+          "width": 192,
+          "height": 192,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-sly-44px-draft-v1.png",
+          "bytes": 2809,
+          "sha256": "612b06a19793084b5f99c33b7f1cd7621e93fc9863d4e2425b7c09f2d4395a7f",
+          "extension": ".png",
+          "width": 44,
+          "height": 44,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-sly-64px-draft-v1.png",
+          "bytes": 4792,
+          "sha256": "768c7a50a40912925fa0b17f91d6b34ae0d7dc93367ad341ae839fe6447afb1e",
+          "extension": ".png",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-sly-96px-draft-v1.png",
+          "bytes": 9105,
+          "sha256": "e27b2606b5d84689073d6027fce01c49cf23a66a64f5611968ec75a2b448c1bf",
+          "extension": ".png",
+          "width": 96,
+          "height": 96,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-thumbsup-192px-draft-v1.png",
+          "bytes": 27324,
+          "sha256": "19b9d48b3fbaf43a0abca14ea63bdedadd7bb788b0c82a9ba4efeb7640dd6b00",
+          "extension": ".png",
+          "width": 192,
+          "height": 192,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-thumbsup-44px-draft-v1.png",
+          "bytes": 2703,
+          "sha256": "8559261bbad880d785ce19ef0223ace90f7a20161f2384a48a4f0e289c3db5c9",
+          "extension": ".png",
+          "width": 44,
+          "height": 44,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-thumbsup-64px-draft-v1.png",
+          "bytes": 4660,
+          "sha256": "86392c8270e35815a52bd383eb6c195b83c34bca30293aabbbae6dfb9b1600b0",
+          "extension": ".png",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-thumbsup-96px-draft-v1.png",
+          "bytes": 9050,
+          "sha256": "3b904e25dd8ddf6cfe6efae21a448f820993ec929455f4bfc71eb1fdb9f018ee",
+          "extension": ".png",
+          "width": 96,
+          "height": 96,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-wave-192px-draft-v1.png",
+          "bytes": 26794,
+          "sha256": "ab74d5a8a8bc1bc4d126c4975864f18eae874a520b31b42e08900635187b271a",
+          "extension": ".png",
+          "width": 192,
+          "height": 192,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-wave-44px-draft-v1.png",
+          "bytes": 2756,
+          "sha256": "1a5802099b0edf4b12fa0ce1b537e6981bbdc9fdbceb331f5efdda8c04965395",
+          "extension": ".png",
+          "width": 44,
+          "height": 44,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-wave-64px-draft-v1.png",
+          "bytes": 4656,
+          "sha256": "c2c04ee082debfafaa447b22291ee5cdef6d96deb86cbf68921245c6d7eeb66d",
+          "extension": ".png",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-wave-96px-draft-v1.png",
+          "bytes": 8786,
+          "sha256": "0265205527fa3b6796679688f35828721b2011cf24a692273f3bc43404952315",
+          "extension": ".png",
+          "width": 96,
+          "height": 96,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-wow-192px-draft-v1.png",
+          "bytes": 25886,
+          "sha256": "6e46b1a994423e3a07dbcc1e8e7defcff52ce5d207b7af36f1ae34ab6b275b01",
+          "extension": ".png",
+          "width": 192,
+          "height": 192,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-wow-44px-draft-v1.png",
+          "bytes": 2664,
+          "sha256": "6379deb6dfaedd6fa021e60bc911d960e134b13f4297f839441e5c6a44428210",
+          "extension": ".png",
+          "width": 44,
+          "height": 44,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-wow-64px-draft-v1.png",
+          "bytes": 4468,
+          "sha256": "1fc09c547bb51c3af22d1a226312285fc0246ad88dbc499181abbad7d812951f",
+          "extension": ".png",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-wow-96px-draft-v1.png",
+          "bytes": 8456,
+          "sha256": "4fd2d18540eb4659ff50d1ea232cd9e610c59e2bd343cc6fba8d9cc662a669fb",
+          "extension": ".png",
+          "width": 96,
+          "height": 96,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/poster/honru-emoji-44px-strip-draft-v1.png",
+          "bytes": 26164,
+          "sha256": "412efa156d837b9831aa246c773f09b998b0b7ab97d97564e228e6683c5e95f5",
+          "extension": ".png",
+          "width": 440,
+          "height": 44,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/honru/emoji-v1/poster/honru-emoji-poster-draft-v1.png",
+          "bytes": 115431,
+          "sha256": "4b22256408b4222b99ba53b94af65c82a96fc1571b891b9c45e4c0869801e01d",
+          "extension": ".png",
+          "width": 640,
+          "height": 360,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        }
+      ]
+    },
+    {
+      "id": "gcoins",
+      "root": "art-source/brand/ghost-game/currency",
+      "fileCount": 13,
+      "visualFileCount": 10,
+      "rasterRenderedCount": 10,
+      "contactSheet": "requirements/active/art-approval-matrix-p1-20260814/evidence/original-gcoins-all-images-contact-sheet.jpg",
+      "contactSheetSha256": "548681e2ce89b573915e4eb17f10f0f4a1b196902830291a51cd628654d568ea",
+      "files": [
+        {
+          "path": "art-source/brand/ghost-game/currency/gcoins-p0-20260810/gcoins-source-chroma-v1.png",
+          "bytes": 1275113,
+          "sha256": "9d6d8870329b04b5a136f66449498656b7601bee15afbdabc2a73eaa030919ad",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/currency/gcoins-p0-20260810/PROMPT_AND_PROVENANCE.md",
+          "bytes": 1078,
+          "sha256": "47dd33c9f528a65af53cbbdbbd7f8a2f48ea6785f521b32e646fad23fc8c9297",
+          "extension": ".md",
+          "textRead": true,
+          "lines": 18,
+          "headings": 3
+        },
+        {
+          "path": "art-source/brand/ghost-game/currency/gcoins-p1-20260814/alpha/gcoins-p1-candidate-b-alpha.png",
+          "bytes": 890093,
+          "sha256": "d62909d4827d427d5e499299fb2a7e839866a3ddc9e7b701d53c3e1cc542854c",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/currency/gcoins-p1-20260814/derived/gcoins-p1-candidate-b-192px.png",
+          "bytes": 36369,
+          "sha256": "aac1ddc47eb931a612e1ef9acf97d1215ebbdb591e818ca0cfdc33b15d40f421",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/currency/gcoins-p1-20260814/derived/gcoins-p1-candidate-b-44px.png",
+          "bytes": 3486,
+          "sha256": "a4c2be71b239faeb90a298811942c72f68a8ab58de8d4ace8a6cfecbb8a9309e",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/currency/gcoins-p1-20260814/derived/gcoins-p1-candidate-b-64px.png",
+          "bytes": 6283,
+          "sha256": "02af42f61f99e626747e35cda5198aabe0a4714cb6da42f84fc2c11da98fb648",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/currency/gcoins-p1-20260814/derived/gcoins-p1-candidate-b-96px.png",
+          "bytes": 11867,
+          "sha256": "5f40724c81fef77ea067f48cdab5650231f701fc63f23c31e76d41ed7538fc25",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/currency/gcoins-p1-20260814/PROMPT_AND_PROVENANCE.md",
+          "bytes": 9231,
+          "sha256": "a8cc7fa8900baf33e736aa9cdfa4778a740e9369a2ef5d891ac0e30db290e043",
+          "extension": ".md",
+          "textRead": true,
+          "lines": 87,
+          "headings": 6
+        },
+        {
+          "path": "art-source/brand/ghost-game/currency/gcoins-p1-20260814/review/gcoins-p1-candidate-b-alpha-review.png",
+          "bytes": 87175,
+          "sha256": "3bddd090c743d68a7fb55e3ed78b76f65a91f40d6f6ce0d61c192f3121ec1839",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/currency/gcoins-p1-20260814/source/gcoins-p1-candidate-a-chroma.png",
+          "bytes": 1368851,
+          "sha256": "36b79d6ce878006430bf6721389d768a2e5bff7d9b96d7006d310932ae8b3745",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/currency/gcoins-p1-20260814/source/gcoins-p1-candidate-b-chroma.png",
+          "bytes": 1329852,
+          "sha256": "6a99bea413410f62520a2abe16ce3ab341c9e0337bd21a383350fc9f578dd04a",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/currency/gcoins-p1-20260814/source/gcoins-p1-candidate-c-chroma.png",
+          "bytes": 1070343,
+          "sha256": "566e32d352608311573a3937cf85890669cbedc602d5147a5b80d20ad0456e84",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/brand/ghost-game/currency/gcoins-p1-20260814/TECHNICAL_REVIEW_Reviewer_A.md",
+          "bytes": 1731,
+          "sha256": "fd46507478a6cd50f76794cdfe062c2eb13109b9b4983c373e5dc277e3964eb3",
+          "extension": ".md",
+          "textRead": true,
+          "lines": 38,
+          "headings": 5
+        }
+      ],
+      "records": [
+        {
+          "path": "art-source/brand/ghost-game/currency/gcoins-p0-20260810/gcoins-source-chroma-v1.png",
+          "bytes": 1275113,
+          "sha256": "9d6d8870329b04b5a136f66449498656b7601bee15afbdabc2a73eaa030919ad",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/currency/gcoins-p1-20260814/alpha/gcoins-p1-candidate-b-alpha.png",
+          "bytes": 890093,
+          "sha256": "d62909d4827d427d5e499299fb2a7e839866a3ddc9e7b701d53c3e1cc542854c",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/currency/gcoins-p1-20260814/derived/gcoins-p1-candidate-b-192px.png",
+          "bytes": 36369,
+          "sha256": "aac1ddc47eb931a612e1ef9acf97d1215ebbdb591e818ca0cfdc33b15d40f421",
+          "extension": ".png",
+          "width": 192,
+          "height": 192,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/currency/gcoins-p1-20260814/derived/gcoins-p1-candidate-b-44px.png",
+          "bytes": 3486,
+          "sha256": "a4c2be71b239faeb90a298811942c72f68a8ab58de8d4ace8a6cfecbb8a9309e",
+          "extension": ".png",
+          "width": 44,
+          "height": 44,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/currency/gcoins-p1-20260814/derived/gcoins-p1-candidate-b-64px.png",
+          "bytes": 6283,
+          "sha256": "02af42f61f99e626747e35cda5198aabe0a4714cb6da42f84fc2c11da98fb648",
+          "extension": ".png",
+          "width": 64,
+          "height": 64,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/currency/gcoins-p1-20260814/derived/gcoins-p1-candidate-b-96px.png",
+          "bytes": 11867,
+          "sha256": "5f40724c81fef77ea067f48cdab5650231f701fc63f23c31e76d41ed7538fc25",
+          "extension": ".png",
+          "width": 96,
+          "height": 96,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/currency/gcoins-p1-20260814/review/gcoins-p1-candidate-b-alpha-review.png",
+          "bytes": 87175,
+          "sha256": "3bddd090c743d68a7fb55e3ed78b76f65a91f40d6f6ce0d61c192f3121ec1839",
+          "extension": ".png",
+          "width": 900,
+          "height": 430,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/currency/gcoins-p1-20260814/source/gcoins-p1-candidate-a-chroma.png",
+          "bytes": 1368851,
+          "sha256": "36b79d6ce878006430bf6721389d768a2e5bff7d9b96d7006d310932ae8b3745",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/currency/gcoins-p1-20260814/source/gcoins-p1-candidate-b-chroma.png",
+          "bytes": 1329852,
+          "sha256": "6a99bea413410f62520a2abe16ce3ab341c9e0337bd21a383350fc9f578dd04a",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/brand/ghost-game/currency/gcoins-p1-20260814/source/gcoins-p1-candidate-c-chroma.png",
+          "bytes": 1070343,
+          "sha256": "566e32d352608311573a3937cf85890669cbedc602d5147a5b80d20ad0456e84",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        }
+      ]
+    },
+    {
+      "id": "honru-pixel-avatar",
+      "root": "art-source/platform/avatars/v3-honru-pixel-p0-20260811",
+      "fileCount": 24,
+      "visualFileCount": 20,
+      "rasterRenderedCount": 20,
+      "contactSheet": "requirements/active/art-approval-matrix-p1-20260814/evidence/original-honru-pixel-avatar-all-images-contact-sheet.jpg",
+      "contactSheetSha256": "dad6e32c9196de34711b88e59d6bc34091df5040778531d130cb39be4e734ab1",
+      "files": [
+        {
+          "path": "art-source/platform/avatars/v3-honru-pixel-p0-20260811/alpha/honru-arcade-builder-alpha-v1.png",
+          "bytes": 766274,
+          "sha256": "1c4efb6cdd88a9c45af73c8e30fcdd2d95302891dd0f53bd7892d90055329e1b",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/platform/avatars/v3-honru-pixel-p0-20260811/alpha/honru-arcade-builder-alpha-v2.png",
+          "bytes": 760782,
+          "sha256": "47ad9618d582ae20abb2aec44d179be5cf4e66b7ffa9bbbabe4ebd62fa88e736",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/platform/avatars/v3-honru-pixel-p0-20260811/alpha/honru-arcade-builder-alpha-v3.png",
+          "bytes": 631068,
+          "sha256": "8ef71d260f75bf4db2d4a5d134fa0029990ee4156f035350132c5e775ff6118c",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/platform/avatars/v3-honru-pixel-p0-20260811/alpha/honru-arcade-builder-alpha-v4.png",
+          "bytes": 625328,
+          "sha256": "7c23a561a5d6615e5edc478cae41403ecd33a8b87a72ee7fb29fa24f164ecc7f",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/platform/avatars/v3-honru-pixel-p0-20260811/alpha/honru-arcade-builder-alpha-v5.png",
+          "bytes": 622533,
+          "sha256": "f56ec80d427ed0864e9437422a2356e82cf6b2a49a58b339dfec239d4d0024c1",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/platform/avatars/v3-honru-pixel-p0-20260811/alpha/honru-arcade-builder-alpha-v6.png",
+          "bytes": 615006,
+          "sha256": "506cb8d15b819a968251f2be9adf65ebe496d70ccbbaf7ae9bf5478a7128f8a0",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/platform/avatars/v3-honru-pixel-p0-20260811/alpha/honru-arcade-builder-alpha-v7.png",
+          "bytes": 533149,
+          "sha256": "a1090c036bdcd523e68ef62b3183b1ca7ed23459ce955172dce672c9429840a8",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/platform/avatars/v3-honru-pixel-p0-20260811/alpha/honru-arcade-builder-alpha-v8.png",
+          "bytes": 615119,
+          "sha256": "1ee490d38b5da584cdca2b8050edad81ced279979843bc6010fce3aec854908e",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/platform/avatars/v3-honru-pixel-p0-20260811/alpha/honru-arcade-builder-alpha-v9.png",
+          "bytes": 615247,
+          "sha256": "775dbd6500eac095eaa08a4bb688fb5e5870b84d91cf79bf23dfa80c3bdf3846",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/platform/avatars/v3-honru-pixel-p0-20260811/alpha/honru-explorer-alpha-v1.png",
+          "bytes": 638068,
+          "sha256": "4ae2652aeb4f1c6a55ddc4df9fb1560b9e5a72e14b306182e1dea7b77540e579",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/platform/avatars/v3-honru-pixel-p0-20260811/alpha/honru-explorer-alpha-v2.png",
+          "bytes": 629995,
+          "sha256": "7353548824f3bc2940ad3c98e76d43b04645b90cce800ec0544477e160c3a408",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/platform/avatars/v3-honru-pixel-p0-20260811/alpha/honru-night-cadet-alpha-v1.png",
+          "bytes": 727300,
+          "sha256": "8804aeed71517d5c29eb47a5eddeea436e3d8097a40ab0521e7c86206dd9ce7c",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/platform/avatars/v3-honru-pixel-p0-20260811/alpha/honru-night-cadet-alpha-v2.png",
+          "bytes": 717980,
+          "sha256": "4e5e0f07dba7075f485c79ab2ab02a4cac3c8e3973572fe2a1779d0efd9b860d",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/platform/avatars/v3-honru-pixel-p0-20260811/alpha/honru-stargazer-alpha-v1.png",
+          "bytes": 682890,
+          "sha256": "c8374be02de6d5118a1e627b204c9364b0dc1ba7da2568bfd1d7373f7d9159bc",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/platform/avatars/v3-honru-pixel-p0-20260811/alpha/honru-stargazer-alpha-v2.png",
+          "bytes": 673790,
+          "sha256": "8874f1943dc8b23d9647727fb82ff27b27c3cd394d711f05345d12c0123fce7b",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/platform/avatars/v3-honru-pixel-p0-20260811/APPROVAL_STATUS.md",
+          "bytes": 1225,
+          "sha256": "a401bba99d92ceed0dd004dd63f77020dafaa760843b7f45338f028d314b5f4e",
+          "extension": ".md",
+          "textRead": true,
+          "lines": 14,
+          "headings": 1
+        },
+        {
+          "path": "art-source/platform/avatars/v3-honru-pixel-p0-20260811/PROMPT_AND_PROVENANCE.md",
+          "bytes": 5381,
+          "sha256": "0613896f5065e073432d85c4604a764ad043cf29df5e03f3ee52ea4fd74b9336",
+          "extension": ".md",
+          "textRead": true,
+          "lines": 96,
+          "headings": 6
+        },
+        {
+          "path": "art-source/platform/avatars/v3-honru-pixel-p0-20260811/source/honru-arcade-builder-chroma-v1.png",
+          "bytes": 1193313,
+          "sha256": "56e060da08c871677ff7f12612bc8079eedf77b67974b9c3f4b8eb078ed30276",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/platform/avatars/v3-honru-pixel-p0-20260811/source/honru-arcade-builder-chroma-v2.png",
+          "bytes": 1047949,
+          "sha256": "042c393df43c02c5d77c9c069ab8db41fe4e7e20e3363f4c9c8689088667042a",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/platform/avatars/v3-honru-pixel-p0-20260811/source/honru-explorer-chroma-v1.png",
+          "bytes": 1049639,
+          "sha256": "0944d7cc97a01fbf457e06f2e544f569d9480b05e7d37dfc5d95021af4f99406",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/platform/avatars/v3-honru-pixel-p0-20260811/source/honru-night-cadet-chroma-v1.png",
+          "bytes": 1218156,
+          "sha256": "3582588586c0e1f46e459a882f3140c2dff74f75c99f7f8443c2d8133ca76215",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/platform/avatars/v3-honru-pixel-p0-20260811/source/honru-stargazer-chroma-v1.png",
+          "bytes": 1121680,
+          "sha256": "9f8853b7c61ff8556db3a7f290647a6355ed67c3ee922b126132fe345222c008",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/platform/avatars/v3-honru-pixel-p0-20260811/SOURCE_STATUS_AND_TECHNICAL_REVIEW.md",
+          "bytes": 6740,
+          "sha256": "4b66389f2a13c1f553e35e1dcda384f1b9b036d5a647386f8b58a9b88b4f4bf2",
+          "extension": ".md",
+          "textRead": true,
+          "lines": 112,
+          "headings": 7
+        },
+        {
+          "path": "art-source/platform/avatars/v3-honru-pixel-p0-20260811/TECHNICAL_REVIEW_Reviewer_A.md",
+          "bytes": 1614,
+          "sha256": "2e6c17c49b99fd9161567c019cc843ec12654e48c8adc06ec6c875d8ed9ea4c5",
+          "extension": ".md",
+          "textRead": true,
+          "lines": 21,
+          "headings": 4
+        }
+      ],
+      "records": [
+        {
+          "path": "art-source/platform/avatars/v3-honru-pixel-p0-20260811/alpha/honru-arcade-builder-alpha-v1.png",
+          "bytes": 766274,
+          "sha256": "1c4efb6cdd88a9c45af73c8e30fcdd2d95302891dd0f53bd7892d90055329e1b",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/platform/avatars/v3-honru-pixel-p0-20260811/alpha/honru-arcade-builder-alpha-v2.png",
+          "bytes": 760782,
+          "sha256": "47ad9618d582ae20abb2aec44d179be5cf4e66b7ffa9bbbabe4ebd62fa88e736",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/platform/avatars/v3-honru-pixel-p0-20260811/alpha/honru-arcade-builder-alpha-v3.png",
+          "bytes": 631068,
+          "sha256": "8ef71d260f75bf4db2d4a5d134fa0029990ee4156f035350132c5e775ff6118c",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/platform/avatars/v3-honru-pixel-p0-20260811/alpha/honru-arcade-builder-alpha-v4.png",
+          "bytes": 625328,
+          "sha256": "7c23a561a5d6615e5edc478cae41403ecd33a8b87a72ee7fb29fa24f164ecc7f",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/platform/avatars/v3-honru-pixel-p0-20260811/alpha/honru-arcade-builder-alpha-v5.png",
+          "bytes": 622533,
+          "sha256": "f56ec80d427ed0864e9437422a2356e82cf6b2a49a58b339dfec239d4d0024c1",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/platform/avatars/v3-honru-pixel-p0-20260811/alpha/honru-arcade-builder-alpha-v6.png",
+          "bytes": 615006,
+          "sha256": "506cb8d15b819a968251f2be9adf65ebe496d70ccbbaf7ae9bf5478a7128f8a0",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/platform/avatars/v3-honru-pixel-p0-20260811/alpha/honru-arcade-builder-alpha-v7.png",
+          "bytes": 533149,
+          "sha256": "a1090c036bdcd523e68ef62b3183b1ca7ed23459ce955172dce672c9429840a8",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/platform/avatars/v3-honru-pixel-p0-20260811/alpha/honru-arcade-builder-alpha-v8.png",
+          "bytes": 615119,
+          "sha256": "1ee490d38b5da584cdca2b8050edad81ced279979843bc6010fce3aec854908e",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/platform/avatars/v3-honru-pixel-p0-20260811/alpha/honru-arcade-builder-alpha-v9.png",
+          "bytes": 615247,
+          "sha256": "775dbd6500eac095eaa08a4bb688fb5e5870b84d91cf79bf23dfa80c3bdf3846",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/platform/avatars/v3-honru-pixel-p0-20260811/alpha/honru-explorer-alpha-v1.png",
+          "bytes": 638068,
+          "sha256": "4ae2652aeb4f1c6a55ddc4df9fb1560b9e5a72e14b306182e1dea7b77540e579",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/platform/avatars/v3-honru-pixel-p0-20260811/alpha/honru-explorer-alpha-v2.png",
+          "bytes": 629995,
+          "sha256": "7353548824f3bc2940ad3c98e76d43b04645b90cce800ec0544477e160c3a408",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/platform/avatars/v3-honru-pixel-p0-20260811/alpha/honru-night-cadet-alpha-v1.png",
+          "bytes": 727300,
+          "sha256": "8804aeed71517d5c29eb47a5eddeea436e3d8097a40ab0521e7c86206dd9ce7c",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/platform/avatars/v3-honru-pixel-p0-20260811/alpha/honru-night-cadet-alpha-v2.png",
+          "bytes": 717980,
+          "sha256": "4e5e0f07dba7075f485c79ab2ab02a4cac3c8e3973572fe2a1779d0efd9b860d",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/platform/avatars/v3-honru-pixel-p0-20260811/alpha/honru-stargazer-alpha-v1.png",
+          "bytes": 682890,
+          "sha256": "c8374be02de6d5118a1e627b204c9364b0dc1ba7da2568bfd1d7373f7d9159bc",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/platform/avatars/v3-honru-pixel-p0-20260811/alpha/honru-stargazer-alpha-v2.png",
+          "bytes": 673790,
+          "sha256": "8874f1943dc8b23d9647727fb82ff27b27c3cd394d711f05345d12c0123fce7b",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/platform/avatars/v3-honru-pixel-p0-20260811/source/honru-arcade-builder-chroma-v1.png",
+          "bytes": 1193313,
+          "sha256": "56e060da08c871677ff7f12612bc8079eedf77b67974b9c3f4b8eb078ed30276",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/platform/avatars/v3-honru-pixel-p0-20260811/source/honru-arcade-builder-chroma-v2.png",
+          "bytes": 1047949,
+          "sha256": "042c393df43c02c5d77c9c069ab8db41fe4e7e20e3363f4c9c8689088667042a",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/platform/avatars/v3-honru-pixel-p0-20260811/source/honru-explorer-chroma-v1.png",
+          "bytes": 1049639,
+          "sha256": "0944d7cc97a01fbf457e06f2e544f569d9480b05e7d37dfc5d95021af4f99406",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/platform/avatars/v3-honru-pixel-p0-20260811/source/honru-night-cadet-chroma-v1.png",
+          "bytes": 1218156,
+          "sha256": "3582588586c0e1f46e459a882f3140c2dff74f75c99f7f8443c2d8133ca76215",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/platform/avatars/v3-honru-pixel-p0-20260811/source/honru-stargazer-chroma-v1.png",
+          "bytes": 1121680,
+          "sha256": "9f8853b7c61ff8556db3a7f290647a6355ed67c3ee922b126132fe345222c008",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        }
+      ]
+    },
+    {
+      "id": "player-character",
+      "root": "art-source/player-character/art-036-player-character-monopoly-p1-20260810",
+      "fileCount": 2,
+      "visualFileCount": 1,
+      "rasterRenderedCount": 1,
+      "contactSheet": "requirements/active/art-approval-matrix-p1-20260814/evidence/original-player-character-all-images-contact-sheet.jpg",
+      "contactSheetSha256": "c2b46cb16ba0736c7bb7456058f80a29fef90eae7eb5fa817d37340aa237c36a",
+      "files": [
+        {
+          "path": "art-source/player-character/art-036-player-character-monopoly-p1-20260810/player-character-direction-board-draft-v1.png",
+          "bytes": 2388571,
+          "sha256": "048606e833d7c7bd7cdb8b213fc1be32895f41181b620ac9a02e6249f683b153",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/player-character/art-036-player-character-monopoly-p1-20260810/PROMPT_AND_PROVENANCE.md",
+          "bytes": 5685,
+          "sha256": "12dfb7948e40c9acaa2653d761f52f1abe4ff1822a9e722c2359cf8864d5eb12",
+          "extension": ".md",
+          "textRead": true,
+          "lines": 64,
+          "headings": 4
+        }
+      ],
+      "records": [
+        {
+          "path": "art-source/player-character/art-036-player-character-monopoly-p1-20260810/player-character-direction-board-draft-v1.png",
+          "bytes": 2388571,
+          "sha256": "048606e833d7c7bd7cdb8b213fc1be32895f41181b620ac9a02e6249f683b153",
+          "extension": ".png",
+          "width": 1536,
+          "height": 1024,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        }
+      ]
+    },
+    {
+      "id": "monopoly",
+      "root": "art-source/games/monopoly/art-036-player-character-monopoly-p1-20260810",
+      "fileCount": 1,
+      "visualFileCount": 1,
+      "rasterRenderedCount": 1,
+      "contactSheet": "requirements/active/art-approval-matrix-p1-20260814/evidence/original-monopoly-all-images-contact-sheet.jpg",
+      "contactSheetSha256": "639896e3683c6a54074892f1ade3eb4671ac7683ee187ee8da26efd0b86bbdf1",
+      "files": [
+        {
+          "path": "art-source/games/monopoly/art-036-player-character-monopoly-p1-20260810/monopoly-tabletop-direction-board-draft-v1.png",
+          "bytes": 2750887,
+          "sha256": "09569c0e5b239cd5aecace3d6180ad8e2779e0bf9f3592dc26d1c6db9ff65195",
+          "extension": ".png"
+        }
+      ],
+      "records": [
+        {
+          "path": "art-source/games/monopoly/art-036-player-character-monopoly-p1-20260810/monopoly-tabletop-direction-board-draft-v1.png",
+          "bytes": 2750887,
+          "sha256": "09569c0e5b239cd5aecace3d6180ad8e2779e0bf9f3592dc26d1c6db9ff65195",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        }
+      ]
+    },
+    {
+      "id": "tank",
+      "root": "art-source/games/tank/tank-art-p1-20260810",
+      "fileCount": 3,
+      "visualFileCount": 2,
+      "rasterRenderedCount": 2,
+      "contactSheet": "requirements/active/art-approval-matrix-p1-20260814/evidence/original-tank-all-images-contact-sheet.jpg",
+      "contactSheetSha256": "c862591a456c271c6f225bc2c41ebaf59dbf86b560c09a99997fc5abba1a834c",
+      "files": [
+        {
+          "path": "art-source/games/tank/tank-art-p1-20260810/PROMPT_AND_PROVENANCE.md",
+          "bytes": 5454,
+          "sha256": "e6ef0d4c4e2f20c274f618bfffe298fffa615f1118ea86905ae4d0b4f6bed598",
+          "extension": ".md",
+          "textRead": true,
+          "lines": 54,
+          "headings": 7
+        },
+        {
+          "path": "art-source/games/tank/tank-art-p1-20260810/rejected/tank-style-board-draft-v1-symbol-noise.png",
+          "bytes": 2962264,
+          "sha256": "4e4dfa8fdc94afb643dffd3b1059272a3037da4375902652129fa79e3347fd2e",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/games/tank/tank-art-p1-20260810/tank-style-board-clean-draft-v2.png",
+          "bytes": 2753232,
+          "sha256": "9eeab1b34b5014f66983026e9245dbc28ec7c8a48b6b11b4cb20267b0cf914e7",
+          "extension": ".png"
+        }
+      ],
+      "records": [
+        {
+          "path": "art-source/games/tank/tank-art-p1-20260810/rejected/tank-style-board-draft-v1-symbol-noise.png",
+          "bytes": 2962264,
+          "sha256": "4e4dfa8fdc94afb643dffd3b1059272a3037da4375902652129fa79e3347fd2e",
+          "extension": ".png",
+          "width": 1536,
+          "height": 1024,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/games/tank/tank-art-p1-20260810/tank-style-board-clean-draft-v2.png",
+          "bytes": 2753232,
+          "sha256": "9eeab1b34b5014f66983026e9245dbc28ec7c8a48b6b11b4cb20267b0cf914e7",
+          "extension": ".png",
+          "width": 1536,
+          "height": 1024,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        }
+      ]
+    },
+    {
+      "id": "m0-teacher",
+      "root": "art-source/ai/teacher/sticker-v1",
+      "fileCount": 20,
+      "visualFileCount": 19,
+      "rasterRenderedCount": 19,
+      "contactSheet": "requirements/active/art-approval-matrix-p1-20260814/evidence/original-m0-teacher-all-images-contact-sheet.jpg",
+      "contactSheetSha256": "dd2cef9d451de9cb320442e818a0000264283d526f94f57445f8485acc2fc913",
+      "files": [
+        {
+          "path": "art-source/ai/teacher/sticker-v1/chroma/teacher-8-state-chroma-draft-v1.png",
+          "bytes": 1850755,
+          "sha256": "ab35e61e675b0f75952b4e882478aafa5cccd44ab605df9b3c17045b2bf05e98",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/ai/teacher/sticker-v1/IP_REVIEW_draft-v1.md",
+          "bytes": 1480,
+          "sha256": "66ae168effb6c17d67e8363d74b0d523c68e42ad6d4b7b63ca118d35f125b72a",
+          "extension": ".md",
+          "textRead": true,
+          "lines": 22,
+          "headings": 1
+        },
+        {
+          "path": "art-source/ai/teacher/sticker-v1/states/confident-draft-v1.png",
+          "bytes": 236990,
+          "sha256": "b5c4f8f54ccfbf562017d9a00d399ca9cd55c99f44ca559438425c43c04f01ea",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/ai/teacher/sticker-v1/states/confident-transparent-draft-v1.png",
+          "bytes": 160718,
+          "sha256": "27288cba87b21ad30ccc589e40cb77e7fe03ae6ad54a1de06c0f193948c85bec",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/ai/teacher/sticker-v1/states/idle-draft-v1.png",
+          "bytes": 220837,
+          "sha256": "58582b5912e7382b6aa376713f017d8f84cfb267dac598957ab71c64959d54be",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/ai/teacher/sticker-v1/states/idle-transparent-draft-v1.png",
+          "bytes": 142729,
+          "sha256": "2925de782ea58acc70eeb88d0019bfe5cddd7186ca729ff50419f2ad904cf37b",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/ai/teacher/sticker-v1/states/lose-draft-v1.png",
+          "bytes": 207372,
+          "sha256": "894a49e5d3105fd05c400b4f46ad084c45b08125dc11c30091c7e1996ca96755",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/ai/teacher/sticker-v1/states/lose-transparent-draft-v1.png",
+          "bytes": 131574,
+          "sha256": "e4e199dc36d52e18affc6336d5c97f7e4d173590cb92c628b83dcfa2cf13a5bb",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/ai/teacher/sticker-v1/states/recover-draft-v1.png",
+          "bytes": 216647,
+          "sha256": "7da5af37e83c43a191dc3fe620ec0f34ebaab2f871aabda07b812fcc6f112474",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/ai/teacher/sticker-v1/states/recover-transparent-draft-v1.png",
+          "bytes": 141536,
+          "sha256": "9445455b47c1ef0fa734a6065ba8890df6074a4cbe7f13cf2ce4a34c2d64d834",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/ai/teacher/sticker-v1/states/surprised-draft-v1.png",
+          "bytes": 236404,
+          "sha256": "4d0eeebff7f7d5840c2c66375c96f6da5efb99c966d3c03d1e78cab597055c31",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/ai/teacher/sticker-v1/states/surprised-transparent-draft-v1.png",
+          "bytes": 154726,
+          "sha256": "67a2637394c8d02a08224f4e97f63738805cdbb51c5944009a30b8e08b3199e7",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/ai/teacher/sticker-v1/states/taunt-draft-v1.png",
+          "bytes": 226550,
+          "sha256": "eb05fe1da598f1bd83b0e0ee2db830d3270f13aee0c92a625f4659ccddb82de9",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/ai/teacher/sticker-v1/states/taunt-transparent-draft-v1.png",
+          "bytes": 156814,
+          "sha256": "993cfd1cc99fb780be93917cbb9a46d90505fdbe560497a827fada39351b837c",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/ai/teacher/sticker-v1/states/think-draft-v1.png",
+          "bytes": 224725,
+          "sha256": "1a17c8e635f0519f052d678fc6f73cf1196c04c3061d500cb979e68c0e414db0",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/ai/teacher/sticker-v1/states/think-transparent-draft-v1.png",
+          "bytes": 147874,
+          "sha256": "bff9c506b4c680d5bc20d801e752dc9e41371629c5ab4cce8f7b5e1488260713",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/ai/teacher/sticker-v1/states/win-draft-v1.png",
+          "bytes": 245278,
+          "sha256": "296cc0e6048ca30b8a1189b8ee1eaed120bf8e8db2682616d22745e606e1250f",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/ai/teacher/sticker-v1/states/win-transparent-draft-v1.png",
+          "bytes": 177765,
+          "sha256": "c254ffe79e8c9fe41fa3230742789a64ba645c01704c6ab192daf6c4111faf2a",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/ai/teacher/sticker-v1/teacher-8-state-contact-sheet-draft-v1.png",
+          "bytes": 1836479,
+          "sha256": "18196b5b1ae197079b27352913f04402a12359ad64419e4e3e65839f148c5100",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/ai/teacher/sticker-v1/teacher-8-state-transparent-draft-v1.png",
+          "bytes": 1258565,
+          "sha256": "6fcc1177fb0eeaaf8d7f9a1a37931f9e66b10dfa2bbd930c4af23491b6c324fb",
+          "extension": ".png"
+        }
+      ],
+      "records": [
+        {
+          "path": "art-source/ai/teacher/sticker-v1/chroma/teacher-8-state-chroma-draft-v1.png",
+          "bytes": 1850755,
+          "sha256": "ab35e61e675b0f75952b4e882478aafa5cccd44ab605df9b3c17045b2bf05e98",
+          "extension": ".png",
+          "width": 1536,
+          "height": 1024,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/ai/teacher/sticker-v1/states/confident-draft-v1.png",
+          "bytes": 236990,
+          "sha256": "b5c4f8f54ccfbf562017d9a00d399ca9cd55c99f44ca559438425c43c04f01ea",
+          "extension": ".png",
+          "width": 384,
+          "height": 512,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/ai/teacher/sticker-v1/states/confident-transparent-draft-v1.png",
+          "bytes": 160718,
+          "sha256": "27288cba87b21ad30ccc589e40cb77e7fe03ae6ad54a1de06c0f193948c85bec",
+          "extension": ".png",
+          "width": 384,
+          "height": 512,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/ai/teacher/sticker-v1/states/idle-draft-v1.png",
+          "bytes": 220837,
+          "sha256": "58582b5912e7382b6aa376713f017d8f84cfb267dac598957ab71c64959d54be",
+          "extension": ".png",
+          "width": 384,
+          "height": 512,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/ai/teacher/sticker-v1/states/idle-transparent-draft-v1.png",
+          "bytes": 142729,
+          "sha256": "2925de782ea58acc70eeb88d0019bfe5cddd7186ca729ff50419f2ad904cf37b",
+          "extension": ".png",
+          "width": 384,
+          "height": 512,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/ai/teacher/sticker-v1/states/lose-draft-v1.png",
+          "bytes": 207372,
+          "sha256": "894a49e5d3105fd05c400b4f46ad084c45b08125dc11c30091c7e1996ca96755",
+          "extension": ".png",
+          "width": 384,
+          "height": 512,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/ai/teacher/sticker-v1/states/lose-transparent-draft-v1.png",
+          "bytes": 131574,
+          "sha256": "e4e199dc36d52e18affc6336d5c97f7e4d173590cb92c628b83dcfa2cf13a5bb",
+          "extension": ".png",
+          "width": 384,
+          "height": 512,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/ai/teacher/sticker-v1/states/recover-draft-v1.png",
+          "bytes": 216647,
+          "sha256": "7da5af37e83c43a191dc3fe620ec0f34ebaab2f871aabda07b812fcc6f112474",
+          "extension": ".png",
+          "width": 384,
+          "height": 512,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/ai/teacher/sticker-v1/states/recover-transparent-draft-v1.png",
+          "bytes": 141536,
+          "sha256": "9445455b47c1ef0fa734a6065ba8890df6074a4cbe7f13cf2ce4a34c2d64d834",
+          "extension": ".png",
+          "width": 384,
+          "height": 512,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/ai/teacher/sticker-v1/states/surprised-draft-v1.png",
+          "bytes": 236404,
+          "sha256": "4d0eeebff7f7d5840c2c66375c96f6da5efb99c966d3c03d1e78cab597055c31",
+          "extension": ".png",
+          "width": 384,
+          "height": 512,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/ai/teacher/sticker-v1/states/surprised-transparent-draft-v1.png",
+          "bytes": 154726,
+          "sha256": "67a2637394c8d02a08224f4e97f63738805cdbb51c5944009a30b8e08b3199e7",
+          "extension": ".png",
+          "width": 384,
+          "height": 512,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/ai/teacher/sticker-v1/states/taunt-draft-v1.png",
+          "bytes": 226550,
+          "sha256": "eb05fe1da598f1bd83b0e0ee2db830d3270f13aee0c92a625f4659ccddb82de9",
+          "extension": ".png",
+          "width": 384,
+          "height": 512,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/ai/teacher/sticker-v1/states/taunt-transparent-draft-v1.png",
+          "bytes": 156814,
+          "sha256": "993cfd1cc99fb780be93917cbb9a46d90505fdbe560497a827fada39351b837c",
+          "extension": ".png",
+          "width": 384,
+          "height": 512,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/ai/teacher/sticker-v1/states/think-draft-v1.png",
+          "bytes": 224725,
+          "sha256": "1a17c8e635f0519f052d678fc6f73cf1196c04c3061d500cb979e68c0e414db0",
+          "extension": ".png",
+          "width": 384,
+          "height": 512,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/ai/teacher/sticker-v1/states/think-transparent-draft-v1.png",
+          "bytes": 147874,
+          "sha256": "bff9c506b4c680d5bc20d801e752dc9e41371629c5ab4cce8f7b5e1488260713",
+          "extension": ".png",
+          "width": 384,
+          "height": 512,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/ai/teacher/sticker-v1/states/win-draft-v1.png",
+          "bytes": 245278,
+          "sha256": "296cc0e6048ca30b8a1189b8ee1eaed120bf8e8db2682616d22745e606e1250f",
+          "extension": ".png",
+          "width": 384,
+          "height": 512,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/ai/teacher/sticker-v1/states/win-transparent-draft-v1.png",
+          "bytes": 177765,
+          "sha256": "c254ffe79e8c9fe41fa3230742789a64ba645c01704c6ab192daf6c4111faf2a",
+          "extension": ".png",
+          "width": 384,
+          "height": 512,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/ai/teacher/sticker-v1/teacher-8-state-contact-sheet-draft-v1.png",
+          "bytes": 1836479,
+          "sha256": "18196b5b1ae197079b27352913f04402a12359ad64419e4e3e65839f148c5100",
+          "extension": ".png",
+          "width": 1536,
+          "height": 1024,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/ai/teacher/sticker-v1/teacher-8-state-transparent-draft-v1.png",
+          "bytes": 1258565,
+          "sha256": "6fcc1177fb0eeaaf8d7f9a1a37931f9e66b10dfa2bbd930c4af23491b6c324fb",
+          "extension": ".png",
+          "width": 1536,
+          "height": 1024,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        }
+      ]
+    },
+    {
+      "id": "m0-avatar",
+      "root": "art-source/avatars/golden-set/sticker-v1",
+      "fileCount": 17,
+      "visualFileCount": 13,
+      "rasterRenderedCount": 13,
+      "contactSheet": "requirements/active/art-approval-matrix-p1-20260814/evidence/original-m0-avatar-all-images-contact-sheet.jpg",
+      "contactSheetSha256": "9d55c81f06efa29b76ffcf07ecba64c355650bb09a6ebf2e2744dfd22ef7627a",
+      "files": [
+        {
+          "path": "art-source/avatars/golden-set/sticker-v1/avatar-100-117-124-141-contact-sheet-draft-v1.png",
+          "bytes": 1510514,
+          "sha256": "729add7418fa01960b7a46043c718295afa05f95d3ab7c082065ad5110793bef",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/avatars/golden-set/sticker-v1/avatar_100/avatar_100-draft-v1.png",
+          "bytes": 303252,
+          "sha256": "7eea0d02683770f2c45bc94c0ba68220d007ae5052adcd6ecb49d78bc6c2f881",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/avatars/golden-set/sticker-v1/avatar_100/avatar_100-transparent-draft-v1.png",
+          "bytes": 996419,
+          "sha256": "87a4eab8943b41b9dd85e6baa8c6bb2a1fe43b13bd7e8525284a4bb2f4abb633",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/avatars/golden-set/sticker-v1/avatar_100/chroma/avatar_100-chroma-draft-v1.png",
+          "bytes": 1366824,
+          "sha256": "2140f6b0c1b322758f41bf0b242c284cc3ac7420b4a13e3621a208efe057cbd4",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/avatars/golden-set/sticker-v1/avatar_100/IP_REVIEW_draft-v1.md",
+          "bytes": 875,
+          "sha256": "b9493f21b49720c3125e73080c3ebc190b1033d74ee444f9cda4730ab8b34922",
+          "extension": ".md",
+          "textRead": true,
+          "lines": 10,
+          "headings": 1
+        },
+        {
+          "path": "art-source/avatars/golden-set/sticker-v1/avatar_117/avatar_117-draft-v1.png",
+          "bytes": 280188,
+          "sha256": "1bfc5819b236ed3be3a4330f00286db021c476f4487205afe7e98c325818809b",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/avatars/golden-set/sticker-v1/avatar_117/avatar_117-transparent-draft-v1.png",
+          "bytes": 871480,
+          "sha256": "b62f370a5a58c7f1db173c67d04f824d4c72a50c2368ba5cf02322ebbe2d925f",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/avatars/golden-set/sticker-v1/avatar_117/chroma/avatar_117-chroma-draft-v1.png",
+          "bytes": 1310180,
+          "sha256": "d6b647b9d742f9ddee708ada7d8d0f74e32c8ca2e1bd44446ec96bca3e10080b",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/avatars/golden-set/sticker-v1/avatar_117/IP_REVIEW_draft-v1.md",
+          "bytes": 833,
+          "sha256": "2bb96ffcd1d63c7a26c17f2f311127af8ff6d0f9ad668bd389dbd953d36c846e",
+          "extension": ".md",
+          "textRead": true,
+          "lines": 10,
+          "headings": 1
+        },
+        {
+          "path": "art-source/avatars/golden-set/sticker-v1/avatar_124/avatar_124-draft-v1.png",
+          "bytes": 305854,
+          "sha256": "33ff9645d369877b8e7523c7ee6be09970b18ca770ea221321e3826d44e6a6a2",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/avatars/golden-set/sticker-v1/avatar_124/avatar_124-transparent-draft-v1.png",
+          "bytes": 1105805,
+          "sha256": "bd814903906d08bca9976ce5fc2ef70706c2c1c98f3090a20bc73fad1ab9875e",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/avatars/golden-set/sticker-v1/avatar_124/chroma/avatar_124-chroma-draft-v1.png",
+          "bytes": 1476028,
+          "sha256": "90879c41f97faaf468bacc2345383f7c1c4a9e9e5df7cff5e3b72cdec4c33ae8",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/avatars/golden-set/sticker-v1/avatar_124/IP_REVIEW_draft-v1.md",
+          "bytes": 816,
+          "sha256": "51c34418b71fe7f0aa4eec3b3ca4a6ecb65568ef104503367a16758b6a21120f",
+          "extension": ".md",
+          "textRead": true,
+          "lines": 10,
+          "headings": 1
+        },
+        {
+          "path": "art-source/avatars/golden-set/sticker-v1/avatar_141/avatar_141-draft-v1.png",
+          "bytes": 262764,
+          "sha256": "5d7dd07fadc8847c07366208f29a8b4c0de9c98b3fa07fd96bc7881b8c086769",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/avatars/golden-set/sticker-v1/avatar_141/avatar_141-transparent-draft-v1.png",
+          "bytes": 829705,
+          "sha256": "1e923155cd6a114fd5a58dee4175baa894166e0db557654b40b03bcd829f95df",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/avatars/golden-set/sticker-v1/avatar_141/chroma/avatar_141-chroma-draft-v1.png",
+          "bytes": 1236155,
+          "sha256": "dc40bf37e8c8c87a5999a908dd5e3363280e73247aca2f7495553ee05acd30dc",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/avatars/golden-set/sticker-v1/avatar_141/IP_REVIEW_draft-v1.md",
+          "bytes": 811,
+          "sha256": "603e590224d83c8cde981f328b501469820cf35937b8eafb60c9004aff0f8d1f",
+          "extension": ".md",
+          "textRead": true,
+          "lines": 10,
+          "headings": 1
+        }
+      ],
+      "records": [
+        {
+          "path": "art-source/avatars/golden-set/sticker-v1/avatar-100-117-124-141-contact-sheet-draft-v1.png",
+          "bytes": 1510514,
+          "sha256": "729add7418fa01960b7a46043c718295afa05f95d3ab7c082065ad5110793bef",
+          "extension": ".png",
+          "width": 1983,
+          "height": 793,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/avatars/golden-set/sticker-v1/avatar_100/avatar_100-draft-v1.png",
+          "bytes": 303252,
+          "sha256": "7eea0d02683770f2c45bc94c0ba68220d007ae5052adcd6ecb49d78bc6c2f881",
+          "extension": ".png",
+          "width": 512,
+          "height": 512,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/avatars/golden-set/sticker-v1/avatar_100/avatar_100-transparent-draft-v1.png",
+          "bytes": 996419,
+          "sha256": "87a4eab8943b41b9dd85e6baa8c6bb2a1fe43b13bd7e8525284a4bb2f4abb633",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/avatars/golden-set/sticker-v1/avatar_100/chroma/avatar_100-chroma-draft-v1.png",
+          "bytes": 1366824,
+          "sha256": "2140f6b0c1b322758f41bf0b242c284cc3ac7420b4a13e3621a208efe057cbd4",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/avatars/golden-set/sticker-v1/avatar_117/avatar_117-draft-v1.png",
+          "bytes": 280188,
+          "sha256": "1bfc5819b236ed3be3a4330f00286db021c476f4487205afe7e98c325818809b",
+          "extension": ".png",
+          "width": 512,
+          "height": 512,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/avatars/golden-set/sticker-v1/avatar_117/avatar_117-transparent-draft-v1.png",
+          "bytes": 871480,
+          "sha256": "b62f370a5a58c7f1db173c67d04f824d4c72a50c2368ba5cf02322ebbe2d925f",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/avatars/golden-set/sticker-v1/avatar_117/chroma/avatar_117-chroma-draft-v1.png",
+          "bytes": 1310180,
+          "sha256": "d6b647b9d742f9ddee708ada7d8d0f74e32c8ca2e1bd44446ec96bca3e10080b",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/avatars/golden-set/sticker-v1/avatar_124/avatar_124-draft-v1.png",
+          "bytes": 305854,
+          "sha256": "33ff9645d369877b8e7523c7ee6be09970b18ca770ea221321e3826d44e6a6a2",
+          "extension": ".png",
+          "width": 512,
+          "height": 512,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/avatars/golden-set/sticker-v1/avatar_124/avatar_124-transparent-draft-v1.png",
+          "bytes": 1105805,
+          "sha256": "bd814903906d08bca9976ce5fc2ef70706c2c1c98f3090a20bc73fad1ab9875e",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/avatars/golden-set/sticker-v1/avatar_124/chroma/avatar_124-chroma-draft-v1.png",
+          "bytes": 1476028,
+          "sha256": "90879c41f97faaf468bacc2345383f7c1c4a9e9e5df7cff5e3b72cdec4c33ae8",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/avatars/golden-set/sticker-v1/avatar_141/avatar_141-draft-v1.png",
+          "bytes": 262764,
+          "sha256": "5d7dd07fadc8847c07366208f29a8b4c0de9c98b3fa07fd96bc7881b8c086769",
+          "extension": ".png",
+          "width": 512,
+          "height": 512,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/avatars/golden-set/sticker-v1/avatar_141/avatar_141-transparent-draft-v1.png",
+          "bytes": 829705,
+          "sha256": "1e923155cd6a114fd5a58dee4175baa894166e0db557654b40b03bcd829f95df",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/avatars/golden-set/sticker-v1/avatar_141/chroma/avatar_141-chroma-draft-v1.png",
+          "bytes": 1236155,
+          "sha256": "dc40bf37e8c8c87a5999a908dd5e3363280e73247aca2f7495553ee05acd30dc",
+          "extension": ".png",
+          "width": 1254,
+          "height": 1254,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        }
+      ]
+    },
+    {
+      "id": "m0-ui",
+      "root": "art-source/ui/sticker-v1",
+      "fileCount": 5,
+      "visualFileCount": 2,
+      "rasterRenderedCount": 2,
+      "contactSheet": "requirements/active/art-approval-matrix-p1-20260814/evidence/original-m0-ui-all-images-contact-sheet.jpg",
+      "contactSheetSha256": "eb978157b9c4e0090c2d1548bd5fb2f1ee2e59a98331637e19170fa0a2652d46",
+      "files": [
+        {
+          "path": "art-source/ui/sticker-v1/component-demo.html",
+          "bytes": 12996,
+          "sha256": "67e52d8d0ceab8cd22d3e0583a724d1f8b8a8c366ec6040ce8d76b9071b5b1e1",
+          "extension": ".html",
+          "textRead": true,
+          "lines": 45,
+          "headings": 0
+        },
+        {
+          "path": "art-source/ui/sticker-v1/component-demo.png",
+          "bytes": 153840,
+          "sha256": "135db655dc400fb35f960045b510ee450e007ccfad03e308debf65e222db1f61",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/ui/sticker-v1/DESIGN_SYSTEM_v3.md",
+          "bytes": 2381,
+          "sha256": "ed4ccc6767248bb32e37f9bcc5b384e03fc6ebe5cd00ec8949d0bb08056f7842",
+          "extension": ".md",
+          "textRead": true,
+          "lines": 39,
+          "headings": 5
+        },
+        {
+          "path": "art-source/ui/sticker-v1/generated/core-ui-style-board-draft-v1.png",
+          "bytes": 1408445,
+          "sha256": "184e24bfd5c52f54fa240366787a0751e5078038e4fbda17b91c61219f2b4de5",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/ui/sticker-v1/IP_REVIEW_draft-v1.md",
+          "bytes": 860,
+          "sha256": "0ef8a491041a7d2d43f94f386203f4596bd00798686031264dc56515ab0a2d30",
+          "extension": ".md",
+          "textRead": true,
+          "lines": 9,
+          "headings": 1
+        }
+      ],
+      "records": [
+        {
+          "path": "art-source/ui/sticker-v1/component-demo.png",
+          "bytes": 153840,
+          "sha256": "135db655dc400fb35f960045b510ee450e007ccfad03e308debf65e222db1f61",
+          "extension": ".png",
+          "width": 1600,
+          "height": 900,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/ui/sticker-v1/generated/core-ui-style-board-draft-v1.png",
+          "bytes": 1408445,
+          "sha256": "184e24bfd5c52f54fa240366787a0751e5078038e4fbda17b91c61219f2b4de5",
+          "extension": ".png",
+          "width": 1672,
+          "height": 941,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        }
+      ]
+    },
+    {
+      "id": "m0-gomoku",
+      "root": "art-source/games/gomoku/sticker-v1",
+      "fileCount": 4,
+      "visualFileCount": 3,
+      "rasterRenderedCount": 2,
+      "contactSheet": "requirements/active/art-approval-matrix-p1-20260814/evidence/original-m0-gomoku-all-images-contact-sheet.jpg",
+      "contactSheetSha256": "e658c0c8eb9d7d5fabf2ac25da2fdfdef89a651371b6daa2cf2248864314e4a6",
+      "files": [
+        {
+          "path": "art-source/games/gomoku/sticker-v1/gomoku-vertical-slice-spec-draft-v2.png",
+          "bytes": 60821,
+          "sha256": "f2e82f280f8b0662451bb01b6b351aba5260d9601fee83984e7a24ca765c24be",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/games/gomoku/sticker-v1/gomoku-vertical-slice-spec-draft-v2.svg",
+          "bytes": 5011,
+          "sha256": "36638c20799829cda752469d26292ba0f2d17eef4e3c2c018139275b90e0f56c",
+          "extension": ".svg"
+        },
+        {
+          "path": "art-source/games/gomoku/sticker-v1/gomoku-vertical-slice-style-board-draft-v1.png",
+          "bytes": 2280431,
+          "sha256": "861d7afde8ac348258ad91ad8627486031b7feb1afd632527bd62057543d0185",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/games/gomoku/sticker-v1/IP_REVIEW_draft-v1.md",
+          "bytes": 794,
+          "sha256": "5e5dd33d9acaaceaab9b2ab7f386bc3bf8c3b2922458ec53473998c01073adc7",
+          "extension": ".md",
+          "textRead": true,
+          "lines": 9,
+          "headings": 1
+        }
+      ],
+      "records": [
+        {
+          "path": "art-source/games/gomoku/sticker-v1/gomoku-vertical-slice-spec-draft-v2.png",
+          "bytes": 60821,
+          "sha256": "f2e82f280f8b0662451bb01b6b351aba5260d9601fee83984e7a24ca765c24be",
+          "extension": ".png",
+          "width": 1600,
+          "height": 900,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/games/gomoku/sticker-v1/gomoku-vertical-slice-spec-draft-v2.svg",
+          "bytes": 5011,
+          "sha256": "36638c20799829cda752469d26292ba0f2d17eef4e3c2c018139275b90e0f56c",
+          "extension": ".svg",
+          "renderedInContactSheet": false,
+          "reason": "SVG preserved as source text; visual PNG siblings exist for this family."
+        },
+        {
+          "path": "art-source/games/gomoku/sticker-v1/gomoku-vertical-slice-style-board-draft-v1.png",
+          "bytes": 2280431,
+          "sha256": "861d7afde8ac348258ad91ad8627486031b7feb1afd632527bd62057543d0185",
+          "extension": ".png",
+          "width": 1672,
+          "height": 941,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        }
+      ]
+    },
+    {
+      "id": "m0-ludo",
+      "root": "art-source/games/ludo/sticker-v1",
+      "fileCount": 4,
+      "visualFileCount": 3,
+      "rasterRenderedCount": 2,
+      "contactSheet": "requirements/active/art-approval-matrix-p1-20260814/evidence/original-m0-ludo-all-images-contact-sheet.jpg",
+      "contactSheetSha256": "25e9c3b815f9513b35d9f12d1cb824cb7b5da4ee8b70c6fba9f35e8eb0c26fe7",
+      "files": [
+        {
+          "path": "art-source/games/ludo/sticker-v1/IP_REVIEW_draft-v1.md",
+          "bytes": 828,
+          "sha256": "dc7b7618e273a74edd3bc6b540676ab26930e4262580d34109196e951a41ab35",
+          "extension": ".md",
+          "textRead": true,
+          "lines": 9,
+          "headings": 1
+        },
+        {
+          "path": "art-source/games/ludo/sticker-v1/ludo-vertical-slice-spec-draft-v2.png",
+          "bytes": 194278,
+          "sha256": "6d9fad5304744edc871293e30e43e2f309c4f8b2b9e79ad1706afefb39628f72",
+          "extension": ".png"
+        },
+        {
+          "path": "art-source/games/ludo/sticker-v1/ludo-vertical-slice-spec-draft-v2.svg",
+          "bytes": 7802,
+          "sha256": "03f61c8883f9ceb7917892b7a8aa12d0662d00281c63e9a89467194610620f40",
+          "extension": ".svg"
+        },
+        {
+          "path": "art-source/games/ludo/sticker-v1/ludo-vertical-slice-style-board-draft-v1.png",
+          "bytes": 2338728,
+          "sha256": "d8bd7e932222059ca98f28727c44bbceb475d7dfa153eb10e7355dc0bc577738",
+          "extension": ".png"
+        }
+      ],
+      "records": [
+        {
+          "path": "art-source/games/ludo/sticker-v1/ludo-vertical-slice-spec-draft-v2.png",
+          "bytes": 194278,
+          "sha256": "6d9fad5304744edc871293e30e43e2f309c4f8b2b9e79ad1706afefb39628f72",
+          "extension": ".png",
+          "width": 1600,
+          "height": 900,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        },
+        {
+          "path": "art-source/games/ludo/sticker-v1/ludo-vertical-slice-spec-draft-v2.svg",
+          "bytes": 7802,
+          "sha256": "03f61c8883f9ceb7917892b7a8aa12d0662d00281c63e9a89467194610620f40",
+          "extension": ".svg",
+          "renderedInContactSheet": false,
+          "reason": "SVG preserved as source text; visual PNG siblings exist for this family."
+        },
+        {
+          "path": "art-source/games/ludo/sticker-v1/ludo-vertical-slice-style-board-draft-v1.png",
+          "bytes": 2338728,
+          "sha256": "d8bd7e932222059ca98f28727c44bbceb475d7dfa153eb10e7355dc0bc577738",
+          "extension": ".png",
+          "width": 1672,
+          "height": 941,
+          "mode": "RGBA",
+          "renderedInContactSheet": true
+        }
+      ]
+    }
+  ],
+  "totals": {
+    "families": 14,
+    "files": 247,
+    "visualFiles": 214,
+    "rasterRendered": 212,
+    "textFilesRead": 33,
+    "markdownDocumentsRead": 32,
+    "htmlFilesRead": 1
+  },
+  "boundary": [
+    "Contact sheets are derived review evidence and do not alter source assets.",
+    "Every PNG is shown with its relative path and hash prefix; SVG files retain full-file hashes and are not silently rasterized.",
+    "Visible review is not human cleanup, Reviewer B, IP approval, Golden Set approval, or runtime authorization."
+  ]
+}

@@ -11,12 +11,37 @@ function registerGame(id, factory) {
   GAME_REGISTRY[id] = factory;
 }
 
+// 所有游戏实例都通过同一入口取得难度，避免某个游戏遗漏默认值或把旧人格直接当强度。
+function normalizeGameAIDifficulty(opts){
+  opts = opts || {};
+  const hasExplicitDifficulty = !!(opts.aiDifficulty || (opts.aiPersona && opts.aiPersona.difficulty));
+  if (typeof aiDifficultyById === 'function') {
+    opts.aiDifficulty = hasExplicitDifficulty && typeof aiDifficultyFromOptions === 'function'
+      ? aiDifficultyFromOptions(opts)
+      : aiDifficultyById('normal');
+    if (typeof aiDifficultyCompatibilityProfile === 'function') {
+      opts.aiPersona = aiDifficultyCompatibilityProfile(opts.aiDifficulty);
+    }
+  } else {
+    // 独立旧模块/测试尚未加载难度目录时，仍保证每局有可读的普通默认值。
+    opts.aiDifficulty = { id:'normal' };
+  }
+  return opts;
+}
+
 function createGameInstance(id, area, extra, playerCount, opts) {
   const factory = GAME_REGISTRY[id] || (typeof games !== 'undefined' && games[id]);
   if (!factory) throw new Error('game not found: ' + id);
-  opts = opts || {};
+  opts = normalizeGameAIDifficulty(opts);
   opts.destroyed = false;
   const raw = factory(area, extra, playerCount, opts);
+  const clearPresentation = () => {
+    try { if (typeof clearHonruGameReaction === 'function') clearHonruGameReaction(); } catch {}
+  };
+  const callWithPresentationReset = fn => (...args) => {
+    clearPresentation();
+    return fn.apply(raw, args);
+  };
 
   const instance = {
     id: id,
@@ -47,20 +72,22 @@ function createGameInstance(id, area, extra, playerCount, opts) {
       return false;
     },
     restart() {
+      clearPresentation();
       if (raw.reset) raw.reset();
       else if (raw.resetLocal) raw.resetLocal();
       else if (raw.restart) raw.restart();
     },
     destroy() {
       opts.destroyed = true;
+      clearPresentation();
       if (raw.destroy) raw.destroy();
       // 清理 DOM（可选，由调用方决定是否清空 area/extra）
     },
 
     // ---- 兼容别名（旧代码仍可用） ----
-    reset: raw.reset || raw.resetLocal || (() => {}),
+    reset: callWithPresentationReset(raw.reset || raw.resetLocal || (() => {})),
     onMove: raw.onMove || (() => {}),
-    onRestart: raw.onRestart || raw.resetLocal || raw.reset || (() => {}),
+    onRestart: callWithPresentationReset(raw.onRestart || raw.resetLocal || raw.reset || (() => {})),
     snapshot: raw.snapshot || raw.serialize || (() => null),
   };
 

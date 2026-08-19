@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "taskId": "shop-design-system-close-p1-20260813",
+  "status": "completed_local",
+  "completed": ["shared overlay topmost lifecycle", "tab/preview restore", "languagechange refresh", "pending purchase rebind", "G Coins visible copy", "quality gates", "full npm test", "local browser"],
+  "pending": ["second desktop browser", "Android/iPhone/Tablet", "real network shaping", "forced-colors and visible reduced-motion", "GATE-ART-GOLDEN-SET", "user release command"],
+  "verification": {
+    "specialized": ["node qa/overlay-dialog-accessibility.js", "node qa/shop-language-refresh-contract.js", "npm run test:shop-contract", "npm run test:g-coins", "npm run test:i18n", "node qa/dom-smoke.js"],
+    "quality": "npm run quality:gates (exit 0)",
+    "full": "npm test (176.1s, exit 0)",
+    "buildBytes": 1356934,
+    "buildSha256": "B1E3509AB28CC03FF43C22FB43A069F8D031083A1C3664B5FC2D270C8B80662"
+  },
+  "browser": {"status":"local_pass", "url":"http://localhost:8080/", "console":"no warn/error observed"},
+  "review": {"status":"master_review_plus_read_only_audits", "terraMax":"two gpt-5.6-terra max audits returned findings; no independent approval claimed"},
+  "published": false
+}

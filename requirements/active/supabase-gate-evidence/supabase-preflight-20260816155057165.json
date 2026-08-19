@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-16T15:50:57.165Z",
+  "classification": "LOCAL_PREFLIGHT_ONLY",
+  "result": "NOT_EXECUTED",
+  "releaseStatus": "RELEASE_EVIDENCE_PENDING",
+  "environment": {
+    "status": "NOT_EXECUTED",
+    "reason": "missing_supabase_url"
+  },
+  "connectivity": {
+    "status": "NOT_EXECUTED"
+  },
+  "schemaDiscovery": {
+    "status": "NOT_EXECUTED",
+    "tables": {
+      "profiles": false,
+      "history": false,
+      "reward_history": false,
+      "economy_ledger": false,
+      "analytics_events": false,
+      "ai_learning_models": false,
+      "ai_learning_experiences": false,
+      "friend_requests": false,
+      "friendships": false,
+      "blocks": false,
+      "reports": false,
+      "direct_messages": false,
+      "direct_message_reads": false,
+      "cluster_instances": false,
+      "cluster_leases": false,
+      "platform_events": false,
+      "cluster_event_cursors": false,
+      "metrics_snapshots": false
+    },
+    "rpcs": {
+      "apply_reward_v1": false,
+      "apply_purchase_v1": false,
+      "apply_ai_learning_v1": false,
+      "send_direct_message_v1": false,
+      "apply_direct_message_read_v1": false,
+      "claim_cluster_lease_v1": false,
+      "renew_cluster_lease_v1": false,
+      "append_platform_event_v1": false,
+      "list_platform_events_v1": false,
+      "commit_cluster_cursor_v1": false,
+      "append_metrics_snapshot_v1": false,
+      "get_direct_message_by_id_v1": false,
+      "cleanup_cluster_data_v1": false
+    }
+  },
+  "rlsRoleMatrix": {
+    "status": "NOT_EXECUTED",
+    "requiredEvidence": "supabase/production-acceptance.sql output using database roles"
+  },
+  "transactionIdempotency": {
+    "status": "NOT_EXECUTED",
+    "requiredEvidence": "real valid transaction identities and duplicate terminal result"
+  },
+  "transactionConcurrency": {
+    "status": "NOT_EXECUTED",
+    "requiredEvidence": "real concurrent valid transactions with one authoritative commit"
+  },
+  "encryptedBackup": {
+    "status": "NOT_EXECUTED"
+  },
+  "isolatedRestore": {
+    "status": "NOT_EXECUTED"
+  },
+  "nonDestructiveRollback": {
+    "status": "NOT_EXECUTED"
+  },
+  "multiInstance": {
+    "status": "NOT_EXECUTED"
+  },
+  "overallPass": false,
+  "boundary": "OpenAPI discovery is not production Gate evidence and can never set overallPass=true."
+}

@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "taskId": "home-engagement-p0-20260810",
+  "owners": {
+    "homeRuntime": ["public/src/core/02-app-shell.js", "public/index-template.html"],
+    "i18n": ["public/locales/zh-CN.json", "public/locales/en-US.json", "public/locales/uk-UA.json"],
+    "qaDocs": ["qa/home-engagement-contract.js", "package.json", "requirements/PRODUCT_REQUIREMENTS_LEDGER.json"]
+  },
+  "forbidden": ["server/**", "shared/rules/**", "supabase/**", "art-source/**", "public/assets/**"]
+}

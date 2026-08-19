@@ -4,7 +4,7 @@
 
 - 身份参考：`art-source/brand/ghost-game/honru/v2/honru-character-master-v2-flat-transparent-draft-v1.png`
 - 生成方式：Codex 内置 ImageGen；每个状态独立调用，未使用 CLI、第三方模型或商业游戏素材。
-- 输出用途：`source-only` / `reference-only`；未经人工风格/IP审查不得进入 `public/` 或线上 Manifest。
+- 输出用途：原始来源与审计母稿；当前九状态已依据 `OWNER_AUTHORIZED_ART_CLEARANCE-20260816.md` 进入本地可逆 runtime。人工风格/IP意见为可选咨询，线上发布仍需用户当前明确命令。
 - 透明流程：纯绿色色键源 → `remove_chroma_key.py --auto-key border --soft-matte --transparent-threshold 12 --opaque-threshold 220 --edge-contract 1 --despill` → Alpha PNG。
 - 三色归并：使用 32 位色距计算，将可见 RGB 归并为 Ink `#211923`、Paper `#FFF9F2`、Cream `#F3E5C4`，保留 Alpha；曾发现 16 位色距会溢出并立即从 Alpha 源重建，错误中间产物未保留为正样本。
 
@@ -47,5 +47,6 @@ The chroma background must be perfectly uniform with no shadow, gradient, textur
 - License：`project-owned-ai-generated`。
 - Author：`OpenAI Codex for Ghost Game`。
 - 自动技术检查：`PASS`。
-- 风格/IP/可爱度：`HUMAN_REVIEW_REQUIRED`。
-- 发布：`DO_NOT_SHIP`，直到运行时技术纵切、人工预览与双人 IP Similarity Review 完成。
+- 机器视觉/技术/相似风险：`OWNER_AUTHORIZED_ART_CLEARANCE` 必备检查已完成，详见同目录清除记录。
+- 人工清稿、Reviewer B、IP/法律意见与额外 Golden Set：`OPTIONAL_ADVISORY_EVIDENCE / NOT_EXECUTED`，不得伪造成 PASS，也不再阻塞开发或 runtime。
+- 发布：`LOCAL_ONLY / NOT_RELEASED`；只有用户当前明确发布命令才可进入线上发布流程。

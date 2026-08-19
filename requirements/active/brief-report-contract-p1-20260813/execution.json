@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "taskId": "brief-report-contract-p1-20260813",
+  "status": "completed_local",
+  "verification": {
+    "specialized": ["node qa/brief-report-contract.js"],
+    "pendingFinal": [],
+    "completedFinal": ["npm run reports:progress", "node qa/progress-ledger.js", "npm run quality:gates", "npm test (165.9s)", "node scripts/build.js", "git diff --check"],
+    "brief": "简易报告/BriefReport-TECH050中文收口合同-202608132155.md"
+  },
+  "published": false,
+  "boundary": "文档与治理合同；不修改产品运行时、规则、协议、奖励、数据库、社交数据、素材 runtime 或线上配置。"
+}

@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "taskId": "bug-intake-p1-20260813",
+  "status": "completed_local",
+  "verification": {
+    "specialized": ["node qa/bug-intake-contract.js"],
+    "pendingFinal": [],
+    "completedFinal": ["npm run test:bug-intake", "npm run reports:progress", "node qa/progress-ledger.js", "node qa/mainline-control-plane.js", "npm run quality:gates", "npm test (189.0s; retry after outer timeout/EPIPE)", "node scripts/build.js", "git diff --check"]
+  },
+  "published": false,
+  "boundary": "Bug Intake 治理文档与 QA；不修改运行时、规则、协议、奖励、数据库、社交数据、素材 runtime 或线上配置。"
+}

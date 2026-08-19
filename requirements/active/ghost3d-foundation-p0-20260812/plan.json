@@ -1,0 +1,16 @@
+{
+  "taskId": "ghost3d-foundation-p0-20260812",
+  "requirement": "TECH-049",
+  "stage": "CLOSE",
+  "disposition": "NOW_CLOSURE",
+  "state": "IMPLEMENTED_LOCAL_ONLY",
+  "steps": [
+    {"id":"G3D-1","status":"completed","title":"读取主线命令、路由、两份总指挥/3D 报告和 deep-module design skill"},
+    {"id":"G3D-2","status":"completed","title":"冻结单一 apply 消息 seam、Adapter 责任和无平台环境读取边界"},
+    {"id":"G3D-3","status":"completed","title":"替换被拒绝的多别名 Host；实现私有 fallback、单调状态和异步过期保护"},
+    {"id":"G3D-4","status":"completed","title":"重写 Node QA，只通过 create/apply/snapshot/dispose 验证合同与静态边界"},
+    {"id":"G3D-5","status":"completed","title":"以 inert build/test/Quality Gate 注册 Foundation，并运行语法、专项和共享本地回归记录证据"},
+    {"id":"G3D-6","status":"pending","title":"真实浏览器、设备、网络和后续 Renderer vertical slice 证据"}
+  ],
+  "rollback": "remove the unreferenced Foundation and QA; existing DOM/Canvas/Wave B paths remain unchanged"
+}

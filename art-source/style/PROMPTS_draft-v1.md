@@ -2,6 +2,15 @@
 
 执行方式：Codex 内置 `imagegen`；运行时管理的具体模型名称与 provider task ID 未暴露。五个调用均为全新生成，未使用第三方图片、商业游戏资产或艺术家风格引用。生成时间为 2026-08-08（Asia/Tokyo）。游戏棋盘生成稿因规则错误只保留为失败探索；当前精确规格稿改为项目自有 SVG。
 
+## 后续生成硬约束（2026-08-16）
+
+后续所有 Ghost Game 图片生成必须引用项目自有 style ID `pocket-tabletop-sticker-v1`、`design-tokens.v1.json`、`ART_BIBLE_v1.md` 以及以下两个 North Star 文件，不得只写模糊的“Q 版”或“游戏风格”：
+
+- `art-source/ui/sticker-v1/component-demo.png`，SHA-256 `135DB655DC400FB35F960045B510EE450E007CCFAD03E308DEBF65E222DB1F61`。
+- `art-source/ui/sticker-v1/generated/core-ui-style-board-draft-v1.png`，SHA-256 `184E24BFD5C52F54FA240366787A0751E5078038E4FBDA17B91C61219F2B4DE5`。
+
+Prompt 只能描述项目自己的 Ink/Paper/Cream Token、粗圆闭合线、硬底影、低频两级赛璐璐、强剪影和可访问状态语义；禁止引用商业游戏、在世艺术家、外部 UI 皮肤或第三方角色作为风格捷径。外部素材只可形成组件/状态清单，不能作为 ImageGen 参考图、重绘底图或成品代码。新调用继续保存 Prompt、task ID、原图 hash、Alpha/尺寸派生与 IP Review，且默认 source-only。
+
 ## Teacher 八状态
 
 - 本地追踪 ID：`local:exec-317752ee-3f5f-4c3c-849b-7cc6e974947e`

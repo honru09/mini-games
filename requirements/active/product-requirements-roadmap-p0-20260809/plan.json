@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "task": "product-requirements-roadmap-p0-20260809",
+  "status": "ACCEPTED",
+  "parallelability": 0,
+  "steps": [
+    {"id":"PRR-1","name":"仓库、历史报告、外部白皮书与当前上下文 Recon","status":"completed","risk":"medium"},
+    {"id":"PRR-2","name":"冻结分类、状态、事实优先级、计数与发布合同","status":"completed","dependsOn":["PRR-1"],"risk":"high"},
+    {"id":"PRR-3","name":"建立唯一原子需求 ledger 并消除重复/旧范围冲突","status":"completed","dependsOn":["PRR-2"],"risk":"high"},
+    {"id":"PRR-4","name":"建立报告生成器与六分类加总报告","status":"completed","dependsOn":["PRR-3"],"risk":"medium"},
+    {"id":"PRR-5","name":"同步 AGENTS/WHITEPAPER/PROJECT_STATUS/报告索引/三日志","status":"completed","dependsOn":["PRR-4"],"risk":"medium"},
+    {"id":"PRR-6","name":"运行台账 QA、项目状态验证与报告漂移检查","status":"completed","dependsOn":["PRR-5"],"risk":"medium"},
+    {"id":"PRR-7","name":"本地验收并停在待用户发布指令状态","status":"completed","dependsOn":["PRR-6"],"risk":"low"}
+  ],
+  "rollbackPoints": ["remove product-requirements ledger/reports/generator task files", "restore documentation-only edits"],
+  "releasePolicy": "no commit/push/deploy without a later explicit user release command"
+}

@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "taskId": "profile-modal-a11y-p1-20260810",
+  "status": "completed_local",
+  "release": "local-only",
+  "steps": [
+    {"id":"recon","status":"completed","owner":"Terra Max","dependsOn":[]},
+    {"id":"red-contract","status":"completed","owner":"Terra Max","dependsOn":["recon"],"evidence":"node qa/profile-modal-a11y-contract.js exits 1 with 17 expected failures before implementation."},
+    {"id":"source-ownership-confirmation","status":"completed","owner":"Master","dependsOn":["recon"],"evidence":"Master delegated the two canonical UI source files explicitly."},
+    {"id":"minimal-ui-implementation","status":"completed","owner":"Terra Max","dependsOn":["red-contract","source-ownership-confirmation"],"evidence":"Shared dialog helper, owner scroll lock and mobile modal classes integrated."},
+    {"id":"regression-verification","status":"completed","owner":"Terra Max + Master","dependsOn":["minimal-ui-implementation"],"evidence":"Master added responsive inline-width regression, reran specialized contracts, i18n, DOM, Profile/Social/Profile route, full npm test and deterministic double build."}
+  ],
+  "tests": [
+    "node qa/profile-modal-a11y-contract.js",
+    "npm run test:i18n",
+    "node qa/dom-smoke.js",
+    "node qa/ui-profile-social-contract.js"
+  ],
+  "rollback": "Revert only the two dialog lifecycle call sites and the modal-specific CSS; no persistent data or protocol state is changed."
+}

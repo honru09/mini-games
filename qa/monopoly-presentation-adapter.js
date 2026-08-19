@@ -1,0 +1,33 @@
+'use strict';
+const assert=require('assert');
+const adapter=require('../public/src/games/monopoly-presentation-adapter');
+const projector=require('../public/src/games/monopoly-character-presentation');
+const failures=[];
+function check(name,fn){try{fn();console.log('PASS  '+name)}catch(error){console.error('FAIL  '+name+' :: '+error.message);failures.push(name)}}
+function authority(overrides={}){const baseState={protocol:'monopoly-rule-v2',players:[{id:0,pos:0,alive:true},{id:1,pos:6,alive:true}],current:0,round:1,phase:'roll',terminal:false,winner:-1,placements:[]};const state={...baseState,...(overrides.state||{})};const out={protocol:'monopoly-rule-v2',matchId:'m-adapter-01',revision:0,serverNow:1000,phase:state.phase,current:state.current,round:state.round,terminal:state.terminal,winner:state.winner,stateHash:'hash-'+state.round,state,...overrides};out.state=state;return out;}
+const a=adapter.create({projector:projector.project});
+check('adapter exposes a small lifecycle interface',()=>{assert(Object.isFrozen(adapter));assert.deepStrictEqual(Object.keys(a).sort(),['consume','destroy','reset'])});
+const first=a.consume({cause:'live',authority:authority(),seats:[]});
+check('first authority frame snaps deterministically',()=>{assert(first.accepted);assert.strictEqual(first.frame.animation.mode,'snap');assert.strictEqual(first.frame.players[0].displayPosition,0)});
+const next=authority({revision:1,state:{phase:'resolving',players:[{id:0,pos:4,alive:true},{id:1,pos:6,alive:true}]},transition:{type:'monopoly_transition',player:0,action:{type:'roll'},events:[{type:'roll',player:0,dice:[2,2]},{type:'move',player:0,from:0,to:4,steps:4}]},stateHash:'hash-2'});
+const stepped=a.consume({cause:'live',authority:next,seats:[],transition:next.transition});
+check('continuous revision with a matching move earns step animation',()=>{assert(stepped.accepted);assert.strictEqual(stepped.frame.animation.mode,'step');assert.strictEqual(stepped.frame.animation.from,0);assert.strictEqual(stepped.frame.animation.to,4);assert.strictEqual(stepped.frame.players[0].displayPosition,0)});
+const jump=authority({revision:3,state:{phase:'roll',players:[{id:0,pos:8,alive:true},{id:1,pos:6,alive:true}]},stateHash:'hash-3'});
+const snapped=a.consume({cause:'live',authority:jump,seats:[]});
+check('revision gaps and missing transition snap without guessing',()=>{assert(snapped.accepted);assert.strictEqual(snapped.frame.animation.mode,'snap');assert.strictEqual(snapped.fallbackReason,'continuity_lost');assert.strictEqual(snapped.frame.players[0].displayPosition,8)});
+check('stale revisions are rejected without replacing the last frame',()=>{const stale=a.consume({cause:'live',authority:jump,seats:[]});assert.strictEqual(stale.accepted,false);assert.strictEqual(stale.fallbackReason,'stale_revision')});
+const reconnect=authority({revision:4,state:{phase:'roll',players:[{id:0,pos:10,alive:true},{id:1,pos:6,alive:true}]},stateHash:'hash-4'});
+const restored=a.consume({cause:'reconnect',authority:reconnect,seats:[]});
+check('reconnect always snaps even with a numerically adjacent revision',()=>{assert(restored.accepted);assert.strictEqual(restored.frame.animation.mode,'snap');assert.strictEqual(restored.frame.players[0].displayPosition,10)});
+const reconnectAgain=authority({revision:0,state:{phase:'roll',players:[{id:0,pos:2,alive:true},{id:1,pos:6,alive:true}]},stateHash:'hash-reconnect'});
+check('reconnect bootstrap can accept a lower revision baseline',()=>{const result=a.consume({cause:'reconnect',authority:reconnectAgain,seats:[]});assert(result.accepted);assert.strictEqual(result.frame.animation.mode,'snap')});
+const reverse=authority({revision:1,state:{phase:'resolving',players:[{id:0,pos:0,alive:true},{id:1,pos:6,alive:true}]},stateHash:'hash-5'});reverse.transition={type:'monopoly_transition',player:0,events:[{type:'move',player:0,from:2,to:0,steps:-2}]};
+const backwards=a.consume({cause:'live',authority:reverse,transition:reverse.transition,seats:[]});
+check('valid reverse two-step transition keeps negative direction',()=>{assert.strictEqual(backwards.frame.animation.mode,'step');assert.strictEqual(backwards.frame.animation.direction,-1)});
+const reduced=authority({revision:2,state:{phase:'resolving',players:[{id:0,pos:4,alive:true},{id:1,pos:6,alive:true}]},stateHash:'hash-6'});reduced.transition={type:'monopoly_transition',player:0,events:[{type:'move',player:0,from:0,to:4,steps:4}]};
+const noMotion=a.consume({cause:'live',authority:reduced,transition:reduced.transition,seats:[],reducedMotion:true});
+check('reduced motion suppresses step animation',()=>{assert.strictEqual(noMotion.frame.animation.mode,'snap');assert.strictEqual(noMotion.frame.accessibility.reducedMotion,true)});
+check('continuous authority frames expose bankruptcy as presentation-only metadata',()=>{const instance=adapter.create({projector:projector.project});instance.consume({cause:'live',authority:authority(),seats:[]});const dead=authority({revision:1,state:{players:[{id:0,pos:0,alive:true},{id:1,pos:6,alive:false}]},stateHash:'hash-dead'});const out=instance.consume({cause:'live',authority:dead,seats:[]});assert.deepStrictEqual(out.frame.changes.bankruptPlayers,[1]);assert(!JSON.stringify(out.frame.changes).includes('money'))});
+check('malformed authority never throws and is rejected',()=>{assert.strictEqual(a.consume({cause:'live',authority:{protocol:'monopoly-rule-v2',matchId:'m',revision:0,state:{}}}).accepted,false)});
+check('reset and destroy clear lifecycle state',()=>{assert(a.reset('new-match').accepted);assert(a.consume({cause:'live',authority:authority(),seats:[]}).accepted);a.destroy();assert.strictEqual(a.consume({cause:'live',authority:authority(),seats:[]}).accepted,false)});
+if(failures.length){console.error('MONOPOLY_PRESENTATION_ADAPTER_FAILED');process.exit(1)}else console.log('MONOPOLY_PRESENTATION_ADAPTER_ALL_PASS');

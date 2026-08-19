@@ -42,4 +42,4 @@ Visual Smoke、Build Drift、Docs/Assets/Status Sync。配置见 `requirements/Q
 
 ## 项目级 Skills
 
-见 `.agents/skills/`。第三方 Skill 只允许登记为 `REFERENCE` 或 `PILOT`；未经审计不得自动安装或执行。
+见 `.agents/skills/`。第三方 Skill 使用 `REFERENCE → PILOT → APPROVED` 生命周期，安全问题标 `BLOCKED`；未经仓库、许可、脚本、网络、破坏性命令与密钥边界审计不得进入 `PILOT/APPROVED`。当前 GreenSock 官方 GSAP skills 已审计并登记为 `APPROVED`。

@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "taskId": "profile-design-system-p1-20260812",
+  "requirements": ["UI-025", "UI-027", "UI-028", "SOC-014"],
+  "stage": "CLOSE",
+  "disposition": "NOW_CLOSURE",
+  "status": "COMPLETED_LOCAL_WITH_REVIEWER_LIMIT",
+  "steps": [
+    {"id":"PDS-1","status":"completed","title":"RECON 本人 Profile、公开 Profile、加载取消、关系操作与 Surface Motion seam"},
+    {"id":"PDS-2","status":"completed","title":"冻结信息架构、请求相关性、Motion 复用和 OUT 边界"},
+    {"id":"PDS-3","status":"completed","title":"红测锁定 Profile 层级、requestId+targetUid、迟到响应、响应式和 Motion 复用"},
+    {"id":"PDS-4","status":"completed","title":"实现本人密度与公开 Profile 生命周期/操作层级"},
+    {"id":"PDS-5","status":"completed_with_reviewer_limit","title":"专项、旧 Profile/Social/DM、三语、DOM 与全链回归；Terra Max 独立终审未交付可用结论"},
+    {"id":"PDS-6","status":"not_executed","title":"浏览器、第二浏览器、真机、真实网络、visible reduced-motion 与低端 FPS"}
+  ],
+  "release": "LOCAL_ONLY_NO_COMMIT_NO_PUSH_NO_DEPLOY"
+}

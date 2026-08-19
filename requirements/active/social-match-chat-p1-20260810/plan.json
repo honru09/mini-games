@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "taskId": "social-match-chat-p1-20260810",
+  "status": "completed_local",
+  "steps": [
+    {"id":"contract","status":"completed","owner":"Master"},
+    {"id":"server","status":"completed","owner":"Master"},
+    {"id":"client","status":"completed","owner":"Master"},
+    {"id":"online_qa","status":"completed","owner":"Master"},
+    {"id":"full_regression","status":"completed","owner":"Master"},
+    {"id":"reports","status":"completed","owner":"Master"}
+  ],
+  "release": "local-accepted-awaiting-user-command"
+}

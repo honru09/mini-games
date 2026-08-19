@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "task": "t7-room-graph-recovery-timer-p9-20260818",
+  "state": "VERIFIED_LOCAL",
+  "recordedAt": "2026-08-18T20:57:00+09:00",
+  "implemented": [
+    "server/index.js roomGraphRecoveryTimer uses ServerClockTimer owner lease",
+    "qa/timer-audit.js owner and cancel regression contract"
+  ],
+  "verified": [
+    "node --check server/index.js",
+    "node qa/timer-audit.js (TIMER_AUDIT_ALL_PASS)",
+    "node qa/server-clock-timer.js (SERVER_CLOCK_TIMER_ALL_PASS)",
+    "node --experimental-websocket qa/tournament-atomic-online.js (TOURNAMENT_ATOMIC_ONLINE_ALL_PASS)",
+    "git diff --check"
+  ],
+  "notExecuted": [
+    "remaining lifecycle/heartbeat/outbox/gameplay/transport timer owners",
+    "current browser/second browser/physical devices/real network",
+    "real Supabase/RLS/concurrency/backup/restore/multi-instance",
+    "commit/push/GitHub Pages/Render/deploy"
+  ],
+  "scopeLimit": "Room Graph Recovery periodic trigger only; no Room/Presence wire or authority change",
+  "release": "LOCAL_ONLY / NOT_RELEASED"
+}

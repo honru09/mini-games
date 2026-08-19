@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "task": "t7-match-protocol-boundary-p3-20260817",
+  "state": "VERIFIED_LOCAL",
+  "startedAt": "2026-08-17T12:00:00+09:00",
+  "completedAt": "2026-08-17T13:20:00+09:00",
+  "requirements": ["TECH-039", "TECH-040", "TECH-052"],
+  "implemented": [
+    "server/boundaries/match-protocol.js",
+    "server/index.js Match Protocol action/transition wiring",
+    "qa/match-protocol-boundary.js"
+  ],
+  "verified": [
+    "node --check server/boundaries/match-protocol.js",
+    "node --check server/index.js",
+    "node qa/match-protocol-boundary.js (21 assertions)",
+    "npm run test:match-protocol-boundary",
+    "npm run test:technical-optimization-t7",
+    "node --experimental-websocket qa/rule-authority-online.js",
+    "node --experimental-websocket qa/reconnect-online.js",
+    "node --experimental-websocket qa/e2e-online.js",
+    "node --experimental-websocket qa/tournament-auto-online.js",
+    "node --experimental-websocket qa/security-online.js",
+    "node --experimental-websocket qa/tetris-protocol-fallback-online.js",
+    "git diff --check"
+  ],
+  "knownLimitations": [
+    "single-process JSON runtime journal is not durable or multi-instance",
+    "server-wide clock/Timer virtualization is not complete; fresh-child wall-clock/module-cache/env isolation is covered by IsolatedNodeProcess",
+    "external browser/device/network/Supabase evidence remains pending"
+  ],
+  "unexecuted": [
+    "second browser",
+    "physical Android/iPhone/Tablet",
+    "real network shaping",
+    "real Supabase migrations/RLS/backup/restore and multi-instance",
+    "commit/push/Pages/Render/deploy"
+  ],
+  "release": "LOCAL_ONLY / NOT_RELEASED"
+}

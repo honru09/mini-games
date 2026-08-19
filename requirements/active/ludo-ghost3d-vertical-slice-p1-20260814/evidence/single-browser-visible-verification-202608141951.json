@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-08-14T19:51:17+09:00",
+  "environment": {
+    "url": "http://127.0.0.1:8080/",
+    "browser": "Codex in-app Chromium",
+    "build": "latest local working tree",
+    "accounts": "ephemeral local guest",
+    "production": false
+  },
+  "result": "PARTIAL_VISIBLE_EVIDENCE",
+  "scenarios": {
+    "defaultOffPortrait390x844": {
+      "viewport": [390, 844],
+      "documentClientAndScrollWidth": [390, 390],
+      "boardAreaClientAndScrollWidth": [360, 360],
+      "stageClientAndScrollWidth": [346, 346],
+      "frameClientAndScrollWidth": [328, 328],
+      "boardClientAndScrollWidth": [318, 318],
+      "ghost3dSlots": 0,
+      "ghost3dCanvases": 0,
+      "domDicePixels": [80, 80]
+    },
+    "highOptInDesktop1440x900": {
+      "viewport": [1440, 900],
+      "documentClientAndScrollWidth": [1440, 1440],
+      "frameClientAndScrollWidth": [620, 620],
+      "canvasPixels": [620, 620],
+      "ghost3dSlots": 1,
+      "ghost3dCanvases": 1,
+      "ready": true,
+      "domDicePixels": [92, 92],
+      "domDiceEnabled": true
+    },
+    "highOptInDesktopToPortrait": {
+      "viewport": [390, 844],
+      "documentClientAndScrollWidth": [390, 390],
+      "boardAreaClientAndScrollWidth": [360, 360],
+      "stageClientAndScrollWidth": [346, 346],
+      "frameClientAndScrollWidth": [328, 328],
+      "canvasPixels": [328, 328],
+      "ready": true,
+      "domDicePixels": [80, 80]
+    },
+    "defaultOffPortraitToDesktopWithoutReload": {
+      "portraitBoardPixels": 318,
+      "desktopBoardPixels": 588,
+      "desktopFrameClientAndScrollWidth": [620, 620],
+      "desktopBoardWithinFrame": true,
+      "ghost3dSlots": 0
+    },
+    "reducedMotion": {
+      "mediaQueryMatched": true,
+      "rendererReady": true,
+      "slotAnimationName": "none",
+      "slotTransitionDuration": "0s",
+      "canvasAnimationName": "none"
+    },
+    "cleanup": {
+      "featureFlag": null,
+      "qualityFlag": null,
+      "reducedMotionEmulation": false,
+      "viewportOverrideReset": true,
+      "consoleWarningsOrErrors": 0
+    }
+  },
+  "priorInteractionEvidenceRetained": [
+    "HIGH opt-in DOM dice remained the only roll entry point",
+    "a forced legal six exposed selectable 3D tokens",
+    "a 3D token click entered the existing pick seam and returned to roll",
+    "two-, three-, and four-player physical colour mappings were visibly checked"
+  ],
+  "notExecuted": [
+    "second desktop browser",
+    "physical Android device",
+    "physical iPhone Safari",
+    "physical tablet",
+    "real network shaping",
+    "low-end FPS and memory capture",
+    "Reviewer B, IP Review, or Golden Set",
+    "production deployment"
+  ],
+  "gate": {
+    "id": "GATE-DEVICE-BROWSER-NETWORK",
+    "status": "BLOCKED"
+  }
+}

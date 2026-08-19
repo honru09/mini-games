@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "taskId": "home-engagement-p1-20260810",
+  "status": "completed_local",
+  "startedAt": "2026-08-10T16:00:00+09:00",
+  "updatedAt": "2026-08-10T16:27:00+09:00",
+  "completed": ["reconnaissance", "scope and privacy contract frozen", "red test before implementation", "formal-account-only pulse card", "account/day local dismissal with storage-safe fallback", "aggregate collection/social/growth projection", "Profile/Chat/Shop route actions", "three-language and responsive presentation", "specialized and shared automated regression"],
+  "verification": {
+    "red": "node qa/home-engagement-p1-contract.js initially exited 1 before any implementation",
+    "specialized": ["node qa/home-engagement-p1-contract.js", "node qa/home-engagement-contract.js", "npm run pretest", "npm run test:i18n", "node qa/dom-smoke.js", "node qa/ghost-shell-contract.js", "node qa/ui-responsive-contract.js", "node qa/profile-journey.js", "node qa/profile-compare-contract.js", "node qa/collection-rarity-catalog.js", "node qa/shop-contract.js", "node qa/ui-shop-layout-contract.js", "node qa/ui-profile-social-contract.js", "npm run quality:gates"],
+    "e2e": "first full chain timed out once at invite-room creation; isolated e2e passed in 53.7s and the next full npm test passed in 179.7s",
+    "build": "deterministic double build: 968233 characters / 982494 physical bytes / SHA-256 4A861DD2F6763FE4AFA4640E7F6AEC7418A0DC9E4EAD52BD41831C0988E43C37"
+  },
+  "masterCorrections": ["changed daily dismissal from one new key per date to one bounded key per account with the date stored as value", "added cross-date bounded-storage regression"],
+  "pending": ["second desktop browser", "Android/iPhone/Tablet", "real network shaping", "visible browser reduced-motion", "user release command"],
+  "boundary": "client-only Home presentation using existing aggregate state; no server/protocol/economy/purchase/rule/AI/Replay/Supabase/art change",
+  "published": false
+}

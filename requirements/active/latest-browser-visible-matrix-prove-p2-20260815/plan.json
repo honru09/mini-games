@@ -1,0 +1,41 @@
+{
+  "taskId": "latest-browser-visible-matrix-prove-p2-20260815",
+  "requirements": [
+    "TECH-027"
+  ],
+  "stage": "PROVE",
+  "gate": "GATE-DEVICE-BROWSER-NETWORK",
+  "status": "COMPLETED_LOCAL_SINGLE_BROWSER_CURRENT_BUILD",
+  "scope": "为当前 public/index.html 建立防陈旧证据合同；先收录 forced-colors 认证页窄证据，再重采集五档四区、共享弹层与六款 Game Stage。",
+  "notGranted": [
+    "TECH-028 second browser",
+    "TECH-029 physical devices",
+    "TECH-030 real network shaping",
+    "SOC-029 two-account friend DM",
+    "GAME-040 physical FPS/heat/audio/recovery",
+    "production or release"
+  ],
+  "steps": [
+    {
+      "id": "PROVE-P2-1",
+      "status": "completed",
+      "title": "建立当前构建 SHA/bytes 与单浏览器边界合同"
+    },
+    {
+      "id": "PROVE-P2-2",
+      "status": "completed",
+      "title": "修复并复核 forced-colors 认证页 44×44、输入、焦点、三语言与双主题"
+    },
+    {
+      "id": "PROVE-P2-3",
+      "status": "completed",
+      "title": "重采集当前构建五档四区、共享弹层与六款 Game Stage"
+    },
+    {
+      "id": "PROVE-P2-4",
+      "status": "completed",
+      "title": "同步 TECH-027、共享 Gate、状态、报告与三日志并跑全链"
+    }
+  ],
+  "release": "LOCAL_ONLY_NO_COMMIT_NO_PUSH_NO_DEPLOY"
+}

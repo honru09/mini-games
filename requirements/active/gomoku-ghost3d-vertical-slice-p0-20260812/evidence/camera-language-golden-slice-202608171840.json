@@ -1,0 +1,60 @@
+{
+  "evidenceId": "gomoku-camera-language-golden-slice-202608171840",
+  "capturedAt": "2026-08-17T18:40:17+09:00",
+  "classification": "VISUAL_VERIFIED_SINGLE_BROWSER_LOCAL_PARTIAL",
+  "requirements": ["TECH-049", "GAME-048"],
+  "build": {
+    "path": "public/index.html",
+    "characters": 1874091,
+    "utf8Bytes": 1888634,
+    "sha256": "D294FE21641DFDF4780E70335B6D73A84C1F35CD5D533373DF4ECE61A0973E28",
+    "gomokuRendererSha256": "FB7D2C98FA2531A9B2E0F4D9ACE899CABA57F744BB1E506F37E7B7DF0F0EA9ED"
+  },
+  "implementation": [
+    "shared presentation-only TabletopCameraRig vocabulary with quality and reduced-motion planning",
+    "Gomoku entrance, action-follow, impact, winning-line and terminal result shots",
+    "procedural reusable impact ring and world-space winning ribbon; it avoids the one-pixel WebGL line-width limit on compact viewports",
+    "revision-bound winning_line and terminal semantic events emitted only after accepted presentation frames",
+    "blocking result dialog waits 980ms HIGH or 860ms BALANCED only while the 3D renderer is ready; result facts and accessible HUD remain immediate",
+    "default-off, LOW, renderer-unready and prefers-reduced-motion paths reveal the result dialog immediately"
+  ],
+  "automated": [
+    "npm run test:gomoku-ghost3d PASS (CameraRig + ESM graph 55 + Renderer 84 + bridge + layout + cache)",
+    "node qa/tabletop-perspective-contract.js PASS",
+    "node qa/game-stage-density-process-gomoku.js PASS",
+    "node qa/ghost3d-foundation.js PASS",
+    "node qa/dom-smoke.js PASS"
+  ],
+  "browser": {
+    "name": "Codex in-app Chromium",
+    "url": "http://localhost:8080/",
+    "scope": [
+      "exact default-off retained the Wave B Canvas board and created no Ghost3D slot",
+      "temporary HIGH opt-in reached ghost3dReady=true and rendered the 15x15 WebGL board with the DOM HUD and controls retained",
+      "a synthetic local no-reward near-terminal sequence exposed the winning-line shot before the result dialog",
+      "line stage kept zero dialogs; terminal generation 2 stayed ready with zero dialogs; the dialog appeared after the finite camera read",
+      "prefers-reduced-motion reached the same terminal information and dialog immediately with no queued camera requirement",
+      "WEBGL_lose_context replaced the renderer canvas and returned to ghost3dReady=true with one canvas",
+      "390x844 portrait and 844x390 compact landscape both had zero horizontal overflow and a visible terminal winning line",
+      "the final world-space gold ribbon renderer identity was reloaded and visibly rechecked before cleanup",
+      "returning to Games removed the slot and all Ghost3D canvases",
+      "console warning/error count was zero"
+    ],
+    "qaIsolation": [
+      "online.connected and online._authenticated were temporarily set false only around synthetic terminal moves, then restored",
+      "no reward/result submission was permitted during the synthetic terminal checks",
+      "mg_ghost3d_gomoku_v1 and mg_ghost3d_gomoku_quality_v1 were removed after verification",
+      "prefers-reduced-motion emulation and viewport override were cleared after verification"
+    ]
+  },
+  "limitations": [
+    "single local Chromium only",
+    "responsive viewport emulation is not a physical Android, iPhone or tablet",
+    "no second desktop browser",
+    "no real network shaping or physical touch evidence",
+    "no low-end FPS, P95 frame-time, GPU, thermal or memory evidence",
+    "procedural geometry is not final approved production art",
+    "not committed, pushed, deployed or production verified"
+  ],
+  "release": "LOCAL_ONLY_NOT_RELEASED"
+}

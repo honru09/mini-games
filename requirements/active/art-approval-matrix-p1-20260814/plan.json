@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "taskId": "art-approval-matrix-p1-20260814",
+  "requirements": ["TECH-031", "ART-028", "ART-030"],
+  "stage": "CLOSE",
+  "disposition": "NOW_CLOSURE",
+  "status": "COMPLETED_LOCAL_GATE_BLOCKED",
+  "scope": "统一已有美术候选审批事实；不生成、不接入、不修改运行时或线上。",
+  "steps": [
+    {"id":"ARTM-1","status":"completed","title":"审计 Catalog、Manifest、候选 provenance 和人工签字包"},
+    {"id":"ARTM-2","status":"completed","title":"冻结四类候选状态、Gate 顺序和统一审批矩阵"},
+    {"id":"ARTM-3","status":"completed","title":"补治理 QA、同步 active task、状态、简报和三日志"},
+    {"id":"ARTM-4","status":"completed","title":"运行专项、质量门禁、完整回归与确定性构建"}
+  ],
+  "release": "LOCAL_ONLY_NO_COMMIT_NO_PUSH_NO_DEPLOY",
+  "rollback": "删除本批审批矩阵、QA、active task 与本批简报/日志条目；不触碰任何素材、Manifest 或运行时代码。"
+}

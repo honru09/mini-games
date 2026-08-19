@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "task": "t7-server-boundary-clock-injection-p8-20260818",
+  "state": "VERIFIED_LOCAL",
+  "recordedAt": "2026-08-18T20:51:03+09:00",
+  "implemented": [
+    "server/index.js shared serverNow injection for six existing Boundary modules",
+    "qa/timer-audit.js six-owner wiring and raw Date.now regression contract"
+  ],
+  "verified": [
+    "node --experimental-websocket qa/tank-snapshot-delta-online.js (TANK_SNAPSHOT_DELTA_ONLINE_ALL_PASS; independent rerun)",
+    "npm run reports:progress (PROGRESS_REPORTS_OK files=7 changed=2)",
+    "node qa/progress-ledger.js (PROGRESS_LEDGER_ALL_PASS)",
+    "node qa/technical-optimization-mainline-contract.js (TECHNICAL_OPTIMIZATION_MAINLINE_CONTRACT_ALL_PASS)",
+    "node qa/brief-report-contract.js (BRIEF_REPORT_CONTRACT_ALL_PASS)",
+    "npm run quality:gates (QUALITY_GATES_FAST_ALL_PASS)",
+    "npm test (exit 0; complete pretest/test/posttest chain)",
+    "node scripts/build.js --check (chars=2070498 utf8Bytes=2085121 sha256=0F7CD4F94730F3A90B32BE191549EF7858BF22940EBC05FD86994F15C7079D95)",
+    "git diff --check"
+  ],
+  "notExecuted": [
+    "heartbeat/reconnect/outbox/gameplay/transport timer migration",
+    "current browser/second browser/physical devices/real network",
+    "real Supabase/RLS/concurrency/backup/restore/multi-instance",
+    "commit/push/GitHub Pages/Render/deploy"
+  ],
+  "scopeLimit": "Explicit Boundary now injection only; no Timer cadence, wire or data migration",
+  "release": "LOCAL_ONLY / NOT_RELEASED"
+}

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-08-09T03:06:00+09:00",
+  "updatedAt": "2026-08-19",
   "storage": {
     "mode": "local-only",
     "remoteProvider": null,
@@ -11,7 +11,22 @@
     {
       "id": "production-asset-manifest",
       "path": "public/assets/manifests/asset_manifest.json",
-      "sha256": "9a900385b96778eda7743af67262430d2dbe933da7690000918573400caef599"
+      "sha256": "22af3bf1815fc1cd1f62d4b03bd58c7afe68b0b96befed23d5b2a1dd96faacdb"
+    },
+    {
+      "id": "original-14-family-complete-visual-inventory-20260814",
+      "path": "requirements/active/art-approval-matrix-p1-20260814/evidence/original-14-family-complete-visual-inventory-20260814.json",
+      "sha256": "6fb062a24d0117c9a0d9bfdd2d2771812996ebdbbd0102f3d0e583eb09ed5bea"
+    },
+    {
+      "id": "external-layered-source-structure-audit-20260814",
+      "path": "requirements/active/external-assets-audit-p1-20260813/evidence/external-layered-source-structure-audit-20260814.json",
+      "sha256": "382a3849d0caa98bd503b0a5842724c8aeace26b108dbe13751aace1f23a1660"
+    },
+    {
+      "id": "external-psd-secondary-parser-verification-20260814",
+      "path": "requirements/active/external-assets-audit-p1-20260813/evidence/external-psd-secondary-parser-verification-20260814.json",
+      "sha256": "3be180b68f12a6928567b375866bd23d9be1552a628d9c410fd1b82069b03d77"
     }
   ],
   "collections": [
@@ -84,7 +99,10 @@
       "license": "project-owned-ai-generated",
       "author": "OpenAI Codex for Ghost Game",
       "status": "reference-only",
-      "dimensions": { "width": 1254, "height": 1254 },
+      "dimensions": {
+        "width": 1254,
+        "height": 1254
+      },
       "previewPath": "art-source/brand/ghost-game/honru/states-v1/flat/honru-idle-flat-draft-v1.png",
       "previewSha256": "9fd41dce51a01ca079fd93726c95d71315c2636c7fe072913dcccf3bbf9abe27",
       "runtimePaths": [
@@ -108,7 +126,10 @@
       "license": "project-owned-ai-generated",
       "author": "OpenAI Codex for Ghost Game",
       "status": "reference-only",
-      "dimensions": { "width": 1254, "height": 1254 },
+      "dimensions": {
+        "width": 1254,
+        "height": 1254
+      },
       "previewPath": "art-source/brand/ghost-game/honru/states-v1/flat/honru-thinking-flat-draft-v1.png",
       "previewSha256": "d28b589e13e01539696161af1ce75478d6b8e111f30182ffc23b15396256e81e",
       "runtimePaths": [
@@ -132,7 +153,10 @@
       "license": "project-owned-ai-generated",
       "author": "OpenAI Codex for Ghost Game",
       "status": "reference-only",
-      "dimensions": { "width": 1254, "height": 1254 },
+      "dimensions": {
+        "width": 1254,
+        "height": 1254
+      },
       "previewPath": "art-source/brand/ghost-game/honru/states-v1/flat/honru-surprised-flat-draft-v1.png",
       "previewSha256": "87d9cf0c8232049108ca6cf1be1e70c08906bbcbad7e88caf09c8f2295eab432",
       "runtimePaths": [
@@ -156,7 +180,10 @@
       "license": "project-owned-ai-generated",
       "author": "OpenAI Codex for Ghost Game",
       "status": "reference-only",
-      "dimensions": { "width": 1254, "height": 1254 },
+      "dimensions": {
+        "width": 1254,
+        "height": 1254
+      },
       "previewPath": "art-source/brand/ghost-game/honru/states-v1/flat/honru-win-flat-draft-v1.png",
       "previewSha256": "55449a877843da04c1386302d965e45b3ced6cae55a8a37ac33f160da895c4ac",
       "runtimePaths": [
@@ -180,7 +207,10 @@
       "license": "project-owned-ai-generated",
       "author": "OpenAI Codex for Ghost Game",
       "status": "reference-only",
-      "dimensions": { "width": 1254, "height": 1254 },
+      "dimensions": {
+        "width": 1254,
+        "height": 1254
+      },
       "previewPath": "art-source/brand/ghost-game/honru/states-v1/flat/honru-lose-flat-draft-v1.png",
       "previewSha256": "295c43d9fb9f8d73eb2bd028d9b335d7c900ae56b11b51be15d981633f94b223",
       "runtimePaths": [
@@ -204,7 +234,10 @@
       "license": "project-owned-ai-generated",
       "author": "OpenAI Codex for Ghost Game",
       "status": "reference-only",
-      "dimensions": { "width": 1254, "height": 1254 },
+      "dimensions": {
+        "width": 1254,
+        "height": 1254
+      },
       "previewPath": "art-source/brand/ghost-game/honru/states-v1/flat/honru-recover-flat-draft-v1.png",
       "previewSha256": "68f4e7cf54c27d5b2faa140a35d0226f0c52255318eb315d32f0ebe80f985f96",
       "runtimePaths": [
@@ -228,7 +261,10 @@
       "license": "project-owned-ai-generated",
       "author": "OpenAI Codex for Ghost Game",
       "status": "reference-only",
-      "dimensions": { "width": 1254, "height": 1254 },
+      "dimensions": {
+        "width": 1254,
+        "height": 1254
+      },
       "previewPath": "art-source/brand/ghost-game/honru/states-v1/flat/honru-waiting-invite-flat-draft-v1.png",
       "previewSha256": "577a91ba467ff11e6c56ae19d827c070c5d7756856dd5abd446a877651f23d5d",
       "runtimePaths": [
@@ -252,7 +288,10 @@
       "license": "project-owned-ai-generated",
       "author": "OpenAI Codex for Ghost Game",
       "status": "reference-only",
-      "dimensions": { "width": 1254, "height": 1254 },
+      "dimensions": {
+        "width": 1254,
+        "height": 1254
+      },
       "previewPath": "art-source/brand/ghost-game/honru/states-v1/flat/honru-check-in-flat-draft-v1.png",
       "previewSha256": "b4bebe1c18837211b932cbdbfeb4a98724a8a8c32a4bf1450ed5e1ea61fa357c",
       "runtimePaths": [
@@ -276,7 +315,10 @@
       "license": "project-owned-ai-generated",
       "author": "OpenAI Codex for Ghost Game",
       "status": "reference-only",
-      "dimensions": { "width": 1254, "height": 1254 },
+      "dimensions": {
+        "width": 1254,
+        "height": 1254
+      },
       "previewPath": "art-source/brand/ghost-game/honru/states-v1/flat/honru-playful-flat-draft-v1.png",
       "previewSha256": "95b1f423ee77f39755374b93abe22feaced6d6e2b3f171c225d7074a8f2ea1c6",
       "runtimePaths": [
@@ -285,6 +327,37 @@
         "art-source/brand/ghost-game/honru/states-v1/derived/honru-playful-flat-draft-v1-96px.png",
         "art-source/brand/ghost-game/honru/states-v1/derived/honru-playful-flat-draft-v1-64px.png",
         "art-source/brand/ghost-game/honru/states-v1/derived/honru-playful-flat-draft-v1-44px.png"
+      ],
+      "promptPath": "art-source/brand/ghost-game/honru/states-v1/PROMPT_AND_PROVENANCE_v1.md",
+      "model": "codex-built-in-imagegen-runtime-managed",
+      "remoteObjectKey": null
+    },
+    {
+      "id": "P-HONRU-STATES-V1",
+      "category": "brand/honru/state",
+      "assetType": "character-expression-runtime-owner-cleared",
+      "sourceType": "generated",
+      "sourcePath": "art-source/brand/ghost-game/honru/states-v1/preview-honru-expression-kit-draft-v1.png",
+      "sourceSha256": "8fd43dd7fb325f0d82624dac48fb8549fbdee4d3b2f9969b93ce91f58b4a5cc9",
+      "license": "project-owned-ai-generated",
+      "author": "OpenAI Codex for Ghost Game",
+      "status": "integrated-local-only",
+      "dimensions": {
+        "width": 660,
+        "height": 750
+      },
+      "previewPath": "art-source/brand/ghost-game/honru/states-v1/preview-honru-expression-kit-draft-v1.png",
+      "previewSha256": "8fd43dd7fb325f0d82624dac48fb8549fbdee4d3b2f9969b93ce91f58b4a5cc9",
+      "runtimePaths": [
+        "public/assets/brand/honru/states-v1/honru-idle-v1.webp",
+        "public/assets/brand/honru/states-v1/honru-thinking-v1.webp",
+        "public/assets/brand/honru/states-v1/honru-surprised-v1.webp",
+        "public/assets/brand/honru/states-v1/honru-win-v1.webp",
+        "public/assets/brand/honru/states-v1/honru-lose-v1.webp",
+        "public/assets/brand/honru/states-v1/honru-recover-v1.webp",
+        "public/assets/brand/honru/states-v1/honru-waiting-invite-v1.webp",
+        "public/assets/brand/honru/states-v1/honru-check-in-v1.webp",
+        "public/assets/brand/honru/states-v1/honru-playful-v1.webp"
       ],
       "promptPath": "art-source/brand/ghost-game/honru/states-v1/PROMPT_AND_PROVENANCE_v1.md",
       "model": "codex-built-in-imagegen-runtime-managed",
@@ -300,7 +373,10 @@
       "license": "project-owned-ai-generated",
       "author": "OpenAI Codex for Ghost Game",
       "status": "reference-only",
-      "dimensions": { "width": 1254, "height": 1254 },
+      "dimensions": {
+        "width": 1254,
+        "height": 1254
+      },
       "previewPath": "art-source/brand/ghost-game/honru/v2/honru-character-master-v2-flat-transparent-draft-v1.png",
       "previewSha256": "9b9bd08f109ef83ba1da19007a6965d3caed3e3fa66b2a9a027c0120044fe971",
       "runtimePaths": [
@@ -324,10 +400,16 @@
       "license": "project-owned-ai-generated",
       "author": "OpenAI Codex for Playroom",
       "status": "integrated-local-only",
-      "dimensions": { "width": 1672, "height": 941 },
+      "dimensions": {
+        "width": 1672,
+        "height": 941
+      },
       "previewPath": "public/assets/ui/game_covers/game_gomoku_320.webp",
       "previewSha256": "a2fc94ec4f9a2de72fc5a0bbcdc12f5459c762c71acae76c23fa5647f1e76618",
-      "runtimePaths": ["public/assets/ui/game_covers/game_gomoku.webp", "public/assets/ui/game_covers/game_gomoku_320.webp"],
+      "runtimePaths": [
+        "public/assets/ui/game_covers/game_gomoku.webp",
+        "public/assets/ui/game_covers/game_gomoku_320.webp"
+      ],
       "promptPath": "art-source/prompts/lobby-cover-family-v2-20260808.md",
       "model": "codex-built-in-imagegen-runtime-managed",
       "remoteObjectKey": null
@@ -342,10 +424,15 @@
       "license": "project-owned",
       "author": "Mini Games Platform Master",
       "status": "integrated-local-only",
-      "dimensions": { "width": 1600, "height": 900 },
+      "dimensions": {
+        "width": 1600,
+        "height": 900
+      },
       "previewPath": "public/assets/games/gomoku/sticker-v1/gomoku-board-surface-v1.svg",
       "previewSha256": "05f88a47b3902f6a96a6b243da19f97aa8e12d39500ebe95576221cb6c9a8e35",
-      "runtimePaths": ["public/assets/games/gomoku/sticker-v1/gomoku-board-surface-v1.svg"],
+      "runtimePaths": [
+        "public/assets/games/gomoku/sticker-v1/gomoku-board-surface-v1.svg"
+      ],
       "promptPath": null,
       "model": null,
       "remoteObjectKey": null
@@ -360,10 +447,16 @@
       "license": "project-owned-ai-generated",
       "author": "OpenAI Codex for Playroom",
       "status": "integrated-local-only",
-      "dimensions": { "width": 1672, "height": 941 },
+      "dimensions": {
+        "width": 1672,
+        "height": 941
+      },
       "previewPath": "public/assets/ui/game_covers/game_ludo_320.webp",
       "previewSha256": "07838b1786e68cd215994bef1a5dd1dd61af835955558c2ad46f8ab304ccb4e0",
-      "runtimePaths": ["public/assets/ui/game_covers/game_ludo.webp", "public/assets/ui/game_covers/game_ludo_320.webp"],
+      "runtimePaths": [
+        "public/assets/ui/game_covers/game_ludo.webp",
+        "public/assets/ui/game_covers/game_ludo_320.webp"
+      ],
       "promptPath": "art-source/prompts/lobby-cover-family-v2-20260808.md",
       "model": "codex-built-in-imagegen-runtime-managed",
       "remoteObjectKey": null
@@ -378,10 +471,16 @@
       "license": "project-owned-ai-generated",
       "author": "OpenAI Codex for Playroom",
       "status": "integrated-local-only",
-      "dimensions": { "width": 1672, "height": 941 },
+      "dimensions": {
+        "width": 1672,
+        "height": 941
+      },
       "previewPath": "public/assets/ui/game_covers/game_monopoly_320.webp",
       "previewSha256": "6ac2b66b1846de51239ef0be87a331c6fa505f1a5777cf73e498dcfd4b73d783",
-      "runtimePaths": ["public/assets/ui/game_covers/game_monopoly.webp", "public/assets/ui/game_covers/game_monopoly_320.webp"],
+      "runtimePaths": [
+        "public/assets/ui/game_covers/game_monopoly.webp",
+        "public/assets/ui/game_covers/game_monopoly_320.webp"
+      ],
       "promptPath": "art-source/prompts/lobby-cover-family-v2-20260808.md",
       "model": "codex-built-in-imagegen-runtime-managed",
       "remoteObjectKey": null
@@ -396,10 +495,16 @@
       "license": "project-owned-ai-generated",
       "author": "OpenAI Codex for Playroom",
       "status": "integrated-local-only",
-      "dimensions": { "width": 1672, "height": 941 },
+      "dimensions": {
+        "width": 1672,
+        "height": 941
+      },
       "previewPath": "public/assets/ui/game_covers/game_tank_320.webp",
       "previewSha256": "ecc38d73f7f8fd4a23f26044cd8d33505b3f675f734f1e35d9d100d913383536",
-      "runtimePaths": ["public/assets/ui/game_covers/game_tank.webp", "public/assets/ui/game_covers/game_tank_320.webp"],
+      "runtimePaths": [
+        "public/assets/ui/game_covers/game_tank.webp",
+        "public/assets/ui/game_covers/game_tank_320.webp"
+      ],
       "promptPath": "art-source/prompts/lobby-cover-family-v2-20260808.md",
       "model": "codex-built-in-imagegen-runtime-managed",
       "remoteObjectKey": null
@@ -414,10 +519,16 @@
       "license": "project-owned-ai-generated",
       "author": "OpenAI Codex for Playroom",
       "status": "integrated-local-only",
-      "dimensions": { "width": 1672, "height": 941 },
+      "dimensions": {
+        "width": 1672,
+        "height": 941
+      },
       "previewPath": "public/assets/ui/game_covers/game_tetris_320.webp",
       "previewSha256": "3556c341f05bba6e3eda68b8fd0f32b7c60602c8de66966df78d7035fd1d739f",
-      "runtimePaths": ["public/assets/ui/game_covers/game_tetris.webp", "public/assets/ui/game_covers/game_tetris_320.webp"],
+      "runtimePaths": [
+        "public/assets/ui/game_covers/game_tetris.webp",
+        "public/assets/ui/game_covers/game_tetris_320.webp"
+      ],
       "promptPath": "art-source/prompts/lobby-cover-family-v2-20260808.md",
       "model": "codex-built-in-imagegen-runtime-managed",
       "remoteObjectKey": null
@@ -432,12 +543,1081 @@
       "license": "project-owned-ai-generated",
       "author": "OpenAI Codex for Playroom",
       "status": "integrated-local-only",
-      "dimensions": { "width": 1672, "height": 941 },
+      "dimensions": {
+        "width": 1672,
+        "height": 941
+      },
       "previewPath": "public/assets/ui/game_covers/game_xiangqi_320.webp",
       "previewSha256": "67b3ab4ca8cb4692766d64cafd862768946eecdc97ec1ac399935b2943f72f6e",
-      "runtimePaths": ["public/assets/ui/game_covers/game_xiangqi.webp", "public/assets/ui/game_covers/game_xiangqi_320.webp"],
+      "runtimePaths": [
+        "public/assets/ui/game_covers/game_xiangqi.webp",
+        "public/assets/ui/game_covers/game_xiangqi_320.webp"
+      ],
       "promptPath": "art-source/prompts/lobby-cover-family-v2-20260808.md",
       "model": "codex-built-in-imagegen-runtime-managed",
+      "remoteObjectKey": null
+    },
+    {
+      "id": "G-12-TANK-ART-P1-CLEAN",
+      "category": "game/tank",
+      "assetType": "tank-art-direction-board-candidate",
+      "sourceType": "generated",
+      "sourcePath": "art-source/games/tank/tank-art-p1-20260810/tank-style-board-clean-draft-v2.png",
+      "sourceSha256": "9eeab1b34b5014f66983026e9245dbc28ec7c8a48b6b11b4cb20267b0cf914e7",
+      "license": "project-owned-ai-generated",
+      "author": "OpenAI Codex for Ghost Game",
+      "status": "reference-only",
+      "dimensions": {
+        "width": 1536,
+        "height": 1024
+      },
+      "previewPath": "art-source/games/tank/tank-art-p1-20260810/tank-style-board-clean-draft-v2.png",
+      "previewSha256": "9eeab1b34b5014f66983026e9245dbc28ec7c8a48b6b11b4cb20267b0cf914e7",
+      "runtimePaths": [
+        "art-source/games/tank/tank-art-p1-20260810/tank-style-board-clean-draft-v2.png"
+      ],
+      "promptPath": "art-source/games/tank/tank-art-p1-20260810/PROMPT_AND_PROVENANCE.md",
+      "model": "gpt-image-2-built-in-runtime-managed",
+      "remoteObjectKey": null
+    },
+    {
+      "id": "G-13-TANK-ART-P1-REJECTED",
+      "category": "game/tank",
+      "assetType": "tank-art-direction-board-rejected-candidate",
+      "sourceType": "generated",
+      "sourcePath": "art-source/games/tank/tank-art-p1-20260810/rejected/tank-style-board-draft-v1-symbol-noise.png",
+      "sourceSha256": "4e4dfa8fdc94afb643dffd3b1059272a3037da4375902652129fa79e3347fd2e",
+      "license": "project-owned-ai-generated",
+      "author": "OpenAI Codex for Ghost Game",
+      "status": "reference-only",
+      "dimensions": {
+        "width": 1536,
+        "height": 1024
+      },
+      "previewPath": "art-source/games/tank/tank-art-p1-20260810/rejected/tank-style-board-draft-v1-symbol-noise.png",
+      "previewSha256": "4e4dfa8fdc94afb643dffd3b1059272a3037da4375902652129fa79e3347fd2e",
+      "runtimePaths": [
+        "art-source/games/tank/tank-art-p1-20260810/rejected/tank-style-board-draft-v1-symbol-noise.png"
+      ],
+      "promptPath": "art-source/games/tank/tank-art-p1-20260810/PROMPT_AND_PROVENANCE.md",
+      "model": "gpt-image-2-built-in-runtime-managed",
+      "remoteObjectKey": null
+    },
+    {
+      "id": "G-14-PLAYER-CHARACTER-ART-036",
+      "category": "platform/player-character",
+      "assetType": "player-character-direction-board-candidate",
+      "sourceType": "generated",
+      "sourcePath": "art-source/player-character/art-036-player-character-monopoly-p1-20260810/player-character-direction-board-draft-v1.png",
+      "sourceSha256": "048606e833d7c7bd7cdb8b213fc1be32895f41181b620ac9a02e6249f683b153",
+      "license": "project-owned-ai-generated",
+      "author": "OpenAI Codex for Ghost Game",
+      "status": "reference-only",
+      "dimensions": {
+        "width": 1536,
+        "height": 1024
+      },
+      "previewPath": "art-source/player-character/art-036-player-character-monopoly-p1-20260810/player-character-direction-board-draft-v1.png",
+      "previewSha256": "048606e833d7c7bd7cdb8b213fc1be32895f41181b620ac9a02e6249f683b153",
+      "runtimePaths": [
+        "art-source/player-character/art-036-player-character-monopoly-p1-20260810/player-character-direction-board-draft-v1.png"
+      ],
+      "promptPath": "art-source/player-character/art-036-player-character-monopoly-p1-20260810/PROMPT_AND_PROVENANCE.md",
+      "model": "gpt-image-2-built-in-runtime-managed",
+      "remoteObjectKey": null
+    },
+    {
+      "id": "G-15-MONOPOLY-ART-036",
+      "category": "game/monopoly",
+      "assetType": "monopoly-tabletop-direction-board-candidate",
+      "sourceType": "generated",
+      "sourcePath": "art-source/games/monopoly/art-036-player-character-monopoly-p1-20260810/monopoly-tabletop-direction-board-draft-v1.png",
+      "sourceSha256": "09569c0e5b239cd5aecace3d6180ad8e2779e0bf9f3592dc26d1c6db9ff65195",
+      "license": "project-owned-ai-generated",
+      "author": "OpenAI Codex for Ghost Game",
+      "status": "reference-only",
+      "dimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "previewPath": "art-source/games/monopoly/art-036-player-character-monopoly-p1-20260810/monopoly-tabletop-direction-board-draft-v1.png",
+      "previewSha256": "09569c0e5b239cd5aecace3d6180ad8e2779e0bf9f3592dc26d1c6db9ff65195",
+      "runtimePaths": [
+        "art-source/games/monopoly/art-036-player-character-monopoly-p1-20260810/monopoly-tabletop-direction-board-draft-v1.png"
+      ],
+      "promptPath": "art-source/player-character/art-036-player-character-monopoly-p1-20260810/PROMPT_AND_PROVENANCE.md",
+      "model": "gpt-image-2-built-in-runtime-managed",
+      "remoteObjectKey": null
+    },
+    {
+      "id": "ART-026-GCOINS-SOURCE-CHROMA-V1",
+      "category": "platform/currency",
+      "assetType": "currency-icon-source-candidate",
+      "sourceType": "generated",
+      "sourcePath": "art-source/brand/ghost-game/currency/gcoins-p0-20260810/gcoins-source-chroma-v1.png",
+      "sourceSha256": "9d6d8870329b04b5a136f66449498656b7601bee15afbdabc2a73eaa030919ad",
+      "license": "project-owned-ai-generated",
+      "author": "OpenAI Codex for Ghost Game",
+      "status": "reference-only",
+      "dimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "previewPath": "art-source/brand/ghost-game/currency/gcoins-p0-20260810/gcoins-source-chroma-v1.png",
+      "previewSha256": "9d6d8870329b04b5a136f66449498656b7601bee15afbdabc2a73eaa030919ad",
+      "runtimePaths": [
+        "art-source/brand/ghost-game/currency/gcoins-p0-20260810/gcoins-source-chroma-v1.png"
+      ],
+      "promptPath": "art-source/brand/ghost-game/currency/gcoins-p0-20260810/PROMPT_AND_PROVENANCE.md",
+      "model": "highest-quality-built-in-imagegen-runtime-managed",
+      "remoteObjectKey": null
+    },
+    {
+      "id": "ART-026-GCOINS-P1-CANDIDATE-B",
+      "category": "platform/currency",
+      "assetType": "currency-icon-source-candidate",
+      "sourceType": "generated",
+      "sourcePath": "art-source/brand/ghost-game/currency/gcoins-p1-20260814/source/gcoins-p1-candidate-b-chroma.png",
+      "sourceSha256": "6a99bea413410f62520a2abe16ce3ab341c9e0337bd21a383350fc9f578dd04a",
+      "license": "project-owned-ai-generated",
+      "author": "OpenAI Codex for Ghost Game",
+      "status": "reference-only",
+      "dimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "previewPath": "art-source/brand/ghost-game/currency/gcoins-p1-20260814/alpha/gcoins-p1-candidate-b-alpha.png",
+      "previewSha256": "d62909d4827d427d5e499299fb2a7e839866a3ddc9e7b701d53c3e1cc542854c",
+      "runtimePaths": [
+        "art-source/brand/ghost-game/currency/gcoins-p1-20260814/alpha/gcoins-p1-candidate-b-alpha.png",
+        "art-source/brand/ghost-game/currency/gcoins-p1-20260814/derived/gcoins-p1-candidate-b-192px.png",
+        "art-source/brand/ghost-game/currency/gcoins-p1-20260814/derived/gcoins-p1-candidate-b-96px.png",
+        "art-source/brand/ghost-game/currency/gcoins-p1-20260814/derived/gcoins-p1-candidate-b-64px.png",
+        "art-source/brand/ghost-game/currency/gcoins-p1-20260814/derived/gcoins-p1-candidate-b-44px.png"
+      ],
+      "promptPath": "art-source/brand/ghost-game/currency/gcoins-p1-20260814/PROMPT_AND_PROVENANCE.md",
+      "model": "highest-quality-built-in-imagegen-runtime-managed",
+      "remoteObjectKey": null
+    },
+    {
+      "id": "P-GCOINS-ICON-V1",
+      "category": "platform/currency",
+      "assetType": "currency-icon-runtime",
+      "sourceType": "generated",
+      "sourcePath": "art-source/brand/ghost-game/currency/gcoins-p1-20260814/source/gcoins-p1-candidate-b-chroma.png",
+      "sourceSha256": "6a99bea413410f62520a2abe16ce3ab341c9e0337bd21a383350fc9f578dd04a",
+      "license": "project-owned-ai-generated",
+      "author": "OpenAI Codex for Ghost Game",
+      "status": "integrated-local-only",
+      "dimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "previewPath": "public/assets/ui/currency/gcoins-v1/gcoins-icon-192-v1.png",
+      "previewSha256": "aac1ddc47eb931a612e1ef9acf97d1215ebbdb591e818ca0cfdc33b15d40f421",
+      "runtimePaths": [
+        "public/assets/ui/currency/gcoins-v1/gcoins-icon-44-v1.png",
+        "public/assets/ui/currency/gcoins-v1/gcoins-icon-64-v1.png",
+        "public/assets/ui/currency/gcoins-v1/gcoins-icon-96-v1.png",
+        "public/assets/ui/currency/gcoins-v1/gcoins-icon-192-v1.png"
+      ],
+      "promptPath": "art-source/brand/ghost-game/currency/gcoins-p1-20260814/PROMPT_AND_PROVENANCE.md",
+      "model": "highest-quality-built-in-imagegen-runtime-managed",
+      "remoteObjectKey": null
+    },
+    {
+      "id": "G-17-HONRU-EMOJI-WAVE-V1",
+      "category": "platform/honru-emoji",
+      "assetType": "honru-emoji-source-candidate",
+      "sourceType": "generated",
+      "sourcePath": "art-source/brand/ghost-game/honru/emoji-v1/alpha/honru-emoji-wave-alpha-draft-v1.png",
+      "sourceSha256": "2b9f4739461907872f6bef5b8cd7774b37d2eff3f35eeb96aa960515279686cf",
+      "license": "project-owned-ai-generated",
+      "author": "OpenAI Codex for Ghost Game",
+      "status": "reference-only",
+      "dimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "previewPath": "art-source/brand/ghost-game/honru/emoji-v1/alpha/honru-emoji-wave-alpha-draft-v1.png",
+      "previewSha256": "2b9f4739461907872f6bef5b8cd7774b37d2eff3f35eeb96aa960515279686cf",
+      "runtimePaths": [
+        "art-source/brand/ghost-game/honru/emoji-v1/chroma/honru-emoji-wave-chroma-draft-v1.png",
+        "art-source/brand/ghost-game/honru/emoji-v1/alpha/honru-emoji-wave-alpha-draft-v1.png",
+        "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-wave-192px-draft-v1.png",
+        "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-wave-96px-draft-v1.png",
+        "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-wave-64px-draft-v1.png",
+        "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-wave-44px-draft-v1.png"
+      ],
+      "promptPath": "art-source/brand/ghost-game/honru/emoji-v1/PROMPT_AND_PROVENANCE.md",
+      "model": "highest-quality-built-in-imagegen-runtime-managed",
+      "remoteObjectKey": null
+    },
+    {
+      "id": "G-18-HONRU-EMOJI-THUMBSUP-V1",
+      "category": "platform/honru-emoji",
+      "assetType": "honru-emoji-source-candidate",
+      "sourceType": "generated",
+      "sourcePath": "art-source/brand/ghost-game/honru/emoji-v1/alpha/honru-emoji-thumbsup-alpha-draft-v1.png",
+      "sourceSha256": "47ca91aca893feaf8e5a2bdacb32c09235c90068f93be667e793025769497108",
+      "license": "project-owned-ai-generated",
+      "author": "OpenAI Codex for Ghost Game",
+      "status": "reference-only",
+      "dimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "previewPath": "art-source/brand/ghost-game/honru/emoji-v1/alpha/honru-emoji-thumbsup-alpha-draft-v1.png",
+      "previewSha256": "47ca91aca893feaf8e5a2bdacb32c09235c90068f93be667e793025769497108",
+      "runtimePaths": [
+        "art-source/brand/ghost-game/honru/emoji-v1/chroma/honru-emoji-thumbsup-chroma-draft-v1.png",
+        "art-source/brand/ghost-game/honru/emoji-v1/alpha/honru-emoji-thumbsup-alpha-draft-v1.png",
+        "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-thumbsup-192px-draft-v1.png",
+        "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-thumbsup-96px-draft-v1.png",
+        "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-thumbsup-64px-draft-v1.png",
+        "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-thumbsup-44px-draft-v1.png"
+      ],
+      "promptPath": "art-source/brand/ghost-game/honru/emoji-v1/PROMPT_AND_PROVENANCE.md",
+      "model": "highest-quality-built-in-imagegen-runtime-managed",
+      "remoteObjectKey": null
+    },
+    {
+      "id": "G-19-HONRU-EMOJI-CHEER-V1",
+      "category": "platform/honru-emoji",
+      "assetType": "honru-emoji-source-candidate",
+      "sourceType": "generated",
+      "sourcePath": "art-source/brand/ghost-game/honru/emoji-v1/alpha/honru-emoji-cheer-alpha-draft-v1.png",
+      "sourceSha256": "54893f913282b39e66adbf9d018ee96e61fe695e5aa843134fc9ab804a62a0c2",
+      "license": "project-owned-ai-generated",
+      "author": "OpenAI Codex for Ghost Game",
+      "status": "reference-only",
+      "dimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "previewPath": "art-source/brand/ghost-game/honru/emoji-v1/alpha/honru-emoji-cheer-alpha-draft-v1.png",
+      "previewSha256": "54893f913282b39e66adbf9d018ee96e61fe695e5aa843134fc9ab804a62a0c2",
+      "runtimePaths": [
+        "art-source/brand/ghost-game/honru/emoji-v1/chroma/honru-emoji-cheer-chroma-draft-v1.png",
+        "art-source/brand/ghost-game/honru/emoji-v1/alpha/honru-emoji-cheer-alpha-draft-v1.png",
+        "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-cheer-192px-draft-v1.png",
+        "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-cheer-96px-draft-v1.png",
+        "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-cheer-64px-draft-v1.png",
+        "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-cheer-44px-draft-v1.png"
+      ],
+      "promptPath": "art-source/brand/ghost-game/honru/emoji-v1/PROMPT_AND_PROVENANCE.md",
+      "model": "highest-quality-built-in-imagegen-runtime-managed",
+      "remoteObjectKey": null
+    },
+    {
+      "id": "G-20-HONRU-EMOJI-WOW-V1",
+      "category": "platform/honru-emoji",
+      "assetType": "honru-emoji-source-candidate",
+      "sourceType": "generated",
+      "sourcePath": "art-source/brand/ghost-game/honru/emoji-v1/alpha/honru-emoji-wow-alpha-draft-v1.png",
+      "sourceSha256": "9316d71dd1a20c5b5320701dd053d37a472daad3557a9d817f805be7fa08d727",
+      "license": "project-owned-ai-generated",
+      "author": "OpenAI Codex for Ghost Game",
+      "status": "reference-only",
+      "dimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "previewPath": "art-source/brand/ghost-game/honru/emoji-v1/alpha/honru-emoji-wow-alpha-draft-v1.png",
+      "previewSha256": "9316d71dd1a20c5b5320701dd053d37a472daad3557a9d817f805be7fa08d727",
+      "runtimePaths": [
+        "art-source/brand/ghost-game/honru/emoji-v1/chroma/honru-emoji-wow-chroma-draft-v1.png",
+        "art-source/brand/ghost-game/honru/emoji-v1/alpha/honru-emoji-wow-alpha-draft-v1.png",
+        "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-wow-192px-draft-v1.png",
+        "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-wow-96px-draft-v1.png",
+        "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-wow-64px-draft-v1.png",
+        "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-wow-44px-draft-v1.png"
+      ],
+      "promptPath": "art-source/brand/ghost-game/honru/emoji-v1/PROMPT_AND_PROVENANCE.md",
+      "model": "highest-quality-built-in-imagegen-runtime-managed",
+      "remoteObjectKey": null
+    },
+    {
+      "id": "G-21-HONRU-EMOJI-OOPS-V1",
+      "category": "platform/honru-emoji",
+      "assetType": "honru-emoji-source-candidate",
+      "sourceType": "generated",
+      "sourcePath": "art-source/brand/ghost-game/honru/emoji-v1/alpha/honru-emoji-oops-alpha-draft-v1.png",
+      "sourceSha256": "efe5f1dd3f50822edd1e2a8e2d7e029eee9b0d14cc037185e5ee06ee4ed7cd31",
+      "license": "project-owned-ai-generated",
+      "author": "OpenAI Codex for Ghost Game",
+      "status": "reference-only",
+      "dimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "previewPath": "art-source/brand/ghost-game/honru/emoji-v1/alpha/honru-emoji-oops-alpha-draft-v1.png",
+      "previewSha256": "efe5f1dd3f50822edd1e2a8e2d7e029eee9b0d14cc037185e5ee06ee4ed7cd31",
+      "runtimePaths": [
+        "art-source/brand/ghost-game/honru/emoji-v1/chroma/honru-emoji-oops-chroma-draft-v1.png",
+        "art-source/brand/ghost-game/honru/emoji-v1/alpha/honru-emoji-oops-alpha-draft-v1.png",
+        "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-oops-192px-draft-v1.png",
+        "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-oops-96px-draft-v1.png",
+        "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-oops-64px-draft-v1.png",
+        "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-oops-44px-draft-v1.png"
+      ],
+      "promptPath": "art-source/brand/ghost-game/honru/emoji-v1/PROMPT_AND_PROVENANCE.md",
+      "model": "highest-quality-built-in-imagegen-runtime-managed",
+      "remoteObjectKey": null
+    },
+    {
+      "id": "G-22-HONRU-EMOJI-CRY-V1",
+      "category": "platform/honru-emoji",
+      "assetType": "honru-emoji-source-candidate",
+      "sourceType": "generated",
+      "sourcePath": "art-source/brand/ghost-game/honru/emoji-v1/alpha/honru-emoji-cry-alpha-draft-v1.png",
+      "sourceSha256": "f9805061309e9f40099ce926ab95b73050348674bf2f6e1c0e69aa38266a0b59",
+      "license": "project-owned-ai-generated",
+      "author": "OpenAI Codex for Ghost Game",
+      "status": "reference-only",
+      "dimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "previewPath": "art-source/brand/ghost-game/honru/emoji-v1/alpha/honru-emoji-cry-alpha-draft-v1.png",
+      "previewSha256": "f9805061309e9f40099ce926ab95b73050348674bf2f6e1c0e69aa38266a0b59",
+      "runtimePaths": [
+        "art-source/brand/ghost-game/honru/emoji-v1/chroma/honru-emoji-cry-chroma-draft-v1.png",
+        "art-source/brand/ghost-game/honru/emoji-v1/alpha/honru-emoji-cry-alpha-draft-v1.png",
+        "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-cry-192px-draft-v1.png",
+        "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-cry-96px-draft-v1.png",
+        "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-cry-64px-draft-v1.png",
+        "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-cry-44px-draft-v1.png"
+      ],
+      "promptPath": "art-source/brand/ghost-game/honru/emoji-v1/PROMPT_AND_PROVENANCE.md",
+      "model": "highest-quality-built-in-imagegen-runtime-managed",
+      "remoteObjectKey": null
+    },
+    {
+      "id": "G-23-HONRU-EMOJI-ANGRY-V1",
+      "category": "platform/honru-emoji",
+      "assetType": "honru-emoji-source-candidate",
+      "sourceType": "generated",
+      "sourcePath": "art-source/brand/ghost-game/honru/emoji-v1/alpha/honru-emoji-angry-alpha-draft-v1.png",
+      "sourceSha256": "d2d5c8d882b90077f2fd8ecb9673a2d58af63eb23463460d3a81e6352d0e8a3e",
+      "license": "project-owned-ai-generated",
+      "author": "OpenAI Codex for Ghost Game",
+      "status": "reference-only",
+      "dimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "previewPath": "art-source/brand/ghost-game/honru/emoji-v1/alpha/honru-emoji-angry-alpha-draft-v1.png",
+      "previewSha256": "d2d5c8d882b90077f2fd8ecb9673a2d58af63eb23463460d3a81e6352d0e8a3e",
+      "runtimePaths": [
+        "art-source/brand/ghost-game/honru/emoji-v1/chroma/honru-emoji-angry-chroma-draft-v1.png",
+        "art-source/brand/ghost-game/honru/emoji-v1/alpha/honru-emoji-angry-alpha-draft-v1.png",
+        "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-angry-192px-draft-v1.png",
+        "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-angry-96px-draft-v1.png",
+        "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-angry-64px-draft-v1.png",
+        "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-angry-44px-draft-v1.png"
+      ],
+      "promptPath": "art-source/brand/ghost-game/honru/emoji-v1/PROMPT_AND_PROVENANCE.md",
+      "model": "highest-quality-built-in-imagegen-runtime-managed",
+      "remoteObjectKey": null
+    },
+    {
+      "id": "G-24-HONRU-EMOJI-SLY-V1",
+      "category": "platform/honru-emoji",
+      "assetType": "honru-emoji-source-candidate",
+      "sourceType": "generated",
+      "sourcePath": "art-source/brand/ghost-game/honru/emoji-v1/alpha/honru-emoji-sly-alpha-draft-v1.png",
+      "sourceSha256": "55dc15664ed9e022acc3d0b3f7ea22351d0d4db438c776d8b9f120bdaab9175a",
+      "license": "project-owned-ai-generated",
+      "author": "OpenAI Codex for Ghost Game",
+      "status": "reference-only",
+      "dimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "previewPath": "art-source/brand/ghost-game/honru/emoji-v1/alpha/honru-emoji-sly-alpha-draft-v1.png",
+      "previewSha256": "55dc15664ed9e022acc3d0b3f7ea22351d0d4db438c776d8b9f120bdaab9175a",
+      "runtimePaths": [
+        "art-source/brand/ghost-game/honru/emoji-v1/chroma/honru-emoji-sly-chroma-draft-v1.png",
+        "art-source/brand/ghost-game/honru/emoji-v1/alpha/honru-emoji-sly-alpha-draft-v1.png",
+        "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-sly-192px-draft-v1.png",
+        "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-sly-96px-draft-v1.png",
+        "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-sly-64px-draft-v1.png",
+        "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-sly-44px-draft-v1.png"
+      ],
+      "promptPath": "art-source/brand/ghost-game/honru/emoji-v1/PROMPT_AND_PROVENANCE.md",
+      "model": "highest-quality-built-in-imagegen-runtime-managed",
+      "remoteObjectKey": null
+    },
+    {
+      "id": "G-25-HONRU-EMOJI-HEART-V1",
+      "category": "platform/honru-emoji",
+      "assetType": "honru-emoji-source-candidate",
+      "sourceType": "generated",
+      "sourcePath": "art-source/brand/ghost-game/honru/emoji-v1/alpha/honru-emoji-heart-alpha-draft-v1.png",
+      "sourceSha256": "5176027d91885562847a612c486536745b2175a1f382cb1caccac2fcaf124a74",
+      "license": "project-owned-ai-generated",
+      "author": "OpenAI Codex for Ghost Game",
+      "status": "reference-only",
+      "dimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "previewPath": "art-source/brand/ghost-game/honru/emoji-v1/alpha/honru-emoji-heart-alpha-draft-v1.png",
+      "previewSha256": "5176027d91885562847a612c486536745b2175a1f382cb1caccac2fcaf124a74",
+      "runtimePaths": [
+        "art-source/brand/ghost-game/honru/emoji-v1/chroma/honru-emoji-heart-chroma-draft-v1.png",
+        "art-source/brand/ghost-game/honru/emoji-v1/alpha/honru-emoji-heart-alpha-draft-v1.png",
+        "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-heart-192px-draft-v1.png",
+        "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-heart-96px-draft-v1.png",
+        "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-heart-64px-draft-v1.png",
+        "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-heart-44px-draft-v1.png"
+      ],
+      "promptPath": "art-source/brand/ghost-game/honru/emoji-v1/PROMPT_AND_PROVENANCE.md",
+      "model": "highest-quality-built-in-imagegen-runtime-managed",
+      "remoteObjectKey": null
+    },
+    {
+      "id": "G-26-HONRU-EMOJI-GAME-V1",
+      "category": "platform/honru-emoji",
+      "assetType": "honru-emoji-source-candidate",
+      "sourceType": "generated",
+      "sourcePath": "art-source/brand/ghost-game/honru/emoji-v1/alpha/honru-emoji-game-alpha-draft-v1.png",
+      "sourceSha256": "d187b335eec57b3ae7530ace1ed66416764918c8eeb22325e4ceb57b06254c38",
+      "license": "project-owned-ai-generated",
+      "author": "OpenAI Codex for Ghost Game",
+      "status": "reference-only",
+      "dimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "previewPath": "art-source/brand/ghost-game/honru/emoji-v1/alpha/honru-emoji-game-alpha-draft-v1.png",
+      "previewSha256": "d187b335eec57b3ae7530ace1ed66416764918c8eeb22325e4ceb57b06254c38",
+      "runtimePaths": [
+        "art-source/brand/ghost-game/honru/emoji-v1/chroma/honru-emoji-game-chroma-draft-v1.png",
+        "art-source/brand/ghost-game/honru/emoji-v1/alpha/honru-emoji-game-alpha-draft-v1.png",
+        "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-game-192px-draft-v1.png",
+        "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-game-96px-draft-v1.png",
+        "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-game-64px-draft-v1.png",
+        "art-source/brand/ghost-game/honru/emoji-v1/derived/honru-emoji-game-44px-draft-v1.png"
+      ],
+      "promptPath": "art-source/brand/ghost-game/honru/emoji-v1/PROMPT_AND_PROVENANCE.md",
+      "model": "highest-quality-built-in-imagegen-runtime-managed",
+      "remoteObjectKey": null
+    },
+    {
+      "id": "G-27-HONRU-EMOJI-PACKET-V1",
+      "category": "platform/honru-emoji",
+      "assetType": "honru-emoji-review-packet",
+      "sourceType": "generated",
+      "sourcePath": "art-source/brand/ghost-game/honru/emoji-v1/atlas/honru-emoji-atlas-draft-v1.png",
+      "sourceSha256": "a767fd48b1b738e4b1939d8b368acc0df51dee7199af9db65c3899b4308d6ba7",
+      "license": "project-owned-ai-generated",
+      "author": "OpenAI Codex for Ghost Game",
+      "status": "reference-only",
+      "dimensions": {
+        "width": 1024,
+        "height": 768
+      },
+      "previewPath": "art-source/brand/ghost-game/honru/emoji-v1/poster/honru-emoji-poster-draft-v1.png",
+      "previewSha256": "4b22256408b4222b99ba53b94af65c82a96fc1571b891b9c45e4c0869801e01d",
+      "runtimePaths": [
+        "art-source/brand/ghost-game/honru/emoji-v1/atlas/honru-emoji-atlas-draft-v1.png",
+        "art-source/brand/ghost-game/honru/emoji-v1/poster/honru-emoji-poster-draft-v1.png",
+        "art-source/brand/ghost-game/honru/emoji-v1/poster/honru-emoji-44px-strip-draft-v1.png"
+      ],
+      "promptPath": "art-source/brand/ghost-game/honru/emoji-v1/PROMPT_AND_PROVENANCE.md",
+      "model": "highest-quality-built-in-imagegen-runtime-managed",
+      "remoteObjectKey": null
+    },
+    {
+      "id": "P-HONRU-EMOJI-V1",
+      "category": "platform/honru-emoji",
+      "assetType": "honru-emoji-runtime-owner-cleared",
+      "sourceType": "generated",
+      "sourcePath": "art-source/brand/ghost-game/honru/emoji-v1/atlas/honru-emoji-atlas-draft-v1.png",
+      "sourceSha256": "a767fd48b1b738e4b1939d8b368acc0df51dee7199af9db65c3899b4308d6ba7",
+      "license": "project-owned-ai-generated",
+      "author": "OpenAI Codex for Ghost Game",
+      "status": "integrated-local-only",
+      "dimensions": {
+        "width": 1024,
+        "height": 768
+      },
+      "previewPath": "public/assets/brand/honru/emoji-v1/honru-emoji-poster-v1.webp",
+      "previewSha256": "ec4b5a263839367a6ddcb9ced1b1b58fa2cbd24b0812b290be17eb7da84b9e35",
+      "runtimePaths": [
+        "public/assets/brand/honru/emoji-v1/honru-emoji-atlas-v1.webp",
+        "public/assets/brand/honru/emoji-v1/honru-emoji-poster-v1.webp"
+      ],
+      "promptPath": "art-source/brand/ghost-game/honru/emoji-v1/PROMPT_AND_PROVENANCE.md",
+      "model": "highest-quality-built-in-imagegen-runtime-managed",
+      "remoteObjectKey": null
+    },
+    {
+      "id": "P-AUTH-GHOST-WAKE-BACKDROP-V1",
+      "category": "platform/auth-background",
+      "assetType": "auth-background-runtime-owner-cleared",
+      "sourceType": "project-owned",
+      "sourcePath": "art-source/platform/auth/ghost-wake-v1/source/auth-ghost-wake-light-desktop-v1.svg",
+      "sourceSha256": "c8edb6d9426d1afc125cfceb83d297577df25830352def50dd3de159b028654f",
+      "license": "project-owned-deterministic-vector",
+      "author": "OpenAI Codex for Ghost Game",
+      "status": "integrated-local-only",
+      "dimensions": {
+        "width": 1920,
+        "height": 1080
+      },
+      "previewPath": "public/assets/ui/auth/ghost-wake-v1/backgrounds/auth-ghost-wake-light-desktop-v1.webp",
+      "previewSha256": "8f1dc0801641465bf35f6a17dbcbd96e64e66a6d5e478cba98b1db409f466712",
+      "runtimePaths": [
+        "public/assets/ui/auth/ghost-wake-v1/backgrounds/auth-ghost-wake-light-desktop-v1.webp",
+        "public/assets/ui/auth/ghost-wake-v1/backgrounds/auth-ghost-wake-dark-desktop-v1.webp",
+        "public/assets/ui/auth/ghost-wake-v1/backgrounds/auth-ghost-wake-light-mobile-v1.webp",
+        "public/assets/ui/auth/ghost-wake-v1/backgrounds/auth-ghost-wake-dark-mobile-v1.webp",
+        "public/assets/ui/auth/ghost-wake-v1/backgrounds/auth-ghost-wake-light-desktop-v1-static.webp",
+        "public/assets/ui/auth/ghost-wake-v1/backgrounds/auth-ghost-wake-dark-desktop-v1-static.webp",
+        "public/assets/ui/auth/ghost-wake-v1/backgrounds/auth-ghost-wake-light-mobile-v1-static.webp",
+        "public/assets/ui/auth/ghost-wake-v1/backgrounds/auth-ghost-wake-dark-mobile-v1-static.webp"
+      ],
+      "promptPath": "art-source/platform/auth/ghost-wake-v1/PROMPT_AND_PROVENANCE.md",
+      "model": null,
+      "remoteObjectKey": null
+    },
+    {
+      "id": "P-AUTH-HONRU-SCENES-V1",
+      "category": "platform/auth-character",
+      "assetType": "auth-honru-scenes-runtime-owner-cleared",
+      "sourceType": "project-owned",
+      "sourcePath": "art-source/platform/auth/ghost-wake-v1/alpha/honru-auth-login-welcome-v1.png",
+      "sourceSha256": "8cb03614f6dc0c15a44b29ba624e3f023cf2259fc044142764d037a9b8a1cf96",
+      "license": "project-owned-derived-from-owner-cleared-honru",
+      "author": "OpenAI Codex for Ghost Game",
+      "status": "integrated-local-only",
+      "dimensions": {
+        "width": 512,
+        "height": 512
+      },
+      "previewPath": "art-source/platform/auth/ghost-wake-v1/review/auth-honru-scenes-contact-sheet-v1.png",
+      "previewSha256": "c1840f717832675cac6de2b26e3664bab9378bfd6afdfdd63f4c2a290e890ca5",
+      "runtimePaths": [
+        "public/assets/ui/auth/ghost-wake-v1/honru/login-welcome-160-v1.webp",
+        "public/assets/ui/auth/ghost-wake-v1/honru/login-welcome-240-v1.webp",
+        "public/assets/ui/auth/ghost-wake-v1/honru/login-welcome-320-v1.webp",
+        "public/assets/ui/auth/ghost-wake-v1/honru/register-create-160-v1.webp",
+        "public/assets/ui/auth/ghost-wake-v1/honru/register-create-240-v1.webp",
+        "public/assets/ui/auth/ghost-wake-v1/honru/register-create-320-v1.webp",
+        "public/assets/ui/auth/ghost-wake-v1/honru/legacy-migrate-160-v1.webp",
+        "public/assets/ui/auth/ghost-wake-v1/honru/legacy-migrate-240-v1.webp",
+        "public/assets/ui/auth/ghost-wake-v1/honru/legacy-migrate-320-v1.webp",
+        "public/assets/ui/auth/ghost-wake-v1/honru/guest-safe-entry-160-v1.webp",
+        "public/assets/ui/auth/ghost-wake-v1/honru/guest-safe-entry-240-v1.webp",
+        "public/assets/ui/auth/ghost-wake-v1/honru/guest-safe-entry-320-v1.webp",
+        "public/assets/ui/auth/ghost-wake-v1/honru/connecting-160-v1.webp",
+        "public/assets/ui/auth/ghost-wake-v1/honru/connecting-240-v1.webp",
+        "public/assets/ui/auth/ghost-wake-v1/honru/connecting-320-v1.webp",
+        "public/assets/ui/auth/ghost-wake-v1/honru/credential-error-160-v1.webp",
+        "public/assets/ui/auth/ghost-wake-v1/honru/credential-error-240-v1.webp",
+        "public/assets/ui/auth/ghost-wake-v1/honru/credential-error-320-v1.webp",
+        "public/assets/ui/auth/ghost-wake-v1/honru/recovered-160-v1.webp",
+        "public/assets/ui/auth/ghost-wake-v1/honru/recovered-240-v1.webp",
+        "public/assets/ui/auth/ghost-wake-v1/honru/recovered-320-v1.webp",
+        "public/assets/ui/auth/ghost-wake-v1/honru/first-start-160-v1.webp",
+        "public/assets/ui/auth/ghost-wake-v1/honru/first-start-240-v1.webp",
+        "public/assets/ui/auth/ghost-wake-v1/honru/first-start-320-v1.webp"
+      ],
+      "promptPath": "art-source/platform/auth/ghost-wake-v1/PROMPT_AND_PROVENANCE.md",
+      "model": null,
+      "remoteObjectKey": null
+    },
+    {
+      "id": "P-BOOT-HONRU-CONTROLLER-V1",
+      "category": "platform/loading-character",
+      "assetType": "boot-honru-scenes-runtime-owner-cleared",
+      "sourceType": "project-owned",
+      "sourcePath": "art-source/platform/loading/ghost-boot-v1/alpha/honru-boot-controller-hug-v1.png",
+      "sourceSha256": "d9c2d3293ea0579012420e9dd01175581102013c48fb354c22d21fb259d12bfd",
+      "license": "project-owned-derived-from-owner-cleared-honru",
+      "author": "OpenAI Codex for Ghost Game",
+      "status": "integrated-local-only",
+      "dimensions": {
+        "width": 512,
+        "height": 512
+      },
+      "previewPath": "art-source/platform/loading/ghost-boot-v1/review/boot-honru-scenes-contact-sheet-v1.png",
+      "previewSha256": "dd338362860a14a08a5d703b5f264dfd181738d3970acecd4d38c3d79968a553",
+      "runtimePaths": [
+        "public/assets/ui/loading/ghost-boot-v1/honru-boot-controller-hug-160-v1.webp",
+        "public/assets/ui/loading/ghost-boot-v1/honru-boot-controller-hug-240-v1.webp",
+        "public/assets/ui/loading/ghost-boot-v1/honru-boot-controller-hug-320-v1.webp",
+        "public/assets/ui/loading/ghost-boot-v1/honru-boot-retry-signal-160-v1.webp",
+        "public/assets/ui/loading/ghost-boot-v1/honru-boot-retry-signal-240-v1.webp",
+        "public/assets/ui/loading/ghost-boot-v1/honru-boot-retry-signal-320-v1.webp"
+      ],
+      "promptPath": "art-source/platform/auth/ghost-wake-v1/PROMPT_AND_PROVENANCE.md",
+      "model": null,
+      "remoteObjectKey": null
+    },
+    {
+      "id": "P-AUTH-STATUS-ICONS-V1",
+      "category": "platform/auth-status",
+      "assetType": "auth-status-icons-runtime-owner-cleared",
+      "sourceType": "project-owned",
+      "sourcePath": "art-source/platform/auth/status-v1/username-available-v1.svg",
+      "sourceSha256": "8c3538f5a4673937a4f71aef41210247eca2ad7d6fb99bf6cf1d9524a9a35b33",
+      "license": "project-owned-deterministic-vector",
+      "author": "OpenAI Codex for Ghost Game",
+      "status": "integrated-local-only",
+      "dimensions": {
+        "width": 64,
+        "height": 64
+      },
+      "previewPath": "art-source/platform/auth/status-v1/review/auth-status-icons-contact-sheet-v1.png",
+      "previewSha256": "fdb95dbd225c3bd12c4322fe89e3ff954c9a474f1cec30ded751d8fea25447da",
+      "runtimePaths": [
+        "public/assets/ui/auth/status-v1/username-available-v1.svg",
+        "public/assets/ui/auth/status-v1/username-occupied-v1.svg",
+        "public/assets/ui/auth/status-v1/password-error-v1.svg",
+        "public/assets/ui/auth/status-v1/migration-success-v1.svg",
+        "public/assets/ui/auth/status-v1/connected-v1.svg",
+        "public/assets/ui/auth/status-v1/offline-retry-v1.svg"
+      ],
+      "promptPath": "art-source/platform/auth/ghost-wake-v1/PROMPT_AND_PROVENANCE.md",
+      "model": null,
+      "remoteObjectKey": null
+    },
+    {
+      "id": "P-PWA-GHOST-WAKE-V1",
+      "category": "platform/pwa",
+      "assetType": "pwa-launch-runtime-owner-cleared",
+      "sourceType": "project-owned",
+      "sourcePath": "art-source/platform/pwa/ghost-wake-v1/source/ghost-game-maskable-v1.svg",
+      "sourceSha256": "795b1e5f7d5f27280faded936ba77a1f79c985c35fb0b2f4a6d85dad789feff0",
+      "license": "project-owned-deterministic-vector",
+      "author": "OpenAI Codex for Ghost Game",
+      "status": "integrated-local-only",
+      "dimensions": {
+        "width": 512,
+        "height": 512
+      },
+      "previewPath": "public/assets/brand/pwa/ghost-wake-v1/ghost-game-maskable-512-v1.png",
+      "previewSha256": "835141ea727b6f7ec1a3dd321c00433b57756328e95700b955bff20e8bcec6a6",
+      "runtimePaths": [
+        "public/assets/brand/pwa/ghost-wake-v1/ghost-game-maskable-192-v1.png",
+        "public/assets/brand/pwa/ghost-wake-v1/ghost-game-maskable-512-v1.png",
+        "public/assets/brand/pwa/ghost-wake-v1/ghost-wake-splash-light-v1.webp",
+        "public/assets/brand/pwa/ghost-wake-v1/ghost-wake-splash-dark-v1.webp"
+      ],
+      "promptPath": "art-source/platform/auth/ghost-wake-v1/PROMPT_AND_PROVENANCE.md",
+      "model": null,
+      "remoteObjectKey": null
+    },
+    {
+      "id": "P-PLATFORM-SCENES-V1",
+      "category": "platform/scenes",
+      "assetType": "platform-scenes-runtime-owner-cleared",
+      "sourceType": "project-owned",
+      "sourcePath": "art-source/platform/scenes/signal-worlds-v1/source-layers/home/light/desktop/home-light-desktop-far-v1.svg",
+      "sourceSha256": "dcda96541ba2096b18840fd3b2433ca00c4e2fd8262a9faf1a32349c100f7c17",
+      "license": "project-owned-deterministic-vector",
+      "author": "OpenAI Codex for Ghost Game",
+      "status": "integrated-local-only",
+      "dimensions": {
+        "width": 1920,
+        "height": 1080
+      },
+      "previewPath": "art-source/platform/scenes/signal-worlds-v1/review/platform-scenes-light-desktop-contact-sheet-v1.png",
+      "previewSha256": "db986bd5decb0813d3ee21556c0ebb151771f4229a959d7258d9fb980e235055",
+      "runtimePaths": [
+        "public/assets/backgrounds/platform-scenes-v1/home/light/desktop/home-light-desktop-far-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/home/light/desktop/home-light-desktop-mid-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/home/light/desktop/home-light-desktop-foreground-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/home/light/desktop/home-light-desktop-static-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/home/light/mobile/home-light-mobile-far-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/home/light/mobile/home-light-mobile-mid-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/home/light/mobile/home-light-mobile-foreground-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/home/light/mobile/home-light-mobile-static-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/home/light/preview/home-light-poster-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/home/light/preview/home-light-mini-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/home/dark/desktop/home-dark-desktop-far-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/home/dark/desktop/home-dark-desktop-mid-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/home/dark/desktop/home-dark-desktop-foreground-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/home/dark/desktop/home-dark-desktop-static-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/home/dark/mobile/home-dark-mobile-far-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/home/dark/mobile/home-dark-mobile-mid-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/home/dark/mobile/home-dark-mobile-foreground-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/home/dark/mobile/home-dark-mobile-static-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/home/dark/preview/home-dark-poster-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/home/dark/preview/home-dark-mini-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/games/light/desktop/games-light-desktop-far-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/games/light/desktop/games-light-desktop-mid-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/games/light/desktop/games-light-desktop-foreground-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/games/light/desktop/games-light-desktop-static-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/games/light/mobile/games-light-mobile-far-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/games/light/mobile/games-light-mobile-mid-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/games/light/mobile/games-light-mobile-foreground-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/games/light/mobile/games-light-mobile-static-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/games/light/preview/games-light-poster-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/games/light/preview/games-light-mini-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/games/dark/desktop/games-dark-desktop-far-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/games/dark/desktop/games-dark-desktop-mid-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/games/dark/desktop/games-dark-desktop-foreground-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/games/dark/desktop/games-dark-desktop-static-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/games/dark/mobile/games-dark-mobile-far-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/games/dark/mobile/games-dark-mobile-mid-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/games/dark/mobile/games-dark-mobile-foreground-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/games/dark/mobile/games-dark-mobile-static-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/games/dark/preview/games-dark-poster-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/games/dark/preview/games-dark-mini-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/room/light/desktop/room-light-desktop-far-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/room/light/desktop/room-light-desktop-mid-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/room/light/desktop/room-light-desktop-foreground-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/room/light/desktop/room-light-desktop-static-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/room/light/mobile/room-light-mobile-far-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/room/light/mobile/room-light-mobile-mid-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/room/light/mobile/room-light-mobile-foreground-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/room/light/mobile/room-light-mobile-static-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/room/light/preview/room-light-poster-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/room/light/preview/room-light-mini-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/room/dark/desktop/room-dark-desktop-far-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/room/dark/desktop/room-dark-desktop-mid-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/room/dark/desktop/room-dark-desktop-foreground-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/room/dark/desktop/room-dark-desktop-static-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/room/dark/mobile/room-dark-mobile-far-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/room/dark/mobile/room-dark-mobile-mid-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/room/dark/mobile/room-dark-mobile-foreground-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/room/dark/mobile/room-dark-mobile-static-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/room/dark/preview/room-dark-poster-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/room/dark/preview/room-dark-mini-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/playline/light/desktop/playline-light-desktop-far-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/playline/light/desktop/playline-light-desktop-mid-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/playline/light/desktop/playline-light-desktop-foreground-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/playline/light/desktop/playline-light-desktop-static-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/playline/light/mobile/playline-light-mobile-far-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/playline/light/mobile/playline-light-mobile-mid-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/playline/light/mobile/playline-light-mobile-foreground-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/playline/light/mobile/playline-light-mobile-static-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/playline/light/preview/playline-light-poster-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/playline/light/preview/playline-light-mini-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/playline/dark/desktop/playline-dark-desktop-far-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/playline/dark/desktop/playline-dark-desktop-mid-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/playline/dark/desktop/playline-dark-desktop-foreground-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/playline/dark/desktop/playline-dark-desktop-static-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/playline/dark/mobile/playline-dark-mobile-far-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/playline/dark/mobile/playline-dark-mobile-mid-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/playline/dark/mobile/playline-dark-mobile-foreground-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/playline/dark/mobile/playline-dark-mobile-static-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/playline/dark/preview/playline-dark-poster-v1.webp",
+        "public/assets/backgrounds/platform-scenes-v1/playline/dark/preview/playline-dark-mini-v1.webp"
+      ],
+      "promptPath": "art-source/platform/scenes/signal-worlds-v1/PROMPT_AND_PROVENANCE.md",
+      "model": null,
+      "remoteObjectKey": null
+    },
+    {
+      "id": "P-GAME-STAGE-SHARED-ART-V1",
+      "category": "platform/game-stage",
+      "assetType": "shared-game-stage-runtime-owner-cleared",
+      "sourceType": "project-owned",
+      "sourcePath": "art-source/platform/game-stage/shared-v1/source/surface-v1.svg",
+      "sourceSha256": "b08440fa98d5d6f559101cfe53d17f72d8ab738815e2d38cfb2a4151a98ae680",
+      "license": "project-owned-deterministic-vector",
+      "author": "OpenAI Codex for Ghost Game",
+      "status": "integrated-local-only",
+      "dimensions": {
+        "width": 1280,
+        "height": 720
+      },
+      "previewPath": "art-source/platform/game-stage/shared-v1/review/game-stage-shared-contact-sheet-v1.png",
+      "previewSha256": "e2fc85339051a386bbe73e9e415ad73a435e9a8d0caf028bc93588e2ea833d28",
+      "runtimePaths": [
+        "public/assets/ui/game-stage/shared-v1/surface-v1.webp"
+      ],
+      "promptPath": "art-source/platform/game-stage/shared-v1/PROMPT_AND_PROVENANCE.md",
+      "model": null,
+      "remoteObjectKey": null
+    },
+    {
+      "id": "P-MODAL-ILLUSTRATION-V1",
+      "category": "platform/modal",
+      "assetType": "modal-illustration-runtime-owner-cleared",
+      "sourceType": "project-owned",
+      "sourcePath": "art-source/platform/modal/illustrations-v1/source/auth-entry-v1.svg",
+      "sourceSha256": "de91cf0ad3f6ff5409526c9252d70afa7ddfdd6b18e2438a6fcd61fef6693937",
+      "license": "project-owned-deterministic-vector",
+      "author": "OpenAI Codex for Ghost Game",
+      "status": "integrated-local-only",
+      "dimensions": {
+        "width": 512,
+        "height": 512
+      },
+      "previewPath": "art-source/platform/modal/illustrations-v1/review/modal-neutral-contact-sheet-v1.png",
+      "previewSha256": "83075c91681a73b88c2ed8098fc50482cedccf628408f8dfd9e8c473ba96c81f",
+      "runtimePaths": [
+        "public/assets/ui/modal/illustrations-v1/auth-entry/neutral/160-auth-entry-v1.webp",
+        "public/assets/ui/modal/illustrations-v1/auth-entry/neutral/240-auth-entry-v1.webp"
+      ],
+      "promptPath": "art-source/platform/modal/illustrations-v1/PROMPT_AND_PROVENANCE.md",
+      "model": null,
+      "remoteObjectKey": null
+    },
+    {
+      "id": "P-LOADING-STATE-ART-V1",
+      "category": "platform/loading",
+      "assetType": "loading-state-runtime-owner-cleared",
+      "sourceType": "project-owned",
+      "sourcePath": "art-source/platform/loading/state-art-v1/source/boot-v1.svg",
+      "sourceSha256": "b53cbff6e9f59ffbc7c668024b2e9f007926332e037e8df0341f8835586aee5e",
+      "license": "project-owned-deterministic-vector",
+      "author": "OpenAI Codex for Ghost Game",
+      "status": "integrated-local-only",
+      "dimensions": {
+        "width": 512,
+        "height": 512
+      },
+      "previewPath": "art-source/platform/loading/state-art-v1/review/loading-state-contact-sheet-v1.png",
+      "previewSha256": "3156d88383855e3ae4d573186d690ad04cfc96d67a4269eaf09d27c06d86fde8",
+      "runtimePaths": [
+        "public/assets/ui/loading/state-art-v1/page/240-page-v1.webp"
+      ],
+      "promptPath": "art-source/platform/loading/state-art-v1/PROMPT_AND_PROVENANCE.md",
+      "model": null,
+      "remoteObjectKey": null
+    },
+    {
+      "id": "G-02-GOMOKU-FINAL-ART-V1",
+      "category": "game/gomoku/final-art",
+      "assetType": "gomoku-final-board-piece-vfx-runtime-owner-cleared",
+      "sourceType": "project-owned",
+      "sourcePath": "art-source/games/gomoku/final-art-v1/source/board-wood-v1.svg",
+      "sourceSha256": "1aa2158a238f09641b9d6670e064eaca3fa235e53d1353da9dcd7f845b69b527",
+      "license": "project-owned-deterministic-vector",
+      "author": "OpenAI Codex for Ghost Game",
+      "status": "integrated-local-only",
+      "dimensions": {
+        "width": 1056,
+        "height": 1056
+      },
+      "previewPath": "art-source/games/gomoku/final-art-v1/review/gomoku-final-contact-sheet-v1.png",
+      "previewSha256": "24d1e96cf65e18fcfa4e8c730870e885d6111fcb4a89f6dbb11578da9535913c",
+      "runtimePaths": [
+        "public/assets/games/gomoku/final-art-v1/board-wood-v1.webp",
+        "public/assets/games/gomoku/final-art-v1/board-wood-static-v1.webp",
+        "public/assets/games/gomoku/final-art-v1/board-stone-v1.webp",
+        "public/assets/games/gomoku/final-art-v1/board-stone-static-v1.webp",
+        "public/assets/games/gomoku/final-art-v1/board-ink-v1.webp",
+        "public/assets/games/gomoku/final-art-v1/board-ink-static-v1.webp",
+        "public/assets/games/gomoku/final-art-v1/board-grass-v1.webp",
+        "public/assets/games/gomoku/final-art-v1/board-grass-static-v1.webp",
+        "public/assets/games/gomoku/final-art-v1/piece-black-white-v1.webp",
+        "public/assets/games/gomoku/final-art-v1/piece-black-white-static-v1.webp",
+        "public/assets/games/gomoku/final-art-v1/piece-jade-v1.webp",
+        "public/assets/games/gomoku/final-art-v1/piece-jade-static-v1.webp",
+        "public/assets/games/gomoku/final-art-v1/piece-crystal-v1.webp",
+        "public/assets/games/gomoku/final-art-v1/piece-crystal-static-v1.webp",
+        "public/assets/games/gomoku/final-art-v1/piece-glow-v1.webp",
+        "public/assets/games/gomoku/final-art-v1/piece-glow-static-v1.webp",
+        "public/assets/games/gomoku/final-art-v1/piece-obsidian-v1.webp",
+        "public/assets/games/gomoku/final-art-v1/piece-obsidian-static-v1.webp",
+        "public/assets/games/gomoku/final-art-v1/vfx-last-move-v1.webp",
+        "public/assets/games/gomoku/final-art-v1/vfx-last-move-static-v1.webp",
+        "public/assets/games/gomoku/final-art-v1/vfx-placement-impact-v1.webp",
+        "public/assets/games/gomoku/final-art-v1/vfx-placement-impact-static-v1.webp",
+        "public/assets/games/gomoku/final-art-v1/vfx-five-line-v1.webp",
+        "public/assets/games/gomoku/final-art-v1/vfx-five-line-static-v1.webp",
+        "public/assets/games/gomoku/final-art-v1/vfx-draw-settle-v1.webp",
+        "public/assets/games/gomoku/final-art-v1/vfx-draw-settle-static-v1.webp",
+        "public/assets/games/gomoku/final-art-v1/vfx-ai-thinking-v1.webp",
+        "public/assets/games/gomoku/final-art-v1/vfx-ai-thinking-static-v1.webp",
+        "public/assets/games/gomoku/final-art-v1/vfx-spectate-v1.webp",
+        "public/assets/games/gomoku/final-art-v1/vfx-spectate-static-v1.webp",
+        "public/assets/games/gomoku/final-art-v1/vfx-reconnect-v1.webp",
+        "public/assets/games/gomoku/final-art-v1/vfx-reconnect-static-v1.webp",
+        "public/assets/games/gomoku/final-art-v1/camera-desktop-v1.webp",
+        "public/assets/games/gomoku/final-art-v1/camera-desktop-static-v1.webp",
+        "public/assets/games/gomoku/final-art-v1/camera-mobile-v1.webp",
+        "public/assets/games/gomoku/final-art-v1/camera-mobile-static-v1.webp"
+      ],
+      "promptPath": "art-source/games/gomoku/final-art-v1/PROMPT_AND_PROVENANCE.md",
+      "model": null,
+      "remoteObjectKey": null
+    },
+    {
+      "id": "G-07-LUDO-FINAL-ART-V1",
+      "category": "game/ludo/final-art",
+      "assetType": "ludo-final-board-aircraft-vfx-runtime-owner-cleared",
+      "sourceType": "project-owned",
+      "sourcePath": "art-source/games/ludo/final-art-v1/source/board-classic-v1.svg",
+      "sourceSha256": "5d07fed83ad6e7f8ab5b75af8a9152e31387ae709ef646e7f020d2abd07089a3",
+      "license": "project-owned-deterministic-vector",
+      "author": "OpenAI Codex for Ghost Game",
+      "status": "integrated-local-only",
+      "dimensions": {
+        "width": 1056,
+        "height": 1056
+      },
+      "previewPath": "art-source/games/ludo/final-art-v1/review/ludo-final-contact-sheet-1-v1.png",
+      "previewSha256": "2fb5a78ca415c75f5fe72cbcda9c64633cfe5969da48de087e3d4bdc8beb62ba",
+      "runtimePaths": [
+        "public/assets/games/ludo/final-art-v1/board-classic-v1.webp",
+        "public/assets/games/ludo/final-art-v1/board-classic-static-v1.webp",
+        "public/assets/games/ludo/final-art-v1/board-sky-v1.webp",
+        "public/assets/games/ludo/final-art-v1/board-sky-static-v1.webp",
+        "public/assets/games/ludo/final-art-v1/board-night-v1.webp",
+        "public/assets/games/ludo/final-art-v1/board-night-static-v1.webp",
+        "public/assets/games/ludo/final-art-v1/board-grass-v1.webp",
+        "public/assets/games/ludo/final-art-v1/board-grass-static-v1.webp",
+        "public/assets/games/ludo/final-art-v1/aircraft-red-takeoff-v1.webp",
+        "public/assets/games/ludo/final-art-v1/aircraft-red-takeoff-static-v1.webp",
+        "public/assets/games/ludo/final-art-v1/aircraft-red-cruise-v1.webp",
+        "public/assets/games/ludo/final-art-v1/aircraft-red-cruise-static-v1.webp",
+        "public/assets/games/ludo/final-art-v1/aircraft-red-land-v1.webp",
+        "public/assets/games/ludo/final-art-v1/aircraft-red-land-static-v1.webp",
+        "public/assets/games/ludo/final-art-v1/aircraft-blue-takeoff-v1.webp",
+        "public/assets/games/ludo/final-art-v1/aircraft-blue-takeoff-static-v1.webp",
+        "public/assets/games/ludo/final-art-v1/aircraft-blue-cruise-v1.webp",
+        "public/assets/games/ludo/final-art-v1/aircraft-blue-cruise-static-v1.webp",
+        "public/assets/games/ludo/final-art-v1/aircraft-blue-land-v1.webp",
+        "public/assets/games/ludo/final-art-v1/aircraft-blue-land-static-v1.webp",
+        "public/assets/games/ludo/final-art-v1/aircraft-green-takeoff-v1.webp",
+        "public/assets/games/ludo/final-art-v1/aircraft-green-takeoff-static-v1.webp",
+        "public/assets/games/ludo/final-art-v1/aircraft-green-cruise-v1.webp",
+        "public/assets/games/ludo/final-art-v1/aircraft-green-cruise-static-v1.webp",
+        "public/assets/games/ludo/final-art-v1/aircraft-green-land-v1.webp",
+        "public/assets/games/ludo/final-art-v1/aircraft-green-land-static-v1.webp",
+        "public/assets/games/ludo/final-art-v1/aircraft-yellow-takeoff-v1.webp",
+        "public/assets/games/ludo/final-art-v1/aircraft-yellow-takeoff-static-v1.webp",
+        "public/assets/games/ludo/final-art-v1/aircraft-yellow-cruise-v1.webp",
+        "public/assets/games/ludo/final-art-v1/aircraft-yellow-cruise-static-v1.webp",
+        "public/assets/games/ludo/final-art-v1/aircraft-yellow-land-v1.webp",
+        "public/assets/games/ludo/final-art-v1/aircraft-yellow-land-static-v1.webp",
+        "public/assets/games/ludo/final-art-v1/route-safe-v1.webp",
+        "public/assets/games/ludo/final-art-v1/route-safe-static-v1.webp",
+        "public/assets/games/ludo/final-art-v1/route-start-v1.webp",
+        "public/assets/games/ludo/final-art-v1/route-start-static-v1.webp",
+        "public/assets/games/ludo/final-art-v1/route-finish-v1.webp",
+        "public/assets/games/ludo/final-art-v1/route-finish-static-v1.webp",
+        "public/assets/games/ludo/final-art-v1/die-atlas-v1.webp",
+        "public/assets/games/ludo/final-art-v1/die-atlas-static-v1.webp",
+        "public/assets/games/ludo/final-art-v1/vfx-takeoff-v1.webp",
+        "public/assets/games/ludo/final-art-v1/vfx-takeoff-static-v1.webp",
+        "public/assets/games/ludo/final-art-v1/vfx-capture-impact-v1.webp",
+        "public/assets/games/ludo/final-art-v1/vfx-capture-impact-static-v1.webp",
+        "public/assets/games/ludo/final-art-v1/vfx-extra-turn-v1.webp",
+        "public/assets/games/ludo/final-art-v1/vfx-extra-turn-static-v1.webp",
+        "public/assets/games/ludo/final-art-v1/vfx-return-home-v1.webp",
+        "public/assets/games/ludo/final-art-v1/vfx-return-home-static-v1.webp",
+        "public/assets/games/ludo/final-art-v1/vfx-finish-v1.webp",
+        "public/assets/games/ludo/final-art-v1/vfx-finish-static-v1.webp",
+        "public/assets/games/ludo/final-art-v1/podium-2p-v1.webp",
+        "public/assets/games/ludo/final-art-v1/podium-2p-static-v1.webp",
+        "public/assets/games/ludo/final-art-v1/podium-3p-v1.webp",
+        "public/assets/games/ludo/final-art-v1/podium-3p-static-v1.webp",
+        "public/assets/games/ludo/final-art-v1/podium-4p-v1.webp",
+        "public/assets/games/ludo/final-art-v1/podium-4p-static-v1.webp",
+        "public/assets/games/ludo/final-art-v1/skin-jet-v1.webp",
+        "public/assets/games/ludo/final-art-v1/skin-jet-static-v1.webp",
+        "public/assets/games/ludo/final-art-v1/skin-paper-v1.webp",
+        "public/assets/games/ludo/final-art-v1/skin-paper-static-v1.webp",
+        "public/assets/games/ludo/final-art-v1/skin-ghost-v1.webp",
+        "public/assets/games/ludo/final-art-v1/skin-ghost-static-v1.webp",
+        "public/assets/games/ludo/final-art-v1/skin-mech-v1.webp",
+        "public/assets/games/ludo/final-art-v1/skin-mech-static-v1.webp",
+        "public/assets/games/ludo/final-art-v1/camera-desktop-v1.webp",
+        "public/assets/games/ludo/final-art-v1/camera-desktop-static-v1.webp",
+        "public/assets/games/ludo/final-art-v1/camera-mobile-v1.webp",
+        "public/assets/games/ludo/final-art-v1/camera-mobile-static-v1.webp"
+      ],
+      "promptPath": "art-source/games/ludo/final-art-v1/PROMPT_AND_PROVENANCE.md",
+      "model": null,
+      "remoteObjectKey": null
+    },
+    {
+      "id": "P-HONRU-CONTEXT-REACTIONS-V1",
+      "category": "platform/honru-context-reactions",
+      "assetType": "honru-context-and-quick-runtime-owner-cleared",
+      "sourceType": "project-owned",
+      "sourcePath": "art-source/brand/ghost-game/honru/context-reactions-v1/derived/honru-hand-corrected-master-v1-alpha.png",
+      "sourceSha256": "1105f7302c60e810cf86c29d1846b54174a64a6fcc35e9ac7e0c10882607bb49",
+      "license": "project-owned-derived-from-owner-approved-ai-generated-honru",
+      "author": "OpenAI Codex for Ghost Game",
+      "status": "integrated-local-only",
+      "dimensions": {
+        "width": 1254,
+        "height": 1254
+      },
+      "previewPath": "art-source/brand/ghost-game/honru/context-reactions-v1/review/honru-context-reactions-poster-v1.png",
+      "previewSha256": "35691bebf2731d5fe9d6db7952b2d68d325b778b7a4628b2fb58612e4abc421d",
+      "runtimePaths": [
+        "public/assets/brand/honru/context-reactions-v1/contexts/honru-context-ready-v1.webp",
+        "public/assets/brand/honru/context-reactions-v1/contexts/honru-context-your-turn-v1.webp",
+        "public/assets/brand/honru/context-reactions-v1/contexts/honru-context-thinking-v1.webp",
+        "public/assets/brand/honru/context-reactions-v1/contexts/honru-context-throw-v1.webp",
+        "public/assets/brand/honru/context-reactions-v1/contexts/honru-context-hit-v1.webp",
+        "public/assets/brand/honru/context-reactions-v1/contexts/honru-context-capture-v1.webp",
+        "public/assets/brand/honru/context-reactions-v1/contexts/honru-context-score-v1.webp",
+        "public/assets/brand/honru/context-reactions-v1/contexts/honru-context-combo-v1.webp",
+        "public/assets/brand/honru/context-reactions-v1/contexts/honru-context-warning-v1.webp",
+        "public/assets/brand/honru/context-reactions-v1/contexts/honru-context-reconnect-v1.webp",
+        "public/assets/brand/honru/context-reactions-v1/contexts/honru-context-spectator-v1.webp",
+        "public/assets/brand/honru/context-reactions-v1/contexts/honru-context-win-v1.webp",
+        "public/assets/brand/honru/context-reactions-v1/contexts/honru-context-lose-v1.webp",
+        "public/assets/brand/honru/context-reactions-v1/contexts/honru-context-draw-v1.webp",
+        "public/assets/brand/honru/context-reactions-v1/contexts/honru-context-rematch-v1.webp",
+        "public/assets/brand/honru/context-reactions-v1/contexts/honru-context-celebration-v1.webp",
+        "public/assets/brand/honru/context-reactions-v1/honru-quick-atlas-v1.webp"
+      ],
+      "promptPath": "art-source/brand/ghost-game/honru/context-reactions-v1/PROMPT_AND_PROVENANCE.md",
+      "model": "codex-built-in-imagegen mother + deterministic Sharp derivatives",
+      "remoteObjectKey": null
+    },
+    {
+      "id": "P-PROGRESSION-FEEDBACK-ART-V1",
+      "category": "platform/progression-feedback",
+      "assetType": "reward-progression-runtime-owner-cleared",
+      "sourceType": "project-owned",
+      "sourcePath": "art-source/platform/progression/feedback-v1/source/ai/progression-feedback-atlas-master-v1.png",
+      "sourceSha256": "4dfde26c2426430fa3ba42c51f7bc067f3600ef169a9312555bfdadb359c94ec",
+      "license": "project-owned-ai-generated-and-deterministically-derived",
+      "author": "OpenAI Codex for Ghost Game",
+      "status": "integrated-local-only",
+      "dimensions": {
+        "width": 1672,
+        "height": 941
+      },
+      "previewPath": "art-source/platform/progression/feedback-v1/review/progression-feedback-contact-sheet-v1.png",
+      "previewSha256": "789a3f26f2d1fd6f91e7b155efd1e624f0280714409a83f15f4f714d5a6c1cae",
+      "runtimePaths": [
+        "public/assets/ui/progression/feedback-v1/reward-96-v1.webp",
+        "public/assets/ui/progression/feedback-v1/reward-160-v1.webp",
+        "public/assets/ui/progression/feedback-v1/reward-256-v1.webp",
+        "public/assets/ui/progression/feedback-v1/gcoins-96-v1.webp",
+        "public/assets/ui/progression/feedback-v1/gcoins-160-v1.webp",
+        "public/assets/ui/progression/feedback-v1/gcoins-256-v1.webp",
+        "public/assets/ui/progression/feedback-v1/xp-96-v1.webp",
+        "public/assets/ui/progression/feedback-v1/xp-160-v1.webp",
+        "public/assets/ui/progression/feedback-v1/xp-256-v1.webp",
+        "public/assets/ui/progression/feedback-v1/level-up-96-v1.webp",
+        "public/assets/ui/progression/feedback-v1/level-up-160-v1.webp",
+        "public/assets/ui/progression/feedback-v1/level-up-256-v1.webp",
+        "public/assets/ui/progression/feedback-v1/task-96-v1.webp",
+        "public/assets/ui/progression/feedback-v1/task-160-v1.webp",
+        "public/assets/ui/progression/feedback-v1/task-256-v1.webp",
+        "public/assets/ui/progression/feedback-v1/achievement-96-v1.webp",
+        "public/assets/ui/progression/feedback-v1/achievement-160-v1.webp",
+        "public/assets/ui/progression/feedback-v1/achievement-256-v1.webp",
+        "public/assets/ui/progression/feedback-v1/win-streak-96-v1.webp",
+        "public/assets/ui/progression/feedback-v1/win-streak-160-v1.webp",
+        "public/assets/ui/progression/feedback-v1/win-streak-256-v1.webp",
+        "public/assets/ui/progression/feedback-v1/collection-96-v1.webp",
+        "public/assets/ui/progression/feedback-v1/collection-160-v1.webp",
+        "public/assets/ui/progression/feedback-v1/collection-256-v1.webp",
+        "public/assets/ui/progression/feedback-v1/unlock-96-v1.webp",
+        "public/assets/ui/progression/feedback-v1/unlock-160-v1.webp",
+        "public/assets/ui/progression/feedback-v1/unlock-256-v1.webp"
+      ],
+      "promptPath": "art-source/platform/progression/feedback-v1/PROMPT_AND_PROVENANCE.md",
+      "model": "OpenAI Codex built-in imagegen + deterministic Sharp derivatives",
       "remoteObjectKey": null
     }
   ]

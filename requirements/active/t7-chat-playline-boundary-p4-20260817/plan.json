@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "task": "t7-chat-playline-boundary-p4-20260817",
+  "state": "WIRED_LOCAL_VERIFIED",
+  "release": "LOCAL_ONLY_NOT_RELEASED",
+  "steps": [
+    {"id":"P4-1","status":"complete","name":"冻结 chat/playline Interface、ownership 与 fail-closed contract"},
+    {"id":"P4-2","status":"complete","name":"Direct Chat policy、bounded state、idempotency 与 monotonic read seam"},
+    {"id":"P4-3","status":"complete","name":"JSON runtime 与 detached memory Adapter"},
+    {"id":"P4-4","status":"complete","name":"Playline existing Module delegation 与 public result sanitization"},
+    {"id":"P4-5","status":"complete","name":"独立 Chat/Playline boundary QA"},
+    {"id":"P4-6","status":"complete","name":"server/index.js local compatibility wiring、wire compatibility 与 online regression"},
+    {"id":"P4-7","status":"pending","name":"真实 Supabase/RLS、multi-instance、设备/网络与发布证据"}
+  ],
+  "next": "进入 Reward/Economy ownership；真实 Supabase/多实例与外部设备网络仍按共享 Gate 后置",
+  "rollback": "remove new module/QA/active contract; keep inline handlers and existing playline module"
+}

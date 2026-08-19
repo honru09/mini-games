@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "taskId": "vertical-slice-definition-p1-20260813",
+  "requirements": ["TECH-051"],
+  "stage": "CLOSE",
+  "disposition": "NOW_CLOSURE",
+  "status": "COMPLETED_LOCAL",
+  "scope": "建立体验纵切十项完成定义、证据等级、伪完成禁止语义与自动化合同检查；不修改产品运行时、规则、协议、经济、数据库或未审批美术。",
+  "steps": [
+    {"id":"SLICE-1","status":"completed","title":"冻结十项纵切门槛与证据等级"},
+    {"id":"SLICE-2","status":"completed","title":"加入合同文档、active task 与专项 QA"},
+    {"id":"SLICE-3","status":"completed","title":"同步台账、状态、报告和三份日志"},
+    {"id":"SLICE-4","status":"completed","title":"运行专项、质量门禁与完整回归"}
+  ],
+  "release": "LOCAL_ONLY_NO_COMMIT_NO_PUSH_NO_DEPLOY",
+  "rollback": "删除本批合同、QA 与 active task，恢复 TECH-051 为 planned；不触碰运行时和数据。"
+}

@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "task": "visual-25d-repush-p0-20260819",
+  "state": "IN_PROGRESS_LOCAL",
+  "requirements": ["UI-028", "GAME-042", "TECH-049", "TECH-054"],
+  "steps": [
+    {"id":"2D-01","status":"completed","title":"冻结 Ghost3D 扩张并建立 2.5D 路由/合同"},
+    {"id":"2D-02","status":"completed","title":"DepthScene、Camera、Honru、Page Transition、Game Stage 语义模块接入构建"},
+    {"id":"2D-03","status":"completed","title":"Gomoku 首个 2.5D 合同与静态回退回归"},
+    {"id":"2D-04","status":"pending","title":"真实浏览器 Home→Games→Gomoku→Result→Games 可见证据"},
+    {"id":"2D-05","status":"pending","title":"将同一空间语言按 Ludo→Monopoly→Xiangqi→Tetris→Tank 推广"}
+  ],
+  "rollback": "关闭 mg_visual_25d_v1 或移除 2.5D 监听/模块接线，保留原 DOM/Canvas；不删除 Ghost3D/Three 实验文件。",
+  "release": "LOCAL_ONLY / NOT_RELEASED"
+}

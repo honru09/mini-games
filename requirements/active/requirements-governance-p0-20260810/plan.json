@@ -1,0 +1,50 @@
+{
+  "status": "ACCEPTED",
+  "parallelability": 1,
+  "dependencies": [
+    "requirements/active/product-requirements-roadmap-p0-20260809",
+    "requirements/active/immersive-game-shell-p0-20260809",
+    "requirements/active/social-match-p0-20260809"
+  ],
+  "steps": [
+    {
+      "id": "GOV-1",
+      "task": "完整原子化长需求并映射既有/新增需求 ID",
+      "status": "completed"
+    },
+    {
+      "id": "GOV-2",
+      "task": "更新来源词典、依赖图、覆盖组和原子台账",
+      "status": "completed"
+    },
+    {
+      "id": "GOV-3",
+      "task": "更新白皮书产品裁决和报告生成日期机制",
+      "status": "completed"
+    },
+    {
+      "id": "GOV-4",
+      "task": "归档历史一次性报告并重建当前报告索引",
+      "status": "completed"
+    },
+    {
+      "id": "GOV-5",
+      "task": "运行进度台账、报告漂移、链接与日志验收",
+      "status": "completed"
+    }
+  ],
+  "risks": [
+    "重复新增已经存在的需求导致总数膨胀",
+    "移动报告后破坏 sourceCatalog 或 Markdown 链接",
+    "把长期愿景误写成本期已承诺功能",
+    "把本地/人工/真实环境未执行项误标为 verified"
+  ],
+  "tests": [
+    "npm run reports:progress",
+    "npm run test:progress-ledger",
+    "npm run quality:gates",
+    "git diff --check",
+    "仓库链接与归档路径静态扫描"
+  ],
+  "rollback": "恢复台账、生成器、白皮书与简易报告索引到本批前版本；历史报告仅移动不删除，可按归档清单原路移回。"
+}

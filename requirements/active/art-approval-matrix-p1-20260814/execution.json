@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "taskId": "art-approval-matrix-p1-20260814",
+  "status": "COMPLETED_LOCAL_POLICY_RECONCILED",
+  "historicalPolicyNote": "historical-as-of 2026-08-16：本文中的旧 BLOCKED、人工美术、Reviewer B、IP/法律与逐资产 Golden Set 状态仅代表当时快照。原创 Ghost-native 资产满足 OWNER_AUTHORIZED_ART_CLEARANCE 后可进行可逆 default-on runtime 接入；人工清稿、独立自然人 Reviewer B、IP/法律意见与逐资产 Golden Set 均为 OPTIONAL_ADVISORY_EVIDENCE，未执行时不得冒充 PASS；设备/第二浏览器/真实网络与 Supabase Gate 当前为 NON_BLOCKING_FOR_DEVELOPMENT / RELEASE_EVIDENCE_PENDING；外部 blocked-license / EXTERNAL_REFERENCE_ONLY 素材永久禁止复制、派生、作为生成输入、接入 runtime 或发布；任何发布仍须当前用户明确命令。",
+  "startedAt": "2026-08-14T00:00:00+09:00",
+  "updatedAt": "2026-08-16T23:15:00+09:00",
+  "policyReconciledAt": "2026-08-16",
+  "steps": [
+    {"id":"ARTM-1","status":"completed","owner":"master","evidence":["asset-library/catalog.json","public/assets/manifests/asset_manifest.json","art-source/** review packets"]},
+    {"id":"ARTM-2","status":"completed","owner":"master","evidence":["requirements/ART_APPROVAL_MATRIX.md"]},
+    {"id":"ARTM-3","status":"completed","owner":"master","evidence":["qa/art-approval-matrix-contract.js","PROJECT_STATUS.json","简易报告/ArtApprovalMatrix-美术候选治理收口-202608140820.md","LOG-新增.md","LOG-修改.md","LOG-删除.md"]},
+    {"id":"ARTM-4","status":"completed","owner":"master","evidence":["node qa/art-approval-matrix-contract.js","node scripts/validate-project-state.js","npm run reports:progress","node qa/progress-ledger.js","node qa/mainline-control-plane.js","npm run quality:gates","npm test (153.6s)","deterministic build: 1362068 characters / 1376602 bytes / SHA-256 BFBD2109B77B1F4C5E070DAB6B98C806E25AD621ACBE3E2E83AD5C5FB7130CAE","git diff --check"]},
+    {"id":"ARTM-5","status":"completed","owner":"master","evidence":["requirements/active/art-approval-matrix-p1-20260814/evidence/original-14-family-complete-visual-inventory-20260814.json","14 complete contact sheets","247/247 files / 214 visual files / 33 text files after G Coins P1"]},
+    {"id":"ARTM-6","status":"completed","owner":"master","evidence":["node qa/art-approval-matrix-contract.js","node qa/external-asset-register-contract.js","node qa/asset-library-governance.js","node scripts/asset-library-audit.js","npm run quality:gates","npm test (139.6s)","deterministic double build 1362068 characters / 1376602 bytes / BFBD2109B77B1F4C5E070DAB6B98C806E25AD621ACBE3E2E83AD5C5FB7130CAE"]}
+  ],
+  "blocked": [],
+  "optionalAdvisoryEvidence": {
+    "status": "NOT_EXECUTED",
+    "blocking": false,
+    "items": ["human cleanup", "independent natural-person Reviewer B", "IP/legal advice", "per-asset Golden Set"]
+  },
+  "releaseEvidencePending": ["second browser", "physical device art matrix", "explicit current user release command"],
+  "historicalGateSnapshot": {
+    "date": "2026-08-14",
+    "status": "COMPLETED_LOCAL_GATE_BLOCKED",
+    "blocked": ["human cleanup", "independent Reviewer B", "IP Similarity Review", "user Golden Set", "second browser and physical device art matrix"],
+    "boundary": "GATE-ART-GOLDEN-SET 保持 BLOCKED",
+    "meaning": "当时的审批政策快照；不覆盖 2026-08-16 的所有者清除开发轨道。"
+  },
+  "skipped": ["image generation", "runtime integration", "commit/push/deploy"],
+  "evidence": [
+    "requirements/ART_APPROVAL_MATRIX.md",
+    "qa/art-approval-matrix-contract.js",
+    "requirements/active/art-approval-matrix-p1-20260814/evidence/original-14-family-complete-visual-inventory-20260814.json",
+    "requirements/active/art-approval-matrix-p1-20260814/acceptance.md",
+    "简易报告/ArtApprovalMatrix-美术候选治理收口-202608140820.md"
+  ],
+  "published": false,
+  "boundary": "本地治理批次。未生成、编辑、接入、上传或发布任何美术；GATE-ART-GOLDEN-SET 当前为 OPEN_BY_OWNER_AUTHORIZATION，具体候选仍须逐族取得 OWNER_AUTHORIZED_ART_CLEARANCE，发布仍须当前用户明确命令。"
+}

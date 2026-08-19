@@ -1,0 +1,17 @@
+{
+  "taskId": "controlled-local-transport-preflight-p0-20260815",
+  "status": "ACCEPTED_LOCAL_CONTROLLED_PREFLIGHT",
+  "stage": "PROVE",
+  "gate": "GATE-DEVICE-BROWSER-NETWORK",
+  "requirements": ["TECH-030", "GAME-048"],
+  "steps": [
+    {"id":"CTP-1","title":"审查 Tetris、Tank、Direct Chat 与 Room resume seam","status":"completed"},
+    {"id":"CTP-2","title":"修复 Tetris v3 重连后出站序号归零","status":"completed"},
+    {"id":"CTP-3","title":"建立旧 epoch、乱序、重复与断连确定性预检","status":"completed"},
+    {"id":"CTP-4","title":"Terra Max 两轮审查并消除测试假阳性","status":"completed"},
+    {"id":"CTP-5","title":"完整 npm test、证据、报告与日志收口","status":"completed"},
+    {"id":"CTP-6","title":"真实 50/100/200ms 网络整形与设备矩阵","status":"blocked_external_gate"}
+  ],
+  "release": "LOCAL_ONLY_NO_COMMIT_NO_PUSH_NO_DEPLOY"
+}
+

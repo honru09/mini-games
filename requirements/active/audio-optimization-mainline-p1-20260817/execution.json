@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "status": "IMPLEMENTED_LOCAL_NOT_RELEASED",
+  "startedAt": "2026-08-17T00:00:00+09:00",
+  "updatedAt": "2026-08-18T23:00:27.9306824+09:00",
+  "steps": [
+    {"id":"mainline-read", "status":"completed", "evidence":["requirements/GHOST_GAME_MAINLINE_COMMAND.md","requirements/MAINLINE_CONTROL_ROUTING.json"]},
+    {"id":"contract-freeze", "status":"completed", "evidence":["requirement.md","contract.md","plan.json","ownership.json","acceptance.md"]},
+    {"id":"qa-contract", "status":"completed", "evidence":["qa/audio-feedback-contract.js"]},
+    {"id":"runtime-adapter", "status":"completed", "evidence":["public/src/core/21-unified-feedback-adapter.js","public/src/core/22-audio-runtime.js","qa/unified-feedback-adapter.js","qa/audio-runtime.js","qa/audio-tone-profiles.js"]},
+    {"id":"six-game-migration", "status":"completed", "evidence":["public/src/games/gomoku.js","public/src/games/ludo.js","public/src/games/monopoly.js","public/src/games/tank.js","public/src/games/tetris.js","public/src/games/xiangqi.js","qa/audio-cue-inventory.js","qa/audio-authority-contract.js","qa/xiangqi-ghost3d-contract.js","qa/tank-ghost3d-contract.js"]},
+    {"id":"platform-cues", "status":"completed", "evidence":["public/src/online/03-websocket.js","qa/platform-audio-cues.js"]},
+    {"id":"platform-coverage-p2", "status":"completed", "evidence":["public/src/core/01-utils.js","public/src/core/02-app-shell.js","public/src/core/07-playline.js","public/src/shop/06-shop.js","public/src/ui/07-roster.js","public/src/online/03-websocket.js","qa/audio-platform-coverage.js"]},
+    {"id":"asset-governance", "status":"completed_local_governance_only", "evidence":["audio-candidate-register.json","external-generation-preflight.json","qa/audio-generation-governance.js"]},
+    {"id":"asset-generation", "status":"not_executed", "evidence":["external-generation-preflight.json"]},
+    {"id":"current-local-capture", "status":"completed", "evidence":["evidence/audio-platform-coverage-20260818-current.json","public/index.html (1CFC9A4E7D2F5CB16B7180437D6BA8080E0338B42E73AA614E4568CE51C31ACB)","npm run test:audio","npm run test:e2e","node scripts/build.js --check"]},
+    {"id":"external-prove", "status":"not_executed", "evidence":["evidence/README.md"]}
+  ],
+  "blocked": [
+    "AudioCraft compatible generation environment and commercial license clearance unavailable",
+    "fal.ai MCP/FAL_KEY unavailable",
+    "ElevenLabs API key unavailable"
+  ],
+  "sharedGateFollowUp": {
+    "status": "OPEN_UNRELATED_TO_AUDIO",
+    "evidence": ["evidence/audio-platform-coverage-20260818.json", "evidence/audio-platform-coverage-20260818-current.json"],
+    "summary": "The current shared quality/progress rerun reports Room Presence rollback, stale TECH-027 report identity, renderer-cache/PWA-cache drift and other non-audio renderer-batch failures after renderer/report rewrites. Audio-specific gates remain passing; the renderer/governance batches own this follow-up."
+  },
+  "skipped": ["external audio asset generation", "second browser/physical devices/real network/PWA lock-screen and output-device evidence", "production Supabase evidence", "commit/push/deploy"],
+  "evidence": ["npm run test:audio", "npm run test:i18n", "npm run test:e2e", "node --experimental-websocket qa/engagement-integrity-online.js", "qa/audio-authority-contract.js", "qa/audio-platform-coverage.js", "qa/xiangqi-ghost3d-contract.js", "qa/tank-ghost3d-contract.js", "qa/dom-smoke.js", "qa/progress-ledger.js", "qa/brief-report-contract.js", "qa/mainline-control-plane.js", "npm run quality:gates", "npm test (exit 0)", "scripts/build.js --check", "evidence/audio-local-regression-20260817.json", "evidence/audio-platform-coverage-20260818.json", "evidence/audio-platform-coverage-20260818-current.json", "acceptance.md"]
+}

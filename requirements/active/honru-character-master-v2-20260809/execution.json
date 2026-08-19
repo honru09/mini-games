@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
   "task": "honru-character-master-v2-20260809",
-  "state": "IMPLEMENTING",
+  "state": "SOURCE_ONLY_CANDIDATE_COMPLETE_OPTIONAL_ADVICE_PENDING",
   "startedAt": "2026-08-09T02:01:21+09:00",
-  "updatedAt": "2026-08-09T02:21:09+09:00",
+  "updatedAt": "2026-08-17T00:39:00+09:00",
   "verifiedCommit": "27b8297a1140c8d4e3beade4e8ac33aa5ec04642",
   "releasedCommit": null,
   "progress": {
@@ -12,8 +12,11 @@
     "generate": {"status":"implemented","evidence":["local:exec-249bbba4-cc19-4e02-abb5-fb4ec47bb993","chroma/honru-character-master-v2-chroma-draft-v1.png"]},
     "alpha": {"status":"verified","evidence":["honru-character-master-v2-transparent-draft-v1.png","honru-character-master-v2-flat-transparent-draft-v1.png","RGBA","transparent corners","0 visible green fringe pixels","192/96/64/44 derived"]},
     "provenance": {"status":"verified","evidence":["PROMPT_AND_PROVENANCE_v2.md","asset-library/catalog.json","scripts/asset-library-audit.js","npm test"]},
-    "review": {"status":"partial","evidence":["TECHNICAL_REVIEW_draft-v1.md","IP_REVIEW_draft-v1.md"],"missing":["user preview decision","Reviewer B"]}
+    "review": {"status":"optional_advisory_not_executed","evidence":["TECHNICAL_REVIEW_draft-v1.md","IP_REVIEW_draft-v1.md"],"missing":["human cleanup","independent natural-person Reviewer B","IP/legal advice","per-asset Golden Set"],"blocking":false}
   },
-  "notExecuted": ["user preview decision","Reviewer B","editable layered redraw","animation state sheet","runtime integration"],
-  "blocked": []
+  "notExecuted": ["optional human cleanup","optional independent natural-person Reviewer B","optional IP/legal advice","optional per-asset Golden Set","editable layered redraw","animation state sheet","runtime integration"],
+  "blocked": [],
+  "externalAssetPolicy":"blocked-license / EXTERNAL_REFERENCE_ONLY assets are permanently disabled",
+  "currentBoundary":"Honru v2 remains a completed source-only candidate. A future runtime may proceed after its own OWNER_AUTHORIZED_ART_CLEARANCE; optional human/IP advice is not PASS and not a development/runtime prerequisite.",
+  "historicalAsOf":{"date":"2026-08-09","state":"IMPLEMENTING_AWAITING_HUMAN_PREVIEW","meaning":"Former human-preview pending task state; audit history only."}
 }

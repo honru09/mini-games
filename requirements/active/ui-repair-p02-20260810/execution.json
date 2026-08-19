@@ -1,0 +1,37 @@
+{
+  "status": "LOCAL_ACCEPTED",
+  "startedAt": "2026-08-10T03:09:00+09:00",
+  "updatedAt": "2026-08-10T04:26:00+09:00",
+  "steps": [
+    {"id":"UIR2-1","status":"completed"},
+    {"id":"UIR2-2","status":"completed"},
+    {"id":"UIR2-3","status":"completed"},
+    {"id":"UIR2-4","status":"completed"},
+    {"id":"UIR2-5","status":"completed"},
+    {"id":"UIR2-6","status":"completed"},
+    {"id":"UIR2-7","status":"completed"}
+  ],
+  "blocked": [],
+  "skipped": [
+    "browser reduced-motion emulation",
+    "second desktop browser",
+    "physical Android/iPhone/Tablet",
+    "real network shaping",
+    "commit/push/Pages/Render"
+  ],
+  "evidence": [
+    "requirements/active/ui-repair-p02-20260810/evidence/browser-qa-20260810.md",
+    "qa/ui-room-lobby-contract.js",
+    "npm run test:i18n",
+    "node qa/ui-responsive-contract.js",
+    "node qa/dom-smoke.js",
+    "node qa/ghost-shell-contract.js",
+    "node --experimental-websocket qa/ghost-auth-online.js",
+    "node --experimental-websocket qa/room-seats.js",
+    "node --experimental-websocket qa/tournament-auto-online.js",
+    "node --experimental-websocket qa/e2e-online.js",
+    "npm run quality:gates",
+    "npm test",
+    "public/index.html sha256 18E23C35A7FB37F705F69238269680DE4D806BA01891F56862F538C399308779"
+  ]
+}

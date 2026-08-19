@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "task": "t7-reward-progression-projection-p7-20260818",
+  "state": "VERIFIED_LOCAL",
+  "recordedAt": "2026-08-18T01:39:15+09:00",
+  "implemented": [
+    "server/boundaries/reward-progression.js",
+    "server/index.js reward projection adapter/wrapper and fixed reward event timestamp",
+    "qa/reward-progression.js",
+    "package.json and scripts/quality-gates.js P7 entry"
+  ],
+  "verified": [
+    "node --check server/boundaries/reward-progression.js",
+    "node --check server/index.js",
+    "npm run test:reward-progression",
+    "node qa/reward-system.js",
+    "node --experimental-websocket qa/daily-tasks.js",
+    "node qa/technical-optimization-mainline-contract.js (exit 0)",
+    "npm run quality:gates (exit 0; QUALITY_GATES_FAST_ALL_PASS)",
+    "npm test (exit 0; complete pretest/test/posttest chain)",
+    "deterministic double build/check (both rounds 2070498 chars / 2085121 UTF-8 bytes / SHA-256 B49347FE9A9EDE743F3C5F677CBE16BAA26236493320F914DE03D5603DE8BABA)"
+  ],
+  "pending": [],
+  "notExecuted": [
+    "current browser/second browser/physical devices/real network",
+    "real Supabase/RLS/concurrency/backup/restore/multi-instance",
+    "commit/push/GitHub Pages/Render/deploy"
+  ],
+  "scopeLimit": "Projection only; Reward Resolver, P5 outbox, daily_task_claim, player wire and all external Gates remain owned by existing paths",
+  "release": "LOCAL_ONLY / NOT_RELEASED"
+}

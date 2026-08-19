@@ -1,0 +1,313 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-08-15T16:37:12.3883725+09:00",
+  "claim": "historical_as_of_build_single_browser_visible_matrix",
+  "currency": "historical_as_of",
+  "scope": "single Codex in-app Chromium historical as-of build only",
+  "fullRouteMatrixCurrentBuild": false,
+  "build": {
+    "path": "public/index.html",
+    "sha256": "4141BBAC492D361AEC2A777D76FD1AACC0600866307709B26568C62EC8780850",
+    "characters": 1579909,
+    "bytes": 1594443
+  },
+  "environment": {
+    "browserSurface": "Codex in-app Chromium",
+    "browserCount": 1,
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
+    "platform": "Win32",
+    "url": "http://127.0.0.1:8090/",
+    "accountType": "one-time guest for authenticated shell; auth page after guest deletion",
+    "deviceEvidenceKind": "CSS viewport emulation only"
+  },
+  "routeMatrix": [
+    {
+      "name": "desktop",
+      "width": 1440,
+      "height": 900,
+      "routes": [
+        "home",
+        "games",
+        "playline",
+        "profile"
+      ],
+      "horizontalOverflowMax": 0,
+      "rawKeyCountMax": 0,
+      "scrollYMax": 0,
+      "desktopNav": true,
+      "mobileNav": false,
+      "headerTouchFloor": "38px compact mouse density; global messages 44px"
+    },
+    {
+      "name": "tablet-landscape",
+      "width": 1024,
+      "height": 768,
+      "routes": [
+        "home",
+        "games",
+        "playline",
+        "profile"
+      ],
+      "horizontalOverflowMax": 0,
+      "rawKeyCountMax": 0,
+      "scrollYMax": 0,
+      "desktopNav": true,
+      "mobileNav": false,
+      "headerTouchFloor": "44x44"
+    },
+    {
+      "name": "tablet-portrait",
+      "width": 768,
+      "height": 1024,
+      "routes": [
+        "home",
+        "games",
+        "playline",
+        "profile"
+      ],
+      "horizontalOverflowMax": 0,
+      "rawKeyCountMax": 0,
+      "scrollYMax": 0,
+      "desktopNav": true,
+      "mobileNav": false,
+      "headerTouchFloor": "44x44"
+    },
+    {
+      "name": "phone-portrait",
+      "width": 390,
+      "height": 844,
+      "routes": [
+        "home",
+        "games",
+        "playline",
+        "profile"
+      ],
+      "horizontalOverflowMax": 0,
+      "rawKeyCountMax": 0,
+      "scrollYMax": 0,
+      "desktopNav": false,
+      "mobileNav": true,
+      "headerTouchFloor": "44x44"
+    },
+    {
+      "name": "phone-landscape",
+      "width": 844,
+      "height": 390,
+      "routes": [
+        "home",
+        "games",
+        "playline",
+        "profile"
+      ],
+      "horizontalOverflowMax": 0,
+      "rawKeyCountMax": 0,
+      "scrollYMax": 0,
+      "desktopNav": true,
+      "mobileNav": false,
+      "headerTouchFloor": "44x44"
+    }
+  ],
+  "surfaces": {
+    "directMessages": {
+      "dialog": true,
+      "width": 920,
+      "height": 420,
+      "guestReadOnlyBoundaryVisible": true,
+      "bodyScrollLock": true,
+      "closeRemovesDialog": true,
+      "closeRestoresFocusTo": "打开玩家私信",
+      "horizontalOverflow": 0
+    },
+    "shop": {
+      "dialog": true,
+      "name": "🛍️ 个性商城",
+      "width": 1080,
+      "height": 840,
+      "bodyScrollLock": true,
+      "rawKeyCount": 0,
+      "horizontalOverflow": 0
+    },
+    "achievements": {
+      "dialog": true,
+      "name": "🏆 成就",
+      "width": 600,
+      "height": 522.5,
+      "bodyScrollLock": true,
+      "rawKeyCount": 0,
+      "horizontalOverflow": 0
+    },
+    "roomLobby": {
+      "visible": true,
+      "headings": [
+        "房间大厅",
+        "🚪 我的房间",
+        "🎮 浏览房间",
+        "👥 玩家列表",
+        "社交"
+      ],
+      "actions": [
+        "🎮 创建房间",
+        "浏览房间",
+        "输入私密房间码"
+      ],
+      "rawKeyCount": 0,
+      "horizontalOverflow": 0
+    }
+  },
+  "gameStages": [
+    {
+      "game": "五子棋",
+      "seatCount": 2,
+      "stage": true,
+      "arena": true,
+      "command": true,
+      "back": true,
+      "scrollY": 0,
+      "horizontalOverflow": 0,
+      "rawKeyCount": 0
+    },
+    {
+      "game": "飞行棋",
+      "seatCount": 2,
+      "stage": true,
+      "arena": true,
+      "command": true,
+      "back": true,
+      "scrollY": 0,
+      "horizontalOverflow": 0,
+      "rawKeyCount": 0
+    },
+    {
+      "game": "迷你大富翁",
+      "seatCount": 2,
+      "stage": true,
+      "arena": true,
+      "command": true,
+      "back": true,
+      "scrollY": 0,
+      "horizontalOverflow": 0,
+      "rawKeyCount": 0
+    },
+    {
+      "game": "坦克大战",
+      "seatCount": 2,
+      "stage": true,
+      "arena": true,
+      "command": true,
+      "back": true,
+      "scrollY": 0,
+      "horizontalOverflow": 0,
+      "rawKeyCount": 0
+    },
+    {
+      "game": "俄罗斯方块",
+      "seatCount": 2,
+      "stage": true,
+      "arena": true,
+      "command": true,
+      "back": true,
+      "scrollY": 0,
+      "horizontalOverflow": 0,
+      "rawKeyCount": 0
+    },
+    {
+      "game": "象棋",
+      "seatCount": 2,
+      "stage": true,
+      "arena": true,
+      "command": true,
+      "back": true,
+      "scrollY": 0,
+      "horizontalOverflow": 0,
+      "rawKeyCount": 0
+    }
+  ],
+  "languageTheme": [
+    {
+      "lang": "zh-CN",
+      "heading": "游戏中心",
+      "rawKeyCount": 0,
+      "horizontalOverflow": 0
+    },
+    {
+      "lang": "en-US",
+      "heading": "Game Center",
+      "rawKeyCount": 0,
+      "horizontalOverflow": 0
+    },
+    {
+      "lang": "uk-UA",
+      "heading": "Ігровий центр",
+      "rawKeyCount": 0,
+      "horizontalOverflow": 0
+    },
+    {
+      "theme": "light",
+      "horizontalOverflow": 0
+    },
+    {
+      "theme": "dark",
+      "horizontalOverflow": 0
+    }
+  ],
+  "reducedMotion": {
+    "emulated": true,
+    "homeAmbientAnimation": "none",
+    "homeHeroAnimation": "none",
+    "runningHomeAnimations": 0,
+    "game": "五子棋",
+    "runningStageAnimations": 0,
+    "horizontalOverflow": 0,
+    "scrollY": 0,
+    "resetAfterCapture": true
+  },
+  "forcedColors": {
+    "emulated": true,
+    "authenticationToolbarMinimum": {
+      "width": 44,
+      "height": 44
+    },
+    "tabsMinimumHeight": 44,
+    "inputMinimumHeight": 44,
+    "logo": {
+      "width": 72,
+      "height": 72,
+      "visibleInLight": true,
+      "visibleInDark": true
+    },
+    "keyboardFocus": {
+      "visible": true,
+      "outlineWidth": "3px",
+      "outlineStyle": "solid",
+      "outlineOffset": "2px"
+    },
+    "languages": [
+      "zh-CN",
+      "en-US",
+      "uk-UA"
+    ],
+    "rawKeyCountMax": 0,
+    "horizontalOverflowMax": 0,
+    "resetAfterCapture": true
+  },
+  "console": {
+    "cdpEventsAfterFinalReloadAndInteractions": 0,
+    "exceptionsObserved": 0
+  },
+  "defectsFoundAndCorrected": [
+    "authentication theme control width 42px -> 44px",
+    "authentication input height 40px -> 44px",
+    "post-component cascade overrode <=1024 header/navigation touch targets to 38/42px -> final 44x44 override"
+  ],
+  "notGranted": [
+    "second_browser",
+    "physical_android",
+    "physical_iphone",
+    "physical_tablet",
+    "real_network_shaping",
+    "two_formal_friend_dm_browsers",
+    "physical_performance_audio_recovery",
+    "production_verification"
+  ],
+  "gateDisposition": "GATE-DEVICE-BROWSER-NETWORK remains BLOCKED"
+}

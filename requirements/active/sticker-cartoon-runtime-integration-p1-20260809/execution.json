@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "task": "sticker-cartoon-runtime-integration-p1-20260809",
-  "state": "VERIFYING",
+  "state": "VERIFYING_OWNER_CLEARANCE_PREPARATION",
   "startedAt": "2026-08-09T01:08:11+09:00",
   "updatedAt": "2026-08-09T02:01:21+09:00",
   "verifiedCommit": "d84f52eb8a27155b14baeb1243c17f53a358f91e",
@@ -13,8 +13,14 @@
     "flagResolver": {"status":"verified","evidence":["strict dual flag DOM matrix","manifest 404/missing/invalid path fallback","load/decode/destroy fallback"]},
     "gomokuIntegration": {"status":"verified","evidence":["active coordinate 0/7/14","active five-in-row","restart","identical legacy/sticker snapshot"]},
     "verification": {"status":"verified","evidence":["npm run quality:gates","npm test","30/30 local Chromium visual combinations","zero console errors"]},
-    "previewDecision": {"status":"not_executed"}
+    "previewDecision": {"status":"optional_advisory_not_executed","blocking":false}
   },
-  "notExecuted": ["human preview decision", "real Android/iPhone/Tablet matrix", "second desktop browser"],
-  "blocked": ["human Art Bible review", "Reviewer A/B IP Similarity Review", "human Golden Set decision"]
+  "policyReconciledAt": "2026-08-16",
+  "ownerClearancePending": ["per-family stable ID/version/SHA/provenance", "machine technical/visual/similarity review", "fallback", "feature flag", "rollback", "OWNER_AUTHORIZED_ART_CLEARANCE"],
+  "optionalAdvisoryEvidence": {"status":"NOT_EXECUTED","items":["human cleanup/preview", "independent natural-person Reviewer B", "IP/legal advice", "per-asset Golden Set"],"blocking":false},
+  "notExecuted": ["real Android/iPhone/Tablet matrix", "second desktop browser", "real network release evidence", "explicit current user release command"],
+  "blocked": [],
+  "externalAssetPolicy": "blocked-license / EXTERNAL_REFERENCE_ONLY assets are permanently disabled",
+  "releasePolicy": "Uncleared technical preview remains default-off; owner-cleared derivatives may be reversible default-on, but release still requires an explicit current user command.",
+  "historicalAsOf": {"date":"2026-08-09","state":"VERIFYING","blocked":["human Art Bible review","Reviewer A/B IP Similarity Review","human Golden Set decision"],"meaning":"Former candidate-only/default-off human prerequisites; audit history only."}
 }

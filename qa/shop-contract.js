@@ -57,6 +57,7 @@ class FakeNode {
     this.parentNode = null;
     this.isConnected = false;
     this.listeners = Object.create(null);
+    this.attributes = Object.create(null);
     this.classList = { toggle: () => {}, add: () => {} };
   }
   appendChild(child){
@@ -70,6 +71,8 @@ class FakeNode {
     this.children.forEach(child => child.setConnected(value));
   }
   addEventListener(type, listener){ this.listeners[type] = listener; }
+  setAttribute(name,value){ this.attributes[name] = String(value); }
+  removeAttribute(name){ delete this.attributes[name]; }
   dispatch(type){ if (this.listeners[type]) this.listeners[type]({ target:this }); }
   remove(){
     if (this.parentNode) this.parentNode.children = this.parentNode.children.filter(child => child !== this);
@@ -77,6 +80,7 @@ class FakeNode {
     this.setConnected(false);
   }
   querySelectorAll(){ return []; }
+  querySelector(selector){ return selector && selector.startsWith('.') ? this.findByClass(selector.slice(1)) : null; }
   findByClass(name){
     if (this.className.split(/\s+/).includes(name)) return this;
     for (const child of this.children){
@@ -99,7 +103,9 @@ function shopRuntimeContract(){
     SHOP:catalog, PLAYROOM_AVATARS:[], AVATAR_CATEGORIES:[], CURRENCY:'$', GAMES:{},
     account:{ coins:0, avatar:0, owned:{ backgrounds:[] } },
     online:{ connected:true, send(){} }, document:{ body },
-    el:(tag, cls) => new FakeNode(tag, cls), currencyIcon:() => new FakeNode('span'),
+    el:(tag, cls, text) => { const node=new FakeNode(tag, cls); if(text!=null)node.textContent=String(text); return node; },
+    currencyAmountText:value=>String(value)+' G Coins',
+    currencyAmountNode:(value,options) => { const node=new FakeNode('span','currency-amount'); node.textContent=options&&options.formattedText?String(options.formattedText):String(value); return node; },
     t:key => key, ownItem:(account, category, id) => !!(account.owned && account.owned[category] && account.owned[category].includes(id)),
     acquireModalScrollLock:() => { counters.acquired++; },
     releaseModalScrollLock:() => { counters.released++; },

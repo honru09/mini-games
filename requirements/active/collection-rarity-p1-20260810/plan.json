@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "taskId": "collection-rarity-p1-20260810",
+  "status": "IMPLEMENTED_LOCAL_AUTOMATION_VERIFIED",
+  "release": "local-only",
+  "steps": [
+    {"id":"recon","status":"completed","dependsOn":[],"owner":"Terra Max","risk":"dirty worktree and generated browser build"},
+    {"id":"contract","status":"completed","dependsOn":["recon"],"owner":"Terra Max","risk":"must not infer rarity from price"},
+    {"id":"red-tests","status":"completed","dependsOn":["contract"],"owner":"Terra Max","tests":["qa/collection-rarity-catalog.js"]},
+    {"id":"pure-catalog","status":"completed","dependsOn":["red-tests"],"owner":"Terra Max","rollback":"remove new shared module"},
+    {"id":"browser-consumers","status":"completed","dependsOn":["pure-catalog"],"owner":"Terra Max","risk":"Profile/Shop UI must not alter mutation flows"},
+    {"id":"build-integration","status":"completed","dependsOn":["pure-catalog"],"owner":"Master delegation","risk":"scripts/build.js is HIGH_RISK; request is recorded"},
+    {"id":"verification","status":"completed","dependsOn":["browser-consumers","build-integration"],"owner":"Terra Max + Master","tests":["node qa/collection-rarity-catalog.js","npm run test:i18n","node qa/dom-smoke.js","node qa/shop-contract.js","node qa/profile-journey.js","node qa/ui-profile-social-contract.js","node qa/ui-shop-layout-contract.js","npm run quality:gates","npm test","deterministic double build"]}
+  ],
+  "rollback": "Remove CollectionRarityCatalog browser inclusion and its two read-only consumers. No data migration, protocol, purchase or asset rollback exists."
+}

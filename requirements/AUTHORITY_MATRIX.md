@@ -17,5 +17,5 @@
 - `PARTIAL_SERVER`：只覆盖某个子系统。
 - `SERVER_COORDINATION`：服务端权威开局、攻击、KO、名次等协调，但不重放完整规则。
 - `SERVER_RULE_AUTHORITY`：服务端复用无 DOM Rule Core 验证动作、推进状态并产生终局。
-- `ENABLE_RULE_AUTHORITY_V2=0` 是紧急兼容开关；默认新客户端会协商 `tetris-rule-v2`、`xiangqi-rule-v2`、`monopoly-rule-v2`。
+- `ENABLE_RULE_AUTHORITY_V2=0` 是共享权威紧急兼容开关；默认新客户端会协商 `tetris-rule-v3`、`xiangqi-rule-v2`、`monopoly-rule-v2`。`TETRIS_GUIDELINE_SCORING=0` 可单独让 Tetris 回退 v1 Coordination。
 - 自动化验证不等于真实设备/真实网络验证。当前 Authority 能力为 `AUTOMATED_VERIFIED`，在设备矩阵完成前不能写 `PRODUCTION_READY`。

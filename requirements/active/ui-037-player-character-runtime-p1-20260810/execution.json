@@ -1,0 +1,48 @@
+{
+  "status": "LOCAL_STATE_MATRIX_IMPLEMENTED_OWNER_CLEARANCE_RELEASE_EVIDENCE_PENDING",
+  "startedAt": "2026-08-10T07:38:31+09:00",
+  "updatedAt": "2026-08-10T07:38:31+09:00",
+  "owner": "Terra Max delegated requirement task",
+  "completed": [
+    "Read-only reconnaissance of PRODUCT_REQUIREMENTS_LEDGER.json and the current UI/game/social/economy/art progress reports.",
+    "Read-only reconnaissance of server/player-character.js, server/player-character-economy.js, public/src/core/03-game-framework.js, public/src/games/monopoly.js, public/src/online/03-websocket.js, server/index.js, server/gameplay/monopoly-rule-authority.js and shared/rules/monopoly.js.",
+    "Frozen the existing root-level transition forwarding gap, authority-to-presentation Seam, public identity privacy rule, state matrix, fallback and external gates in this active task only."
+    ,"Implemented MonopolyUiState, the visible in-match state rail, authoritative auction countdown display, reconnect/spectator/disconnect/bankruptcy/terminal mappings, chance-card dialog keyboard behavior and 44px command controls without changing Rule Core or wire protocol."
+  ],
+  "notExecuted": [
+    "Terra Max 文档冻结阶段未改源码；随后主负责人独立实现了受本合同允许的代码原生 fallback projection、Monopoly marker consumer、CSS fallback 与专项 QA，未接入 ART-036 位图、Manifest、商城或数据库。",
+    "No ART-036 source candidate was copied or wired into runtime because this family has not yet completed its owner-clearance technical package; machine-verifiable development may continue without waiting for optional human advice.",
+    "No player-character catalog, price, purchase, equip, G Coins, Supabase RPC, RLS, migration, backup or rollback work was performed.",
+    "获批角色 renderer、交易 Authority/UI、第二浏览器/真机浏览器验收、commit、push 或 deployment 仍未执行；AuthorityEnvelope transition forwarding、代码原生连续 revision Adapter 与完整 UI-037 可见状态矩阵已在本地主线完成。"
+  ],
+  "externalGates": [
+    "ECO-029 production catalog and apply_purchase_v1/RPC/concurrency/RLS/backup/recovery/non-destructive rollback validation.",
+    "Second desktop browser, Android, iPhone, Tablet, reduced-motion visible verification and real network shaping."
+  ],
+  "ownerClearancePending": [
+    "ART-036 stable ID/version/SHA/provenance",
+    "machine technical/visual/similarity review",
+    "runtime Manifest/budget/a11y/fallback/feature flag/rollback",
+    "OWNER_AUTHORIZED_ART_CLEARANCE"
+  ],
+  "optionalAdvisoryEvidence": {"status":"NOT_EXECUTED","items":["human cleanup","independent natural-person Reviewer B","IP/legal advice","per-asset Golden Set"],"blocking":false},
+  "externalAssetPolicy": "blocked-license / EXTERNAL_REFERENCE_ONLY assets are permanently disabled",
+  "releasePolicy": "Owner-cleared art may enter reversible default-on runtime; second browser/devices/network/Supabase remain release evidence, and release requires an explicit current user command.",
+  "historicalAsOf": {"date":"2026-08-10","status":"LOCAL_STATE_MATRIX_IMPLEMENTED_ART_DEVICE_GATED","externalGates":["ART-036 manual cleanup","Reviewer B","IP Similarity Review","user Golden Set approval"],"meaning":"Former candidate-only/default-off human prerequisites; audit history only."},
+  "evidence": [
+    "requirements/active/ui-037-player-character-runtime-p1-20260810/requirement.md",
+    "requirements/active/ui-037-player-character-runtime-p1-20260810/contract.md",
+    "requirements/active/ui-037-player-character-runtime-p1-20260810/plan.json",
+    "requirements/active/player-character-p0-20260810/contract.md",
+    "requirements/active/art-036-player-character-monopoly-p1-20260810/contract.md",
+    "requirements/active/player-character-economy-p1-20260810/contract.md",
+    "public/src/games/monopoly-character-presentation.js",
+    "qa/monopoly-character-presentation.js",
+    "qa/social-match-client-lifecycle.js",
+    "public/src/games/monopoly-ui-state.js",
+    "qa/ui-037-monopoly-presentation.js",
+    "node qa/monopoly-character-presentation.js",
+    "node qa/social-match-client-lifecycle.js",
+    "node qa/player-character-economy-contract.js"
+  ]
+}

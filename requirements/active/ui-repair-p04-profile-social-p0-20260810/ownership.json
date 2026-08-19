@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "taskId": "ui-repair-p04-profile-social-p0-20260810",
+  "owners": {
+    "implementation": ["public/src/core/02-app-shell.js", "public/src/shop/05-profile.js", "public/src/online/03-websocket.js", "public/src/ui/07-roster.js", "qa/player-chat-contract.js", "qa/ui-identity-preview-contract.js", "qa/ui-profile-social-contract.js", "package.json"],
+    "integration": ["public/index-template.html", "public/index.html", "PROJECT_STATUS.json", "requirements/PRODUCT_REQUIREMENTS_LEDGER.json", "AGENTS.md", "README.md", "WHITEPAPER.md", "LOG-新增.md", "LOG-修改.md", "LOG-删除.md", "简易报告/*"]
+  },
+  "forbidden": ["server/gameplay/**", "shared/rules/**", "server/reward-engine.js", "supabase/schema.sql", "public/assets/manifests/asset_manifest.json", "art-source/**"]
+}

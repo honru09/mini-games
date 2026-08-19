@@ -13,10 +13,12 @@
 
 ## 技术边界
 
-- 本批只在 `art-source/`；未修改 v1/v2 母图、`public/`、运行时 Manifest、协议、游戏状态或奖励。
+- 原始母稿仍只在 `art-source/`；版本化 WebP 已进入 `public/` 与运行时 Manifest，协议、游戏状态和奖励保持不变。
 - 三色归并的 16 位色距溢出已在审计中发现并由 32 位重建修复；错误中间产物未登记素材库。
 - 当前仍不是动画分层资产；需要运行时时先用静态 PNG/WebP 纵切并保留现有 v1 fallback。
 
-## 审查状态
+## 当前清除与审查状态
 
-`IMPLEMENTED / SOURCE_ONLY / HUMAN_REVIEW_REQUIRED / DO_NOT_SHIP`
+`OWNER_AUTHORIZED_ART_CLEARANCE / LOCAL_ONLY / NOT_RELEASED`
+
+人工笔触清稿、独立自然人 Reviewer B、IP/法律意见和额外 Golden Set 为 `OPTIONAL_ADVISORY_EVIDENCE / NOT_EXECUTED`。本技术审查不冒充上述结论；运行时准入、回滚和机器相似风险记录见 `OWNER_AUTHORIZED_ART_CLEARANCE-20260816.md`。

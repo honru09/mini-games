@@ -8,6 +8,8 @@ const vm = require('vm');
 const ROOT = path.join(__dirname, '..');
 const UTILS = fs.readFileSync(path.join(ROOT, 'public', 'src', 'core', '01-utils.js'), 'utf8');
 const ASSETS = fs.readFileSync(path.join(ROOT, 'public', 'src', 'core', '06-assets.js'), 'utf8');
+const BOARD_AI_KERNEL = fs.readFileSync(path.join(ROOT, 'public', 'src', 'core', '18-board-ai-kernel.js'), 'utf8');
+const BOARD_AI_BROKER = fs.readFileSync(path.join(ROOT, 'public', 'src', 'core', '19-board-ai-worker-broker.js'), 'utf8');
 const failures = [];
 
 function assert(name, condition, detail){
@@ -133,6 +135,22 @@ function createHarness(file, factory, playerCount, options = {}){
   const context = vm.createContext(sandbox);
   vm.runInContext(UTILS, context, { filename: '01-utils.js' });
   vm.runInContext(ASSETS, context, { filename: '06-assets.js' });
+  if (options.boardAIWorker){
+    context.__boardKernelCreates = 0;
+    vm.runInContext(BOARD_AI_KERNEL, context, { filename: '18-board-ai-kernel.js' });
+    vm.runInContext(`
+      const __boardKernelOriginal = BoardAIKernel;
+      BoardAIKernel = Object.freeze({
+        SOLVER_VERSION: __boardKernelOriginal.SOLVER_VERSION,
+        RULE_VERSIONS: __boardKernelOriginal.RULE_VERSIONS,
+        LIMITS: __boardKernelOriginal.LIMITS,
+        OPENING_BOOK_VERSION: __boardKernelOriginal.OPENING_BOOK_VERSION,
+        hashPosition: __boardKernelOriginal.hashPosition,
+        create(){ globalThis.__boardKernelCreates++; return __boardKernelOriginal.create(); }
+      });
+    `, context, { filename: 'board-ai-kernel-spy.js' });
+    vm.runInContext(BOARD_AI_BROKER, context, { filename: '19-board-ai-worker-broker.js' });
+  }
   vm.runInContext(`
     function t(key){ return String(key); }
     function renderPlayers(){}
@@ -150,6 +168,7 @@ function createHarness(file, factory, playerCount, options = {}){
     onEnd(){}, sendMove(){}, sendRestart(){}, isReplaying(){ return false; },
     online: !!options.online, myIdx: 0, isHost: true, destroyed: false,
   };
+  if (options.boardAIWorker) opts.technicalFeatures = { boardAIWorkerV1:true };
   context.__opts = opts;
   const game = vm.runInContext(`${factory}(__area, __extra, ${playerCount}, __opts)`, context, { filename: file + ':factory' });
   return { context, game, area, extra, calls, opts };
@@ -165,6 +184,35 @@ async function run(){
   h.game.onMove({ from: [6, 0], to: [5, 0] });
   await waitFor(() => h.calls.some(c => c.game === 'xiangqi') && h.game.snapshot().cur === 0, '象棋 AI');
   assert('象棋：AI 合法回应且状态机继续', !h.game.snapshot().over);
+
+  h = createHarness('gomoku.js', 'gameGomoku', 2, { boardAIWorker:true });
+  const denseHistory = [
+    [0,0],[0,2],[0,4],[0,6],[0,8],[0,10],[0,12],[0,14],
+    [2,1],[2,3],[2,5],[2,7],[2,9],[2,11],[2,13],
+    [4,0],[4,2],[4,4],[4,6],[4,8],[4,10],[4,12],[4,14],
+    [6,1]
+  ];
+  h.game.onRestore({ hist:denseHistory, cur:0, over:false, last:denseHistory[denseHistory.length - 1] });
+  h.game.onMove([8, 8]);
+  await waitFor(() => h.context.__boardKernelCreates > 0 && h.game.snapshot().hist.length === 26, '五子棋 Board AI 同步回退');
+  assert('五子棋 T4：真实调用方在 Worker 缺失时使用共享 Kernel', h.context.__boardKernelCreates > 0 && h.game.snapshot().cur === 0);
+
+  h = createHarness('xiangqi.js', 'gameXiangqi', 2, { boardAIWorker:true });
+  h.game.onMove({ from: [6, 0], to: [5, 0] });
+  await waitFor(() => h.context.__boardKernelCreates > 0 && h.game.snapshot().cur === 0, '象棋 Board AI 同步回退');
+  assert('象棋 T4：真实调用方在 Worker 缺失时使用共享 Kernel', h.context.__boardKernelCreates > 0 && !h.game.snapshot().over);
+
+  h = createHarness('gomoku.js', 'gameGomoku', 2, { boardAIWorker:true });
+  h.game.onMove([7, 7]);
+  h.game.setSpectators(true);
+  await sleep(80);
+  assert('五子棋 T4：切换观众会取消整条待执行 AI 链', h.game.snapshot().hist.length === 1 && h.game.snapshot().cur === 1);
+
+  h = createHarness('xiangqi.js', 'gameXiangqi', 2, { boardAIWorker:true });
+  h.game.onMove({ from: [6, 0], to: [5, 0] });
+  h.game.setSpectators(true);
+  await sleep(80);
+  assert('象棋 T4：切换观众会 epoch-fence 待执行 AI 链', h.game.snapshot().moveCount === 1 && h.game.snapshot().cur === 1);
 
   h = createHarness('tank.js', 'gameTank', 2);
   h.game.onMove({ act: 'move', d: 1 });

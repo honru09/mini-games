@@ -1,0 +1,126 @@
+{
+  "schemaVersion": 1,
+  "claim": "historical_as_of_build_single_browser_honru_art_runtime_partial",
+  "currency": "historical_as_of",
+  "capturedAt": "2026-08-17T00:30:00+09:00",
+  "provenanceCorrection": "后续源码构建漂移后，该窄证据仅保留为 historical-as-of；当前构建已重新采集完整单浏览器矩阵，未把本文件改写为当前证据。",
+  "build": {
+    "path": "public/index.html",
+    "characters": 1866294,
+    "bytes": 1880837,
+    "sha256": "324922B8E8275D599B4D15FF83C1665C83155E4496BC9B9E3A4AE0A0C5B478E6"
+  },
+  "environment": {
+    "browserSurface": "Codex In-app Chromium",
+    "browserCount": 1,
+    "sessionCount": 2,
+    "origins": [
+      "http://127.0.0.1:8092",
+      "http://localhost:8092"
+    ],
+    "storageIsolation": "Two hostnames were used only to isolate localStorage for two disposable formal local QA accounts; this is not a second browser claim.",
+    "server": "isolated local JSON DATA_DIR"
+  },
+  "visibleChecks": {
+    "honruHomeIdle": {
+      "status": "PASS",
+      "runtimePath": "assets/brand/honru/states-v1/honru-idle-v1.webp",
+      "naturalSize": "1254x1254",
+      "datasetState": "idle"
+    },
+    "honruCheckIn": {
+      "status": "PASS",
+      "runtimePath": "assets/brand/honru/states-v1/honru-check-in-v1.webp",
+      "datasetState": "check-in"
+    },
+    "darkThemeHonru": {
+      "status": "PASS",
+      "theme": "dark",
+      "opacity": 1,
+      "visible": true,
+      "runtimePath": "assets/brand/honru/states-v1/honru-idle-v1.webp"
+    },
+    "emojiPicker": {
+      "status": "PASS",
+      "count": 10,
+      "readyCount": 10,
+      "atlas": "assets/brand/honru/emoji-v1/honru-emoji-atlas-v1.webp",
+      "backgroundSize": "400% 300%",
+      "stableIds": [
+        "emoji_wave",
+        "emoji_thumbsup",
+        "emoji_cheer",
+        "emoji_wow",
+        "emoji_oops",
+        "emoji_cry",
+        "emoji_angry",
+        "emoji_sly",
+        "emoji_heart",
+        "emoji_game"
+      ]
+    },
+    "directedThrow": {
+      "status": "PASS",
+      "senderFlightCountDuringMotion": 1,
+      "senderBubbleCount": 1,
+      "receiverBubbleCount": 1,
+      "assetReady": true,
+      "expressionId": "emoji_wave"
+    },
+    "reducedMotion": {
+      "status": "PASS",
+      "mediaMatched": true,
+      "flightCount": 0,
+      "bubbleAnimationName": "none",
+      "staticEmojiReady": true
+    },
+    "responsive": {
+      "status": "PASS",
+      "viewport": "390x844",
+      "documentWidth": 390,
+      "horizontalOverflow": 0,
+      "pickerCount": 10,
+      "readyCount": 10
+    },
+    "localeTheme": {
+      "status": "PASS",
+      "languages": [
+        "zh-CN",
+        "en-US",
+        "uk-UA"
+      ],
+      "themes": [
+        "light",
+        "dark"
+      ],
+      "rawKeyCount": 0,
+      "expectedChineseLanguageOptionOnly": true
+    },
+    "console": {
+      "status": "PASS",
+      "hostWarnErrorCount": 0,
+      "peerWarnErrorCount": 0
+    }
+  },
+  "machineContracts": [
+    "npm run test:honru-runtime",
+    "npm run test:honru-emoji",
+    "node qa/asset-manifest-v2.js",
+    "node qa/social-match-contract.js"
+  ],
+  "notGranted": [
+    "second_real_browser",
+    "physical_android",
+    "physical_iphone",
+    "physical_tablet",
+    "real_network_shaping",
+    "real_low_end_performance",
+    "production_supabase",
+    "production_release",
+    "optional_human_cleanup",
+    "optional_natural_person_reviewer_b",
+    "optional_ip_legal_advice",
+    "optional_per_asset_golden_set"
+  ],
+  "boundary": "Historical-as-of narrow single-browser evidence for owner-cleared Honru states and Emoji runtime only. It does not replace the current full five-viewport/four-route matrix, a second browser, physical devices, real network, production data, optional human advice, or release authorization."
+}

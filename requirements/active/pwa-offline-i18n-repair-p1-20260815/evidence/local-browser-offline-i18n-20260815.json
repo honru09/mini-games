@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-08-15T15:48:00+09:00",
+  "browser": "Codex in-app Chromium",
+  "url": "http://127.0.0.1:8090/?offline-i18n=11-active",
+  "release": "LOCAL_ONLY_NOT_RELEASED",
+  "serviceWorker": {
+    "oldClient": {"active":"activated","controller":"activated","waiting":"installed","observedCaches":["ghost-game-shell-v10-20260815","ghost-game-shell-v11-20260815"]},
+    "afterClosingOldClient": {"active":"activated","controller":"activated","waiting":null,"observedCaches":["ghost-game-shell-v11-20260815"]},
+    "decision": "do not force skipWaiting during an active game"
+  },
+  "offlineLanguageMatrix": [
+    {"language":"zh-CN","title":"Ghost Game · 随时开局，一起成长","heading":"和 Honru 一起，下一局现在开始","rawI18nKeys":0},
+    {"language":"en-US","title":"Ghost Game · Play now. Grow together.","heading":"With Honru, your next game starts now","rawI18nKeys":0},
+    {"language":"uk-UA","title":"Ghost Game · Грайте зараз. Зростайте разом.","heading":"З Honru наступна гра починається зараз","rawI18nKeys":0},
+    {"language":"zh-CN-return","title":"Ghost Game · 随时开局，一起成长","heading":"和 Honru 一起，下一局现在开始","rawI18nKeys":0}
+  ],
+  "layout": {"horizontalOverflow":false},
+  "console": {"warn":0,"error":0},
+  "automation": {
+    "qualityGates":"PASS",
+    "fullNpmTest":"PASS approximately 163 seconds including posttest",
+    "deterministicBuild":{"characters":1579631,"bytes":1594165,"sha256":"41E7C7562B9289ABA27D237D9C806D1B9565B71293453EDC47F9BF05AC5F383E"}
+  },
+  "notExecuted": ["second desktop browser","physical Android/iPhone/Tablet","real network shaping","online deployment"]
+}

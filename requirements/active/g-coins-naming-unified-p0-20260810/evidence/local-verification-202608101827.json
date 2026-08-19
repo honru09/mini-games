@@ -1,0 +1,36 @@
+{
+  "task": "g-coins-naming-unified-p0",
+  "verifiedAt": "2026-08-10T18:27:44+09:00",
+  "result": "LOCAL_ACCEPTED_AWAITING_RELEASE_COMMAND",
+  "tests": {
+    "gCoinsContract": "PASS",
+    "i18n": "PASS",
+    "assetLibraryAudit": "PASS",
+    "domSmoke": "PASS",
+    "shopContract": "PASS",
+    "rewardSystem": "PASS",
+    "progressLedger": "PASS",
+    "qualityGates": "PASS",
+    "fullNpmTest": "PASS (221 seconds)"
+  },
+  "build": {
+    "generatedCharacters": 975716,
+    "physicalBytes": 990079,
+    "sha256": "E9516112DB8D4C47D1A79B5BB9FA0844162F6AB051B3679A3A1B9236110672F0",
+    "deterministicDoubleBuild": true
+  },
+  "asset": {
+    "sourcePath": "art-source/brand/ghost-game/currency/gcoins-p0-20260810/gcoins-source-chroma-v1.png",
+    "dimensions": "1254x1254",
+    "sha256": "9D6D8870329B04B5A136F66449498656B7601BEE15AFBDABC2A73EAA030919AD",
+    "status": "reference-only/source-only",
+    "runtimeManifestIntegrated": false
+  },
+  "boundaries": [
+    "No reward value or shop price changes",
+    "No coins/currency protocol or persistence field rename",
+    "No Supabase schema/RPC change",
+    "No unapproved image runtime integration",
+    "No commit, push, GitHub Pages or Render deployment"
+  ]
+}

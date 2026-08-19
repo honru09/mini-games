@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "task": "immersive-game-shell-p0-20260809",
+  "state": "LOCAL_ACCEPTED_AWAITING_RELEASE_COMMAND",
+  "startedAt": "2026-08-09T20:20:00+09:00",
+  "updatedAt": "2026-08-09T21:59:00+09:00",
+  "progress": {
+    "recon": {"status":"completed"},
+    "freeze": {"status":"completed"},
+    "implementation": {"status":"completed","scope":["fixed 100dvh shell","five stable slots","safe-area responsive layout","document scroll lock","keyboard/wheel/touch boundary","focus/scroll restoration with game-card fallback","accessible external dialog focus lifecycle","single-instance idempotent victory overlay cleanup","44px Tetris controls","internal scrollbar polish","showGame/showHub/auth lifecycle"]},
+    "automatedVerification": {"status":"verified","passed":["qa/immersive-game-shell.js","qa/overlay-dialog-accessibility.js (22 assertions; 5 old-implementation replay failures)","qa/game-stage-contract.js","qa/ui-responsive-contract.js","qa/dom-smoke.js","qa/honru-runtime-contract.js","npm run test:i18n","node --experimental-websocket qa/e2e-online.js","npm run quality:gates","npm test (189.2s)","git diff --check","two builds SHA-256 4236BF12F501470A9684F80F7DF810F3CC994899482BEC46011ACABE22BE02DD"]},
+    "browserVerification": {"status":"verified","evidence":"evidence/browser-qa.md","viewports":["1440x900","1024x768","390x844","844x390"],"consoleErrors":0},
+    "docsSync": {"status":"completed"},
+    "release": {"status":"not_executed","reason":"explicit user release command not provided"}
+  },
+  "notExecuted": ["second desktop browser","physical Android/iPhone/Tablet","real network shaping","browser reduced-motion emulation","commit","git push","GitHub Pages","Render deployment"],
+  "blocked": []
+}

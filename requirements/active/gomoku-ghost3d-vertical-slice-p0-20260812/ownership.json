@@ -1,0 +1,39 @@
+{
+  "taskId": "gomoku-ghost3d-vertical-slice-p0-20260812",
+  "master": [
+    "package.json",
+    "scripts/quality-gates.js",
+    "public/sw.js",
+    "public/index.html",
+    "requirements/PRODUCT_REQUIREMENTS_LEDGER.json",
+    "PROJECT_STATUS.json",
+    "AGENTS.md",
+    "WHITEPAPER.md",
+    "简易报告",
+    "LOG-新增.md",
+    "LOG-修改.md",
+    "LOG-删除.md"
+  ],
+  "rendererAgent": [
+    "public/three/gomoku-entry.js",
+    "qa/gomoku-ghost3d-renderer.js",
+    "qa/gomoku-ghost3d-contract.js",
+    "requirements/THREEJS_OFFICIAL_INTEGRATION_STRATEGY_20260812.md",
+    "requirements/GSAP_OFFICIAL_3D_MOTION_STRATEGY_20260812.md"
+  ],
+  "existingBridge": [
+    "public/src/games/gomoku.js",
+    "public/index-template.html",
+    "qa/gomoku-ghost3d-layout.js",
+    "qa/gomoku-ghost3d-esm-graph.js"
+  ],
+  "forbidden": [
+    "server",
+    "shared/rules",
+    "supabase",
+    "reward",
+    "replay",
+    "social protocol",
+    "approved art manifest"
+  ]
+}

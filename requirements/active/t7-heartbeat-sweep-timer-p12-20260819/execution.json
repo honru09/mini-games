@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "task": "t7-heartbeat-sweep-timer-p12-20260819",
+  "state": "IMPLEMENTED_LOCAL",
+  "recordedAt": "2026-08-19T09:48:57+09:00",
+  "implemented": [
+    "server/index.js heartbeat sweep uses one repeating ServerClockTimer lease and one sampled now",
+    "server/boundaries/heartbeat-sweep-isolation.js contains synchronous per-domain faults behind one run Interface",
+    "qa/heartbeat-sweep.js proves same-tick and next-tick liveness with Manual Clock",
+    "qa/timer-audit.js scopes heartbeat source contracts to the owned block"
+  ],
+  "verified": [
+    "node --check server/index.js",
+    "npm run test:server-clock-timer",
+    "npm run test:technical-optimization-t7",
+    "node qa/timer-audit.js (TIMER_AUDIT_ALL_PASS)",
+    "Room/Presence, Ghost Auth, Connection Route and Reconnect regressions",
+    "Tournament unit/auto/atomic/recovery regressions",
+    "node --experimental-websocket qa/e2e-online.js on E2E_PORT=39222 (E2E_ALL_PASS; exit 0)"
+  ],
+  "pending": [
+    "quality gates, complete npm test and stable deterministic build after parallel frontend/3D writers finish",
+    "remaining token/room/chat/outbox/gameplay/transport timer owners",
+    "current browser/second browser/physical devices/real network",
+    "real Supabase/RLS/concurrency/backup/restore/multi-instance",
+    "commit/push/GitHub Pages/Render/deploy"
+  ],
+  "scopeLimit": "Heartbeat sweep timer ownership, sampled time and liveness isolation only; no wire, gameplay, reward, persistence or UI change",
+  "release": "LOCAL_ONLY / NOT_RELEASED"
+}

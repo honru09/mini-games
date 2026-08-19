@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "taskId": "home-engagement-p0-20260810",
+  "status": "completed_local",
+  "steps": [
+    {"id":"contract","status":"completed","owner":"Master"},
+    {"id":"home-ui","status":"completed","owner":"Master"},
+    {"id":"i18n-qa","status":"completed","owner":"Master"},
+    {"id":"regression","status":"completed","owner":"Master"},
+    {"id":"docs","status":"completed","owner":"Master"}
+  ],
+  "release": "local-accepted-awaiting-user-command"
+}

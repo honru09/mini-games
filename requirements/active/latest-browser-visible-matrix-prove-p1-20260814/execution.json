@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "taskId": "latest-browser-visible-matrix-prove-p1-20260814",
+  "status": "completed_local_single_browser",
+  "completed": ["five viewport route matrix", "Shop/DM/Achievement visible lifecycle", "six Game Stage entry/exit", "three languages", "light/dark", "CDP visible reduced-motion", "console warn/error audit", "final full npm test 160.6s", "deterministic double build 1362068 characters / 1376602 bytes / BFBD2109B77B1F4C5E070DAB6B98C806E25AD621ACBE3E2E83AD5C5FB7130CAE", "final build uk-UA 390x844 Achievement visible recapture", "TECH-027 partial evidence sync"],
+  "pending": ["TECH-028 second desktop browser", "TECH-029 physical Android/iPhone/Tablet", "TECH-030 real network shaping", "SOC-029 two-account friend DM", "GAME-040 physical performance/audio/recovery", "forced-colors", "production/release"],
+  "published": false
+}

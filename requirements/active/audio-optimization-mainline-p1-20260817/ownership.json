@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 2,
+  "builder": "root",
+  "status": "AUTHORIZED_IMPLEMENTED_LOCAL_NOT_RELEASED",
+  "reconciledAt": "2026-08-17",
+  "purpose": "Post-implementation ownership record for the authorized local audio mainline. It supersedes the planning-only scope that existed before runtime implementation.",
+  "owned": [
+    "requirements/active/audio-optimization-mainline-p1-20260817/**",
+    "public/src/core/15-feedback-bus.js",
+    "public/src/core/21-unified-feedback-adapter.js",
+    "public/src/core/22-audio-runtime.js",
+    "qa/audio-feedback-contract.js",
+    "qa/audio-cue-inventory.js",
+    "qa/audio-authority-contract.js",
+    "qa/audio-generation-governance.js",
+    "qa/audio-runtime.js",
+    "qa/audio-tone-profiles.js",
+    "qa/platform-audio-cues.js",
+    "qa/unified-feedback-adapter.js"
+  ],
+  "authorizedSharedImplementation": [
+    "package.json",
+    "scripts/build.js",
+    "public/index-template.html",
+    "public/index.html",
+    "public/src/08-registry.js",
+    "public/src/core/01-utils.js",
+    "public/src/core/02-app-shell.js",
+    "public/src/core/04-social.js",
+    "public/src/games/gomoku.js",
+    "public/src/games/ludo.js",
+    "public/src/games/monopoly.js",
+    "public/src/games/tank.js",
+    "public/src/games/tetris.js",
+    "public/src/games/xiangqi.js",
+    "public/src/online/03-websocket.js",
+    "public/src/shop/04-auth.js",
+    "public/src/shop/05-profile.js",
+    "public/src/shop/06-shop.js",
+    "public/src/ui/07-roster.js",
+    "public/locales/zh-CN.json",
+    "public/locales/en-US.json",
+    "public/locales/uk-UA.json",
+    "public/assets/manifests/asset_manifest.json",
+    "requirements/PRODUCT_REQUIREMENTS_LEDGER.json",
+    "PROJECT_STATUS.json",
+    "简易报告/音效主线-P1本地收口-202608172148.md"
+  ],
+  "readOnlyDependencies": [
+    "requirements/GHOST_GAME_MAINLINE_COMMAND.md",
+    "requirements/MAINLINE_CONTROL_ROUTING.json",
+    "requirements/active/audio-optimization-research-p0-20260817/**",
+    "server/**",
+    "shared/**",
+    "supabase/**"
+  ],
+  "forbiddenExternalActions": [
+    "commit",
+    "push",
+    "GitHub Pages deployment",
+    "Render deployment",
+    "Supabase or production data writes",
+    "unreviewed external audio generation or runtime admission",
+    "Rule/Authority/Protocol/Reward/Replay ownership changes"
+  ],
+  "historicalPreImplementationScope": {
+    "status": "SUPERSEDED_BY_USER_AUTHORIZATION_AND_IMPLEMENTATION",
+    "description": "The initial contract-only batch prohibited public/src, package.json and runtime changes. The user's subsequent instruction to start the audio mainline authorized the implementation recorded above; the old prohibition must not be read as the current state."
+  }
+}

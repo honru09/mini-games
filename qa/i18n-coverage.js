@@ -124,7 +124,7 @@ const families = {
     [`xiangqi_piece_red_${piece}`, `xiangqi_piece_black_${piece}`]),
   accessibility: [
     'mode_group_aria','player_count_aria','account_button_title','my_profile_button_title',
-    'profile_avatar_aria','ludo_dice_cyber','ludo_dice_classic','currency_aria',
+    'profile_avatar_aria','ludo_dice_cyber','ludo_dice_classic','currency_name','currency_aria','currency_legal',
     'monopoly_owned_by','monopoly_token_title','monopoly_token_car','monopoly_token_character',
   ],
   tournament: [

@@ -1,15 +1,17 @@
 {
   "schemaVersion": 1,
   "task": "honru-character-master-v2-20260809",
-  "state": "IMPLEMENTING",
+  "state": "SOURCE_ONLY_CANDIDATE_COMPLETE_OPTIONAL_ADVICE_PENDING",
   "risk": "MEDIUM",
   "dependsOn": ["ghost-game-rebrand-p0-20260808:released", "sticker-cartoon-runtime-integration-p1-20260809:verified-default-off"],
+  "currentPolicy": "Honru v2 母图仍是独立 source-only 候选；其后续 runtime 只依赖逐资产 OWNER_AUTHORIZED_ART_CLEARANCE，而不依赖人工清稿、Reviewer B、IP/法律意见或逐资产 Golden Set。四类事项仅为 OPTIONAL_ADVISORY_EVIDENCE；外部 blocked-license / EXTERNAL_REFERENCE_ONLY 素材永久禁用。",
   "steps": [
     {"id":"recon","status":"completed","dependsOn":[],"risk":"low","tests":["existing Honru v1 source/runtime/IP audit","M0 style/reference audit","dirty tree and ownership audit"],"rollback":"no changes"},
     {"id":"freeze","status":"completed","dependsOn":["recon"],"risk":"medium","tests":["IN/OUT/identity/source/alpha/review boundary"],"rollback":"delete unopened task package"},
     {"id":"generate","status":"completed","dependsOn":["freeze"],"risk":"medium","tests":["single subject","identity invariants","flat chroma key","no text/third-party traits"],"rollback":"retain v1 and reject v2 candidate"},
     {"id":"alpha","status":"completed","dependsOn":["generate"],"risk":"medium","tests":["RGBA","transparent corners","coverage","green fringe","44/64px readability"],"rollback":"keep chroma source only"},
     {"id":"provenance","status":"completed","dependsOn":["alpha"],"risk":"medium","tests":["hash","dimensions","prompt/model/task id","asset-library audit"],"rollback":"remove unapproved catalog entry"},
-    {"id":"review","status":"pending","dependsOn":["provenance"],"risk":"medium","tests":["technical checklist","IP draft","human preview"],"rollback":"mark rejected/source-only"}
-  ]
+    {"id":"review","status":"optional_advisory_not_executed","dependsOn":[],"risk":"advisory","tests":["optional human cleanup, natural-person Reviewer B, IP/legal advice and per-asset Golden Set"],"rollback":"keep source-only","blocking":false}
+  ],
+  "historicalAsOf": {"date":"2026-08-09","state":"IMPLEMENTING_AWAITING_HUMAN_PREVIEW","meaning":"Former human-preview pending task state; audit history only."}
 }

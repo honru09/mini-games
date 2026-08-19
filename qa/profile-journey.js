@@ -1,0 +1,18 @@
+'use strict';
+const fs=require('fs'),path=require('path');const ROOT=path.join(__dirname,'..'),mastery=require(path.join(ROOT,'shared/progression/victory-mastery.js')),journey=require(path.join(ROOT,'shared/progression/profile-journey.js'));let failures=0;const check=(name,ok)=>{console.log((ok?'PASS  ':'FAIL  ')+name);if(!ok)failures++;};
+const model=journey.deriveProfileJourney({wins:{gomoku:9,ludo:49},achievements:['first_win','first_win','win_10'],owned:{avatars:[0,0,1],frames:[1],effects:'bad',backgrounds:[0],game_cosmetics:['gomoku-board-1']}},{masteryApi:mastery,achievementTotal:8});
+check('journey exports a frozen read-only model',Object.isFrozen(journey)&&Object.isFrozen(model)&&Object.isFrozen(model.mastery)&&Object.isFrozen(model.achievements)&&Object.isFrozen(model.collection));
+check('nearest mastery goal uses deterministic remaining then game order',model.mastery.gameId==='gomoku'&&model.mastery.remaining===1&&model.mastery.nextThreshold===10&&model.mastery.nextTitle.nameKey==='mastery_gomoku_10');
+check('achievement progress deduplicates stable unlocked ids',model.achievements.unlocked===2&&model.achievements.total===8&&!model.achievements.complete);
+check('collection counts deduplicate ids and ignore malformed categories',model.collection.total===5&&model.collection.byCategory.avatars===2&&model.collection.byCategory.effects===0);
+const complete=journey.deriveProfileJourney({wins:Object.fromEntries(mastery.GAME_IDS.map(id=>[id,1000])),achievements:['a'],owned:Object.create({avatars:[999]})},{masteryApi:mastery,achievementTotal:1});
+check('complete mastery and achievements have stable terminal state',complete.mastery.complete&&complete.mastery.gameId===null&&complete.achievements.complete);
+check('inherited owned collections cannot enter projection',complete.collection.total===0);
+const hostile=journey.deriveProfileJourney({wins:{gomoku:Symbol('bad')},achievements:null,owned:{avatars:[{},null,Symbol('bad')] }},{masteryApi:mastery,achievementTotal:Symbol('bad')});
+check('uncoercible and object values safely collapse',hostile.mastery.gameId==='gomoku'&&hostile.achievements.total===0&&hostile.collection.total===0);
+check('journey model contains no prices, rewards or purchase history',!/(coins|xp|price|reward|purchase|ledger)/i.test(JSON.stringify(model)));
+const build=fs.readFileSync(path.join(ROOT,'scripts/build.js'),'utf8'),shell=fs.readFileSync(path.join(ROOT,'public/src/core/02-app-shell.js'),'utf8'),html=fs.readFileSync(path.join(ROOT,'public/index-template.html'),'utf8');
+check('browser build loads journey after mastery and before app shell',build.indexOf('../../shared/progression/profile-journey.js')>build.indexOf('../../shared/progression/victory-mastery.js')&&build.indexOf('../../shared/progression/profile-journey.js')<build.indexOf('core/02-app-shell.js'));
+check('profile consumes three goals through existing routes',/ProfileJourney\.deriveProfileJourney/.test(shell)&&/profile-journey-card/.test(shell)&&/openAchievementsModal/.test(shell)&&/openShop/.test(shell));
+check('journey cards have responsive and 44px presentation',/\.profile-journey-grid/.test(html)&&/\.profile-journey-card\{[^}]*min-height:/.test(html)&&/@media\(max-width:640px\)[\s\S]{0,2400}\.profile-journey-grid/.test(html));
+if(failures){console.error('PROFILE_JOURNEY_FAILURES='+failures);process.exitCode=1;}else console.log('PROFILE_JOURNEY_ALL_PASS');

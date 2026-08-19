@@ -1,0 +1,14 @@
+{
+  "taskId": "game-stage-input-continuity-close-p1-20260813",
+  "requirements": ["GAME-041", "GAME-042", "GAME-043", "GAME-044", "GAME-048", "GAME-049", "GAME-050", "GAME-051", "GAME-052"],
+  "stage": "CLOSE",
+  "disposition": "NOW_CLOSURE",
+  "status": "COMPLETED_LOCAL_WITH_EXTERNAL_GATES_REMAINING",
+  "scope": "补齐六款 Game Stage 共享 Shell 的输入连续性、进入/退出、返回焦点、文档滚动锁与监听清理回归；不修改规则、Authority、协议、奖励、Replay、数据库或未审批美术。",
+  "steps": [
+    {"id":"STAGE-1","status":"completed","title":"审计现有沉浸式 Shell 与局内返回路径"},
+    {"id":"STAGE-2","status":"completed","title":"补齐六款 Game ID 生命周期与监听无泄漏回归"},
+    {"id":"STAGE-3","status":"pending","title":"最新浏览器、第二浏览器、真机与真实网络可见验收"}
+  ],
+  "release": "LOCAL_ONLY_NO_COMMIT_NO_PUSH_NO_DEPLOY"
+}

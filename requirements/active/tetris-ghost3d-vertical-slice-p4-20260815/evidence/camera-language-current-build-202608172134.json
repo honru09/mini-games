@@ -1,0 +1,53 @@
+{
+  "evidenceId": "tetris-camera-language-current-build-202608172134",
+  "capturedAt": "2026-08-17T21:34:41+09:00",
+  "classification": "VISUAL_VERIFIED_SINGLE_BROWSER_LOCAL_PARTIAL",
+  "requirements": ["GAME-048", "TECH-049", "TECH-054"],
+  "build": {
+    "path": "public/index.html",
+    "characters": 1982386,
+    "utf8Bytes": 1997009,
+    "sha256": "2C8D4F8B28255C15358C81122DFF9BE0479A0FD4DF3A75F8EAAB02A2CD95F1F1",
+    "rendererSha256": "D5D5C6156ECD2FB89DAA1513FDE8872EB72FF2D0DE49CB28813F31C6BE591FBB"
+  },
+  "implementation": [
+    "Tetris now consumes the shared TabletopCameraRig for entrance, action-follow, impact, overview and result shots",
+    "accepted piece_locked remains the only lock motion; accepted terminal frames add one revision-bound presentation-only terminal result event",
+    "Rule completion and onEnd remain immediate; HIGH/BALANCED result dialog delay is 520/420ms only when the animated renderer is ready",
+    "LOW, fallback and reduced-motion settle the same readable well/result pose without a timeline",
+    "Renderer canvas remains aria-hidden and pointer-transparent while the permanent DOM well, keyboard and seven touch controls remain authoritative"
+  ],
+  "automated": [
+    "npm run test:tetris-ghost3d PASS (ESM 88 / Renderer 130 / Presenter contract / layout / cache)",
+    "node qa/ghost3d-foundation.js PASS",
+    "node qa/tabletop-camera-rig-contract.js PASS",
+    "npm run test:game-stage-density-final PASS",
+    "node qa/game-stage-input-continuity.js PASS",
+    "node qa/tetris-rule-core.js PASS",
+    "node qa/game-module-loader.js, node qa/sw-game-module-preheat.js and node qa/pwa-offline-i18n.js PASS"
+  ],
+  "browser": {
+    "name": "Codex in-app Chromium",
+    "url": "http://localhost:8080/",
+    "scope": [
+      "temporary HIGH opt-in on the current build reached one ready inert canvas in the 18x10 main well with zero horizontal overflow",
+      "DOM Hard Drop remained usable and the renderer retained pointer-events:none",
+      "a same-origin reduced-motion QA iframe retained one static ready canvas and equivalent readable well/result state",
+      "after the QA flags were removed, a new Tetris game created no optional slot and kept the permanent DOM fallback",
+      "console warning/error count was zero"
+    ],
+    "qaIsolation": [
+      "temporary local QA pages wrote only the five Ghost3D/Wave B flags, then removed all five keys before the final default-off check",
+      "no account credential, session token, reward claim, or production endpoint was touched",
+      "temporary QA pages were deleted from public after the run"
+    ]
+  },
+  "limitations": [
+    "single local Chromium and one desktop viewport only",
+    "no second browser, physical Android/iPhone/Tablet, real network shaping or low-end FPS/GPU/memory evidence",
+    "terminal timing was proven by VM/Renderer contracts rather than a visible synthetic winning result in this capture",
+    "procedural geometry is not approved production art",
+    "not committed, pushed, deployed or production verified"
+  ],
+  "release": "LOCAL_ONLY_NOT_RELEASED"
+}

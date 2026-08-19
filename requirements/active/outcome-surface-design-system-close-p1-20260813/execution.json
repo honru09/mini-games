@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "taskId": "outcome-surface-design-system-close-p1-20260813",
+  "status": "completed_local",
+  "completed": ["scope and authority freeze", "external reference-only boundary", "existing surface audit", "red contract", "Ghost-native Victory/Reward/Achievement hierarchy", "finite GSAP item timeline", "legacy CSS animation conflict exclusion", "desktop and 390px local browser visible review", "dark and light theme local browser review", "quality gates", "full npm test", "documentation sync"],
+  "pending": ["second desktop browser", "Android/iPhone/Tablet", "real network shaping", "forced-colors and visible reduced-motion", "GATE-ART-GOLDEN-SET", "user release command"],
+  "verification": {
+    "specialized": ["node qa/outcome-surface-design-system.js", "node qa/surface-motion-runtime.js", "node qa/surface-motion-adapter.js", "node qa/direct-message-design-system-contract.js", "node qa/overlay-dialog-accessibility.js", "npm run test:i18n", "node qa/dom-smoke.js", "node qa/reward-system.js"],
+    "quality": "npm run quality:gates (exit 0)",
+    "full": "npm test (151.3s, exit 0; prior full pass 154.6s)",
+    "buildCharacters": 1361503,
+    "buildBytes": 1376033,
+    "buildSha256": "57BFD553E0C250A1BF386792D7B889CB0B45377F1F17C8BEDB36E2B789ECFE2D"
+  },
+  "browser": {"status":"local_pass","url":"http://localhost:8080/?outcome=20260813","matrix":["desktop dark achievement dialog","390x844 no horizontal overflow and 44px action","light theme reopen"],"console":"no new warn/error observed"},
+  "review": {"status":"master_review_plus_terra_max","terraMax":["motion adapter implementation and QA","read-only outcome and external-asset boundary audit","next CLOSE priority audit"],"masterCorrections":["isolated runtime QA counters after new completion path","updated legacy DM cleanup contract to accept activeContext ownership","excluded Outcome from old board/modal CSS keyframes"]},
+  "published": false
+}

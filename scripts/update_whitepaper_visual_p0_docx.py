@@ -63,7 +63,7 @@ updates = [
     ),
     (
         "截至本版，6 款精选游戏人机/联机双模式、",
-        "截至本版，6 款精选游戏人机/联机双模式、Seat/Social/Profile v2、游戏外观商城、Daily Task、Replay v1.1、Tournament v1.1、Metrics v2、Reward Resolver、三语与 CI/QA 已具备；六款大厅封面、注册/商城重排、价格契约、五档响应式与本地素材库也已完成自动化及本地浏览器验证。真实 Supabase、真实设备/网络整形、跨实例长期 Metrics、外部 Sentry、远端素材存储和最终 Sticker Cartoon 全量美术仍保持 BLOCKED/待办。",
+        "截至本版，6 款精选游戏人机/联机双模式、Seat/Social/Profile v2、游戏外观商城、Daily Task、Replay v1.1、Tournament v1.1、Metrics v2、Reward Resolver、三语与 CI/QA 已具备；六款大厅封面、注册/商城重排、价格契约、五档响应式与本地素材库也已完成自动化及本地浏览器验证。真实 Supabase、真实设备/网络整形、跨实例长期 Metrics、外部 Sentry 与远端素材存储仍为发布证据待决；原创 Sticker Cartoon 美术按逐资产 OWNER_AUTHORIZED_ART_CLEARANCE 继续开发与可逆接入，不再等待可选人工/IP/Golden Set 咨询。",
     ),
     (
         "26. 美术、音频与 Game Feel 的“体验资产化”（v3.0 新增建议）",
@@ -122,16 +122,16 @@ if not any(p.text.strip().startswith(section_title) for p in doc.paragraphs):
         "中文、英文、乌克兰语目录统一为 1046 个 key；商品名、游戏顶栏与 Avatar 辅助文本通过连续切换及英文/乌克兰语真实页面泄漏检查。",
         "asset-library 作为 provenance sidecar 记录来源、许可、目录/许可证独立哈希、Prompt/模型、预览与未来对象键；asset_manifest.json 继续是唯一运行时机器事实源。",
         "新目标视觉为 Pocket Tabletop Sticker × Expressive Sticker Cartoon：粗深色轮廓、两级赛璐璐、Q 版强剪影、统一 Facial Kit 与四段式 Motion。只吸收高层视觉语法，不复制商业游戏具体角色、服装、皇冠、构图、表情帧或高潮 Pose。",
-        "执行闸门为 Art Bible v1 → Design System v3 / Motion System v1 → Source Manifest v2 → Golden Set（1 Persona×8 状态、4 Avatar、核心 UI、五子棋、飞行棋）→ IP Similarity Review → 批量生产。Golden Set 未通过前不翻新全部 48 Avatar 或其余游戏。",
-        "真实 Android、iPhone、Tablet、第二桌面浏览器、真实 Supabase/RLS/并发/备份回滚、真实网络整形和 30 分钟会话尚未执行，因此 Release Candidate 继续 BLOCKED，不得写 production-ready。",
+        "执行轨道为 Art Bible v1 → Design System v3 / Motion System v1 → Source Manifest v2 → 稳定 ID/SHA/provenance 与机器技术、视觉、相似风险审查 → 逐资产 OWNER_AUTHORIZED_ART_CLEARANCE → 带 fallback、feature flag 与一键回滚的可逆批量生产。人工清稿、独立 Reviewer B、IP/法律意见和额外 Golden Set 均为可选风险咨询，缺失不得阻塞原创资产开发或 runtime。",
+        "真实 Android、iPhone、Tablet、第二桌面浏览器、真实 Supabase/RLS/并发/备份回滚、真实网络整形和 30 分钟会话尚未执行，因此对应发布证据保持 RELEASE_EVIDENCE_PENDING，不得写 production-ready；这些外部缺口不阻塞本地开发、机器回归或可逆预览。",
     ]
     for item in items:
         doc.add_paragraph(item, style="List Bullet")
     changed += len(items) + 2
 
 doc.core_properties.title = "Mini Games Platform 产品与技术白皮书 v3.3 视觉商城 P0 收口与 Sticker Cartoon M0 冻结版"
-doc.core_properties.subject = "六款游戏人机/联机事实基线、视觉商城素材 P0 与全项目贴纸卡通重制闸门"
-doc.core_properties.comments = "在现有 v3.0 完善版上最小增量修改；验证提交 52c1a85，保留真实环境阻塞项。"
+doc.core_properties.subject = "六款游戏人机/联机事实基线、视觉商城素材 P0 与全项目贴纸卡通所有者清除轨道"
+doc.core_properties.comments = "在现有 v3.0 完善版上最小增量修改；验证提交 52c1a85，真实环境仅保留发布证据待决。"
 OUTPUT.parent.mkdir(parents=True, exist_ok=True)
 doc.save(str(OUTPUT))
 print(f"UPDATED {OUTPUT} changes={changed}")

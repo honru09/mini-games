@@ -182,6 +182,11 @@ check('非封面运行时素材目录与生产 Manifest 路径一致', catalog.a
   const production=runtimeAssetMap.get(item.id);
   return production&&item.runtimePaths.includes(production.runtime_path);
 }));
+const honruCatalog=catalog.assets.find(item=>item.id==='P-HONRU-STATES-V1');
+const honruProduction=runtimeAssetMap.get('P-HONRU-STATES-V1');
+check('Honru 素材库九状态路径与生产 Manifest variants 完全同构', !!honruCatalog&&!!honruProduction&&
+  sameJson(honruCatalog.runtimePaths,Object.values(honruProduction.variants||{}))&&
+  sameJson(honruCatalog.runtimePaths.slice().sort(),Object.values(honruProduction.variants||{}).slice().sort()));
 check('reference-only 素材只留在 art-source 且不进入 public', catalog.assets.filter(item => item.status==='reference-only').every(item => {
   const paths=[item.sourcePath,item.previewPath,...item.runtimePaths];
   return paths.every(value => typeof value==='string'&&value.startsWith('art-source/')&&!value.startsWith('public/'));

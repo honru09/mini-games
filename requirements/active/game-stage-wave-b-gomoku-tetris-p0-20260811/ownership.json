@@ -1,0 +1,8 @@
+{
+  "taskId": "game-stage-wave-b-gomoku-tetris-p0-20260811",
+  "masterOnly": ["public/index-template.html", "scripts/build.js", "public/index.html", "requirements/PRODUCT_REQUIREMENTS_LEDGER.json", "PROJECT_STATUS.json", "AGENTS.md", "README.md", "WHITEPAPER.md"],
+  "gomokuAgent": ["public/src/games/gomoku.js", "qa/game-stage-wave-b-gomoku.js"],
+  "tetrisAgent": ["public/src/games/tetris.js", "qa/game-stage-wave-b-tetris.js"],
+  "sharedReadOnly": ["public/src/core/02-app-shell.js", "public/src/ui/07-roster.js", "public/src/games/00-tabletop-art-runtime.js", "MOTION_TOKENS.json"],
+  "forbidden": ["server/**", "shared/rules/**", "supabase/**", "public/src/online/**", "server/reward-engine.js", "public/assets/**", "art-source/**"]
+}

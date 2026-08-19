@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "task": "t7-auth-profile-boundary-p1-20260816",
+  "state": "VERIFIED_LOCAL",
+  "startedAt": "2026-08-16T00:00:00+09:00",
+  "currentStep": "A4_COMPLETE",
+  "implemented": [
+    "server/boundaries/auth-profile.js",
+    "server/index.js narrow Auth/Profile seam",
+    "qa/auth-profile-boundary.js",
+    "qa/profile-compare-contract.js seam-aware update"
+  ],
+  "verified": [
+    "node --check server/boundaries/auth-profile.js",
+    "node --check server/index.js",
+    "node qa/auth-profile-boundary.js",
+    "npm run test:ghost-auth",
+    "npm run test:security",
+    "npm run test:supabase",
+    "node --experimental-websocket qa/profile-compare-online.js",
+    "node qa/profile-compare-contract.js",
+    "npm run test:technical-optimization-t7",
+    "git diff --check",
+    "post-review: removed non-contract parseAuthTokenRecord export",
+    "post-review: node qa/auth-profile-boundary.js (10 assertions)",
+    "post-review: npm run test:security (SECURITY_ALL_PASS)",
+    "post-review: npm run test:supabase (26 assertions)",
+    "post-review: node --experimental-websocket qa/profile-compare-online.js (PROFILE_COMPARE_ONLINE_ALL_PASS)",
+    "post-review: node --experimental-websocket qa/test-admin-security.js (TEST_ADMIN_SECURITY_ALL_PASS)",
+    "post-review: node --experimental-websocket qa/game-cosmetic-profile.js (GAME_COSMETIC_PROFILE_ALL_PASS)",
+    "post-review: node qa/social-guards.js (SOCIAL_GUARDS_ALL_PASS)"
+  ],
+  "knownLimitations": [
+    "full npm test/quality gates await Master integration because current deterministic frontend hash is being changed by a parallel art lane",
+    "real Supabase/RLS/multi-instance and external device evidence remain release gates",
+    "Auth credential transport/rate maps and Supabase queue remain intentionally in server/index.js for this narrow vertical slice"
+  ],
+  "notExecuted": ["commit", "push", "deploy"]
+}

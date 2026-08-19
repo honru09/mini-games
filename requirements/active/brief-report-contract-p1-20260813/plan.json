@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "taskId": "brief-report-contract-p1-20260813",
+  "requirements": ["TECH-050"],
+  "stage": "CLOSE",
+  "disposition": "NOW_CLOSURE",
+  "status": "COMPLETED_LOCAL",
+  "scope": "建立中文任务收口简报的固定结构、模板、敏感信息边界和自动化结构检查；不修改产品运行时、协议、经济、数据库或未审批美术。",
+  "steps": [
+    {"id":"BRIEF-1","status":"completed","title":"冻结简报结构与说人话规则"},
+    {"id":"BRIEF-2","status":"completed","title":"加入模板、合同文档与 QA 入口"},
+    {"id":"BRIEF-3","status":"completed","title":"创建当前批次简报并同步治理文档、报告与三日志"},
+    {"id":"BRIEF-4","status":"completed","title":"运行专项、台账、质量门禁与完整测试"}
+  ],
+  "release": "LOCAL_ONLY_NO_COMMIT_NO_PUSH_NO_DEPLOY",
+  "rollback": "删除本批新增合同、模板、QA 与 active task，恢复 TECH-050 为 planned；不触碰运行时和数据。"
+}

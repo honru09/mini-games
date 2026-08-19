@@ -1,0 +1,46 @@
+{
+  "taskId": "ui-motion-closure-p1-20260812",
+  "requirements": ["UI-028", "TECH-054"],
+  "stage": "CLOSE",
+  "disposition": "NOW_CLOSURE",
+  "status": "VERIFYING",
+  "parallelability": 1,
+  "dependencies": [
+    "requirements/active/gsap-motion-governance-p0-20260811",
+    "MOTION_TOKENS.json",
+    "public/src/core/02-app-shell.js:setAppRoute",
+    "public/vendor/gsap/3.15.0/esm/gsap-core.js"
+  ],
+  "steps": [
+    {"id":"MOTION-1","status":"completed","owner":"Master","title":"完成仓库 RECON、GSAP skills 与 CSSPlugin 缺口审计"},
+    {"id":"MOTION-2","status":"completed","owner":"Master","title":"冻结需求、深模块 Interface、生命周期、性能和回滚合同"},
+    {"id":"MOTION-3","status":"completed_by_master_after_agent_timeout","owner":"Master","title":"实现 lazy DOM Motion Runtime、最小 vendor 图和专项 QA","dependsOn":["MOTION-2"]},
+    {"id":"MOTION-4","status":"completed","owner":"Master","title":"集成 setAppRoute、模板 CSS、build/package/SW 与共享 QA","dependsOn":["MOTION-3"]},
+    {"id":"MOTION-5","status":"completed_with_reviewer_limit","owner":"Master + Terra-Max Reviewer","title":"差异审查、边界/回归风险修正与专项复验","dependsOn":["MOTION-4"]},
+    {"id":"MOTION-6","status":"completed","owner":"Master","title":"Quality Gates、完整 npm test、构建稳定性与证据收口","dependsOn":["MOTION-5"]},
+    {"id":"MOTION-7","status":"completed","owner":"Master","title":"同步台账、七报告、三日志并进入下一 CLOSE Part","dependsOn":["MOTION-6"]}
+  ],
+  "risks": [
+    "public/src/core/02-app-shell.js 与 public/index-template.html 是当前热文件且含大量前序未提交修改",
+    "DOM CSSPlugin 图若与 Gomoku core-only 图混用会破坏既有 vendor/provenance 合同",
+    "异步 import 可能导致旧 route callback 闪回或导航等待",
+    "hidden/aria-hidden/inert 与 autoAlpha 清理错误会产生不可见可点击层或焦点陷阱",
+    "public/index.html 是生成产物，只能串行 build",
+    "浏览器 MCP transport closed，视觉/设备证据不可自动获得"
+  ],
+  "tests": [
+    "node --check public/src/core/09-route-motion.js",
+    "node qa/ui-route-motion-contract.js",
+    "node qa/ui-route-motion-runtime.js",
+    "node qa/gsap-dom-esm-graph.js",
+    "node qa/route-motion-cache.js",
+    "node qa/hub-information-architecture.js",
+    "node qa/ghost-shell-contract.js",
+    "npm run test:i18n",
+    "node qa/dom-smoke.js",
+    "npm run quality:gates",
+    "npm test"
+  ],
+  "rollback": "让 GhostRouteMotion unavailable 或删除 setAppRoute 的 transition wrapper；route commit 保持同步 visibility/hash/render 路径，CSS 静态 fallback 继续工作。",
+  "release": "LOCAL_ONLY_NO_COMMIT_NO_PUSH_NO_DEPLOY"
+}

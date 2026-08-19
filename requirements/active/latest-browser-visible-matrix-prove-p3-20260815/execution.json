@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "taskId": "latest-browser-visible-matrix-prove-p3-20260815",
+  "status": "completed_local_single_browser_current_build",
+  "startedAt": "2026-08-15T17:50:25+09:00",
+  "completedAt": "2026-08-15T18:23:56+09:00",
+  "completed": [
+    "current build deterministic double build",
+    "localhost:8080 and 127.0.0.1:8090 byte-identical HTTP verification",
+    "existing formal QA browser session discovered without account creation",
+    "five viewport by four route visible matrix with zero horizontal overflow and zero raw keys",
+    "Shop, Direct Messages, Achievement and Room Lobby shared surfaces",
+    "six Game Stage entry and safe exit checks",
+    "zh-CN, en-US, uk-UA, light, dark, visible reduced-motion, forced-colors and console checks",
+    "viewport and media emulation reset; final route home, zh-CN, light and no active game",
+    "P3 evidence, control-plane, report and log synchronization"
+  ],
+  "pending": [
+    "second independent desktop browser",
+    "physical Android, iPhone and Tablet",
+    "real network shaping and two-formal-friend cross-browser UI",
+    "physical low-end performance, audio and recovery",
+    "production verification and release"
+  ],
+  "verification": [
+    "node qa/prove-current-build-evidence-contract.js PASS",
+    "node qa/brief-report-contract.js PASS",
+    "node qa/mainline-control-plane.js PASS",
+    "node qa/progress-ledger.js PASS",
+    "npm run quality:gates PASS",
+    "deterministic double build PASS: 1580313 characters / 1594847 bytes / 0A6FE8494AA5B14188D006E2FCDFA97AA7DAB438E127A6442FFF298BC5B1CDB4"
+  ],
+  "published": false
+}

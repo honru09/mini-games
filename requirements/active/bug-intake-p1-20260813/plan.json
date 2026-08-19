@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "taskId": "bug-intake-p1-20260813",
+  "requirements": ["TECH-041"],
+  "stage": "CLOSE",
+  "disposition": "NOW_CLOSURE",
+  "status": "COMPLETED_LOCAL",
+  "scope": "建立脱敏、分级、复现、修复、回归与关闭的 Bug Intake 治理合同和模板；不修改产品运行时、规则、协议、经济、数据库或线上配置。",
+  "steps": [
+    {"id":"BUG-1","status":"completed","title":"冻结生命周期、字段、分级和关闭条件"},
+    {"id":"BUG-2","status":"completed","title":"加入合同、JSON 模板、active task 与专项 QA"},
+    {"id":"BUG-3","status":"completed","title":"同步台账、状态、报告、简报和三份日志"},
+    {"id":"BUG-4","status":"completed","title":"运行专项与本地全链回归"}
+  ],
+  "release": "LOCAL_ONLY_NO_COMMIT_NO_PUSH_NO_DEPLOY",
+  "rollback": "删除 Bug Intake 合同、模板、QA 与 active task，恢复 TECH-041 为 planned；不触碰运行时和数据。"
+}

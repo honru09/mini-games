@@ -27,6 +27,12 @@ async function main(){
     const host=new Client('Host'),guest=new Client('Guest'),viewer=new Client('Viewer'),overflow=new Client('Overflow');
     for(const c of [host,guest,viewer,overflow])await c.connect();
     await host.register(1);await guest.register(2);await viewer.register(3);await overflow.register(4);
+    host.send('create',{capacity:2});const settingsRoom=(await host.wait('created')).room;
+    viewer.send('spectate',{room:settingsRoom});await viewer.wait('spectating',3000,msg=>msg.payload&&msg.payload.room===settingsRoom);
+    host.send('room_settings',{allowSpectators:false});
+    const disabledSpectating=await viewer.wait('spectate_left',3000,msg=>msg.payload&&msg.payload.room===settingsRoom&&msg.payload.reason==='disabled');
+    assert('Spectator：房主关闭观战使用统一 spectate_left 协议',disabledSpectating.type==='spectate_left');
+    host.send('leave',{});await sleep(100);
     host.send('create',{capacity:2});const created=await host.wait('created');const room=created.room;
     guest.send('join',{room});await guest.wait('joined');const startedPair=await selectAndStart(host,guest,'gomoku');const gomokuStarted=startedPair.host;host.send('move',{r:7,c:7});await sleep(80);
     viewer.send('spectate_join',{roomId:room,matchId:gomokuStarted.matchId});const joined=await viewer.wait('spectate_joined');

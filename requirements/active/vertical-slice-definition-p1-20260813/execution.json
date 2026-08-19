@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "taskId": "vertical-slice-definition-p1-20260813",
+  "status": "completed_local",
+  "verification": {
+    "specialized": ["node qa/vertical-slice-definition.js"],
+    "pendingFinal": [],
+    "completedFinal": ["npm run reports:progress", "node qa/progress-ledger.js", "npm run quality:gates", "npm test (173.3s)", "node scripts/build.js", "git diff --check"]
+  },
+  "published": false,
+  "boundary": "治理合同与 QA；不修改产品运行时、规则、协议、奖励、数据库、社交数据、素材 runtime 或线上配置。"
+}

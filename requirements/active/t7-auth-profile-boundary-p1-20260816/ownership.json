@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "task": "t7-auth-profile-boundary-p1-20260816",
+  "owned": [
+    "server/boundaries/auth-profile.js",
+    "qa/auth-profile-boundary.js",
+    "requirements/active/t7-auth-profile-boundary-p1-20260816/**"
+  ],
+  "shared": [
+    "server/index.js"
+  ],
+  "forbidden": [
+    "package.json",
+    "PROJECT_STATUS.json",
+    "requirements/PRODUCT_REQUIREMENTS_LEDGER.json",
+    "requirements/MAINLINE_CONTROL_ROUTING.json",
+    "public/**",
+    "supabase/schema.sql",
+    "server/reward-engine.js",
+    "LOG-新增.md",
+    "LOG-修改.md",
+    "LOG-删除.md",
+    "简易报告/**"
+  ],
+  "sharedChangeRule": "Master confirmed no other agent edits server/index.js; only import, initialization, compatibility wrappers and five auth/profile call sites may change."
+}

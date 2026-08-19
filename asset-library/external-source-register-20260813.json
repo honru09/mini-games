@@ -1,0 +1,135 @@
+{
+  "schemaVersion": 1,
+  "registerId": "external-source-register-20260813",
+  "createdAt": "2026-08-13T22:55:26+09:00",
+  "status": "reference-only",
+  "runtimePolicy": "不得直接复制到 public/assets、asset_manifest、商城或默认头像；必须先完成授权核验、人工清稿、Reviewer B、IP Review、Golden Set 与运行时派生。",
+  "skillReferencePolicy": {
+    "status": "OWNER_AUTHORIZED_CONTROLLED_REFERENCE_INPUT",
+    "scope": "All registered external files, previews, PSD/AI/EPS structure and semantic inventory may be read by local Skills and, when explicitly configured, supplied task-scoped to third-party Skills.",
+    "requiredProvenance": ["sourcePath", "sourceSha256", "provider", "model", "taskId", "transmissionScope"],
+    "outputDisposition": "SOURCE_ONLY_EXTERNAL_INFLUENCED / SIMILARITY_REVIEW_REQUIRED",
+    "runtimeRule": "Source pixels/layers and uncleared externally influenced candidates stay out of public/assets, Manifest, store and default runtime."
+  },
+  "storage": {
+    "mode": "local-reference-path-only",
+    "remoteObjectKey": null,
+    "copiedIntoRepository": false,
+    "decompressedIntoRepository": false
+  },
+  "sourceRoots": [
+    {
+      "id": "external-rpg-character-animation-pack",
+      "path": "D:/BaiduNetdiskDownload/游戏素材/2D游戏角色素材RPG人物动画序列帧PNG透明图片休闲卡通Q版NPC怪物",
+      "kind": "character-animation-reference",
+      "inventory": {
+        "zipFiles": 64,
+        "previewPngFilesOutsideZip": 64,
+        "zipBytes": 5468429338,
+        "zipGiB": 5.09,
+        "zipEntries": 48281,
+        "pngFramesInsideZip": 44145,
+        "extensionsInsideZip": {
+          ".png": 44145,
+          ".ai": 270,
+          ".eps": 3170,
+          ".scml": 240,
+          ".unitypackage": 157,
+          ".psd": 25,
+          ".gif": 3,
+          ".jpg": 15,
+          ".txt": 256
+        },
+        "inventoryHashMethod": "sha256(sorted-relative-path,size,mtimeUtc)",
+        "contentHashStatus": "computed-for-all-836-external-files",
+        "contentHashEvidence": "requirements/active/external-assets-audit-p1-20260813/evidence/external-file-content-hashes.json",
+        "layeredSourceStructureStatus": "parsed-read-only-no-extraction",
+        "layeredSourceStructureEvidence": "requirements/active/external-assets-audit-p1-20260813/evidence/external-layered-source-structure-audit-20260814.json"
+      },
+      "observedFamilies": [
+        "chibi RPG combat characters with Idle/Idle Blink/Walking/Running/Hurt/Dying/Attacking/Taunt",
+        "4-direction characters with Front/Back/Left/Right and clothing/base separation",
+        "NPC/service roles with Greeting/Communication/Chagrin/Joy/Idle Blinking",
+        "animals and monsters with Jump/Sleep/Throwing/Smoke/Healing/Casting variants",
+        "Spriter SCML/vector-part sources and Unity package companions"
+      ],
+      "dominantActionCounts": {
+        "Idle": 4624,
+        "Idle Blinking": 3516,
+        "Walking": 2982,
+        "Hurt": 2196,
+        "Dying": 2128,
+        "Communication": 1800,
+        "Greeting": 1530,
+        "Taunt": 1170,
+        "Running": 912,
+        "Throwing": 849,
+        "Attacking": 828,
+        "Joy": 720,
+        "Chagrin": 720
+      },
+      "dominantFrameSizes": ["900x900", "700x700", "1100x1100", "128x128", "256x256", "512x512", "720x480", "520x420"],
+      "licenseObservation": "每个 ZIP 均存在 License/README/TXT 类文件名线索，但本批没有建立可发布授权结论；需逐包人工核验授权主体、用途、再分发与改作条款。"
+    },
+    {
+      "id": "external-q-ui-elements-230717",
+      "path": "D:/BaiduNetdiskDownload/游戏素材/卡通Q版休闲游戏UI界面手游弹窗按钮元素图标PSD分层设计素材模板/230717 游戏UI界面元素",
+      "kind": "ui-layout-reference",
+      "inventory": {
+        "files": 708,
+        "bytes": 13092283703,
+        "GiB": 12.19,
+        "extensions": {".psd": 263, ".ai": 91, ".jpg": 205, ".png": 149},
+        "sourcePreviewPairs": {"aiOrPsdWithSameBasePreview": 354},
+        "inventoryHashMethod": "sha256(sorted-relative-path,size,mtimeUtc)",
+        "contentHashStatus": "computed-for-all-836-external-files",
+        "contentHashEvidence": "requirements/active/external-assets-audit-p1-20260813/evidence/external-file-content-hashes.json",
+        "layeredSourceStructureStatus": "parsed-read-only-no-extraction",
+        "layeredSourceStructureEvidence": "requirements/active/external-assets-audit-p1-20260813/evidence/external-layered-source-structure-audit-20260814.json"
+      },
+      "subdirectories": {
+        "AI格式": {"files": 182, "ai": 91, "jpgPreview": 91},
+        "界面": {"files": 126, "psd": 63, "jpgPreview": 63},
+        "弹窗": {"files": 100, "psd": 50, "jpgPreview": 50},
+        "元素": {"files": 300, "psd": 150, "pngPreview": 149, "jpgPreview": 1}
+      },
+      "previewDimensionsObserved": ["900x1600", "5334x3000", "3750x5000", "5000x5000", "1440x2280", "900x900", "650x170", "296x62", "500x500"],
+      "styleObservations": [
+        "高饱和 Q 版按钮与粗描边标题栏",
+        "纸张/木板/丝带式弹窗边框与关闭按钮",
+        "奖励、成就、进度条、徽章和商品卡的清晰层级",
+        "横向标签、竖向移动端界面和大面积插画背景",
+        "源稿与 JPG/PNG 预览同目录配对，适合建立组件对照板"
+      ],
+      "licenseObservation": "文件夹内的 PSD/AI/JPG/PNG 仅证明本地拥有文件，不证明 Ghost Game 可发布授权；正式使用前必须补齐授权凭证和原创重绘决议。"
+    }
+  ],
+  "selectiveUsePlan": {
+    "allowedNow": [
+      "用于内部风格研究、组件结构对照和动作语义拆解",
+      "提取通用设计原则：层级、边框、按钮状态、弹窗结构、进度反馈和角色动作节奏",
+      "以 Ghost Game 黑白 Logo、Honru、毛玻璃双主题和 Game Stage Cream/Ink 重新原创绘制草案"
+    ],
+    "candidateFutureSlices": [
+      {"area": "UI-021/UI-028", "use": "商城/奖励/成就卡片的结构参考，重绘成 Ghost-native 黑白高对比变体"},
+      {"area": "UI-027/GAME-041", "use": "局内 HUD、状态条、胜负反馈和弹窗标题栏节奏参考，保留现有沉浸式 Shell"},
+      {"area": "ART-028/ART-030", "use": "Honru 局内动作、待机、庆祝、受击和表情的动作分镜参考，不直接使用角色位图"},
+      {"area": "ART-033/ART-035", "use": "未来游戏 3D/2D 资产的动作覆盖矩阵参考，继续使用程序化 fallback 直到 Golden Set"
+      }
+    ],
+    "forbiddenNow": [
+      "直接把第三方角色、UI、PSD/AI 图层或预览图放入 public/assets 或线上对象存储",
+      "裁切、描摹、换色后宣称为 Ghost Game 正式原创素材",
+      "用文件名、预览图或 ZIP 中的 License.txt 代替人工授权审查",
+      "让外部素材绕过 Manifest、source-only、fallback、reduced-motion 或性能预算"
+    ]
+  },
+  "inspectionLimits": [
+    "本批读取 ZIP 目录项、文件扩展名、PNG header 尺寸/色彩类型、动作目录与预览图；未解压外部 ZIP。",
+    "3819/3819 份 PSD/AI/EPS 分层或矢量源已只读解析：288 PSD 的 35,107 个图层记录、组、文本/智能对象/矢量标记，以及 361 AI、3,170 EPS 的 PDF/PostScript 容器结构已登记；没有解压落地。",
+    "Illustrator 私有语义对象、字体字形、链接对象正文和可编辑效果没有被重建；结构库存不等于 Adobe 应用中的完整视觉语义，也不等于授权或可直接使用。",
+    "18,567,721,249 bytes / 836 个外部文件已生成逐文件 SHA-256 与 aggregate hash；该哈希只固定输入版本，不证明授权或美术审批。",
+    "未执行第三方授权、IP 相似度、人工清稿、Reviewer B、Golden Set、真机或线上验收。"
+  ],
+  "rollback": "删除本登记文件、active task 与报告即可回滚；不触碰现有 asset-library/catalog.json、public/assets、Manifest、游戏规则、协议、账号或线上配置。"
+}

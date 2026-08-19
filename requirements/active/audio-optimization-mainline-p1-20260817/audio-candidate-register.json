@@ -1,0 +1,508 @@
+{
+  "schemaVersion": 1,
+  "registryId": "AUDIO-CANDIDATE-REGISTER-V1",
+  "task": "audio-optimization-mainline-p1-20260817",
+  "status": "LOCAL_ONLY_NOT_GENERATED",
+  "recordedAt": "2026-08-18",
+  "owner": "Ghost Game audio mainline",
+  "purpose": "登记外部音频候选的计划、许可闸门、凭证闸门和回滚边界；本文件不是运行时资产清单。",
+  "policy": {
+    "externalCandidateStatus": "PLANNED_NOT_GENERATED",
+    "generatedOutputAdmission": "MANIFEST_ONLY_AFTER_LICENSE_PROVENANCE_REVIEW",
+    "publicRuntimeGeneration": "FORBIDDEN",
+    "publicBinaryAdmission": "DENY_UNREGISTERED_AUDIO",
+    "promptStorage": "REGISTRY_ONLY_NO_RUNTIME_OR_USER_TEXT",
+    "secretStorage": "ENVIRONMENT_ONLY_NEVER_REGISTRY_OR_PUBLIC",
+    "fallbackRequired": true,
+    "fallbackAssetId": "AUDIO-FALLBACK-PROCEDURAL-V1",
+    "audioBoundary": "presentation-only; never Rule Authority Protocol Reward Replay AI Chat or database"
+  },
+  "sourceLocks": [
+    {
+      "sourceId": "GAME-CREATOR-DESIGN-REFERENCE",
+      "sourceType": "repository-design-reference",
+      "sourceUrl": "https://github.com/PlayableIntelligence/game-creator",
+      "pinnedUrl": "https://github.com/PlayableIntelligence/game-creator/tree/4e64b83b5fe400b34ad3a484d9b4a6090b26d512",
+      "revisionRepository": "https://github.com/PlayableIntelligence/game-creator.git",
+      "revisionRef": "refs/heads/main",
+      "revision": "4e64b83b5fe400b34ad3a484d9b4a6090b26d512",
+      "revisionObservedBy": "git ls-remote https://github.com/PlayableIntelligence/game-creator.git refs/heads/main",
+      "candidateIds": ["GAME-CREATOR-PROCEDURAL-DESIGN-REFERENCE-V1"],
+      "localSkillSnapshots": [
+        {
+          "skillName": "add-audio",
+          "localPath": "$CODEX_HOME/skills/add-audio/SKILL.md",
+          "upstreamPath": "skills/add-audio/SKILL.md",
+          "sha256": "49E4D8C0C7135B42936C3E2E0022F7B571EDCFC36CBC9770D1ED18A7CB37C9FD",
+          "hashObservedBy": "Get-FileHash -Algorithm SHA256"
+        },
+        {
+          "skillName": "game-audio",
+          "localPath": "$CODEX_HOME/skills/game-audio/SKILL.md",
+          "upstreamPath": "skills/game-audio/SKILL.md",
+          "sha256": "A5244D0136F98A729C9E5454741A4E76F5F16C34E06877C3D64DDB5A2A4AB4B5",
+          "hashObservedBy": "Get-FileHash -Algorithm SHA256"
+        }
+      ]
+    },
+    {
+      "sourceId": "AUDIOCRAFT-CODE-REPOSITORY",
+      "sourceType": "generation-code-repository",
+      "sourceUrl": "https://github.com/facebookresearch/audiocraft",
+      "pinnedUrl": "https://github.com/facebookresearch/audiocraft/tree/896ec7c47f5e5d1e5aa1e4b260c4405328bf009d",
+      "revisionRepository": "https://github.com/facebookresearch/audiocraft.git",
+      "revisionRef": "refs/heads/main",
+      "revision": "896ec7c47f5e5d1e5aa1e4b260c4405328bf009d",
+      "revisionObservedBy": "git ls-remote https://github.com/facebookresearch/audiocraft.git refs/heads/main",
+      "candidateIds": ["AUDIOCRAFT-RESEARCH-SFX-TEXTURE-V1", "AUDIOCRAFT-RESEARCH-MUSIC-BED-V1"],
+      "localSkillSnapshots": [],
+      "localSkillSnapshotStatus": "NOT_APPLICABLE_CODE_REPOSITORY"
+    },
+    {
+      "sourceId": "HERMES-AUDIOCRAFT-WORKFLOW-SKILL",
+      "sourceType": "workflow-skill",
+      "sourceUrl": "https://github.com/NousResearch/hermes-agent/blob/main/optional-skills/creative/audiocraft-audio-generation/SKILL.md",
+      "pinnedUrl": "https://github.com/NousResearch/hermes-agent/blob/4323c67dcc6048fc8e311cdff7600d3d6a17807f/optional-skills/creative/audiocraft-audio-generation/SKILL.md",
+      "revisionRepository": "https://github.com/NousResearch/hermes-agent.git",
+      "revisionRef": "refs/heads/main",
+      "revision": "4323c67dcc6048fc8e311cdff7600d3d6a17807f",
+      "revisionObservedBy": "git ls-remote https://github.com/NousResearch/hermes-agent.git refs/heads/main",
+      "candidateIds": ["AUDIOCRAFT-RESEARCH-SFX-TEXTURE-V1", "AUDIOCRAFT-RESEARCH-MUSIC-BED-V1"],
+      "localSkillSnapshots": [
+        {
+          "skillName": "audiocraft-audio-generation",
+          "localPath": "$CODEX_HOME/skills/audiocraft-audio-generation/SKILL.md",
+          "upstreamPath": "optional-skills/creative/audiocraft-audio-generation/SKILL.md",
+          "sha256": "A2F1C3B8B5D9C89E06CE7927D1A62E0CC5813A5F5DD63D81637A3C317665D002",
+          "hashObservedBy": "Get-FileHash -Algorithm SHA256"
+        }
+      ]
+    },
+    {
+      "sourceId": "ECC-FAL-AI-MEDIA-WORKFLOW-SKILL",
+      "sourceType": "workflow-skill",
+      "sourceUrl": "https://github.com/affaan-m/ECC/blob/main/.agents/skills/fal-ai-media/SKILL.md",
+      "pinnedUrl": "https://github.com/affaan-m/ECC/blob/06c5e118c4d3e6c3b7f9445f973a2194c82de193/.agents/skills/fal-ai-media/SKILL.md",
+      "revisionRepository": "https://github.com/affaan-m/ECC.git",
+      "revisionRef": "refs/heads/main",
+      "revision": "06c5e118c4d3e6c3b7f9445f973a2194c82de193",
+      "revisionObservedBy": "git ls-remote https://github.com/affaan-m/ECC.git refs/heads/main",
+      "candidateIds": ["FAL-AUDIO-SFX-VARIANTS-V1"],
+      "localSkillSnapshots": [
+        {
+          "skillName": "fal-ai-media",
+          "localPath": "$CODEX_HOME/skills/fal-ai-media/SKILL.md",
+          "upstreamPath": ".agents/skills/fal-ai-media/SKILL.md",
+          "sha256": "2420F083FDF4EEC3BB97B9B5DB8B68E667640B51ECA051C7D537596E6BE2049C",
+          "hashObservedBy": "Get-FileHash -Algorithm SHA256"
+        }
+      ]
+    },
+    {
+      "sourceId": "ELEVENLABS-SOUND-EFFECTS-WORKFLOW-SKILL",
+      "sourceType": "workflow-skill",
+      "sourceUrl": "https://github.com/elevenlabs/skills/tree/main/sound-effects",
+      "pinnedUrl": "https://github.com/elevenlabs/skills/tree/1d8a5c6cc1edf0b22df34620b9d5a1324a8d9f0a/sound-effects",
+      "revisionRepository": "https://github.com/elevenlabs/skills.git",
+      "revisionRef": "refs/heads/main",
+      "revision": "1d8a5c6cc1edf0b22df34620b9d5a1324a8d9f0a",
+      "revisionObservedBy": "git ls-remote https://github.com/elevenlabs/skills.git refs/heads/main",
+      "candidateIds": ["ELEVENLABS-SFX-CORE-V1"],
+      "localSkillSnapshots": [
+        {
+          "skillName": "sound-effects",
+          "localPath": "$CODEX_HOME/skills/sound-effects/SKILL.md",
+          "upstreamPath": "sound-effects/SKILL.md",
+          "sha256": "9DA7F48812A55A6569893E900CB43D4088201E21CF38D7B12EDA55E63F1DC12A",
+          "hashObservedBy": "Get-FileHash -Algorithm SHA256"
+        }
+      ]
+    }
+  ],
+  "runtimeBaseline": {
+    "assetId": "AUDIO-FALLBACK-PROCEDURAL-V1",
+    "candidateType": "internal-runtime-fallback",
+    "provider": "internal-web-audio",
+    "status": "INTEGRATED_FALLBACK",
+    "source": "public/src/core/21-unified-feedback-adapter.js",
+    "license": "project-owned-code",
+    "manifestContract": {
+      "audio": "unified-procedural-v1",
+      "audioFallback": "webaudio-fallback",
+      "defaultEnabled": true,
+      "externalNetwork": false
+    },
+    "admission": "permanent fallback; no generated file and no provider credential",
+    "rollback": "disable optional candidate flag; leave procedural adapter enabled"
+  },
+  "externalCandidates": [
+    {
+      "candidateId": "AUDIOCRAFT-RESEARCH-SFX-TEXTURE-V1",
+      "candidateType": "external-generation",
+      "provider": "audiocraft",
+      "repository": "https://github.com/facebookresearch/audiocraft",
+      "workflowSkill": "https://github.com/NousResearch/hermes-agent/blob/main/optional-skills/creative/audiocraft-audio-generation/SKILL.md",
+      "sourceLockIds": ["AUDIOCRAFT-CODE-REPOSITORY", "HERMES-AUDIOCRAFT-WORKFLOW-SKILL"],
+      "mode": "AudioGen",
+      "status": "PLANNED_NOT_GENERATED",
+      "researchOnly": true,
+      "plannedCues": [
+        "gomoku_place",
+        "ludo_roll",
+        "ludo_capture",
+        "monopoly_land",
+        "xiangqi_move",
+        "tetris_lock"
+      ],
+      "promptTemplate": "short non-musical game sound design, {action}, polished close-miked material, 0.8 seconds, dry centered one-shot, no voice, no melody, no music, short tail, game-ready",
+      "generationPlan": {
+        "durationSeconds": 0.8,
+        "loop": false,
+        "format": "wav",
+        "nativeSampleRateHz": 16000,
+        "sampleRateHz": 44100,
+        "deliverySampleRateHz": 44100,
+        "channels": 1,
+        "resample": {
+          "status": "PLANNED_NOT_EXECUTED",
+          "sourceSampleRateHz": 16000,
+          "targetSampleRateHz": 44100,
+          "method": "ffmpeg-aresample-with-explicit-version-and-quality-review",
+          "commandTemplate": "ffmpeg -i {nativeWav} -af aresample=44100 -ar 44100 -ac 1 {deliveryWav}",
+          "retainNativeSource": true,
+          "provenanceFieldsRequired": ["checkpointId", "checkpointRevision", "nativeSampleRateHz", "nativeArtifactSha256", "resamplerName", "resamplerVersion", "resampleParameters", "deliverySampleRateHz", "deliveryArtifactSha256"]
+        },
+        "postProcess": ["trim-silence", "short-fade", "resample-native-16000-to-44100-with-provenance", "loudness-review"]
+      },
+      "licenseGate": {
+        "sourceCode": "MIT",
+        "modelWeights": "CC-BY-NC-4.0",
+        "commercialUse": "BLOCKED",
+        "runtimeAdmission": "RESEARCH_ONLY_UNTIL_INDEPENDENT_LICENSE_CLEARANCE",
+        "recordRequired": "model/checkpoint version, prompt, provenance, reviewer and redistribution decision"
+      },
+      "credentialGate": {
+        "requiredEnvironment": [],
+        "optionalEnvironment": ["HF_TOKEN", "HUGGINGFACE_HUB_TOKEN"],
+        "optionalFor": "public-checkpoints",
+        "observedStatus": "OPTIONAL_ABSENT_NON_BLOCKING",
+        "dependencyRequirements": ["audiocraft", "torch", "torchaudio", "transformers", "ffmpeg"],
+        "platformRequirement": "Linux-or-macOS research environment",
+        "observedDependencyStatus": "MISSING"
+      },
+      "runtime": {
+        "featureFlag": "mg_audio_candidate_audiocraft_v1",
+        "defaultEnabled": false,
+        "load": "never until approved static artifact",
+        "fallbackAssetId": "AUDIO-FALLBACK-PROCEDURAL-V1",
+        "publicPath": null,
+        "manifestAssetId": null
+      },
+      "generation": {
+        "status": "NOT_GENERATED",
+        "artifactPath": null,
+        "sha256": null,
+        "bytes": null,
+        "providerJobId": null,
+        "generatedAt": null,
+        "provenance": {
+          "checkpointId": null,
+          "checkpointRevision": null,
+          "nativeSampleRateHz": null,
+          "nativeArtifactSha256": null,
+          "resamplerName": null,
+          "resamplerVersion": null,
+          "resampleParameters": null,
+          "deliverySampleRateHz": null,
+          "deliveryArtifactSha256": null
+        }
+      },
+      "rollback": {
+        "flag": "mg_audio_candidate_audiocraft_v1",
+        "disableValue": "0",
+        "fallback": "AUDIO-FALLBACK-PROCEDURAL-V1",
+        "removeFromManifest": true
+      },
+      "notes": "AudioCraft 仅作为研究性草稿路线登记；不得将 CC-BY-NC 权重产物描述为商业发布音效。"
+    },
+    {
+      "candidateId": "AUDIOCRAFT-RESEARCH-MUSIC-BED-V1",
+      "candidateType": "external-generation",
+      "provider": "audiocraft",
+      "repository": "https://github.com/facebookresearch/audiocraft",
+      "workflowSkill": "https://github.com/NousResearch/hermes-agent/blob/main/optional-skills/creative/audiocraft-audio-generation/SKILL.md",
+      "sourceLockIds": ["AUDIOCRAFT-CODE-REPOSITORY", "HERMES-AUDIOCRAFT-WORKFLOW-SKILL"],
+      "mode": "MusicGen",
+      "status": "PLANNED_NOT_GENERATED",
+      "researchOnly": true,
+      "plannedCues": ["music_home", "music_game", "music_result"],
+      "promptTemplate": "quiet non-vocal game ambience, {scene}, sparse three-layer texture, no recognizable artist or song, 45 seconds, loop-friendly ending, no voice",
+      "generationPlan": {
+        "durationSeconds": 45,
+        "loop": true,
+        "format": "wav",
+        "nativeSampleRateHz": 32000,
+        "sampleRateHz": 44100,
+        "deliverySampleRateHz": 44100,
+        "channels": 2,
+        "resample": {
+          "status": "PLANNED_NOT_EXECUTED",
+          "sourceSampleRateHz": 32000,
+          "targetSampleRateHz": 44100,
+          "method": "ffmpeg-aresample-with-explicit-version-and-quality-review",
+          "commandTemplate": "ffmpeg -i {nativeWav} -af aresample=44100 -ar 44100 -ac 2 {deliveryWav}",
+          "retainNativeSource": true,
+          "provenanceFieldsRequired": ["checkpointId", "checkpointRevision", "nativeSampleRateHz", "nativeArtifactSha256", "resamplerName", "resamplerVersion", "resampleParameters", "deliverySampleRateHz", "deliveryArtifactSha256"]
+        },
+        "postProcess": ["trim-silence", "crossfade-loop", "resample-native-32000-to-44100-with-provenance", "loudness-review", "duck-under-sfx"]
+      },
+      "licenseGate": {
+        "sourceCode": "MIT",
+        "modelWeights": "CC-BY-NC-4.0",
+        "commercialUse": "BLOCKED",
+        "runtimeAdmission": "RESEARCH_ONLY_UNTIL_INDEPENDENT_LICENSE_CLEARANCE",
+        "recordRequired": "model/checkpoint version, prompt, provenance, reviewer and redistribution decision"
+      },
+      "credentialGate": {
+        "requiredEnvironment": [],
+        "optionalEnvironment": ["HF_TOKEN", "HUGGINGFACE_HUB_TOKEN"],
+        "optionalFor": "public-checkpoints",
+        "observedStatus": "OPTIONAL_ABSENT_NON_BLOCKING",
+        "dependencyRequirements": ["audiocraft", "torch", "torchaudio", "transformers", "ffmpeg"],
+        "platformRequirement": "Linux-or-macOS research environment",
+        "observedDependencyStatus": "MISSING"
+      },
+      "runtime": {
+        "featureFlag": "mg_audio_candidate_audiocraft_music_v1",
+        "defaultEnabled": false,
+        "load": "never until approved static artifact",
+        "fallbackAssetId": "AUDIO-FALLBACK-PROCEDURAL-V1",
+        "publicPath": null,
+        "manifestAssetId": null
+      },
+      "generation": {
+        "status": "NOT_GENERATED",
+        "artifactPath": null,
+        "sha256": null,
+        "bytes": null,
+        "providerJobId": null,
+        "generatedAt": null,
+        "provenance": {
+          "checkpointId": null,
+          "checkpointRevision": null,
+          "nativeSampleRateHz": null,
+          "nativeArtifactSha256": null,
+          "resamplerName": null,
+          "resamplerVersion": null,
+          "resampleParameters": null,
+          "deliverySampleRateHz": null,
+          "deliveryArtifactSha256": null
+        }
+      },
+      "rollback": {
+        "flag": "mg_audio_candidate_audiocraft_music_v1",
+        "disableValue": "0",
+        "fallback": "AUDIO-FALLBACK-PROCEDURAL-V1",
+        "removeFromManifest": true
+      },
+      "notes": "MusicGen 草稿只用于听感探索；当前统一运行时的低响度程序化 music bed 保持权威 fallback。"
+    },
+    {
+      "candidateId": "ELEVENLABS-SFX-CORE-V1",
+      "candidateType": "external-generation",
+      "provider": "elevenlabs",
+      "repository": "https://github.com/elevenlabs/skills/tree/main/sound-effects",
+      "sourceLockIds": ["ELEVENLABS-SOUND-EFFECTS-WORKFLOW-SKILL"],
+      "apiDocumentation": "https://elevenlabs.io/docs/api-reference/text-to-sound-effects/convert",
+      "mode": "sound-effects",
+      "status": "PLANNED_NOT_GENERATED",
+      "researchOnly": false,
+      "plannedCues": [
+        "ui_confirm",
+        "ui_error",
+        "tank_fire",
+        "tank_hit",
+        "tank_ko",
+        "tetris_line_clear",
+        "match_win",
+        "match_loss"
+      ],
+      "promptTemplate": "{action}, {material}, clean attack, {duration} seconds, centered game one-shot, no voice, no music, short tail, game-ready",
+      "generationPlan": {
+        "durationSeconds": 0.8,
+        "loop": false,
+        "format": "wav-or-mp3-after-review",
+        "sampleRateHz": 44100,
+        "channels": 2,
+        "postProcess": ["trim-silence", "peak-limit", "loudness-review", "manual-artifact-review"]
+      },
+      "licenseGate": {
+        "providerTerms": "PENDING_PROVIDER_TERMS_REVIEW",
+        "commercialUse": "PENDING_OUTPUT_RIGHTS_REVIEW",
+        "runtimeAdmission": "BLOCKED_UNTIL_LICENSE_PROVENANCE_AND_MANUAL_REVIEW",
+        "recordRequired": "model/version, prompt, generation timestamp, provider terms, output hash, reviewer and rollback flag"
+      },
+      "credentialGate": {
+        "requiredEnvironment": ["ELEVENLABS_API_KEY"],
+        "observedStatus": "MISSING",
+        "mcpRequired": false,
+        "generationRequestStatus": "NOT_EXECUTED"
+      },
+      "runtime": {
+        "featureFlag": "mg_audio_candidate_elevenlabs_v1",
+        "defaultEnabled": false,
+        "load": "never until approved static artifact",
+        "fallbackAssetId": "AUDIO-FALLBACK-PROCEDURAL-V1",
+        "publicPath": null,
+        "manifestAssetId": null
+      },
+      "generation": {
+        "status": "NOT_GENERATED",
+        "artifactPath": null,
+        "sha256": null,
+        "bytes": null,
+        "providerJobId": null,
+        "generatedAt": null
+      },
+      "rollback": {
+        "flag": "mg_audio_candidate_elevenlabs_v1",
+        "disableValue": "0",
+        "fallback": "AUDIO-FALLBACK-PROCEDURAL-V1",
+        "removeFromManifest": true
+      },
+      "notes": "凭证缺失；不能把 API 计划、prompt 或未生成输出写入客户端。"
+    },
+    {
+      "candidateId": "FAL-AUDIO-SFX-VARIANTS-V1",
+      "candidateType": "external-generation",
+      "provider": "fal-ai",
+      "workflowSkill": "https://github.com/affaan-m/ECC/blob/main/.agents/skills/fal-ai-media/SKILL.md",
+      "sourceLockIds": ["ECC-FAL-AI-MEDIA-WORKFLOW-SKILL"],
+      "modelSelection": "PENDING_MODEL_SEARCH_AND_COST_ESTIMATE",
+      "mode": "audio-sfx",
+      "status": "PLANNED_NOT_GENERATED",
+      "researchOnly": false,
+      "plannedCues": [
+        "ludo_capture",
+        "monopoly_auction",
+        "monopoly_bankrupt",
+        "tetris_garbage",
+        "xiangqi_check",
+        "xiangqi_checkmate"
+      ],
+      "promptTemplate": "{action}, polished game Foley, {material}, {duration} seconds, one-shot, no speech, no music, dry mix, clean tail",
+      "generationPlan": {
+        "durationSeconds": 1.2,
+        "loop": false,
+        "format": "wav-or-ogg-after-review",
+        "sampleRateHz": 44100,
+        "channels": 2,
+        "postProcess": ["trim-silence", "peak-limit", "loudness-review", "manual-artifact-review"]
+      },
+      "licenseGate": {
+        "providerTerms": "PENDING_PROVIDER_MODEL_TERMS_REVIEW",
+        "commercialUse": "PENDING_OUTPUT_RIGHTS_REVIEW",
+        "runtimeAdmission": "BLOCKED_UNTIL_LICENSE_PROVENANCE_COST_AND_MANUAL_REVIEW",
+        "recordRequired": "model id, cost estimate, job id, prompt, output hash, provider terms, reviewer and rollback flag"
+      },
+      "credentialGate": {
+        "requiredEnvironment": ["FAL_KEY"],
+        "observedStatus": "MISSING",
+        "mcpRequired": true,
+        "mcpObservedStatus": "UNAVAILABLE",
+        "generationRequestStatus": "NOT_EXECUTED"
+      },
+      "runtime": {
+        "featureFlag": "mg_audio_candidate_fal_v1",
+        "defaultEnabled": false,
+        "load": "never until approved static artifact",
+        "fallbackAssetId": "AUDIO-FALLBACK-PROCEDURAL-V1",
+        "publicPath": null,
+        "manifestAssetId": null
+      },
+      "generation": {
+        "status": "NOT_GENERATED",
+        "artifactPath": null,
+        "sha256": null,
+        "bytes": null,
+        "providerJobId": null,
+        "generatedAt": null
+      },
+      "rollback": {
+        "flag": "mg_audio_candidate_fal_v1",
+        "disableValue": "0",
+        "fallback": "AUDIO-FALLBACK-PROCEDURAL-V1",
+        "removeFromManifest": true
+      },
+      "notes": "先 estimate_cost，再异步生成；当前没有 MCP 或 FAL_KEY，故没有发起请求。"
+    },
+    {
+      "candidateId": "GAME-CREATOR-PROCEDURAL-DESIGN-REFERENCE-V1",
+      "candidateType": "design-reference",
+      "provider": "game-creator",
+      "repository": "https://github.com/PlayableIntelligence/game-creator",
+      "sourceLockIds": ["GAME-CREATOR-DESIGN-REFERENCE"],
+      "mode": "WebAudio-procedural-reference",
+      "status": "REFERENCE_ONLY",
+      "researchOnly": false,
+      "plannedCues": ["ui_confirm", "ui_cancel", "ui_toggle", "ui_test"],
+      "promptTemplate": null,
+      "generationPlan": {
+        "durationSeconds": 0,
+        "loop": false,
+        "format": "none",
+        "sampleRateHz": null,
+        "channels": null,
+        "postProcess": []
+      },
+      "licenseGate": {
+        "runtimeApproach": "project-owned-zero-dependency-WebAudio-only",
+        "strudelDependency": "NOT_USED",
+        "commercialUse": "PENDING_IF_OPTIONAL_DEPENDENCY_IS_EVER_ADDED",
+        "runtimeAdmission": "REFERENCE_ONLY; NO THIRD_PARTY_BINARY"
+      },
+      "credentialGate": {
+        "requiredEnvironment": [],
+        "observedStatus": "NOT_APPLICABLE",
+        "generationRequestStatus": "NOT_EXECUTED"
+      },
+      "runtime": {
+        "load": "not loaded; design reference only",
+        "fallbackAssetId": "AUDIO-FALLBACK-PROCEDURAL-V1",
+        "publicPath": null,
+        "manifestAssetId": null
+      },
+      "generation": {
+        "status": "NOT_APPLICABLE_REFERENCE_ONLY",
+        "artifactPath": null,
+        "sha256": null,
+        "bytes": null,
+        "providerJobId": null,
+        "generatedAt": null
+      },
+      "rollback": {
+        "action": "remove the source-only design reference record",
+        "fallback": "AUDIO-FALLBACK-PROCEDURAL-V1",
+        "removeFromManifest": false,
+        "runtimeChangeRequired": false
+      },
+      "notes": "PlayableIntelligence/game-creator 提供 WebAudio/事件审计参考；当前不引入 Strudel 或 AGPL 依赖，也不生成文件。"
+    }
+  ],
+  "admissionChecklist": [
+    "provider credentials and model availability verified without recording secret values",
+    "prompt and source provenance archived outside public runtime",
+    "license and commercial redistribution decision recorded",
+    "output manually reviewed for artifacts, speech, clipping and loop seams",
+    "SHA-256 and byte size computed from the actual immutable file",
+    "manifest asset id, feature flag, fallback and rollback registered",
+    "runtime source contains no provider SDK, credential, prompt or user text",
+    "procedural fallback and reduced-effects path remain functional"
+  ],
+  "nonClaims": [
+    "No external provider generation was called in this batch.",
+    "No candidate output, provider job id, SHA-256 or runtime path exists yet.",
+    "No AudioCraft sample is commercially cleared; its model weights remain CC-BY-NC research-only.",
+    "No candidate is in public/assets or the runtime asset manifest."
+  ]
+}

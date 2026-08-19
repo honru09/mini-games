@@ -1,0 +1,34 @@
+# 玩家私聊与个人主页 P0 验收
+
+> **Historical policy note（historical-as-of，2026-08-16）：** 本文中的旧 `BLOCKED`、人工美术、Reviewer B、IP/法律与逐资产 Golden Set 表述仅代表本文形成时的历史快照，不覆盖当前权威政策。原创 Ghost-native 资产满足 `OWNER_AUTHORIZED_ART_CLEARANCE` 后可进行可逆 `default-on` runtime 接入；人工清稿、独立自然人 Reviewer B、IP/法律意见与逐资产 Golden Set 均为 `OPTIONAL_ADVISORY_EVIDENCE`，未执行时须如实保留且不得冒充 `PASS`。设备/第二浏览器/真实网络与 Supabase Gate 当前为 `NON_BLOCKING_FOR_DEVELOPMENT / RELEASE_EVIDENCE_PENDING`；外部 `blocked-license` / `EXTERNAL_REFERENCE_ONLY` 素材永久禁止复制、派生、作为生成输入、接入 runtime 或发布。任何接入结论均不授权发布，commit、push、Pages、Render 或生产发布仍须当前用户明确命令。
+
+| Requirement | Status | Evidence | Notes |
+|---|---|---|---|
+| Chat 默认玩家消息，Honru 为独立子页且三个入口路由正确 | PASS | `qa/player-chat-contract.js` |  |
+| 两正式好友在线双向发送，服务端权威 ID/seq/time/sender | PASS | `qa/player-chat-online.js` | seq 为十进制字符串 |
+| 离线留言、会话列表、未读、已读、多 session 与重连恢复 | PASS | `qa/player-chat-online.js` | 含 token 淘汰旧连接拒推 |
+| clientMessageId 幂等与冲突拒绝 | PASS | `qa/player-chat-online.js` |  |
+| 非好友、Block、访客、越权历史、伪造 sender、超长与限频拒绝 | PASS | `qa/player-chat-online.js`、`qa/security-online.js` |  |
+| 消息按纯文本渲染，正文不进入公开数据、Analytics、Replay 或普通日志 | PASS | `qa/player-chat-contract.js`、`qa/player-chat-online.js` |  |
+| 本地有界留存与 Supabase 可重复 schema/RLS/revoke/索引 | PARTIAL | `qa/supabase-schema.js`、`qa/supabase-adapter.js` | 真实 Supabase 另行验收 |
+| Desktop/Tablet 双栏与 Mobile 主从线程、safe-area、44px、reduced-motion | AUTOMATED_PASS | `qa/player-chat-contract.js`、`qa/ui-responsive-contract.js` | 真实视觉未执行 |
+| 三语言同构并连续切换；昵称/签名/正文保持原样 | PASS | `npm run test:i18n`、`qa/player-chat-contract.js` |  |
+| Profile 身份、成长、总战绩、六游戏、成就、展示、装扮、社交、任务分区 | PASS | `qa/profile-route-contract.js`、`qa/dom-smoke.js` | 不虚构字段 |
+| 个人购买背景在昼夜切换后保持 | AUTOMATED_PASS | `qa/profile-route-contract.js`、`qa/ghost-shell-contract.js` | 本轮视觉未执行 |
+| 玩家私聊专项、security、reconnect、social、schema/adapter、DOM/i18n 通过 | PASS | `evidence/automated-verification-202608091031.json` |  |
+| `npm run quality:gates` 与完整 `npm test` 通过 | PASS | `evidence/automated-verification-202608091031.json`、`evidence/online-release-verification-202608091243.json` | 发布树 npm test 104.3s |
+| 360/390/768/1024/1440、双主题、三语言浏览器视觉 QA | NOT_EXECUTED | `evidence/browser-visual-qa-202608091031.md` | 本轮线上连接器解析到 Node 20.20.2，低于所需 22.22.0 |
+| GitHub Pages/Render 推送、部署、HTTP/WS/线上浏览器冒烟 | PARTIAL_PASS | `evidence/online-release-verification-202608091243.json` | Pages/Render/HTTP/WS 已通过；可见浏览器未执行 |
+
+## Known Issues
+
+- 真实 Supabase 凭证尚未提供，无法完成真实迁移、RLS、并发、备份与回滚验收。
+- Desktop 第二浏览器、Android、iPhone、Tablet 实机和真实网络整形尚未执行。
+- 缺少专用生产 QA 好友账号，未在线上执行两正式好友的 UI 发送、离线留言、未读与已读闭环。
+- Honru P2 已随 `94ae977` 默认关闭发布；人工/IP/真实设备闸门前不得默认开启。
+
+## Rollback
+
+- 客户端从 capability 中移除 `direct-chat-v1` 并隐藏玩家消息面板，可独立回退到 Honru 子页。
+- 服务端保留旧 Social Graph/Honru dispatcher；新 `chat_*` 分支可整体关闭且不影响游戏、奖励、商城和 Profile。
+- Supabase 新表为增量 schema，不删除旧列/表；回滚应用时保留消息数据，不执行破坏性 DROP。

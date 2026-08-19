@@ -1,0 +1,120 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-08-15T00:03:06+09:00",
+  "observationWindow": "2026-08-14 local task run before network interruption",
+  "captureProvenance": "Serialized from the primary reviewer's direct browser observations in the same active task after reconnecting the interrupted work. This is not an independent second-browser review and contains no screenshot claim.",
+  "environment": {
+    "url": "http://127.0.0.1:8080/",
+    "browser": "Codex in-app Chromium",
+    "build": "latest local working tree at observation time",
+    "account": "temporary local development account",
+    "production": false
+  },
+  "result": "PARTIAL_VISIBLE_EVIDENCE",
+  "requirements": ["GAME-052", "TECH-049"],
+  "scenarios": {
+    "defaultOff": {
+      "featureFlag": null,
+      "ghost3dSlotCount": 0,
+      "ghost3dModuleLoaded": false,
+      "domBoardPlayable": true
+    },
+    "temporaryOptIn": {
+      "featureFlag": "1",
+      "slotReady": true,
+      "canvasPresent": true,
+      "canvasAriaHidden": true,
+      "canvasPointerEvents": "none",
+      "rendererInputCommands": 0
+    },
+    "viewportMatrix": [
+      {
+        "viewport": [390, 844],
+        "boardHeightBudgetPixels": 185,
+        "horizontalOverflowPixels": 0,
+        "verticalOverflowPixels": 0
+      },
+      {
+        "viewport": [1024, 768],
+        "boardPixels": [369, 410],
+        "wrapPixels": [602, 475],
+        "horizontalOverflowPixels": 0,
+        "verticalOverflowPixels": 0
+      },
+      {
+        "viewport": [1440, 900],
+        "boardPixels": [530, 589],
+        "wrapPixels": [1010, 601],
+        "horizontalOverflowPixels": 0,
+        "verticalOverflowPixels": 0
+      },
+      {
+        "viewport": [844, 390],
+        "boardPixels": [139, 154],
+        "wrapPixels": [510, 162],
+        "horizontalOverflowPixels": 0,
+        "verticalOverflowPixels": 0
+      }
+    ],
+    "keyboardInput": {
+      "gridRole": true,
+      "focusRetained": true,
+      "select": { "domCueVisible": true, "ghost3dTemporarilyHidden": true },
+      "arrowNavigation": { "domCueVisible": true, "ghost3dTemporarilyHidden": true },
+      "commit": { "domCueVisible": false, "ghost3dVisible": true },
+      "escapeClearsSelection": true
+    },
+    "languageThemeMatrix": {
+      "languages": ["zh-CN", "en-US", "uk-UA"],
+      "themes": ["light", "dark"],
+      "rendererReadyInEachObservedCase": true,
+      "rendererAddsLocalizedText": false
+    },
+    "reducedMotion": {
+      "mediaQueryMatched": true,
+      "slotAnimationDuration": "0s",
+      "slotTransitionDuration": "0s",
+      "canvasAnimationDuration": "0s",
+      "canvasTransitionDuration": "0s",
+      "gameplayRemainedOperable": true
+    },
+    "console": {
+      "warnings": 0,
+      "errors": 0
+    },
+    "cleanup": {
+      "featureFlag": null,
+      "language": "zh-CN",
+      "theme": "light",
+      "viewportOverrideReset": true,
+      "reducedMotionEmulation": false,
+      "temporaryHarnessRemoved": true
+    }
+  },
+  "browserFindingsCorrected": [
+    "retained DOM board lacked a complete keyboard selection and move path",
+    "malformed accepted-state projections could mutate the DOM before strict bridge validation",
+    "the opaque presentation layer could hide selected, legal, and keyboard cues",
+    "viewport changes did not recompute Xiangqi board geometry",
+    "desktop, portrait, and compact-landscape height budgets could clip the Arena",
+    "seven piece types were not visually distinguishable enough in the procedural renderer",
+    "the central renderer marker obscured the river boundary",
+    "the cache-first service worker could reuse a stale optional renderer module"
+  ],
+  "notExecuted": [
+    "independent second desktop browser",
+    "physical Android device",
+    "physical iPhone Safari",
+    "physical tablet",
+    "physical touch-path verification",
+    "real network shaping",
+    "real low-end FPS, GPU, thermal, and memory capture",
+    "Reviewer B, IP Review, or Golden Set",
+    "production deployment"
+  ],
+  "gates": {
+    "GATE-DEVICE-BROWSER-NETWORK": "BLOCKED",
+    "GATE-ART-GOLDEN-SET": "BLOCKED",
+    "GATE-SUPABASE-PRODUCTION": "BLOCKED"
+  }
+}

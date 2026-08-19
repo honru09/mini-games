@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "taskId": "collection-rarity-p1-20260810",
+  "state": "IMPLEMENTED_LOCAL_AUTOMATION_VERIFIED",
+  "completed": ["recon", "scope-freeze", "red-test", "pure-catalog", "profile-consumer", "shop-consumer", "build-integration", "automated-regression"],
+  "next": "completed local consolidation; Home Engagement P1 may consume only aggregate safe presentation",
+  "automatedEvidence": ["node scripts/build.js", "node qa/collection-rarity-catalog.js", "npm run pretest", "npm run test:i18n", "node qa/dom-smoke.js", "node qa/shop-contract.js", "node qa/profile-journey.js", "node qa/ui-profile-social-contract.js", "node qa/ui-shop-layout-contract.js", "npm run quality:gates"],
+  "masterCorrections": ["catalogued default avatar 0-29 and default frame/effect/background 0 as explicit Starter IDs", "added starter-account zero-false-unclassified regression"],
+  "fullEvidence": ["npm test (114.2s)", "double build 962213 characters / 976327 bytes / SHA-256 457169CB1982748D74CC2E1CBF145176802B0271D88A49B8B1963BC6712B7636"],
+  "notExecuted": ["browser visual QA", "second browser", "physical devices", "real network shaping", "commit", "push", "deployment"],
+  "invariants": ["no price-derived rarity", "no server or persistent data changes", "no public owned leakage", "no unapproved art activation"]
+}

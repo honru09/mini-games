@@ -1,0 +1,29 @@
+{
+  "taskId": "ghost3d-foundation-p0-20260812",
+  "verifiedAt": "2026-08-12T05:24:21+09:00",
+  "commands": [
+    "node --check public/src/core/08-ghost3d-foundation.js",
+    "node qa/ghost3d-foundation.js"
+  ],
+  "status": "pass",
+  "assertions": 41,
+  "observed": [
+    "module and instance exact own-key surface",
+    "browser-global node:vm export without CommonJS and cross-realm plain-frame acceptance",
+    "forbidden platform environment tokens absent from core source",
+    "private fallback and quality ladder",
+    "immutable frame projection, strict revision, and terminal monotonicity",
+    "cycle, unsupported own values, dangerous keys, and throwing getters are dropped while safe nested data is deep-frozen without prototype pollution",
+    "onInput and semantic motion acceptance, freezing, and forwarded status through apply",
+    "environment and lifecycle injection without platform listeners",
+    "adapter mount/render, stale render and generation completion rejection",
+    "motion drops with forwarded false during delayed mount or pending async quality/environment configuration",
+    "current-configuration motion forwarding and unsupported adapter motion status",
+    "mount-pending latest quality and reduced-motion configuration before first render",
+    "independent stale async completion rejection for quality and environment",
+    "quality, context loss, fallback, fresh recovery adapter validation, and idempotent dispose"
+  ],
+  "visualEvidence": "NOT_EXECUTED",
+  "deviceEvidence": "NOT_EXECUTED",
+  "productionEvidence": "NOT_EXECUTED"
+}

@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "taskId": "supabase-production-data-preflight-p0-20260814",
+  "capturedAt": "2026-08-14T07:02:00+09:00",
+  "classification": "LOCAL_STATIC_OR_FAKE_ONLY",
+  "credentialsPresent": {
+    "SUPABASE_URL": false,
+    "SUPABASE_KEY_OR_SERVICE_ROLE": false,
+    "SUPABASE_DB_URL": false,
+    "SUPABASE_RESTORE_DB_URL": false,
+    "DATABASE_URL": false
+  },
+  "toolsPresent": {"psql":true,"pg_dump":true,"pg_restore":true},
+  "dryRun": {"status":"PASS","connected":false,"wrote":false,"backedUp":false},
+  "restoreIsolationRepair": {
+    "status":"PASS",
+    "defect":"same Supabase project with a different database name could reach pg_restore --clean",
+    "fix":"reject any restore target with the same Supabase project ref",
+    "sameProjectDifferentDatabase":"BLOCKED_PASS",
+    "differentProjectWithoutConfirmation":"REACHES_EXPLICIT_CONFIRMATION_PASS"
+  },
+  "tests": {
+    "productionReadinessContract":"PASS",
+    "supabaseSchema":"PASS",
+    "fakeSupabaseAdapter":"PASS_26_ASSERTIONS",
+    "fullNpmTest":{"status":"PASS","durationSeconds":141.4},
+    "qualityGates":"PASS"
+  },
+  "deterministicDoubleBuild": {
+    "status":"PASS",
+    "characters":1362068,
+    "filesystemBytes":1376602,
+    "sha256":"BFBD2109B77B1F4C5E070DAB6B98C806E25AD621ACBE3E2E83AD5C5FB7130CAE"
+  },
+  "notExecuted":[
+    "real Supabase connection",
+    "encrypted production backup",
+    "transactional migration and production acceptance",
+    "real RLS and concurrency",
+    "isolated restore and non-destructive rollback",
+    "two-instance lease/fencing/outbox/chat PubSub",
+    "Render configuration or release"
+  ],
+  "gateStatus":"BLOCKED",
+  "localTaskStatus":"ACCEPTED"
+}

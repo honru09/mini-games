@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "taskId": "progression-identity-p1-20260810",
+  "status": "implemented_local_pending_external_visual",
+  "steps": [
+    {"id":"contract","status":"completed","owner":"Master"},
+    {"id":"authoritative-projection","status":"completed","owner":"Master"},
+    {"id":"profile-consumers","status":"completed","owner":"Master"},
+    {"id":"i18n-responsive-security","status":"completed","owner":"Master"},
+    {"id":"regression-docs","status":"completed","owner":"Master"}
+  ],
+  "release": "local-only"
+}

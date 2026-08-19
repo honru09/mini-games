@@ -1,0 +1,16 @@
+{
+  "taskId": "latest-browser-visible-matrix-prove-p4-20260815",
+  "status": "completed_local",
+  "stage": "PROVE",
+  "requirements": ["TECH-027", "UI-027", "UI-028", "UI-037", "GAME-045", "UI-029", "TECH-005"],
+  "steps": [
+    {"id":"P4-1","title":"一次采集五档四区、共享表面、六 Stage、语言/主题/动效并冻结缺陷","status":"completed"},
+    {"id":"P4-2","title":"集中修复深滚动路由回顶与回归","status":"completed"},
+    {"id":"P4-3","title":"集中修复 Monopoly 小屏 fallback 密度与回归","status":"completed"},
+    {"id":"P4-4","title":"统一修复 uk-UA 数量语法与三语合同","status":"completed"},
+    {"id":"P4-5","title":"统一构建后重新采集 current 完整浏览器矩阵","status":"completed"},
+    {"id":"P4-6","title":"集中运行 i18n、专项、Quality Gates、全链与双构建","status":"completed"},
+    {"id":"P4-7","title":"证据、台账、报告、简报与三日志收口","status":"completed"}
+  ],
+  "release": "LOCAL_ONLY_NO_COMMIT_NO_PUSH_NO_DEPLOY"
+}

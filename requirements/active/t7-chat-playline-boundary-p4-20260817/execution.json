@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "task": "t7-chat-playline-boundary-p4-20260817",
+  "state": "WIRED_LOCAL_VERIFIED",
+  "startedAt": "2026-08-17T00:00:00+09:00",
+  "completedAt": "2026-08-17T17:22:00+09:00",
+  "requirements": ["TECH-039", "TECH-040", "TECH-052"],
+  "implemented": [
+    "server/boundaries/chat-playline.js",
+    "qa/chat-playline-boundary.js",
+    "requirements/active/t7-chat-playline-boundary-p4-20260817"
+  ],
+  "verified": [
+    "node --check server/boundaries/chat-playline.js",
+    "node --check qa/chat-playline-boundary.js",
+    "node qa/chat-playline-boundary.js (22 assertions)",
+    "node qa/player-chat-contract.js",
+    "node qa/playline-contract.js",
+    "node qa/playline-supabase-contract.js",
+    "node --experimental-websocket qa/player-chat-online.js (legacy caller baseline)",
+    "node --experimental-websocket qa/playline-online.js (legacy caller baseline)",
+    "node --experimental-websocket qa/test-admin-online.js (stable test_admin_isolated reason)",
+    "npm run test:technical-optimization-t7",
+    "npm run quality:gates",
+    "npm test (post-fix exit 0)"
+  ],
+  "knownLimitations": [
+    "Supabase-configured Direct Chat keeps the existing transactional RPC fallback; local JSON callers use the new boundary while WebSocket wire/broadcast/session ownership remain in server/index.js",
+    "JSON runtime Adapter is a single-process compatibility seam, not production transaction or multi-instance evidence",
+    "external browser/device/network/Supabase evidence remains pending"
+  ],
+  "unexecuted": [
+    "second browser and physical Android/iPhone/Tablet",
+    "real network shaping",
+    "real Supabase migrations/RLS/backup/restore and multi-instance",
+    "commit/push/Pages/Render/deploy"
+  ],
+  "release": "LOCAL_ONLY / NOT_RELEASED"
+}

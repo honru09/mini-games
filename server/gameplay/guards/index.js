@@ -19,6 +19,20 @@ function cloneValue(value){
   try { return JSON.parse(JSON.stringify(value)); } catch { return null; }
 }
 
+function orderedStringsEqual(left,right){
+  return Array.isArray(left) && Array.isArray(right) && left.length === right.length && left.every((value,index) => value === right[index]);
+}
+
+function deepFreeze(value){
+  if (!value || typeof value !== 'object' || Object.isFrozen(value)) return value;
+  for (const nested of Object.values(value)) deepFreeze(nested);
+  return Object.freeze(value);
+}
+
+function bindingDto(binding){
+  return binding ? { ...binding, players:Array.isArray(binding.players) ? binding.players.slice() : [] } : null;
+}
+
 /**
  * Identity/seat guard for the spectator protocol.
  * The server can pass its session/room maps as request metadata without
@@ -263,6 +277,7 @@ class TournamentGuard {
     const tournamentId = stringId(request.tournamentId);
     const ownerUid = stringId(request.ownerUid);
     const gameId = stringId(request.gameId);
+    const allowExternalOwner = request.allowExternalOwner === true;
     const rawParticipants = Array.isArray(request.participants) ? request.participants.map(stringId) : [];
     const participants = uniqueStrings(request.participants);
     if (!tournamentId || !/^[A-Za-z0-9_-]{4,120}$/.test(tournamentId)) return reason('invalid_tournament_id');
@@ -270,7 +285,7 @@ class TournamentGuard {
     if (!ownerUid || !gameId) return reason('invalid_tournament');
     if (!this.gameWhitelist.has(gameId)) return reason('game_not_allowed');
     if (participants.length < 3 || participants.length > this.maxParticipants) return reason('participant_limit');
-    if (rawParticipants.length !== participants.length || !participants.includes(ownerUid)) return reason('invalid_participants');
+    if (rawParticipants.length !== participants.length || (allowExternalOwner ? participants.includes(ownerUid) : !participants.includes(ownerUid))) return reason('invalid_participants');
     if (this._ownerCount(ownerUid,now) >= this.maxPerOwner) return reason('owner_capacity');
     if (this._activeCount(now) >= this.maxActive) return reason('tournament_capacity');
     const ttl = Math.min(this.maxLifetimeMs, Math.max(1000, Number(request.ttlMs) || this.ttlMs));
@@ -278,7 +293,8 @@ class TournamentGuard {
     const entry = {
       tournamentId,ownerUid,gameId,participants,createdAt:now,lastActivityAt:now,
       expiresAt:now + ttl,hardExpiresAt:now + hardTtl,status:'waiting',
-      consents:new Map(participants.map(uid => [uid,uid === ownerUid])),
+      externalOwner:allowExternalOwner,
+      consents:new Map(participants.map(uid => [uid,allowExternalOwner ? false : uid === ownerUid])),
       pairings:new Map(),bindings:new Map(),authorizedResults:new Set(),revision:0,
     };
     this.entries.set(tournamentId,entry);
@@ -338,25 +354,160 @@ class TournamentGuard {
     return {ok:true,state:this.snapshot(entry.tournamentId,now)};
   }
 
-  bindMatch(tournamentId,pairingId,request = {},now = Date.now()){
+  registerPairings(tournamentId,requests,now = Date.now()){
     const entry = this._get(tournamentId,now);
-    const id = stringId(pairingId);
-    const matchId = stringId(request.matchId);
     if (!entry) return reason('tournament_not_found');
     if (entry.status !== 'running') return reason('invalid_status');
-    const pairing = entry.pairings.get(id);
-    if (!pairing) return reason('pairing_not_found');
-    if (pairing.matchId) return reason('match_already_bound');
-    if (!matchId || !/^[A-Za-z0-9_-]{6,160}$/.test(matchId)) return reason('invalid_match_id');
-    if (this.matchBindings.has(matchId)) return reason('match_already_bound');
-    if (request.actorUid !== undefined && stringId(request.actorUid) !== entry.ownerUid) return reason('owner_only');
-    if (stringId(request.gameId) !== entry.gameId) return reason('game_mismatch');
-    const rawPlayers = Array.isArray(request.players) ? request.players.map(stringId) : [];
-    const players = uniqueStrings(request.players);
-    if (rawPlayers.length !== players.length || players.length !== pairing.players.length || players.some(uid => !pairing.players.includes(uid))) return reason('players_mismatch');
-    const binding = {tournamentId:entry.tournamentId,pairingId:id,matchId,gameId:entry.gameId,players:pairing.players.slice(),boundAt:this._now(now),resultAccepted:false};
-    pairing.matchId = matchId; pairing.status = 'bound'; entry.bindings.set(id,binding); this.matchBindings.set(matchId,binding); this._touch(entry,now);
-    return {ok:true,state:this.snapshot(entry.tournamentId,now),binding:{...binding,players:binding.players.slice()}};
+    if (!Array.isArray(requests) || !requests.length) return reason('invalid_pairing');
+    const additions = [];
+    const seen = new Set();
+    const seenPlayers = new Set();
+    for (const request of requests) {
+      const id = stringId(request && request.pairingId);
+      const rawIds = Array.isArray(request && request.players) ? request.players.map(stringId) : [];
+      const ids = uniqueStrings(request && request.players);
+      if (!id || seen.has(id) || rawIds.length !== ids.length || ids.length !== 2 || ids.some(uid => !entry.participants.includes(uid)) || ids[0] === ids[1] || ids.some(uid => seenPlayers.has(uid))) return reason('invalid_pairing');
+      seen.add(id);
+      ids.forEach(uid => seenPlayers.add(uid));
+      const existing = entry.pairings.get(id);
+      if (existing) {
+        if (!orderedStringsEqual(existing.players,ids)) return reason('duplicate_pairing');
+        continue;
+      }
+      additions.push({pairingId:id,players:ids,matchId:null,status:'unbound'});
+    }
+    for (const pairing of additions) entry.pairings.set(pairing.pairingId,pairing);
+    if (additions.length) this._touch(entry,now);
+    return {ok:true,state:this.snapshot(entry.tournamentId,now),registered:additions.map(item=>item.pairingId)};
+  }
+
+  _bindMatches(tournamentId,requests,now,options = {}){
+    const entry = this._get(tournamentId,now);
+    if (!entry) return reason('tournament_not_found');
+    if (entry.status !== 'running') return reason('invalid_status');
+    if (!Array.isArray(requests) || !requests.length) return reason('invalid_binding_batch');
+    const strictPlayerOrder = options.strictPlayerOrder !== false;
+    const allowIdempotent = options.allowIdempotent !== false;
+    const seenPairings = new Set();
+    const seenMatches = new Set();
+    const seenPlayers = new Set();
+    const planned = [];
+    for (const request of requests){
+      if (!request || typeof request !== 'object' || Array.isArray(request)) return reason('invalid_binding');
+      const id = stringId(request.pairingId);
+      const matchId = stringId(request.matchId);
+      if (!id || seenPairings.has(id)) return reason('duplicate_batch_pairing');
+      if (!matchId || !/^[A-Za-z0-9_-]{6,160}$/.test(matchId)) return reason('invalid_match_id');
+      if (seenMatches.has(matchId)) return reason('duplicate_batch_match');
+      const pairing = entry.pairings.get(id);
+      if (!pairing) return reason('pairing_not_found');
+      if (request.actorUid !== undefined && stringId(request.actorUid) !== entry.ownerUid) return reason('owner_only');
+      if (stringId(request.gameId) !== entry.gameId) return reason('game_mismatch');
+      const rawPlayers = Array.isArray(request.players) ? request.players.map(stringId) : [];
+      const players = uniqueStrings(request.players);
+      const samePlayerSet = rawPlayers.length === players.length && players.length === pairing.players.length && players.every(uid => pairing.players.includes(uid));
+      if (!samePlayerSet || (strictPlayerOrder && !orderedStringsEqual(players,pairing.players))) return reason('players_mismatch');
+      if (players.some(uid => seenPlayers.has(uid))) return reason('duplicate_batch_player');
+      players.forEach(uid => seenPlayers.add(uid));
+      seenPairings.add(id);
+      seenMatches.add(matchId);
+
+      const existing = entry.bindings.get(id);
+      const globalBinding = this.matchBindings.get(matchId);
+      if (existing || pairing.matchId){
+        if (!allowIdempotent) return reason('match_already_bound');
+        if (!existing || pairing.matchId !== existing.matchId || existing.matchId !== matchId || globalBinding !== existing) return reason('match_already_bound');
+        if (existing.gameId !== entry.gameId || !orderedStringsEqual(players,existing.players)) return reason('binding_mismatch');
+        planned.push({pairing,binding:existing,isNew:false});
+        continue;
+      }
+      if (globalBinding) return reason('match_already_bound');
+      const bindingPlayers = strictPlayerOrder ? players.slice() : pairing.players.slice();
+      planned.push({
+        pairing,
+        isNew:true,
+        binding:{tournamentId:entry.tournamentId,pairingId:id,matchId,gameId:entry.gameId,players:bindingPlayers,boundAt:this._now(now),resultAccepted:false},
+      });
+    }
+
+    const additions = planned.filter(item => item.isNew);
+    for (const item of additions){
+      item.pairing.matchId = item.binding.matchId;
+      item.pairing.status = 'bound';
+      entry.bindings.set(item.binding.pairingId,item.binding);
+      this.matchBindings.set(item.binding.matchId,item.binding);
+    }
+    if (additions.length) this._touch(entry,now);
+    return deepFreeze({
+      ok:true,
+      state:this.snapshot(entry.tournamentId,now),
+      bindings:planned.map(item => bindingDto(item.binding)),
+      bound:additions.map(item => item.binding.pairingId),
+      idempotent:additions.length === 0,
+    });
+  }
+
+  bindMatches(tournamentId,requests,now = Date.now()){
+    return this._bindMatches(tournamentId,requests,now,{strictPlayerOrder:true,allowIdempotent:true});
+  }
+
+  bindMatch(tournamentId,pairingId,request = {},now = Date.now()){
+    const batch = this._bindMatches(tournamentId,[{...request,pairingId}],now,{strictPlayerOrder:false,allowIdempotent:false});
+    if (!batch.ok) return batch;
+    return {ok:true,state:batch.state,binding:batch.bindings[0]};
+  }
+
+  _unbindMatches(tournamentId,requests,now){
+    const entry = this._get(tournamentId,now);
+    if (!entry) return reason('tournament_not_found');
+    if (entry.status !== 'running') return reason('invalid_status');
+    if (!Array.isArray(requests) || !requests.length) return reason('invalid_unbind_batch');
+    const seenPairings = new Set();
+    const seenMatches = new Set();
+    const planned = [];
+    for (const request of requests){
+      if (!request || typeof request !== 'object' || Array.isArray(request)) return reason('invalid_unbind');
+      const id = stringId(request.pairingId);
+      const matchId = stringId(request.matchId);
+      if (!id || seenPairings.has(id)) return reason('duplicate_batch_pairing');
+      if (!matchId || seenMatches.has(matchId)) return reason('duplicate_batch_match');
+      // This operation exists only to compensate a server-side orchestration
+      // failure after binding succeeded. It is never a participant mutation.
+      if (request.source !== 'server_rollback') return reason('untrusted_rollback_source');
+      const pairing = entry.pairings.get(id);
+      const binding = entry.bindings.get(id);
+      if (!pairing || !binding) return reason('match_not_bound');
+      if (matchId !== binding.matchId) return reason('match_mismatch');
+      if (this.matchBindings.get(binding.matchId) !== binding || pairing.matchId !== binding.matchId) return reason('binding_state_mismatch');
+      if (binding.resultAccepted || entry.authorizedResults.has(id) || pairing.status === 'complete') return reason('binding_finalized');
+      seenPairings.add(id);
+      seenMatches.add(matchId);
+      planned.push({pairing,binding});
+    }
+
+    for (const item of planned){
+      entry.bindings.delete(item.binding.pairingId);
+      this.matchBindings.delete(item.binding.matchId);
+      item.pairing.matchId = null;
+      item.pairing.status = 'unbound';
+    }
+    this._touch(entry,now);
+    return deepFreeze({
+      ok:true,
+      state:this.snapshot(entry.tournamentId,now),
+      bindings:planned.map(item => bindingDto(item.binding)),
+      unbound:planned.map(item => item.binding.pairingId),
+    });
+  }
+
+  unbindMatches(tournamentId,requests,now = Date.now()){
+    return this._unbindMatches(tournamentId,requests,now);
+  }
+
+  unbindMatch(tournamentId,pairingId,request = {},now = Date.now()){
+    const batch = this._unbindMatches(tournamentId,[{...request,pairingId}],now);
+    if (!batch.ok) return batch;
+    return {ok:true,state:batch.state,binding:batch.bindings[0]};
   }
 
   authorizeResult(tournamentId,pairingId,request = {},now = Date.now()){
@@ -396,7 +547,7 @@ class TournamentGuard {
     const mapValues = map => [...map.values()].map(item => ({...item,players:item.players && item.players.slice()}));
     return {
       protocol:this.protocol,tournamentId:entry.tournamentId,ownerUid:entry.ownerUid,gameId:entry.gameId,
-      participants:entry.participants.slice(),status:entry.status,createdAt:entry.createdAt,lastActivityAt:entry.lastActivityAt,
+      participants:entry.participants.slice(),externalOwner:entry.externalOwner===true,status:entry.status,createdAt:entry.createdAt,lastActivityAt:entry.lastActivityAt,
       expiresAt:entry.expiresAt,hardExpiresAt:entry.hardExpiresAt,revision:entry.revision,
       consents:Object.fromEntries(entry.consents),pairings:mapValues(entry.pairings),bindings:mapValues(entry.bindings),
     };

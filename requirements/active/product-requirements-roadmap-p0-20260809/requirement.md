@@ -1,0 +1,46 @@
+# 全量需求台账与分类进度报告 P0
+
+状态：`LOCAL_ACCEPTED_AWAITING_RELEASE_COMMAND`
+
+## Goal
+
+把历次用户需求、当前源码事实、`AGENTS.md`、`WHITEPAPER.md`、`PROJECT_STATUS.json`、active requirements、历史简易报告及外部研究报告中的需求合并成唯一、可计数、可追踪的产品需求台账，并按美术、界面、游戏、社交、经济成长、技术数据与跨平台六类生成独立进度报告和总报告。
+
+## IN
+
+- 每个原子需求分配稳定 ID、分类、状态、优先级、阶段、来源、验收边界、前置依赖、证据入口和下一阶段。
+- 明确区分 `verified / implemented / partial / planned / not_executed / blocked`。
+- 合并本轮新需求：局内 Emoji/实时表情/文字气泡、沉浸式游戏页面与输入锁、Honru 光标、首页引导与复玩动机、Logo/角色分层、10 个原创 Honru Emoji、G Coins、Avatar/头像框/动态背景修正、房间/商城/聊天/个人页深度升级、全端适配、最高质量图片生成治理。
+- 记录新发布规则：只有用户明确说“输出线上/部署/推送”时才允许发布；普通任务完成后停在本地验收。
+- 生成七份 `XXX进度报告-20260809.md`，并提供可重复生成和一致性校验。
+- 建立来源词典、无环依赖图和历史/当前请求覆盖索引；所有 208 项必须至少被一个覆盖组命中。
+
+## OUT
+
+- 本轮不实现美术、UI、游戏、社交或服务端功能。
+- 本轮不生成图片，不调用图像生成模型。
+- 本轮不修改 `public/`、`server/`、`shared/`、`supabase/`、运行时资产、协议、奖励或数据库。
+- 本轮不提交、推送、触发 GitHub Pages 或 Render 部署。
+- 不恢复已删除的井字棋、弹珠跳棋、斗兽棋、国际跳棋、贪吃蛇等旧目录。
+
+## Non-negotiable
+
+- 同一需求只能计数一次；跨分类依赖通过 `related` 引用，不能重复创建。
+- 历史报告是来源，不自动成为当前事实；当前源码/测试/最新状态矩阵优先。
+- 默认关闭、source-only 或尚未取得逐资产 `OWNER_AUTHORIZED_ART_CLEARANCE` 的原创素材不得记为已上线；可选人工/IP/Golden Set 咨询缺失不得写成阻塞开发，也不得伪造成 PASS。
+- 浏览器模拟不得记为真机；fake Supabase/静态 SQL 不得记为真实迁移。
+- 每个未完成项必须有下一步、依赖或阻塞原因。
+- 报告中必须显式展示总需求数和各状态数量。
+
+## Known Existing Behavior
+
+- 六款游戏、人机+联机、Game Stage、Direct Chat、Profile、Economy、Replay、Tournament、PWA 等已有自动化和线上证据。
+- 默认可见 Tabletop Wave A 覆盖为 `52/100`；该行只保留当时覆盖事实。当前原创 M0/P1/P2 逐族走 `OWNER_AUTHORIZED_ART_CLEARANCE`，人工/IP/Golden Set 仅为可选咨询。
+- 项目已有 `PROJECT_STATUS.json`，但它按能力汇总，不足以保存所有原子产品需求。
+- 旧文档包含已经被六款聚焦方案替代的 11 款目录、三模式和过期“未实现”描述。
+
+## Expected UX
+
+- 用户打开总报告即可知道：一共有多少需求、完成多少、部分完成多少、尚未开始多少、被什么阻塞、下一阶段先做什么。
+- 每个专业方向只看自己的分类报告即可施工，不再把美术、UI、游戏、社交揉成一个执行包。
+- 后续每次任务结束先更新台账与对应分类报告；没有用户明确发布指令时停在本地验收。

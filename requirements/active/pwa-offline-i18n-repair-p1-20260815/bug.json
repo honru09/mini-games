@@ -1,0 +1,20 @@
+{
+  "bugId": "BUG-20260815-001",
+  "summary": "离线壳层缺少三语言词典导致界面显示 i18n key",
+  "severity": "P1",
+  "area": "tech",
+  "firstSeen": "2026-08-15T10:14:00+09:00",
+  "environment": {"release":"local CLOSE","browser":"Codex in-app Chromium","device":"desktop","language":"zh-CN/en-US/uk-UA","theme":"light","network":"offline"},
+  "steps": ["在线加载旧 v10 Service Worker", "停止本地服务或模拟断网", "由离线 index.html 恢复页面", "观察 data-i18n 节点"],
+  "expected": "离线页面仍使用所选语言显示完整系统文案",
+  "actual": "旧实现显示 app_title、nav_games 等 117–122 个裸 key",
+  "reproRate": "3/3 VM；1/1 旧 worker 浏览器客户端",
+  "evidence": ["qa/pwa-offline-i18n.js", "requirements/active/pwa-offline-i18n-repair-p1-20260815/evidence/local-browser-offline-i18n-20260815.json"],
+  "owner": "main agent",
+  "linkedRequirements": ["TECH-005", "TECH-007", "TECH-008", "UI-029"],
+  "status": "regression_verified",
+  "fix": {"summary":"v13 校验安装精确三语、network-first 刷新旧词典、排除其他 JSON、导航只缓存 HTML","files":["public/sw.js","qa/pwa-offline-i18n.js","qa/production-readiness-contract.js"],"commit":"NOT_COMMITTED"},
+  "regression": {"commands":["node qa/pwa-offline-i18n.js","node qa/production-readiness-contract.js","npm run quality:gates","npm test"],"result":"ALL_PASS; final full npm test approximately 164 seconds"},
+  "rollback": "恢复上一版 sw.js/cache generation；不触碰用户数据。",
+  "notes": "旧 generation 活跃客户端不会被强制中断；本地真实经历 v11/v12 waiting 链后关闭最后客户端，由 v13 激活并只保留 v13 cache。真机与第二浏览器仍未执行。"
+}

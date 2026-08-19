@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-08-09T14:25:00+09:00",
+  "branch": "codex/production-readiness-sprint",
+  "baselineCommit": "2213493b0f8f8f870c2bc4a65175da142ed02062",
+  "results": {
+    "build": "PASS",
+    "productionReadinessContract": "PASS",
+    "supabaseSchemaStatic": "PASS",
+    "qualityGates": "PASS",
+    "npmTest": "PASS",
+    "npmTestElapsedSeconds": 182.9,
+    "syntheticProductionSession30Minutes": "PASS"
+  },
+  "synthetic": {
+    "messagesSent": 15,
+    "messagesReceived": 15,
+    "readReceipts": 15,
+    "reconnects": 2,
+    "unexpectedCloses": 0,
+    "latencyP95Ms": 181
+  },
+  "notExecuted": [
+    "real Supabase migration/RLS/concurrency/backup/restore/rollback",
+    "current browser UI matrix due connector restart requirement",
+    "second browser and physical Android/iPhone/Tablet",
+    "real network shaping",
+    "independent human Reviewer B/IP/Golden Set/default-on approval",
+    "real multi-instance Reward/AI fencing and external telemetry receiver",
+    "native/miniprogram/store publication"
+  ],
+  "releaseCandidate": "BLOCKED_EXTERNAL"
+}

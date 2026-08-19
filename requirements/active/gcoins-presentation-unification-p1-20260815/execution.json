@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "taskId": "gcoins-presentation-unification-p1-20260815",
+  "status": "LOCAL_ACCEPTED_AWAITING_RELEASE_COMMAND",
+  "startedAt": "2026-08-15T18:23:56+09:00",
+  "closedAt": "2026-08-15T19:34:00+09:00",
+  "recon": {
+    "runtimeLegacyCashLiteralCount": 2,
+    "legalLegacyLocations": [
+      "public/src/core/06-assets.js CURRENCY fallback",
+      "public/src/core/00-i18n.js historical server-message mapping"
+    ],
+    "directCurrencyIconConsumerCount": 10,
+    "currentAssetId": "P-GCOINS-ICON-V1",
+    "fallbackAssetId": "P-003",
+    "candidateBState": "source reference-only / owner-cleared runtime mirrored separately",
+    "currentOwnerClearedRuntime": {
+      "status": "OWNER_AUTHORIZED_ART_CLEARANCE",
+      "record": "requirements/active/gcoins-source-redesign-p1-20260814/OWNER_AUTHORIZED_ART_CLEARANCE-20260816.md",
+      "featureFlag": "mg_art_gcoins_p1_v1",
+      "defaultEnabled": true,
+      "runtimeQa": "qa/g-coins-runtime.js"
+    }
+  },
+  "completed": [
+    "read AGENTS, command plane, routing, README, HIGH_RISK_FILES, status, G Coins requirements and current tests",
+    "distinguished legal compatibility literals from current user-visible assembly drift",
+    "froze presentation-only API, ownership, rollback and external art boundary",
+    "added atomic currencyAmountNode with one complete accessible name and decorative internals",
+    "migrated Home, Profile, Shop, leaderboard, invitation and player-list icon amounts to one seam",
+    "kept Reward prose on currencyAmountText and preserved coins/currency authority fields",
+    "kept P-003 as the permanent fallback and preserved the source candidate outside the runtime Manifest; the separately owner-cleared P-GCOINS-ICON-V1 local runtime is tracked by the Source Redesign P1 task",
+    "corrected stale locale delivery with validated Service Worker v13 install and network-first runtime refresh",
+    "recorded single Chromium zh-CN/en-US/uk-UA, light/dark, 390x844 Shop/Profile/leaderboard/player-list evidence with zero raw key, overflow or console error",
+    "completed two independent Terra Max read-only reviews with all P1 findings corrected",
+    "passed Quality Gates and the full npm test chain in approximately 164 seconds",
+    "regenerated the seven aggregate progress reports and synchronized the control plane, brief report index and three Chinese logs",
+    "completed deterministic double build at 1582693 characters / 1597229 bytes / SHA-256 3D0532737A932B505DDDE04EFB565B527EE63FD9E660CDAD4648B38E6559062D"
+  ],
+  "pending": [
+    "second browser, physical devices, real network and screen-reader device matrix",
+    "release evidence for the separately owner-cleared P1 runtime: second browser, physical devices, real network and screen-reader device matrix",
+    "explicit current user release command"
+  ],
+  "optionalAdvisoryEvidence": {"status":"NOT_EXECUTED","items":["human cleanup","independent natural-person Reviewer B","IP/legal advice","per-asset Golden Set"],"blocking":false},
+  "externalAssetPolicy": "blocked-license / EXTERNAL_REFERENCE_ONLY assets are permanently disabled",
+  "releasePolicy": "Owner-cleared P1 art may enter a reversible default-on runtime candidate; this presentation batch remains local and release requires an explicit current user command.",
+  "historicalAsOf": {"date":"2026-08-15","candidateBState":"reference-only / DO_NOT_ENABLE","pending":["human cleanup","independent natural-person Reviewer B","IP decision","user Golden Set"],"meaning":"Former candidate-only/default-off human prerequisites; audit history only."},
+  "verification": {
+    "qualityGates": "PASS",
+    "fullNpmTest": "PASS approximately 164 seconds",
+    "singleBrowserEvidence": "PASS within the recorded narrow G Coins scope",
+    "doubleBuild": "PASS 1582693 characters / 1597229 bytes / SHA-256 3D0532737A932B505DDDE04EFB565B527EE63FD9E660CDAD4648B38E6559062D",
+    "externalGates": "NOT_EXECUTED"
+  },
+  "published": false
+}

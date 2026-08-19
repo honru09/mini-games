@@ -1,0 +1,193 @@
+{
+  "schemaVersion": 1,
+  "familyId": "P-GHOST-NATIVE-Q-UI-V1",
+  "artworkVersion": 1,
+  "status": "OWNER_AUTHORIZED_ART_CLEARANCE",
+  "clearance": "OWNER_AUTHORIZED_ART_CLEARANCE",
+  "boundary": "SOURCE_BOARD_CANDIDATE_ONLY / LOCAL_ONLY / NOT_RELEASED",
+  "owner": "Ghost Game project",
+  "license": "project-owned-ai-generated",
+  "generator": "built-in image_gen",
+  "generatedAt": "2026-08-17",
+  "sourceReferences": [
+    {
+      "path": "art-source/ui/sticker-v1/component-demo.png",
+      "role": "project-owned semantic component North Star",
+      "sha256": "135DB655DC400FB35F960045B510EE450E007CCFAD03E308DEBF65E222DB1F61"
+    },
+    {
+      "path": "art-source/ui/sticker-v1/generated/core-ui-style-board-draft-v1.png",
+      "role": "project-owned visual quality North Star",
+      "sha256": "184E24BFD5C52F54FA240366787A0751E5078038E4FBDA17B91C61219F2B4DE5"
+    }
+  ],
+  "externalReferencePolicy": "semantic-coverage-only; no external pixel input, copying, tracing, cropping, recoloring, runtime wiring or release",
+  "assets": [
+    {
+      "assetId": "UI-QKIT-CORE-INTERACTION-V1",
+      "file": "ghost-native-core-interaction-source-v1.png",
+      "sha256": "08B28FF9B52FB712354B4CFA7F8BA90037904EC8FBB31154F6565D8FB9CD4CC2",
+      "bytes": 1464467,
+      "width": 1672,
+      "height": 941,
+      "imageMode": "RGB",
+      "alpha": "none",
+      "featureFlag": "mg_art_ghost_q_ui_core_v1",
+      "defaultEnabled": false,
+      "fallback": "existing DOM/CSS/SVG component primitives"
+    },
+    {
+      "assetId": "UI-QKIT-COMMERCE-PROGRESSION-V1",
+      "file": "ghost-native-commerce-progression-source-v1.png",
+      "sha256": "F56C9D339C7AB62DA26E3AAA3F88357192A106A43E4CDF50DE53C50EAE3652F5",
+      "bytes": 1896937,
+      "width": 1672,
+      "height": 941,
+      "imageMode": "RGB",
+      "alpha": "none",
+      "featureFlag": "mg_art_ghost_q_ui_commerce_v1",
+      "defaultEnabled": false,
+      "fallback": "existing Shop/Reward DOM card primitives"
+    },
+    {
+      "assetId": "UI-QKIT-ROOM-SOCIAL-MATCH-V1",
+      "file": "ghost-native-room-social-source-v1.png",
+      "sha256": "12B1CDD8F325111C9C2FFC6CDDD18FF99220533B7D9493A069B6D5BE83C35C1C",
+      "bytes": 1624081,
+      "width": 1672,
+      "height": 941,
+      "imageMode": "RGB",
+      "alpha": "none",
+      "featureFlag": "mg_art_ghost_q_ui_social_v1",
+      "defaultEnabled": false,
+      "fallback": "existing Room/Seat/DM/Match Chat DOM primitives"
+    },
+    {
+      "assetId": "UI-QKIT-IDENTITY-HOME-PROFILE-V1",
+      "file": "ghost-native-identity-home-profile-source-board-v1.png",
+      "sha256": "DAA1D81E6469E378B3CBDC131604B2A7AB887FADCFBB843BE2203B64261A539B",
+      "bytes": 1387634,
+      "width": 1672,
+      "height": 941,
+      "imageMode": "RGB",
+      "alpha": "none",
+      "featureFlag": "mg_art_ghost_q_ui_identity_v1",
+      "defaultEnabled": false,
+      "fallback": "existing Home/Profile identity presentation"
+    },
+    {
+      "assetId": "UI-QKIT-GAME-STAGE-HUD-V1",
+      "file": "ghost-native-game-stage-hud-source-board-v1.png",
+      "sha256": "431E732C05266BF3256A370DEB6D5960E2110B4073BE3BBA66F8A77BE8572961",
+      "bytes": 2187327,
+      "width": 1536,
+      "height": 1024,
+      "imageMode": "RGB",
+      "alpha": "none",
+      "featureFlag": "mg_art_ghost_q_ui_hud_v1",
+      "defaultEnabled": false,
+      "fallback": "existing Game Stage DOM HUD/controls"
+    },
+    {
+      "assetId": "UI-QKIT-FEEDBACK-RECOVERY-V1",
+      "file": "ghost-native-feedback-recovery-source-board-v1.png",
+      "sha256": "2DE4669188201AF237410115F47CA5A44449B22F82668B82016A2957B428AD1E",
+      "bytes": 1490998,
+      "width": 1672,
+      "height": 941,
+      "imageMode": "RGB",
+      "alpha": "none",
+      "featureFlag": "mg_art_ghost_q_ui_feedback_v1",
+      "defaultEnabled": false,
+      "fallback": "existing localized empty/error/loading/reconnect DOM states"
+    },
+    {
+      "assetId": "UI-QKIT-GAME-COVER-ROSTER-V1",
+      "file": "ghost-native-game-cover-roster-source-board-v1.png",
+      "sha256": "A92C9C327D70E1FC614BEA2CC1A52A898C3C1DC6932322FD77C4B2598A5679A3",
+      "bytes": 1586823,
+      "width": 1672,
+      "height": 941,
+      "imageMode": "RGB",
+      "alpha": "none",
+      "featureFlag": "mg_art_ghost_q_ui_game_cover_roster_v1",
+      "defaultEnabled": false,
+      "fallback": "existing Games cards, roster and invite DOM/CSS primitives"
+    },
+    {
+      "assetId": "UI-QKIT-SHOP-SURFACE-COSMETIC-V1",
+      "file": "ghost-native-shop-surface-cosmetic-source-board-v1.png",
+      "sha256": "5EF035BCBAB5311F8C4E80D20411BCC186D83574AE308AA83AD4EAA94C3A78F5",
+      "bytes": 2511893,
+      "width": 1536,
+      "height": 1024,
+      "imageMode": "RGB",
+      "alpha": "none",
+      "featureFlag": "mg_art_ghost_q_ui_shop_surface_v1",
+      "defaultEnabled": false,
+      "fallback": "existing Shop cosmetic cards, price chips and equip states"
+    },
+    {
+      "assetId": "UI-QKIT-HONRU-ACCENT-STICKER-V1",
+      "file": "ghost-native-honru-accent-sticker-source-board-v1.png",
+      "sha256": "1BDC725FB77CF3403E67DC0F2744E50E618D270385945DA7965D90D4856762B4",
+      "bytes": 1520531,
+      "width": 1672,
+      "height": 941,
+      "imageMode": "RGB",
+      "alpha": "none",
+      "featureFlag": "mg_art_ghost_q_ui_honru_accent_v1",
+      "defaultEnabled": false,
+      "fallback": "existing Honru SVG/Unicode/anchored text accents"
+    },
+    {
+      "assetId": "UI-QKIT-GAME-PIECE-TOKEN-V1",
+      "file": "ghost-native-game-piece-token-source-board-v1.png",
+      "sha256": "FEBDEDC23913B6267D361E629CC4FF56897DE5CE7028976E9F64B2BD2E6A35B3",
+      "bytes": 2903397,
+      "width": 1536,
+      "height": 1024,
+      "imageMode": "RGBA",
+      "alpha": "present; source-board-only; not clean runtime transparency",
+      "featureFlag": "mg_art_ghost_q_ui_game_piece_token_v1",
+      "defaultEnabled": false,
+      "fallback": "existing per-game CSS/SVG/Canvas pieces and tokens"
+    },
+    {
+      "assetId": "UI-QKIT-SOCIAL-REACTION-EFFECTS-V1",
+      "file": "ghost-native-social-reaction-effects-source-board-v1.png",
+      "sha256": "4507E834B936E8A22EAC67997999A945D225BFB115A16264BB8D058102E28DEE",
+      "bytes": 2464481,
+      "width": 1536,
+      "height": 1024,
+      "imageMode": "RGB",
+      "alpha": "none",
+      "featureFlag": "mg_art_ghost_q_ui_social_reaction_v1",
+      "defaultEnabled": false,
+      "fallback": "existing match-expression-v1 CSS/Unicode/text reactions"
+    },
+    {
+      "assetId": "UI-QKIT-STAGE-SURFACE-BACKPLATE-V1",
+      "file": "ghost-native-stage-surface-backplate-source-board-v1.png",
+      "sha256": "4482EE5470D5ABD2879ABBC033EAA6DF2759A92AAE789B6049DA4F5C5544A57A",
+      "bytes": 2957198,
+      "width": 1536,
+      "height": 1024,
+      "imageMode": "RGB",
+      "alpha": "none",
+      "featureFlag": "mg_art_ghost_q_ui_stage_surface_v1",
+      "defaultEnabled": false,
+      "fallback": "existing Game Stage Ink/Cream and platform light/dark backgrounds"
+    }
+  ],
+  "rejectedIterations": [
+    {
+      "files": [
+        "ghost-native-core-interaction-transparent-v2.png",
+        "ghost-native-commerce-progression-transparent-v2.png"
+      ],
+      "reason": "RGB output; checkerboard was not true alpha; excluded from clearance and runtime"
+    }
+  ],
+  "rollback": "remove this family manifest and disable all twelve flags; existing DOM/CSS/SVG/Canvas/Unicode fallbacks remain authoritative"
+}

@@ -1,0 +1,104 @@
+{
+  "schemaVersion": 1,
+  "taskId": "latest-browser-visible-matrix-prove-p1-20260814",
+  "startedAt": "2026-08-14T00:15:00+09:00",
+  "completedAt": "2026-08-14T06:40:00+09:00",
+  "environment": {
+    "browser": "Codex in-app Chromium",
+    "url": "http://localhost:8080/",
+    "candidateBuildSha256": "BFBD2109B77B1F4C5E070DAB6B98C806E25AD621ACBE3E2E83AD5C5FB7130CAE",
+    "candidateBuildBytes": 1376602,
+    "scope": "one browser with simulated CSS viewports",
+    "account": "existing local formal QA account; credentials not recorded"
+  },
+  "viewports": [
+    {"name":"desktop","width":1440,"height":900,"routes":["home","games","playline","profile"],"horizontalOverflow":false,"desktopNav":"visible","mobileNav":"hidden"},
+    {"name":"tabletLandscape","width":1024,"height":768,"routes":["home","games","playline","profile"],"horizontalOverflow":false,"desktopNav":"visible","mobileNav":"hidden","primaryTouchHeightAfterRepair":44},
+    {"name":"tabletPortrait","width":768,"height":1024,"routes":["home","games","playline","profile"],"horizontalOverflow":false,"desktopNav":"visible","mobileNav":"hidden","primaryTouchHeight":44},
+    {"name":"mobilePortrait","width":390,"height":844,"routes":["home","games","playline","profile"],"horizontalOverflow":false,"desktopNav":"hidden","mobileNav":"visible","mobileNavHeight":52,"primaryTouchHeight":44},
+    {"name":"mobileLandscape","width":844,"height":390,"routes":["home","games","playline","profile"],"horizontalOverflow":false,"desktopNav":"visible","mobileNav":"hidden"}
+  ],
+  "surfaces": {
+    "shop": {"desktop":"visible dialog, focus starts at close and returns to opener","mobile390":{"width":390,"minActionHeight":44,"horizontalOverflow":false}},
+    "directMessage": {"desktop":"empty formal-account dialog, focus and scroll lock lifecycle passed","mobile390":{"width":390,"minActionHeight":44,"horizontalOverflow":false}},
+    "achievementOutcome": {"desktop":"progress and close lifecycle passed; no random confetti","mobile390":{"width":366,"minActionHeight":44,"horizontalOverflow":false,"ukrainianLayout":"single column after visible overlap repair"}},
+    "roomsLobby1024": {"connected":true,"horizontalOverflow":false,"createBrowsePrivateAndInviteHeightAfterRepair":44},
+    "gameStage": {
+      "games":["gomoku","ludo","monopoly","tank","tetris","xiangqi"],
+      "allEntered":true,
+      "allArenaAndCommandVisible":true,
+      "allGameSpecificMarkersVisible":true,
+      "allScrollYOnEntry":0,
+      "allHorizontalOverflow":false,
+      "allReturnedToOriginCard":true,
+      "fullMatchCompletion":false,
+      "ghost3dVisualVerified":false
+    }
+  },
+  "internationalization": [
+    {"requested":"zh-CN","htmlLang":"zh-CN","settingsHeading":"设置","bareVisibleKeys":0},
+    {"requested":"en-US","htmlLang":"en-US","settingsHeading":"Settings","bareVisibleKeys":0},
+    {"requested":"uk-UA","htmlLang":"uk-UA","settingsHeading":"Налаштування","bareVisibleKeys":0}
+  ],
+  "themes": {
+    "dark":{"htmlTheme":"dark","themeColor":"#05070b","bodyText":"rgb(248, 249, 251)","horizontalOverflow":false},
+    "light":{"htmlTheme":"light","themeColor":"#eaf3fa","bodyText":"rgb(10, 13, 18)","horizontalOverflow":false}
+  },
+  "visibleReducedMotion": {
+    "method":"Chrome DevTools Protocol Emulation.setEmulatedMedia",
+    "matchMedia":true,
+    "homeAndSettings":"static near-zero-duration settle",
+    "gomokuBoard":{"animationName":"none","animationDuration":"0s","transform":"none"},
+    "stageUsable":true,
+    "horizontalOverflow":false,
+    "restoredToNormalAfterTest":true
+  },
+  "console":{"warn":0,"error":0},
+  "defectsCorrected": [
+    "Games leaderboard intrinsic width caused horizontal overflow at 1024x768 and 390x844",
+    "Ukrainian achievement descriptions overlapped in a 390px two-column grid",
+    "Tablet primary room and invite controls were 38px instead of the 44px touch contract"
+  ],
+  "postRepairRecapture": {
+    "completedAt": "2026-08-14T06:40:00+09:00",
+    "tablet1024Rooms": {"horizontalOverflow":false,"createBrowsePrivateHeights":[44,44,44],"inviteMinHeight":44},
+    "mobile390Games": {"horizontalOverflow":false,"clientWidth":375,"scrollWidth":375,"leaderboardWidth":355},
+    "mobile390Achievement": {"horizontalOverflow":false,"columns":"310px","dialogWidth":351,"eightItemWidths":310,"eightItemHeights":81.25},
+    "consoleWarnError": 0,
+    "note": "The Ukrainian long-copy layout was visually inspected before the final recapture; the deterministic final build was then reloaded and visibly rechecked at 390x844 with the same responsive single-column geometry."
+  },
+  "finalValidation": {
+    "completedAt": "2026-08-14T06:47:00+09:00",
+    "fullNpmTest": {"status":"PASS","durationSeconds":160.6},
+    "deterministicDoubleBuild": {
+      "status":"PASS",
+      "characters":1362068,
+      "filesystemBytes":1376602,
+      "sha256":"BFBD2109B77B1F4C5E070DAB6B98C806E25AD621ACBE3E2E83AD5C5FB7130CAE"
+    },
+    "finalBuildVisibleRecapture": {
+      "language":"uk-UA",
+      "viewport":{"width":390,"height":844},
+      "documentClientWidth":390,
+      "documentScrollWidth":390,
+      "achievementDialogWidth":351,
+      "achievementColumns":"310px",
+      "achievementItemCount":8,
+      "achievementItemWidth":310,
+      "achievementItemHeight":81.25,
+      "consoleWarnError":0
+    }
+  },
+  "notExecuted": [
+    "second desktop browser",
+    "physical Android, iPhone or Tablet",
+    "real network shaping",
+    "two formal-account friend DM",
+    "physical FPS, heat, audio or lock-screen recovery",
+    "forced-colors",
+    "real Supabase",
+    "art Golden Set",
+    "production or release"
+  ],
+  "status":"VISUAL_VERIFIED_SINGLE_BROWSER_PARTIAL_GATE_EVIDENCE"
+}

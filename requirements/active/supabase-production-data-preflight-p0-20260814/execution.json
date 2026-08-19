@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "taskId": "supabase-production-data-preflight-p0-20260814",
+  "status": "ACCEPTED",
+  "localEvidenceClass": "LOCAL_STATIC_OR_FAKE_ONLY",
+  "completed": [
+    "credential-presence-only audit",
+    "PostgreSQL client availability audit",
+    "zero-connect dry-run",
+    "same-project different-database restore rejection",
+    "different-project explicit-confirmation boundary",
+    "schema/readiness/fake-adapter regression",
+    "full npm test 141.4s",
+    "deterministic double build 1362068 characters / 1376602 bytes / BFBD2109B77B1F4C5E070DAB6B98C806E25AD621ACBE3E2E83AD5C5FB7130CAE"
+  ],
+  "blockedExternal": [
+    "production project URL and server-only service role",
+    "production direct/session database URL",
+    "different-project isolated restore target",
+    "verifiably encrypted restricted backup storage",
+    "real concurrency and two-instance environment"
+  ],
+  "published": false
+}

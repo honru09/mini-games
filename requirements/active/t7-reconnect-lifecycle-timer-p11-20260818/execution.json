@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "task": "t7-reconnect-lifecycle-timer-p11-20260818",
+  "state": "VERIFIED_LOCAL",
+  "recordedAt": "2026-08-18T22:45:46+09:00",
+  "implemented": [
+    "server/index.js reconnect grace and Presence retry use per-session ServerClockTimer lease",
+    "server/index.js room removal retry uses per-session ServerClockTimer lease",
+    "Room Presence Boundary receives lease/native cancel adapter",
+    "qa/timer-audit.js covers owner, callback ordering and cancel wiring"
+  ],
+  "verified": [
+    "node --check server/index.js",
+    "node qa/timer-audit.js (TIMER_AUDIT_ALL_PASS)",
+    "node qa/connection-route-resilience.js (CONNECTION_ROUTE_RESILIENCE_ALL_PASS)",
+    "node --experimental-websocket qa/reconnect-online.js (RECONNECT_ALL_PASS)",
+    "node --experimental-websocket qa/e2e-online.js (exit 0)",
+    "node scripts/build.js --check (chars=2077538 utf8Bytes=2092161 sha256=1CFC9A4E7D2F5CB16B7180437D6BA8080E0338B42E73AA614E4568CE51C31ACB)",
+    "git diff --check"
+  ],
+  "pending": [
+    "remaining heartbeat/outbox/gameplay/transport timer owners",
+    "current browser/second browser/physical devices/real network",
+    "real Supabase/RLS/concurrency/backup/restore/multi-instance",
+    "commit/push/GitHub Pages/Render/deploy"
+  ],
+  "scopeLimit": "Reconnect lifecycle timer ownership only; no account, room wire, reward, authority or persistence policy change",
+  "release": "LOCAL_ONLY / NOT_RELEASED"
+}

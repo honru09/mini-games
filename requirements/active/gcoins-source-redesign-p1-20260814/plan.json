@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "taskId": "gcoins-source-redesign-p1-20260814",
+  "requirements": ["ART-026"],
+  "stage": "ART",
+  "disposition": "NON_BLOCKING_FOR_DEVELOPMENT",
+  "status": "OWNER_AUTHORIZED_ART_CLEARANCE_LOCAL_RUNTIME",
+  "scope": "Candidate B 原样派生的机器清关与可逆本地 runtime 接入；不改变 P0、P-003、经济、协议、数据库或发布边界。",
+  "steps": [
+    {"id":"GCP1-1","status":"completed","title":"复核 P0、Honru 锚点、审批矩阵和生成边界"},
+    {"id":"GCP1-2","status":"completed","title":"生成 A/B/C 三个独立候选并保留 Prompt/任务标识/SHA"},
+    {"id":"GCP1-3","status":"completed","title":"选 B、生成 Alpha/四档派生和技术审查板"},
+    {"id":"GCP1-4","status":"completed","title":"同步 Catalog/矩阵/台账/报告/日志并运行最终门禁"}
+  ],
+  "next": "继续当前构建的浏览器/设备/网络发布证据；若有新清稿候选，按同一 ID/version/provenance/回滚合同替换并重新验证。",
+  "optionalAdvisoryEvidence": {"status":"NOT_EXECUTED","items":["human cleanup","independent natural-person Reviewer B","IP/legal advice","per-asset Golden Set"],"blocking":false},
+  "releaseEvidencePending": ["second real browser","physical devices","real network","screen-reader device","explicit current user release command"],
+  "externalAssetPolicy": "blocked-license / EXTERNAL_REFERENCE_ONLY assets are permanently forbidden",
+  "historicalAsOf": {"date":"2026-08-14","disposition":"EXTERNAL_GATE","status":"COMPLETED_LOCAL_GATE_BLOCKED","meaning":"Former candidate-only/default-off human-gate interpretation; audit history only."},
+  "release": "LOCAL_ONLY_NO_COMMIT_NO_PUSH_NO_DEPLOY",
+  "rollback": "设置 mg_art_gcoins_p1_v1=0 或移除 P-GCOINS-ICON-V1 Manifest/runtime 条目；P0、P-003、经济和协议保持不变。"
+}

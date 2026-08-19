@@ -1,0 +1,39 @@
+{
+  "status": "LOCAL_ACCEPTED",
+  "parallelability": 1,
+  "dependencies": [
+    "requirements/active/ui-repair-p0-20260810",
+    "requirements/active/requirements-governance-p0-20260810"
+  ],
+  "steps": [
+    {"id":"UIR2-1","task":"新增房间/Lobby/Tournament/品牌/层级失败合同测试","status":"completed"},
+    {"id":"UIR2-2","task":"修复全局 Dialog/Header/Nav/Toast 层级","status":"completed"},
+    {"id":"UIR2-3","task":"实现可访问 Room Launchpad 与私密码加入","status":"completed"},
+    {"id":"UIR2-4","task":"重构 Lobby 卡并保持服务端权限事实源","status":"completed"},
+    {"id":"UIR2-5","task":"隐藏普通用户 Tournament 三类入口并保留管理员受控能力","status":"completed"},
+    {"id":"UIR2-6","task":"同步三语品牌文案、构建、专项/完整测试与浏览器验收","status":"completed"},
+    {"id":"UIR2-7","task":"主负责人终审、纠错、台账/报告/日志收口","status":"completed"}
+  ],
+  "risks": [
+    "误改 create payload 或 select_game 时序导致联机回归",
+    "本地推断 canJoin/canSpectate 造成权限展示越权",
+    "赛事仅隐藏按钮但仍由 tournament_state 自动弹窗",
+    "Modal 层级修复压住 Toast 或登录页",
+    "长英文/乌克兰语品牌文案挤压中屏导航"
+  ],
+  "tests": [
+    "node qa/ui-room-lobby-contract.js",
+    "npm run test:i18n",
+    "node qa/ui-responsive-contract.js",
+    "node qa/dom-smoke.js",
+    "node qa/ghost-shell-contract.js",
+    "node --experimental-websocket qa/room-seats.js",
+    "node qa/tournament.js",
+    "node --experimental-websocket qa/tournament-auto-online.js",
+    "npm run quality:gates",
+    "npm test",
+    "double build SHA-256",
+    "local browser interaction"
+  ],
+  "rollback": "撤销本批模板、07-roster、03-websocket、locale 与 QA；重新构建 public/index.html。协议、房间数据、赛事状态与账号数据无需迁移或回滚。"
+}

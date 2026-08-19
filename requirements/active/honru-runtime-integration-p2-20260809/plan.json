@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "task": "honru-runtime-integration-p2-20260809",
+  "state": "VERIFYING",
+  "risk": "HIGH",
+  "dependsOn": ["honru-expression-kit-v1-20260809:verified-source-only", "sticker-cartoon-runtime-integration-p1-20260809:verified-default-off", "ghost-game-rebrand-p0-20260808:released"],
+  "steps": [
+    {"id":"recon","status":"completed","dependsOn":[],"risk":"medium","tests":["report/readme/AGENTS/project status/source and runtime audit"],"rollback":"no changes"},
+    {"id":"freeze","status":"completed","dependsOn":["recon"],"risk":"high","tests":["flags/manifest/presentation/fallback/ownership contract"],"rollback":"delete unopened task package"},
+    {"id":"runtime-preview-assets","status":"completed","dependsOn":["freeze"],"risk":"medium","tests":["WebP alpha/hash/bytes/manifest/fallback"],"rollback":"remove preview asset group"},
+    {"id":"login-logo-fix","status":"completed","dependsOn":["freeze"],"risk":"medium","tests":["light/dark static CSS/DOM contract; browser screenshot not executed because browser permission was denied"],"rollback":"remove dark selector"},
+    {"id":"shared-reaction-hook","status":"completed","dependsOn":["runtime-preview-assets","login-logo-fix"],"risk":"high","tests":["dual flag, state allowlist, lifecycle cleanup, reduced-motion, replay suppression, priority/cooldown, no rule snapshot coupling"],"rollback":"disable flags/revert hook"},
+    {"id":"platform-state-map","status":"completed","dependsOn":["shared-reaction-hook"],"risk":"high","tests":["check-in/chat/invite/wait/settlement mapping; i18n untouched"],"rollback":"remove presentation mapping"},
+    {"id":"six-game-vertical-slice","status":"completed","dependsOn":["platform-state-map"],"risk":"high","tests":["six game feedback smoke and snapshot parity"],"rollback":"keep old Canvas/DOM visuals"},
+    {"id":"verification","status":"completed","dependsOn":["six-game-vertical-slice"],"risk":"high","tests":["asset/ghost-shell/dom/AI/gameplay/quality gates/npm test pass; browser visual matrix recorded NOT_EXECUTED"],"rollback":"flags off and revert P2"},
+    {"id":"release","status":"pending","dependsOn":["verification"],"risk":"high","tests":["push/Pages/Render deploy and online smoke"],"rollback":"disable flags/revert commit"}
+  ]
+}

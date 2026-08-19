@@ -1,0 +1,14 @@
+{
+  "status":"REQUIREMENT_FROZEN",
+  "currentPolicy":"原创 Ghost-native 候选按 OWNER_AUTHORIZED_ART_CLEARANCE 推进；人工清稿、独立自然人 Reviewer B、IP/法律意见与逐资产 Golden Set 为 OPTIONAL_ADVISORY_EVIDENCE，不阻塞开发、runtime 或未来发布候选；外部 blocked-license / EXTERNAL_REFERENCE_ONLY 素材永久禁用。",
+  "steps":[
+    {"id":"ART36-1","task":"冻结角色/Monopoly source-only contract 与审批矩阵","status":"completed"},
+    {"id":"ART36-2","task":"最高质量模型生成角色与实体棋盘方向源稿","status":"completed"},
+    {"id":"ART36-3","task":"素材库 reference-only 登记、哈希与审计","status":"completed"},
+    {"id":"ART36-4","task":"补齐稳定 ID/版本/SHA/provenance、机器视觉/技术/相似风险审查、fallback/flag/回滚，取得 OWNER_AUTHORIZED_ART_CLEARANCE 后实施可逆 runtime 接入","status":"planned"},
+    {"id":"ART36-5","task":"人工清稿、独立自然人 Reviewer B、IP/法律意见与逐资产 Golden Set 风险咨询","status":"optional_advisory_not_executed","blocking":false}
+  ],
+  "dependencies":["SOC-031","ECO-029"],
+  "forbiddenBeforeOwnerClearance":["ART-036 public/assets","ART-036 asset_manifest runtime entries"],
+  "forbidden":["player-character schema changes without a separate contract","Monopoly rules/authority","shop/equip mutation without ECO-029 authority","Supabase schema","commit/push/deploy","external blocked-license / EXTERNAL_REFERENCE_ONLY assets"]
+}

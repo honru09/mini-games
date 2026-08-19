@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "taskId": "gcoins-source-redesign-p1-20260814",
+  "verifiedAt": "2026-08-14T10:39:53+09:00",
+  "selectedCandidate": "B",
+  "source": {
+    "path": "art-source/brand/ghost-game/currency/gcoins-p1-20260814/source/gcoins-p1-candidate-b-chroma.png",
+    "width": 1254,
+    "height": 1254,
+    "sha256": "6a99bea413410f62520a2abe16ce3ab341c9e0337bd21a383350fc9f578dd04a"
+  },
+  "alpha": {
+    "path": "art-source/brand/ghost-game/currency/gcoins-p1-20260814/alpha/gcoins-p1-candidate-b-alpha.png",
+    "width": 1254,
+    "height": 1254,
+    "mode": "RGBA",
+    "sha256": "d62909d4827d427d5e499299fb2a7e839866a3ddc9e7b701d53c3e1cc542854c",
+    "cornerAlpha": [0, 0, 0, 0],
+    "nonzeroAlphaCoverage": 0.426914,
+    "opaqueCoverage": 0.424913,
+    "partialAlphaPixels": 3147,
+    "greenDominantFringePixels": 0,
+    "alphaBBox": [194, 129, 1061, 1124]
+  },
+  "derived": [
+    {"size":192,"sha256":"aac1ddc47eb931a612e1ef9acf97d1215ebbdb591e818ca0cfdc33b15d40f421"},
+    {"size":96,"sha256":"5f40724c81fef77ea067f48cdab5650231f701fc63f23c31e76d41ed7538fc25"},
+    {"size":64,"sha256":"02af42f61f99e626747e35cda5198aabe0a4714cb6da42f84fc2c11da98fb648"},
+    {"size":44,"sha256":"a4c2be71b239faeb90a298811942c72f68a8ab58de8d4ace8a6cfecbb8a9309e"}
+  ],
+  "reviewBoard": {
+    "path": "art-source/brand/ghost-game/currency/gcoins-p1-20260814/review/gcoins-p1-candidate-b-alpha-review.png",
+    "sha256": "3bddd090c743d68a7fb55e3ed78b76f65a91f40d6f6ce0d61c192f3121ec1839",
+    "backgrounds": ["light", "dark", "checker"]
+  },
+  "unselected": [
+    {"candidate":"A","sha256":"36b79d6ce878006430bf6721389d768a2e5bff7d9b96d7006d310932ae8b3745"},
+    {"candidate":"C","sha256":"566e32d352608311573a3937cf85890669cbedc602d5147a5b80d20ad0456e84"}
+  ],
+  "finalTests": {
+    "gCoinsContract": "PASS",
+    "artApprovalMatrix": "PASS",
+    "assetLibraryAudit": "PASS",
+    "projectState": "PASS",
+    "mainlineControl": "PASS",
+    "progressLedger": "PASS",
+    "qualityGates": "PASS",
+    "fullNpmTest": "PASS (151 seconds)",
+    "gitDiffCheck": "PASS"
+  },
+  "build": {
+    "characters": 1362068,
+    "bytes": 1376602,
+    "sha256": "BFBD2109B77B1F4C5E070DAB6B98C806E25AD621ACBE3E2E83AD5C5FB7130CAE",
+    "deterministicDoubleBuild": true
+  },
+  "gate": "GATE-ART-GOLDEN-SET=BLOCKED",
+  "runtimeIntegrated": false,
+  "published": false
+}

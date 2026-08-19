@@ -1,0 +1,577 @@
+{
+  "schemaVersion": 1,
+  "productionUnitId": "P0-05",
+  "familyId": "P-LOADING-STATE-ART-V1",
+  "sourceAssetId": "ART-LOADING-STATE-ART-V1",
+  "artworkVersion": 1,
+  "status": "OWNER_AUTHORIZED_ART_CLEARANCE",
+  "license": "project-owned-deterministic-vector",
+  "externalReferencePolicy": "EXTERNAL_REFERENCE_ONLY / blocked-license files were not read, copied, traced, recolored, used as generation inputs, or connected to runtime.",
+  "semantics": [
+    "boot",
+    "page",
+    "auth",
+    "avatar",
+    "background",
+    "game",
+    "room",
+    "reconnect",
+    "feed",
+    "profile",
+    "shop",
+    "retry"
+  ],
+  "contexts": [
+    "first-open",
+    "service-worker-update",
+    "login-connection",
+    "avatar-directory",
+    "background-poster",
+    "dynamic-background-decode",
+    "game-module",
+    "three-renderer",
+    "three-assets",
+    "room-lobby",
+    "enter-match",
+    "ws-reconnect",
+    "playline-feed",
+    "dm-list",
+    "dm-history",
+    "profile-compare",
+    "shop-load",
+    "purchase-wait",
+    "result-settle",
+    "snapshot-recovery",
+    "offline-start",
+    "resource-retry"
+  ],
+  "sizes": [
+    160,
+    240,
+    320
+  ],
+  "progressSemantics": [
+    "linear",
+    "ring",
+    "segmented",
+    "xp",
+    "task",
+    "timer",
+    "hp",
+    "garbage",
+    "tournament"
+  ],
+  "sourceMasters": [
+    {
+      "key": "boot",
+      "path": "art-source/platform/loading/state-art-v1/source/boot-v1.svg",
+      "sha256": "B53CBFF6E9F59FFBC7C668024B2E9F007926332E037E8DF0341F8835586AEE5E",
+      "bytes": 832,
+      "width": 512,
+      "height": 512,
+      "format": "svg",
+      "alpha": true
+    },
+    {
+      "key": "page",
+      "path": "art-source/platform/loading/state-art-v1/source/page-v1.svg",
+      "sha256": "8277CA4919FC1361DCC34BFDFEE86FD1E1F65C52A3C12952579256FAB124E3B7",
+      "bytes": 832,
+      "width": 512,
+      "height": 512,
+      "format": "svg",
+      "alpha": true
+    },
+    {
+      "key": "auth",
+      "path": "art-source/platform/loading/state-art-v1/source/auth-v1.svg",
+      "sha256": "B925F6399A7DF5B6BA885293B25C55F21B9879CF64950C2E0903D014F12D202C",
+      "bytes": 832,
+      "width": 512,
+      "height": 512,
+      "format": "svg",
+      "alpha": true
+    },
+    {
+      "key": "avatar",
+      "path": "art-source/platform/loading/state-art-v1/source/avatar-v1.svg",
+      "sha256": "6A539D7F0CD0C84D73DF9ADDBB745AE95571162A1DAF178965D325A84959CECA",
+      "bytes": 832,
+      "width": 512,
+      "height": 512,
+      "format": "svg",
+      "alpha": true
+    },
+    {
+      "key": "background",
+      "path": "art-source/platform/loading/state-art-v1/source/background-v1.svg",
+      "sha256": "8E0F74A12ED5B8887C3E4C061BE32A4DEAC2CBD162C1BC86C0F31291F98AEEE7",
+      "bytes": 832,
+      "width": 512,
+      "height": 512,
+      "format": "svg",
+      "alpha": true
+    },
+    {
+      "key": "game",
+      "path": "art-source/platform/loading/state-art-v1/source/game-v1.svg",
+      "sha256": "B44F8610899028D71D9D0E55516029592C8255F53080A93D1B24D0163B596757",
+      "bytes": 832,
+      "width": 512,
+      "height": 512,
+      "format": "svg",
+      "alpha": true
+    },
+    {
+      "key": "room",
+      "path": "art-source/platform/loading/state-art-v1/source/room-v1.svg",
+      "sha256": "8277CA4919FC1361DCC34BFDFEE86FD1E1F65C52A3C12952579256FAB124E3B7",
+      "bytes": 832,
+      "width": 512,
+      "height": 512,
+      "format": "svg",
+      "alpha": true
+    },
+    {
+      "key": "reconnect",
+      "path": "art-source/platform/loading/state-art-v1/source/reconnect-v1.svg",
+      "sha256": "B925F6399A7DF5B6BA885293B25C55F21B9879CF64950C2E0903D014F12D202C",
+      "bytes": 832,
+      "width": 512,
+      "height": 512,
+      "format": "svg",
+      "alpha": true
+    },
+    {
+      "key": "feed",
+      "path": "art-source/platform/loading/state-art-v1/source/feed-v1.svg",
+      "sha256": "B53CBFF6E9F59FFBC7C668024B2E9F007926332E037E8DF0341F8835586AEE5E",
+      "bytes": 832,
+      "width": 512,
+      "height": 512,
+      "format": "svg",
+      "alpha": true
+    },
+    {
+      "key": "profile",
+      "path": "art-source/platform/loading/state-art-v1/source/profile-v1.svg",
+      "sha256": "8277CA4919FC1361DCC34BFDFEE86FD1E1F65C52A3C12952579256FAB124E3B7",
+      "bytes": 832,
+      "width": 512,
+      "height": 512,
+      "format": "svg",
+      "alpha": true
+    },
+    {
+      "key": "shop",
+      "path": "art-source/platform/loading/state-art-v1/source/shop-v1.svg",
+      "sha256": "8E0F74A12ED5B8887C3E4C061BE32A4DEAC2CBD162C1BC86C0F31291F98AEEE7",
+      "bytes": 832,
+      "width": 512,
+      "height": 512,
+      "format": "svg",
+      "alpha": true
+    },
+    {
+      "key": "retry",
+      "path": "art-source/platform/loading/state-art-v1/source/retry-v1.svg",
+      "sha256": "CF26C474A8821549EDBB91C5CC5A6B700F1722346097FD55BEA75BBA3BAE3E91",
+      "bytes": 832,
+      "width": 512,
+      "height": 512,
+      "format": "svg",
+      "alpha": true
+    }
+  ],
+  "runtimeVariants": [
+    {
+      "key": "boot-160",
+      "path": "public/assets/ui/loading/state-art-v1/boot/160-boot-v1.webp",
+      "sha256": "3BC3DAE1873EFE8D2ED1D7968236E4D436267ECD73BD130F4AA14CA7C280DC9C",
+      "bytes": 4890,
+      "width": 160,
+      "height": 160,
+      "format": "webp",
+      "alpha": true
+    },
+    {
+      "key": "boot-240",
+      "path": "public/assets/ui/loading/state-art-v1/boot/240-boot-v1.webp",
+      "sha256": "7ACCFCA5A927E44AC77C9745138430F7F6709F9614E2835712DA51A44FF70E53",
+      "bytes": 7466,
+      "width": 240,
+      "height": 240,
+      "format": "webp",
+      "alpha": true
+    },
+    {
+      "key": "boot-320",
+      "path": "public/assets/ui/loading/state-art-v1/boot/320-boot-v1.webp",
+      "sha256": "4308146A95062116636964D90C60F00BC8F71F2869E1A95D6CF5FB516A1947F8",
+      "bytes": 10008,
+      "width": 320,
+      "height": 320,
+      "format": "webp",
+      "alpha": true
+    },
+    {
+      "key": "page-160",
+      "path": "public/assets/ui/loading/state-art-v1/page/160-page-v1.webp",
+      "sha256": "8D0EBAC332A69112D80B80C1FD9C8B1FA9E88B8D45A648AA4FE4880E748604CB",
+      "bytes": 5066,
+      "width": 160,
+      "height": 160,
+      "format": "webp",
+      "alpha": true
+    },
+    {
+      "key": "page-240",
+      "path": "public/assets/ui/loading/state-art-v1/page/240-page-v1.webp",
+      "sha256": "EF27F0B8D5409D58E311728916F62C94A21B5D4F75612538EF1846D44173DBAC",
+      "bytes": 7696,
+      "width": 240,
+      "height": 240,
+      "format": "webp",
+      "alpha": true
+    },
+    {
+      "key": "page-320",
+      "path": "public/assets/ui/loading/state-art-v1/page/320-page-v1.webp",
+      "sha256": "67B28B5CBAFCB4EAA730E129357D35311DFA5918AE6660210EDCD6CEC25DDCD3",
+      "bytes": 10544,
+      "width": 320,
+      "height": 320,
+      "format": "webp",
+      "alpha": true
+    },
+    {
+      "key": "auth-160",
+      "path": "public/assets/ui/loading/state-art-v1/auth/160-auth-v1.webp",
+      "sha256": "371E1CD0543B4B7534D37D74BD0B13DD0C49AB61C6B5D5E1C3874C1660FE9117",
+      "bytes": 4840,
+      "width": 160,
+      "height": 160,
+      "format": "webp",
+      "alpha": true
+    },
+    {
+      "key": "auth-240",
+      "path": "public/assets/ui/loading/state-art-v1/auth/240-auth-v1.webp",
+      "sha256": "E5BDC6D4673492D48CBF067A7097D9F669043946E753A963F8E8A7D7C3C37578",
+      "bytes": 7322,
+      "width": 240,
+      "height": 240,
+      "format": "webp",
+      "alpha": true
+    },
+    {
+      "key": "auth-320",
+      "path": "public/assets/ui/loading/state-art-v1/auth/320-auth-v1.webp",
+      "sha256": "6EC728CEEFC4E68FFC9D324F9CBDFE754852DB877A563AD79BB9610CD785EA28",
+      "bytes": 9770,
+      "width": 320,
+      "height": 320,
+      "format": "webp",
+      "alpha": true
+    },
+    {
+      "key": "avatar-160",
+      "path": "public/assets/ui/loading/state-art-v1/avatar/160-avatar-v1.webp",
+      "sha256": "39FE3F4A9706931CB95B3F4F15B5E4B9D803D86FE2CD459BE851CF5F4F3C3C3A",
+      "bytes": 4808,
+      "width": 160,
+      "height": 160,
+      "format": "webp",
+      "alpha": true
+    },
+    {
+      "key": "avatar-240",
+      "path": "public/assets/ui/loading/state-art-v1/avatar/240-avatar-v1.webp",
+      "sha256": "111FED3C74851E66DE14675CEAE8118B0C08C3396BA2BB80E9F4725584C5F1C5",
+      "bytes": 7324,
+      "width": 240,
+      "height": 240,
+      "format": "webp",
+      "alpha": true
+    },
+    {
+      "key": "avatar-320",
+      "path": "public/assets/ui/loading/state-art-v1/avatar/320-avatar-v1.webp",
+      "sha256": "38D4D9B355B1EB7B5FC77C06A39E845A48FEEF0A55F81FE0CADCE7376830B96E",
+      "bytes": 9772,
+      "width": 320,
+      "height": 320,
+      "format": "webp",
+      "alpha": true
+    },
+    {
+      "key": "background-160",
+      "path": "public/assets/ui/loading/state-art-v1/background/160-background-v1.webp",
+      "sha256": "75B8793014014DF8BBF70CDC0B9E2623F9C059646F0721F5824FFFF0729CD394",
+      "bytes": 4842,
+      "width": 160,
+      "height": 160,
+      "format": "webp",
+      "alpha": true
+    },
+    {
+      "key": "background-240",
+      "path": "public/assets/ui/loading/state-art-v1/background/240-background-v1.webp",
+      "sha256": "C4A64B1251C0D0685DD30E9100016D51B5CF811A940AED97515DD4CCB402D7C3",
+      "bytes": 7354,
+      "width": 240,
+      "height": 240,
+      "format": "webp",
+      "alpha": true
+    },
+    {
+      "key": "background-320",
+      "path": "public/assets/ui/loading/state-art-v1/background/320-background-v1.webp",
+      "sha256": "14F136904FD3330BF3155EF1DFD199FE3F40B0836C0685DCCEC27559C1468765",
+      "bytes": 10004,
+      "width": 320,
+      "height": 320,
+      "format": "webp",
+      "alpha": true
+    },
+    {
+      "key": "game-160",
+      "path": "public/assets/ui/loading/state-art-v1/game/160-game-v1.webp",
+      "sha256": "4910518573BB134DACE4FC92080EF60250213675DE138DE366C8C21345411864",
+      "bytes": 4766,
+      "width": 160,
+      "height": 160,
+      "format": "webp",
+      "alpha": true
+    },
+    {
+      "key": "game-240",
+      "path": "public/assets/ui/loading/state-art-v1/game/240-game-v1.webp",
+      "sha256": "69279C88F0FD9272510429B456B6515EAB1E92E258C93679C84F6C2E75EDB12D",
+      "bytes": 7116,
+      "width": 240,
+      "height": 240,
+      "format": "webp",
+      "alpha": true
+    },
+    {
+      "key": "game-320",
+      "path": "public/assets/ui/loading/state-art-v1/game/320-game-v1.webp",
+      "sha256": "098C2413A49E63A99A344C41E1A0946AD086F72CEE383B2A1EE427CF1B5751AA",
+      "bytes": 9658,
+      "width": 320,
+      "height": 320,
+      "format": "webp",
+      "alpha": true
+    },
+    {
+      "key": "room-160",
+      "path": "public/assets/ui/loading/state-art-v1/room/160-room-v1.webp",
+      "sha256": "8D0EBAC332A69112D80B80C1FD9C8B1FA9E88B8D45A648AA4FE4880E748604CB",
+      "bytes": 5066,
+      "width": 160,
+      "height": 160,
+      "format": "webp",
+      "alpha": true
+    },
+    {
+      "key": "room-240",
+      "path": "public/assets/ui/loading/state-art-v1/room/240-room-v1.webp",
+      "sha256": "EF27F0B8D5409D58E311728916F62C94A21B5D4F75612538EF1846D44173DBAC",
+      "bytes": 7696,
+      "width": 240,
+      "height": 240,
+      "format": "webp",
+      "alpha": true
+    },
+    {
+      "key": "room-320",
+      "path": "public/assets/ui/loading/state-art-v1/room/320-room-v1.webp",
+      "sha256": "67B28B5CBAFCB4EAA730E129357D35311DFA5918AE6660210EDCD6CEC25DDCD3",
+      "bytes": 10544,
+      "width": 320,
+      "height": 320,
+      "format": "webp",
+      "alpha": true
+    },
+    {
+      "key": "reconnect-160",
+      "path": "public/assets/ui/loading/state-art-v1/reconnect/160-reconnect-v1.webp",
+      "sha256": "371E1CD0543B4B7534D37D74BD0B13DD0C49AB61C6B5D5E1C3874C1660FE9117",
+      "bytes": 4840,
+      "width": 160,
+      "height": 160,
+      "format": "webp",
+      "alpha": true
+    },
+    {
+      "key": "reconnect-240",
+      "path": "public/assets/ui/loading/state-art-v1/reconnect/240-reconnect-v1.webp",
+      "sha256": "E5BDC6D4673492D48CBF067A7097D9F669043946E753A963F8E8A7D7C3C37578",
+      "bytes": 7322,
+      "width": 240,
+      "height": 240,
+      "format": "webp",
+      "alpha": true
+    },
+    {
+      "key": "reconnect-320",
+      "path": "public/assets/ui/loading/state-art-v1/reconnect/320-reconnect-v1.webp",
+      "sha256": "6EC728CEEFC4E68FFC9D324F9CBDFE754852DB877A563AD79BB9610CD785EA28",
+      "bytes": 9770,
+      "width": 320,
+      "height": 320,
+      "format": "webp",
+      "alpha": true
+    },
+    {
+      "key": "feed-160",
+      "path": "public/assets/ui/loading/state-art-v1/feed/160-feed-v1.webp",
+      "sha256": "3BC3DAE1873EFE8D2ED1D7968236E4D436267ECD73BD130F4AA14CA7C280DC9C",
+      "bytes": 4890,
+      "width": 160,
+      "height": 160,
+      "format": "webp",
+      "alpha": true
+    },
+    {
+      "key": "feed-240",
+      "path": "public/assets/ui/loading/state-art-v1/feed/240-feed-v1.webp",
+      "sha256": "7ACCFCA5A927E44AC77C9745138430F7F6709F9614E2835712DA51A44FF70E53",
+      "bytes": 7466,
+      "width": 240,
+      "height": 240,
+      "format": "webp",
+      "alpha": true
+    },
+    {
+      "key": "feed-320",
+      "path": "public/assets/ui/loading/state-art-v1/feed/320-feed-v1.webp",
+      "sha256": "4308146A95062116636964D90C60F00BC8F71F2869E1A95D6CF5FB516A1947F8",
+      "bytes": 10008,
+      "width": 320,
+      "height": 320,
+      "format": "webp",
+      "alpha": true
+    },
+    {
+      "key": "profile-160",
+      "path": "public/assets/ui/loading/state-art-v1/profile/160-profile-v1.webp",
+      "sha256": "8D0EBAC332A69112D80B80C1FD9C8B1FA9E88B8D45A648AA4FE4880E748604CB",
+      "bytes": 5066,
+      "width": 160,
+      "height": 160,
+      "format": "webp",
+      "alpha": true
+    },
+    {
+      "key": "profile-240",
+      "path": "public/assets/ui/loading/state-art-v1/profile/240-profile-v1.webp",
+      "sha256": "EF27F0B8D5409D58E311728916F62C94A21B5D4F75612538EF1846D44173DBAC",
+      "bytes": 7696,
+      "width": 240,
+      "height": 240,
+      "format": "webp",
+      "alpha": true
+    },
+    {
+      "key": "profile-320",
+      "path": "public/assets/ui/loading/state-art-v1/profile/320-profile-v1.webp",
+      "sha256": "67B28B5CBAFCB4EAA730E129357D35311DFA5918AE6660210EDCD6CEC25DDCD3",
+      "bytes": 10544,
+      "width": 320,
+      "height": 320,
+      "format": "webp",
+      "alpha": true
+    },
+    {
+      "key": "shop-160",
+      "path": "public/assets/ui/loading/state-art-v1/shop/160-shop-v1.webp",
+      "sha256": "75B8793014014DF8BBF70CDC0B9E2623F9C059646F0721F5824FFFF0729CD394",
+      "bytes": 4842,
+      "width": 160,
+      "height": 160,
+      "format": "webp",
+      "alpha": true
+    },
+    {
+      "key": "shop-240",
+      "path": "public/assets/ui/loading/state-art-v1/shop/240-shop-v1.webp",
+      "sha256": "C4A64B1251C0D0685DD30E9100016D51B5CF811A940AED97515DD4CCB402D7C3",
+      "bytes": 7354,
+      "width": 240,
+      "height": 240,
+      "format": "webp",
+      "alpha": true
+    },
+    {
+      "key": "shop-320",
+      "path": "public/assets/ui/loading/state-art-v1/shop/320-shop-v1.webp",
+      "sha256": "14F136904FD3330BF3155EF1DFD199FE3F40B0836C0685DCCEC27559C1468765",
+      "bytes": 10004,
+      "width": 320,
+      "height": 320,
+      "format": "webp",
+      "alpha": true
+    },
+    {
+      "key": "retry-160",
+      "path": "public/assets/ui/loading/state-art-v1/retry/160-retry-v1.webp",
+      "sha256": "ABC718B251CF1DAF69B26AE9EC3E415C475BC5140788B72B5A3D95F053B16E88",
+      "bytes": 4920,
+      "width": 160,
+      "height": 160,
+      "format": "webp",
+      "alpha": true
+    },
+    {
+      "key": "retry-240",
+      "path": "public/assets/ui/loading/state-art-v1/retry/240-retry-v1.webp",
+      "sha256": "A70E262C63A75BD01926AFB376B1B1DBBE1FD6A817524E723466EAEE0F5F2E88",
+      "bytes": 7458,
+      "width": 240,
+      "height": 240,
+      "format": "webp",
+      "alpha": true
+    },
+    {
+      "key": "retry-320",
+      "path": "public/assets/ui/loading/state-art-v1/retry/320-retry-v1.webp",
+      "sha256": "29E6FC1371673FE57847DA10007D196303EE60CDBEEF99EF1D319FC8BF470C0E",
+      "bytes": 10030,
+      "width": 320,
+      "height": 320,
+      "format": "webp",
+      "alpha": true
+    }
+  ],
+  "reviewBoards": [
+    {
+      "path": "art-source/platform/loading/state-art-v1/review/loading-state-contact-sheet-v1.png",
+      "sha256": "3156D88383855E3AE4D573186D690AD04CFC96D67A4269EAF09D27C06D86FDE8",
+      "bytes": 37896,
+      "width": 1024,
+      "height": 768
+    }
+  ],
+  "featureFlags": {
+    "operator": "all",
+    "enabledValue": "1",
+    "defaultEnabled": true,
+    "ids": [
+      "mg_art_loading_state_v1"
+    ]
+  },
+  "metrics": {
+    "sourceMasterCount": 12,
+    "runtimeVariantCount": 36,
+    "reviewBoardCount": 1,
+    "runtimeVariantBytes": 268762,
+    "runtimeByteBudget": 2097152,
+    "withinBudget": true
+  },
+  "fallback": {
+    "chain": "loading art -> same-family 240 neutral -> existing spinner/HTML"
+  },
+  "a11y": "Decorative art is aria-hidden; progress value and loading copy remain live HTML."
+}

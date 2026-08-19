@@ -1,0 +1,18 @@
+{
+  "status":"PARTIAL_OWNER_CLEARANCE_PREPARATION",
+  "dependencies":["requirements/active/tank-controls-p0-20260810","requirements/active/game-stage-art-expansion-p0-20260809"],
+  "steps":[
+    {"id":"TANKART-1","task":"冻结原创风格、四套皮肤、地图/基地交付与审批合同","status":"completed"},
+    {"id":"TANKART-2","task":"使用最高质量图像模型生成 source-only 概念稿并保存 provenance","status":"completed"},
+    {"id":"TANKART-3","task":"补齐稳定 ID/版本/SHA/provenance、机器技术/视觉/相似风险审查、runtime 派生、fallback、feature flag 与回滚，形成 OWNER_AUTHORIZED_ART_CLEARANCE","status":"pending"},
+    {"id":"TANKART-4","task":"取得所有者清除后独立建立可逆 default-on runtime/Manifest/回退 QA；发布仍须当前用户明确命令","status":"pending"}
+  ],
+  "risks":["生成图出现 AI 痕迹或商业 IP 相似性","材质细节遮挡游戏可读性","未获 OWNER_AUTHORIZED_ART_CLEARANCE 的资源误进入 manifest","透明边缘/暗黑主题/多尺寸派生质量不足"],
+  "tests":["scripts/asset-library-audit.js","qa/asset-manifest-v2.js","qa/tabletop-art-runtime.js","qa/dom-smoke.js","机器小尺寸/相似风险/回滚验证；可选人工咨询单独记录"],
+  "optionalAdvisoryEvidence":["human editable cleanup","independent natural-person Reviewer B","IP/legal advice","per-asset Golden Set"],
+  "optionalAdvisoryPolicy":"All listed items are OPTIONAL_ADVISORY_EVIDENCE / NOT_EXECUTED and non-blocking; never fabricate PASS.",
+  "releaseEvidencePending":["second real browser","physical Android/iPhone/Tablet","real network shaping","real low-end performance","explicit current user release command"],
+  "externalAssetPolicy":"blocked-license / EXTERNAL_REFERENCE_ONLY assets are permanently forbidden from source derivation, generation input, runtime and release",
+  "historicalAsOf":{"date":"2026-08-10","status":"PARTIAL_AWAITING_HUMAN_REVIEW","meaning":"The former candidate-only/default-off plan treated human cleanup, Reviewer B, IP Review and Golden Set as runtime prerequisites; retained for audit only."},
+  "rollback":"当前源稿不进入运行时；取得 clearance 后也必须能以 feature flag 回到现有 Tank 表现，不改 Authority、规则、协议、奖励或用户数据。"
+}

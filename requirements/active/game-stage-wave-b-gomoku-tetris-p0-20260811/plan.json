@@ -1,0 +1,25 @@
+{
+  "taskId": "game-stage-wave-b-gomoku-tetris-p0-20260811",
+  "status": "LOCAL_ACCEPTED_AWAITING_BROWSER_REFRESH",
+  "risk": "MEDIUM",
+  "phases": [
+    {"id":"WB-1","title":"冻结视觉/回滚合同与红灯 QA","status":"completed","dependsOn":[]},
+    {"id":"WB-2","title":"五子棋 Wave B 游戏文件纵切","status":"completed","dependsOn":["WB-1"]},
+    {"id":"WB-3","title":"Tetris Wave B 游戏文件纵切","status":"completed","dependsOn":["WB-1"]},
+    {"id":"WB-4","title":"Master 共享 CSS、四视口与双主题三语整合","status":"completed","dependsOn":["WB-2","WB-3"]},
+    {"id":"WB-5","title":"专项/完整回归/双构建/报告日志收口","status":"completed","dependsOn":["WB-4"]}
+  ],
+  "tests": [
+    "node qa/game-stage-wave-b-gomoku.js",
+    "node qa/game-stage-wave-b-tetris.js",
+    "node qa/game-stage-contract.js",
+    "node qa/immersive-game-shell.js",
+    "node qa/tabletop-art-runtime.js",
+    "node qa/tetris-rule-core.js",
+    "npm run test:i18n",
+    "node qa/dom-smoke.js",
+    "npm run quality:gates",
+    "npm test"
+  ],
+  "rollback": "mg_art_game_stage_wave_b_v1=0 严格回退当前 Wave A；不回滚规则、协议或数据。"
+}

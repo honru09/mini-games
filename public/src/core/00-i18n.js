@@ -130,6 +130,7 @@ const SERVER_MESSAGE_KEYS = {
   'PIN 只能使用字母和数字，长度 4-20 位':'pin_invalid',
   'PIN 只能包含字母和数字，长度 4-20 位':'pin_invalid',
   '余额不足，请完成有效对局获取 💵':'shop_insufficient',
+  'G Coins 余额不足，请完成有效对局获取 G Coins':'shop_insufficient',
   '余额不足，先去赢几局吧':'shop_insufficient',
   '只有房主可以提前结算':'host_only_settle',
   '房间不存在':'server_room_not_found',
@@ -187,13 +188,25 @@ function translateServerMessage(message, reason, fallbackKey) {
 const I18N_TEXT_SOURCES = typeof WeakMap !== 'undefined' ? new WeakMap() : null;
 const I18N_ATTRIBUTE_SOURCES = typeof WeakMap !== 'undefined' ? new WeakMap() : null;
 const I18N_RENDERED_VALUES = new Map();
-function rememberRenderedTranslation(text, key, args) {
+function rememberRenderedSource(text, source) {
   const value = String(text);
   if (I18N_RENDERED_VALUES.size >= 4096 && !I18N_RENDERED_VALUES.has(value)) {
     const oldest = I18N_RENDERED_VALUES.keys().next().value;
     I18N_RENDERED_VALUES.delete(oldest);
   }
-  I18N_RENDERED_VALUES.set(value, { key, args: args.slice() });
+  I18N_RENDERED_VALUES.set(value, source);
+}
+function rememberRenderedTranslation(text, key, args) {
+  rememberRenderedSource(text, { key, args: args.slice() });
+}
+function localizeRenderedSource(source) {
+  if (!source || typeof source !== 'object') return source;
+  const args = Array.isArray(source.args) ? source.args : [];
+  if (source.kind === 'plural') return tPlural(source.key, ...args);
+  if (source.kind === 'game_record') return formatGameRecord(...args);
+  if (source.kind === 'mastery_journey_goal') return formatMasteryJourneyGoal(...args);
+  if (source.kind === 'mastery_next_hint') return formatMasteryNextHint(...args);
+  return source.key ? t(source.key, ...args) : '';
 }
 function rememberRuntimeText(node, source) {
   if (!I18N_TEXT_SOURCES || !node || node.nodeType !== 3) return;
@@ -210,8 +223,8 @@ function localizeRuntimeNode(node) {
     rememberRuntimeText(node, source);
     source = I18N_TEXT_SOURCES ? I18N_TEXT_SOURCES.get(node) : source;
   }
-  const localized = source && typeof source === 'object' && source.key
-    ? t(source.key, ...(source.args || []))
+  const localized = source && typeof source === 'object'
+    ? localizeRenderedSource(source)
     : translateRuntime(source);
   if (localized !== node.nodeValue) node.nodeValue = localized;
 }
@@ -245,7 +258,7 @@ function localizeRuntimeAttributes(root) {
         if (!sources) { sources = new Map(); I18N_ATTRIBUTE_SOURCES.set(element, sources); }
         sources.set(attribute, source);
       }
-      const localized = source && source.key ? t(source.key, ...(source.args || [])) : current;
+      const localized = source && typeof source === 'object' ? localizeRenderedSource(source) : current;
       if (localized !== current) element.setAttribute(attribute, localized);
     });
   });
@@ -296,6 +309,63 @@ function t(key, ...args) {
   }
   rememberRenderedTranslation(text, key, args);
   return text;
+}
+
+/* Count-bearing UI selects grammar at the i18n boundary, never in a route,
+ * profile card, or leaderboard renderer. The fallback keeps the three shipped
+ * locales legible even if a legacy runtime does not provide Intl.PluralRules. */
+const I18N_PLURAL_RULES = typeof Map !== 'undefined' ? new Map() : null;
+function normalizedPluralCount(value) {
+  const numeric = Number(value);
+  return Number.isFinite(numeric) && numeric >= 0 ? Math.max(0, Math.trunc(numeric)) : 0;
+}
+function pluralCategory(count) {
+  const normalized = normalizedPluralCount(count);
+  try {
+    let rules = I18N_PLURAL_RULES && I18N_PLURAL_RULES.get(currentLang);
+    if (!rules && typeof Intl !== 'undefined' && typeof Intl.PluralRules === 'function') {
+      rules = new Intl.PluralRules(currentLang);
+      if (I18N_PLURAL_RULES) I18N_PLURAL_RULES.set(currentLang, rules);
+    }
+    if (rules) return rules.select(normalized);
+  } catch (_error) {}
+  if (currentLang === 'uk-UA') {
+    const mod10 = normalized % 10, mod100 = normalized % 100;
+    if (mod10 === 1 && mod100 !== 11) return 'one';
+    if (mod10 >= 2 && mod10 <= 4 && !(mod100 >= 12 && mod100 <= 14)) return 'few';
+    return 'many';
+  }
+  return normalized === 1 ? 'one' : 'other';
+}
+function tPlural(key, count, ...args) {
+  const normalized = normalizedPluralCount(count);
+  const category = pluralCategory(normalized);
+  for (const candidate of [key + '_' + category, key + '_other', key]) {
+    const translated = t(candidate, normalized, ...args);
+    if (translated !== candidate) {
+      rememberRenderedSource(translated, { kind:'plural', key, args:[normalized, ...args] });
+      return translated;
+    }
+  }
+  return key;
+}
+function formatGamesCount(count) { return tPlural('games_count', count); }
+function formatWinsCount(count) { return tPlural('wins_count', count); }
+function formatRemainingWins(count) { return tPlural('remaining_wins', count); }
+function formatGameRecord(played, wins, rate) {
+  const rendered = t('profile_game_record', formatGamesCount(played), formatWinsCount(wins), rate === undefined || rate === null ? '—' : rate);
+  rememberRenderedSource(rendered, { kind:'game_record', args:[played, wins, rate] });
+  return rendered;
+}
+function formatMasteryJourneyGoal(gameName, remaining, title) {
+  const rendered = t('profile_journey_mastery_goal', gameName, formatRemainingWins(remaining), title);
+  rememberRenderedSource(rendered, { kind:'mastery_journey_goal', args:[gameName, remaining, title] });
+  return rendered;
+}
+function formatMasteryNextHint(remaining, threshold) {
+  const rendered = t('mastery_next_hint', formatRemainingWins(remaining), formatWinsCount(threshold));
+  rememberRenderedSource(rendered, { kind:'mastery_next_hint', args:[remaining, threshold] });
+  return rendered;
 }
 
 function i18nElements(root, selector) {
@@ -390,6 +460,10 @@ async function setLanguage(lang) {
     document.documentElement.setAttribute('lang', currentLang);
   }
   applyI18n();
+  // Formatted runtime values (for example Playline's audience label) must be
+  // recomputed from stable IDs after the committed locale changes.  Static
+  // applyI18n cannot safely translate an already formatted parameter.
+  try { if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function' && typeof Event === 'function') window.dispatchEvent(new Event('languagechange')); } catch {}
   // Static icon labels and early-rendered dynamic rails may be created before
   // the async locale request resolves. Re-render them from stable keys once
   // the committed locale is available so a temporary key never becomes UI.
@@ -406,8 +480,10 @@ async function setLanguage(lang) {
   if (typeof renderGhostHome === 'function') renderGhostHome();
   if (typeof renderGhostProfile === 'function') renderGhostProfile();
   if (typeof renderSocialRail === 'function') renderSocialRail();
+  if (typeof setChatView === 'function' && typeof ghostAppRoute !== 'undefined' && ghostAppRoute === 'chat') setChatView(typeof ghostChatView !== 'undefined' ? ghostChatView : 'players', { silentHash:true });
   if (online.room) renderRoomPanel();
   if (currentGame && typeof currentGame.onLanguageChange === 'function') currentGame.onLanguageChange(currentLang);
+  if (typeof renderGameStage === 'function') renderGameStage();
   if (online.connected && account && account.uid) {
     online.send({ type:'profile', payload: { uid: account.uid, name: account.name, avatar: account.avatar, lang:currentLang } });
   }

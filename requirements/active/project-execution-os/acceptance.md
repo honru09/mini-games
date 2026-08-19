@@ -1,5 +1,7 @@
 # Acceptance
 
+> **Historical policy note（historical-as-of，2026-08-16）：** 下文关于设备、第二浏览器、真实网络或 Supabase 的 `BLOCKED` 表述仅是本批形成时的历史验收快照。当前设备/浏览器/网络与 Supabase Gate 均为 `NON_BLOCKING_FOR_DEVELOPMENT`；缺失的真实环境证据保持 `NOT_EXECUTED / RELEASE_EVIDENCE_PENDING`。这不表示外部证据已经完成，也不授予跨设备、生产就绪或发布结论；下方旧结果仅为历史留档，不再阻塞开发，发布仍须当前用户明确命令。
+
 | Requirement | Status | Evidence | Notes |
 |---|---|---|---|
 | 副窗提交已融合 | PASS | `简易报告/副窗任务融合审阅-202608080049.md` | `c5bb59e` 是 `main` 祖先 |

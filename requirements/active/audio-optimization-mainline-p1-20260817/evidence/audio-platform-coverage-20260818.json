@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "evidenceId": "AUDIO-PLATFORM-COVERAGE-20260818",
+  "capturedAt": "2026-08-18T22:10:07.6259634+09:00",
+  "verifiedAt": "2026-08-18T22:36:04.7161946+09:00",
+  "currency": "current_local_capture",
+  "status": "PASS_WITH_EXTERNAL_GATES_PENDING",
+  "build": {
+    "path": "public/index.html",
+    "characters": 2077538,
+    "bytes": 2092161,
+    "sha256": "82D85384C5AF1061B3B60E5BB197E9F75A9A57FCD10DD30096E2C88C248FE90E",
+    "identitySemantics": "mutable shared-worktree snapshot captured after a passing deterministic build check; this hash is evidence for this capture only and is not a release or commit identity"
+  },
+  "coverage": {
+    "totalCues": 84,
+    "toneFamilies": 56,
+    "musicBeds": 3,
+    "newPlatformCues": 13,
+    "platformAssertions": 8,
+    "areas": [
+      "settings/theme/language/volume",
+      "shop purchase success/error/timeout",
+      "equip commits",
+      "social accepted/rejected mutations",
+      "Playline publish/remove/error",
+      "match expression and match chat",
+      "daily reward-bearing claim with claim-id dedupe",
+      "profile save"
+    ]
+  },
+  "commands": [
+    {"command": "npm run test:audio", "status": "pass", "summary": "84 cues; 56 tone families; 3 music beds; AUDIO_PLATFORM_COVERAGE_ALL_PASS assertions=8 cues=13"},
+    {"command": "node qa/audio-platform-coverage.js", "status": "pass", "summary": "AUDIO_PLATFORM_COVERAGE_ALL_PASS assertions=8 cues=13"},
+    {"command": "node scripts/build.js --check", "status": "pass", "characters": 2077538, "bytes": 2092161, "sha256": "82D85384C5AF1061B3B60E5BB197E9F75A9A57FCD10DD30096E2C88C248FE90E"},
+    {"command": "npm run test:i18n", "status": "pass"},
+    {"command": "node qa/dom-smoke.js", "status": "pass"},
+    {"command": "npm run quality:gates", "status": "pass_at_capture", "summary": "QUALITY_GATES_FAST_ALL_PASS in the 2026-08-18 local capture before unrelated renderer entry rewrites"},
+    {"command": "npm run test:e2e", "status": "pass", "summary": "E2E_ALL_PASS"},
+    {"command": "npm test", "status": "pass", "summary": "exit_code=0; full pretest/test/posttest aggregate"},
+    {"command": "node qa/progress-ledger.js", "status": "pass_at_capture", "summary": "PROGRESS_LEDGER_ALL_PASS requirements=242 reports=7 sources=76 dependencyEdges=267; later rerun found unrelated TECH-027 report identity drift"},
+    {"command": "node qa/brief-report-contract.js", "status": "pass", "summary": "BRIEF_REPORT_CONTRACT_ALL_PASS reports=89"},
+    {"command": "node qa/mainline-control-plane.js", "status": "pass", "summary": "MAINLINE_CONTROL_PLANE_ALL_PASS requirements=242"},
+    {"command": "npm run quality:gates (rerun at 2026-08-18T22:29+09:00)", "status": "blocked_unrelated_worktree_drift", "summary": "audio gates remain green; shared renderer gates report stale manifest/SW digests for Gomoku/Ludo/Monopoly/Xiangqi/Tetris and an independent Ludo perspective assertion"}
+  ],
+  "claims": [
+    "the 13 new platform semantic cues are synchronized between FeedbackBus and UnifiedFeedbackAdapter",
+    "UI helper calls use bounded local IDs and do not carry user text, UID, token, identity, or protocol payload",
+    "success cues are emitted only after committed local state or matching accepted server replies; rejected and timeout branches use error cues",
+    "daily claim audio is reward-bearing and claim-id deduplicated; chat and expression audio is receive/send deduplicated",
+    "the source graph and deterministic public/index.html build contain the integrated coverage",
+    "this evidence does not claim audible quality, second-browser/device/PWA recovery, real network, production Supabase, external generated binaries, or release readiness"
+  ],
+  "externalGates": {
+    "audiocraft": "NOT_EXECUTED",
+    "elevenlabs": "NOT_EXECUTED",
+    "falAi": "NOT_EXECUTED",
+    "secondBrowser": "NOT_EXECUTED",
+    "physicalDevices": "NOT_EXECUTED",
+    "pwaLockScreenAndOutputSwitch": "NOT_EXECUTED",
+    "realNetwork": "NOT_EXECUTED",
+    "productionSupabase": "NOT_EXECUTED",
+    "commitPushDeploy": "NOT_EXECUTED"
+  },
+  "sharedWorktreeNote": {
+    "status": "OPEN_UNRELATED_TO_AUDIO",
+    "failures": [
+      "qa/game-module-loader.js: renderer entry digests do not match the existing loader manifest",
+      "qa/sw-game-module-preheat.js: renderer SW allowlist digests do not match current entry bytes",
+      "qa/gomoku-ghost3d-cache.js, qa/ludo-ghost3d-cache.js, qa/monopoly-ghost3d-cache.js, qa/xiangqi-ghost3d-cache.js, qa/tetris-ghost3d-cache.js: stale renderer descriptors",
+      "qa/ludo-ghost3d-renderer.js: independent TabletopPerspective rotation assertion",
+      "qa/progress-ledger.js: generated TECH-027 report does not contain the current build identity"
+    ],
+    "boundary": "No renderer manifest, SW, Three entry, or perspective file was changed by the audio closure; repair belongs to the active renderer batch."
+  }
+}
