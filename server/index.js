@@ -1408,7 +1408,7 @@ function profileDbRow(u){
     achievements: u.achievements || [], playmates: u.playmates || {},
     signature: u.signature || '', country_region: u.countryRegion || '', gender_tag: u.genderTag || 'hidden',
     presence_preference: u.presencePreference || 'joinable', presence_visibility: u.presenceVisibility || 'everyone', showcase: u.showcase || null,
-    daily: u.daily || { play: 0, win: 0, streak: 0 }, daily_key: u.dailyKey || '', daily_task_key: u.dailyTaskKey || '', daily_tasks: u.dailyTasks || null, name_fx: u.nameFx || 0,
+    daily: u.daily || { play: 0, win: 0, streak: 0 }, daily_key: u.dailyKey || '', daily_task_key: u.dailyTaskKey || '', daily_tasks: u.dailyTasks || { play: 0, win: 0, streak: 0, claimed: [], claimIds: {} }, name_fx: u.nameFx || 0,
     auth_tokens: Array.isArray(u.authTokens) ? u.authTokens.slice(-5) : [],
     recent_results: Array.isArray(u.recentResults) ? u.recentResults.slice(-500) : [],
     purchase_requests: Array.isArray(u.purchaseRequests) ? u.purchaseRequests.slice(-100) : [],
