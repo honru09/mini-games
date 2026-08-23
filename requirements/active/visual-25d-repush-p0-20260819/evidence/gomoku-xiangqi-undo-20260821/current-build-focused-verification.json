@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-08-21T13:45:00+09:00",
+  "build": {
+    "path": "public/index.html",
+    "characters": 1967839,
+    "utf8Bytes": 1982521,
+    "sha256": "176D108FAEEE8BE2D42274BDCD7462A43D6623371B3F4F2E9F46EFB2C037D9FC"
+  },
+  "scope": "focused_gomoku_xiangqi_undo_and_gomoku_impact",
+  "automated": {
+    "passed": [
+      "npm run test:i18n",
+      "node qa/game-stage-density-process-gomoku.js",
+      "node qa/game-stage-density-process-tank-xiangqi.js",
+      "node qa/ui-room-lobby-contract.js",
+      "node qa/rule-authority.js",
+      "node --experimental-websocket qa/undo-online.js",
+      "npm run test:visual-25d",
+      "npm run test:immersive-shell",
+      "node qa/dom-smoke.js",
+      "npm run quality:gates (QUALITY_GATES_FAST_ALL_PASS)",
+      "npm test (exit 0)",
+      "node scripts/build.js --check"
+    ],
+    "onlineUndoScenarios": [
+      "room allowUndo=false rejects Gomoku undo",
+      "only the last mover can undo in Gomoku and Xiangqi",
+      "one room-wide undo per match",
+      "Xiangqi revision and action sequence remain monotonic after rollback",
+      "new match resets undoUsed"
+    ]
+  },
+  "singleBrowserFocusedCheck": {
+    "browser": "Codex in-app Chromium",
+    "viewport": "390x844 CSS px simulation",
+    "gomoku": {
+      "documentOverflowPx": [0, 0],
+      "boardCssPx": [374, 374],
+      "boardAspectRatio": 1,
+      "frameAspectRatio": 1,
+      "touchDirectionPadCount": 0,
+      "stoneShape": "circular",
+      "persistentSquareMarkerCount": 0,
+      "localAiUndo": {
+        "readyAfterRound": true,
+        "stateAfterUse": "used",
+        "disabledAfterUse": true,
+        "lastMoveAfterUse": "none"
+      }
+    },
+    "roomSetup": {
+      "ludo": { "undoDisabled": true, "undoChecked": false },
+      "xiangqi": { "undoDisabled": false, "undoChecked": true }
+    }
+  },
+  "automatedVisualContract": {
+    "placementImpactImmediate": { "core": 1, "rays": 8, "motes": 4 },
+    "placementImpactCleanup": "finite and cleared after the bounded presentation window",
+    "sources": ["qa/game-stage-density-process-gomoku.js", "qa/tabletop-perspective-contract.js"]
+  },
+  "nonClaims": [
+    "not a second browser",
+    "not a physical Android, iPhone, or Tablet run",
+    "not real 50/100/200ms network shaping",
+    "not low-end GPU, FPS, thermal, or memory evidence",
+    "not a six-game full route or result matrix",
+    "not released or deployed"
+  ]
+}

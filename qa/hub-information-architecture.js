@@ -5,7 +5,8 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..');
-const template = fs.readFileSync(path.join(ROOT, 'public', 'index-template.html'), 'utf8');
+const { readPresentationSource } = require('./presentation-source');
+const template = readPresentationSource();
 const roster = fs.readFileSync(path.join(ROOT, 'public', 'src', 'ui', '07-roster.js'), 'utf8');
 const shell = fs.readFileSync(path.join(ROOT, 'public', 'src', 'core', '02-app-shell.js'), 'utf8');
 

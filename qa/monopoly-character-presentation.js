@@ -23,19 +23,20 @@ check('bankrupt players remain represented but invisible',base({players:[{pos:0,
 const privateInput={schemaVersion:'player-character-v1',characterId:'unknown',slots:{body:'unknown'},owned:[3001],coins:999,token:'secret'};
 const safe=presentation.project({players:[{pos:0}],seats:[{seatId:0,playerCharacter:privateInput}]})[0].character;
 check('unknown and private character fields collapse to the fixed public fallback',safe.characterId==='character-base-01'&&safe.slots.body==='body-paper-01'&&!('owned'in safe)&&!('coins'in safe)&&!('token'in safe));
-check('runtime cannot activate unapproved art paths',live.every(item=>item.renderMode==='code-fallback'&&!('assetPath'in item)&&!('assetId'in item)));
+check('pure projection stays renderer-neutral and carries no asset path',live.every(item=>item.renderMode==='code-fallback'&&!('assetPath'in item)&&!('assetId'in item)));
 
 const root=path.join(__dirname,'..');
 const monopoly=fs.readFileSync(path.join(root,'public/src/games/monopoly.js'),'utf8');
 const roster=fs.readFileSync(path.join(root,'public/src/ui/07-roster.js'),'utf8');
 const online=fs.readFileSync(path.join(root,'public/src/online/03-websocket.js'),'utf8');
 const build=fs.readFileSync(path.join(root,'scripts/build.js'),'utf8');
-const template=fs.readFileSync(path.join(root,'public/index-template.html'),'utf8');
+const { readPresentationSource }=require('./presentation-source');
+const template=readPresentationSource();
 check('Monopoly consumes the projection without changing shared rules',monopoly.includes('MonopolyCharacterPresentation.project({players,seats,current:cur,phase,over,winner')&&monopoly.includes("const renderSource=source||'snapshot'"));
 check('online caller supplies current public Seat projections lazily',roster.includes('getPublicSeats: () => online.roomInfo'));
 check('online forwards the existing root transition without changing the wire contract',online.includes("onMonopolyRuleState(msg.payload||msg,msg.transition||null)")&&online.includes("onMonopolyRuleState(p.monopolyRuleSnapshot,null,'reconnect')"));
 check('build orders the presentation module before Monopoly',build.indexOf("'games/monopoly-character-presentation.js'")<build.indexOf("'games/monopoly.js'"));
-check('code fallback has reduced-motion and accessible renderer hooks',template.includes('monopoly-character-fallback')&&template.includes('@media (prefers-reduced-motion:reduce)')&&monopoly.includes("setAttribute('aria-label',tokenTitle)"));
+check('layered renderer keeps code fallback, truthful state, reduced-motion and accessible hooks',template.includes('monopoly-character-fallback')&&template.includes('player-character-composite-fallback')&&template.includes('@media (prefers-reduced-motion:reduce)')&&template.includes('.player-character-layered){animation:none!important')&&monopoly.includes("setAttribute('aria-label',tokenTitle)")&&monopoly.includes('onRendererState:state=>{m.dataset.characterRenderer=state;}')&&monopoly.includes('dataset.playerCharacterRenderer:view.renderMode'));
 check('presentation module never reads economy, rule or reward fields',!/(\bcoins\b|\bowned\b|\bprice\b|\breward\b|\bdice\b|\bdamage\b|\bspeed\b|\bxp\b|\bwins\b)/i.test(fs.readFileSync(path.join(root,'public/src/games/monopoly-character-presentation.js'),'utf8')));
 
 if(failed){console.error('MONOPOLY_CHARACTER_PRESENTATION_FAILED',failed);process.exit(1);}console.log('MONOPOLY_CHARACTER_PRESENTATION_ALL_PASS');

@@ -155,6 +155,7 @@ check('外部集合必须登记来源 URL 和可核验许可证文件', catalog.
 const required=['id','category','assetType','sourceType','sourcePath','sourceSha256','license','author','status','dimensions','previewPath','previewSha256','runtimePaths','promptPath','model','remoteObjectKey'];
 check('每项素材包含完整审计字段', catalog.assets.every(item => required.every(key => Object.prototype.hasOwnProperty.call(item,key))));
 check('素材路径均留在仓库且文件存在', catalog.assets.every(item => {
+  if (!item || !Array.isArray(item.runtimePaths)) return false;
   const rawPaths=[item.sourcePath,item.previewPath,...item.runtimePaths];
   if (item.promptPath !== null) rawPaths.push(item.promptPath);
   const paths=rawPaths.map(safePath);
@@ -162,10 +163,12 @@ check('素材路径均留在仓库且文件存在', catalog.assets.every(item =>
 }));
 check('素材源文件与低清预览 SHA-256 一致', catalog.assets.every(item => {
   const source=safePath(item.sourcePath),preview=safePath(item.previewPath);
-  return /^[a-f0-9]{64}$/.test(item.sourceSha256)&&/^[a-f0-9]{64}$/.test(item.previewSha256)&&sha256(source)===item.sourceSha256&&sha256(preview)===item.previewSha256;
+  return source&&preview&&fs.existsSync(source)&&fs.existsSync(preview)&&/^[a-f0-9]{64}$/.test(item.sourceSha256)&&/^[a-f0-9]{64}$/.test(item.previewSha256)&&sha256(source)===item.sourceSha256&&sha256(preview)===item.previewSha256;
 }));
 check('素材源文件尺寸与目录声明一致', catalog.assets.every(item => {
-  const size=imageSize(safePath(item.sourcePath));
+  const source=safePath(item&&item.sourcePath);
+  if (!source||!fs.existsSync(source)||!item.dimensions) return false;
+  const size=imageSize(source);
   return size&&size.width===item.dimensions.width&&size.height===item.dimensions.height;
 }));
 check('生成素材登记 Prompt、模型、作者与生成许可', catalog.assets.filter(item => item.sourceType==='generated').every(item => item.promptPath&&item.model&&item.author&&item.license==='project-owned-ai-generated'));
@@ -180,7 +183,9 @@ check('六款封面目录与生产 Manifest 路径一致', coverCatalogAssets.le
 const runtimeAssetMap=new Map(manifest.assets.map(item => [item.asset_id,item]));
 check('非封面运行时素材目录与生产 Manifest 路径一致', catalog.assets.filter(item => item.status==='integrated-local-only'&&item.assetType!=='lobby-cover').every(item => {
   const production=runtimeAssetMap.get(item.id);
-  return production&&item.runtimePaths.includes(production.runtime_path);
+  if (!production || !Array.isArray(item.runtimePaths) || typeof production.runtime_path !== 'string') return false;
+  const root=production.runtime_path.replace(/\/$/,'');
+  return item.runtimePaths.includes(production.runtime_path)||item.runtimePaths.some(runtimePath => runtimePath.startsWith(root + '/'));
 }));
 const honruCatalog=catalog.assets.find(item=>item.id==='P-HONRU-STATES-V1');
 const honruProduction=runtimeAssetMap.get('P-HONRU-STATES-V1');
@@ -188,6 +193,7 @@ check('Honru 素材库九状态路径与生产 Manifest variants 完全同构', 
   sameJson(honruCatalog.runtimePaths,Object.values(honruProduction.variants||{}))&&
   sameJson(honruCatalog.runtimePaths.slice().sort(),Object.values(honruProduction.variants||{}).slice().sort()));
 check('reference-only 素材只留在 art-source 且不进入 public', catalog.assets.filter(item => item.status==='reference-only').every(item => {
+  if (!Array.isArray(item.runtimePaths)) return false;
   const paths=[item.sourcePath,item.previewPath,...item.runtimePaths];
   return paths.every(value => typeof value==='string'&&value.startsWith('art-source/')&&!value.startsWith('public/'));
 }));

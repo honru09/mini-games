@@ -12,13 +12,16 @@ if(api){
   check('every player pid maps its base to the same near quarter', [0,1,2,3].every(pid=>(pid+api.nearQuarterTurns(pid))%4===3));
   const p=[18,42],q=api.quarterPoint(100,p[0],p[1],1),back=api.quarterPoint(100,q[0],q[1],3);check('point quarter-turn is reversible',Math.abs(back[0]-p[0])<1e-8&&Math.abs(back[1]-p[1])<1e-8);
 }
-const gomoku=read('public/src/games/gomoku.js'),ludo=read('public/src/games/ludo.js'),utils=read('public/src/core/01-utils.js'),template=read('public/index-template.html'),build=read('scripts/build.js');
+const gomoku=read('public/src/games/gomoku.js'),ludo=read('public/src/games/ludo.js'),utils=read('public/src/core/01-utils.js'),build=read('scripts/build.js');
+const { readPresentationSource }=require('./presentation-source');
+const template=readPresentationSource();
 check('build loads perspective before game consumers',build.indexOf("'games/00-tabletop-perspective.js'")>=0&&build.indexOf("'games/00-tabletop-perspective.js'")<build.indexOf("'games/gomoku.js'"));
 check('gomoku draw and pointer use inverse presentation mapping',/function gomokuViewCell/.test(gomoku)&&/function gomokuLogicalCell/.test(gomoku)&&/gomokuViewCell\(r,c\)/.test(gomoku)&&/gomokuLogicalCell\(view\[0\],view\[1\]\)/.test(gomoku));
 check('gomoku rejects transformed non-integer and out-of-board input',/!Number\.isInteger\(r\) \|\| !Number\.isInteger\(c\) \|\| r < 0 \|\| r >= N \|\| c < 0 \|\| c >= N/.test(gomoku));
 check('gomoku last-step presentation uses impact feedback instead of a red frame',/triggerMoveImpact/.test(gomoku)&&/drawMoveImpact/.test(gomoku)&&!/const mark = CELL\*\.2/.test(gomoku));
 check('ludo keeps path-driven flight and capture impact presentation',/function animateTokenMove/.test(ludo)&&/ludo-flight-token/.test(ludo)&&/ludo-impact/.test(ludo)&&/movementPath\(from, dice\)/.test(ludo));
 check('gomoku and ludo use a reduced-motion-safe camera entrance',/@keyframes tabletopCameraIn/.test(template)&&/#screen-game \.gomoku-board,#screen-game \.ludo-board/.test(template)&&/prefers-reduced-motion:reduce\)\{#screen-game \.gomoku-board/.test(template));
+check('Gomoku entrance preserves a square Canvas and circular stones', /@keyframes gomokuBoardIn\{from\{opacity:0;transform:translateY\(14px\) scale\(\.96\)\}/.test(template) && /#screen-game \.gomoku-board\{animation-name:gomokuBoardIn\}/.test(template));
 check('ludo 2/3/4-player standings feed the shared accessible podium',/podium: placement\.map/.test(ludo)&&/victory-podium/.test(utils)&&/victory_podium_label/.test(utils)&&/victory_podium_rank/.test(utils));
 check('gomoku snapshots and wire moves remain logical',/opts\.sendMove\(\[r, c\]\)/.test(gomoku)&&/function snapshot\(\)/.test(gomoku)&&!/presentationHalfTurn/.test(gomoku.slice(gomoku.indexOf('function snapshot()'),gomoku.indexOf('function deserialize'))));
 check('ludo geometry uses current viewer pid only for presentation',/const viewPid=.*pids\[Number\(opts\.myIdx\)\]/.test(ludo)&&/nearQuarterTurns\(viewPid\)/.test(ludo)&&/quarterPoint\(S/.test(ludo));

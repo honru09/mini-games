@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "assetFamily": "P-PROFILE-ADAPTIVE-HERO-V1",
+  "licenseState": "EXTERNAL_REFERENCE_ONLY / blocked-license",
+  "inventoryContext": {
+    "hashIndexPath": "requirements/active/external-assets-audit-p1-20260813/evidence/external-file-content-hashes.json",
+    "hashIndexSha256": "EC0D066AA33DB56B0AE1DE42431BB2E6B07BEA10425524FD78A4DA1B80B782DD",
+    "structureIndexPath": "requirements/active/external-assets-audit-p1-20260813/evidence/external-layered-source-structure-audit-20260814.json",
+    "fileCount": 836,
+    "layeredOrVectorRecords": 3819
+  },
+  "taskRelevantInputs": [],
+  "sentAt": "2026-08-22T00:00:00+09:00",
+  "remoteTaskIds": [],
+  "externalPixelsOrLayersTransmitted": 0,
+  "runtimeExternalInputs": 0,
+  "rejectedInfluences": ["pixel copying", "layer copying", "tracing", "recoloring", "commercial game UI imitation"]
+}

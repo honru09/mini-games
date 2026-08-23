@@ -95,14 +95,17 @@ function shopRuntimeContract(){
   const body = new FakeNode('body');
   body.setConnected(true);
   const counters = { acquired:0, released:0 };
-  const catalog = { avatars:[], frames:[], effects:[], backgrounds:[
+  const sent = [];
+  const catalog = { avatars:[], frames:[], effects:[
+    {id:5,price:20,cls:'effect-5'},{id:8,price:32,cls:'effect-8'},
+  ], backgrounds:[
     {id:1,price:3},{id:2,price:3},{id:3,price:3},{id:4,price:3},{id:5,price:3},{id:6,price:5},
     {id:7,price:18},{id:8,price:18},{id:9,price:22},{id:10,price:20},
   ], game_cosmetics:[] };
   const context = vm.createContext({
     SHOP:catalog, PLAYROOM_AVATARS:[], AVATAR_CATEGORIES:[], CURRENCY:'$', GAMES:{},
-    account:{ coins:0, avatar:0, owned:{ backgrounds:[] } },
-    online:{ connected:true, send(){} }, document:{ body },
+    account:{ uid:'shop-contract-user', coins:100, avatar:0, frame:0, effect:0, background:0, owned:{ avatars:[], frames:[], effects:[], backgrounds:[], game_cosmetics:[] } },
+    online:{ connected:true, send(message){ sent.push(message); } }, document:{ body },
     el:(tag, cls, text) => { const node=new FakeNode(tag, cls); if(text!=null)node.textContent=String(text); return node; },
     currencyAmountText:value=>String(value)+' G Coins',
     currencyAmountNode:(value,options) => { const node=new FakeNode('span','currency-amount'); node.textContent=options&&options.formattedText?String(options.formattedText):String(value); return node; },
@@ -113,8 +116,8 @@ function shopRuntimeContract(){
     premiumBackgroundMeta:() => null, backgroundPosterNode:() => new FakeNode('div'),
     saveAccount(){}, syncProfiles(){}, renderMe(){}, toast(){}, setTimeout(){}, crypto:undefined,
   });
-  vm.runInContext(shopSource + '\nglobalThis.__shopCatalogItems = shopCatalogItems; globalThis.__shopState = () => ({ activeShopModal, activeShopRefresh });', context, { filename:'06-shop.js' });
-  return { context, body, counters };
+  vm.runInContext(shopSource + '\nglobalThis.__shopCatalogItems = shopCatalogItems; globalThis.__requestPurchase = requestPurchase; globalThis.__finishShopPurchaseFeedback = finishShopPurchaseFeedback; globalThis.__shopState = () => ({ activeShopModal, activeShopRefresh, activeShopPurchase });', context, { filename:'06-shop.js' });
+  return { context, body, counters, sent };
 }
 
 const clientCatalog = readClientCatalog();
@@ -122,7 +125,7 @@ const serverPrices = readServerPrices();
 const ranges = {
   avatars:Array.from({length:26}, (_, index) => index + 30),
   frames:Array.from({length:8}, (_, index) => index + 1),
-  effects:Array.from({length:4}, (_, index) => index + 1),
+  effects:Array.from({length:8}, (_, index) => index + 1),
   backgrounds:Array.from({length:4}, (_, index) => index + 7),
 };
 
@@ -132,6 +135,10 @@ for (const [category, ids] of Object.entries(ranges)){
   check(category + ' 客户端价格与服务端权威价格一致', samePrices(client, server), JSON.stringify({client,server}));
   check(category + ' 指定商品 ID 完整无重复', Object.keys(client).length === ids.length, JSON.stringify(client));
 }
+const newEffectPrices = {5:20,6:24,7:28,8:32};
+check('Effect 5-8 客户端与服务端价格精确冻结',
+  JSON.stringify(pricesFor(clientCatalog.effects,[5,6,7,8])) === JSON.stringify(newEffectPrices) &&
+  JSON.stringify(serverPricesFor(serverPrices,'effects',[5,6,7,8])) === JSON.stringify(newEffectPrices));
 
 const runtime = shopRuntimeContract();
 const visibleDefault = vm.runInContext("__shopCatalogItems('backgrounds', account).map(item => item.id)", runtime.context);
@@ -143,6 +150,22 @@ check('商城渲染循环使用背景过滤契约', /shopCatalogItems\(cat, acco
 
 vm.runInContext('openShop(); openShop();', runtime.context);
 check('连续打开商城只创建一个弹层并只获取一次滚动锁', runtime.body.children.length === 1 && runtime.counters.acquired === 1, JSON.stringify(runtime.counters));
+const buyEffect5 = new FakeNode('button','btn btn-primary');
+buyEffect5.setConnected(true);
+runtime.context.__requestPurchase('effects',5,buyEffect5);
+runtime.context.__requestPurchase('effects',5,buyEffect5);
+const effect5Request = runtime.sent[0] && runtime.sent[0].payload;
+check('Effect 5 重复购买触发只发送一个稳定 requestId',runtime.sent.length===1&&runtime.sent[0].type==='purchase'&&effect5Request.category==='effects'&&effect5Request.id===5&&/^buy_[A-Za-z0-9_-]+$/.test(effect5Request.requestId),JSON.stringify(runtime.sent));
+check('Effect 5 匹配成功回执只完成当前 pending',runtime.context.__finishShopPurchaseFeedback(true,{category:'effects',id:5,requestId:effect5Request.requestId},'')===true&&runtime.context.__shopState().activeShopPurchase===null);
+const buyEffect8 = new FakeNode('button','btn btn-primary');
+buyEffect8.setConnected(true);
+runtime.context.__requestPurchase('effects',8,buyEffect8);
+runtime.context.__requestPurchase('effects',8,buyEffect8);
+const effect8Request = runtime.sent[1] && runtime.sent[1].payload;
+check('Effect 8 重复购买触发只发送一个稳定 requestId',runtime.sent.length===2&&runtime.sent[1].type==='purchase'&&effect8Request.category==='effects'&&effect8Request.id===8&&effect8Request.requestId!==effect5Request.requestId,JSON.stringify(runtime.sent));
+check('Effect 8 replay 回执幂等收口且不产生第三次发送',runtime.context.__finishShopPurchaseFeedback(true,{category:'effects',id:8,requestId:effect8Request.requestId,replayed:true},'')===true&&runtime.context.__shopState().activeShopPurchase===null&&runtime.sent.length===2);
+const purchaseBranch = sourceSlice(serverSource,"if (type === 'purchase')","if (type === 'logout')",'服务端购买处理');
+check('服务端在扣款前按 purchase requestId 返回 replayed 回执',purchaseBranch.indexOf('u.purchaseRequests.includes(requestId)')>=0&&purchaseBranch.indexOf('u.purchaseRequests.includes(requestId)')<purchaseBranch.indexOf('u.coins -= price')&&/replayed:\s*true/.test(purchaseBranch));
 const closeButton = runtime.body.findByClass('shop-close');
 check('单例商城存在可用关闭按钮', !!closeButton);
 if (closeButton){

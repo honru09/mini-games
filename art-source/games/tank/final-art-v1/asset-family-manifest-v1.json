@@ -1,0 +1,759 @@
+{
+  "schemaVersion": 1,
+  "productionUnitId": "P1-02",
+  "familyId": "G-12-TANK-FINAL-ART-V1",
+  "sourceAssetId": "ART-035-TANK-FINAL-ART-V1",
+  "artworkVersion": 1,
+  "status": "OWNER_AUTHORIZED_ART_CLEARANCE",
+  "license": "project-owned-deterministic-svg-sharp",
+  "runtimeStrategy": "Vanilla DOM + CSS + Canvas + GSAP 2.5D; no GLB/Three dependency",
+  "sourceOnlyInputs": {
+    "arena": "art-source/games/tank/final-art-v1/source/tank-arena-source-v1.png",
+    "objectAtoms": "art-source/games/tank/final-art-v1/source/tank-object-atoms-chroma-source-v1.png",
+    "semanticVfx": "art-source/games/tank/final-art-v1/source/tank-semantic-vfx-chroma-source-v1.png",
+    "externalInfluence": "task-scoped semantic-only reference lane; no external pixels in runtime"
+  },
+  "sources": [
+    {
+      "role": "board-background",
+      "path": "art-source/games/tank/final-art-v1/runtime-source/board-background-v1.svg",
+      "sha256": "F26D3903EE0B8812FD7DD61281490EB627326EA7F7A7548F64E7E275D09B6576",
+      "bytes": 1666,
+      "width": 1056,
+      "height": 720,
+      "alpha": false,
+      "kind": "layer"
+    },
+    {
+      "role": "board-midground",
+      "path": "art-source/games/tank/final-art-v1/runtime-source/board-midground-v1.svg",
+      "sha256": "0C7B38F0AF30336321DA9D54BECE38D324A9FD2FA9395FB8DEE16FDF0EEF2A98",
+      "bytes": 4447,
+      "width": 1056,
+      "height": 720,
+      "alpha": false,
+      "kind": "layer"
+    },
+    {
+      "role": "board-foreground",
+      "path": "art-source/games/tank/final-art-v1/runtime-source/board-foreground-v1.svg",
+      "sha256": "7C3BE6492853282B7B2B1FC34C0ABB1FAA6015125B7DACF6DABE6E8DE93F8D0F",
+      "bytes": 412,
+      "width": 1056,
+      "height": 720,
+      "alpha": false,
+      "kind": "layer"
+    },
+    {
+      "role": "object-tank-classic",
+      "path": "art-source/games/tank/final-art-v1/runtime-source/object-tank-classic-v1.svg",
+      "sha256": "7E6D0218CDB731234643899B1DC4070CE9A25BA64CD76E685FD0C3323BF04FA4",
+      "bytes": 1553,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "object"
+    },
+    {
+      "role": "object-tank-teal",
+      "path": "art-source/games/tank/final-art-v1/runtime-source/object-tank-teal-v1.svg",
+      "sha256": "E1EB0E567AAE41E8C5C497D821EB86A6EE4B8DE77B5DD384798DC4FE07E6341A",
+      "bytes": 1553,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "object"
+    },
+    {
+      "role": "object-tank-coral",
+      "path": "art-source/games/tank/final-art-v1/runtime-source/object-tank-coral-v1.svg",
+      "sha256": "EF9814F4C68093039F52744D4BA899A21C27282D35F179C46B1F6DB8D80460FB",
+      "bytes": 1553,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "object"
+    },
+    {
+      "role": "object-tank-blue",
+      "path": "art-source/games/tank/final-art-v1/runtime-source/object-tank-blue-v1.svg",
+      "sha256": "CED6B6A20F78A525D13A0AE7391B8207E8EB725E960B388598E0B49022613F81",
+      "bytes": 1553,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "object"
+    },
+    {
+      "role": "object-wall-brick",
+      "path": "art-source/games/tank/final-art-v1/runtime-source/object-wall-brick-v1.svg",
+      "sha256": "774E06AC2EE643D7EE636532C7940675EAC49449C96CD2C1DD02E5EEEC4436FA",
+      "bytes": 510,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "object"
+    },
+    {
+      "role": "object-wall-steel",
+      "path": "art-source/games/tank/final-art-v1/runtime-source/object-wall-steel-v1.svg",
+      "sha256": "B38F9A664BB8C2660DBD7AB469EBE8FD2283C41A4B0FBD7F5CB23B619D8B933A",
+      "bytes": 643,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "object"
+    },
+    {
+      "role": "object-cover",
+      "path": "art-source/games/tank/final-art-v1/runtime-source/object-cover-v1.svg",
+      "sha256": "707A8F1F0E1E044CF227424AC3ADFFB05B426A47D62BE8393D922B860BB4353E",
+      "bytes": 773,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "object"
+    },
+    {
+      "role": "object-base-pad",
+      "path": "art-source/games/tank/final-art-v1/runtime-source/object-base-pad-v1.svg",
+      "sha256": "F5EF286548877B7D1E9CAD29FBFD0C3CACB3698328E969A6E5691D9664429DC5",
+      "bytes": 513,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "object"
+    },
+    {
+      "role": "object-projectile",
+      "path": "art-source/games/tank/final-art-v1/runtime-source/object-projectile-v1.svg",
+      "sha256": "FE6A6802D4A96738DB5E70FCDEC927F3344384B41233B0F579D12104C581C4EC",
+      "bytes": 443,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "object"
+    },
+    {
+      "role": "object-muzzle",
+      "path": "art-source/games/tank/final-art-v1/runtime-source/object-muzzle-v1.svg",
+      "sha256": "9135AA24F2EBA3B933FFCD0A2D41CA8307683462A7658D7DA12809ABBFC2C967",
+      "bytes": 531,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "object"
+    },
+    {
+      "role": "object-contact-shadow",
+      "path": "art-source/games/tank/final-art-v1/runtime-source/object-contact-shadow-v1.svg",
+      "sha256": "7FFE007E31EB439704785D51D2592EBA65AAC267DC33D72DE25C49A277AD9A26",
+      "bytes": 167,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "object"
+    },
+    {
+      "role": "object-shield",
+      "path": "art-source/games/tank/final-art-v1/runtime-source/object-shield-v1.svg",
+      "sha256": "71772275E1E4EB742ECAE7E53642DEEB7D5E894BD5E580C46F4DCAD7733F6983",
+      "bytes": 373,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "object"
+    },
+    {
+      "role": "vfx-muzzle",
+      "path": "art-source/games/tank/final-art-v1/runtime-source/vfx-muzzle-v1.svg",
+      "sha256": "8A1D3025799A956BCBB9A8C0CAF82001937513C2AEBD4EC88F9E7F144731E8B2",
+      "bytes": 451,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "semantic-vfx"
+    },
+    {
+      "role": "vfx-projectile",
+      "path": "art-source/games/tank/final-art-v1/runtime-source/vfx-projectile-v1.svg",
+      "sha256": "D19D5633B59CBAC87CA8EF08E265F0B1BF7D76D429BCA02DAF296FC8AA6A14D1",
+      "bytes": 474,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "semantic-vfx"
+    },
+    {
+      "role": "vfx-ricochet",
+      "path": "art-source/games/tank/final-art-v1/runtime-source/vfx-ricochet-v1.svg",
+      "sha256": "D60BECF5024CCB3880A82D0B81A81A77D18D34F76B76AEBEDD6E8DE75A74D3DF",
+      "bytes": 686,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "semantic-vfx"
+    },
+    {
+      "role": "vfx-hit",
+      "path": "art-source/games/tank/final-art-v1/runtime-source/vfx-hit-v1.svg",
+      "sha256": "4769782F165B3EB25BF9F2EF13BD6AEF8B1626FCA9140F850AD08AB54F2ECD21",
+      "bytes": 427,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "semantic-vfx"
+    },
+    {
+      "role": "vfx-explosion",
+      "path": "art-source/games/tank/final-art-v1/runtime-source/vfx-explosion-v1.svg",
+      "sha256": "ACE634D33659D1BC1E57BE3C6B138328043046421730B35519615625710099A4",
+      "bytes": 587,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "semantic-vfx"
+    },
+    {
+      "role": "vfx-destruction",
+      "path": "art-source/games/tank/final-art-v1/runtime-source/vfx-destruction-v1.svg",
+      "sha256": "D9CD3445B4B18C53E42096A2F2D4618B6B8E1FFE79753931BCFBCFEA39739594",
+      "bytes": 465,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "semantic-vfx"
+    },
+    {
+      "role": "vfx-shield",
+      "path": "art-source/games/tank/final-art-v1/runtime-source/vfx-shield-v1.svg",
+      "sha256": "A270F49FDC613EA1274BDD1DD82D77A91264AFDF605A5F31A937EB441E0C0ED8",
+      "bytes": 351,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "semantic-vfx"
+    },
+    {
+      "role": "vfx-terminal",
+      "path": "art-source/games/tank/final-art-v1/runtime-source/vfx-terminal-v1.svg",
+      "sha256": "2D0B9AC2F67AA9478DAE5C153AE3945488E4B08ED26EC28CEFEF5968F787A7E6",
+      "bytes": 488,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "semantic-vfx"
+    },
+    {
+      "role": "camera-desktop",
+      "path": "art-source/games/tank/final-art-v1/runtime-source/camera-desktop-v1.svg",
+      "sha256": "AEC5833AF0A89A771F6E5489FECD0C44720AA62A80EB2F1502D497304560958D",
+      "bytes": 401,
+      "width": 1280,
+      "height": 720,
+      "alpha": false,
+      "kind": "camera"
+    },
+    {
+      "role": "camera-mobile",
+      "path": "art-source/games/tank/final-art-v1/runtime-source/camera-mobile-v1.svg",
+      "sha256": "15358280C52E73D67CB518E170A6A8863FB68D946AA33DCE9CBB787A4DC0E4C1",
+      "bytes": 396,
+      "width": 720,
+      "height": 960,
+      "alpha": false,
+      "kind": "camera"
+    }
+  ],
+  "variants": [
+    {
+      "role": "board-background",
+      "path": "public/assets/games/tank/final-art-v1/board-background-v1.webp",
+      "sha256": "5B85EA08EBFF2435A85C446C79D90C98AB2673E658774EB0FF383DC9CB5215B1",
+      "bytes": 11666,
+      "width": 1056,
+      "height": 720,
+      "alpha": false
+    },
+    {
+      "role": "board-background-static",
+      "path": "public/assets/games/tank/final-art-v1/board-background-static-v1.webp",
+      "sha256": "5B85EA08EBFF2435A85C446C79D90C98AB2673E658774EB0FF383DC9CB5215B1",
+      "bytes": 11666,
+      "width": 1056,
+      "height": 720,
+      "alpha": false
+    },
+    {
+      "role": "board-midground",
+      "path": "public/assets/games/tank/final-art-v1/board-midground-v1.webp",
+      "sha256": "616A1D3AF625D17703B7E321834B0DD6AF6AA6AB3289A8940EE61C721EADE26D",
+      "bytes": 9038,
+      "width": 1056,
+      "height": 720,
+      "alpha": false
+    },
+    {
+      "role": "board-midground-static",
+      "path": "public/assets/games/tank/final-art-v1/board-midground-static-v1.webp",
+      "sha256": "616A1D3AF625D17703B7E321834B0DD6AF6AA6AB3289A8940EE61C721EADE26D",
+      "bytes": 9038,
+      "width": 1056,
+      "height": 720,
+      "alpha": false
+    },
+    {
+      "role": "board-foreground",
+      "path": "public/assets/games/tank/final-art-v1/board-foreground-v1.webp",
+      "sha256": "90114D2F336C1B2DD8F1101878E2B1BA16CA927D0441AEDEB71404EB1DDF6B99",
+      "bytes": 3244,
+      "width": 1056,
+      "height": 720,
+      "alpha": false
+    },
+    {
+      "role": "board-foreground-static",
+      "path": "public/assets/games/tank/final-art-v1/board-foreground-static-v1.webp",
+      "sha256": "90114D2F336C1B2DD8F1101878E2B1BA16CA927D0441AEDEB71404EB1DDF6B99",
+      "bytes": 3244,
+      "width": 1056,
+      "height": 720,
+      "alpha": false
+    },
+    {
+      "role": "object-tank-classic",
+      "path": "public/assets/games/tank/final-art-v1/object-tank-classic-v1.webp",
+      "sha256": "5996C0835131CA87B038EC4164DB11C9D1FFEF4F6E2725905A1017840A722223",
+      "bytes": 6312,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "object-tank-classic-static",
+      "path": "public/assets/games/tank/final-art-v1/object-tank-classic-static-v1.webp",
+      "sha256": "5996C0835131CA87B038EC4164DB11C9D1FFEF4F6E2725905A1017840A722223",
+      "bytes": 6312,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "object-tank-teal",
+      "path": "public/assets/games/tank/final-art-v1/object-tank-teal-v1.webp",
+      "sha256": "31A7E6033EAE927BC183F3805D3EBEE3AFDBDBB340735E6E5A9B5F92FA86064C",
+      "bytes": 6106,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "object-tank-teal-static",
+      "path": "public/assets/games/tank/final-art-v1/object-tank-teal-static-v1.webp",
+      "sha256": "31A7E6033EAE927BC183F3805D3EBEE3AFDBDBB340735E6E5A9B5F92FA86064C",
+      "bytes": 6106,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "object-tank-coral",
+      "path": "public/assets/games/tank/final-art-v1/object-tank-coral-v1.webp",
+      "sha256": "66EBA5FCEC1AC50B308495095FFC095EDF0F2C74F2B7AF60073D8BD834FC29D8",
+      "bytes": 6288,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "object-tank-coral-static",
+      "path": "public/assets/games/tank/final-art-v1/object-tank-coral-static-v1.webp",
+      "sha256": "66EBA5FCEC1AC50B308495095FFC095EDF0F2C74F2B7AF60073D8BD834FC29D8",
+      "bytes": 6288,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "object-tank-blue",
+      "path": "public/assets/games/tank/final-art-v1/object-tank-blue-v1.webp",
+      "sha256": "66A3E7CA4354C09047A0D2B670A095F4DB70BB18A34A4521AF24917DD84A0C41",
+      "bytes": 6118,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "object-tank-blue-static",
+      "path": "public/assets/games/tank/final-art-v1/object-tank-blue-static-v1.webp",
+      "sha256": "66A3E7CA4354C09047A0D2B670A095F4DB70BB18A34A4521AF24917DD84A0C41",
+      "bytes": 6118,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "object-wall-brick",
+      "path": "public/assets/games/tank/final-art-v1/object-wall-brick-v1.webp",
+      "sha256": "6F29AB93BC8BA1F7966A036E5A784B6B177A0C33065CE27FC1A095B918D47B0F",
+      "bytes": 4412,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "object-wall-brick-static",
+      "path": "public/assets/games/tank/final-art-v1/object-wall-brick-static-v1.webp",
+      "sha256": "6F29AB93BC8BA1F7966A036E5A784B6B177A0C33065CE27FC1A095B918D47B0F",
+      "bytes": 4412,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "object-wall-steel",
+      "path": "public/assets/games/tank/final-art-v1/object-wall-steel-v1.webp",
+      "sha256": "5CBA24174FBB9686151B44C287C1F2200A4F1F6B1336705C596E046AC07B5D68",
+      "bytes": 4356,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "object-wall-steel-static",
+      "path": "public/assets/games/tank/final-art-v1/object-wall-steel-static-v1.webp",
+      "sha256": "5CBA24174FBB9686151B44C287C1F2200A4F1F6B1336705C596E046AC07B5D68",
+      "bytes": 4356,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "object-cover",
+      "path": "public/assets/games/tank/final-art-v1/object-cover-v1.webp",
+      "sha256": "4F66C8B4647CF78AC652746E83EB8CC5E7198F06B1E64D2EF86698E441A321CB",
+      "bytes": 5938,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "object-cover-static",
+      "path": "public/assets/games/tank/final-art-v1/object-cover-static-v1.webp",
+      "sha256": "4F66C8B4647CF78AC652746E83EB8CC5E7198F06B1E64D2EF86698E441A321CB",
+      "bytes": 5938,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "object-base-pad",
+      "path": "public/assets/games/tank/final-art-v1/object-base-pad-v1.webp",
+      "sha256": "EFFC2DE66522126DD18E8EC44B677A56395C52879529FB0C07A486407842E3D5",
+      "bytes": 11740,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "object-base-pad-static",
+      "path": "public/assets/games/tank/final-art-v1/object-base-pad-static-v1.webp",
+      "sha256": "EFFC2DE66522126DD18E8EC44B677A56395C52879529FB0C07A486407842E3D5",
+      "bytes": 11740,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "object-projectile",
+      "path": "public/assets/games/tank/final-art-v1/object-projectile-v1.webp",
+      "sha256": "5632056EAD155730840D57AC772099981BA0B832D383CC7C011638FEEF306BA7",
+      "bytes": 3646,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "object-projectile-static",
+      "path": "public/assets/games/tank/final-art-v1/object-projectile-static-v1.webp",
+      "sha256": "5632056EAD155730840D57AC772099981BA0B832D383CC7C011638FEEF306BA7",
+      "bytes": 3646,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "object-muzzle",
+      "path": "public/assets/games/tank/final-art-v1/object-muzzle-v1.webp",
+      "sha256": "168DEEA6AEBC59CF2B871F70585624F77C95B1C005F81CF427F579FDBD695B6E",
+      "bytes": 3526,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "object-muzzle-static",
+      "path": "public/assets/games/tank/final-art-v1/object-muzzle-static-v1.webp",
+      "sha256": "168DEEA6AEBC59CF2B871F70585624F77C95B1C005F81CF427F579FDBD695B6E",
+      "bytes": 3526,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "object-contact-shadow",
+      "path": "public/assets/games/tank/final-art-v1/object-contact-shadow-v1.webp",
+      "sha256": "3CEFA23A18C5B2547517858B0194399D8F9E3CFA2F7E4AE677F95BA1CE7BBE82",
+      "bytes": 3272,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "object-contact-shadow-static",
+      "path": "public/assets/games/tank/final-art-v1/object-contact-shadow-static-v1.webp",
+      "sha256": "3CEFA23A18C5B2547517858B0194399D8F9E3CFA2F7E4AE677F95BA1CE7BBE82",
+      "bytes": 3272,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "object-shield",
+      "path": "public/assets/games/tank/final-art-v1/object-shield-v1.webp",
+      "sha256": "477CF3B364E97F452770EC807C68D04BEAC4C18CEEFC4EFEAF3B0D7B06B79FC9",
+      "bytes": 6120,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "object-shield-static",
+      "path": "public/assets/games/tank/final-art-v1/object-shield-static-v1.webp",
+      "sha256": "477CF3B364E97F452770EC807C68D04BEAC4C18CEEFC4EFEAF3B0D7B06B79FC9",
+      "bytes": 6120,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "vfx-muzzle",
+      "path": "public/assets/games/tank/final-art-v1/vfx-muzzle-v1.webp",
+      "sha256": "847C70EFCC819870A33B99319741989239515BA43F4333412DF4D6E0EE1597B9",
+      "bytes": 12068,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "vfx-muzzle-static",
+      "path": "public/assets/games/tank/final-art-v1/vfx-muzzle-static-v1.webp",
+      "sha256": "847C70EFCC819870A33B99319741989239515BA43F4333412DF4D6E0EE1597B9",
+      "bytes": 12068,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "vfx-projectile",
+      "path": "public/assets/games/tank/final-art-v1/vfx-projectile-v1.webp",
+      "sha256": "545628E6859F1955F8F3103D0071E16E82D83B1AEC306E779C70F27F7B04D928",
+      "bytes": 2898,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "vfx-projectile-static",
+      "path": "public/assets/games/tank/final-art-v1/vfx-projectile-static-v1.webp",
+      "sha256": "545628E6859F1955F8F3103D0071E16E82D83B1AEC306E779C70F27F7B04D928",
+      "bytes": 2898,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "vfx-ricochet",
+      "path": "public/assets/games/tank/final-art-v1/vfx-ricochet-v1.webp",
+      "sha256": "737EB84792910497B48E29D690F000D63D7406D1165D437FD52D510A39FE3F16",
+      "bytes": 5206,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "vfx-ricochet-static",
+      "path": "public/assets/games/tank/final-art-v1/vfx-ricochet-static-v1.webp",
+      "sha256": "737EB84792910497B48E29D690F000D63D7406D1165D437FD52D510A39FE3F16",
+      "bytes": 5206,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "vfx-hit",
+      "path": "public/assets/games/tank/final-art-v1/vfx-hit-v1.webp",
+      "sha256": "62B8F4AD91CA53E0318B9413F21E23B93FAB5F8D86B4C56B594A2201B36480CB",
+      "bytes": 15754,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "vfx-hit-static",
+      "path": "public/assets/games/tank/final-art-v1/vfx-hit-static-v1.webp",
+      "sha256": "62B8F4AD91CA53E0318B9413F21E23B93FAB5F8D86B4C56B594A2201B36480CB",
+      "bytes": 15754,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "vfx-explosion",
+      "path": "public/assets/games/tank/final-art-v1/vfx-explosion-v1.webp",
+      "sha256": "4817743DE5A4E5226E7AA1450C8F4055251A9387A9F36995F5D89422401E1D38",
+      "bytes": 14344,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "vfx-explosion-static",
+      "path": "public/assets/games/tank/final-art-v1/vfx-explosion-static-v1.webp",
+      "sha256": "4817743DE5A4E5226E7AA1450C8F4055251A9387A9F36995F5D89422401E1D38",
+      "bytes": 14344,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "vfx-destruction",
+      "path": "public/assets/games/tank/final-art-v1/vfx-destruction-v1.webp",
+      "sha256": "059CB372A5AF1B4236AE2E7DD44CC5219C7AD09610C9148593C8679530D3B0E6",
+      "bytes": 8894,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "vfx-destruction-static",
+      "path": "public/assets/games/tank/final-art-v1/vfx-destruction-static-v1.webp",
+      "sha256": "059CB372A5AF1B4236AE2E7DD44CC5219C7AD09610C9148593C8679530D3B0E6",
+      "bytes": 8894,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "vfx-shield",
+      "path": "public/assets/games/tank/final-art-v1/vfx-shield-v1.webp",
+      "sha256": "5F0072AFF85707C8B7FED63C99EC224FA5828228E94BFE5A0EACAE52DDD06454",
+      "bytes": 12160,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "vfx-shield-static",
+      "path": "public/assets/games/tank/final-art-v1/vfx-shield-static-v1.webp",
+      "sha256": "5F0072AFF85707C8B7FED63C99EC224FA5828228E94BFE5A0EACAE52DDD06454",
+      "bytes": 12160,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "vfx-terminal",
+      "path": "public/assets/games/tank/final-art-v1/vfx-terminal-v1.webp",
+      "sha256": "06EEEE3D9B31412257020447D3A92BF98BA27E517E641E67DBB478E5408388AE",
+      "bytes": 14126,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "vfx-terminal-static",
+      "path": "public/assets/games/tank/final-art-v1/vfx-terminal-static-v1.webp",
+      "sha256": "06EEEE3D9B31412257020447D3A92BF98BA27E517E641E67DBB478E5408388AE",
+      "bytes": 14126,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "camera-desktop",
+      "path": "public/assets/games/tank/final-art-v1/camera-desktop-v1.webp",
+      "sha256": "B224D6AA0D246E1908ADA31C717163814A19E5C86EBCBA97A5729AB2E7D4AD6A",
+      "bytes": 5928,
+      "width": 1280,
+      "height": 720,
+      "alpha": false
+    },
+    {
+      "role": "camera-desktop-static",
+      "path": "public/assets/games/tank/final-art-v1/camera-desktop-static-v1.webp",
+      "sha256": "B224D6AA0D246E1908ADA31C717163814A19E5C86EBCBA97A5729AB2E7D4AD6A",
+      "bytes": 5928,
+      "width": 1280,
+      "height": 720,
+      "alpha": false
+    },
+    {
+      "role": "camera-mobile",
+      "path": "public/assets/games/tank/final-art-v1/camera-mobile-v1.webp",
+      "sha256": "911CA668EB2121C439FE4602EF989C898798FF60AFE99C3712472BA598181C3F",
+      "bytes": 5174,
+      "width": 720,
+      "height": 960,
+      "alpha": false
+    },
+    {
+      "role": "camera-mobile-static",
+      "path": "public/assets/games/tank/final-art-v1/camera-mobile-static-v1.webp",
+      "sha256": "911CA668EB2121C439FE4602EF989C898798FF60AFE99C3712472BA598181C3F",
+      "bytes": 5174,
+      "width": 720,
+      "height": 960,
+      "alpha": false
+    }
+  ],
+  "reviewBoards": [
+    {
+      "path": "art-source/games/tank/final-art-v1/review/tank-final-runtime-contact-sheet-v1.png",
+      "sha256": "18E3F703045D23FB046F902B422DA879EA2A3FD5A1D48EF5B20456BEA08DCE96",
+      "bytes": 24709,
+      "width": 1060,
+      "height": 462
+    }
+  ],
+  "featureFlags": {
+    "operator": "all",
+    "enabledValue": "1",
+    "defaultEnabled": true,
+    "ids": [
+      "mg_art_tank_final_v1"
+    ]
+  },
+  "metrics": {
+    "sourceMasterCount": 25,
+    "runtimeVariantCount": 50,
+    "runtimeBytes": 376668,
+    "runtimeByteBudget": 6291456,
+    "withinBudget": true,
+    "boardLayerCount": 3,
+    "objectAtomCount": 12,
+    "semanticVfxCount": 8,
+    "cameraPresetCount": 2
+  },
+  "authorityBoundary": "presentation-only; Tank Authority, Protocol, Snapshot, Prediction, Replay, Reward, Economy, HP, ammo, controls and player identity remain live DOM/Rule/Protocol",
+  "fallback": {
+    "chain": "Tank final art -> existing CSS/DOM/Canvas arena and Emoji fallback"
+  },
+  "release": "LOCAL_ONLY_NOT_RELEASED",
+  "externalReferenceContext": {
+    "status": "SOURCE_ONLY_EXTERNAL_INFLUENCED",
+    "license": "EXTERNAL_REFERENCE_ONLY / blocked-license",
+    "transmissionRecord": "art-source/games/tank/final-art-v1/EXTERNAL_REFERENCE_TRANSMISSION.json",
+    "runtimeBoundary": "No blocked-license pixel, layer, silhouette, palette, text or icon enters runtime."
+  }
+}

@@ -84,10 +84,9 @@ check('Tank suppresses prediction/bootstrap cues and emits accepted movement onl
   assert(/!authorityMode/.test(move));
   assert(/audioCue\('tank_move'/.test(move));
   const authority = source.indexOf('function onAuthoritySnapshot');
-  const duplicateGuard = source.indexOf("if(receiptStatus==='duplicate_tick')return true", authority);
   const silentGate = source.indexOf('if(silent!==true&&audioReceiptAccepted&&previousAudio)', authority);
-  assert(authority >= 0 && duplicateGuard > authority && silentGate > duplicateGuard);
-  assert(source.includes("const audioReceiptAccepted = receiptStatus === 'accepted'"));
+  const monotonicReceipt = source.indexOf('const audioReceiptAccepted = hasValidServerTick&&incomingServerTick>authorityServerTick', authority);
+  assert(authority >= 0 && monotonicReceipt > authority && silentGate > monotonicReceipt);
   assert(source.includes('audioReceiptAccepted&&previousAudio'));
   assert(source.includes('if (audioReceiptAccepted) tankAudioAuthorityBaseline=nextAudioBaseline'));
   assert(source.includes("if(silent===true){resetTankInputGate();resetTankPrediction('authority-bootstrap');}"));

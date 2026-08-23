@@ -1,6 +1,6 @@
 # P12 本地验收
 
-当前结论：`IMPLEMENTED_LOCAL / T7_PARTIAL / LOCAL_ONLY / NOT_RELEASED`。
+当前结论：`VERIFIED_LOCAL / T7_PARTIAL / LOCAL_ONLY / NOT_RELEASED`。
 
 ## 已达到
 
@@ -20,12 +20,12 @@
 - [x] Tournament unit、Auto、Atomic、Recovery：全部通过
 - [x] 独立端口 `qa/e2e-online.js`：`E2E_ALL_PASS / E2E_EXIT=0`
 
-## 本批末待统一完成
+## 本批末统一完成
 
-- [ ] `npm run quality:gates`
-- [ ] 专用 QA 端口完整 `npm test`
-- [x] 并行前端/3D/美术源码已确定性聚合为 2,099,543 characters / 2,114,168 bytes / `E21CAA1CDC1D7E8B2FCD35A74DEB5A1A98CAAD69384A0F7D3C7AC77541693526`，`node scripts/build.js --check` 只读通过；该身份不冒充浏览器证据
-- [ ] 台账、状态、七份进度报告、简易报告入口和三日志最终同步
+- [x] `npm run quality:gates`：`QUALITY_GATES_FAST_ALL_PASS`
+- [x] 完整 `npm test` 主链、E2E 与 WS close 通过；设备/网络 posttest 在并行构建证据降为 `historical_as_of` 后独立全通过
+- [x] 当前确定性构建为 2,152,958 characters / 2,167,629 bytes / `5731F0D016AFF0A7403B609FE98A7A1D6D3453C13BCD99CFBFE4067090135921`，`node scripts/build.js --check` 只读通过；该身份不冒充浏览器证据
+- [x] 台账、七份进度报告、简易报告入口和三日志最终同步
 
 ## 保留缺口
 

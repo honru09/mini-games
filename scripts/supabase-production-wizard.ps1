@@ -8,6 +8,13 @@ $ErrorActionPreference = 'Stop'
 $Root = Split-Path -Parent $PSScriptRoot
 if ([string]::IsNullOrWhiteSpace($EnvFile)) { $EnvFile = Join-Path $Root '.env.supabase.local' }
 $Ops = Join-Path $PSScriptRoot 'supabase-production-ops.ps1'
+$KnownEnvKeys = @(
+  'SUPABASE_URL',
+  'SUPABASE_SERVICE_ROLE_KEY',
+  'SUPABASE_DB_URL',
+  'SUPABASE_RESTORE_DB_URL',
+  'SUPABASE_BACKUP_DIRECTORY'
+)
 
 function Show-Stage([int]$Index, [string]$Title) {
   Clear-Host
@@ -21,17 +28,33 @@ function Open-Page([string]$Url) {
   Start-Process $Url
 }
 
+function Assert-IsolatedEnvValue([string]$Key, [string]$Value) {
+  if ($Value.IndexOf("`r", [StringComparison]::Ordinal) -ge 0 -or
+      $Value.IndexOf("`n", [StringComparison]::Ordinal) -ge 0 -or
+      $Value.IndexOf("`0", [StringComparison]::Ordinal) -ge 0) {
+    throw '本地 Supabase 配置格式异常；请删除该文件后通过向导重新录入。'
+  }
+  foreach ($candidate in $KnownEnvKeys) {
+    if ($Value.IndexOf("$candidate=", [StringComparison]::Ordinal) -ge 0) {
+      throw '本地 Supabase 配置格式异常；请删除该文件后通过向导重新录入。'
+    }
+  }
+  return $Value
+}
+
 function Get-Existing([string]$Key) {
   if (-not (Test-Path -LiteralPath $EnvFile)) { return '' }
   $line = Get-Content -LiteralPath $EnvFile | Where-Object { $_ -like "$Key=*" } | Select-Object -Last 1
   if (-not $line) { return '' }
-  return $line.Substring($Key.Length + 1)
+  $value = $line.Substring($Key.Length + 1)
+  Assert-IsolatedEnvValue $Key $value | Out-Null
+  return $value
 }
 
 function Read-Visible([string]$Key, [string]$Prompt, [string]$Default = '') {
   $existing = Get-Existing $Key
   $fallback = if ($existing) { $existing } else { $Default }
-  $hint = if ($fallback) { "（直接 Enter 使用：$fallback）" } else { '' }
+  $hint = if ($fallback) { '（直接 Enter 使用已保存值）' } else { '' }
   $value = Read-Host "$Prompt$hint"
   if ([string]::IsNullOrWhiteSpace($value)) { return $fallback }
   return $value.Trim()
@@ -66,7 +89,7 @@ function Write-EnvValue([string]$Key, [string]$Value) {
   } else { @() }
   $temporary = "$EnvFile.$PID.tmp"
   try {
-    [IO.File]::WriteAllLines($temporary, @($lines + "$Key=$Value"), [Text.UTF8Encoding]::new($false))
+    [IO.File]::WriteAllLines($temporary, @($lines) + @("$Key=$Value"), [Text.UTF8Encoding]::new($false))
     Move-Item -LiteralPath $temporary -Destination $EnvFile -Force
   } finally {
     if (Test-Path -LiteralPath $temporary) { Remove-Item -LiteralPath $temporary -Force }
@@ -109,6 +132,40 @@ if ($Probe) {
   $probeRef = Get-ProjectRef 'https://abcdefghijklmnopqrst.supabase.co'
   $probeDb = Get-DatabaseInfo 'postgresql://postgres.abcdefghijklmnopqrst:password@aws-0-ap-northeast-1.pooler.supabase.com:5432/postgres' 'probe'
   if ($probeRef -ne $probeDb.ProjectRef -or $probeDb.Port -ne 5432) { throw 'PowerShell wizard probe failed.' }
+  $originalEnvFile = $EnvFile
+  $malformedEnv = Join-Path ([IO.Path]::GetTempPath()) "ghost-game-supabase-malformed-$PID.env"
+  $roundTripEnv = Join-Path ([IO.Path]::GetTempPath()) "ghost-game-supabase-round-trip-$PID.env"
+  try {
+    [IO.File]::WriteAllText(
+      $malformedEnv,
+      'SUPABASE_URL=https://abcdefghijklmnopqrst.supabase.coSUPABASE_SERVICE_ROLE_KEY=probe-secret',
+      [Text.UTF8Encoding]::new($false)
+    )
+    $EnvFile = $malformedEnv
+    try {
+      Get-Existing 'SUPABASE_URL' | Out-Null
+      throw 'malformed_env_was_accepted'
+    } catch {
+      if ($_.Exception.Message -eq 'malformed_env_was_accepted') { throw }
+      if ($_.Exception.Message -match 'probe-secret') { throw 'malformed_env_error_leaked_secret' }
+      if ($_.Exception.Message -notmatch '本地 Supabase 配置格式异常') { throw }
+    }
+    $EnvFile = $roundTripEnv
+    Write-EnvValue 'SUPABASE_URL' 'https://abcdefghijklmnopqrst.supabase.co'
+    Write-EnvValue 'SUPABASE_BACKUP_DIRECTORY' 'D:\probe-backups'
+    $roundTripLines = @(Get-Content -LiteralPath $roundTripEnv)
+    if ($roundTripLines.Count -ne 2) { throw 'env_round_trip_line_count_failed' }
+    if ((Get-Existing 'SUPABASE_URL') -ne 'https://abcdefghijklmnopqrst.supabase.co') {
+      throw 'env_round_trip_url_failed'
+    }
+    if ((Get-Existing 'SUPABASE_BACKUP_DIRECTORY') -ne 'D:\probe-backups') {
+      throw 'env_round_trip_backup_directory_failed'
+    }
+  } finally {
+    $EnvFile = $originalEnvFile
+    if (Test-Path -LiteralPath $malformedEnv) { Remove-Item -LiteralPath $malformedEnv -Force }
+    if (Test-Path -LiteralPath $roundTripEnv) { Remove-Item -LiteralPath $roundTripEnv -Force }
+  }
   Write-Output 'POWERSHELL_WIZARD_READY'
   exit 0
 }

@@ -348,7 +348,7 @@ check('memory Adapter keeps canonical room references when callers pass a stale 
   assert.strictEqual(joined.ok, true);
   assert.deepStrictEqual(joined.room, {
     id: 'R-ISOLATED', game: null, capacity: 2, started: false, settled: false, matchId: null,
-    visibility: 'public', allowSpectators: false, testAdminSandbox: false, hostUid: 'u-a',
+    visibility: 'public', allowSpectators: false, allowUndo: true, testAdminSandbox: false, hostUid: 'u-a',
   });
   assert(Object.isFrozen(joined.room));
   assert.strictEqual(Object.prototype.hasOwnProperty.call(joined.room, 'clients'), false);

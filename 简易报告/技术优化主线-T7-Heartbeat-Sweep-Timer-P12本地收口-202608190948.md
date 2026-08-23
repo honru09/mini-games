@@ -2,7 +2,7 @@
 
 ## 一句话结论
 
-状态：`IMPLEMENTED_LOCAL / T7_PARTIAL / LOCAL_ACCEPTED_AWAITING_RELEASE_COMMAND`。服务端 heartbeat 已统一到可控 owner lease，并补上“单点异常不能让整条心跳永久停摆”的动态证据；本批不包含前端可见变化和线上发布。
+状态：`VERIFIED_LOCAL / T7_PARTIAL / LOCAL_ACCEPTED_AWAITING_RELEASE_COMMAND`。服务端 heartbeat 已统一到可控 owner lease，并补上“单点异常不能让整条心跳永久停摆”的动态证据；统一全链现已完成，本批不包含线上发布。
 
 ## 主线切换进度
 
@@ -34,7 +34,6 @@
 
 - `NOT_EXECUTED`：正式 token TTL、其余 lifecycle timer、Chat/Expression delay、Reward/AI outbox cadence、gameplay tick、transport deadline 与 Metrics `generatedAt`。
 - `NOT_EXECUTED`：第二浏览器、物理手机/平板、真实网络整形、真实 Supabase、多实例与生产发布。
-- 本批末尚需统一运行 Quality Gates 和完整 `npm test`，随后把本简报与 active 事实包更新为最终本地验证状态。
 
 ## 验证
 
@@ -43,8 +42,9 @@
 - Timer Audit、Room/Presence、Ghost Auth、Connection Route、Reconnect：`PASS`。
 - Tournament unit/Auto/Atomic/Recovery：`PASS`。
 - 独立端口完整联机 E2E：`E2E_ALL_PASS / exit 0`。
-- 确定性构建闭环：并行前端/3D/美术源码已原子聚合为 2,099,543 characters / 2,114,168 bytes / `E21CAA1CDC1D7E8B2FCD35A74DEB5A1A98CAAD69384A0F7D3C7AC77541693526`，随后 `node scripts/build.js --check` 只读通过；该身份尚无匹配浏览器完整矩阵。
-- `npm run quality:gates`、完整 `npm test`：`NOT_EXECUTED`（待本批末统一运行）。
+- 确定性构建闭环：当前为 2,152,958 characters / 2,167,629 bytes / `5731F0D016AFF0A7403B609FE98A7A1D6D3453C13BCD99CFBFE4067090135921`，`node scripts/build.js --check` 只读通过；该身份尚无匹配浏览器完整矩阵。
+- 本批源码快照的完整 `npm test` 主链、E2E 与 WS close：`PASS`；独立 posttest：`PASS`。随后并行窗口更新源码，当前生成 hash 仅由 build check 绑定。
+- `npm run quality:gates`：第一次与并行质量门重叠时出现一次 Metrics 500，专项立即全通过，单实例完整重跑为 `QUALITY_GATES_FAST_ALL_PASS`。
 
 ## 风险与下一步
 

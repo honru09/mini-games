@@ -23,12 +23,16 @@ async function main(){
   const sameProjectRestoreDrillRejected =
     /if\s*\(\s*\$sourceIdentity\.ProjectRef\s*-eq\s*\$targetIdentity\.ProjectRef\s*\)\s*\{\s*throw\s+'[^']*同一(?:\s*Supabase)?\s*项目[^']*'\s*\}/.test(ops) &&
     !/\$sourceIdentity\.ProjectRef\s*-eq\s*\$targetIdentity\.ProjectRef\s*-and\s*\$sourceIdentity\.Database\s*-eq\s*\$targetIdentity\.Database/.test(ops);
-  check('Production Ops：恢复演练同一 Supabase 项目无条件拒绝、隔离并有破坏确认',/Get-SupabaseDatabaseIdentity/.test(ops)&&sameProjectRestoreDrillRejected&&/I_UNDERSTAND_EPHEMERAL_TARGET_WILL_BE_REPLACED/.test(ops));
-  check('Production Ops：备份目录 ACL/实际加密属性/保留期与失败残片清理受控',/icacls/.test(ops)&&/cipher \/E/.test(ops)&&/\[IO\.FileAttributes\]::Encrypted/.test(ops)&&/Test-BitLockerProtectedVolume/.test(ops)&&/SUPABASE_BACKUP_RETENTION_DAYS/.test(ops)&&/Remove-Item -LiteralPath \$target -Force/.test(ops));
+  check('Production Ops：恢复演练同一 Supabase 项目无条件拒绝、隔离、schema 权限重放并有破坏确认',/Get-SupabaseDatabaseIdentity/.test(ops)&&sameProjectRestoreDrillRejected&&/I_UNDERSTAND_EPHEMERAL_TARGET_WILL_BE_REPLACED/.test(ops)&&/备份使用 --no-acl[\s\S]*Invoke-WithDatabase \$target[\s\S]*--single-transaction --file \$Schema/.test(ops));
+  check('Production Ops：备份目录 ACL/卷级或 DPAPI 应用层加密/保留期与失败残片清理受控',/icacls/.test(ops)&&/cipher \/E/.test(ops)&&/\[IO\.FileAttributes\]::Encrypted/.test(ops)&&/Test-BitLockerProtectedVolume/.test(ops)&&/dpapi-aes-gcm/.test(ops)&&/supabase-encrypted-backup\.js/.test(ops)&&/SUPABASE_BACKUP_RETENTION_DAYS/.test(ops)&&/Remove-BackupArtifacts/.test(ops));
   check('Production Ops：plan 覆盖 dump/restore、项目身份和加密存储',/'plan'[\s\S]*Get-SupabaseDatabaseIdentity[\s\S]*Require-Tool 'pg_dump'[\s\S]*Require-Tool 'pg_restore'[\s\S]*Ensure-BackupStorage/.test(ops)&&/--dbname \$DatabaseUrl/.test(ops)&&/--dbname \$url/.test(ops)&&/--dbname \$target/.test(ops));
-  check('Production Ops：本地凭证和自定义 dump 均被 Git 忽略',/^\.env$/m.test(gitignore)&&/^\.env\.\*$/m.test(gitignore)&&/^\*\.dump$/m.test(gitignore));
+  check('Production Ops：本地凭证和明文/应用层加密 dump 均被 Git 忽略',/^\.env$/m.test(gitignore)&&/^\.env\.\*$/m.test(gitignore)&&/^\*\.dump$/m.test(gitignore)&&/^\*\.dump\.aes$/m.test(gitignore)&&/^\*\.dump\.aes\.meta\.json$/m.test(gitignore));
   check('Synthetic Session：默认只连本机且生产永久账号要求显式确认',/ws:\/\/127\.0\.0\.1:8080\/ws/.test(synthetic)&&/SYNTHETIC_PRODUCTION_CONFIRM/.test(synthetic)&&/CREATE_PERSISTENT_QA_ACCOUNTS/.test(synthetic));
   check('Production Acceptance：真实 RLS/权限/租约/游标均有探针',/relrowsecurity/.test(acceptance)&&/has_table_privilege\('anon'/.test(acceptance)&&/claim_cluster_lease_v1/.test(acceptance)&&/commit_cluster_cursor_v1/.test(acceptance)&&/rollback;/i.test(acceptance));
+  check('Production Acceptance：奖励 RPC 签名与 schema 四个 jsonb 参数一致',
+    /apply_reward_v1\(jsonb,\s*jsonb,\s*jsonb,\s*jsonb\)/i.test(schema) &&
+    /'apply_reward_v1\(jsonb,jsonb,jsonb,jsonb\)'/i.test(acceptance) &&
+    !/'apply_reward_v1\(jsonb,text,jsonb,jsonb\)'/i.test(acceptance));
 
   const calls=[],events=[];let listed=false;
   const coordinator=new ClusterCoordinator({enabled:true,instanceId:'test-instance-a',deploymentId:'test-deploy',

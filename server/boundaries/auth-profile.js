@@ -149,7 +149,10 @@ function createAuthProfileBoundary(options = {}) {
       // Legacy bare hashes receive one complete TTL on first observation,
       // matching the pre-boundary migration behavior.
       const issuedAt = parsed.issuedAt || at;
-      if (at - issuedAt <= tokenTtlMs) output.push('t2$' + issuedAt + '$' + parsed.hash);
+      const age = at - issuedAt;
+      // A token issued in the future is never accepted.  This keeps clock
+      // rollback/skew fail-closed instead of granting an accidental extra TTL.
+      if (age >= 0 && age <= tokenTtlMs) output.push('t2$' + issuedAt + '$' + parsed.hash);
     }
     return output.slice(-tokenLimit);
   }
@@ -169,6 +172,55 @@ function createAuthProfileBoundary(options = {}) {
     user.authTokens = records;
     try { adapter.put(user); } catch (_error) { return records; }
     return records;
+  }
+
+  function sameRecords(left, right) {
+    return Array.isArray(left) && Array.isArray(right) && left.length === right.length &&
+      left.every((value, index) => value === right[index]);
+  }
+
+  function sweepExpired(command = {}) {
+    let at;
+    let users;
+    try {
+      at = command && command.at !== undefined ? Number(command.at) : now();
+      if (!Number.isSafeInteger(at) || at < 0) throw new Error('auth_profile_clock_invalid');
+      users = adapter.list();
+    } catch (_error) {
+      return result(false, { reason: 'auth_unavailable', scannedUsers: 0, updatedUsers: 0, removedRecords: 0, failedUsers: 0, changedUids: [] });
+    }
+    let scannedUsers = 0;
+    let updatedUsers = 0;
+    let removedRecords = 0;
+    let failedUsers = 0;
+    const changedUids = [];
+    for (const user of Array.isArray(users) ? users : []) {
+      if (!user || typeof user !== 'object' || !text(user.uid)) continue;
+      scannedUsers += 1;
+      const previous = Array.isArray(user.authTokens) ? user.authTokens.slice() : [];
+      const next = normalizeRecords(previous, at);
+      if (sameRecords(previous, next)) continue;
+      user.authTokens = next;
+      try {
+        adapter.put(user);
+        updatedUsers += 1;
+        removedRecords += Math.max(0, previous.length - next.length);
+        // UIDs are an internal persistence seam only; they never enter a wire
+        // response or user-facing log.
+        changedUids.push(text(user.uid));
+      } catch (_error) {
+        user.authTokens = previous;
+        failedUsers += 1;
+      }
+    }
+    return result(failedUsers === 0, {
+      reason: failedUsers ? 'auth_unavailable' : '',
+      scannedUsers,
+      updatedUsers,
+      removedRecords,
+      failedUsers,
+      changedUids,
+    });
   }
 
   function issue(command) {
@@ -236,6 +288,7 @@ function createAuthProfileBoundary(options = {}) {
       if (action === 'normalize') return result(true, { records: normalizeRecords(command.records) });
       if (action === 'hash_token') return result(true, { tokenHash: tokenHash(command.token) });
       if (action === 'issue') return issue(command);
+      if (action === 'sweep_expired') return sweepExpired(command);
       if (action === 'authenticate') return verify(command, null);
       if (action === 'verify_token') return verify(command, null);
       if (action === 'verify_hash') return verify(command, command.tokenHash);

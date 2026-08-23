@@ -1,0 +1,14 @@
+{
+  "familyId": "G-16-XIANGQI-FINAL-ART-V1",
+  "sourceId": "ART-038-XIANGQI-FINAL-ART-V1",
+  "version": 1,
+  "status": "APPROVED_LOCAL_ONLY",
+  "externalReferences": [],
+  "isolatedHashLane": {
+    "hasBlockedLicenseInput": false,
+    "hasRuntimeLeak": false,
+    "inputDigest": null
+  },
+  "approvedBy": "Platform Architecture Governance",
+  "approvedAt": "2026-08-21T14:45:00+09:00"
+}

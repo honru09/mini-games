@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "familyId": "P-SOCIAL-SHARE-TEMPLATES-V1",
+  "status": "LOCAL_PROJECT_CONTEXT_ONLY",
+  "inputs": [
+    "requirements/GHOST_GAME_MAINLINE_COMMAND.md",
+    "requirements/ART_GENERATION_SKILL_PIPELINE.md",
+    "art-source/platform/community-replay-tournament-cards-v1/asset-family-manifest-v1.json",
+    "public/src/core/06-assets.js",
+    "public/src/core/07-playline.js",
+    "public/index-template.html"
+  ],
+  "transmissionScope": "local-workspace-only",
+  "externalProvider": null,
+  "externalModel": null,
+  "externalTaskId": null,
+  "containsPlayerData": false,
+  "containsSecrets": false
+}
+

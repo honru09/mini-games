@@ -309,13 +309,21 @@ Supabase 首次接入或升级优先用 `scripts/supabase-production-ops.ps1`：
 
 ## 7. 当前状态
 
+### 2026-08-22 当前美术主线：P2-10 已核销（LOCAL_ONLY / NOT_RELEASED）
+
+- 33 单元美术计划当前为 `32 / 33 = 96.97%`；P0 `12 / 12 = 100%`、P1 `9 / 9 = 100%`、P2 `11 / 12 = 91.67%`。`P2-12 / P-PROFILE-ADAPTIVE-HERO-V1` 已完成原创 Profile Hero 主视觉、桌面/移动/Poster/Static 派生与本地可见证据；P2-07 保持冻结的可选 Renderer/GLB 实验，下一步转入 `PROVE` 外部证据准备。
+- `P1-09 / P-IDENTITY-BADGE-SYSTEM-V1` 已生成 34 个原创 Ghost-native SVG 母版和 102 个 32/48/64 WebP 变体（143,090 bytes），覆盖排行榜、8 项成就、4 项任务、5 档胜场精通、4 档收藏稀有度、5 档玩家称号和 4 档赛事身份。全部为纯表现层，不修改 Reward、wins、任务领取、owned、价格、赛事协议或持久化。
+- Family 已取得 `OWNER_AUTHORIZED_ART_CLEARANCE`，以 `mg_art_identity_badge_system_v1` default-on 接入；flag/Manifest/decode 失败回退既有 Emoji/Unicode/game marker 与本地化文字。外部受限输入与第三方传输均为 0。
+- 当前构建 `6D00D5BE…229EAEB` 已通过 P2-10 专项、Tournament 基线、DOM/i18n、GSAP 图谱、Quality Gates 与隔离端口完整 `npm test`；本地 Browser 仅采集虚构赛况 Review 页的 1200×630 主板和三语联系表，不冒充当前 Runtime Tournament 可见矩阵、第二浏览器或真机。
+- 第二浏览器、物理 Android/iPhone/Tablet、真实网络、低端性能与发布仍为 `RELEASE_EVIDENCE_PENDING`；本批未 commit、push、Pages、Render 或生产数据写入。
+
 ### 2026-08-19 当前权威节点：2.5D 重排 + T7 P7–P12 本地实现（LOCAL_ONLY / NOT_RELEASED）
 
 - `GATE-ART-GOLDEN-SET = OPEN_BY_OWNER_AUTHORIZATION`；原创 Ghost-native 资产在稳定 ID/版本/SHA/provenance、机器技术/视觉/相似风险审查、fallback、feature flag 与回滚齐全后，可取得 `OWNER_AUTHORIZED_ART_CLEARANCE` 并进入可逆 default-on runtime。人工清稿、Reviewer B、IP/法律意见与逐资产 Golden Set 是 `OPTIONAL_ADVISORY_EVIDENCE`，不阻塞开发或 runtime；外部 `blocked-license` / `EXTERNAL_REFERENCE_ONLY` 素材可按用户授权的受控全信息 reference lane 提供给已授权 Skill，逐输入记录路径、SHA、provider、model、taskId 与 transmissionScope；许可状态与 runtime 禁止边界不变。
 - 设备/浏览器/真实网络与 Supabase Gate 均为 `NON_BLOCKING_FOR_DEVELOPMENT`、开发状态 `OPEN`、发布状态 `RELEASE_EVIDENCE_PENDING`。原子需求仍可因缺真实环境保持 `blocked/not_executed`，但不得扩大成全项目开发停工或伪造发布证据。
 - 四窗口并行期间，当前 `public/index.html` 的精确 characters/bytes/SHA 以自动生成 TECH-027 报告和当次 `node scripts/build.js --check` 为准；静态状态只保留时点快照，不能冒充永久当前。当前身份尚无匹配浏览器完整矩阵；`1CFC9A4E…51C31ACB` 与更早单浏览器证据均为 historical-as-of。
-- 用户 2026-08-19 新指南已将生产视觉主线重排为 `Vanilla DOM + CSS + Canvas + GSAP` 的共享 2.5D 空间语言：`DepthScene`、八模式 `CameraSystem`、Honru 空间行为、页面转场和 Gomoku 首个完整 Demo 优先；现有 Ghost3D/Three.js 代码、素材和历史证据冻结保留，不删除、不继续扩张，也不再是六款游戏的必经路径。合同与证据入口：`requirements/active/visual-25d-repush-p0-20260819/`、`qa/visual-25d-contract.js`。
-- Ghost3D 六款合同已改为冻结可选实验层：精确 `"1"` 才 opt-in，缺失或 `"0"` 保留 DOM/Canvas fallback；这不影响规则、Authority、Protocol、Reward、Replay、AI 或持久化。旧 default-on 文字仅作历史快照，不得再作为当前失败依据。
+- 用户 2026-08-19 新指南及后续瘦身命令已将生产视觉唯一主线固定为 `Vanilla DOM + CSS + Canvas + GSAP` 的共享 2.5D 空间语言：`DepthScene`、八模式 `CameraSystem`、Honru 空间行为、页面转场和六款 Game Stage 语义表现。合同与证据入口：`requirements/active/visual-25d-repush-p0-20260819/`、`qa/visual-25d-contract.js`、`qa/visual-25d-only-runtime.js`。
+- Three.js vendor、Ghost3D Foundation、六款 renderer/presenter、GameModuleLoader、Renderer Governor/Profile/Quality、专属 SW cache/warmup 和六款游戏 bridge/flag 已从当前 runtime 清除。旧 Ghost3D 目录、截图和报告仅作 `historical_as_of` 证据，不得作为当前 capability、回滚、测试或未来开发必经路径；未来特殊 3D 需求必须重新立项。
 - Honru 九状态、十枚 Emoji 与 `P-GCOINS-ICON-V1` 已分别取得所有者清除并以 Manifest-backed default-on 接入；均保留独立 flag、旧资产/Unicode/文字/P-003 fallback 与 decode/Manifest 失败回滚。G Coins 只改表现层，不改 `coins/currency`、价格、奖励、数据库或协议。
 - T7 仍为 `partial`：P7 已集中 Reward/Progression 投影，P8 把六个 Boundary 的显式 `now` 统一到 `serverNow`，P9 把 `room-graph-recovery` 周期迁移为 owner lease，P10 把访客延迟清理迁移为 `ephemeral-cleanup:<uid>` 一次性 lease，P11 把 reconnect grace/Presence 失败重试与 room removal retry 迁移为按 Session owner lease；P12 把 heartbeat 迁移为单一 `heartbeat-sweep` repeat owner，复用一次 `now`，并通过 `HeartbeatSweepIsolation` + Manual Clock 故障注入保证单 session/room/tournament 异常不停止同 tick 后续任务或下一 tick。访客继续 `close(true)`，普通超时继续 `close()`。P12 专项、连接、赛事和独立端口 E2E 已通过；统一 Quality Gates/完整 `npm test` 将在 2.5D 并行构建稳定后集中记录。Metrics `generatedAt`、正式 token TTL、其他 Room/Tournament lifecycle、Chat/Expression delay、Reward/AI outbox cadence、游戏 tick 与 transport deadline 仍未迁移；不得把 P8–P12 写成 server-wide time virtualization。
 - 本节优先于下方 2026-08-16 的“当前构建/当前节点”措辞；`324922B8…B478E6` 的 Honru 定向投掷窄证据和更早哈希均为 historical-as-of。未执行 commit、push、Pages、Render 或生产数据写入。
@@ -368,9 +376,9 @@ Supabase 首次接入或升级优先用 `scripts/supabase-production-ops.ps1`：
 
 ### 2026-08-16 技术优化 T1 本地基线（LOCAL_ONLY / NOT_RELEASED）
 
-- `ClientDiagnosticsRing` 与 `RendererRuntimeGovernor` 已完成本地实现并加入 `scripts/build.js`；两者均为 inert/default-off 深模块，不实例化、不联网、不写 localStorage、不改变 Ghost3D Foundation 外部 Interface。
+- `ClientDiagnosticsRing` 保留在 `scripts/build.js`；历史 `RendererRuntimeGovernor`、Renderer Device/Quality 与 Loader 已随 3D runtime 退役清除。
 - `ClientDiagnosticsRing` 固定 64 条、5 分钟 TTL、事件/字段 allowlist、ID 类别化哈希和敏感字段 fail-closed；`RendererRuntimeGovernor` 保持既有静态 DPR 上限，仅在显式开启时产生带 hysteresis/cooldown 的质量建议，负责 resize 合帧和生命周期失效。
-- 专项证据：`qa/client-diagnostics-buffer.js`、`qa/renderer-runtime-governor.js`、`npm run test:technical-optimization-t1`；最终 `npm run quality:gates` 与完整 `npm test` 均已退出码 0，完整回归约 171 秒，确定性双构建的字符数、字节数与 SHA-256 完全一致。
+- 当前专项证据：`qa/client-diagnostics-buffer.js`、`qa/visual-25d-only-runtime.js`、`npm run test:technical-optimization-t1`；旧 Renderer 专项只属于历史构建。
 - 当前构建（T1 接入后）为 1,632,559 characters / 1,647,102 bytes / SHA-256 `1C65343FE0246E2DA99C7646822FFF6CFBB8328A015D99A2AFDC61C60C090C2A`；旧 P4 及缩放修复构建证据均保持 historical-as-of，当前浏览器矩阵必须重采集。
 
 ### 2026-08-16 TECH-027 当前 T1 构建窄范围浏览器证据（LOCAL_ONLY / NOT_RELEASED）
@@ -700,7 +708,7 @@ Chat 空态、公开 Profile/社交弹层、背景预览和访客只读态已分
 
 ### 2026-08-15 PWA Offline i18n v13 与审批降阻 P1
 
-- Service Worker v13 将三份 locale 从通用 SHELL 分离，以同源、无 query、GET、`no-cache` 和严格响应校验安装；运行时 network-first 刷新最后合法离线词典。其他 JSON 即使伪装成 script destination 也不缓存，成功导航只有 `text/html` 可覆盖离线壳层。API/WS/Auth/Chat/Token 排除、六款 Ghost3D 与 GSAP lazy island 边界保持。
+- Service Worker v15 将三份 locale 从通用 SHELL 分离，以同源、无 query、GET、`no-cache` 和严格响应校验安装；运行时 network-first 刷新最后合法离线词典。其他 JSON 即使伪装成 script destination 也不缓存，成功导航只有 `text/html` 可覆盖离线壳层。API/WS/Auth/Chat/Token 排除；旧 renderer cache/warmup/descriptor 通道已移除，激活时会清理旧 `ghost-game-*` cache。
 - VM 红绿回归覆盖 GitHub Pages 子路径、三语、query/Authorization/跨源/POST/API/未知语言/任意 JSON、500/HTML/no-store、quota failure、503 与 JSON 导航污染。单一 Codex in-app Chromium 未强制 `skipWaiting()`，真实走完 v11/v12 waiting → v13 激活，最终只保留 v13 cache；三语 G Coins 新标签均无裸 key，console warn/error 为 0。
 - `requirements/AUTOMATED_AND_HUMAN_GATE_POLICY.md` 规定技术 Reviewer、哈希/Alpha/尺寸、对比度、a11y、i18n、性能、fallback、Manifest、缓存、自动回归和本地浏览器证据默认机器继续。人工清稿、独立自然人 Reviewer B、IP/法律最终判断与用户 Golden Set 属于 `OPTIONAL_ADVISORY_EVIDENCE`；第二浏览器、真机、真实网络和真实 Supabase 是外部环境发布证据。
 - 本批不改变三条共享 Gate，不提交、不推送、不部署。第二浏览器、物理 Android/iPhone/Tablet PWA 更新和真实网络仍为 `NOT_EXECUTED / RELEASE_EVIDENCE_PENDING`，不阻塞其他开发。
@@ -712,10 +720,18 @@ Chat 空态、公开 Profile/社交弹层、背景预览和访客只读态已分
 - 纯规则、Authority、协议、UI、镜头、Renderer 性能或测试代码任务也要执行该 Skill 的 `NOT_APPLICABLE` 预检，但不得为代码任务调用付费生成 API；任何实际生成调用都必须先取得当前用户明确确认，且不能把外部 `blocked-license / EXTERNAL_REFERENCE_ONLY` 素材直接送入 runtime。
 - `asset-gen` 输出默认留在受控 runtime 资产目录；接入 `public/assets`、Manifest 或默认 runtime 前，继续经过项目 `GATE-ART-GOLDEN-SET`、provenance、相似风险、fallback 与回滚合同。该 Skill 的安装不等于美术清除、真机证据或发布授权。
 
-## 15. 六款 Ghost3D 正式默认表现层（2026-08-18）
+## 15. Ghost3D 历史节点与当前 2.5D 表现主线（2026-08-18 → 2026-08-19）
 
-- 六款局内 Renderer 已从“exact opt-in 技术试验”切换为正式 local presentation default：缺少 `mg_ghost3d_{game}_v1` 时启用，只有精确字符串 `"0"` 回滚；Wave B 自身仍以精确 `"0"` 关闭，storage 不可用时 fail-closed 到旧 DOM/Canvas。
-- Gomoku、Ludo、Monopoly、Xiangqi、Tetris、Tank 均消费冻结 Semantic Presentation Model / Motion Event；Three r185 + GSAP 只在对应 lazy GameModuleLoader island 内。Renderer 不进入 Rule、Authority、Protocol、Reward、Replay、AI、Economy、Social、Persistence 或网络 payload。
-- Renderer 首个语义 frame ready 后才隐藏可替换 2D paint：Gomoku/Ludo/Monopoly 使用 board opacity fallback，Xiangqi 保留 DOM 点击/键盘 cue，Tetris 隐藏 cell paint，Tank 隐藏可替换 DOM paint；HUD、控制、44px 触控、无障碍与原输入所有权继续保留。
-- `qa/ghost3d-default-on-contract.js` 是跨六款总合同；六款专项 contract/layout/cache/ESM/Renderer 与 `npm run test:ghost3d-default-on` 已通过。该结论是本地 implemented/verified contract，不是第二浏览器、Android/iPhone/Tablet、真实 50/100/200ms 网络、低端性能或发布证据。
-- 当前仍使用程序化几何；GLB/贴图/正式生产美术替换不是本批已完成项。任何新资产必须按已安装 godogen `asset-gen` 做 NOT_APPLICABLE/APPLIED 预检；付费生成需用户明确确认，并补 Manifest、SHA/provenance、尺寸、许可、fallback、flag 与回滚。
+- 2026-08-18 的六款 Ghost3D default-on 集成与材质/镜头增强只保留为对应构建的 `historical_as_of` 证据；用户 2026-08-19 的 2.5D 重推命令已覆盖该默认方向，不得再把 Three Renderer 描述为当前正式主线。
+- 当前六款只存在 DOM/Canvas + GSAP 2.5D 生产表现；`mg_ghost3d_*` flag 已不再消费，Three/材质代码与专项合同已从 runtime/QA 清除。历史截图继续用于说明过去构建，不用于兼容、回滚或当前验收。
+- 当前生产表现由 `DepthScene`、八模式 `CameraSystem`、Honru Motion、Page Transition 与 Game Stage 2.5D 语义层统一驱动，入口为 `public/depth-motion-entry.js`；规则、Authority、Protocol、Reward、Replay、AI、Social 与 Persistence 不依赖镜头或 GSAP。
+- 首个 Demo 固定为 `Home → Games → Gomoku → Result → Games`。桌面/390×844、卡片 `matrix3d`、Gomoku 落子 `impact → active` 只有历史构建部分可见证据；当前构建仍需完整 Result 回流和最新浏览器复核，第二浏览器、真机、真实网络、低端 GPU/FPS/热量/内存继续为 `NOT_EXECUTED / RELEASE_EVIDENCE_PENDING`。
+- 本批未生成新图片、贴图、GLB、角色或 Sprite，godogen `asset-gen` 路由为 `NOT_APPLICABLE`，没有调用付费 API。未来产生新游戏资产时继续按第 14 节执行资产生成与治理流程。
+
+## 16. P0-11 Avatar Frame / Effect 当前节点（2026-08-19）
+
+- `P-AVATAR-FRAME-EFFECT-V1` 已取得 `OWNER_AUTHORIZED_ART_CLEARANCE` 并进入本地 default-on 候选：8 个头像框、8 个头像效果，覆盖 44/64/96/192 四档与 static/dynamic/high-contrast 三种模式；运行时 192 个透明 WebP 变体共 533844 bytes，源稿与 contact sheet 均保留；生成器使用跨进程独占锁阻止并发 reset/写入造成的哈希漂移。
+- `public/src/core/06-assets.js` 的 allowlist resolver 校验稳定 Asset ID、source ID、clearance record、feature flag、路径模式与尺寸/模式；Profile、Shop、Player Seat、DM、Playline 共用 `playerIdentityAvatarNode` 懒加载素材，失败时回到原 CSS frame/effect、Avatar/initial fallback。
+- `prefers-reduced-motion` 选择 static，`forced-colors` 选择 high-contrast；动效仅改变 presentation atom 的 transform/opacity，不进入规则、Authority、Protocol、Reward、AI、Replay、经济、账号或持久化。
+- `node qa/avatar-frame-effect-art-v1.js`、`node scripts/asset-library-audit.js`、`node scripts/build.js --check`、身份/商城/Manifest 专项均已通过；本批未执行第二浏览器、真机、真实网络、生产 Supabase 或线上部署。
+- 当前美术生产进度为 `11 / 33 = 33.33%`，P0 为 `11 / 12 = 91.67%`；下一单元为 `P0-12 / P-GAME-ICON-SYSTEM-V2`。继续保持发布冻结，用户明确“输出线上/部署”前不得提交、推送或触发 Pages/Render。

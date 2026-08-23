@@ -10,12 +10,9 @@ const SW_URL = 'https://ghost.game/mini-games/sw.js';
 const SCOPE_URL = new URL('.', SW_URL);
 const source = fs.readFileSync(path.join(ROOT, 'public', 'sw.js'), 'utf8');
 const CURRENT_CACHE_NAME = /const CACHE_VERSION='([^']+)'/.exec(source)[1];
-const RENDERER_CACHE_MATCH = /const RENDERER_CACHE_VERSION='([^']+)'/.exec(source);
-assert.ok(RENDERER_CACHE_MATCH && RENDERER_CACHE_MATCH[1] === 'ghost-game-renderer-v17-20260819',
-  'the v17 renderer cache must remain a named, independently versioned cache');
-const RENDERER_CACHE_NAME = RENDERER_CACHE_MATCH[1];
-assert.notStrictEqual(RENDERER_CACHE_NAME, CURRENT_CACHE_NAME,
-  'renderer entries must not share the offline shell/locale cache namespace');
+const RETIRED_RENDERER_CACHE_NAME = 'ghost-game-renderer-v17-20260819';
+assert.doesNotMatch(source, /RENDERER_CACHE_VERSION|RENDERER_ENTRY_ALLOWLIST|GAME_MODULE_WARMUP|\/three\//,
+  'the 2.5D-only service worker must not expose a renderer cache or warmup channel');
 const OLD_CACHE_NAME = 'ghost-game-shell-v11-20260815';
 const handlers = new Map();
 const stores = new Map();
@@ -183,14 +180,14 @@ async function assertRejectedLocaleInstall(buildBadResponse, label) {
   probeHandlers.get('install')({ waitUntil(promise) { installWork = promise; } });
   await assert.rejects(installWork, /invalid_locale_response/, `${label} must reject the new worker install`);
   assert.deepStrictEqual(await probeCaches.keys(), [OLD_CACHE_NAME], `${label} must delete only the rejected new cache generation`);
-  assert.strictEqual(probeStores.has(RENDERER_CACHE_NAME), false,
-    `${label} locale installation must not open the optional renderer cache`);
+  assert.strictEqual(probeStores.has(RETIRED_RENDERER_CACHE_NAME), false,
+    `${label} locale installation must not recreate the retired renderer cache`);
   assert.strictEqual(await (await (await probeCaches.open(OLD_CACHE_NAME)).match(sentinelUrl)).text(), 'keep-v11',
     `${label} must preserve the active v11 cache sentinel`);
   assert.ok(installFetches.length >= 1 && installFetches.every(call => call.cache === 'no-cache'),
     `${label} locale install fetches must bypass the HTTP cache`);
   assert.ok(!installFetches.some(call => /\/(?:three|vendor)\//.test(new URL(call.url).pathname)),
-    `${label} locale installation must not fetch optional renderer, Three, or GSAP resources`);
+    `${label} locale installation must not fetch retired Three or vendor resources`);
 }
 
 async function main() {
@@ -209,12 +206,13 @@ async function main() {
 
   const oldSentinelUrl = new URL('sentinel.txt', SCOPE_URL).href;
   stores.set(OLD_CACHE_NAME, new Map([[oldSentinelUrl, new Response('keep-v11')]]));
+  stores.set(RETIRED_RENDERER_CACHE_NAME, new Map([[new URL('three/retired-entry.js', SCOPE_URL).href, new Response('retired')]]));
   await installServiceWorker();
   const installedKeys = await caches.keys();
-  assert.deepStrictEqual(installedKeys, [OLD_CACHE_NAME, CURRENT_CACHE_NAME],
+  assert.deepStrictEqual(installedKeys, [OLD_CACHE_NAME, RETIRED_RENDERER_CACHE_NAME, CURRENT_CACHE_NAME],
     'install must create a separate cache generation without deleting the active v11 cache');
-  assert.strictEqual(stores.has(RENDERER_CACHE_NAME), false,
-    'install/login shell work must not even open the optional renderer cache');
+  assert.strictEqual(stores.has(RETIRED_RENDERER_CACHE_NAME), true,
+    'install must leave legacy caches untouched until activation');
   assert.strictEqual(await (await (await caches.open(OLD_CACHE_NAME)).match(oldSentinelUrl)).text(), 'keep-v11',
     'install must leave the active v11 cache untouched while the new worker waits');
   assert.strictEqual(skipWaitingCalls, 0, 'install must not force the waiting worker to activate');
@@ -224,7 +222,7 @@ async function main() {
   assert.ok(installLocaleFetches.every(call => call.cache === 'no-cache'),
     'install locale fetches must bypass the browser HTTP cache');
   assert.ok(!fetchCalls.some(call => /\/(?:three|vendor)\//.test(new URL(call.url).pathname)),
-    'install/login shell work must not fetch optional renderer, Three, or GSAP resources');
+    'install/login shell work must not fetch retired Three or vendor resources');
   networkFetch = async () => { throw new TypeError('simulated offline network'); };
 
   const expectedNavLabels = { 'zh-CN': '游戏', 'en-US': 'Games', 'uk-UA': 'Ігри' };
@@ -240,8 +238,8 @@ async function main() {
   assert.strictEqual(skipWaitingCalls, 1, 'the waiting worker activates only after an explicit SKIP_WAITING message');
   await activateServiceWorker();
   assert.deepStrictEqual(await caches.keys(), [CURRENT_CACHE_NAME], 'activation deletes the old cache only after the waiting boundary');
-  assert.strictEqual(stores.has(RENDERER_CACHE_NAME), false,
-    'activation must not fabricate a renderer cache when no renderer was requested');
+  assert.strictEqual(stores.has(RETIRED_RENDERER_CACHE_NAME), false,
+    'activation must remove and never recreate the retired renderer cache');
   assert.strictEqual(claimCalls, 1, 'activation claims clients exactly once');
 
   const installedCacheName = CURRENT_CACHE_NAME;

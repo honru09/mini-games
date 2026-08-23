@@ -137,6 +137,7 @@ function makeRouteHarness() {
     // Platform scene rendering is a separate visual owner; keep this route-scroll
     // harness focused on synchronous route/scroll ownership without loading images.
     refreshPlatformScene() {},
+    refreshPersonalHomeScene() {},
     resetGhostHeroTimer() {},
     setGhostHero() {},
     $() { return null; },

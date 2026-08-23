@@ -1,0 +1,114 @@
+{
+  "schemaVersion": 1,
+  "evidenceClass": "LOCAL_SINGLE_CHROMIUM_SIMULATION_ONLY",
+  "capturedAt": "2026-08-21T16:01:53.9563118+09:00",
+  "build": {
+    "path": "public/index.html",
+    "characters": 1990675,
+    "bytes": 2005245,
+    "sha256": "FDD06C32CBBF4CA6E9A94720CE35DE03D6E49270E51DE0D7131D52097591FC44"
+  },
+  "browser": {
+    "surface": "Codex in-app Chromium",
+    "devicePixelRatio": 1,
+    "physicalDevice": false,
+    "secondBrowser": false
+  },
+  "scenarios": [
+    {
+      "id": "desktop-light-1280x720",
+      "result": "PASS",
+      "facts": {
+        "tankFinalArtState": "active",
+        "decodedBoardLayers": 3,
+        "decoratedWalls": 68,
+        "decoratedTanks": 2,
+        "boardWidth": 593.0625,
+        "boardHeight": 514,
+        "horizontalOverflow": 0
+      }
+    },
+    {
+      "id": "desktop-dark-1280x720",
+      "result": "PASS",
+      "facts": {
+        "tankFinalArtState": "active",
+        "allBoardLayersDecoded": true,
+        "gameStageHeaderIconsPreserveInkCream": true,
+        "horizontalOverflow": 0
+      }
+    },
+    {
+      "id": "mobile-dark-390x844",
+      "result": "PASS",
+      "facts": {
+        "tankFinalArtState": "active",
+        "boardWidth": 362,
+        "boardHeight": 313.71875,
+        "controlDeckWidth": 354.5323791503906,
+        "dpadMinimumTarget": 44.3165283203125,
+        "fireTarget": 72.51800537109375,
+        "gameStageHeaderIconsVisible": true,
+        "horizontalOverflow": 0
+      }
+    },
+    {
+      "id": "reduced-motion-static-family",
+      "result": "PASS",
+      "facts": {
+        "matchMedia": true,
+        "tankFinalArtState": "active",
+        "boardVariants": [
+          "board-background-static-v1.webp",
+          "board-midground-static-v1.webp",
+          "board-foreground-static-v1.webp"
+        ],
+        "vfxAnimation": "none",
+        "horizontalOverflow": 0
+      }
+    },
+    {
+      "id": "forced-colors-fallback",
+      "result": "PASS",
+      "facts": {
+        "matchMedia": true,
+        "decorativeLayersDisplay": "none",
+        "wallBackgroundImage": "none",
+        "wallBorder": "solid",
+        "tankBorder": "solid",
+        "tankFallbackGlyph": "▣",
+        "horizontalOverflow": 0
+      }
+    },
+    {
+      "id": "live-fire-projectile",
+      "result": "PASS",
+      "facts": {
+        "projectileUsesFinalArt": true,
+        "asset": "object-projectile-v1.webp",
+        "directionTransformApplied": true
+      }
+    }
+  ],
+  "console": {
+    "warningCount": 0,
+    "errorCount": 0
+  },
+  "browserStateRestored": {
+    "viewportOverride": "reset",
+    "emulatedMedia": "reset",
+    "theme": "light",
+    "temporaryTabs": "closed"
+  },
+  "notExecuted": [
+    "second desktop browser",
+    "physical Android/iPhone/Tablet",
+    "real touch hardware",
+    "real network shaping",
+    "low-end FPS/GPU/thermal/memory",
+    "real Supabase",
+    "production latest-build verification",
+    "commit/push/Pages/Render/release"
+  ],
+  "boundary": "Local single-Chromium viewport/media simulation only. This proves the recorded current build and may not be relabeled as physical-device, cross-browser, real-network or release evidence."
+}

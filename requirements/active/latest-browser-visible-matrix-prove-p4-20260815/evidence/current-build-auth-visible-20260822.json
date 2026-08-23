@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-08-22T11:03:08+09:00",
+  "currency": "current",
+  "claim": "current_build_single_browser_auth_visible_partial",
+  "evidenceClass": "LOCAL_SINGLE_CHROMIUM_VISIBLE_PARTIAL_ONLY",
+  "browser": "Codex in-app Chromium",
+  "url": "http://127.0.0.1:8090/?prove=D2DDA572",
+  "build": {
+    "characters": 2029526,
+    "bytes": 2044179,
+    "sha256": "D2DDA5720FD70133D62A7ACED582951E4EA56DCA55B4DBFE906B147B3624DA04"
+  },
+  "scenarios": [
+    {
+      "id": "desktop-light-zh",
+      "viewport": "1280x720",
+      "result": "PASS",
+      "assertions": ["认证页可见", "light 主题", "zh-CN", "横向溢出为 0", "console warn/error 为 0"]
+    },
+    {
+      "id": "desktop-dark-zh",
+      "viewport": "1280x720",
+      "result": "PASS",
+      "assertions": ["dark 主题", "可见 Ghost Game 标志 brightness(0) invert(1)", "横向溢出为 0", "console warn/error 为 0"]
+    },
+    {
+      "id": "desktop-dark-en",
+      "viewport": "1280x720",
+      "result": "PASS",
+      "assertions": ["en-US", "英文标题与认证文案", "横向溢出为 0", "console warn/error 为 0"]
+    },
+    {
+      "id": "mobile-dark-en",
+      "viewport": "390x844",
+      "result": "PASS",
+      "assertions": ["认证页单列布局", "所有可见 button/input 高度不低于 44px", "横向溢出为 0", "console warn/error 为 0"]
+    },
+    {
+      "id": "mobile-dark-uk",
+      "viewport": "390x844",
+      "result": "PASS",
+      "assertions": ["uk-UA", "乌克兰语页面标题", "横向溢出为 0", "console warn/error 为 0"]
+    }
+  ],
+  "console": { "warningCount": 0, "errorCount": 0 },
+  "notExecuted": [
+    "创建账号、访客账号或登录后的四区与六款 Game Stage",
+    "第二桌面浏览器",
+    "物理 Android、iPhone、Tablet",
+    "真实网络整形",
+    "低端 FPS、GPU、热量与内存",
+    "生产 Supabase、多实例与线上发布"
+  ],
+  "boundary": "当前构建认证页单一 Chromium 可见窄证据；不是完整路由/终局/三语言/双主题/逐语义 FX 矩阵，也不解除设备、网络、Supabase 或发布 Gate。"
+}

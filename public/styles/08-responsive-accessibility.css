@@ -1,0 +1,152 @@
+/* 深色主题下的硬编码浅色面 */
+html[data-theme="dark"] .lobby-row,
+html[data-theme="dark"] .roster-item,
+html[data-theme="dark"] .m-cell,
+html[data-theme="dark"] .tcell,
+html[data-theme="dark"] .ludo-base:not([data-base-skin]),
+html[data-theme="dark"] .ludo-center,
+html[data-theme="dark"] .dice3d .face{background:rgba(31,39,63,.92);color:var(--text)}
+html[data-theme="dark"] .m-cell .stripe{filter:brightness(.82)}
+html[data-theme="dark"] .avatar-opt{background:rgba(31,39,63,.92)}
+html[data-theme="dark"] .ttt-cell{background:var(--card)}
+html[data-theme="dark"] .modal-card{background:var(--surface-elevated)}
+html[data-theme="dark"] .overlay-card,html[data-theme="dark"] .chance-card{background:var(--surface-overlay)}
+html[data-theme="dark"] .toast{background:var(--toast-bg);color:var(--toast-text)}
+html[data-theme="dark"] .dice3d .pip::before{background:#dbe4f5}
+html[data-theme="dark"] .online-dot{box-shadow:0 0 0 2px #1a2238}
+
+/* ====== 触屏 & 移动端适配 ====== */
+/* 消除 300ms 延迟，防止双击缩放 */
+button, canvas, .game-card, .ttt-cell, .j-cell, .xq-cell,
+.lobby-row, .roster-item, .lb-row, .player-row,
+.shop-item, .avatar-opt, .bg-swatch, .shop-tab, .pchip,
+.tcell, .hcell, .m-cell, .tok, .dice-btn, .count-btn, .btn {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 手机横屏 / 小屏 (< 480px) */
+@media (max-width: 480px) {
+  #app { padding: 8px 6px 24px; }
+  .app-header { margin-bottom: 10px; }
+  .brand { font-size: 15px; gap: 5px; }
+  .brand .brand-icon { font-size: 20px; }
+  .brand .brand-tag { font-size: 10px; display: none; }
+  .hub-grid { grid-template-columns: 1fr; gap: 10px; }
+  .hub-side { gap: 10px; }
+  .hub-count { gap: 6px; margin-bottom: 10px; }
+  .hub-label { font-size: 12px; }
+  .count-btn { padding: 6px 12px; font-size: 12px; }
+  .game-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .game-card { padding: 12px 10px; min-width:0; }
+  .game-card.has-cover{padding:7px 7px 11px}
+  .game-card .icon { font-size: 26px; }
+  .game-card .name { font-size: 14px; }
+  .game-card .desc { font-size: 11px; min-height: 28px; }
+  .btn { padding: 7px 10px; font-size: 12px; border-radius: 8px; }
+  .online-panel { padding: 10px 12px; }
+  .online-panel h3 { font-size: 13px; }
+  .lb-panel, .lobby-panel { padding: 10px 12px; }
+  .lb-panel h3, .lobby-panel h3 { font-size: 13px; }
+  .modal-card { padding: 16px 14px; max-width: calc(100vw - 12px); width: auto; }
+  .modal-card h3 { font-size: 15px; }
+  .game-top {
+    display:grid;
+    grid-template-columns:auto minmax(0,1fr);
+    grid-template-areas:
+      "back title"
+      "actions actions";
+    gap:8px;
+    align-items:center;
+    padding:8px 10px;
+  }
+  #btn-back { grid-area:back; }
+  .game-top h2 {
+    grid-area:title;
+    min-width:0;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    text-align:right;
+    font-size:15px;
+  }
+  .game-top .top-actions {
+    grid-area:actions;
+    display:flex;
+    width:100%;
+    gap:8px;
+  }
+  .game-top .top-actions .btn {
+    flex:1 1 0;
+    min-width:0;
+    justify-content:center;
+  }
+  canvas.board-canvas { max-width: 100%; }
+  .auth-backdrop{padding:6px; align-items:flex-start}
+  .auth-card,.auth-card.auth-login-mode{width:100%; max-width:none; max-height:calc(100dvh - 12px); padding:12px}
+  .auth-hero{padding:10px 12px; gap:10px; margin-bottom:10px}
+  .auth-hero .big{font-size:26px}
+  .auth-hero h2{font-size:16px}
+  .auth-hero p{font-size:11px}
+  .auth-register-layout{grid-template-columns:minmax(0,1fr); gap:10px}
+  .auth-choice-panel,.auth-details-panel,.auth-login-body{padding:11px}
+  .auth-avatar-grid{grid-template-columns:repeat(4,minmax(0,1fr)); gap:6px}
+  .auth-avatar-grid .avatar-opt{min-height:56px}
+  .auth-bg-grid{grid-template-columns:repeat(4,1fr)}
+  .auth-actions{display:grid; grid-template-columns:1fr}
+  .shop-modal-card{display:block; width:100%; max-width:none; max-height:calc(100dvh - 12px); overflow:auto; padding:12px 12px max(12px,env(safe-area-inset-bottom,0px))}
+  .shop-header{grid-template-columns:minmax(0,1fr) auto; gap:8px}
+  .shop-header .stat-chip{grid-column:1; grid-row:2; justify-self:start}
+  .shop-close{grid-column:2; grid-row:1 / span 2}
+  .shop-tabs{flex-wrap:nowrap; overflow-x:auto; overflow-y:hidden; min-height:52px; padding-bottom:4px; scrollbar-width:thin}
+  .shop-tab{white-space:nowrap; flex:none}
+  .shop-layout{grid-template-columns:1fr; gap:10px; overflow:visible}
+  .shop-preview-panel{position:static; min-height:0; display:grid; grid-template-columns:96px minmax(0,1fr); grid-template-rows:auto auto auto 1fr; gap:3px 12px; text-align:left; padding:10px}
+  .shop-preview-eyebrow{grid-column:2; align-self:end}
+  .shop-preview-visual{grid-column:1; grid-row:1 / span 4; width:96px; height:96px; margin:0}
+  .shop-preview-name,.shop-preview-state,.shop-preview-note,.shop-preview-playback{grid-column:2}
+  .shop-preview-state{justify-self:start; margin-top:2px}
+  .shop-preview-note{margin:2px 0 0; line-height:1.35}
+  .shop-preview-game-icon{font-size:46px}
+  .shop-catalog{overflow:visible; padding:0}
+  .shop-grid{grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px}
+  .shop-limited-showcase{padding-top:10px}.shop-limited-heading{margin-bottom:7px}.shop-limited-heading p{font-size:10px}.shop-limited-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.shop-limited-card{min-height:104px}.shop-limited-card-copy{inset:auto 8px 7px}
+  .shop-item button.btn{min-height:44px; min-width:44px}
+}
+
+/* 平板 / 中等屏 (481px - 768px) */
+@media (min-width: 481px) and (max-width: 768px) {
+  .hub-grid { grid-template-columns: 1fr; gap: 12px; }
+  .hub-side { gap: 12px; }
+  .game-grid { grid-template-columns: repeat(3, 1fr); }
+  .brand .brand-tag { font-size: 10px; }
+  .auth-backdrop{padding:10px; align-items:flex-start}
+  .auth-card,.auth-card.auth-login-mode{width:100%; max-width:none; max-height:calc(100dvh - 20px); padding:14px}
+  .auth-register-layout{grid-template-columns:minmax(0,1fr); gap:12px}
+  .auth-avatar-grid{grid-template-columns:repeat(6,minmax(0,1fr)); gap:7px}
+  .auth-bg-grid{grid-template-columns:repeat(7,minmax(44px,1fr))}
+  .shop-modal-card{display:block; width:calc(100vw - 20px); max-width:none; max-height:calc(100dvh - 20px); overflow:auto; padding:14px}
+  .shop-header{grid-template-columns:minmax(0,1fr) auto; gap:9px}
+  .shop-header .stat-chip{grid-column:1; grid-row:2; justify-self:start}
+  .shop-close{grid-column:2; grid-row:1 / span 2}
+  .shop-tabs{flex-wrap:nowrap; overflow-x:auto; overflow-y:hidden; min-height:52px; padding-bottom:4px; scrollbar-width:thin}
+  .shop-tab{white-space:nowrap; flex:none}
+  .shop-layout{grid-template-columns:1fr; gap:12px; overflow:visible}
+  .shop-preview-panel{position:static; min-height:0; display:grid; grid-template-columns:112px minmax(0,1fr); grid-template-rows:auto auto auto 1fr; gap:4px 14px; text-align:left; padding:12px}
+  .shop-preview-eyebrow{grid-column:2; align-self:end}
+  .shop-preview-visual{grid-column:1; grid-row:1 / span 4; width:112px; height:112px; margin:0}
+  .shop-preview-name,.shop-preview-state,.shop-preview-note,.shop-preview-playback{grid-column:2}
+  .shop-preview-state{justify-self:start; margin-top:2px}
+  .shop-preview-note{margin:2px 0 0; line-height:1.4}
+  .shop-preview-game-icon{font-size:54px}
+  .shop-catalog{overflow:visible; padding:0}
+  .shop-grid{grid-template-columns:repeat(auto-fill,minmax(132px,1fr)); gap:8px}
+  .shop-limited-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.shop-limited-card{min-height:110px}
+  .shop-item button.btn{min-height:44px; min-width:44px}
+}
+
+/* 中等屏 (769px - 1024px) */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .hub-grid { grid-template-columns: minmax(0, 1fr) 280px; gap: 12px; }
+}
+

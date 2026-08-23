@@ -19,7 +19,7 @@ const EXPECTED_CATEGORIES = {
   tech: 'TECH'
 };
 const EXPECTED_REQUIREMENT_COUNT = 242;
-const EXPECTED_SOURCE_CATALOG_COUNT = 80;
+const EXPECTED_SOURCE_CATALOG_COUNT = 83;
 const EXPECTED_DEPENDENCY_NODE_COUNT = 129;
 const EXPECTED_DEPENDENCY_EDGE_COUNT = 267;
 const EXPECTED_REQUEST_COVERAGE_GROUP_COUNT = 48;
@@ -252,7 +252,15 @@ for (const [category, meta] of Object.entries(ledger.categories)) {
     assert(tech027[0].includes('1B26D7D5'), 'TECH-027 generated report is missing the historical T2 build identity');
     const hasCurrentFullMatrix = tech027[0].includes('已有与其匹配的当前五档四区/六款 Game Stage 完整单 Chromium 矩阵') ||
       tech027[0].includes('当前可见矩阵');
-    assert(hasCurrentFullMatrix || tech027[0].includes('完整五档矩阵仍未执行') ||
+    const hasCurrentImmersiveStageMatrix = tech027[0].includes('36 场景 Immersive Stage 布局/操作单 Chromium 矩阵') &&
+      tech027[0].includes('尚无完整路由/终局/三语/双主题/逐 FX 矩阵');
+    const hasCurrentTankFinalArtMatrix = tech027[0].includes('Tank Final Art 聚焦矩阵') &&
+      tech027[0].includes('尚无完整路由/终局/三语/双主题/六款逐 FX 矩阵');
+    const hasCurrentIdentityBadgeMatrix = tech027[0].includes('P1-09 Games/Profile/成就墙/Shop/390×844 身份徽章聚焦矩阵') &&
+      tech027[0].includes('尚无全站路由/终局/六款逐 FX 完整矩阵');
+    const hasCurrentMaintenanceMatrix = tech027[0].includes('维护窄范围可见复核') &&
+      tech027[0].includes('尚无完整路由/终局/三语/双主题矩阵');
+    assert(hasCurrentFullMatrix || hasCurrentImmersiveStageMatrix || hasCurrentTankFinalArtMatrix || hasCurrentIdentityBadgeMatrix || hasCurrentMaintenanceMatrix || tech027[0].includes('完整五档矩阵仍未执行') ||
       tech027[0].includes('尚无与其匹配的浏览器可见证据') ||
       (tech027[0].includes('并行写入尚未冻结') && tech027[0].includes('不得冒充当前稳定构建或浏览器证据')),
       'TECH-027 generated report must preserve either the current full-matrix evidence or the missing current full-matrix boundary');

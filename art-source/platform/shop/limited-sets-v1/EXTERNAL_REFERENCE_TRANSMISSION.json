@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "assetFamily": "P-SHOP-LIMITED-SETS-V1",
+  "licenseState": "EXTERNAL_REFERENCE_ONLY / blocked-license",
+  "inventoryContext": {
+    "hashIndexPath": "requirements/active/external-assets-audit-p1-20260813/evidence/external-file-content-hashes.json",
+    "hashIndexSha256": "EC0D066AA33DB56B0AE1DE42431BB2E6B07BEA10425524FD78A4DA1B80B782DD",
+    "fileCount": 836,
+    "totalBytes": 18567721249,
+    "aggregateSha256": "a7151ed3c6b32fd1306962accd42f8f838a8e5b8d1ea54f4fc4a56397842298f",
+    "structureIndexPath": "requirements/active/external-assets-audit-p1-20260813/evidence/external-layered-source-structure-audit-20260814.json",
+    "structureIndexSha256": "382A3849D0CAA98BD503B0A5842724C8AEACE26B108DBE13751AACE1F23A1660",
+    "layeredOrVectorRecords": 3819
+  },
+  "taskRelevantInputs": [
+    {"sourcePath":"q-ui-pack/元素/火山素材 (118).psd","sourceSha256":"abbf22a5884bc6c8edc868e531345d94db28f263a94bb4ca402ed5494d9525a9","bytes":447349,"structure":"606x600 / 50 layers / Shop + Shadow + Icon","provider":"local-skill-context","model":null,"taskId":"P2-11","transmissionScope":"PATH_HASH_STRUCTURE_SEMANTICS_ONLY"},
+    {"sourcePath":"q-ui-pack/元素/火山素材 (150).psd","sourceSha256":"451cba99d2c44f5f45f00b7fa0af0d4f5c033dd1ba6628fba2a34d784cf1e1ab","bytes":15213913,"structure":"800x5312 / 902 layers / Store + Buy + Coin + Buttons","provider":"local-skill-context","model":null,"taskId":"P2-11","transmissionScope":"PATH_HASH_STRUCTURE_SEMANTICS_ONLY"},
+    {"sourcePath":"q-ui-pack/弹窗/火山素材 (4).psd","sourceSha256":"888dbc65479687a94afffe2d2ad2395929c4b9cc00550ddb1b339a2155b72e84","bytes":8622556,"structure":"2280x1440 / 74 layers / Coins Shop + item list + buy buttons","provider":"local-skill-context","model":null,"taskId":"P2-11","transmissionScope":"PATH_HASH_STRUCTURE_SEMANTICS_ONLY"},
+    {"sourcePath":"q-ui-pack/弹窗/火山素材 (5).psd","sourceSha256":"1d0ab6654c7b62186a851666117517c1553eff3bf42a4c58c6819b4506f2ac06","bytes":8187031,"structure":"2280x1440 / 77 layers / Booster Shop + item list + buy buttons","provider":"local-skill-context","model":null,"taskId":"P2-11","transmissionScope":"PATH_HASH_STRUCTURE_SEMANTICS_ONLY"}
+  ],
+  "sentAt": "2026-08-22T00:00:00+09:00",
+  "remoteTaskIds": [],
+  "externalPixelsOrLayersTransmitted": 0,
+  "runtimeExternalInputs": 0,
+  "rejectedInfluences": ["pixel copying","layer copying","tracing","recoloring","blue-white popup geometry","coin pack art","balloons","flags","button silhouettes","commercial copy"]
+}
+

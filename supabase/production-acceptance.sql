@@ -27,7 +27,7 @@ do $$
 declare v_missing text[];
 begin
   select array_agg(signature) into v_missing from unnest(array[
-    'apply_reward_v1(jsonb,text,jsonb,jsonb)',
+    'apply_reward_v1(jsonb,jsonb,jsonb,jsonb)',
     'apply_purchase_v1(text,text,integer,integer,text)',
     'apply_ai_learning_v1(jsonb,text,jsonb)',
     'send_direct_message_v1(text,text,text,text,text,text,text,text)',
@@ -56,6 +56,26 @@ begin
     if has_table_privilege('anon','public.'||v_name,'select,insert,update,delete')
        or has_table_privilege('authenticated','public.'||v_name,'select,insert,update,delete') then
       raise exception 'browser_role_table_privilege:%',v_name;
+    end if;
+  end loop;
+end $$;
+
+do $$
+declare v_name text;
+begin
+  foreach v_name in array array[
+    'profiles','history','reward_history','economy_ledger','analytics_events',
+    'ai_learning_models','ai_learning_experiences','friend_requests','friendships','blocks','reports',
+    'direct_messages','direct_message_reads','cluster_instances','cluster_leases','platform_events',
+    'cluster_event_cursors','metrics_snapshots','playline_posts','playline_rate_events'
+  ] loop
+    if not (
+      has_table_privilege('service_role','public.'||v_name,'select') and
+      has_table_privilege('service_role','public.'||v_name,'insert') and
+      has_table_privilege('service_role','public.'||v_name,'update') and
+      has_table_privilege('service_role','public.'||v_name,'delete')
+    ) then
+      raise exception 'service_role_table_privilege_missing:%',v_name;
     end if;
   end loop;
 end $$;

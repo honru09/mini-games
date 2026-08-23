@@ -165,14 +165,35 @@ const index = read('简易报告/README.md');
 const projectStatus = JSON.parse(read('PROJECT_STATUS.json'));
 const currentBuildSha = crypto.createHash('sha256').update(fs.readFileSync(path.join(ROOT, 'public', 'index.html'))).digest('hex').toUpperCase();
 const drift = projectStatus.parallelBuildDrift20260819;
-const generatedProgress = read('简易报告/项目总需求进度报告-20260819.md');
+const generatedProgress = read('简易报告/项目总需求进度报告-20260821.md');
+const immersiveStageEvidence = JSON.parse(read('requirements/active/visual-25d-repush-p0-20260819/evidence/immersive-stage-20260820/current-build-visible-matrix.json'));
+const tankFinalArtEvidence = JSON.parse(read('requirements/active/tank-final-art-v1-p1-20260821/current-build-tank-visible-matrix-20260821.json'));
 const stableCurrentBuild = drift && drift.status === 'resolved' && drift.artifact && drift.expectedFromSources &&
   drift.artifact.sha256 === currentBuildSha && drift.expectedFromSources.sha256 === currentBuildSha &&
   index.includes(`当前 SHA-256 \`${currentBuildSha}\``) && index.includes('尚无与其匹配的浏览器完整矩阵');
 const activeParallelBuildDrift = drift && drift.status === 'active' && drift.artifact && drift.expectedFromSources &&
   index.includes('当前构建 SHA/bytes') && index.includes('自动生成报告') &&
   generatedProgress.includes(currentBuildSha) && generatedProgress.includes('尚无与其匹配的浏览器可见证据');
-assert((stableCurrentBuild || activeParallelBuildDrift) &&
+const currentImmersiveStageMatrix = immersiveStageEvidence.evidenceClass === 'LOCAL_SINGLE_CHROMIUM_SIMULATION_ONLY' &&
+  immersiveStageEvidence.build && immersiveStageEvidence.build.sha256 === currentBuildSha &&
+  immersiveStageEvidence.matrix && immersiveStageEvidence.matrix.scenarioCount === 36 && immersiveStageEvidence.matrix.result === 'PASS' &&
+  index.includes(currentBuildSha) && index.includes('36 个 Immersive Game Stage 布局/操作场景');
+const currentTankFinalArtMatrix = tankFinalArtEvidence.evidenceClass === 'LOCAL_SINGLE_CHROMIUM_SIMULATION_ONLY' &&
+  tankFinalArtEvidence.build && tankFinalArtEvidence.build.sha256 === currentBuildSha &&
+  Array.isArray(tankFinalArtEvidence.scenarios) && tankFinalArtEvidence.scenarios.length === 6 && tankFinalArtEvidence.scenarios.every(scenario => scenario.result === 'PASS') &&
+  index.includes(currentBuildSha) && index.includes('P1-02 Tank');
+const currentMaintenanceVisibleMatrix = (() => {
+  const evidencePath = path.join(ROOT, 'requirements', 'active', 'latest-browser-visible-matrix-prove-p4-20260815', 'evidence', 'current-build-visible-maintenance-2026082222.json');
+  if (!fs.existsSync(evidencePath)) return false;
+  const evidence = JSON.parse(fs.readFileSync(evidencePath, 'utf8'));
+  return evidence.evidenceClass === 'LOCAL_SINGLE_CHROMIUM_VISIBLE_PARTIAL_ONLY' &&
+    evidence.claim === 'current_build_single_browser_maintenance_partial' &&
+    evidence.build && evidence.build.sha256 === currentBuildSha && evidence.build.bytes === fs.statSync(path.join(ROOT, 'public', 'index.html')).size &&
+    Array.isArray(evidence.scenarios) && evidence.scenarios.length === 6 && evidence.scenarios.every(scenario => scenario.result === 'PASS') &&
+    evidence.browser && evidence.browser.consoleWarningCount === 0 && evidence.browser.consoleErrorCount === 0 &&
+    index.includes(currentBuildSha) && index.includes('6/6 场景');
+})();
+assert((stableCurrentBuild || activeParallelBuildDrift || currentImmersiveStageMatrix || currentTankFinalArtMatrix || currentMaintenanceVisibleMatrix) &&
   index.includes('`915A97F3…B8C8EFC` 的完整单浏览器矩阵') && index.includes('historical-as-of'),
   'report index must distinguish the current build from the historical browser matrix');
 assert(/该报告形成时.*historical-as-of/.test(index) && /Golden Set Gate 阻塞是 historical-as-of/.test(index),

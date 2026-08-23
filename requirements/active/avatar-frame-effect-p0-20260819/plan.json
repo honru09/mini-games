@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "id": "avatar-frame-effect-p0-20260819",
+  "objective": "将头像框和头像效果从 CSS-only 占位升级为可回滚的 Ghost-native 2.5D 素材原子",
+  "steps": [
+    {"step": "读取总指挥、美术管线和 GSAP 核心/时间线/性能边界", "status": "completed"},
+    {"step": "生成 8 frames + 8 effects 的 SVG source 与四档运行时派生", "status": "completed"},
+    {"step": "接入 Manifest/Catalog、统一身份节点与商城/Profile/Seat/DM/Playline", "status": "completed"},
+    {"step": "通过专项、共享、构建和进度报告回归", "status": "completed"},
+    {"step": "真实设备、第二浏览器、生产 Supabase 与线上发布", "status": "pending_external_gate"}
+  ]
+}

@@ -7,7 +7,12 @@ let activeShopPurchase = null;
 let shopLanguageListenerInstalled = false;
 let shopLanguageListener = null;
 const SHOP_PURCHASE_TIMEOUT_MS = 8000;
-
+const SHOP_LIMITED_SET_DEFS = Object.freeze([
+  Object.freeze({id:'spring',titleKey:'shop_limited_set_spring',parts:Object.freeze({avatars:128,frames:7,effects:2,backgrounds:32})}),
+  Object.freeze({id:'summer',titleKey:'shop_limited_set_summer',parts:Object.freeze({avatars:123,frames:4,effects:3,backgrounds:34})}),
+  Object.freeze({id:'autumn',titleKey:'shop_limited_set_autumn',parts:Object.freeze({avatars:112,frames:5,effects:1,backgrounds:36})}),
+  Object.freeze({id:'winter',titleKey:'shop_limited_set_winter',parts:Object.freeze({avatars:146,frames:8,effects:7,backgrounds:38})}),
+]);
 function installShopLanguageRefresh(){
   if (shopLanguageListenerInstalled || typeof window === 'undefined' || typeof window.addEventListener !== 'function') return;
   shopLanguageListenerInstalled = true;
@@ -167,7 +172,9 @@ function collectionRarityBadge(category,item){
   if(!item||typeof CollectionRarityCatalog==='undefined'||!CollectionRarityCatalog||typeof CollectionRarityCatalog.entryFor!=='function')return null;
   const entry=CollectionRarityCatalog.entryFor(category,item.id);
   if(!entry)return null;
-  const badge=el('span','collection-rarity-badge rarity-'+entry.tier,t('shop_rarity_label',t('collection_rarity_'+entry.tier)));
+  const badge=el('span','collection-rarity-badge rarity-'+entry.tier);
+  if(typeof identityBadgeNode==='function')badge.appendChild(identityBadgeNode('rarity',entry.tier,{size:'32',className:'shop-rarity-identity-badge'}));
+  badge.appendChild(el('span',null,t('shop_rarity_label',t('collection_rarity_'+entry.tier))));
   badge.setAttribute('data-rarity',entry.tier);
   return badge;
 }
@@ -175,7 +182,7 @@ function collectionRarityBadge(category,item){
 function shopCatalogItems(category, currentAccount){
   const items = Array.isArray(SHOP[category]) ? SHOP[category] : [];
   if (category !== 'backgrounds') return items;
-  return items.filter(item => item.id >= 7 || ownItem(currentAccount, 'backgrounds', item.id));
+  return items.filter(item => (!item.seasonal || seasonalBackgroundsEnabled()) && (item.id >= 7 || ownItem(currentAccount, 'backgrounds', item.id)));
 }
 
 function openShop(){
@@ -226,6 +233,9 @@ function openShop(){
   purchaseStatus.setAttribute('aria-atomic','true');
   header.appendChild(purchaseStatus);
   card.appendChild(header);
+  const limitedSection = el('section','shop-limited-showcase');
+  limitedSection.setAttribute('aria-labelledby','shop-limited-title');
+  card.appendChild(limitedSection);
   let tab = 'avatars';
   const tabs = el('div','shop-tabs');
   const tabPanelId = 'shop-catalog-panel';
@@ -269,7 +279,10 @@ function openShop(){
   let renderingCatalog = false;
   let previewBackground = null;
   let previewPlaybackCleanup = null;
+  let limitedPreviewSelection = null;
   function collectionParts(item){
+    const limited=SHOP_LIMITED_SET_DEFS.find(set=>Number(set.parts.backgrounds)===Number(item&&item.id));
+    if(limited)return {avatarId:limited.parts.avatars,frameId:limited.parts.frames,effectId:limited.parts.effects,name:t(limited.titleKey)};
     const index=AVATAR_CATEGORIES.findIndex(theme=>theme.id===item.theme);if(index<0)return null;
     const frames=[5,4,1,6,7,8],effects=[3,1,2,1,4,2],themed=PLAYROOM_AVATARS.filter(avatar=>avatar.theme===item.theme);
     const avatar=themed.find(candidate=>candidate.animated===!!item.animated&&!candidate.free)||themed.find(candidate=>!candidate.free)||themed[0];
@@ -277,17 +290,81 @@ function openShop(){
   }
   function collectionProgress(item){
     const parts=collectionParts(item);if(!parts)return null;
-    const avatarOwned=PLAYROOM_AVATARS.some(avatar=>avatar.theme===item.theme&&(avatar.free||ownItem(account,'avatars',avatar.id)));
+    const avatarOwned=(typeof isCuratedDefaultFreeAvatarId==='function'&&isCuratedDefaultFreeAvatarId(parts.avatarId))||ownItem(account,'avatars',parts.avatarId);
     const owned=[avatarOwned,ownItem(account,'frames',parts.frameId),ownItem(account,'backgrounds',item.id),ownItem(account,'effects',parts.effectId)].filter(Boolean).length;
     return {...parts,owned,total:4};
+  }
+  function limitedSetItems(set){
+    return ['avatars','frames','effects','backgrounds'].map(category=>{
+      const source=category==='avatars'?PLAYROOM_AVATARS:SHOP[category],id=Number(set.parts[category]);
+      const item=Array.isArray(source)?source.find(candidate=>Number(candidate.id)===id):null;
+      const owned=!!item&&(category==='avatars'&&item.free||ownItem(account,category,id));
+      return {category,id,item,owned};
+    }).filter(part=>part.item);
+  }
+  function limitedSetProgress(set){
+    const items=limitedSetItems(set);return {items,owned:items.filter(part=>part.owned).length,total:items.length};
+  }
+  function limitedSetArtNode(set){
+    const holder=el('span','shop-limited-art shop-limited-art-'+set.id,'');holder.setAttribute('aria-hidden','true');
+    const img=el('img',null,'');img.alt='';img.decoding='async';img.loading='lazy';img.addEventListener('load',()=>holder.classList.add('asset-ready'));
+    img.addEventListener('error',()=>{img.removeAttribute('src');holder.classList.remove('asset-ready');});holder.appendChild(img);
+    if(typeof resolveShopLimitedSetArtUrl==='function')resolveShopLimitedSetArtUrl('poster').then(url=>{if(url&&img.isConnected!==false)img.src=url;}).catch(()=>{});
+    return holder;
+  }
+  function syncLimitedSelection(setId){
+    limitedPreviewSelection=setId||null;
+    limitedSection.querySelectorAll('.shop-limited-card').forEach(node=>{
+      const active=!!setId&&node.dataset.limitedSet===setId;node.classList.toggle('is-selected',active);node.setAttribute('aria-pressed',active?'true':'false');
+    });
+  }
+  function renderLimitedSetPreview(set){
+    if(previewPlaybackCleanup)previewPlaybackCleanup();previewPlaybackCleanup=null;
+    if(previewBackground)releasePremiumBackground(previewBackground);previewBackground=null;
+    const progress=limitedSetProgress(set),parts=set.parts;
+    previewEl.innerHTML='';previewEl.appendChild(el('div','shop-preview-eyebrow',t('shop_limited_badge')));
+    const visual=el('div','shop-preview-visual'),hero=el('div','shop-identity-preview shop-limited-identity-preview profile-hero bg-'+parts.backgrounds);
+    const background=premiumBackgroundMeta(parts.backgrounds);if(background){applyPremiumBackground(hero,parts.backgrounds,'shop-preview',{autoplay:false});previewBackground=hero;}
+    const identity={...account,avatar:parts.avatars,frame:parts.frames,effect:parts.effects};
+    let stage=null;
+    if(typeof playerIdentityAvatarNode==='function')stage=playerIdentityAvatarNode(identity,{size:76,animate:!prefersReducedMotion(),stageClass:'avatar-stage'});
+    else{stage=el('div','avatar-stage effect-'+parts.effects);const frame=SHOP.frames.find(item=>item.id===parts.frames);if(frame)stage.appendChild(el('span','frame-ring '+frame.cls,''));stage.appendChild(avatarCanvas(parts.avatars,76,{animate:!prefersReducedMotion()}));}
+    hero.appendChild(stage);const name=el('div','pname');name.appendChild(nameFxNode(identity,account.name||t('profile_title')));hero.appendChild(name);visual.appendChild(hero);previewEl.appendChild(visual);
+    previewEl.appendChild(el('div','shop-preview-name',t(set.titleKey)));
+    previewEl.appendChild(el('div','shop-preview-state',progress.owned===progress.total?t('shop_limited_complete'):t('shop_limited_progress',progress.owned,progress.total)));
+    const components=el('div','shop-limited-components');
+    progress.items.forEach(part=>{const chip=el('span','shop-limited-component '+(part.owned?'is-owned':'is-missing'),t('shop_limited_part',t('shop_tab_'+part.category),shopItemName(part.category,part.item)));chip.dataset.category=part.category;components.appendChild(chip);});
+    previewEl.appendChild(components);previewEl.appendChild(el('p','shop-preview-note',t('shop_limited_preview_note')));
+    const browse=el('button','btn shop-limited-browse',t(progress.owned===progress.total?'shop_limited_browse_all':'shop_limited_browse'));
+    browse.type='button';browse.addEventListener('click',()=>{
+      const target=progress.items.find(part=>!part.owned)||progress.items.find(part=>part.category==='backgrounds')||progress.items[0];if(!target)return;
+      activateTab(target.category);const node=Array.from(listEl.querySelectorAll('.shop-item')).find(item=>item.dataset.shopCategory===target.category&&Number(item.dataset.shopItemId)===target.id);
+      if(node&&node.__shopPreviewSelection)selectPreview(node,node.__shopPreviewSelection.category,node.__shopPreviewSelection.item);
+    });previewEl.appendChild(browse);syncLimitedSelection(set.id);
+  }
+  function renderLimitedSets(){
+    limitedSection.innerHTML='';
+    const enabled=typeof shopLimitedSetsEnabled==='function'&&shopLimitedSetsEnabled()&&typeof seasonalBackgroundsEnabled==='function'&&seasonalBackgroundsEnabled();
+    limitedSection.classList.toggle('hidden',!enabled);if(!enabled)return;
+    const heading=el('div','shop-limited-heading'),copy=el('div','shop-limited-heading-copy');
+    const title=el('h4',null,t('shop_limited_title'));title.id='shop-limited-title';copy.appendChild(title);copy.appendChild(el('p',null,t('shop_limited_disclaimer')));heading.appendChild(copy);heading.appendChild(el('span','shop-limited-badge',t('shop_limited_badge')));limitedSection.appendChild(heading);
+    const grid=el('div','shop-limited-grid');
+    SHOP_LIMITED_SET_DEFS.forEach(set=>{
+      const progress=limitedSetProgress(set),button=el('button','shop-limited-card shop-limited-card-'+set.id+(limitedPreviewSelection===set.id?' is-selected':''),'');button.type='button';button.dataset.limitedSet=set.id;button.setAttribute('aria-pressed',limitedPreviewSelection===set.id?'true':'false');button.setAttribute('aria-label',t('shop_limited_set_aria',t(set.titleKey),progress.owned,progress.total));
+      button.appendChild(limitedSetArtNode(set));const cardCopy=el('span','shop-limited-card-copy');cardCopy.appendChild(el('span','shop-limited-card-title',t(set.titleKey)));cardCopy.appendChild(el('span','shop-limited-card-progress',progress.owned===progress.total?t('shop_limited_complete'):t('shop_limited_progress',progress.owned,progress.total)));button.appendChild(cardCopy);button.addEventListener('click',()=>renderLimitedSetPreview(set));grid.appendChild(button);
+    });limitedSection.appendChild(grid);
   }
   function previewCollection(item){
     if(activeCollectionPreviewClose)activeCollectionPreviewClose();
     const parts=collectionParts(item);if(!parts)return;
     const pbd=el('div','modal-backdrop'),pc=el('div','modal-card');pc.appendChild(el('h3',null,t('premium_collection_preview_title',parts.name)));
     const hero=el('div','profile-hero bg-'+item.id);applyPremiumBackground(hero,item.id,'shop-preview',{autoplay:!prefersReducedMotion()});
-    const st=el('div','avatar-stage effect-'+parts.effectId),frame=SHOP.frames.find(candidate=>candidate.id===parts.frameId);if(frame)st.appendChild(el('span','frame-ring '+(frame.cls||''),''));st.appendChild(avatarCanvas(parts.avatarId,96,{animate:!prefersReducedMotion()}));hero.appendChild(st);
-    const previewAccount={...account,effect:parts.effectId,nameFx:parts.effectId};const nm=el('div','pname');nm.appendChild(nameFxNode(previewAccount,account.name));hero.appendChild(nm);hero.appendChild(el('div','profile-identity-scrim',t('premium_collection_preview_note')));pc.appendChild(hero);
+    const previewAccount={...account,avatar:parts.avatarId,frame:parts.frameId,effect:parts.effectId,nameFx:parts.effectId};
+    let st=null;
+    if(typeof playerIdentityAvatarNode==='function')st=playerIdentityAvatarNode(previewAccount,{size:96,animate:!prefersReducedMotion(),stageClass:'avatar-stage'});
+    else{st=el('div','avatar-stage effect-'+parts.effectId);const frame=SHOP.frames.find(candidate=>candidate.id===parts.frameId);if(frame)st.appendChild(el('span','frame-ring '+(frame.cls||''),''));st.appendChild(avatarCanvas(parts.avatarId,96,{animate:!prefersReducedMotion()}));}
+    hero.appendChild(st);
+    const nm=el('div','pname');nm.appendChild(nameFxNode(previewAccount,account.name));hero.appendChild(nm);hero.appendChild(el('div','profile-identity-scrim',t('premium_collection_preview_note')));pc.appendChild(hero);
     const progress=collectionProgress(item);if(progress)pc.appendChild(el('div','profile-showcase',t('premium_collection_progress',progress.name,progress.owned,progress.total)));
     let dialogClose=null,closedPreview=false;const releasePreview=()=>{if(closedPreview)return false;closedPreview=true;releasePremiumBackground(hero);releaseModalScrollLock(pbd);if(activeCollectionPreviewClose===closePreview)activeCollectionPreviewClose=null;return true;};
     const closePreview=()=>{if(closedPreview)return false;return typeof dialogClose==='function'?dialogClose():(releasePreview(),pbd.remove(),true);};const close=el('button','btn',t('premium_back_to_shop'));close.addEventListener('click',closePreview);pc.appendChild(close);pbd.appendChild(pc);acquireModalScrollLock(pbd);document.body.appendChild(pbd);
@@ -327,13 +404,11 @@ function openShop(){
       applyPremiumBackground(hero,backgroundId,'shop-preview',{autoplay:false});
       previewBackground = hero;
     }
-    const effect = (SHOP.effects || []).find(candidate => candidate.id === effectId);
-    const frame = (SHOP.frames || []).find(candidate => candidate.id === frameId);
-    const stage = el('div','avatar-stage' + (effect && effect.cls ? ' ' + effect.cls : (effectId ? ' effect-' + effectId : '')));
-    if (frame) stage.appendChild(el('span','frame-ring ' + (frame.cls || ''),''));
-    stage.appendChild(avatarCanvas(avatarId,76,{animate:!prefersReducedMotion()}));
-    hero.appendChild(stage);
     const previewIdentity = {...account, avatar:avatarId, frame:frameId, effect:effectId};
+    let stage=null;
+    if(typeof playerIdentityAvatarNode==='function')stage=playerIdentityAvatarNode(previewIdentity,{size:76,animate:!prefersReducedMotion(),stageClass:'avatar-stage'});
+    else{const effect=(SHOP.effects||[]).find(candidate=>candidate.id===effectId),frame=(SHOP.frames||[]).find(candidate=>candidate.id===frameId);stage=el('div','avatar-stage'+(effect&&effect.cls?' '+effect.cls:(effectId?' effect-'+effectId:'')));if(frame)stage.appendChild(el('span','frame-ring '+(frame.cls||''),''));stage.appendChild(avatarCanvas(avatarId,76,{animate:!prefersReducedMotion()}));}
+    hero.appendChild(stage);
     const name = el('div','pname');
     name.appendChild(nameFxNode(previewIdentity,account.name || t('profile_title')));
     hero.appendChild(name);
@@ -379,7 +454,8 @@ function openShop(){
     const visual = el('div','shop-preview-visual');
     let identity = null;
     if (category === 'game_cosmetics'){
-      visual.appendChild(el('div','shop-preview-game-icon',GAMES[item.game] ? GAMES[item.game].icon : '🎮'));
+      const meta=GAMES[item.game];
+      visual.appendChild(typeof gameIconNode==='function'?gameIconNode(item.game,{role:'theme-icon',size:64,className:'shop-preview-game-icon',loading:'eager',fallback:meta?meta.icon:'🎮'}):el('div','shop-preview-game-icon',meta?meta.icon:'🎮'));
     } else {
       identity = renderIdentityPreview(category,item);
       visual.appendChild(identity.hero);
@@ -393,6 +469,7 @@ function openShop(){
     else previewEl.appendChild(el('p','shop-preview-note',t('shop_preview_hint')));
   }
   function selectPreview(node,category,item){
+    syncLimitedSelection(null);
     listEl.querySelectorAll('.shop-item').forEach(card => {
       const selected = card === node;
       card.classList.toggle('preview-selected',selected);
@@ -430,6 +507,7 @@ function openShop(){
   }
   function render(){
     listEl.innerHTML = '';
+    renderLimitedSets();
     const restoreSelection = previewSelection
       ? {category:String(previewSelection.category),id:Number(previewSelection.item && previewSelection.item.id)}
       : preferredSelection;
@@ -474,7 +552,8 @@ function openShop(){
         const owned = ownItem(account, 'game_cosmetics', item.id);
         const equipped = !!(account.gameCosmetics && account.gameCosmetics[item.game] && account.gameCosmetics[item.game][item.slot] === item.value);
         const it = el('div','shop-item game-cosmetic-item' + (equipped ? ' selected' : '') + (owned ? ' owned' : ''));
-        it.appendChild(el('div','game-cosmetic-preview',GAMES[item.game] ? GAMES[item.game].icon : '🎮'));
+        const meta=GAMES[item.game];
+        it.appendChild(typeof gameIconNode==='function'?gameIconNode(item.game,{role:'icon',size:64,className:'game-cosmetic-preview',fallback:meta?meta.icon:'🎮'}):el('div','game-cosmetic-preview',meta?meta.icon:'🎮'));
         it.appendChild(el('div','si-name',shopItemName('game_cosmetics',item)));
         const rarity=collectionRarityBadge('game_cosmetics',item);if(rarity)it.appendChild(rarity);
         it.appendChild(el('div','seat-meta',t('game_cosmetic_slot',t('game_'+item.game),cosmeticSlotLabel(item))));
@@ -503,10 +582,10 @@ function openShop(){
           if(premium){it.appendChild(backgroundPosterNode(premium,{hoverPreview:true}));it.appendChild(el('span','background-tier',t(premium.animated?'shop_tier_animated':'shop_tier_static')));}
           else { const sw = el('div','bg-swatch ' + item.cls); sw.style.width='38px';sw.style.height='38px';it.appendChild(sw); }
         } else {
-          const st = el('div','mini-avatar-stage' + (tab === 'effects' ? ' ' + item.cls : ''));
-          const ring = el('span','frame-ring ' + (tab === 'frames' ? item.cls : ''), '');
-          if (tab === 'frames') st.appendChild(ring);
-          st.appendChild(avatarCanvas(account.avatar, 30));
+          const previewIdentity={...account,frame:tab==='frames'?item.id:0,effect:tab==='effects'?item.id:0};
+          let st=null;
+          if(typeof playerIdentityAvatarNode==='function')st=playerIdentityAvatarNode(previewIdentity,{size:30,animate:false,stageClass:'mini-avatar-stage'});
+          else{st=el('div','mini-avatar-stage'+(tab==='effects'?' '+item.cls:''));const ring=el('span','frame-ring '+(tab==='frames'?item.cls:''),'');if(tab==='frames')st.appendChild(ring);st.appendChild(avatarCanvas(account.avatar,30));}
           it.appendChild(st);
         }
         it.appendChild(el('div','si-name', shopItemName(cat,item)));

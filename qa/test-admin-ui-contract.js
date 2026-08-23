@@ -18,7 +18,8 @@ const social = read('public/src/core/04-social.js');
 const profile = read('public/src/shop/05-profile.js');
 const shop = read('public/src/shop/06-shop.js');
 const shell = read('public/src/core/02-app-shell.js');
-const template = read('public/index-template.html');
+const { readPresentationSource } = require('./presentation-source');
+const template = readPresentationSource();
 const locales = Object.fromEntries(['zh-CN','en-US','uk-UA'].map(lang => [lang,JSON.parse(read('public/locales/'+lang+'.json'))]));
 let failures = 0;
 

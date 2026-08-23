@@ -1,0 +1,14 @@
+{
+  "batch": "T7-P13",
+  "title": "正式 Session Token TTL Sweep 本地收口",
+  "status": "implemented_local_pending_full_regression",
+  "owner": "mainline-primary",
+  "scope": [
+    "Auth/Profile boundary sweep_expired action",
+    "future-issued token fail-closed",
+    "ServerClockTimer leader-owned repeat lease",
+    "expired-session close and Supabase sync seam",
+    "QA, logs, reports and state evidence"
+  ],
+  "release": "LOCAL_ONLY / NOT_RELEASED"
+}

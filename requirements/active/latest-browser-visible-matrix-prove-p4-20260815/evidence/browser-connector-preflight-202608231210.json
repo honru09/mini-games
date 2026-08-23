@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-08-23T03:10:30.762Z",
+  "evidenceClass": "BROWSER_CONNECTOR_PREFLIGHT_ONLY",
+  "currency": "current-build",
+  "claim": "no_visible_evidence",
+  "build": {
+    "path": "public/index.html",
+    "characters": 1808578,
+    "utf8Bytes": 1822431,
+    "sha256": "6AA8EF0C1CE035DD8008C7A5479495029B54779088404977F2FFA735219E9246"
+  },
+  "browser": {
+    "surface": "Codex in-app Browser",
+    "initialization": "failed",
+    "error": "failed to write kernel assets: 系统找不到指定的路径",
+    "cookiesRead": false,
+    "storageRead": false,
+    "screenshotsCaptured": false
+  },
+  "notExecuted": [
+    "current build visible matrix",
+    "second real desktop browser",
+    "physical Android/iPhone/Tablet",
+    "real network shaping",
+    "production Supabase concurrency/multi-instance evidence"
+  ],
+  "releaseStatus": "RELEASE_EVIDENCE_PENDING"
+}

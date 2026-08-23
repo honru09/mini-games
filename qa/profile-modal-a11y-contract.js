@@ -12,7 +12,8 @@ const read = relative => fs.readFileSync(path.join(ROOT, relative), 'utf8');
 const rosterSource = read('public/src/ui/07-roster.js');
 const socialSource = read('public/src/core/04-social.js');
 const utilsSource = read('public/src/core/01-utils.js');
-const templateSource = read('public/index-template.html');
+const { readPresentationSource } = require('./presentation-source');
+const templateSource = readPresentationSource();
 const packageJson = JSON.parse(read('package.json'));
 
 function section(source, start, end) {

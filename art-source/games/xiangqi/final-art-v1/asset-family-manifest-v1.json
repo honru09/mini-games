@@ -1,0 +1,808 @@
+{
+  "schemaVersion": 1,
+  "productionUnitId": "P1-04",
+  "familyId": "G-16-XIANGQI-FINAL-ART-V1",
+  "sourceAssetId": "ART-040-XIANGQI-FINAL-ART-V1",
+  "artworkVersion": 1,
+  "status": "OWNER_AUTHORIZED_ART_CLEARANCE",
+  "license": "project-owned-deterministic-svg-sharp",
+  "runtimeStrategy": "Vanilla DOM + CSS + Canvas + GSAP 2.5D; no GLB/Three dependency",
+  "sourceOnlyInputs": {
+    "boardCover": "art-source/games/xiangqi/cover-source-v1.png",
+    "pieceAtoms": "art-source/games/xiangqi/piece-atoms-source-v1.png",
+    "externalInfluence": "task-scoped semantic-only reference lane; no external pixels in runtime"
+  },
+  "sources": [
+    {
+      "role": "board-background",
+      "path": "art-source/games/xiangqi/final-art-v1/runtime-source/board-background.svg",
+      "sha256": "CC3EC98FC5A7A084AC46139110DFA1D1E72B1CEEC2F64C7484D6FAD2EFB2FE33",
+      "bytes": 661,
+      "width": 1080,
+      "height": 1200,
+      "alpha": false,
+      "kind": "layer"
+    },
+    {
+      "role": "board-midground",
+      "path": "art-source/games/xiangqi/final-art-v1/runtime-source/board-midground.svg",
+      "sha256": "A6643AE1BBA0DED33FCEC2988AE5CF070ED1E13DCDA0AEA696BA8BB5FC03D2D9",
+      "bytes": 4719,
+      "width": 1080,
+      "height": 1200,
+      "alpha": true,
+      "kind": "layer"
+    },
+    {
+      "role": "board-foreground",
+      "path": "art-source/games/xiangqi/final-art-v1/runtime-source/board-foreground.svg",
+      "sha256": "38E2F9ADDFB152CC2F77F9021B9FDC48CE2F5C62CBC9FC1112B8B7857221ECB0",
+      "bytes": 649,
+      "width": 1080,
+      "height": 1200,
+      "alpha": true,
+      "kind": "layer"
+    },
+    {
+      "role": "piece-red-general",
+      "path": "art-source/games/xiangqi/final-art-v1/runtime-source/piece-red-general.svg",
+      "sha256": "C85C062E087A259A96F803CD99346C94DA852AEBDB132A6330079FA2D7603BE0",
+      "bytes": 1092,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "piece"
+    },
+    {
+      "role": "piece-red-advisor",
+      "path": "art-source/games/xiangqi/final-art-v1/runtime-source/piece-red-advisor.svg",
+      "sha256": "7C99412895082E81896D3ABC280CF4CF39CA8677CB7AFFD6B48108DCA12658D2",
+      "bytes": 1092,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "piece"
+    },
+    {
+      "role": "piece-red-elephant",
+      "path": "art-source/games/xiangqi/final-art-v1/runtime-source/piece-red-elephant.svg",
+      "sha256": "430DC08FD892E82FEAE40C8FC12362690C3F93565666FA43DF55B96BDD4A4C33",
+      "bytes": 1092,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "piece"
+    },
+    {
+      "role": "piece-red-horse",
+      "path": "art-source/games/xiangqi/final-art-v1/runtime-source/piece-red-horse.svg",
+      "sha256": "C80D01E7988BDAD8361C152C08C42C86B69D83A5AF7047327102848387E795DF",
+      "bytes": 1092,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "piece"
+    },
+    {
+      "role": "piece-red-chariot",
+      "path": "art-source/games/xiangqi/final-art-v1/runtime-source/piece-red-chariot.svg",
+      "sha256": "8E1A1B47CBCCB4B8AC70E7A77C1E7A6B9D048DCBFF5BC23DC79A801075DF3DEE",
+      "bytes": 1092,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "piece"
+    },
+    {
+      "role": "piece-red-cannon",
+      "path": "art-source/games/xiangqi/final-art-v1/runtime-source/piece-red-cannon.svg",
+      "sha256": "3D840BF547089D86607FBCA42D1CC4AF295683E023CB03B58758E6139A915485",
+      "bytes": 1092,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "piece"
+    },
+    {
+      "role": "piece-red-soldier",
+      "path": "art-source/games/xiangqi/final-art-v1/runtime-source/piece-red-soldier.svg",
+      "sha256": "836747C127A36FFA2DD3BD94A94A80CC3F9F972446EFF1DA69E6C720927AE9D9",
+      "bytes": 1092,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "piece"
+    },
+    {
+      "role": "piece-black-general",
+      "path": "art-source/games/xiangqi/final-art-v1/runtime-source/piece-black-general.svg",
+      "sha256": "3DD9BC2FA83089F003AAD98A9250A110AAB9DA2B9C0115C83EE352BCC3966569",
+      "bytes": 1092,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "piece"
+    },
+    {
+      "role": "piece-black-advisor",
+      "path": "art-source/games/xiangqi/final-art-v1/runtime-source/piece-black-advisor.svg",
+      "sha256": "623265D32ED8BC86DE4984D0149425286ECFE86781C9B7011272C0F1251CF3BB",
+      "bytes": 1092,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "piece"
+    },
+    {
+      "role": "piece-black-elephant",
+      "path": "art-source/games/xiangqi/final-art-v1/runtime-source/piece-black-elephant.svg",
+      "sha256": "A67E7CDAE85CC738F67DE88CC33C8EFDE53158DB21FA93BB47BEBB2E37A34D18",
+      "bytes": 1092,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "piece"
+    },
+    {
+      "role": "piece-black-horse",
+      "path": "art-source/games/xiangqi/final-art-v1/runtime-source/piece-black-horse.svg",
+      "sha256": "7F6C368F24CEAE57C8271D5ECFFF2A5AC19699B11473178E457E80F8265214F0",
+      "bytes": 1092,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "piece"
+    },
+    {
+      "role": "piece-black-chariot",
+      "path": "art-source/games/xiangqi/final-art-v1/runtime-source/piece-black-chariot.svg",
+      "sha256": "2C145DCCC84CFF6B21873D175ABF2CCCA722574B5A50592564F9713EECA1EDD8",
+      "bytes": 1092,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "piece"
+    },
+    {
+      "role": "piece-black-cannon",
+      "path": "art-source/games/xiangqi/final-art-v1/runtime-source/piece-black-cannon.svg",
+      "sha256": "2228160F6E24014E75E1611C7638CA6C457260F2636F15DA87878E2F2EDF71B2",
+      "bytes": 1092,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "piece"
+    },
+    {
+      "role": "piece-black-soldier",
+      "path": "art-source/games/xiangqi/final-art-v1/runtime-source/piece-black-soldier.svg",
+      "sha256": "1DCC9188BF87F4C5B9C6D55DED70E9CBF2E13F7A4F4466E3F8FFC4F262FEB033",
+      "bytes": 1092,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "piece"
+    },
+    {
+      "role": "vfx-piece-land",
+      "path": "art-source/games/xiangqi/final-art-v1/runtime-source/vfx-piece-land.svg",
+      "sha256": "34498A9F23A118740D26C39F6A3D1E0B46281E643E2462FFBBA831DF0C47278A",
+      "bytes": 509,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "vfx"
+    },
+    {
+      "role": "vfx-check-alert",
+      "path": "art-source/games/xiangqi/final-art-v1/runtime-source/vfx-check-alert.svg",
+      "sha256": "BD164F8ED0EF26857A41A8B8835F831C23F613D17E9591F60DA16A5A56DDF352",
+      "bytes": 475,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "vfx"
+    },
+    {
+      "role": "vfx-checkmate-burst",
+      "path": "art-source/games/xiangqi/final-art-v1/runtime-source/vfx-checkmate-burst.svg",
+      "sha256": "9B7D63F49E62623F11630A4CD27D228AC50DC72605382A9B09EF08FEB2EB50D6",
+      "bytes": 681,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "vfx"
+    },
+    {
+      "role": "vfx-selected",
+      "path": "art-source/games/xiangqi/final-art-v1/runtime-source/vfx-selected.svg",
+      "sha256": "84A2282005E9203DC6D742A519485A90953798ED4A30B6B1A1A5B4AE07197D12",
+      "bytes": 595,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "vfx"
+    },
+    {
+      "role": "vfx-capture",
+      "path": "art-source/games/xiangqi/final-art-v1/runtime-source/vfx-capture.svg",
+      "sha256": "8DB7283DD4590D162F30F8D13A472CC8B1BD80C4AAFB14B7A759E80FB59EAACD",
+      "bytes": 616,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "vfx"
+    },
+    {
+      "role": "vfx-clock-warning",
+      "path": "art-source/games/xiangqi/final-art-v1/runtime-source/vfx-clock-warning.svg",
+      "sha256": "C93F19C17CD7CEF420867311527693D38F4CD3DD7C9FC20EFF3189EF02D06AD5",
+      "bytes": 477,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "vfx"
+    },
+    {
+      "role": "camera-desktop",
+      "path": "art-source/games/xiangqi/final-art-v1/runtime-source/camera-desktop.svg",
+      "sha256": "D24E2DE1EF2E3DCA096106C1B59C308CCC6158023F3C987AC6029B846948DF38",
+      "bytes": 770,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "camera"
+    },
+    {
+      "role": "camera-mobile",
+      "path": "art-source/games/xiangqi/final-art-v1/runtime-source/camera-mobile.svg",
+      "sha256": "2CB44F5CCD27AC4A010AE11FCA4FB9A58E979681FA616183E749B53138EF8578",
+      "bytes": 769,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "camera"
+    }
+  ],
+  "variants": [
+    {
+      "role": "board-background",
+      "path": "public/assets/games/xiangqi/final-art-v1/board-background-v1.webp",
+      "sha256": "3FD6887C1C9A23F607F31D9BC4B5E5A97268EAFAC51EE50D6D9EC450A390ABE2",
+      "bytes": 8762,
+      "animated": false,
+      "width": 1080,
+      "height": 1200,
+      "mode": "standard"
+    },
+    {
+      "role": "board-background-static",
+      "path": "public/assets/games/xiangqi/final-art-v1/board-background-static-v1.webp",
+      "sha256": "30F527B32A2C3D77F5E905C2E184608F6578914DE2FA7F1736EA3CACDE9A9B40",
+      "bytes": 7946,
+      "animated": false,
+      "width": 1080,
+      "height": 1200,
+      "mode": "static"
+    },
+    {
+      "role": "board-midground",
+      "path": "public/assets/games/xiangqi/final-art-v1/board-midground-v1.webp",
+      "sha256": "4ED5A66C9B27CF214869CBEE7FC20FFB44D422F1635B858F2DDC473C4E7BF720",
+      "bytes": 18664,
+      "animated": false,
+      "width": 1080,
+      "height": 1200,
+      "mode": "standard"
+    },
+    {
+      "role": "board-midground-static",
+      "path": "public/assets/games/xiangqi/final-art-v1/board-midground-static-v1.webp",
+      "sha256": "79CEE24446F54ED61D90C7B3658C4AAED8C03B67F82377C6947D62EBA40E292E",
+      "bytes": 18076,
+      "animated": false,
+      "width": 1080,
+      "height": 1200,
+      "mode": "static"
+    },
+    {
+      "role": "board-foreground",
+      "path": "public/assets/games/xiangqi/final-art-v1/board-foreground-v1.webp",
+      "sha256": "C7093D203465DF5C209773EBF188A25D5AB8DD57AC94F447B58B7BA79C70F9A5",
+      "bytes": 5732,
+      "animated": false,
+      "width": 1080,
+      "height": 1200,
+      "mode": "standard"
+    },
+    {
+      "role": "board-foreground-static",
+      "path": "public/assets/games/xiangqi/final-art-v1/board-foreground-static-v1.webp",
+      "sha256": "363DEFF1B159F5A76F7E23CD688A65FEF09E701F3A09BE4403736D584D151850",
+      "bytes": 5622,
+      "animated": false,
+      "width": 1080,
+      "height": 1200,
+      "mode": "static"
+    },
+    {
+      "role": "piece-red-general",
+      "path": "public/assets/games/xiangqi/final-art-v1/piece-red-general-v1.webp",
+      "sha256": "AD06D0FFE5C3227466809F038478498569C4737D1B679034B8E08E6D73C7519C",
+      "bytes": 20784,
+      "animated": false,
+      "width": 512,
+      "height": 512,
+      "mode": "standard"
+    },
+    {
+      "role": "piece-red-general-static",
+      "path": "public/assets/games/xiangqi/final-art-v1/piece-red-general-static-v1.webp",
+      "sha256": "8D6ADD117ECADB111BA36573415D1BE7B2D9F4797B7C3D80FAC38803D953BA1E",
+      "bytes": 19742,
+      "animated": false,
+      "width": 512,
+      "height": 512,
+      "mode": "static"
+    },
+    {
+      "role": "piece-red-advisor",
+      "path": "public/assets/games/xiangqi/final-art-v1/piece-red-advisor-v1.webp",
+      "sha256": "D75570669037F1A48B06F45989B098E8DD8C4178D64AFCC95E0DC51035360DF2",
+      "bytes": 20780,
+      "animated": false,
+      "width": 512,
+      "height": 512,
+      "mode": "standard"
+    },
+    {
+      "role": "piece-red-advisor-static",
+      "path": "public/assets/games/xiangqi/final-art-v1/piece-red-advisor-static-v1.webp",
+      "sha256": "30C40D33E870E3BB4300742FE32F7D0FD834F83033970BE325AD337BA1602037",
+      "bytes": 19638,
+      "animated": false,
+      "width": 512,
+      "height": 512,
+      "mode": "static"
+    },
+    {
+      "role": "piece-red-elephant",
+      "path": "public/assets/games/xiangqi/final-art-v1/piece-red-elephant-v1.webp",
+      "sha256": "1FF07F67DF3CFDF49DE0F0878F6C81B5B111CDFD804229F993963E472598D3B4",
+      "bytes": 21234,
+      "animated": false,
+      "width": 512,
+      "height": 512,
+      "mode": "standard"
+    },
+    {
+      "role": "piece-red-elephant-static",
+      "path": "public/assets/games/xiangqi/final-art-v1/piece-red-elephant-static-v1.webp",
+      "sha256": "701B90DF036C949A17C6B49F976AEA6E25C1C62D7100A885073936D85D20E6D0",
+      "bytes": 20174,
+      "animated": false,
+      "width": 512,
+      "height": 512,
+      "mode": "static"
+    },
+    {
+      "role": "piece-red-horse",
+      "path": "public/assets/games/xiangqi/final-art-v1/piece-red-horse-v1.webp",
+      "sha256": "075C12C52F8715EA7FB22A1F75788E04A2B1D0DFCED10B5B6309FB4F14EF1D8A",
+      "bytes": 21658,
+      "animated": false,
+      "width": 512,
+      "height": 512,
+      "mode": "standard"
+    },
+    {
+      "role": "piece-red-horse-static",
+      "path": "public/assets/games/xiangqi/final-art-v1/piece-red-horse-static-v1.webp",
+      "sha256": "6C7B77077C9E84F22EF2057DFB7C1ABA17104DC1B7F7E31FBDEFC63D05226BBF",
+      "bytes": 20374,
+      "animated": false,
+      "width": 512,
+      "height": 512,
+      "mode": "static"
+    },
+    {
+      "role": "piece-red-chariot",
+      "path": "public/assets/games/xiangqi/final-art-v1/piece-red-chariot-v1.webp",
+      "sha256": "363A41C8FACAACD70626583363920CB2A0DACAE78472861B474C16E54FEE466E",
+      "bytes": 21486,
+      "animated": false,
+      "width": 512,
+      "height": 512,
+      "mode": "standard"
+    },
+    {
+      "role": "piece-red-chariot-static",
+      "path": "public/assets/games/xiangqi/final-art-v1/piece-red-chariot-static-v1.webp",
+      "sha256": "41591D080C92DF632EEF71EEDBDA013C47C425F4771BC9EE6056B07429369C3D",
+      "bytes": 20382,
+      "animated": false,
+      "width": 512,
+      "height": 512,
+      "mode": "static"
+    },
+    {
+      "role": "piece-red-cannon",
+      "path": "public/assets/games/xiangqi/final-art-v1/piece-red-cannon-v1.webp",
+      "sha256": "C47C8F6C8F0423987DF78E16EB727C7E77F59BE51EE7C1A270658590CCE68373",
+      "bytes": 21600,
+      "animated": false,
+      "width": 512,
+      "height": 512,
+      "mode": "standard"
+    },
+    {
+      "role": "piece-red-cannon-static",
+      "path": "public/assets/games/xiangqi/final-art-v1/piece-red-cannon-static-v1.webp",
+      "sha256": "E4EAE67800276CBE4656CE3141F49216A4A17A38619E0C85E268DF40692FF7B4",
+      "bytes": 20474,
+      "animated": false,
+      "width": 512,
+      "height": 512,
+      "mode": "static"
+    },
+    {
+      "role": "piece-red-soldier",
+      "path": "public/assets/games/xiangqi/final-art-v1/piece-red-soldier-v1.webp",
+      "sha256": "46E8F03C7CCD218CDC5E71CEBF476F44C7A4E6B218E2287BDD85D5A9BF940DAF",
+      "bytes": 20926,
+      "animated": false,
+      "width": 512,
+      "height": 512,
+      "mode": "standard"
+    },
+    {
+      "role": "piece-red-soldier-static",
+      "path": "public/assets/games/xiangqi/final-art-v1/piece-red-soldier-static-v1.webp",
+      "sha256": "6007A9AFE1D44F8228DC738835256E2AEE0F6EA4E4F9FED4338450DFC053DA2D",
+      "bytes": 19928,
+      "animated": false,
+      "width": 512,
+      "height": 512,
+      "mode": "static"
+    },
+    {
+      "role": "piece-black-general",
+      "path": "public/assets/games/xiangqi/final-art-v1/piece-black-general-v1.webp",
+      "sha256": "709A71CB463466704D11A35696A07D0AF0A068868DB27124C98AFC5C9E1CCED9",
+      "bytes": 20904,
+      "animated": false,
+      "width": 512,
+      "height": 512,
+      "mode": "standard"
+    },
+    {
+      "role": "piece-black-general-static",
+      "path": "public/assets/games/xiangqi/final-art-v1/piece-black-general-static-v1.webp",
+      "sha256": "5DC6E578DF22788F437C339F0CC904854EE9EBD8E3D48477EA230EA92B05DC46",
+      "bytes": 19698,
+      "animated": false,
+      "width": 512,
+      "height": 512,
+      "mode": "static"
+    },
+    {
+      "role": "piece-black-advisor",
+      "path": "public/assets/games/xiangqi/final-art-v1/piece-black-advisor-v1.webp",
+      "sha256": "63C8141CEACA3277FDCD82518592B3A1CFD0B09BB88D14B394D412A403CE5826",
+      "bytes": 19644,
+      "animated": false,
+      "width": 512,
+      "height": 512,
+      "mode": "standard"
+    },
+    {
+      "role": "piece-black-advisor-static",
+      "path": "public/assets/games/xiangqi/final-art-v1/piece-black-advisor-static-v1.webp",
+      "sha256": "413BAFAE3606F945D31EE4ED6DB76841C3F05C055A9736C2D9AAB4618D98ED77",
+      "bytes": 18530,
+      "animated": false,
+      "width": 512,
+      "height": 512,
+      "mode": "static"
+    },
+    {
+      "role": "piece-black-elephant",
+      "path": "public/assets/games/xiangqi/final-art-v1/piece-black-elephant-v1.webp",
+      "sha256": "D75925E0EFCDEF30F925FAC8167D998448BDB93276DE921B636DBAEE1C5A5E08",
+      "bytes": 21048,
+      "animated": false,
+      "width": 512,
+      "height": 512,
+      "mode": "standard"
+    },
+    {
+      "role": "piece-black-elephant-static",
+      "path": "public/assets/games/xiangqi/final-art-v1/piece-black-elephant-static-v1.webp",
+      "sha256": "AC92D5B78ED258D86AE96809847A1A4B20ADD4DAA12C022939E728F003731D8C",
+      "bytes": 20036,
+      "animated": false,
+      "width": 512,
+      "height": 512,
+      "mode": "static"
+    },
+    {
+      "role": "piece-black-horse",
+      "path": "public/assets/games/xiangqi/final-art-v1/piece-black-horse-v1.webp",
+      "sha256": "4476E43F1799B442BCD590C169310785C981CEBDE1D01766E8FF8DF5CA3C5B3C",
+      "bytes": 20636,
+      "animated": false,
+      "width": 512,
+      "height": 512,
+      "mode": "standard"
+    },
+    {
+      "role": "piece-black-horse-static",
+      "path": "public/assets/games/xiangqi/final-art-v1/piece-black-horse-static-v1.webp",
+      "sha256": "3B054FF2AC37B3B516737EDECCE7E76B033C681B1A927EFCD38FD941DB3A49DF",
+      "bytes": 19452,
+      "animated": false,
+      "width": 512,
+      "height": 512,
+      "mode": "static"
+    },
+    {
+      "role": "piece-black-chariot",
+      "path": "public/assets/games/xiangqi/final-art-v1/piece-black-chariot-v1.webp",
+      "sha256": "7E81332041C721BB6C683292920C67AFACC4A5BEBA8391DE4403BFB9A3A91A93",
+      "bytes": 20398,
+      "animated": false,
+      "width": 512,
+      "height": 512,
+      "mode": "standard"
+    },
+    {
+      "role": "piece-black-chariot-static",
+      "path": "public/assets/games/xiangqi/final-art-v1/piece-black-chariot-static-v1.webp",
+      "sha256": "DC7BF902D1E74E8541AC90E6E394FC8D58E55DCB031E4136EEF3C9DCEB5FB06F",
+      "bytes": 19252,
+      "animated": false,
+      "width": 512,
+      "height": 512,
+      "mode": "static"
+    },
+    {
+      "role": "piece-black-cannon",
+      "path": "public/assets/games/xiangqi/final-art-v1/piece-black-cannon-v1.webp",
+      "sha256": "B36076A8050FE56FE33D79C9784CB460460303682645796E678BBD88D778E246",
+      "bytes": 20944,
+      "animated": false,
+      "width": 512,
+      "height": 512,
+      "mode": "standard"
+    },
+    {
+      "role": "piece-black-cannon-static",
+      "path": "public/assets/games/xiangqi/final-art-v1/piece-black-cannon-static-v1.webp",
+      "sha256": "B25AC6B718AD398F803AB72FB0A41A621074040827A7054C1F425B942433F3F1",
+      "bytes": 19780,
+      "animated": false,
+      "width": 512,
+      "height": 512,
+      "mode": "static"
+    },
+    {
+      "role": "piece-black-soldier",
+      "path": "public/assets/games/xiangqi/final-art-v1/piece-black-soldier-v1.webp",
+      "sha256": "C8A05DE891DABC4891E228C3FD2803FEF2050D41B3F1E29CDF0359B7BAB0285A",
+      "bytes": 20270,
+      "animated": false,
+      "width": 512,
+      "height": 512,
+      "mode": "standard"
+    },
+    {
+      "role": "piece-black-soldier-static",
+      "path": "public/assets/games/xiangqi/final-art-v1/piece-black-soldier-static-v1.webp",
+      "sha256": "C37CEEFE0CBD82240C6525AF779AA4B6C80FAA906F78BC4FBF2EB1AADC3DD2DC",
+      "bytes": 19108,
+      "animated": false,
+      "width": 512,
+      "height": 512,
+      "mode": "static"
+    },
+    {
+      "role": "vfx-piece-land",
+      "path": "public/assets/games/xiangqi/final-art-v1/vfx-piece-land-v1.webp",
+      "sha256": "C50C37177F785A6D9AFA932BE468D7F36EDAC2174BBC1EC4C573B3843F54D661",
+      "bytes": 20452,
+      "animated": false,
+      "width": 512,
+      "height": 512,
+      "mode": "standard"
+    },
+    {
+      "role": "vfx-piece-land-static",
+      "path": "public/assets/games/xiangqi/final-art-v1/vfx-piece-land-static-v1.webp",
+      "sha256": "00FA4495EA048B140A86D6F6AF9A1B74A3FAE2F6C866B240E12B2C5DD0B5A3BC",
+      "bytes": 19848,
+      "animated": false,
+      "width": 512,
+      "height": 512,
+      "mode": "static"
+    },
+    {
+      "role": "vfx-check-alert",
+      "path": "public/assets/games/xiangqi/final-art-v1/vfx-check-alert-v1.webp",
+      "sha256": "CFC97E0BFA95D58ADEF68022399FB62B6D80F24A36129D7E725840F2C27082E0",
+      "bytes": 8488,
+      "animated": false,
+      "width": 512,
+      "height": 512,
+      "mode": "standard"
+    },
+    {
+      "role": "vfx-check-alert-static",
+      "path": "public/assets/games/xiangqi/final-art-v1/vfx-check-alert-static-v1.webp",
+      "sha256": "ACA23D95FA2B1BDF8001319CE09082024DBDF81E32F0AA52C43967423F93F69C",
+      "bytes": 8090,
+      "animated": false,
+      "width": 512,
+      "height": 512,
+      "mode": "static"
+    },
+    {
+      "role": "vfx-checkmate-burst",
+      "path": "public/assets/games/xiangqi/final-art-v1/vfx-checkmate-burst-v1.webp",
+      "sha256": "3F6FAF5FA8680D176D400672BE00CBA875862078E8B9F6F1DA24E5ABC1B9F8FB",
+      "bytes": 14652,
+      "animated": false,
+      "width": 512,
+      "height": 512,
+      "mode": "standard"
+    },
+    {
+      "role": "vfx-checkmate-burst-static",
+      "path": "public/assets/games/xiangqi/final-art-v1/vfx-checkmate-burst-static-v1.webp",
+      "sha256": "6FF76E8E67D30AB9D52339738DFBCA1913F75BAFA31F377E163A42CF31266BD1",
+      "bytes": 14026,
+      "animated": false,
+      "width": 512,
+      "height": 512,
+      "mode": "static"
+    },
+    {
+      "role": "vfx-selected",
+      "path": "public/assets/games/xiangqi/final-art-v1/vfx-selected-v1.webp",
+      "sha256": "433DAF91D0DCE1107EE8D3D8377BCDA2D218E29F489FE6A4689D7586CFCE22FD",
+      "bytes": 20548,
+      "animated": false,
+      "width": 512,
+      "height": 512,
+      "mode": "standard"
+    },
+    {
+      "role": "vfx-selected-static",
+      "path": "public/assets/games/xiangqi/final-art-v1/vfx-selected-static-v1.webp",
+      "sha256": "DF14AD414EAB1283648EE59BF68449B361E560EFA6833F50892679585D362F64",
+      "bytes": 19996,
+      "animated": false,
+      "width": 512,
+      "height": 512,
+      "mode": "static"
+    },
+    {
+      "role": "vfx-capture",
+      "path": "public/assets/games/xiangqi/final-art-v1/vfx-capture-v1.webp",
+      "sha256": "D5417E5CC21DDA3080B8E08452E7BD80A48EBC4534DAEA1E9B138BFC9C9192B5",
+      "bytes": 20250,
+      "animated": false,
+      "width": 512,
+      "height": 512,
+      "mode": "standard"
+    },
+    {
+      "role": "vfx-capture-static",
+      "path": "public/assets/games/xiangqi/final-art-v1/vfx-capture-static-v1.webp",
+      "sha256": "CAB6D27CA0D3C752DDFD7AC728460174B6DF72155EC9EBA1C31C83709C5CB229",
+      "bytes": 19578,
+      "animated": false,
+      "width": 512,
+      "height": 512,
+      "mode": "static"
+    },
+    {
+      "role": "vfx-clock-warning",
+      "path": "public/assets/games/xiangqi/final-art-v1/vfx-clock-warning-v1.webp",
+      "sha256": "F2AA74DA6BE2C2B10BAD3B148FAD01634450DB5C58526CFBE1A5193A7097A4EE",
+      "bytes": 20058,
+      "animated": false,
+      "width": 512,
+      "height": 512,
+      "mode": "standard"
+    },
+    {
+      "role": "vfx-clock-warning-static",
+      "path": "public/assets/games/xiangqi/final-art-v1/vfx-clock-warning-static-v1.webp",
+      "sha256": "B9BD0FC6E2A82ACC6CEE83AD621BE0953B74B93AA7D13DB31ADA3541D50059EF",
+      "bytes": 19314,
+      "animated": false,
+      "width": 512,
+      "height": 512,
+      "mode": "static"
+    },
+    {
+      "role": "camera-desktop",
+      "path": "public/assets/games/xiangqi/final-art-v1/camera-desktop-v1.webp",
+      "sha256": "1FE7A082F3A81175C246449D49935D003238FCBB141B82DF318C3FAE14639F3D",
+      "bytes": 8446,
+      "animated": false,
+      "width": 512,
+      "height": 512,
+      "mode": "standard"
+    },
+    {
+      "role": "camera-desktop-static",
+      "path": "public/assets/games/xiangqi/final-art-v1/camera-desktop-static-v1.webp",
+      "sha256": "85B994BC75D4B2B59EBA87AE35CB72A5305A5ABEB11D41154FD4E4DD85077D0F",
+      "bytes": 8096,
+      "animated": false,
+      "width": 512,
+      "height": 512,
+      "mode": "static"
+    },
+    {
+      "role": "camera-mobile",
+      "path": "public/assets/games/xiangqi/final-art-v1/camera-mobile-v1.webp",
+      "sha256": "73D70A9C502B198C09FB506045112862F392AFEAC965201EF192AB80704DBA00",
+      "bytes": 7634,
+      "animated": false,
+      "width": 512,
+      "height": 512,
+      "mode": "standard"
+    },
+    {
+      "role": "camera-mobile-static",
+      "path": "public/assets/games/xiangqi/final-art-v1/camera-mobile-static-v1.webp",
+      "sha256": "771F8CB15F5955A1D7302A68334DF690FB4F8DAC5D52CF748983AB43BE162441",
+      "bytes": 7252,
+      "animated": false,
+      "width": 512,
+      "height": 512,
+      "mode": "static"
+    }
+  ],
+  "reviewBoards": [
+    {
+      "path": "art-source/games/xiangqi/final-art-v1/review/xiangqi-final-runtime-contact-sheet-v1.png",
+      "sha256": "DBC0CF4544D80F95D51DF633E19AFF9EC475B23584DB4659D1FACB4927AC0D9C",
+      "bytes": 562883,
+      "width": 1060,
+      "height": 1080
+    }
+  ],
+  "featureFlags": {
+    "operator": "all",
+    "enabledValue": "1",
+    "defaultEnabled": true,
+    "ids": [
+      "mg_art_xiangqi_final_v1"
+    ]
+  },
+  "metrics": {
+    "sourceMasterCount": 25,
+    "runtimeVariantCount": 50,
+    "runtimeBytes": 870410,
+    "runtimeByteBudget": 6291456,
+    "withinBudget": true,
+    "boardLayerCount": 3,
+    "pieceAtomCount": 14,
+    "semanticVfxCount": 6,
+    "cameraPresetCount": 2
+  },
+  "authorityBoundary": "presentation-only; XiangqiRules v2, clocks, moves, captured pieces, and tournament orchestrator remain authoritative live DOM/Rules",
+  "fallback": {
+    "chain": "Xiangqi final art -> Tabletop Wave A paper board and CSS fallback"
+  },
+  "release": "LOCAL_ONLY_NOT_RELEASED",
+  "externalReferenceContext": {
+    "status": "SOURCE_ONLY_EXTERNAL_INFLUENCED",
+    "license": "EXTERNAL_REFERENCE_ONLY / blocked-license",
+    "transmissionRecord": "art-source/games/xiangqi/final-art-v1/EXTERNAL_REFERENCE_TRANSMISSION.json",
+    "runtimeBoundary": "No blocked-license pixel, layer, silhouette, palette, text or icon enters runtime."
+  }
+}

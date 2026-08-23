@@ -4,12 +4,12 @@
   "state": "IN_PROGRESS_LOCAL",
   "requirements": ["UI-028", "GAME-042", "TECH-049", "TECH-054"],
   "steps": [
-    {"id":"2D-01","status":"completed","title":"冻结 Ghost3D 扩张并建立 2.5D 路由/合同"},
+    {"id":"2D-01","status":"completed","title":"退役并清除 Ghost3D/Three runtime，建立 2.5D 唯一路由/合同"},
     {"id":"2D-02","status":"completed","title":"DepthScene、Camera、Honru、Page Transition、Game Stage 语义模块接入构建"},
     {"id":"2D-03","status":"completed","title":"Gomoku 首个 2.5D 合同与静态回退回归"},
-    {"id":"2D-04","status":"pending","title":"真实浏览器 Home→Games→Gomoku→Result→Games 可见证据"},
-    {"id":"2D-05","status":"pending","title":"将同一空间语言按 Ludo→Monopoly→Xiangqi→Tetris→Tank 推广"}
+    {"id":"2D-04","status":"partial","title":"当前构建已完成 6 视口 × 6 游戏 Game Stage 布局/操作可见矩阵；仍缺 Result→Games、三语/双主题/reduced-motion 与逐语义 FX 完整链路"},
+    {"id":"2D-05","status":"completed","title":"将同一空间语言推广到六款：共享语义桥接、八类差异化 FX、无效抖动清理、全屏 Immersive Shell、自适应 HUD 与性能降级合同已实现；外部可见验收归 2D-04"}
   ],
-  "rollback": "关闭 mg_visual_25d_v1 或移除 2.5D 监听/模块接线，保留原 DOM/Canvas；不删除 Ghost3D/Three 实验文件。",
+  "rollback": "关闭 mg_visual_25d_v1 可回到静态 DOM/Canvas；3D runtime 已退役，不再作为回滚路径。",
   "release": "LOCAL_ONLY / NOT_RELEASED"
 }

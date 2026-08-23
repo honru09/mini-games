@@ -2,7 +2,8 @@
 
 /* Home Engagement P0: static contract for the first-visit and return-player loop. */
 const fs=require('fs'),path=require('path'),vm=require('vm');const ROOT=path.join(__dirname,'..');const read=file=>fs.readFileSync(path.join(ROOT,file),'utf8');
-const template=read('public/index-template.html'),shell=read('public/src/core/02-app-shell.js'),pkg=read('package.json'),server=read('server/index.js');
+const { readPresentationSource } = require('./presentation-source');
+const template=readPresentationSource(),shell=read('public/src/core/02-app-shell.js'),pkg=read('package.json'),server=read('server/index.js');
 const locales=['zh-CN','en-US','uk-UA'].map(lang=>JSON.parse(read('public/locales/'+lang+'.json')));let fail=0;
 function check(name,ok){console.log((ok?'PASS  ':'FAIL  ')+name);if(!ok)fail++;}
 const keys=['home_next_step','home_next_step_title','home_step_choose','home_step_choose_copy','home_step_mode','home_step_mode_copy','home_step_replay','home_step_replay_copy','home_recommendation_open','home_recommendation_view','home_goal_label','home_goal_guest','home_goal_guest_copy','home_goal_level','home_goal_streak','home_goal_recommendation','home_goal_open_profile','home_goal_start','home_goal_level_chip','home_goal_game_chip'];

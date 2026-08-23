@@ -82,6 +82,7 @@ function run(flag, options) {
   options = options || {};
   const area = createNode('div');
   const extra = createNode('div');
+  const outcomes = [];
   let timers = 0;
   const localStorage = {
     getItem() {
@@ -97,12 +98,12 @@ function run(flag, options) {
     t(key, ...args) { return key + (args.length ? ':' + args.join(',') : ''); },
     gameArtEnabled() { return false; }, stickerArtEnabled() { return false; }, tabletopArtEnabled() { return false; },
     prefersReducedMotion() { return !!options.reducedMotion; }, playFeedback() {}, setStatus() {}, renderPlayers() {}, aiChoose: async () => null, aiSpeak() {},
-    online: { room: null, isHost: false }, toast() {}, showVictoryOverlay() {}, shareGameLink() {}, openInvitePicker() {},
+    online: { room: null, isHost: false }, toast() {}, showVictoryOverlay(_area, value) { outcomes.push(value || null); }, shareGameLink() {}, openInvitePicker() {},
   };
   const context = vm.createContext(sandbox);
   vm.runInContext(SOURCE, context, { filename: 'gomoku.js' });
   const instance = context.gameGomoku(area, extra, 2, {});
-  return { area, extra, instance, timers: () => timers };
+  return { area, extra, instance, outcomes, timers: () => timers };
 }
 
 // Red-light source contract. The exact state values are intentionally stable
@@ -111,6 +112,9 @@ check('Wave B resolves its own safe local flag', /function gomokuWaveBEnabled\(\
 check('Wave B has a stable arena, frame, status and last-move seam', ['gomoku-wave-b-stage', 'gomoku-wave-b-arena', 'gomoku-wave-b-board-frame', 'gomoku-wave-b-meta', 'gomoku-wave-b-state', 'gomoku-wave-b-last-move', 'gomoku-wave-b-board'].every(token => SOURCE.includes(token)));
 check('Wave B keeps its state out of the rule snapshot', !/function snapshot\(\)\{[^}]*gomokuWaveB/.test(SOURCE));
 check('Wave B cleanup is part of the normal destroy lifecycle', /destroy:\s*\(\)\s*=>\s*\{[\s\S]*releaseGomokuWaveBPresentation\(\)/.test(SOURCE));
+check('Gomoku win and draw outcomes expose the shared Games exit seam',
+  (SOURCE.match(/onBackToGames\s*:/g) || []).length >= 2 &&
+  /setAppRoute\('games',\s*\{\s*reason:'outcome_games'\s*\}\)/.test(SOURCE));
 
 try {
   const active = run(null);
@@ -125,6 +129,10 @@ try {
   active.instance.onMove([7, 7], 0);
   const snapshot = active.instance.snapshot();
   check('a move updates only presentation metadata and preserves the snapshot contract', lastMove.textContent === 'H8' && stage.dataset.gomokuPhase === 'turn-2' && board.dataset.lastMove === 'H8' && JSON.stringify(snapshot) === JSON.stringify({ hist: [[7, 7]], cur: 1, over: false, last: [7, 7] }));
+  const terminal = run(null, { reducedMotion: true });
+  [[0,0],[1,0],[0,1],[1,1],[0,2],[1,2],[0,3],[1,3],[0,4]].forEach(move => terminal.instance.onMove(move, 0));
+  check('Gomoku win publishes a disposable outcome with a Games exit callback', terminal.outcomes.length === 1 && terminal.outcomes[0] && typeof terminal.outcomes[0].onBackToGames === 'function');
+  terminal.instance.destroy();
   active.instance.destroy();
   check('destroy removes the Wave B wrapper and stale flag class', !findByClass(active.area, 'gomoku-wave-b-stage') && !active.area.classList.contains('gomoku-wave-b-arena') && active.area.children.length === 1 && active.area.children[0].classList.contains('gomoku-board'));
 

@@ -7,7 +7,8 @@ const read = file => fs.readFileSync(path.join(ROOT, file), 'utf8');
 const shell = read('public/src/core/02-app-shell.js');
 const profile = read('public/src/shop/05-profile.js');
 const online = read('public/src/online/03-websocket.js');
-const template = read('public/index-template.html');
+const { readPresentationSource } = require('./presentation-source');
+const template = readPresentationSource();
 const packageJson = JSON.parse(read('package.json'));
 let failures = 0;
 function check(name, ok) { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (!ok) failures += 1; }

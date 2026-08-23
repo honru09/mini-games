@@ -11,13 +11,13 @@ const PLAYER_CHARACTER_CATALOG = Object.freeze({
   schemaVersion: SCHEMA_VERSION,
   characters: Object.freeze(['character-base-01']),
   slots: Object.freeze({
-    body: Object.freeze(['body-paper-01']),
-    face: Object.freeze(['face-dot-01']),
-    hair: Object.freeze(['hair-none']),
-    top: Object.freeze(['top-hoodie-01']),
-    bottom: Object.freeze(['bottom-shorts-01']),
-    footwear: Object.freeze(['footwear-sneakers-01']),
-    accessory: Object.freeze(['accessory-none']),
+    body: Object.freeze(['body-paper-01','body-dusk-01','body-moon-01','body-mist-01']),
+    face: Object.freeze(['face-dot-01','face-bright-01','face-focus-01','face-joy-01','face-curious-01','face-calm-01']),
+    hair: Object.freeze(['hair-none','hair-short-ink-01','hair-curl-ink-01','hair-bob-ink-01','hair-cloud-cream-01','hair-comet-teal-01','hair-sweep-violet-01','hair-tuft-coral-01']),
+    top: Object.freeze(['top-hoodie-01','top-crew-ink-01','top-varsity-teal-01','top-sailor-blue-01','top-patch-coral-01','top-knit-gold-01','top-jacket-violet-01','top-tunic-mint-01','top-apron-cream-01','top-cosmic-dark-01']),
+    bottom: Object.freeze(['bottom-shorts-01','bottom-trousers-01','bottom-skirt-01','bottom-joggers-01','bottom-cargo-01','bottom-overalls-01']),
+    footwear: Object.freeze(['footwear-sneakers-01','footwear-boots-01','footwear-slipons-01','footwear-hightop-01','footwear-moon-01','footwear-teal-01']),
+    accessory: Object.freeze(['accessory-none','accessory-round-glasses-01','accessory-square-glasses-01','accessory-scarf-teal-01','accessory-scarf-coral-01','accessory-headset-01','accessory-cap-01','accessory-star-pin-01','accessory-moon-pin-01','accessory-satchel-01','accessory-paper-halo-01','accessory-ghost-puff-01']),
   }),
 });
 

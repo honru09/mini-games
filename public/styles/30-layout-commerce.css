@@ -1,0 +1,186 @@
+/* Commerce surface: the preview is the anchor, the catalogue is the flow. */
+html[data-layout-system="v1"] .shop-modal-card {
+  width: min(1160px, calc(100vw - 32px));
+  max-height: min(880px, calc(100dvh - 32px));
+  padding: clamp(16px, 2.2vw, 28px);
+}
+
+html[data-layout-system="v1"] .shop-modal-card .shop-header {
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: start;
+  gap: 12px 16px;
+}
+
+html[data-layout-system="v1"] .shop-modal-card .shop-header-copy {
+  min-width: 0;
+}
+
+html[data-layout-system="v1"] .shop-modal-card .shop-header-copy :is(h3, p) {
+  overflow-wrap: anywhere;
+}
+
+html[data-layout-system="v1"] .shop-modal-card .shop-layout {
+  grid-template-columns: minmax(260px, 310px) minmax(0, 1fr);
+  gap: clamp(14px, 2vw, 24px);
+  align-items: start;
+}
+
+html[data-layout-system="v1"] .shop-modal-card .shop-preview-panel {
+  top: 0;
+  min-width: 0;
+  min-height: 344px;
+  padding: clamp(14px, 1.8vw, 20px);
+}
+
+html[data-layout-system="v1"] .shop-modal-card .shop-preview-note {
+  max-width: 34ch;
+  margin-inline: auto;
+  overflow-wrap: anywhere;
+}
+
+html[data-layout-system="v1"] .shop-modal-card .shop-catalog {
+  min-width: 0;
+  max-height: min(660px, calc(100dvh - 230px));
+  padding-inline-end: 4px;
+}
+
+html[data-layout-system="v1"] .shop-modal-card .shop-grid {
+  grid-template-columns: repeat(auto-fill, minmax(158px, 1fr));
+  gap: 12px;
+}
+
+html[data-layout-system="v1"] .shop-modal-card .shop-item {
+  min-width: 0;
+  min-height: 194px;
+  padding: 13px;
+}
+
+html[data-layout-system="v1"] .shop-modal-card .shop-item .si-name {
+  min-height: 2.6em;
+}
+
+html[data-layout-system="v1"] .shop-modal-card .shop-tabs {
+  margin-block: 14px;
+  padding-block: 2px;
+}
+
+html[data-layout-system="v1"] .shop-modal-card .shop-limited-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+html[data-layout-system="v1"] .shop-modal-card :is(.shop-tab, .shop-item button, .shop-close, .shop-limited-browse) {
+  min-height: var(--ghost-layout-control-height);
+}
+
+@media (max-width: 920px) {
+  html[data-layout-system="v1"] .shop-modal-card .shop-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  html[data-layout-system="v1"] .shop-modal-card .shop-preview-panel {
+    position: static;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 112px minmax(0, 1fr);
+    grid-template-rows: auto auto auto 1fr;
+    gap: 4px 14px;
+    text-align: start;
+  }
+
+  html[data-layout-system="v1"] .shop-modal-card .shop-preview-eyebrow {
+    grid-column: 2;
+    align-self: end;
+  }
+
+  html[data-layout-system="v1"] .shop-modal-card .shop-preview-visual {
+    grid-column: 1;
+    grid-row: 1 / span 4;
+    width: 112px;
+    height: 112px;
+    margin: 0;
+  }
+
+  html[data-layout-system="v1"] .shop-modal-card :is(.shop-preview-name, .shop-preview-state, .shop-preview-note, .shop-preview-playback) {
+    grid-column: 2;
+  }
+
+  html[data-layout-system="v1"] .shop-modal-card .shop-preview-state {
+    justify-self: start;
+    margin-top: 2px;
+  }
+
+  html[data-layout-system="v1"] .shop-modal-card .shop-preview-note {
+    margin: 2px 0 0;
+  }
+
+  html[data-layout-system="v1"] .shop-modal-card .shop-catalog {
+    max-height: none;
+    overflow: visible;
+    padding: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  html[data-layout-system="v1"] .shop-modal-card {
+    width: calc(100vw - 20px);
+    max-height: calc(100dvh - 20px);
+    padding: 14px;
+  }
+
+  html[data-layout-system="v1"] .shop-modal-card .shop-header {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  html[data-layout-system="v1"] .shop-modal-card .shop-header .stat-chip {
+    grid-column: 1;
+    grid-row: 2;
+    justify-self: start;
+  }
+
+  html[data-layout-system="v1"] .shop-modal-card .shop-close {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+  }
+
+  html[data-layout-system="v1"] .shop-modal-card .shop-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    min-height: 52px;
+    padding-block-end: 4px;
+    scrollbar-width: thin;
+  }
+
+  html[data-layout-system="v1"] .shop-modal-card .shop-tab {
+    flex: none;
+    white-space: nowrap;
+  }
+
+  html[data-layout-system="v1"] .shop-modal-card .shop-preview-panel {
+    grid-template-columns: 96px minmax(0, 1fr);
+  }
+
+  html[data-layout-system="v1"] .shop-modal-card .shop-preview-visual {
+    width: 96px;
+    height: 96px;
+  }
+
+  html[data-layout-system="v1"] .shop-modal-card .shop-grid,
+  html[data-layout-system="v1"] .shop-modal-card .shop-limited-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  html[data-layout-system="v1"] .shop-modal-card .shop-item {
+    min-height: 0;
+    padding: 11px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-layout-system="v1"] .shop-modal-card .shop-item,
+  html[data-layout-system="v1"] .shop-modal-card .shop-limited-card {
+    transition: none !important;
+  }
+}

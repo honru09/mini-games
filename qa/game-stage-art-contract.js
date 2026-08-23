@@ -6,7 +6,8 @@ const manifest=JSON.parse(fs.readFileSync(path.join(ROOT,'public/assets/manifest
 const source=fs.readFileSync(path.join(ROOT,'public/src/core/06-assets.js'),'utf8');
 const shell=fs.readFileSync(path.join(ROOT,'public/src/core/02-app-shell.js'),'utf8');
 const roster=fs.readFileSync(path.join(ROOT,'public/src/ui/07-roster.js'),'utf8');
-const html=fs.readFileSync(path.join(ROOT,'public/index-template.html'),'utf8');
+const { readPresentationSource } = require('./presentation-source');
+const html=readPresentationSource();
 let failures=0;function check(label,ok,detail=''){if(ok)console.log('PASS',label,detail);else{failures++;console.error('FAIL',label,detail);}}
 function fileFor(p){return path.join(ROOT,...String(p).replace(/\\/g,'/').split('/'));}
 function digest(file){const b=fs.readFileSync(file);return{sha256:crypto.createHash('sha256').update(b).digest('hex').toUpperCase(),bytes:b.length};}

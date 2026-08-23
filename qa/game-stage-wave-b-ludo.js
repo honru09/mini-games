@@ -141,10 +141,10 @@ try {
   let h = createHarness(storage(null));
   const stage = h.area.querySelector('.ludo-wave-b-stage');
   const board = h.area.querySelector('.ludo-wave-b-board');
-  const state = h.area.querySelector('.ludo-wave-b-state');
-  const rankings = h.area.querySelector('.ludo-wave-b-rankings');
+  const state = h.extra.querySelector('.ludo-wave-b-state');
+  const rankings = h.extra.querySelector('.ludo-wave-b-rankings');
   const dice = h.extra.querySelector('[data-ludo-control="dice"]');
-  check('default flag mounts a Wave B arena with board, command, state and rankings', !!stage && !!board && !!state && !!rankings && !!dice && h.area.classList.contains('ludo-wave-b-arena') && board.parentNode.classList.contains('ludo-wave-b-board-frame'));
+  check('default flag mounts a Wave B arena with a board-only stage and HUD-owned state/rankings', !!stage && !!board && !!state && !!rankings && !!dice && h.area.classList.contains('ludo-wave-b-arena') && board.parentNode.classList.contains('ludo-wave-b-board-frame') && state.parentNode.parentNode.parentNode===h.extra);
   check('initial turn state is localized and exposes dice/active-player metadata', stage.dataset.ludoStage === 'wave-b' && h.area.dataset.ludoStage === 'wave-b' && stage.dataset.ludoPhase === 'roll' && stage.dataset.ludoStatus === 'active' && stage.dataset.ludoActivePlayer === '0' && h.area.dataset.ludoPhase === 'roll' && h.area.dataset.ludoStatus === 'active' && state.textContent === 'ludo_roll_die' && dice.dataset.ludoDiceState === 'roll');
   check('rankings expose all player presentation values without mutating the snapshot', rankings.children.length === 2 && rankings.children.every(item => item.dataset.ludoRank && item.dataset.ludoHome === '0') && JSON.stringify(h.game.snapshot()) === JSON.stringify({ tokens:[[-1,-1,-1,-1],[-1,-1,-1,-1]], curIdx:0, phase:'roll', dice:0, over:false, winner:-1 }));
   check('serialize keeps Wave B fields out of state and presentation payloads', !/ludo-wave-b|ludoWaveB|game-stage-wave-b|ludoPhase/.test(JSON.stringify(h.game.serialize())));
@@ -178,11 +178,11 @@ try {
   h.game.destroy();
 
   h = createHarness(storage(null), { online: true, myIdx: 1 });
-  check('remote active player is marked as a waiting state without changing turn ownership', h.area.querySelector('.ludo-wave-b-stage').dataset.ludoStatus === 'waiting' && h.area.querySelector('.ludo-wave-b-state').textContent === 'opponent_turn' && h.game.snapshot().curIdx === 0);
+  check('remote active player is marked as a waiting state without changing turn ownership', h.area.querySelector('.ludo-wave-b-stage').dataset.ludoStatus === 'waiting' && h.extra.querySelector('.ludo-wave-b-state').textContent === 'opponent_turn' && h.game.snapshot().curIdx === 0);
   h.game.destroy();
 
   h = createHarness(storage(null), { spectator: true });
-  check('spectator state is exposed as read-only presentation metadata', h.area.querySelector('.ludo-wave-b-stage').dataset.ludoStatus === 'spectating' && h.extra.querySelector('[data-ludo-control="dice"]').disabled === true && h.area.querySelector('.ludo-wave-b-state').textContent === 'spectator_player_action:1');
+  check('spectator state is exposed as read-only presentation metadata', h.area.querySelector('.ludo-wave-b-stage').dataset.ludoStatus === 'spectating' && h.extra.querySelector('[data-ludo-control="dice"]').disabled === true && h.extra.querySelector('.ludo-wave-b-state').textContent === 'spectator_player_action:1');
   h.game.destroy();
 } catch (error) {
   check('Wave B Ludo runtime matrix executes', false, error && error.stack || String(error));

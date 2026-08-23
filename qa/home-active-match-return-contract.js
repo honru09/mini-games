@@ -3,7 +3,8 @@
 /* Home Active Match Return P0: same-instance Game Stage return only. */
 const fs=require('fs'),path=require('path'),vm=require('vm');
 const ROOT=path.join(__dirname,'..'),read=file=>fs.readFileSync(path.join(ROOT,file),'utf8');
-const template=read('public/index-template.html'),shell=read('public/src/core/02-app-shell.js'),roster=read('public/src/ui/07-roster.js'),pkg=JSON.parse(read('package.json'));
+const { readPresentationSource } = require('./presentation-source');
+const template=readPresentationSource(),shell=read('public/src/core/02-app-shell.js'),roster=read('public/src/ui/07-roster.js'),pkg=JSON.parse(read('package.json'));
 let failures=0;const check=(name,ok,detail)=>{console.log((ok?'PASS  ':'FAIL  ')+name);if(!ok){failures++;if(detail)console.error(detail);}};
 const card=template.slice(template.indexOf('id="home-active-match-return"'),template.indexOf('</article>',template.indexOf('id="home-active-match-return"'))+10);
 check('return card is localized, accessible and mobile-safe',/aria-labelledby="home-active-match-return-title"/.test(card)&&/id="btn-home-active-match-return"/.test(card)&&/data-i18n="home_active_match_return"/.test(card)&&/\.home-active-match-return\{[^}]*grid-template-columns:minmax\(0,1fr\) auto/.test(template)&&/@media\(max-width:640px\)[\s\S]{0,12000}\.home-active-match-return\{grid-column:auto;grid-template-columns:1fr/.test(template));

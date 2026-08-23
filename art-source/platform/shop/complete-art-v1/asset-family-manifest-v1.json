@@ -1,0 +1,493 @@
+{
+  "familyId": "P-SHOP-COMPLETE-ART-V1",
+  "sourceId": "ART-041-SHOP-COMPLETE-ART-V1",
+  "flag": "mg_art_shop_complete_v1",
+  "generatedAt": "2026-08-21T07:09:34.002Z",
+  "sourceMastersCount": 24,
+  "runtimeVariantsCount": 48,
+  "totalRuntimeBytes": 211010,
+  "sourceMasters": [
+    {
+      "role": "rarity-frame-common",
+      "path": "art-source/platform/shop/complete-art-v1/runtime-source/rarity-frame-common.svg",
+      "sha256": "499571871F288C4CAC6121D18B12EF0995260B2AD96F7BA985A17B0D5288B2C4",
+      "bytes": 667
+    },
+    {
+      "role": "rarity-frame-rare",
+      "path": "art-source/platform/shop/complete-art-v1/runtime-source/rarity-frame-rare.svg",
+      "sha256": "B3B775E73E2A8647297B7DF9F8870A180D1D5A1F45E5AC071B1AD857601E17C5",
+      "bytes": 711
+    },
+    {
+      "role": "rarity-frame-epic",
+      "path": "art-source/platform/shop/complete-art-v1/runtime-source/rarity-frame-epic.svg",
+      "sha256": "8E433EB966AB43E1915CE5BE724302E56C6500C30C96DCCAEA3B6471FE0F7379",
+      "bytes": 862
+    },
+    {
+      "role": "rarity-frame-legendary",
+      "path": "art-source/platform/shop/complete-art-v1/runtime-source/rarity-frame-legendary.svg",
+      "sha256": "5C92A6B4D8B56282678CB872E0ECC1C0C3B49AFF754B72289D78DACFD31DD9B9",
+      "bytes": 1166
+    },
+    {
+      "role": "rarity-frame-mythic",
+      "path": "art-source/platform/shop/complete-art-v1/runtime-source/rarity-frame-mythic.svg",
+      "sha256": "4173D3157C0923BBF33D7689D49467A053F65A875CB9F995D908E329DEDFD1C6",
+      "bytes": 1146
+    },
+    {
+      "role": "pedestal-common",
+      "path": "art-source/platform/shop/complete-art-v1/runtime-source/pedestal-common.svg",
+      "sha256": "D7C68FECB742C592C74B3379FB92D5990B7FEED3480DF9D481565BA4622B9E53",
+      "bytes": 459
+    },
+    {
+      "role": "pedestal-rare",
+      "path": "art-source/platform/shop/complete-art-v1/runtime-source/pedestal-rare.svg",
+      "sha256": "0A81E244EDD176E6D14F91CB4C764C888BDAE500132029F0FDD09039DBF4048B",
+      "bytes": 564
+    },
+    {
+      "role": "pedestal-epic",
+      "path": "art-source/platform/shop/complete-art-v1/runtime-source/pedestal-epic.svg",
+      "sha256": "77B8E1CF9EF80AE7F8FA3EFCC23ACE80F970DC6129BA34F2B46E1713ED8FDFEE",
+      "bytes": 680
+    },
+    {
+      "role": "pedestal-legendary",
+      "path": "art-source/platform/shop/complete-art-v1/runtime-source/pedestal-legendary.svg",
+      "sha256": "9F7BCD092C783D2C2E99DC9EA2817303C4BBC79A937AC945E9A1E8BBF4E91743",
+      "bytes": 664
+    },
+    {
+      "role": "pedestal-mythic",
+      "path": "art-source/platform/shop/complete-art-v1/runtime-source/pedestal-mythic.svg",
+      "sha256": "3E5AE8761EB05A2C70FF720140242BBE053ADEBBD3EE47C08EB4729F00DDC705",
+      "bytes": 661
+    },
+    {
+      "role": "category-avatars",
+      "path": "art-source/platform/shop/complete-art-v1/runtime-source/category-avatars.svg",
+      "sha256": "99E0BF3AB91ACCD7E39DCCA59DC21F2C817BC357327D6F0CE83E4A89B979D2B7",
+      "bytes": 569
+    },
+    {
+      "role": "category-frames",
+      "path": "art-source/platform/shop/complete-art-v1/runtime-source/category-frames.svg",
+      "sha256": "6E40EA7E28A3FA17D6B1B6A94951DC91D01DFDA766E8D8C6B99340454BF606CF",
+      "bytes": 498
+    },
+    {
+      "role": "category-effects",
+      "path": "art-source/platform/shop/complete-art-v1/runtime-source/category-effects.svg",
+      "sha256": "E365FCCB8140E0146C1F128143261D2981BA6FE1C3225DA2AFC6E60158F6A346",
+      "bytes": 473
+    },
+    {
+      "role": "category-backgrounds",
+      "path": "art-source/platform/shop/complete-art-v1/runtime-source/category-backgrounds.svg",
+      "sha256": "389D413E1D6B0E4D3F05DAAAD907692A7885A6AE0B25E8B4625D12CB10207E15",
+      "bytes": 624
+    },
+    {
+      "role": "category-skins",
+      "path": "art-source/platform/shop/complete-art-v1/runtime-source/category-skins.svg",
+      "sha256": "39D035CFCCAD9F1D5079D607FCE2450C0A1E2F273AD3B4D68C119994BF1B4617",
+      "bytes": 628
+    },
+    {
+      "role": "category-specials",
+      "path": "art-source/platform/shop/complete-art-v1/runtime-source/category-specials.svg",
+      "sha256": "EF241C614E2B75830FA1AD61B5473F999B1086DC41363BA13678C5471DF71501",
+      "bytes": 545
+    },
+    {
+      "role": "vfx-purchase-burst",
+      "path": "art-source/platform/shop/complete-art-v1/runtime-source/vfx-purchase-burst.svg",
+      "sha256": "4854E04D7E81306BA01E2E9306F6BBD94DFF5B9D91398945F456BB6214E856AB",
+      "bytes": 846
+    },
+    {
+      "role": "vfx-unlock-ray",
+      "path": "art-source/platform/shop/complete-art-v1/runtime-source/vfx-unlock-ray.svg",
+      "sha256": "C9993C700AD39B25045760432E42CAB87E9FB4C4D43D67BD3E2FD7484CC6F6E1",
+      "bytes": 874
+    },
+    {
+      "role": "vfx-coin-deduct",
+      "path": "art-source/platform/shop/complete-art-v1/runtime-source/vfx-coin-deduct.svg",
+      "sha256": "05B9E81040A0F3E500684ED485D2C5D5DDC4C8D2B41D15E7C134EB75BBAC7EEB",
+      "bytes": 612
+    },
+    {
+      "role": "vfx-equipped-badge",
+      "path": "art-source/platform/shop/complete-art-v1/runtime-source/vfx-equipped-badge.svg",
+      "sha256": "6638C8A2A9AF9FBFD92B8A2494A1A82670C5A2F39DF09774CE938F33C3516962",
+      "bytes": 417
+    },
+    {
+      "role": "vfx-rarity-glow",
+      "path": "art-source/platform/shop/complete-art-v1/runtime-source/vfx-rarity-glow.svg",
+      "sha256": "14E181D94A277028183AB29C12469D26EECF617B5C6E6E5D0DBC534176A6CE65",
+      "bytes": 364
+    },
+    {
+      "role": "vfx-discount-tag",
+      "path": "art-source/platform/shop/complete-art-v1/runtime-source/vfx-discount-tag.svg",
+      "sha256": "1E806F953101E07FB26D879A108D31F361947875D0A98E1B27AC9018B169D9EA",
+      "bytes": 460
+    },
+    {
+      "role": "camera-desktop",
+      "path": "art-source/platform/shop/complete-art-v1/runtime-source/camera-desktop.svg",
+      "sha256": "4C073BE6354D15789EFE99B537F35633808F0E91255E8246D7A9C14758091246",
+      "bytes": 157
+    },
+    {
+      "role": "camera-mobile",
+      "path": "art-source/platform/shop/complete-art-v1/runtime-source/camera-mobile.svg",
+      "sha256": "4C073BE6354D15789EFE99B537F35633808F0E91255E8246D7A9C14758091246",
+      "bytes": 157
+    }
+  ],
+  "runtimeVariants": [
+    {
+      "role": "rarity-frame-common",
+      "variant": "normal",
+      "path": "public/assets/platform/shop/complete-art-v1/rarity-frame-common.webp",
+      "sha256": "9350EB87724CC7DE2946B023E177BD2994DA47AE47C3DA3751F8B3C7723C4FA2",
+      "bytes": 3474
+    },
+    {
+      "role": "rarity-frame-common",
+      "variant": "static",
+      "path": "public/assets/platform/shop/complete-art-v1/rarity-frame-common-static.webp",
+      "sha256": "584286269A753B3A5E51DB7D99D56FBE55DD652895E428CF44E4BC7E9199017E",
+      "bytes": 3064
+    },
+    {
+      "role": "rarity-frame-rare",
+      "variant": "normal",
+      "path": "public/assets/platform/shop/complete-art-v1/rarity-frame-rare.webp",
+      "sha256": "0006FDF01F090B6EE09F458137B29E0A971C5ED3BBB8569764F3D5E3B009A84D",
+      "bytes": 4532
+    },
+    {
+      "role": "rarity-frame-rare",
+      "variant": "static",
+      "path": "public/assets/platform/shop/complete-art-v1/rarity-frame-rare-static.webp",
+      "sha256": "E2736CD7F67B45C7CE0F2BCF38803D3BCB98FE7A93EF4A0E087EB2DC952908CA",
+      "bytes": 4124
+    },
+    {
+      "role": "rarity-frame-epic",
+      "variant": "normal",
+      "path": "public/assets/platform/shop/complete-art-v1/rarity-frame-epic.webp",
+      "sha256": "0765BF8C23B761A87A2D746A667DA46BE2913FDC9644CB5F9E99CACC8844B69A",
+      "bytes": 5930
+    },
+    {
+      "role": "rarity-frame-epic",
+      "variant": "static",
+      "path": "public/assets/platform/shop/complete-art-v1/rarity-frame-epic-static.webp",
+      "sha256": "8D624DFD3945CFDCFB8ADA58261B7637BE5B9A0497A1B8402C23573FD37A484C",
+      "bytes": 5232
+    },
+    {
+      "role": "rarity-frame-legendary",
+      "variant": "normal",
+      "path": "public/assets/platform/shop/complete-art-v1/rarity-frame-legendary.webp",
+      "sha256": "B4B3A54CE2B5E9C31C3BF9C783F3D8CD6CA7CB36457FBB5A41C110450B334F9F",
+      "bytes": 5458
+    },
+    {
+      "role": "rarity-frame-legendary",
+      "variant": "static",
+      "path": "public/assets/platform/shop/complete-art-v1/rarity-frame-legendary-static.webp",
+      "sha256": "FA6092073BFC89F087342798BBC2AED6497F00F5F555DEAFFFD79292291B1B7E",
+      "bytes": 4896
+    },
+    {
+      "role": "rarity-frame-mythic",
+      "variant": "normal",
+      "path": "public/assets/platform/shop/complete-art-v1/rarity-frame-mythic.webp",
+      "sha256": "61508D2CB81135973E0AF7CF9C4F886CC6DF1E7BC2E3968EFA90E61748A0FB1A",
+      "bytes": 10928
+    },
+    {
+      "role": "rarity-frame-mythic",
+      "variant": "static",
+      "path": "public/assets/platform/shop/complete-art-v1/rarity-frame-mythic-static.webp",
+      "sha256": "1E9235805D5DF9AC714A53B44F2F0B665E4C8EE0F1BE6FB21E0949E4ADE6080D",
+      "bytes": 9752
+    },
+    {
+      "role": "pedestal-common",
+      "variant": "normal",
+      "path": "public/assets/platform/shop/complete-art-v1/pedestal-common.webp",
+      "sha256": "606427C6D64AA8F92BCF9B2969C1E1B0E200CE0B8CDCFEBC6B912A33DCF0A63E",
+      "bytes": 3914
+    },
+    {
+      "role": "pedestal-common",
+      "variant": "static",
+      "path": "public/assets/platform/shop/complete-art-v1/pedestal-common-static.webp",
+      "sha256": "2300EFD99430A9F0A576D853C986F7B44C0765328891B20C630F845A435757DE",
+      "bytes": 3372
+    },
+    {
+      "role": "pedestal-rare",
+      "variant": "normal",
+      "path": "public/assets/platform/shop/complete-art-v1/pedestal-rare.webp",
+      "sha256": "D8250A07236DA36ABF1FBCACD62923AFEC72BB0A84FCD06B581240178A168DC0",
+      "bytes": 6738
+    },
+    {
+      "role": "pedestal-rare",
+      "variant": "static",
+      "path": "public/assets/platform/shop/complete-art-v1/pedestal-rare-static.webp",
+      "sha256": "9F13B194428D4A366E26F35BC23E3AC36E588CA66914E6F8D4261A72D2D0F132",
+      "bytes": 6130
+    },
+    {
+      "role": "pedestal-epic",
+      "variant": "normal",
+      "path": "public/assets/platform/shop/complete-art-v1/pedestal-epic.webp",
+      "sha256": "1F3CC3B21A03B0D3DB9AAD267055AAEF5AFB159BE0B3CD053268BFA5BF89F238",
+      "bytes": 6828
+    },
+    {
+      "role": "pedestal-epic",
+      "variant": "static",
+      "path": "public/assets/platform/shop/complete-art-v1/pedestal-epic-static.webp",
+      "sha256": "DCB4F4A1D050E3E8E645476556AFC6E84AE7758C0971B2AFF7974D75085B6D54",
+      "bytes": 6180
+    },
+    {
+      "role": "pedestal-legendary",
+      "variant": "normal",
+      "path": "public/assets/platform/shop/complete-art-v1/pedestal-legendary.webp",
+      "sha256": "D18C3141491C6DD434023D07AE6D80B33FE27B2F039FE17E36FE93A857D8F2B3",
+      "bytes": 5876
+    },
+    {
+      "role": "pedestal-legendary",
+      "variant": "static",
+      "path": "public/assets/platform/shop/complete-art-v1/pedestal-legendary-static.webp",
+      "sha256": "174D69DD3C5162001D98381A59B2CF73EFB015FBDE89EE88D3862C0336896DE0",
+      "bytes": 5174
+    },
+    {
+      "role": "pedestal-mythic",
+      "variant": "normal",
+      "path": "public/assets/platform/shop/complete-art-v1/pedestal-mythic.webp",
+      "sha256": "10A161D16FA9CEC102E119277DAEA1EAC957A4FCB72FB8615ADACDDD10D25A1D",
+      "bytes": 5650
+    },
+    {
+      "role": "pedestal-mythic",
+      "variant": "static",
+      "path": "public/assets/platform/shop/complete-art-v1/pedestal-mythic-static.webp",
+      "sha256": "BDF7B7FD1AE1B7D901F95A550F9D927EBF3A27499654BBDEAF2E0625CF513977",
+      "bytes": 4902
+    },
+    {
+      "role": "category-avatars",
+      "variant": "normal",
+      "path": "public/assets/platform/shop/complete-art-v1/category-avatars.webp",
+      "sha256": "E05BEECC734F04E5E1D03F414F28C87267DEC2DB6869D53CCD6D1FFC733EB9FE",
+      "bytes": 4222
+    },
+    {
+      "role": "category-avatars",
+      "variant": "static",
+      "path": "public/assets/platform/shop/complete-art-v1/category-avatars-static.webp",
+      "sha256": "84B6B0FD141B871D5189FE4044321EA8E8CBF8627847BA19231E23A0498872FE",
+      "bytes": 3878
+    },
+    {
+      "role": "category-frames",
+      "variant": "normal",
+      "path": "public/assets/platform/shop/complete-art-v1/category-frames.webp",
+      "sha256": "C6D028B8D30004491D9E27CEF9D504B6B1A2C5D4648ACA38573B9E0D8E64C3E2",
+      "bytes": 3480
+    },
+    {
+      "role": "category-frames",
+      "variant": "static",
+      "path": "public/assets/platform/shop/complete-art-v1/category-frames-static.webp",
+      "sha256": "45B09EE07224D7572D0E9FEB8F2FD47D3476860D09AB51F02AB8751055A0E568",
+      "bytes": 3240
+    },
+    {
+      "role": "category-effects",
+      "variant": "normal",
+      "path": "public/assets/platform/shop/complete-art-v1/category-effects.webp",
+      "sha256": "47F743F50C2F70ACAECBC60C15C40267BD93B80654BC496D824429E7A0752EE3",
+      "bytes": 4456
+    },
+    {
+      "role": "category-effects",
+      "variant": "static",
+      "path": "public/assets/platform/shop/complete-art-v1/category-effects-static.webp",
+      "sha256": "DBA9E96EA8329346E6EC0579791405236866774727F78A68F075E245BB92EB78",
+      "bytes": 4030
+    },
+    {
+      "role": "category-backgrounds",
+      "variant": "normal",
+      "path": "public/assets/platform/shop/complete-art-v1/category-backgrounds.webp",
+      "sha256": "9A1AC1D24151F32592B4B3231ED918D612982002D99E4844459FA29949CE53BC",
+      "bytes": 3538
+    },
+    {
+      "role": "category-backgrounds",
+      "variant": "static",
+      "path": "public/assets/platform/shop/complete-art-v1/category-backgrounds-static.webp",
+      "sha256": "21334A4A6E8652674187D0FD065B6E6F216BA1FA907D7F371C393047F4B65F06",
+      "bytes": 3248
+    },
+    {
+      "role": "category-skins",
+      "variant": "normal",
+      "path": "public/assets/platform/shop/complete-art-v1/category-skins.webp",
+      "sha256": "F9E84880CAE089095794C086E0296D3D41560A52B186601A0A24525D2B8CA46F",
+      "bytes": 3720
+    },
+    {
+      "role": "category-skins",
+      "variant": "static",
+      "path": "public/assets/platform/shop/complete-art-v1/category-skins-static.webp",
+      "sha256": "36691F1083E9FA6A9068B4AC99C38B4D01A3E0BC595AB5A0DD2134508E7C7EFB",
+      "bytes": 3374
+    },
+    {
+      "role": "category-specials",
+      "variant": "normal",
+      "path": "public/assets/platform/shop/complete-art-v1/category-specials.webp",
+      "sha256": "A42B6B1BDD79D49AA15DFD96E923B7000F4D0C81BE8EE8940A176848BDDE0050",
+      "bytes": 3736
+    },
+    {
+      "role": "category-specials",
+      "variant": "static",
+      "path": "public/assets/platform/shop/complete-art-v1/category-specials-static.webp",
+      "sha256": "27165D09016DB65AF45CE9C7EA0A70E1A61E02526B91D0B34938543DB8FC82AE",
+      "bytes": 3440
+    },
+    {
+      "role": "vfx-purchase-burst",
+      "variant": "normal",
+      "path": "public/assets/platform/shop/complete-art-v1/vfx-purchase-burst.webp",
+      "sha256": "7401AD457D00A521A41785A8F2AF508287940A69D6D735F78EB9581DA77655CD",
+      "bytes": 5996
+    },
+    {
+      "role": "vfx-purchase-burst",
+      "variant": "static",
+      "path": "public/assets/platform/shop/complete-art-v1/vfx-purchase-burst-static.webp",
+      "sha256": "299A213339BC112891EC57CF36749300002CCDEB9FCACF4F79A6E2D2A87B58A1",
+      "bytes": 5254
+    },
+    {
+      "role": "vfx-unlock-ray",
+      "variant": "normal",
+      "path": "public/assets/platform/shop/complete-art-v1/vfx-unlock-ray.webp",
+      "sha256": "DD5B95F978F8F768DCCD1203E9F93F2196F56D21CC2CB3E0C8076D6107F9A5C2",
+      "bytes": 7310
+    },
+    {
+      "role": "vfx-unlock-ray",
+      "variant": "static",
+      "path": "public/assets/platform/shop/complete-art-v1/vfx-unlock-ray-static.webp",
+      "sha256": "8FA75ABF1497319AAFC81743C14EA0B2CB9EA3A32F38D04BB817470C0B20582D",
+      "bytes": 6582
+    },
+    {
+      "role": "vfx-coin-deduct",
+      "variant": "normal",
+      "path": "public/assets/platform/shop/complete-art-v1/vfx-coin-deduct.webp",
+      "sha256": "12E8A03031AA896843C87F65C3D98051662DDF14866780E9294C87E88A83006B",
+      "bytes": 4176
+    },
+    {
+      "role": "vfx-coin-deduct",
+      "variant": "static",
+      "path": "public/assets/platform/shop/complete-art-v1/vfx-coin-deduct-static.webp",
+      "sha256": "47EC6ED998F9F58EBBF947A2FE314AB4C448C78C53063400C929C171E36FF32C",
+      "bytes": 3620
+    },
+    {
+      "role": "vfx-equipped-badge",
+      "variant": "normal",
+      "path": "public/assets/platform/shop/complete-art-v1/vfx-equipped-badge.webp",
+      "sha256": "B9381F6C09B4E694676E6EA33D8D6AE8B7A8AC72C35D35FA034F249E1FBB272B",
+      "bytes": 3284
+    },
+    {
+      "role": "vfx-equipped-badge",
+      "variant": "static",
+      "path": "public/assets/platform/shop/complete-art-v1/vfx-equipped-badge-static.webp",
+      "sha256": "165F2CD8D235AD85095ED6BCCE33B5F0DB5F2C8B24F0CD80BA91CD5E8DD66452",
+      "bytes": 2906
+    },
+    {
+      "role": "vfx-rarity-glow",
+      "variant": "normal",
+      "path": "public/assets/platform/shop/complete-art-v1/vfx-rarity-glow.webp",
+      "sha256": "C801D14A9A55C5756496AC7452D030EA3D3F773CB9956BE9C1D7BFDF19E45A51",
+      "bytes": 5028
+    },
+    {
+      "role": "vfx-rarity-glow",
+      "variant": "static",
+      "path": "public/assets/platform/shop/complete-art-v1/vfx-rarity-glow-static.webp",
+      "sha256": "6498A74190429022212C42C7677557B5D253DD67664C527859B6AB65A15ADB8B",
+      "bytes": 4586
+    },
+    {
+      "role": "vfx-discount-tag",
+      "variant": "normal",
+      "path": "public/assets/platform/shop/complete-art-v1/vfx-discount-tag.webp",
+      "sha256": "0AC7CE7A6A00E40899366C15E4821F1E3AA4E6516A9716CDD7BEAFCC170D7335",
+      "bytes": 2934
+    },
+    {
+      "role": "vfx-discount-tag",
+      "variant": "static",
+      "path": "public/assets/platform/shop/complete-art-v1/vfx-discount-tag-static.webp",
+      "sha256": "5D98E4AE9CE71BCAA922CF131DB3DAAFB28CF37CFF64D3F579B218C4D731C50C",
+      "bytes": 2526
+    },
+    {
+      "role": "camera-desktop",
+      "variant": "normal",
+      "path": "public/assets/platform/shop/complete-art-v1/camera-desktop.webp",
+      "sha256": "8F867907A98951EE0E779CFA7CD4BB0827808311273ED401FF9E04165C9A64D2",
+      "bytes": 74
+    },
+    {
+      "role": "camera-desktop",
+      "variant": "static",
+      "path": "public/assets/platform/shop/complete-art-v1/camera-desktop-static.webp",
+      "sha256": "A401BF42B76ACB849A8A0852F293B536D7B0FC6433AA5BF3C74AFE1576203878",
+      "bytes": 72
+    },
+    {
+      "role": "camera-mobile",
+      "variant": "normal",
+      "path": "public/assets/platform/shop/complete-art-v1/camera-mobile.webp",
+      "sha256": "8F867907A98951EE0E779CFA7CD4BB0827808311273ED401FF9E04165C9A64D2",
+      "bytes": 74
+    },
+    {
+      "role": "camera-mobile",
+      "variant": "static",
+      "path": "public/assets/platform/shop/complete-art-v1/camera-mobile-static.webp",
+      "sha256": "A401BF42B76ACB849A8A0852F293B536D7B0FC6433AA5BF3C74AFE1576203878",
+      "bytes": 72
+    }
+  ]
+}

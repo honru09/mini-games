@@ -1,0 +1,13 @@
+{
+  "batch": "T7-P14",
+  "title": "Supabase Reward/AI Outbox Cadence 本地收口",
+  "status": "implemented_local_pending_full_regression",
+  "owner": "mainline-primary",
+  "scope": [
+    "single ServerClockTimer owner",
+    "leader-only retry gate",
+    "Promise.allSettled error isolation",
+    "server close disposal and timer audit"
+  ],
+  "release": "LOCAL_ONLY / NOT_RELEASED"
+}

@@ -9,7 +9,8 @@ const read = file => fs.readFileSync(path.join(root,file),'utf8');
 const shopSource = read('public/src/shop/06-shop.js');
 const onlineSource = read('public/src/online/03-websocket.js');
 const serverSource = read('server/index.js');
-const template = read('public/index-template.html');
+const { readPresentationSource } = require('./presentation-source');
+const template = readPresentationSource();
 let failed = false;
 function check(ok,message){ console.log((ok?'PASS  ':'FAIL  ')+message); if(!ok) failed=true; }
 

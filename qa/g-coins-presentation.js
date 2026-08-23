@@ -89,7 +89,8 @@ check(!consumers.join('\n').includes("'G Coins ' +"),'target surfaces do not ret
 const publicProfile=read('public/src/shop/05-profile.js');
 check(publicProfile.includes(":currencyAmountText(p.coins || 0);"),'regular public Profile supplies a complete amount label instead of a bare number');
 
-const template=read('public/index-template.html');
+const { readPresentationSource } = require('./presentation-source');
+const template=readPresentationSource();
 check(template.includes('.currency-amount{')&&template.includes('font-variant-numeric:tabular-nums'),'shared amount CSS freezes alignment and tabular numerals');
 const locales=['zh-CN','en-US','uk-UA'].map(lang=>JSON.parse(read(`public/locales/${lang}.json`)));
 check(locales.every(locale=>locale.currency_name==='G Coins'),'brand name remains identical in all locales');

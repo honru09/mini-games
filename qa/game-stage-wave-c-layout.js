@@ -1,8 +1,9 @@
 const fs = require('fs');
 const path = require('path');
+const { readPresentationSource } = require('./presentation-source');
 
 const ROOT = path.join(__dirname, '..');
-const template = fs.readFileSync(path.join(ROOT, 'public', 'index-template.html'), 'utf8');
+const template = readPresentationSource();
 const gomoku = fs.readFileSync(path.join(ROOT, 'public', 'src', 'games', 'gomoku.js'), 'utf8');
 const tetris = fs.readFileSync(path.join(ROOT, 'public', 'src', 'games', 'tetris.js'), 'utf8');
 let failures = 0;
@@ -30,8 +31,9 @@ check('active process feedback uses transform and color rather than layout dimen
   template.includes('[data-gomoku-process-active="true"]') &&
   template.includes('[data-tetris-process-active="true"]') &&
   !/process-step[^}]*transition:[^;}]*(?:width|height|top|left)/.test(template));
-check('Gomoku impact and Tetris lock feedback target their actual stable board nodes',
-  template.includes('.gomoku-wave-b-stage[data-gomoku-process="impact"] .gomoku-wave-b-board-frame') &&
+check('Gomoku impact stays on its Canvas/VFX seam while Tetris lock targets the stable well node',
+  gomoku.includes("showGomokuFinalVfx('placement', r, c)") &&
+  gomoku.includes('function drawMoveImpact(){') &&
   template.includes('.tetris-wave-b-main-well[data-tetris-process="lock"]'));
 check('reduced motion removes process transitions and board transforms',
   /@media\(prefers-reduced-motion:reduce\)[\s\S]*gomoku-wave-c-process[\s\S]*tetris-wave-c-process[\s\S]*transition:none!important[\s\S]*gomoku-wave-b-board-frame[\s\S]*tetris-wave-b-main-well[\s\S]*transform:translateZ\(0\)!important/.test(template));

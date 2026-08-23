@@ -1,0 +1,35 @@
+{
+  "unit": "P2-12",
+  "build": {
+    "path": "public/index.html",
+    "characters": 2154257,
+    "utf8Bytes": 2169019,
+    "sha256": "07A04A98B01E650A1BE1FD3A2898A31DA94C1FECA05E3D3B748AD9DC24854861"
+  },
+  "browser": "Codex In-app Chromium",
+  "desktop": {
+    "viewport": "default 1265px client width",
+    "hero": true,
+    "adaptiveGame": "tank",
+    "assetState": "ready",
+    "assetVariant": "desktop",
+    "horizontalOverflow": 0
+  },
+  "mobile": {
+    "viewport": "390x844 CSS override (375px client width after scrollbar)",
+    "hero": true,
+    "adaptiveGame": "tank",
+    "assetState": "ready",
+    "assetVariant": "mobile",
+    "horizontalOverflow": 0,
+    "screenshot": "art-source/production/ghost-game-art-program-v1/profile-adaptive-hero-browser-390x844.png"
+  },
+  "checks": [
+    "Profile Hero renders localised dominant-game label and played/wins summary",
+    "Manifest-gated desktop/mobile visual decodes successfully",
+    "Existing Profile controls remain visible",
+    "No horizontal overflow",
+    "No second browser, physical device, real network or release claim"
+  ],
+  "status": "LOCAL_VISIBLE_EVIDENCE_ONLY"
+}

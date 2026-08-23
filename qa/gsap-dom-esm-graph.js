@@ -35,5 +35,5 @@ check(/registerPlugin\(CSSPlugin\)/.test(index) && !/registerPlugin\(CSSPlugin\)
 check(/CSSPlugin/.test(surfaceEntry) && /CSSPlugin/.test(stageEntry), 'all DOM tween adapters explicitly require the official CSSPlugin export');
 check(/export \{ gsapWithCSS as gsap/.test(index) && /export var CSSPlugin/.test(css), 'official DOM exports are present');
 check(!/https?:\/\//.test(entry) && !/ScrollTrigger|ScrollSmoother|GSDevTools|SplitText/.test(entry + index), 'runtime graph has no CDN or unused plugin token');
-check(!/CSSPlugin/.test(read('public/three/gomoku-entry.js')), 'Gomoku remains on its separate core-only graph');
+check(!/three(?:\.module)?\.js|\bTHREE\b/.test(entry + surfaceEntry + stageEntry), 'DOM motion graph remains 2.5D-only');
 if (failures) process.exitCode = 1; else console.log('ALL_PASS gsap-dom-esm-graph assertions=' + assertions);

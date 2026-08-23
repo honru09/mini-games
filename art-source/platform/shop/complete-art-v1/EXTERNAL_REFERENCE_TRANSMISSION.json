@@ -1,0 +1,10 @@
+{
+  "assetFamily": "P-SHOP-COMPLETE-ART-V1",
+  "generatedAt": "2026-08-21T15:00:00.000Z",
+  "externalReferences": [],
+  "policy": {
+    "zeroExternalThirdPartyArt": true,
+    "allowlistOnly": true,
+    "licenseCheck": "CLEARED_ORIGINAL_VECTOR_PROGRAM"
+  }
+}

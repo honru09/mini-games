@@ -1,0 +1,127 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-08-19T22:10:00+09:00",
+  "claim": "local_single_chromium_simulated_device_network_performance_matrix",
+  "scope": "LOCAL_SINGLE_CHROMIUM_SIMULATION_ONLY",
+  "currency": "historical_as_of",
+  "releaseClaim": "NOT_GRANTED",
+  "build": {
+    "path": "public/index.html",
+    "sha256": "F0C765475887E6CCE20BEAD286C91EAE4E6198ECB6CB9BED7FA46E502B6E5D39",
+    "characters": 2151120,
+    "bytes": 2165759,
+    "visualMode": "VANILLA_DOM_CSS_CANVAS_GSAP_25D_DEFAULT",
+    "ghost3d": "OPT_IN_ONLY_EXACT_STORAGE_VALUE_1"
+  },
+  "environment": {
+    "browserSurface": "Codex in-app Chromium",
+    "browserCount": 1,
+    "browserEngineCount": 1,
+    "browserEngine": "Chromium",
+    "physicalDeviceCount": 0,
+    "networkMode": "deterministic_virtual_transport",
+    "note": "Viewport, touch, DPR and CPU values are emulated in one Chromium; this is not physical-device or production evidence."
+  },
+  "secondDesktopContext": {
+    "evidenceClass": "SIMULATED_SECOND_BROWSER_ISOLATED_CONTEXT",
+    "status": "PASS_LOCAL_STORAGE_ISOLATION_ONLY",
+    "realSecondBrowser": "NOT_EXECUTED",
+    "browserSurface": "Codex in-app Chromium",
+    "browserEngineCount": 1,
+    "origins": ["http://127.0.0.1:8080", "http://localhost:8080"]
+  },
+  "deviceMatrix": {
+    "evidenceClass": "LOCAL_SINGLE_CHROMIUM_DEVICE_EMULATION_ONLY",
+    "totalRouteCases": 28,
+    "passedRouteCases": 28,
+    "profiles": [
+      {"id":"desktop-1440x900","width":1440,"height":900,"emulatedDevicePixelRatio":1,"emulatedTouchPoints":0,"navigation":"desktop","physicalDevice":false,"routes":["home","games","playline","profile"],"horizontalOverflowMax":0,"rawKeyCountMax":0,"scrollYMax":0},
+      {"id":"second-desktop-1366x768","width":1366,"height":768,"emulatedDevicePixelRatio":1,"emulatedTouchPoints":0,"navigation":"desktop","physicalDevice":false,"routes":["home","games","playline","profile"],"horizontalOverflowMax":0,"rawKeyCountMax":0,"scrollYMax":0},
+      {"id":"android-360x800","width":360,"height":800,"emulatedDevicePixelRatio":3,"emulatedTouchPoints":5,"navigation":"mobile","physicalDevice":false,"routes":["home","games","playline","profile"],"horizontalOverflowMax":0,"rawKeyCountMax":0,"scrollYMax":0},
+      {"id":"iphone-390x844","width":390,"height":844,"emulatedDevicePixelRatio":3,"emulatedTouchPoints":5,"navigation":"mobile","physicalDevice":false,"routes":["home","games","playline","profile"],"horizontalOverflowMax":0,"rawKeyCountMax":0,"scrollYMax":0},
+      {"id":"iphone-landscape-844x390","width":844,"height":390,"emulatedDevicePixelRatio":3,"emulatedTouchPoints":5,"navigation":"desktop","physicalDevice":false,"routes":["home","games","playline","profile"],"horizontalOverflowMax":0,"rawKeyCountMax":0,"scrollYMax":0},
+      {"id":"tablet-768x1024","width":768,"height":1024,"emulatedDevicePixelRatio":2,"emulatedTouchPoints":5,"navigation":"desktop","physicalDevice":false,"routes":["home","games","playline","profile"],"horizontalOverflowMax":0,"rawKeyCountMax":0,"scrollYMax":0},
+      {"id":"tablet-landscape-1024x768","width":1024,"height":768,"emulatedDevicePixelRatio":2,"emulatedTouchPoints":5,"navigation":"desktop","physicalDevice":false,"routes":["home","games","playline","profile"],"horizontalOverflowMax":0,"rawKeyCountMax":0,"scrollYMax":0}
+    ]
+  },
+  "gameStageMatrix": {
+    "evidenceClass": "LOCAL_SINGLE_CHROMIUM_DEVICE_EMULATION_ONLY",
+    "totalCases": 12,
+    "passedCases": 12,
+    "cases": [
+      {"profile":"desktop-1440x900","game":"gomoku","stage":true,"arena":true,"command":true,"back":true,"ghost3dReady":true,"horizontalOverflow":0,"rawKeyCount":0,"actualRendererDpr":1},
+      {"profile":"desktop-1440x900","game":"ludo","stage":true,"arena":true,"command":true,"back":true,"ghost3dReady":true,"horizontalOverflow":0,"rawKeyCount":0,"actualRendererDpr":1},
+      {"profile":"desktop-1440x900","game":"monopoly","stage":true,"arena":true,"command":true,"back":true,"ghost3dReady":true,"horizontalOverflow":0,"rawKeyCount":0,"actualRendererDpr":1},
+      {"profile":"desktop-1440x900","game":"tank","stage":true,"arena":true,"command":true,"back":true,"ghost3dReady":true,"horizontalOverflow":0,"rawKeyCount":0,"actualRendererDpr":1},
+      {"profile":"desktop-1440x900","game":"tetris","stage":true,"arena":true,"command":true,"back":true,"ghost3dReady":true,"horizontalOverflow":0,"rawKeyCount":0,"actualRendererDpr":1},
+      {"profile":"desktop-1440x900","game":"xiangqi","stage":true,"arena":true,"command":true,"back":true,"ghost3dReady":true,"horizontalOverflow":0,"rawKeyCount":0,"actualRendererDpr":1},
+      {"profile":"iphone-390x844","game":"gomoku","stage":true,"arena":true,"command":true,"back":true,"ghost3dReady":true,"horizontalOverflow":0,"rawKeyCount":0,"actualRendererDpr":1},
+      {"profile":"iphone-390x844","game":"ludo","stage":true,"arena":true,"command":true,"back":true,"ghost3dReady":true,"horizontalOverflow":0,"rawKeyCount":0,"actualRendererDpr":1},
+      {"profile":"iphone-390x844","game":"monopoly","stage":true,"arena":true,"command":true,"back":true,"ghost3dReady":true,"horizontalOverflow":0,"rawKeyCount":0,"actualRendererDpr":1},
+      {"profile":"iphone-390x844","game":"tank","stage":true,"arena":true,"command":true,"back":true,"ghost3dReady":true,"horizontalOverflow":0,"rawKeyCount":0,"actualRendererDpr":1},
+      {"profile":"iphone-390x844","game":"tetris","stage":true,"arena":true,"command":true,"back":true,"ghost3dReady":true,"horizontalOverflow":0,"rawKeyCount":0,"actualRendererDpr":1},
+      {"profile":"iphone-390x844","game":"xiangqi","stage":true,"arena":true,"command":true,"back":true,"ghost3dReady":true,"horizontalOverflow":0,"rawKeyCount":0,"actualRendererDpr":1}
+    ]
+  },
+  "lowEndPerformanceProxy": {
+    "evidenceClass": "LOCAL_LOW_END_CAPABILITY_AND_CPU_THROTTLE_PROXY_ONLY",
+    "status": "PASS_LOCAL_PROXY_ONLY",
+    "profile": "android-360x800",
+    "cpuThrottleRate": 4,
+    "hardwareConcurrency": 4,
+    "deviceMemoryGb": 4,
+    "rendererQuality": "LOW",
+    "actualRendererDpr": 1,
+    "antialias": false,
+    "shadows": false,
+    "powerPreference": "low-power",
+    "physicalLowEndGpu": {"status":"NOT_EXECUTED"},
+    "actualGpu": {"classification":"HOST_GPU_NOT_LOW_END_EVIDENCE","renderer":"Chromium host renderer (not a physical low-end GPU claim)"},
+    "durationMs": 8000,
+    "proxyFrameBudgetMs": 33.3,
+    "games": [
+      {"game":"gomoku","p95FrameTimeMs":18.4},
+      {"game":"ludo","p95FrameTimeMs":19.1},
+      {"game":"monopoly","p95FrameTimeMs":21.2},
+      {"game":"tank","p95FrameTimeMs":22.4},
+      {"game":"tetris","p95FrameTimeMs":18.8},
+      {"game":"xiangqi","p95FrameTimeMs":19.7}
+    ],
+    "heap": {"before":24500000,"peak":32600000,"afterGc":26800000,"reclaimedBytes":5800000},
+    "thermal": {"status":"NOT_EXECUTED","temperatureC":null,"claim":"SUSTAINED_LOAD_AND_THROTTLING_RISK_PROXY_ONLY"}
+  },
+  "networkSimulation": {
+    "evidenceClass": "LOCAL_DETERMINISTIC_NETWORK_SIMULATION_ONLY",
+    "status": "PASS_LOCAL_SIMULATION_ONLY",
+    "oneWayLatencyProfilesMs": [50,100,200],
+    "scenarios": ["ordered","jitter","reorder","duplicate-late","reconnect"],
+    "games": ["tetris","tank"],
+    "totalCases": 30,
+    "passedCases": 30,
+    "nativeTimerUsed": false,
+    "osNetworkShaperUsed": false,
+    "realNetworkShaping": {"status":"NOT_EXECUTED"},
+    "source": "qa/network-simulation-matrix.js",
+    "helper": "qa/helpers/deterministic-transport.js"
+  },
+  "screenshots": {
+    "evidenceClass": "LOCAL_SINGLE_CHROMIUM_DEVICE_EMULATION_ONLY",
+    "encodedFormat": "image/png",
+    "captureDevicePixelRatio": 1,
+    "items": [
+      {"path":"requirements/active/latest-browser-visible-matrix-prove-p4-20260815/evidence/simulated-device-network-performance-20260819/android-360x800-fullpage-tank-3d.png","encodedFormat":"image/png","captureDevicePixelRatio":1,"profileDevicePixelRatio":3,"sha256":"57300D2B1EA6852DF378A1DB8FE5A002F27EF268D581BDFFB34B070688C7CCBB","width":360,"height":800},
+      {"path":"requirements/active/latest-browser-visible-matrix-prove-p4-20260815/evidence/simulated-device-network-performance-20260819/desktop-1440x900-gomoku-3d.png","encodedFormat":"image/png","captureDevicePixelRatio":1,"profileDevicePixelRatio":1,"sha256":"2747CB5996F7CFF04A7FDCB063AD541FE373FA90DDCFD78A9B9FA0ACC95FDAF4","width":1440,"height":900},
+      {"path":"requirements/active/latest-browser-visible-matrix-prove-p4-20260815/evidence/simulated-device-network-performance-20260819/iphone-390x844-fullpage-xiangqi-3d.png","encodedFormat":"image/png","captureDevicePixelRatio":1,"profileDevicePixelRatio":3,"sha256":"3D408030E724794D58B75A424129D8B5F770FA8715E09B9B33617910090B2568","width":390,"height":844},
+      {"path":"requirements/active/latest-browser-visible-matrix-prove-p4-20260815/evidence/simulated-device-network-performance-20260819/tablet-768x1024-fullpage-monopoly-3d.png","encodedFormat":"image/png","captureDevicePixelRatio":1,"profileDevicePixelRatio":2,"sha256":"478A978EB3D9AC0E58D789D88CCB504005346DAD97646F212206FCF025AF42B2","width":768,"height":1024}
+    ]
+  },
+  "notGranted": ["second_real_browser","physical_android","physical_iphone","physical_tablet","real_network_shaping","physical_low_end_gpu","physical_temperature","cross_device_visual_verified","production_verification","release"],
+  "gate": {"id":"GATE-DEVICE-BROWSER-NETWORK","developmentStatus":"OPEN","releaseStatus":"RELEASE_EVIDENCE_PENDING"},
+  "provenance": {
+    "defaultRenderer": "2.5D DOM/CSS/Canvas/GSAP",
+    "ghost3dPolicy": "only exact localStorage value 1 enables optional renderer; all other values use fallback",
+    "networkEvidence": "deterministic virtual transport only; no OS-level shaper or real network claim",
+    "screenshotNote": "Four formal images are PNG-encoded and dimension-checked; legacy JPEG-named captures remain outside the whitelist.",
+    "currencyNote": "The exercised F0C76547 build became historical when a concurrent workspace window produced a later public/index.html during the full test run. This record does not claim the later build was browser-verified."
+  }
+}

@@ -48,6 +48,13 @@ check('Cluster/PubSub/Telemetry 五表启用 RLS 且撤销浏览器角色', ['cl
 check('Cluster lease 使用数据库时间、事务锁和 fencing token', /create or replace function claim_cluster_lease_v1[\s\S]*clock_timestamp\(\)[\s\S]*pg_advisory_xact_lock[\s\S]*fencing_token\+1/i.test(sql)&&/create or replace function renew_cluster_lease_v1[\s\S]*lease_until>v_now/i.test(sql));
 check('Cluster 有效租约不可被其他实例抢占且过期数据受 fencing 清理', /v_takeover\s*:=\s*v_row\.holder_instance_id is null or v_row\.lease_until <= v_now/i.test(sql)&&!/v_takeover\s*:=\s*[^;]*holder_instance_id <> p_instance_id/i.test(sql)&&/create or replace function cleanup_cluster_data_v1[\s\S]*stale_cluster_fencing_token[\s\S]*delete from platform_events[\s\S]*delete from metrics_snapshots/i.test(sql));
 check('Platform event 白名单拒绝正文/秘密并提供持久游标', /platform_event_payload_allowed_v1[\s\S]*body\|text\|message\|password\|pin\|token\|secret\|prompt\|authorization/i.test(sql)&&/create or replace function list_platform_events_v1/i.test(sql)&&/create or replace function commit_cluster_cursor_v1/i.test(sql));
+const serviceTableGrant = (/grant select, insert, update, delete on table([\s\S]*?)to service_role;/i.exec(sql) || [])[1] || '';
+check('service_role 获得全部服务端表的最小 CRUD 权限', [
+  'profiles','history','reward_history','economy_ledger','analytics_events',
+  'ai_learning_models','ai_learning_experiences','friend_requests','friendships','blocks','reports',
+  'direct_messages','direct_message_reads','cluster_instances','cluster_leases','platform_events',
+  'cluster_event_cursors','metrics_snapshots','playline_posts','playline_rate_events',
+].every(table => new RegExp('\\b' + table + '\\b', 'i').test(serviceTableGrant)));
 
 if (failures.length){
   console.error('SUPABASE_SCHEMA_FAILED: ' + failures.join('、'));

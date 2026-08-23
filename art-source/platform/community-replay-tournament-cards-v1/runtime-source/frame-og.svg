@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" fill="none"><defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#0a1020"/><stop offset=".52" stop-color="#182c55"/><stop offset="1" stop-color="#5b4cce"/></linearGradient>
+    <linearGradient id="cyan" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#5ce1e6"/><stop offset="1" stop-color="#18a6a8"/></linearGradient>
+    <linearGradient id="violet" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#9b7bff"/><stop offset="1" stop-color="#5b4cce"/></linearGradient>
+    <linearGradient id="warm" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ff7a77"/><stop offset="1" stop-color="#f7c969"/></linearGradient>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="22"/></filter>
+    <pattern id="grid" width="44" height="44" patternUnits="userSpaceOnUse"><path d="M44 0H0V44" stroke="#ffffff" stroke-opacity=".07"/></pattern>
+  </defs><rect x="12" y="12" width="1176" height="606" rx="48" stroke="#f5f1e8" stroke-opacity=".72" stroke-width="10"/><rect x="30" y="30" width="1140" height="570" rx="38" stroke="#5ce1e6" stroke-opacity=".38" stroke-width="2" stroke-dasharray="14 18"/><path d="M68 120h160M972 510h160" stroke="#ff7a77" stroke-width="8" stroke-linecap="round"/></svg>

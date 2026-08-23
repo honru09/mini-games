@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-08-22T22:22:00+09:00",
+  "evidenceClass": "LOCAL_SINGLE_CHROMIUM_VISIBLE_PARTIAL_ONLY",
+  "currency": "current",
+  "claim": "current_build_single_browser_maintenance_partial",
+  "build": {
+    "sha256": "5F7BEE5DC4FB7913035B778C6BA802553FD0992EA699EE5FA6C9317108F7A783",
+    "characters": 2151996,
+    "bytes": 2166756
+  },
+  "browser": {
+    "family": "Codex in-app Chromium",
+    "viewport": "1280x720",
+    "theme": "dark",
+    "language": "zh-CN",
+    "consoleWarningCount": 0,
+    "consoleErrorCount": 0
+  },
+  "scenarios": [
+    {
+      "id": "auth-page",
+      "result": "PASS",
+      "checks": ["localized copy settled", "zero horizontal overflow", "server connected"]
+    },
+    {
+      "id": "guest-home",
+      "result": "PASS",
+      "checks": ["Home rendered", "zero horizontal overflow", "carousel dots expose 44px hit targets"]
+    },
+    {
+      "id": "games-route",
+      "result": "PASS",
+      "checks": ["six game cards visible", "zero horizontal overflow", "interactive control overlap scan empty"]
+    },
+    {
+      "id": "tank-ai-joystick",
+      "result": "PASS",
+      "checks": ["immersive Game Stage", "joystick visible", "D-pad hidden", "mode switch visible", "zero horizontal/vertical stage overflow"]
+    },
+    {
+      "id": "tank-ai-dpad",
+      "result": "PASS",
+      "checks": ["D-pad visible after one switch", "joystick hidden", "fire remains visible", "mode switch label localized"]
+    },
+    {
+      "id": "gomoku-ai",
+      "result": "PASS",
+      "checks": ["immersive Game Stage", "touch direction controls count=0", "keyboard canvas grid remains", "zero horizontal/vertical stage overflow"]
+    }
+  ],
+  "notExecuted": [
+    "second real desktop browser",
+    "physical Android/iPhone/Tablet",
+    "real network shaping",
+    "full five-viewport four-route matrix",
+    "production Supabase concurrency/multi-instance evidence"
+  ],
+  "releaseStatus": "RELEASE_EVIDENCE_PENDING"
+}

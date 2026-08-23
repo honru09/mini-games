@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "taskId": "p1-01-monopoly-final-art-v1-20260819",
+  "productionUnitId": "P1-01",
+  "familyId": "G-15-MONOPOLY-FINAL-ART-V1",
+  "status": "implemented_local_visible_evidence_pending_external",
+  "release": "LOCAL_ONLY_NOT_RELEASED",
+  "objective": "把大富翁城市棋盘、建筑、角色、卡牌与语义反馈交付为 DOM/CSS/Canvas + GSAP 2.5D 可消费的分层 Ghost-native 资产族",
+  "in": [
+    "background/midground/foreground 三层棋盘母版",
+    "透明建筑、地标、道具、卡牌、角色与接触阴影原子",
+    "拍卖、落点、支付、破产与结算的局部语义 VFX",
+    "desktop/mobile、static/reduced-motion/low-bandwidth 派生",
+    "Manifest、Catalog、feature flag、fallback、rollback 与专项 QA"
+  ],
+  "out": [
+    "不改变 24 格规则、Rule Authority、Protocol、Replay、AI、Reward、Economy 或持久化",
+    "不把文字、价格、所有权、资金、倒计时、进度或聊天正文烘焙进图片",
+    "不要求 GLB、骨骼、复杂实时 3D 场景或继续扩张 Ghost3D",
+    "不提交、不推送、不部署"
+  ],
+  "next": "保留第二浏览器、真机、真实网络、低端性能与发布证据为外部门禁；完成后才可进入 P1-02 / G-12-TANK-FINAL-ART-V1"
+}

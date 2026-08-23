@@ -54,6 +54,10 @@ const SHOP = {
     { id: 2, name: '闪耀星光', price: 12, cls: 'effect-2' },
     { id: 3, name: '漂浮',     price: 12, cls: 'effect-3' },
     { id: 4, name: '环绕旋转', price: 20, cls: 'effect-4' },
+    { id: 5, name: '四角脉冲', price: 20, cls: 'effect-5' },
+    { id: 6, name: '交叉闪电', price: 24, cls: 'effect-6' },
+    { id: 7, name: '星轨点阵', price: 28, cls: 'effect-7' },
+    { id: 8, name: '像素扫描', price: 32, cls: 'effect-8' },
   ],
   backgrounds: [
     { id: 1, name: '薰衣草紫', price: 3, cls: 'bg-1' },
@@ -287,6 +291,15 @@ const SS_GUEST_ACCOUNT = 'mg_guest_account';
 const PLAYER_CHARACTER_SCHEMA = 'player-character-v1';
 const PLAYER_CHARACTER_SLOTS = Object.freeze(['body','face','hair','top','bottom','footwear','accessory']);
 const PLAYER_CHARACTER_ID_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
+const PLAYER_CHARACTER_SLOT_CATALOG = Object.freeze({
+  body:Object.freeze(['body-paper-01','body-dusk-01','body-moon-01','body-mist-01']),
+  face:Object.freeze(['face-dot-01','face-bright-01','face-focus-01','face-joy-01','face-curious-01','face-calm-01']),
+  hair:Object.freeze(['hair-none','hair-short-ink-01','hair-curl-ink-01','hair-bob-ink-01','hair-cloud-cream-01','hair-comet-teal-01','hair-sweep-violet-01','hair-tuft-coral-01']),
+  top:Object.freeze(['top-hoodie-01','top-crew-ink-01','top-varsity-teal-01','top-sailor-blue-01','top-patch-coral-01','top-knit-gold-01','top-jacket-violet-01','top-tunic-mint-01','top-apron-cream-01','top-cosmic-dark-01']),
+  bottom:Object.freeze(['bottom-shorts-01','bottom-trousers-01','bottom-skirt-01','bottom-joggers-01','bottom-cargo-01','bottom-overalls-01']),
+  footwear:Object.freeze(['footwear-sneakers-01','footwear-boots-01','footwear-slipons-01','footwear-hightop-01','footwear-moon-01','footwear-teal-01']),
+  accessory:Object.freeze(['accessory-none','accessory-round-glasses-01','accessory-square-glasses-01','accessory-scarf-teal-01','accessory-scarf-coral-01','accessory-headset-01','accessory-cap-01','accessory-star-pin-01','accessory-moon-pin-01','accessory-satchel-01','accessory-paper-halo-01','accessory-ghost-puff-01']),
+});
 let roster = [];
 let account = null;
 let pendingAuthPin = null;
@@ -300,10 +313,10 @@ let authModalEl = null;
 function readPlayerCharacterPresentation(value){
   try {
     if (!value || typeof value !== 'object' || Array.isArray(value) || value.schemaVersion !== PLAYER_CHARACTER_SCHEMA || !value.slots || typeof value.slots !== 'object' || Array.isArray(value.slots)) return null;
-    if (typeof value.characterId !== 'string' || !PLAYER_CHARACTER_ID_RE.test(value.characterId)) return null;
+    if (value.characterId !== 'character-base-01') return null;
     const slots = {};
     for (const slot of PLAYER_CHARACTER_SLOTS){
-      if (typeof value.slots[slot] !== 'string' || !PLAYER_CHARACTER_ID_RE.test(value.slots[slot])) return null;
+      if (typeof value.slots[slot] !== 'string' || !PLAYER_CHARACTER_ID_RE.test(value.slots[slot]) || !PLAYER_CHARACTER_SLOT_CATALOG[slot].includes(value.slots[slot])) return null;
       slots[slot] = value.slots[slot];
     }
     return { schemaVersion:PLAYER_CHARACTER_SCHEMA, characterId:value.characterId, slots };
@@ -860,7 +873,11 @@ function renderLeaderboard(){
   }
   list.slice(0, 10).forEach((u, i) => {
     const row = el('div','lb-row' + (u.uid === deviceUid ? ' me' : ''));
-    row.appendChild(el('span','lb-rank', String(i + 1)));
+    const rank = el('span','lb-rank');
+    if (typeof identityBadgeNode === 'function') rank.appendChild(identityBadgeNode('rank',i<3?String(i+1):'standard',{size:'32',className:'leaderboard-rank-badge'}));
+    else if (i < 3 && typeof gameSystemMarkerNode === 'function') rank.appendChild(gameSystemMarkerNode('ranking',{size:24,className:'leaderboard-ranking-marker'}));
+    rank.appendChild(el('span','lb-rank-number',String(i + 1)));
+    row.appendChild(rank);
     const av = el('button','game-stage-avatar-button lb-av');
     av.type = 'button';
     av.setAttribute('aria-label',t('room_host_profile_aria',u.name||t('social_player')));
@@ -1129,7 +1146,7 @@ function showGame(id){
   else document.body.classList.add('game-active');
   $('screen-hub').classList.add('hidden');
   const meta = GAMES[id];
-  $('game-title').textContent = meta.icon + ' ' + meta.name;
+  if (typeof renderGameTitle !== 'function' || !renderGameTitle(id)) $('game-title').textContent = meta.icon + ' ' + meta.name;
   currentGameId = id;
   // The instance owns turn authority.  Leave the Stage neutral until its first
   // renderPlayers() call rather than guessing that the local seat is active.
@@ -1148,7 +1165,9 @@ function showGame(id){
       cosmetic: online.presentationMeta && online.presentationMeta.cosmetic,
       matchId: online.matchId,
       getMatchId: () => online.matchId,
+      allowUndo: online.roomInfo ? online.roomInfo.allowUndo !== false : true,
       sendMove: p => online.sendMove(p),
+      sendUndo: () => online.send({ type:'undo', payload:{ matchId: online.matchId } }),
       sendBotMove: (seatId,p) => online.sendBotMove(seatId,p),
       sendTankInput: p => online.sendTankInput(p),
       sendTetrisLockClaim: p => online.sendTetrisLockClaim(p),
@@ -1178,8 +1197,11 @@ function showGame(id){
       if (persona && typeof personaById === 'function') opts.aiPersona = personaById(persona) || currentPersona;
     }
   } else {
-    opts = { onEnd: results => applyGameResult(results) };
-    if (aiMode && playerCount >= 2){
+    const replayMode=!!(online&&online._replaying);
+    opts = replayMode
+      ? { onEnd(){}, isReplaying:()=>true, ai:new Set() }
+      : { onEnd: results => applyGameResult(results), isReplaying:()=>false };
+    if (!replayMode && aiMode && playerCount >= 2){
       opts.ai = new Set(Array.from({ length: playerCount - 1 }, (_, i) => i + 1));
       opts.aiPersona = currentPersona;
       opts.onProgress = action => online.reportSoloProgress(id, action);
@@ -1236,7 +1258,7 @@ function openRoomSetup(selectedGame){
   const bd=el('div','modal-backdrop room-launchpad-modal'),card=el('section','modal-card room-launchpad-card');
   activeRoomLaunchpad=bd;
   let gameId=selectedGame&&GAMES[selectedGame]?selectedGame:null;
-  let capacity=gameId?Math.max(GAMES[gameId].min,2):2,visibility='public',allowSpectators=true;
+  let capacity=gameId?Math.max(GAMES[gameId].min,2):2,visibility='public',allowSpectators=true,allowUndo=true,undoPreference=true;
   const title=el('h3',null,t('room_setup_title')),hint=el('p','lb-note',t('room_setup_hint'));
   card.appendChild(title);card.appendChild(hint);
   const status=el('p','room-launchpad-status');status.setAttribute('role','status');status.setAttribute('aria-live','polite');card.appendChild(status);
@@ -1250,6 +1272,9 @@ function openRoomSetup(selectedGame){
   const visibilityChoices=el('div','room-launchpad-segments');visibilityChoices.setAttribute('role','group');visibilityChoices.setAttribute('aria-label',t('room_setup_visibility_label'));visibilityFieldset.appendChild(visibilityChoices);
   const spectatorFieldset=document.createElement('fieldset');spectatorFieldset.className='room-launchpad-section';const spectatorLegend=document.createElement('legend');spectatorLegend.textContent=t('room_setup_spectators_label');spectatorFieldset.appendChild(spectatorLegend);
   const spectatorRow=el('label','room-launchpad-toggle-row');const spectatorToggle=document.createElement('input');spectatorToggle.type='checkbox';spectatorToggle.checked=true;spectatorToggle.addEventListener('change',()=>{allowSpectators=spectatorToggle.checked;});spectatorRow.appendChild(spectatorToggle);spectatorRow.appendChild(el('span',null,t('allow_spectators')));spectatorFieldset.appendChild(spectatorRow);
+  const undoFieldset=document.createElement('fieldset');undoFieldset.className='room-launchpad-section';const undoLegend=document.createElement('legend');undoLegend.textContent=t('room_setup_undo_label');undoFieldset.appendChild(undoLegend);
+  const undoHint=el('p','lb-note',t('room_setup_undo_hint'));undoFieldset.appendChild(undoHint);
+  const undoRow=el('label','room-launchpad-toggle-row');const undoToggle=document.createElement('input');undoToggle.type='checkbox';undoToggle.checked=true;undoToggle.addEventListener('change',()=>{undoPreference=undoToggle.checked;allowUndo=undoPreference;});undoRow.appendChild(undoToggle);undoRow.appendChild(el('span',null,t('allow_undo')));undoFieldset.appendChild(undoRow);
   const create=el('button','btn btn-primary room-launchpad-create',t('room_setup_create_action'));create.type='button';
   const setStatus=(message,invalid)=>{status.textContent=message||'';status.toggleAttribute('data-invalid',!!invalid);};
   const selectedName=()=>gameId&&GAMES[gameId]?t(GAMES[gameId].nameKey):'';
@@ -1257,8 +1282,9 @@ function openRoomSetup(selectedGame){
     gameChoices.textContent='';
     Object.keys(GAMES).forEach(id=>{
       const meta=GAMES[id],choice=el('button','room-launchpad-game-choice'+(id===gameId?' is-selected':''));choice.type='button';choice.setAttribute('role','radio');choice.setAttribute('aria-checked',String(id===gameId));choice.dataset.gameId=id;
-      choice.appendChild(el('span','room-launchpad-game-icon',meta.icon));choice.appendChild(el('strong',null,t(meta.nameKey)));choice.appendChild(el('small',null,t('players_range',meta.min,meta.max)));
-      choice.addEventListener('click',()=>{gameId=id;const selectedMeta=GAMES[gameId];capacity=Math.max(selectedMeta.min,Math.min(selectedMeta.max,capacity));setStatus('');renderGameChoices();renderCapacity();renderSelectedGame();if(typeof emitUiAudioCue==='function')emitUiAudioCue('ui_toggle',.36);});gameChoices.appendChild(choice);
+      choice.appendChild(typeof gameIconNode==='function'?gameIconNode(id,{role:'icon',size:64,className:'room-launchpad-game-icon',loading:'eager',fallback:meta.icon}):el('span','room-launchpad-game-icon',meta.icon));choice.appendChild(el('strong',null,t(meta.nameKey)));choice.appendChild(el('small',null,t('players_range',meta.min,meta.max)));
+      if(id===gameId&&typeof ensureGameSelectedObjectNode==='function')ensureGameSelectedObjectNode(choice,id);
+      choice.addEventListener('click',()=>{gameId=id;const selectedMeta=GAMES[gameId];capacity=Math.max(selectedMeta.min,Math.min(selectedMeta.max,capacity));setStatus('');renderGameChoices();renderCapacity();renderSelectedGame();renderUndoChoice();if(typeof emitUiAudioCue==='function')emitUiAudioCue('ui_toggle',.36);});gameChoices.appendChild(choice);
     });
   };
   const renderSelectedGame=()=>{
@@ -1287,15 +1313,22 @@ function openRoomSetup(selectedGame){
     capacity=Math.max(meta.min,Math.min(meta.max,capacity));
     online.pendingGame=gameId;
     closeRoomLaunchpad();
-    online.create({capacity,visibility,allowSpectators});
+    online.create({capacity,visibility,allowSpectators,allowUndo});
   });
-  content.appendChild(setupFieldset);content.appendChild(capacityFieldset);content.appendChild(visibilityFieldset);content.appendChild(spectatorFieldset);
+  const renderUndoChoice=()=>{
+    const supported=gameId==='gomoku'||gameId==='xiangqi';
+    undoToggle.disabled=!supported;
+    undoToggle.setAttribute('aria-disabled',supported?'false':'true');
+    allowUndo=supported&&undoPreference;
+    undoToggle.checked=supported&&undoPreference;
+  };
+  content.appendChild(setupFieldset);content.appendChild(capacityFieldset);content.appendChild(visibilityFieldset);content.appendChild(spectatorFieldset);content.appendChild(undoFieldset);
   const joinFieldset=document.createElement('fieldset');joinFieldset.className='room-launchpad-section room-launchpad-join-section';const joinLegend=document.createElement('legend');joinLegend.textContent=t('room_join_code_label');joinFieldset.appendChild(joinLegend);
   const joinHint=el('p','lb-note',t('room_join_code_hint'));joinFieldset.appendChild(joinHint);
   const joinForm=document.createElement('form');joinForm.className='room-launchpad-code-form';joinForm.noValidate=true;const code=document.createElement('input');code.type='text';code.className='nick-input';code.autocomplete='off';code.autocapitalize='characters';code.spellcheck=false;code.inputMode='text';code.maxLength=6;code.pattern='[A-HJKMNP-Z2-9]{6}';code.setAttribute('aria-label',t('room_join_code_label'));code.setAttribute('placeholder',t('private_room_code'));joinForm.appendChild(code);
   const join=el('button','btn room-launchpad-join',t('join_room'));join.type='submit';joinForm.appendChild(join);joinForm.addEventListener('submit',event=>{event.preventDefault();const value=String(code.value||'').trim().toUpperCase().replace(/[^A-HJKMNP-Z2-9]/g,'').slice(0,6);code.value=value;if(value.length!==6){code.setAttribute('aria-invalid','true');setStatus(t('room_code_required'),true);code.focus();if(typeof emitUiAudioCue==='function')emitUiAudioCue('ui_error',.58);return;}code.removeAttribute('aria-invalid');closeRoomLaunchpad();online.join(value);if(typeof emitUiAudioCue==='function')emitUiAudioCue('ui_confirm',.42);});joinFieldset.appendChild(joinForm);content.appendChild(joinFieldset);card.appendChild(content);
   const actions=el('div','room-launchpad-actions');actions.appendChild(create);const browse=el('button','btn',t('browse_rooms'));browse.type='button';browse.addEventListener('click',()=>{closeRoomLaunchpad();const lobby=$('lobby-panel');if(lobby){lobby.scrollIntoView({behavior:'smooth',block:'start'});try{lobby.focus({preventScroll:true});}catch{}}});actions.appendChild(browse);const cancel=el('button','btn',t('cancel'));cancel.type='button';cancel.addEventListener('click',closeRoomLaunchpad);actions.appendChild(cancel);card.appendChild(actions);
-  renderGameChoices();renderCapacity();renderSelectedGame();
+  renderGameChoices();renderCapacity();renderSelectedGame();renderUndoChoice();
   bd.appendChild(card);acquireModalScrollLock(bd);document.body.appendChild(bd);
   const initial=gameId&&gameChoices.querySelector('[data-game-id="'+gameId+'"]')||gameChoices.querySelector('button')||code;
   activeRoomLaunchpadClose=setupAccessibleOverlayDialog(bd,card,initial,t('room_setup_title'),()=>{releaseModalScrollLock(bd);if(activeRoomLaunchpad===bd){activeRoomLaunchpad=null;activeRoomLaunchpadClose=null;}});
@@ -1387,9 +1420,25 @@ function renderHub(){
     card.appendChild(el('div','desc', g.desc));
     const badgeRow = el('div','badge-row');
     badgeRow.appendChild(el('span','range', g.min === g.max ? t('players_exact',g.min) : t('players_range',g.min,g.max)));
-    if (aiMode) badgeRow.appendChild(el('span','ai-badge',t('ai_badge')));
+    if (aiMode){
+      const aiBadge=el('span','ai-badge');
+      if(typeof gameSystemMarkerNode==='function')aiBadge.appendChild(gameSystemMarkerNode('ai',{size:24,className:'ai-badge-marker'}));
+      aiBadge.appendChild(el('span','ai-badge-label',t('ai_badge')));
+      badgeRow.appendChild(aiBadge);
+    }
     card.appendChild(badgeRow);
-    card.addEventListener('click', () => startGame(id));
+    const selectForTransition=()=>{
+      if(typeof PageTransition25D!=='undefined'&&PageTransition25D&&typeof PageTransition25D.select==='function'){
+        const snapshot=typeof PageTransition25D.snapshot==='function'?PageTransition25D.snapshot():null;
+        if(!snapshot||snapshot.selected!==id||card.dataset.depthSelected!=='true')PageTransition25D.select(card);
+      }
+    };
+    // Pointer hover and keyboard focus share the same lightweight selection
+    // seam, while click still commits the game start below.
+    card.addEventListener('pointerenter',selectForTransition);
+    card.addEventListener('focus',selectForTransition);
+    card.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '||event.key==='Spacebar')selectForTransition();});
+    card.addEventListener('click', () => {selectForTransition();startGame(id);});
     grid.appendChild(card);
   }
   if(typeof DepthScene25D!=='undefined'&&DepthScene25D&&typeof DepthScene25D.refresh==='function')DepthScene25D.refresh();
@@ -1435,16 +1484,6 @@ if (typeof document !== 'undefined'){
     renderHub();
     if (typeof emitUiAudioCue === 'function') emitUiAudioCue('ui_toggle', .36);
   }));
-  const themeBtn = $('btn-theme');
-  if (themeBtn) themeBtn.addEventListener('click', () => {
-    const cur = getTheme();
-    const idx = THEME_LIST.findIndex(t => t.id === cur);
-    const next = THEME_LIST[(idx + 1) % THEME_LIST.length].id;
-    applyTheme(next);
-    try { localStorage.setItem('mg_theme', next); } catch {}
-    toast(t('theme_changed',themeMeta(next).icon,themeName(themeMeta(next))));
-    if (typeof emitUiAudioCue === 'function') emitUiAudioCue('settings_change', .42);
-  });
   const endBtn = $('btn-end-game');
   if (endBtn) endBtn.addEventListener('click', () => {
     if (!online.connected || !online.game) return;

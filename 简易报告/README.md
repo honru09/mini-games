@@ -4,16 +4,45 @@
 
 ## 当前总进度
 
-- `项目总需求进度报告-20260819.md`：242 项唯一原子需求、六分类、48 个历史/当前请求覆盖组、79 个来源入口、129 个显式依赖节点/267 条依赖边，以及 146/32/48/16 四类主线路由和三条共享 Gate；四窗口并行期间，当前构建 SHA/bytes 由该自动生成报告的 TECH-027 段和 `node scripts/build.js --check` 共同给出，静态入口不把任一时点快照冒充永久当前；当前仍尚无匹配的浏览器完整矩阵，`915A97F3…B8C8EFC` 的完整单浏览器矩阵仅为 historical-as-of。T7 已完成六类 Server Boundary 本地窄纵切、Reward/Progression P7、Boundary Clock Injection P8、Room Graph Recovery P9、Ephemeral Cleanup P10、Reconnect Lifecycle P11 与 Heartbeat Sweep P12；P12 专项、连接、赛事和独立端口 E2E 已通过，统一 Quality Gates 与完整 npm test 正在本批末集中复核。
+- `Profile-Adaptive-Hero-P2-12本地收口-202608221755.md`：按既有 played/wins 聚合确定性突出常玩游戏，复用 Ghost-native 游戏图标、背景、角色与身份资产，三语/窄屏/reduced-motion/forced-colors/fallback 完整；不新增 Profile、经济或协议事实，本地未发布，下一步转 PROVE。
+- `Shop-Limited-Sets-P2-11本地收口-202608221745.md`：四季商城 Ghost-native 策展卡、原创桌面/移动/poster 主视觉、精确 N/4 进度、既有单品购买入口与 111 项 Supabase 价格白名单同构修复；不新增套装经济事实，本地未发布，下一单元 P2-12。
+- `Tournament-Broadcast-Overlay-P2-10本地收口-202608221635.md`：赛事状态/轮次/领跑者/最多三桌赛况的代码原生 Overlay、有限懒加载 GSAP Timeline、1200×630 主审查板和三语联系表；普通玩家入口、赛事权限与真正音视频直播能力保持不变，本地未发布。
+- `Audio-Spectrum-Art-P2-08本地收口-202608221537.md`：Settings 幽灵频谱、脱敏 accepted-cue/主题 track envelope、有限 GSAP pulse、零音量静音与迟到 Adapter 释放；全链通过，本地未发布。
+- `Replay-Cinematic-P2-06本地收口-202608221517.md`：Replay 三层 2.5D 电影式演出、overview/playing/paused/seeking/result、可逆 GSAP Timeline、静态回退与无 AI/奖励副作用边界；完整全链通过，本地未发布。
+- `Spectator-Camera-P2-05本地收口-202608221455.md`：观战中立 2.5D composition、overview/focus/impact/result 语义镜头、静态回退与全链验证；本地未发布。
+- `项目总需求进度报告-20260821.md`：242 项唯一原子需求、六分类、48 个历史/当前请求覆盖组、81 个来源入口、129 个显式依赖节点/267 条依赖边，以及 146/32/48/16 四类主线路由和三条共享 Gate；当前构建 SHA/bytes 以自动生成报告为准。当前 SHA-256 `5F7BEE5DC4FB7913035B778C6BA802553FD0992EA699EE5FA6C9317108F7A783` 已有认证页、访客 Home、Games、坦克摇杆/D-pad 与五子棋无方向键 6/6 场景的当前单 Chromium 维护窄证据，但尚无匹配的浏览器完整矩阵；P2-10 只有本地 1200×630/三语 Review 图，不冒充当前 Runtime Tournament 浏览器矩阵。当前证据不冒充全站完整路由/终局/三语/双主题/逐 FX 矩阵、第二浏览器、真机、真实网络或低端性能。`915A97F3…B8C8EFC` 的完整单浏览器矩阵和其他历史构建均只作 historical-as-of；T7 已完成六类 Server Boundary 本地窄纵切、Reward/Progression P7、Boundary Clock Injection P8、Room Graph Recovery P9、Ephemeral Cleanup P10、Reconnect Lifecycle P11 与 Heartbeat Sweep P12；统一 Quality Gates 与完整 `npm test` 以本批最终复跑记录为准。
 - 上述总报告现在是完整整合阅读版：先给主线切换百分比，再按美术、界面、游戏、社交、经济、技术顺序展开 242 项明细；七份分类报告保留为按领域快速查阅版。
-- `美术与品牌进度报告-20260819.md`
-- `界面与交互进度报告-20260819.md`
-- `游戏与局内体验进度报告-20260819.md`
-- `社交与玩家关系进度报告-20260819.md`
-- `经济成长与商业化进度报告-20260819.md`
-- `技术数据AI与跨平台进度报告-20260819.md`
+- `美术与品牌进度报告-20260821.md`
+- `界面与交互进度报告-20260821.md`
+- `游戏与局内体验进度报告-20260821.md`
+- `社交与玩家关系进度报告-20260821.md`
+- `经济成长与商业化进度报告-20260821.md`
+- `技术数据AI与跨平台进度报告-20260821.md`
 
 ## 最新本地收口
+
+- `界面排版重构-布局系统V4-历史内联CSS源码迁移-202608231102.md`：5 个历史内联样式块已按原级联顺序迁出模板，新增表现源码模块与 QA 读取 seam，Service Worker v19 预缓存，当前构建 `6BFC54CE…C6B9D076`；Quality Gates 通过，线上未发布，下一步继续当前构建浏览器可见证据准备。
+
+- `界面排版重构-布局系统V3-内容密度与弹层收口-202608230009.md`：新增独立内容密度模块，统一 Modal/私信/Profile 弹层与 Game Stage Header/Seat Rail/Arena/Command Rail 的滚动边界、长文本换行、安全区和窄屏降级；Service Worker v18，专项合同与质量门准备继续复跑，仍未发布。
+
+- `界面排版重构-布局系统V2-模块化组件收口-202608222356.md`：布局层从单一覆盖表拆为 tokens、shell、Games/Playline/Profile/Game Stage surfaces 与 commerce 五个可独立审阅入口；Games 房间、Playline 信息流、Profile 内容层级和商城预览/目录的密度与响应式规则完成本地收口；Service Worker v17、专项布局/商城/响应式/DOM 回归通过，浏览器与发布证据仍未执行。
+
+- `界面排版重构-布局系统V1本地收口-202608222340.md`：新增外部布局层，重排 Home/Games/Playline/Profile/Game Stage 的网格、间距、断点和溢出策略；Service Worker v16 预缓存布局样式，专项 QA 与 DOM/响应式检查通过；浏览器复核因连接超时保持 `NOT_EXECUTED`，本地未发布。
+
+- `主线收口-P2-11-P2-12全链验证-202608222132.md`：P2-11/P2-12 本地收口、32/33 美术生产单元（96.97%）、完整 `npm test` 第二次重跑退出码 0、构建哈希与 PROVE 转段边界；未部署线上。
+
+- `GameIconSystem-P0-12本地收口-202608191804.md`：六款游戏 36 个 SVG 源稿、72 个 WebP runtime、12 类 marker、跨页面接入、九 Skill 路由、外部库存全事实上下文与严格 runtime 隔离；32+39 项专项、Quality Gates、完整 npm test 与确定性构建通过。P0 12/12、全量 12/33；下一单元 P1-01，本地未发布。
+
+- `Monopoly-Final-Art-P1-01本地收口-202608211137.md`：23 个 source masters、46 个 WebP runtime、三层棋盘、9 个对象原子、9 个语义 VFX 与 P0-10 角色复用已完成；修复桌面右侧操作轨、平板/手机/矮横屏显式命令布局，五视口单一 Chromium 可见证据绑定历史 `6050108E…992C4EC` 构建；本地未发布，下一单元 P1-02。
+
+- `art-source/production/ghost-game-art-program-v1/P1-06_LOCAL_ACCEPTANCE.md`：Playline/Replay/赛事/OG 卡面 12 个 SVG 母版、24 个 WebP normal/static 变体、253,450 bytes；Playline、Replay、赛事均只消费装饰层，精确文案与权威事实仍由 DOM/i18n/服务端提供；当前本地未发布，下一单元 P1-07。
+
+- `art-source/production/ghost-game-art-program-v1/P1-07_LOCAL_ACCEPTANCE.md`：AI 三档 13 个 SVG 母版、26 个 WebP normal/static 变体、157,404 bytes；选择器、房间 AI Seat 与 Game Stage AI Seat 共享无文字 Ghost-native 视觉，AI 强度/合法性/DeepSeek/学习/协议不变；当前本地未发布，已由 P1-08 接续。
+- `art-source/production/ghost-game-art-program-v1/P1-08_LOCAL_ACCEPTANCE.md`：Honru 三个非阻挡页面边缘姿态、六个原生光标状态（含四向滚动）、代码驱动微小眼神高光、设置页系统光标回退与 reduced-motion/细指针门禁；15 个 SVG 母版、18 个 WebP/PNG Runtime 变体、111,367 bytes；当前本地未发布，下一单元 P1-09。
+
+- `Avatar-Frame-Effect-P0-11本地收口-202608191415.md`：8 个头像框、8 个头像效果、四档尺寸、static/dynamic/high-contrast、统一身份节点接入、Manifest/Catalog/provenance、fallback 与本地专项 QA；11/33 美术进度，下一单元 P0-12；本地未发布。
+
+- `视觉2.5D重推-P0本地验证收口-202608191344.md`：2.5D 默认主线、Ghost3D 可选冻结、模拟设备/网络证据合同、素材库审计、Ludo 进度同步与当前全链验证；本地未发布。
 
 - `美术与开发Gate全面解禁收口-202608162318.md`：所有者授权解除人工清稿、Reviewer B、IP/法律与逐资产 Golden Set 的开发前置，设备/Supabase 改为发布证据待决；清理顶层、艺术来源与 active task 陈旧状态机，扩展防回退 QA，最终 Quality Gates、完整 npm test、报告幂等与双构建通过；本地未发布。
 - `技术优化主线-T6互动完整性影子审计P0收口-202608162000.md`：Tank Authority accepted-action shadow、Human/AI cohort、Test Admin/spectator 排除、Reward/公开 wire 不变与当前六方向百分比；默认关闭，本地未发布。
@@ -110,3 +139,13 @@
 - 生成进度报告：`主题进度报告-YYYYMMDD.md`。
 - 每次代码或文档批次完成后，先更新台账、重新生成七份进度报告，再更新根目录 `LOG-新增.md`、`LOG-修改.md`、`LOG-删除.md`。
 - 未经用户当前任务明确要求，不提交、不推送、不部署。
+
+## 最近维护
+
+- `技术优化主线-T7-SupabaseOutbox-Cadence-P14本地收口-202608231301.md`：Reward/AI outbox 合并为单一 ServerClockTimer、leader-only 与 allSettled 异常隔离；本地未发布。
+
+- `技术优化主线-T7-AuthTokenTTL-Sweep-P13本地收口-202608231229.md`：正式 Session Token TTL 批量清扫、未来 token fail-closed、失效会话关闭与 ServerClockTimer leader lease；专项回归通过，`LOCAL_ONLY / NOT_RELEASED`。
+
+- `界面排版重构-布局系统V5-CSS职责深拆-202608231152.md`：将 V4 的平台表现 CSS 按职责拆为 11 个源码模块，模板扩展为 15 个有序表现链接，Service Worker v20 预缓存；字节/级联/构建回归通过，线上未发布。
+
+- `维护审计-UI局内美术音频Supabase-202608222157.md`：五子棋触摸方向键移除、坦克单控件切换、美术/音频融合审计、Supabase 状态与完整本地回归；`LOCAL_ONLY / NOT_RELEASED`。

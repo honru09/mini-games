@@ -626,7 +626,7 @@ function createRoomPresenceBoundary(options = {}) {
     return freezeProjection({
       id: text(room.id), game: room.game || null, capacity,
       started: !!room.started, settled: !!room.settled, matchId: room.matchId || null,
-      visibility: normalizeVisibility(room.visibility), allowSpectators: !!room.allowSpectators,
+      visibility: normalizeVisibility(room.visibility), allowSpectators: !!room.allowSpectators, allowUndo: room.allowUndo !== false,
       testAdminSandbox: !!room.testAdminSandbox, hostUid: host && host.uid || null,
     });
   }
@@ -714,7 +714,7 @@ function createRoomPresenceBoundary(options = {}) {
       spectatorCount: room.spectators instanceof Map ? room.spectators.size : 0,
       maxSpectators: room.maxSpectators || 20, started: !!room.started, settled: !!room.settled,
       matchId: room.matchId || null, visibility: normalizeVisibility(room.visibility),
-      allowSpectators: !!room.allowSpectators, testAdminSandbox: !!room.testAdminSandbox,
+      allowSpectators: !!room.allowSpectators, allowUndo: room.allowUndo !== false, testAdminSandbox: !!room.testAdminSandbox,
       canStart: details.canStart, host: hostPayload(room, users, at), gameplay: clonePlain(gameplayMetadata(room)),
     });
   }
@@ -744,7 +744,7 @@ function createRoomPresenceBoundary(options = {}) {
         joinable, spectatable, spectatorCount: room.spectators instanceof Map ? room.spectators.size : 0,
         maxSpectators: room.maxSpectators || 0, matchId: room.matchId || null,
         status: room.started ? 'playing' : 'waiting', visibility: 'public',
-        allowSpectators: !!room.allowSpectators, canJoin: joinable, canSpectate: spectatable,
+        allowSpectators: !!room.allowSpectators, allowUndo: room.allowUndo !== false, canJoin: joinable, canSpectate: spectatable,
         seats: details.seats.map(publicSeat),
       }));
     }

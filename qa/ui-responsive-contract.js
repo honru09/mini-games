@@ -11,7 +11,8 @@ const AUTH_PATH = path.join(ROOT, 'public', 'src', 'shop', '04-auth.js');
 const SHOP_PATH = path.join(ROOT, 'public', 'src', 'shop', '06-shop.js');
 const SHELL_PATH = path.join(ROOT, 'public', 'src', 'core', '02-app-shell.js');
 
-const template = fs.readFileSync(TEMPLATE_PATH, 'utf8');
+const { readPresentationSource } = require('./presentation-source');
+const template = readPresentationSource();
 const utils = fs.readFileSync(UTILS_PATH, 'utf8');
 const auth = fs.readFileSync(AUTH_PATH, 'utf8');
 const shop = fs.readFileSync(SHOP_PATH, 'utf8');
@@ -128,13 +129,13 @@ for (const candidate of template.matchAll(finalTabletTouchHeader)) finalTabletTo
 const finalTabletTouch = finalTabletTouchMatch
   ? extractBalancedBlock(template.slice(finalTabletTouchMatch.index), /@media\s*\(\s*max-width\s*:\s*1024px\s*\)\s*\{/i)
   : '';
-const finalHeaderTouchControls = ruleBody(finalTabletTouch, /\.ghost-brand-button\s*,\s*\.desktop-app-nav\s+\.app-nav-button\s*,\s*\.header-actions\s+\.btn\s*\{/);
-const finalHeaderActionTouch = ruleBody(finalTabletTouch, /\.header-actions\s+\.btn\s*\{/);
+const finalHeaderTouchControls = ruleBody(finalTabletTouch, /\.ghost-brand-button\s*,\s*\.desktop-app-nav\s+\.app-nav-button\s*,\s*\.route-heading-actions\s+\.btn\s*\{/);
+const finalHeaderActionTouch = ruleBody(finalTabletTouch, /\.route-heading-actions\s+\.btn\s*\{/);
 check('<=1024px 最终顶栏触控合同位于紧凑组件覆盖之后',
   finalTabletTouchMatch &&
   finalTabletTouchMatch.index > template.lastIndexOf('.app-nav-button{min-height:38px') &&
-  finalTabletTouchMatch.index > template.lastIndexOf('.header-actions .btn{min-width:42px'));
-check('<=1024px 最终顶栏品牌、导航与操作至少保持 44px',
+  finalTabletTouchMatch.index > template.lastIndexOf('.route-heading-actions{display:flex'));
+check('<=1024px 最终品牌、导航与路由操作至少保持 44px',
   hasDeclaration(finalHeaderTouchControls, 'min-height', '44px') &&
   hasDeclaration(finalHeaderActionTouch, 'min-width', '44px'));
 

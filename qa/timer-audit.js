@@ -31,6 +31,20 @@ check('Timer Audit：Heartbeat sweep 隔离单个会话/房间/赛事异常以�
 ].every(context=>heartbeatBlock.includes("heartbeatSweepIsolation.run('"+context+"'")));
 check('Timer Audit：Heartbeat 保留访客强制关闭与普通超时重连语义',/heartbeat_guest_expiry_close'\s*,\s*\(\)=>session\.close\(true\)/.test(heartbeatBlock)&&/heartbeat_session_timeout_close'\s*,\s*\(\)=>session\.close\(\)/.test(heartbeatBlock));
 check('Timer Audit：Heartbeat schedule 失败记录稳定 operational context',heartbeatBlock.includes("recordOperationalError('heartbeat_sweep_schedule'"));
+const authSweepStart=serverIndex.indexOf("const AUTH_TOKEN_SWEEP_INTERVAL_MS=");
+const authSweepEnd=serverIndex.indexOf('server.once(\'close\'',authSweepStart);
+const authSweepBlock=authSweepStart>=0&&authSweepEnd>authSweepStart?serverIndex.slice(authSweepStart,authSweepEnd):'';
+check('Timer Audit：正式 Token TTL sweep 使用独立 ServerClockTimer owner',authSweepBlock.includes("AUTH_TOKEN_SWEEP_TIMER_OWNER='auth-token-expiry-sweep'")&&authSweepBlock.includes('owner:AUTH_TOKEN_SWEEP_TIMER_OWNER')&&authSweepBlock.includes('repeat:true'));
+check('Timer Audit：正式 Token TTL sweep 由 Cluster leader 单写者执行',authSweepBlock.includes("clusterCoordinator.enabled&&!clusterCoordinator.isLeader()")&&authSweepBlock.includes("reason:'not_cluster_leader'"));
+check('Timer Audit：正式 Token TTL sweep 只通过 auth-profile session seam 清扫',authSweepBlock.includes("session({action:'sweep_expired',at:now})")&&authSweepBlock.includes('changedUids'));
+check('Timer Audit：正式 Token TTL sweep 失败记录并由统一 close dispose 清理',authSweepBlock.includes("recordOperationalError('auth_token_expiry_sweep'")&&serverIndex.includes("server.once('close',()=>serverClockTimer.dispose())"));
+check('Timer Audit：Auth sweep 未新增原生 setInterval',!/const authTokenExpirySweep\s*=\s*setInterval\s*\(/.test(serverIndex));
+const outboxBlockStart=serverIndex.indexOf("const SUPABASE_OUTBOX_SYNC_TIMER_OWNER='");
+const outboxBlock=outboxBlockStart>=0?serverIndex.slice(outboxBlockStart):'';
+check('Timer Audit：Supabase Reward/AI outbox 共用单一 ServerClockTimer owner',outboxBlock.includes("SUPABASE_OUTBOX_SYNC_TIMER_OWNER='supabase-outbox-sync'")&&outboxBlock.includes('owner:SUPABASE_OUTBOX_SYNC_TIMER_OWNER')&&outboxBlock.includes('repeat:true')&&outboxBlock.includes('Promise.allSettled'));
+check('Timer Audit：Supabase outbox retry 保持 leader gate 与异常隔离',outboxBlock.includes("!useSupabase||!clusterCoordinator.isLeader()")&&outboxBlock.includes("supabase_reward_outbox_retry")&&outboxBlock.includes("supabase_ai_outbox_retry"));
+check('Timer Audit：Supabase outbox 两类 drain 串行化避免并发 saveDB rename',outboxBlock.includes('const reward=Promise.resolve()')&&outboxBlock.includes('const ai=reward.catch(()=>undefined).then('));
+check('Timer Audit：Supabase outbox 不再创建两个原生 interval',!/const rewardSyncSweep\s*=\s*setInterval\s*\(/.test(serverIndex)&&!/const aiLearningSyncSweep\s*=\s*setInterval\s*\(/.test(serverIndex));
 check('Timer Audit：Server close 会释放统一 ServerClockTimer',serverIndex.includes("server.once('close',()=>serverClockTimer.dispose())"));
 check('Timer Audit：六个既有 Server Boundary 共用单一 serverNow 注入',[
   /createRoomPresenceBoundary\(\{[\s\S]{0,220}?now:serverNow/,

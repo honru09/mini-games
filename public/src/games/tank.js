@@ -76,6 +76,13 @@ function gameTank(area, extra, n, opts){
   const renderObjectIds=new WeakMap();
   let nextRenderObjectId=0,lastPlayersSignature='',lastStatusText='',victoryShown=false;
   const renderNodes={board:null,staticCells:new Map(),traces:new Map(),bullets:new Map(),tanks:new Map(),respawns:new Map(),effects:new Map(),time:null,scores:[]};
+  const tankFinalArtRequested=typeof tankFinalArtEnabled==='function'&&tankFinalArtEnabled();
+  let tankFinalArtActive=false,tankFinalArtState=tankFinalArtRequested?'loading':'disabled';
+  let tankFinalArtRequest=0,tankFinalArtAssets=null;
+  const tankFinalArtImageFactory=()=>typeof Image==='function'?new Image():null;
+  const TANK_FINAL_ART_BOARD_ROLES=['background','midground','foreground'];
+  const TANK_FINAL_ART_OBJECT_ROLES=['tank-classic','tank-teal','tank-coral','tank-blue','wall-brick','wall-steel','cover','base-pad','projectile','muzzle','contact-shadow','shield'];
+  const TANK_FINAL_ART_VFX_ROLES=['muzzle','projectile','ricochet','hit','explosion','destruction','shield','terminal'];
 
   function tankTechnicalFeature(name){
     try{return !!(opts&&opts.technicalFeatures&&opts.technicalFeatures[name]===true);}catch(_error){return false;}
@@ -139,7 +146,7 @@ function gameTank(area, extra, n, opts){
     try{return tankPredictionAdapter.acceptAuthority(state);}catch(_error){return null;}
   }
   function tankFeedbackEnvironment(hidden){
-    return{enabled:true,hidden:hidden===true,reducedMotion:tankGhost3DReducedMotion(),reducedEffects:false,muted:false,audioEnabled:tankSpatialAudioRequested,hapticsEnabled:tankHapticsRequested};
+    return{enabled:true,hidden:hidden===true,reducedMotion:typeof prefersReducedMotion==='function'&&prefersReducedMotion()===true,reducedEffects:false,muted:false,audioEnabled:tankSpatialAudioRequested,hapticsEnabled:tankHapticsRequested};
   }
   function tankUnifiedFeedbackAvailable(){
     return typeof emitAcceptedAudioCue === 'function' && typeof emitAudioCue === 'function';
@@ -179,7 +186,7 @@ function gameTank(area, extra, n, opts){
   }
   function setTankFeedbackHidden(hidden){
     if(!tankFeedbackBus||typeof tankFeedbackBus.setEnvironment!=='function')return false;
-    try{return tankFeedbackBus.setEnvironment({hidden:hidden===true,reducedMotion:tankGhost3DReducedMotion()}).accepted===true;}catch(_error){return false;}
+    try{return tankFeedbackBus.setEnvironment({hidden:hidden===true,reducedMotion:typeof prefersReducedMotion==='function'&&prefersReducedMotion()===true}).accepted===true;}catch(_error){return false;}
   }
   function tankFeedbackPan(x){return Math.max(-1,Math.min(1,((Number(x)||0)/(Math.max(2,W)-1))*2-1));}
   function emitTankFeedback(type,x,intensity,id){
@@ -188,172 +195,6 @@ function gameTank(area, extra, n, opts){
     try{return tankFeedbackBus.emit({type,id:cueId,intensity:Math.max(0,Math.min(1,Number(intensity)||1)),pan:tankFeedbackPan(x)}).accepted===true;}catch(_error){return false;}
   }
 
-  // Tank Ghost3D P5 is a deliberately narrow default presentation seam. The
-  // presenter is allowed to see a frozen local commit or a cropped accepted
-  // Authority receipt, never the input, relay, socket, reward, replay, or
-  // full game-state objects used by this game.
-  const TANK_GHOST3D_WAVE_B_STORAGE_KEY='mg_art_game_stage_wave_b_v1';
-  const TANK_GHOST3D_STORAGE_KEY='mg_ghost3d_tank_v1';
-  const TANK_GHOST3D_QUALITY_STORAGE_KEY='mg_ghost3d_tank_quality_v1';
-  const TANK_GHOST3D_QUALITIES=new Set(['HIGH','BALANCED','LOW']);
-  let tankGhost3DPresenter=null,tankGhost3DCommitActive=false;
-  let tankGhost3DLocalEpoch=0,tankGhost3DResetEpoch=0,tankGhost3DSourceEpoch=0;
-  let tankGhost3DLocalCommitted=false,tankGhost3DLocalDirty=true;
-  let tankGhost3DAuthorityReceipt=null,tankGhost3DAuthorityReceiptEpoch=0,tankGhost3DAuthorityReceiptFingerprint='',tankGhost3DAuthoritySource='reconcile',tankGhost3DForcedDomOnly=false;
-
-  function tankGhost3DNextEpoch(value){
-    return Number.isSafeInteger(value)&&value<Number.MAX_SAFE_INTEGER?value+1:0;
-  }
-  function tankGhost3DStorage(){
-    try{
-      const storage=typeof window!=='undefined'&&window?window.localStorage:(typeof localStorage!=='undefined'?localStorage:null);
-      return storage&&typeof storage.getItem==='function'?storage:null;
-    }catch(_error){return null;}
-  }
-  function tankGhost3DWaveBActive(){
-    const storage=tankGhost3DStorage();
-    try{return !!storage&&storage.getItem(TANK_GHOST3D_WAVE_B_STORAGE_KEY)!=='0';}catch(_error){return false;}
-  }
-  function tankGhost3DEnabled(){
-    const storage=tankGhost3DStorage();
-    try{return !!storage&&storage.getItem(TANK_GHOST3D_WAVE_B_STORAGE_KEY)!=='0'&&storage.getItem(TANK_GHOST3D_STORAGE_KEY)==='1';}catch(_error){return false;}
-  }
-  function tankGhost3DQuality(){
-    const storage=tankGhost3DStorage();
-    try{const quality=storage?storage.getItem(TANK_GHOST3D_QUALITY_STORAGE_KEY):null;return TANK_GHOST3D_QUALITIES.has(quality)?quality:'BALANCED';}catch(_error){return 'BALANCED';}
-  }
-  function tankGhost3DReducedMotion(){
-    try{
-      if(typeof prefersReducedMotion==='function')return prefersReducedMotion()===true;
-      return !!(typeof window!=='undefined'&&window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);
-    }catch(_error){return false;}
-  }
-  function tankGhost3DReplay(){
-    try{return !!(opts.isReplaying&&opts.isReplaying());}catch(_error){return true;}
-  }
-  function tankGhost3DShellActive(){
-    try{
-      if(typeof document==='undefined'||!document||typeof document.getElementById!=='function')return true;
-      const stage=document.getElementById('screen-game');
-      if(!stage||!stage.dataset)return false;
-      if(stage.dataset.shellActive!=='true'||stage.dataset.shellGame!=='tank')return false;
-      return !(stage.classList&&stage.classList.contains&&stage.classList.contains('hidden'));
-    }catch(_error){return false;}
-  }
-  function tankGhost3DValue(value,key){try{return value&&value[key];}catch(_error){return undefined;}}
-  function tankGhost3DPlainRecord(value){
-    if(!value||typeof value!=='object'||Array.isArray(value))return false;
-    try{return Object.prototype.toString.call(value)==='[object Object]';}catch(_error){return false;}
-  }
-  function tankGhost3DFreeze(value){
-    if(Array.isArray(value))return Object.freeze(value.map(tankGhost3DFreeze));
-    if(value&&typeof value==='object'){
-      const copy={};Object.keys(value).forEach(key=>{copy[key]=tankGhost3DFreeze(value[key]);});return Object.freeze(copy);
-    }
-    return value;
-  }
-  function tankGhost3DCopyGrid(value){
-    if(!Array.isArray(value)||value.length!==H)return null;
-    const copied=[];
-    for(let row=0;row<H;row++){
-      const source=value[row];if(!Array.isArray(source)||source.length!==W)return null;
-      const next=[];for(let column=0;column<W;column++)next.push(source[column]);copied.push(next);
-    }
-    return copied;
-  }
-  function tankGhost3DCropAuthorityReceipt(state){
-    if(!tankGhost3DPlainRecord(state))return null;
-    const rawPlayers=tankGhost3DValue(state,'players'),rawProjectiles=tankGhost3DValue(state,'projectiles');
-    const cells=tankGhost3DCopyGrid(tankGhost3DValue(state,'destructibles'));
-    if(!Array.isArray(rawPlayers)||rawPlayers.length!==playerCount||!Array.isArray(rawProjectiles)||!cells)return null;
-    const players=[];
-    for(let index=0;index<rawPlayers.length;index++){
-      const raw=rawPlayers[index];if(!tankGhost3DPlainRecord(raw))return null;
-      players.push({id:tankGhost3DValue(raw,'id'),x:tankGhost3DValue(raw,'x'),y:tankGhost3DValue(raw,'y'),d:tankGhost3DValue(raw,'d'),hp:tankGhost3DValue(raw,'hp'),alive:tankGhost3DValue(raw,'alive'),invulnerableUntil:tankGhost3DValue(raw,'invulnerableUntil'),shots:tankGhost3DValue(raw,'shots'),hits:tankGhost3DValue(raw,'hits'),kills:tankGhost3DValue(raw,'kills'),deaths:tankGhost3DValue(raw,'deaths'),damage:tankGhost3DValue(raw,'damage')});
-    }
-    const projectiles=[];
-    for(let index=0;index<rawProjectiles.length;index++){
-      const raw=rawProjectiles[index];if(!tankGhost3DPlainRecord(raw))return null;
-      projectiles.push({id:tankGhost3DValue(raw,'id'),owner:tankGhost3DValue(raw,'owner'),x:tankGhost3DValue(raw,'x'),y:tankGhost3DValue(raw,'y'),d:tankGhost3DValue(raw,'d')});
-    }
-    const rawOrder=tankGhost3DValue(state,'order');
-    const order=Array.isArray(rawOrder)?rawOrder.slice():rawOrder;
-    return tankGhost3DFreeze({protocol:tankGhost3DValue(state,'protocol'),matchId:tankGhost3DValue(state,'matchId'),serverTick:tankGhost3DValue(state,'serverTick'),serverNow:tankGhost3DValue(state,'serverNow'),season:tankGhost3DValue(state,'season'),destructibles:cells,players,projectiles,status:tankGhost3DValue(state,'status'),finished:tankGhost3DValue(state,'finished'),order});
-  }
-  function tankGhost3DAuthorityFingerprint(receipt){
-    if(!receipt)return '';
-    try{return JSON.stringify({protocol:receipt.protocol,matchId:receipt.matchId,serverTick:receipt.serverTick,season:receipt.season,destructibles:receipt.destructibles,players:receipt.players,projectiles:receipt.projectiles,status:receipt.status,finished:receipt.finished,order:receipt.order});}catch(_error){return '';}
-  }
-  function tankGhost3DFailClosedAuthorityReceipt(){
-    tankGhost3DForcedDomOnly=true;
-    tankGhost3DAuthorityReceipt=null;tankGhost3DAuthorityReceiptFingerprint='';tankGhost3DAuthoritySource='reconcile';
-    disposeTankGhost3DPresenter();
-  }
-  function tankGhost3DRememberAuthorityReceipt(state,silent){
-    const serverTick=tankGhost3DValue(state,'serverTick');
-    if(!Number.isSafeInteger(serverTick)||serverTick<0){tankGhost3DFailClosedAuthorityReceipt();return 'invalid_tick';}
-    const receipt=tankGhost3DCropAuthorityReceipt(state);
-    const fingerprint=tankGhost3DAuthorityFingerprint(receipt);
-    if(!receipt||!fingerprint){tankGhost3DFailClosedAuthorityReceipt();return 'invalid_receipt';}
-    if(serverTick<=lastAuthoritySequence){
-      if(serverTick===lastAuthoritySequence&&fingerprint===tankGhost3DAuthorityReceiptFingerprint)return 'duplicate_tick';
-      tankGhost3DFailClosedAuthorityReceipt();return 'conflicting_tick';
-    }
-    tankGhost3DAuthorityReceipt=receipt;tankGhost3DAuthorityReceiptFingerprint=fingerprint;lastAuthoritySequence=serverTick;
-    tankGhost3DAuthoritySource=silent===true?'reconcile':'live';
-    tankGhost3DAuthorityReceiptEpoch=tankGhost3DNextEpoch(tankGhost3DAuthorityReceiptEpoch);
-    tankGhost3DSourceEpoch=tankGhost3DAuthorityReceiptEpoch;
-    tankGhost3DForcedDomOnly=false;
-    return 'accepted';
-  }
-  function tankGhost3DMarkLocalCommitted(){
-    if(!opts.online)tankGhost3DLocalDirty=true;
-  }
-  function tankGhost3DInvalidate(clearAuthority){
-    tankGhost3DResetEpoch=tankGhost3DNextEpoch(tankGhost3DResetEpoch);
-    tankGhost3DSourceEpoch=tankGhost3DNextEpoch(tankGhost3DSourceEpoch);
-    tankGhost3DLocalCommitted=false;tankGhost3DLocalDirty=true;
-    if(clearAuthority){tankGhost3DAuthorityReceipt=null;tankGhost3DAuthorityReceiptFingerprint='';tankGhost3DAuthoritySource='reconcile';tankGhost3DAuthorityReceiptEpoch=tankGhost3DSourceEpoch;}
-  }
-  function tankGhost3DLocalState(){
-    return {width:W,height:H,season,cells:grid.map(row=>row.slice()),tanks:tanks.map(tank=>({id:tank.id,x:tank.x,y:tank.y,d:tank.d,hp:tank.hp,alive:tank.alive===true,invulnerableUntil:tank.invulnerableUntil,shots:tank.shots,hits:tank.hits,kills:tank.kills,deaths:tank.deaths,damage:tank.damage})),projectiles:bullets.slice(0,160).map(bullet=>({id:bullet.id,owner:bullet.owner,x:bullet.x,y:bullet.y,d:bullet.d})),terminal:over===true,winner:Number.isInteger(winner)?winner:-1};
-  }
-  function tankGhost3DReadModel(){
-    const onlineMode=!!opts.online;
-    const receipt=onlineMode&&authorityMode?tankGhost3DAuthorityReceipt:null;
-    return {mountElement:renderNodes.board,waveBActive:tankGhost3DWaveBActive(),online:onlineMode,authorityMode:authorityMode===true,isReplaying:tankGhost3DReplay(),expectedMatchId:currentMatchId(),receipt,accepted:!!receipt,source:tankGhost3DAuthoritySource,receiptEpoch:tankGhost3DAuthorityReceiptEpoch,committed:!onlineMode&&tankGhost3DLocalCommitted,localState:!onlineMode?tankGhost3DLocalState():null,localEpoch:tankGhost3DLocalEpoch,resetEpoch:tankGhost3DResetEpoch,sourceEpoch:tankGhost3DSourceEpoch,playerCount,quality:tankGhost3DQuality(),reducedMotion:tankGhost3DReducedMotion(),hidden:!!(typeof document!=='undefined'&&document&&document.hidden),shellActive:tankGhost3DShellActive()};
-  }
-  function disposeTankGhost3DPresenter(){
-    const presenter=tankGhost3DPresenter;tankGhost3DPresenter=null;
-    if(presenter&&typeof presenter.dispose==='function'){try{presenter.dispose();}catch(_error){}}
-  }
-  function commitTankGhost3DPresenter(){
-    if(tankGhost3DCommitActive)return false;
-    if(!opts.online&&tankGhost3DLocalDirty){tankGhost3DLocalEpoch=tankGhost3DNextEpoch(tankGhost3DLocalEpoch);tankGhost3DLocalDirty=false;tankGhost3DLocalCommitted=true;}
-    if(!tankGhost3DEnabled()||tankGhost3DForcedDomOnly||(opts.online&&(!authorityMode||!tankGhost3DAuthorityReceipt))){disposeTankGhost3DPresenter();return false;}
-    if(!tankGhost3DPresenter){
-      const factory=typeof TankGhost3DPresenter!=='undefined'?TankGhost3DPresenter:null;
-      if(!factory||typeof factory.create!=='function')return false;
-      try{tankGhost3DPresenter=factory.create(tankGhost3DReadModel);}catch(_error){tankGhost3DPresenter=null;return false;}
-    }
-    if(!tankGhost3DPresenter||typeof tankGhost3DPresenter.commit!=='function')return false;
-    tankGhost3DCommitActive=true;
-    try{tankGhost3DPresenter.commit();return true;}catch(_error){disposeTankGhost3DPresenter();return false;}finally{tankGhost3DCommitActive=false;}
-  }
-
-  // Authority/result ownership stays synchronous.  A ready optional renderer
-  // may hold only the visual victory surface long enough to read its finite
-  // result shot; LOW, reduced motion, import failure, DOM fallback, or a
-  // missing accepted terminal frame reveal the permanent DOM result at once.
-  function tankGhost3DTerminalPresentationDelay(){
-    if(!tankGhost3DPresenter||typeof tankGhost3DPresenter.snapshot!=='function')return 0;
-    let snapshot=null;try{snapshot=tankGhost3DPresenter.snapshot();}catch(_error){snapshot=null;}
-    if(!snapshot||snapshot.ready!==true||snapshot.fallback===true||snapshot.terminal!==true||snapshot.reducedMotion===true||snapshot.quality==='LOW')return 0;
-    return snapshot.quality==='HIGH'?420:320;
-  }
-  function retireTankGhost3DTerminalPresentation(){
-    tankGhost3DInvalidate(true);tankGhost3DForcedDomOnly=true;disposeTankGhost3DPresenter();
-  }
   function queueTankVictoryOverlay(){
     if(!over||victoryShown)return false;
     victoryShown=true;
@@ -365,10 +206,8 @@ function gameTank(area, extra, n, opts){
         audioType:terminalOnly ? 'match_terminal' : undefined,
         audioId:'tank-outcome-'+tankFeedbackSession+'-'+winner,
         onRestart:reset,onShare:()=>shareGameLink('tank')});
-      retireTankGhost3DTerminalPresentation();
     };
-    const delay=tankGhost3DTerminalPresentationDelay();
-    if(delay>0)scheduleTransient(reveal,delay);else reveal();
+    reveal();
     return true;
   }
 
@@ -434,7 +273,7 @@ function gameTank(area, extra, n, opts){
       });
     }
   }
-  function setTankWaveCProcess(next, detail){
+  function setTankWaveCProcess(next, detail, publishBridge){
     const process = TANK_WAVE_C_PROCESS_STEPS.includes(next) ? next : 'ready';
     const processDetail = detail === undefined || detail === null ? '' : String(detail);
     if (process === tankWaveCProcess && processDetail === tankWaveCProcessDetail) return;
@@ -443,12 +282,16 @@ function gameTank(area, extra, n, opts){
     tankWaveCProcessDetail = processDetail;
     tankWaveCProcessRevision++;
     paintTankWaveCProcess();
+    if(publishBridge!==false&&typeof emitGameStage25DEvent==='function'&&['spawn','fire','hit','ko','score','terminal'].includes(process)){
+      const outcome=process!=='terminal'?undefined:(spectator||!Number.isInteger(winner)||winner<0?'draw':(winner===controlledPlayer()?'win':'loss'));
+      emitGameStage25DEvent({type:'phase',game:'tank',phase:process,detail:processDetail,reducedMotion:prefersReducedMotion(),outcome});
+    }
   }
-  function settleTankWaveCProcess(next, detail, delay){
-    if (typeof prefersReducedMotion === 'function' && prefersReducedMotion()) { setTankWaveCProcess(next, detail); return; }
+  function settleTankWaveCProcess(next, detail, delay, publishBridge){
+    if (typeof prefersReducedMotion === 'function' && prefersReducedMotion()) { setTankWaveCProcess(next, detail, publishBridge); return; }
     const revision = tankWaveCProcessRevision;
     scheduleTankWaveCProcess(() => {
-      if (revision === tankWaveCProcessRevision) setTankWaveCProcess(next, detail);
+      if (revision === tankWaveCProcessRevision) setTankWaveCProcess(next, detail, publishBridge);
     }, delay);
   }
   function tankWaveCProcessBlocksMove(){
@@ -557,7 +400,7 @@ function gameTank(area, extra, n, opts){
   }
   function resetLocal(){
     if (typeof releaseAllControls === 'function') releaseAllControls(false);
-    aiEpoch++; aiPending.clear(); clearTransientTimers(); clearTankWaveCProcessTimers(); tankWaveCProcessEpoch++; tankGhost3DInvalidate(true); tankGhost3DForcedDomOnly=false; removeVictoryOverlay(); lastPlayersSignature='';lastStatusText='';buildMap();
+    aiEpoch++; aiPending.clear(); clearTransientTimers(); clearTankWaveCProcessTimers(); tankWaveCProcessEpoch++; removeVictoryOverlay(); lastPlayersSignature='';lastStatusText='';buildMap();
     startedAt = Date.now(); finishedAt = 0; remainingMs = MATCH_MS; lastLoopAt = startedAt; accumulator = 0;
     tanks = Array.from({length:playerCount}, (_, i) => createTank(i));
     bullets = []; traces = []; effects = []; over = false; winner = -1; cur = 0; bulletSequence = 0; destroyed = false;
@@ -637,7 +480,6 @@ function gameTank(area, extra, n, opts){
     if (effects.length > 40) effects.splice(0, effects.length - 40);
     audioCue('tank_fire', { actionId:'tank-fire-' + tankFeedbackSession + '-' + tank.id + '-' + bulletSequence, reaction:'shoot' }, .9, tankFeedbackPan(tank.x));
     settleTankWaveCProcess('ready', tank.id, 180);
-    tankGhost3DMarkLocalCommitted();
     return true;
   }
   function damageTank(target, owner, amount){
@@ -659,7 +501,6 @@ function gameTank(area, extra, n, opts){
       settleTankWaveCProcess('score', owner, 260);
     }
     else settleTankWaveCProcess('ready', target.id, 220);
-    tankGhost3DMarkLocalCommitted();
     return true;
   }
   function safestSpawn(tank){
@@ -678,7 +519,6 @@ function gameTank(area, extra, n, opts){
     setTankWaveCProcess('spawn', tank.id);
     effects.push({ x:tank.x, y:tank.y, type:'respawn', at:now, ttl:600 });
     settleTankWaveCProcess('ready', tank.id, 320);
-    tankGhost3DMarkLocalCommitted();
   }
   function fixedUpdate(dt){
     if (over) return;
@@ -715,7 +555,6 @@ function gameTank(area, extra, n, opts){
     bullets = nextBullets;
     traces = traces.filter(item => now - item.at < (item.type === 'scorch' ? 7000 : 1600)).slice(-60);
     effects = effects.filter(item => now - item.at < item.ttl).slice(-40);
-    tankGhost3DMarkLocalCommitted();
     // 联机客端只做预测显示，最终计时与排名必须等待房主快照；人机模拟行为保持不变。
     if (remainingMs <= 0 && (!opts.online || opts.isHost)) finishMatch();
   }
@@ -730,7 +569,7 @@ function gameTank(area, extra, n, opts){
   function resultsForOrder(order){
     return order.map((id,index) => ({ slot:id, rank:index+1, coins:index===0?1:0 }));
   }
-  function commitFinal(order, broadcastFinal){
+  function commitFinal(order, broadcastFinal, publishBridge){
     if (resultCommitted || !validOrder(order)) return false;
     over = true; finishedAt = Date.now(); remainingMs = 0; winner = order[0];
     order.forEach((id, index) => tanks[id].placement = index + 1);
@@ -738,8 +577,8 @@ function gameTank(area, extra, n, opts){
     if (broadcastFinal) broadcastAuthoritativeState(order);
     if (opts.onEnd) opts.onEnd(resultsForOrder(order));
     clearTankWaveCProcessTimers();
-    setTankWaveCProcess('score', winner);
-    settleTankWaveCProcess('terminal', winner, 260);
+    setTankWaveCProcess('score', winner, publishBridge);
+    settleTankWaveCProcess('terminal', winner, 260, publishBridge);
     render(); setStatus(t('tank_win_status',winner+1,tanks[winner].kills), true);
     return true;
   }
@@ -768,7 +607,8 @@ function gameTank(area, extra, n, opts){
   }
   function getLocalInput(){
     const input = emptyInput();
-    ['up','right','down','left'].forEach(key => { input[key] = !!(keyboardInput[key] || joystickMovement[key] || dpadMovement[key]); });
+    const movement = tankControlMode === 'dpad' ? dpadMovement : joystickMovement;
+    ['up','right','down','left'].forEach(key => { input[key] = !!(keyboardInput[key] || movement[key]); });
     input.fire = !!(keyboardInput.fire || fireHeld || firePointerIds.size > 0);
     return input;
   }
@@ -825,6 +665,7 @@ function gameTank(area, extra, n, opts){
   const keyboardInput = emptyInput(), joystickMovement = emptyInput(), dpadMovement = emptyInput();
   const firePointerIds = new Set(), dpadPointerIds = new Map();
   let fireHeld = false, joystickPointerId = null, joystickVector = { x:0, y:0, magnitude:0, direction:'neutral' };
+  let tankControlMode = 'joystick';
   let lastDpadPointerAt = 0;
   const directionKeys = ['up','right','down','left'];
   const directionLabels = { up:'tank_direction_up', right:'tank_direction_right', down:'tank_direction_down', left:'tank_direction_left', neutral:'tank_direction_neutral' };
@@ -858,6 +699,27 @@ function gameTank(area, extra, n, opts){
     if (joystickDirection){
       joystickDirection.textContent = localizedDirection(direction);
     }
+  }
+  function updateTankControlMode(){
+    const joystickActive = tankControlMode === 'joystick';
+    if (joystickWrap){ joystickWrap.hidden = !joystickActive; joystickWrap.setAttribute('aria-hidden', joystickActive ? 'false' : 'true'); }
+    if (dpad){ dpad.hidden = joystickActive; dpad.setAttribute('aria-hidden', joystickActive ? 'true' : 'false'); }
+    if (controls) controls.dataset.tankControlMode = tankControlMode;
+    if (modeToggle){
+      const nextMode = joystickActive ? 'dpad' : 'joystick';
+      const key = joystickActive ? 'tank_control_switch_to_dpad' : 'tank_control_switch_to_joystick';
+      modeToggle.textContent = t(key);
+      modeToggle.setAttribute('data-i18n', key);
+      modeToggle.setAttribute('aria-label', t(key));
+      modeToggle.setAttribute('aria-pressed', joystickActive ? 'false' : 'true');
+      modeToggle.dataset.targetMode = nextMode;
+    }
+  }
+  function toggleTankControlMode(event){
+    if (event && event.preventDefault) event.preventDefault();
+    releaseAllControls(false);
+    tankControlMode = tankControlMode === 'joystick' ? 'dpad' : 'joystick';
+    updateTankControlMode();
   }
   function applyJoystickPoint(event){
     if (!canControl() || (joystickPointerId !== null && event.pointerId !== undefined && event.pointerId !== joystickPointerId)) return;
@@ -934,8 +796,9 @@ function gameTank(area, extra, n, opts){
     const button = el('button','btn tank-dpad-button tank-dpad-'+direction,t('tank_'+direction)); button.type='button'; button.setAttribute('data-tank-direction',direction); button.setAttribute('data-i18n','tank_'+direction); button.setAttribute('data-i18n-aria-label','tank_'+direction+'_aria'); button.setAttribute('aria-label',t('tank_'+direction+'_aria')); dpad.appendChild(button); dpadButtons[direction]=button;
   });
   const fireBtn = el('button','btn btn-primary tank-fire',t('tank_fire')); fireBtn.type='button'; fireBtn.setAttribute('data-i18n','tank_fire'); fireBtn.setAttribute('data-i18n-aria-label','tank_fire_aria'); fireBtn.setAttribute('aria-label',t('tank_fire_aria')); fireBtn.setAttribute('aria-pressed','false');
+  const modeToggle = el('button','btn tank-control-mode-toggle',t('tank_control_switch_to_dpad')); modeToggle.type='button'; modeToggle.addEventListener('click',toggleTankControlMode);
   const hint = el('span','tank-control-hint',t('tank_control_hint')); hint.setAttribute('data-i18n','tank_control_hint');
-  controls.appendChild(joystickWrap); controls.appendChild(dpad); controls.appendChild(fireBtn); controls.appendChild(hint); extra.appendChild(hud); extra.appendChild(controls);
+  controls.appendChild(joystickWrap); controls.appendChild(dpad); controls.appendChild(fireBtn); controls.appendChild(modeToggle); controls.appendChild(hint); extra.appendChild(hud); extra.appendChild(controls); updateTankControlMode();
   function beginJoystick(event){
     if (!canControl() || joystickPointerId !== null) return;
     unlockTankFeedback();
@@ -1218,6 +1081,95 @@ function gameTank(area, extra, n, opts){
   const aiTimer = setInterval(() => { if (opts.ai) opts.ai.forEach(pi => scheduleAIPlayer(pi)); }, 650);
   if (aiTimer && typeof aiTimer.unref === 'function') aiTimer.unref();
 
+  function tankFinalArtProbe(url){
+    return new Promise(resolve=>{
+      const image=tankFinalArtImageFactory();
+      if(!image||!url){resolve(false);return;}
+      let settled=false;
+      const finish=value=>{if(settled)return;settled=true;image.onload=null;image.onerror=null;resolve(!!value);};
+      image.decoding='async';
+      image.onload=()=>{
+        if(typeof image.decode!=='function'){finish(true);return;}
+        Promise.resolve(image.decode()).then(()=>finish(true)).catch(()=>finish(false));
+      };
+      image.onerror=()=>finish(false);
+      image.src=url;
+    });
+  }
+  function tankFinalArtUrl(group,role){
+    return tankFinalArtActive&&tankFinalArtAssets&&tankFinalArtAssets[group]
+      ? String(tankFinalArtAssets[group][role]||'') : '';
+  }
+  function clearTankFinalArtSurface(){
+    if(tankFinalArtAssets){
+      ['host','vfxHost'].forEach(key=>{const node=tankFinalArtAssets[key];if(node&&node.parentNode)node.remove();tankFinalArtAssets[key]=null;});
+      tankFinalArtAssets.terminal=null;
+    }
+    if(renderNodes.board&&renderNodes.board.dataset)renderNodes.board.dataset.tankFinalArt=tankFinalArtState;
+  }
+  function mountTankFinalArtSurface(board){
+    if(!tankFinalArtActive||!tankFinalArtAssets||!board)return null;
+    if(!tankFinalArtAssets.host||tankFinalArtAssets.host.parentNode!==board){
+      const host=el('div','tank-final-art-layers');
+      host.setAttribute('aria-hidden','true');host.dataset.tankFinalArt=tankFinalArtState;
+      TANK_FINAL_ART_BOARD_ROLES.forEach((role,index)=>{
+        const image=el('img','tank-final-art-layer tank-final-art-layer-'+role);
+        image.alt='';image.decoding='async';image.loading='eager';image.src=tankFinalArtAssets.boards[role];image.style.zIndex=String(index);
+        host.appendChild(image);
+      });
+      SPAWNS.slice(0,playerCount).forEach((spawn,index)=>{
+        const pad=el('img','tank-final-art-base-pad');
+        pad.alt='';pad.decoding='async';pad.src=tankFinalArtAssets.objects['base-pad'];pad.dataset.tankSpawnPad=String(index);
+        pad.style.left=(spawn[0]/W*100)+'%';pad.style.top=(spawn[1]/H*100)+'%';
+        host.appendChild(pad);
+      });
+      board.insertBefore(host,board.firstChild);tankFinalArtAssets.host=host;
+    }
+    if(!tankFinalArtAssets.vfxHost||tankFinalArtAssets.vfxHost.parentNode!==board){
+      const vfxHost=el('div','tank-final-art-vfx-host');vfxHost.setAttribute('aria-hidden','true');board.appendChild(vfxHost);tankFinalArtAssets.vfxHost=vfxHost;
+    }
+    board.dataset.tankFinalArt=tankFinalArtState;
+    return tankFinalArtAssets.host;
+  }
+  function syncTankFinalArtTerminal(board){
+    if(!tankFinalArtActive||!tankFinalArtAssets||!board)return;
+    mountTankFinalArtSurface(board);
+    if(over&&!tankFinalArtAssets.terminal){
+      const node=el('img','tank-final-art-terminal');node.alt='';node.decoding='async';node.src=tankFinalArtAssets.vfx.terminal;
+      tankFinalArtAssets.vfxHost.appendChild(node);tankFinalArtAssets.terminal=node;
+    }else if(!over&&tankFinalArtAssets.terminal){
+      if(tankFinalArtAssets.terminal.parentNode)tankFinalArtAssets.terminal.remove();tankFinalArtAssets.terminal=null;
+    }
+  }
+  function initTankFinalArtSurface(){
+    if(!tankFinalArtRequested||typeof resolveTankFinalArtUrl!=='function')return;
+    const request=++tankFinalArtRequest,reduced=prefersReducedMotion();
+    const roles=[
+      ...TANK_FINAL_ART_BOARD_ROLES.map(role=>'board-'+role),
+      ...TANK_FINAL_ART_OBJECT_ROLES.map(role=>'object-'+role),
+      ...TANK_FINAL_ART_VFX_ROLES.map(role=>'vfx-'+role),
+    ];
+    Promise.all(roles.map(role=>resolveTankFinalArtUrl(role,reduced))).then(urls=>{
+      if(request!==tankFinalArtRequest||destroyed)return;
+      if(urls.some(url=>!url))throw new Error('tank-final-art-manifest');
+      return Promise.all(urls.map(tankFinalArtProbe)).then(results=>{
+        if(request!==tankFinalArtRequest||destroyed)return;
+        if(results.some(value=>!value))throw new Error('tank-final-art-decode');
+        const boardCount=TANK_FINAL_ART_BOARD_ROLES.length,objectCount=TANK_FINAL_ART_OBJECT_ROLES.length;
+        tankFinalArtAssets={
+          boards:Object.fromEntries(TANK_FINAL_ART_BOARD_ROLES.map((role,index)=>[role,urls[index]])),
+          objects:Object.fromEntries(TANK_FINAL_ART_OBJECT_ROLES.map((role,index)=>[role,urls[boardCount+index]])),
+          vfx:Object.fromEntries(TANK_FINAL_ART_VFX_ROLES.map((role,index)=>[role,urls[boardCount+objectCount+index]])),
+          host:null,vfxHost:null,terminal:null,
+        };
+        tankFinalArtState='active';tankFinalArtActive=true;render();
+      });
+    }).catch(()=>{
+      if(request!==tankFinalArtRequest||destroyed)return;
+      tankFinalArtState='fallback';tankFinalArtActive=false;clearTankFinalArtSurface();render();
+    });
+  }
+
   function seasonBackground(){
     return {
       spring:'radial-gradient(circle at 20% 15%,rgba(255,255,255,.72),transparent 25%),linear-gradient(145deg,#8fcf75,#4f8f5d)',
@@ -1233,15 +1185,14 @@ function gameTank(area, extra, n, opts){
   }
   function ensureRenderTree(){
     if(renderNodes.board&&area.querySelector&&area.querySelector('.tank-board')===renderNodes.board)return renderNodes.board;
-    // A rebuilt DOM root is a fresh visual generation.  The optional canvas
-    // is recreated only after this new board is fully mounted.
-    tankGhost3DInvalidate(false);
     area.innerHTML='';
     tankWaveCProcessRail = null; tankWaveCProcessLabel = null; tankWaveCProcessSteps = [];
     const board=el('div','tank-board realtime-arena season-'+season);
     board.style.touchAction='none';board.style.overscrollBehavior='contain';board.style.overflow='hidden';
     board.addEventListener('pointerdown',event=>{if(event.button===0)localShoot();});
     area.appendChild(board);renderNodes.board=board;
+    board.dataset.tankFinalArt=tankFinalArtState;
+    if(tankFinalArtActive)mountTankFinalArtSurface(board);
     renderNodes.staticCells.clear();renderNodes.traces.clear();renderNodes.bullets.clear();renderNodes.tanks.clear();renderNodes.respawns.clear();renderNodes.effects.clear();
     if(!renderNodes.time){
       renderNodes.time=el('strong','tank-time');hud.appendChild(renderNodes.time);
@@ -1269,14 +1220,17 @@ function gameTank(area, extra, n, opts){
     // Fit the map and its live process rail into the measured Arena.  The old
     // 620px cap made wide/tall stages look like a card inside a room; this
     // preserves the map ratio while taking every usable height/width pixel.
-    const availableWidth = Math.max(240, Number(area.clientWidth) || 560);
-    const availableHeight = Math.max(0, Number(area.clientHeight) || 0);
+    const arenaSize = typeof measureGameStageArena === 'function' ? measureGameStageArena(area,560,0) : {width:Number(area.clientWidth)||560,height:Number(area.clientHeight)||0};
+    const availableWidth = Math.max(240, arenaSize.width || 560);
+    const availableHeight = Math.max(0, arenaSize.height || 0);
     const widthBudget = Math.max(240, Math.min(availableWidth - 16, 980));
     const heightBudget = availableHeight > 0 ? Math.max(240, (availableHeight - 76) * W / H) : widthBudget;
     const width = Math.min(widthBudget, heightBudget);
     const cell = width/W, height = cell*H;
     const board=ensureRenderTree();
     board.className='tank-board realtime-arena season-'+season;
+    board.dataset.tankFinalArt=tankFinalArtState;
+    if(tankFinalArtActive)mountTankFinalArtSurface(board);else clearTankFinalArtSurface();
     if (board.style && typeof board.style.setProperty === 'function') board.style.setProperty('--tank-wave-c-board-size', width+'px');
     const tabletop = typeof tabletopArtEnabled === 'function' && tabletopArtEnabled();
     if (typeof markTabletopSurface === 'function') markTabletopSurface(board, 'tank-arena', { variant: season });
@@ -1286,23 +1240,24 @@ function gameTank(area, extra, n, opts){
       : seasonBackground();
     const staticItems=[];for(let r=0;r<H;r++)for(let c=0;c<W;c++)if(grid[r][c])staticItems.push({r,c,type:grid[r][c]});
     syncRenderMap(renderNodes.staticCells,staticItems,item=>item.r+':'+item.c,
-      item=>{const node=el('div','tank-cell tank-ghost3d-dom-paint');node.style.zIndex='1';board.appendChild(node);return node;},
-      (node,item)=>{node.className='tank-cell tank-ghost3d-dom-paint '+(item.type===3?'steel':'brick');node.style.left=item.c*cell+'px';node.style.top=item.r*cell+'px';node.style.width=cell+'px';node.style.height=cell+'px';});
+      item=>{const node=el('div','tank-cell');node.style.zIndex='3';board.appendChild(node);return node;},
+      (node,item)=>{const role=item.type===3?'wall-steel':'wall-brick',url=tankFinalArtUrl('objects',role);node.className='tank-cell '+(item.type===3?'steel':'brick')+(url?' tank-final-art-object':'');node.style.left=item.c*cell+'px';node.style.top=item.r*cell+'px';node.style.width=cell+'px';node.style.height=cell+'px';node.style.backgroundImage=url?'url("'+url+'")':'';});
     syncRenderMap(renderNodes.traces,traces,item=>renderObjectKey(item,'trace'),
-      item=>{const node=el('div','tank-trace tank-ghost3d-dom-paint');board.appendChild(node);return node;},
-      (node,item)=>{node.className='tank-trace tank-ghost3d-dom-paint '+item.type;node.textContent=item.type==='scorch'?'✹':'';node.style.cssText='position:absolute;z-index:2;left:'+((item.x-.18)*cell)+'px;top:'+((item.y-.18)*cell)+'px;width:'+(cell*.36)+'px;height:'+(cell*.36)+'px;opacity:.34;pointer-events:none;color:#312e2a;font-size:'+(cell*.28)+'px;';});
+      item=>{const node=el('div','tank-trace');board.appendChild(node);return node;},
+      (node,item)=>{const url=tankFinalArtUrl(item.type==='scorch'?'vfx':'objects',item.type==='scorch'?'destruction':'contact-shadow');node.className='tank-trace '+item.type+(url?' tank-final-art-object':'');node.textContent=url?'':(item.type==='scorch'?'✹':'');node.style.cssText='position:absolute;z-index:2;left:'+((item.x-.18)*cell)+'px;top:'+((item.y-.18)*cell)+'px;width:'+(cell*.36)+'px;height:'+(cell*.36)+'px;opacity:.34;pointer-events:none;color:#312e2a;font-size:'+(cell*.28)+'px;';node.style.backgroundImage=url?'url("'+url+'")':'';});
     syncRenderMap(renderNodes.bullets,bullets,item=>String(item.id),
-      item=>{const node=el('div','tank-projectile tank-ghost3d-dom-paint','●');board.appendChild(node);return node;},
-      (node,item)=>{node.style.cssText='position:absolute;z-index:3;left:'+((item.x-.12)*cell)+'px;top:'+((item.y-.12)*cell)+'px;width:'+(cell*.24)+'px;height:'+(cell*.24)+'px;color:#fde047;text-shadow:0 0 8px #fff;pointer-events:none;';});
+      item=>{const node=el('div','tank-projectile','●');board.appendChild(node);return node;},
+      (node,item)=>{const url=tankFinalArtUrl('objects','projectile');node.className='tank-projectile'+(url?' tank-final-art-object':'');node.textContent=url?'':'●';node.style.cssText='position:absolute;z-index:5;left:'+((item.x-.12)*cell)+'px;top:'+((item.y-.12)*cell)+'px;width:'+(cell*.24)+'px;height:'+(cell*.24)+'px;color:#fde047;text-shadow:0 0 8px #fff;pointer-events:none;transform:rotate('+(item.d*90)+'deg);';node.style.backgroundImage=url?'url("'+url+'")':'';});
     syncRenderMap(renderNodes.tanks,tanks,item=>String(item.id),
-      tank=>{const node=el('div','tank-cell arena-tank');node._icon=el('span','tank-icon tank-ghost3d-dom-paint');node._hp=el('span','hp tank-hp-status');node.appendChild(node._icon);node.appendChild(node._hp);board.appendChild(node);return node;},
-      (node,tank)=>{const skin=cosmetic.players&&cosmetic.players[tank.id]||cosmetic.default||'classic';node.className='tank-cell arena-tank tank'+tank.id+' skin-'+skin;node.style.display=tank.alive?'flex':'none';node.style.zIndex='8';node.style.left=((tank.x-.5)*cell)+'px';node.style.top=((tank.y-.5)*cell)+'px';node.style.width=cell+'px';node.style.height=cell+'px';node.style.transform='rotate('+(tank.d*90)+'deg)';node.style.filter=Date.now()<tank.invulnerableUntil?'drop-shadow(0 0 9px #fff) brightness(1.3)':'';node._icon.textContent=skin==='cyber'?'🤖':'🛡️';node._hp.textContent='♥'.repeat(Math.max(0,tank.hp));node._hp.style.transform='rotate('+(-tank.d*90)+'deg)';});
+      tank=>{const node=el('div','tank-cell arena-tank');node._icon=el('span','tank-icon');node._shield=el('span','tank-final-art-shield');node._hp=el('span','hp tank-hp-status');node.appendChild(node._icon);node.appendChild(node._shield);node.appendChild(node._hp);board.appendChild(node);return node;},
+      (node,tank)=>{const skin=cosmetic.players&&cosmetic.players[tank.id]||cosmetic.default||'classic',roles=['tank-classic','tank-blue','tank-teal','tank-coral'],role=skin==='cyber'?'tank-blue':roles[tank.id%roles.length],url=tankFinalArtUrl('objects',role),shieldUrl=tankFinalArtUrl('objects','shield'),invulnerable=Date.now()<tank.invulnerableUntil;node.className='tank-cell arena-tank tank'+tank.id+' skin-'+skin+(url?' tank-final-art-object':'');node.style.display=tank.alive?'flex':'none';node.style.zIndex='8';node.style.left=((tank.x-.5)*cell)+'px';node.style.top=((tank.y-.5)*cell)+'px';node.style.width=cell+'px';node.style.height=cell+'px';node.style.transform='rotate('+(tank.d*90)+'deg)';node.style.filter=invulnerable?'drop-shadow(0 0 9px #fff) brightness(1.3)':'';node._icon.textContent=url?'':(skin==='cyber'?'🤖':'🛡️');node._icon.style.backgroundImage=url?'url("'+url+'")':'';node._shield.style.backgroundImage=shieldUrl?'url("'+shieldUrl+'")':'';node._shield.style.display=url&&shieldUrl&&invulnerable?'block':'none';node._hp.textContent='♥'.repeat(Math.max(0,tank.hp));node._hp.style.transform='rotate('+(-tank.d*90)+'deg)';});
     syncRenderMap(renderNodes.respawns,tanks.filter(tank=>!tank.alive),item=>String(item.id),
-      tank=>{const node=el('div','tank-respawn tank-ghost3d-status');board.appendChild(node);return node;},
+      tank=>{const node=el('div','tank-respawn');board.appendChild(node);return node;},
       (node,tank)=>{node.textContent='↻ '+Math.max(1,Math.ceil((tank.respawnAt-Date.now())/1000));node.style.cssText='position:absolute;z-index:8;left:'+((tank.x-.45)*cell)+'px;top:'+((tank.y-.45)*cell)+'px;color:#fff;font-weight:900;text-shadow:0 1px 3px rgba(0,0,0,.88);pointer-events:none;';});
     syncRenderMap(renderNodes.effects,effects,item=>renderObjectKey(item,'effect'),
-      item=>{const node=el('div','tank-effect tank-ghost3d-dom-paint');board.appendChild(node);return node;},
-      (node,item)=>{node.className='tank-effect tank-ghost3d-dom-paint '+item.type;node.textContent=item.type==='explosion'?'💥':item.type==='respawn'?'✨':item.type==='muzzle'?'✦':'✹';node.style.cssText='position:absolute;z-index:5;left:'+((item.x-.45)*cell)+'px;top:'+((item.y-.45)*cell)+'px;width:'+cell+'px;height:'+cell+'px;font-size:'+(cell*.7)+'px;pointer-events:none;';});
+      item=>{const node=el('div','tank-effect');board.appendChild(node);return node;},
+      (node,item)=>{const role=item.type==='explosion'?'explosion':item.type==='respawn'?'shield':item.type==='muzzle'?'muzzle':'hit',url=tankFinalArtUrl('vfx',role),fallback=item.type==='explosion'?'💥':item.type==='respawn'?'✨':item.type==='muzzle'?'✦':'✹';node.className='tank-effect '+item.type+(url?' tank-final-art-vfx':'');node.textContent=url?'':fallback;node.style.cssText='position:absolute;z-index:7;left:'+((item.x-.45)*cell)+'px;top:'+((item.y-.45)*cell)+'px;width:'+cell+'px;height:'+cell+'px;font-size:'+(cell*.7)+'px;pointer-events:none;';node.style.backgroundImage=url?'url("'+url+'")':'';});
+    syncTankFinalArtTerminal(board);
     const timeText='⏱ '+Math.floor(remainingMs/60000)+':'+String(Math.ceil(remainingMs/1000)%60).padStart(2,'0')+' · '+seasonLabel(season);
     if(renderNodes.time.textContent!==timeText)renderNodes.time.textContent=timeText;
     ranking().forEach((id,index)=>{const tank=tanks[id],text=t('tank_score_line',id+1,tank.kills,tank.deaths,tank.damage);if(renderNodes.scores[index].textContent!==text)renderNodes.scores[index].textContent=text;});
@@ -1310,9 +1265,6 @@ function gameTank(area, extra, n, opts){
     const playerRows=tanks.map(tank=>t('tank_player_stats',tank.kills,tank.deaths,tank.damage)),playersSignature=controlledPlayer()+'|'+playerRows.join('|');
     if(playersSignature!==lastPlayersSignature){lastPlayersSignature=playersSignature;renderPlayers(controlledPlayer(),playerRows);}
     updateStatus();
-    // Safe tail only: DOM controls/HUD/board have already been painted and
-    // the presenter receives no mutable game or input references.
-    commitTankGhost3DPresenter();
     if(over)queueTankVictoryOverlay();
   }
 
@@ -1361,7 +1313,7 @@ function gameTank(area, extra, n, opts){
     lastAuthoritySequence = seq;
     if (replayingHost) authoritySequence = Math.max(authoritySequence,seq);
     if (localInput && tanks[controlledPlayer()]) tanks[controlledPlayer()].input = localInput;
-    if (finalOrder) commitFinal(finalOrder,false);
+    if (finalOrder) commitFinal(finalOrder,false,!replaying);
     return true;
   }
   opts.onMove = (payload, player) => {
@@ -1427,9 +1379,6 @@ function gameTank(area, extra, n, opts){
     resetTankInputGate();
     resetTankPrediction('restore');
     tankAudioAuthorityBaseline = null; tankAudioAuthorityMoveTick = -Infinity;
-    // Restore/replay/legacy relay remain DOM-only.  Do not let a prior live
-    // Authority receipt survive into a new visual generation.
-    tankGhost3DInvalidate(true);tankGhost3DForcedDomOnly=true;
     aiEpoch++; clearTankWaveCProcessTimers(); tankWaveCProcessEpoch++;
     grid=state.grid.map(row=>row.map(v=>v===2||v===3?v:0));
     tanks=state.tanks.map((t,id)=>sanitizeTank(t,id));
@@ -1446,26 +1395,14 @@ function gameTank(area, extra, n, opts){
     cur=Number.isInteger(state.cur)&&state.cur>=0&&state.cur<playerCount?state.cur:0;
     lastLoopAt=Date.now(); accumulator=0; traces=[]; effects=[];
     if (value&&value.presentation) setCosmetic(value.presentation.cosmetic);
-    setTankWaveCProcess(over ? 'terminal' : 'ready', cur);
+    setTankWaveCProcess(over ? 'terminal' : 'ready', cur, false);
     if (!silent) render(); return true;
   }
   function onAuthoritySnapshot(state,silent){
     if(!authorityMode||!state||state.protocol!==AUTH_PROTOCOL||String(state.matchId||'')!==currentMatchId()||!Array.isArray(state.players)||state.players.length!==playerCount)return false;
     if (resultCommitted || over) return false;
-    // The optional renderer has a stricter monotonic receipt boundary than
-    // the retained DOM authority path.  An old, malformed, or conflicting
-    // tick fails closed for Ghost3D but must still be reconciled by the
-    // existing authoritative DOM simulation below.
-    if(Number(state.serverTick)<authorityServerTick)tankGhost3DFailClosedAuthorityReceipt();
-    const receiptStatus=tankGhost3DRememberAuthorityReceipt(state,silent===true);
-    // An exact duplicate is already represented by the current DOM and 3D
-    // receipt.  Treat it as an accepted no-op so callers retain the legacy
-    // authority contract without allocating a new renderer frame.
-    if(receiptStatus==='duplicate_tick')return true;
-    // The retained DOM path may still reconcile a stale/conflicting receipt
-    // for backwards compatibility, but audio must never treat that frame as
-    // an accepted authority delta or let it replace the next cue baseline.
-    const audioReceiptAccepted = receiptStatus === 'accepted';
+    const incomingServerTick=Number(state.serverTick),hasValidServerTick=Number.isSafeInteger(incomingServerTick)&&incomingServerTick>=0;
+    const audioReceiptAccepted = hasValidServerTick&&incomingServerTick>authorityServerTick;
     if(silent===true){resetTankInputGate();resetTankPrediction('authority-bootstrap');}
     const predictionReceipt=acceptTankPrediction(state);
     const predictionPresentation=predictionReceipt&&predictionReceipt.accepted===true?predictionReceipt.presentation:null;
@@ -1473,6 +1410,7 @@ function gameTank(area, extra, n, opts){
     const previousAudioBaseline=Array.isArray(tankAudioAuthorityBaseline)?tankAudioAuthorityBaseline:null;
     const nextAudioBaseline=Array(playerCount).fill(null);
     authorityServerTick=Math.max(authorityServerTick,serverTick);
+    if(hasValidServerTick)lastAuthoritySequence=Math.max(lastAuthoritySequence,serverTick);
     const ack=Array.isArray(state.ack)?state.ack.slice(0,playerCount).map(value=>Math.max(0,Math.floor(Number(value)||0))):[];
     if(ack.length===playerCount){lastInputSequence=ack;inputSequence=Math.max(inputSequence,ack[localId]||0);}
     authorityEndAt=Number(state.endAt)||authorityEndAt;remainingMs=Math.max(0,Number(state.remainingMs)||0);season=SEASONS.includes(state.season)?state.season:season;
@@ -1548,18 +1486,19 @@ function gameTank(area, extra, n, opts){
     return tanks.map(t=>({kills:t.kills,deaths:t.deaths,damage:t.damage,shots:t.shots,hits:t.hits,placement:t.placement||order.indexOf(t.id)+1}));
   }
   function getPerformanceStats(){return{...performanceStats,activeParticles:effects.length,activeProjectiles:bullets.length,trailCount:traces.length,caps:{particles:40,projectiles:128,trails:60}};}
-  function setSeason(value){ season=SEASONS.includes(value)?value:'spring'; tankGhost3DMarkLocalCommitted(); render(); return season; }
+  function setSeason(value){ season=SEASONS.includes(value)?value:'spring'; render(); return season; }
   function setCosmetic(value){ cosmetic={default:'classic',players:{},...(value||{})}; cosmetic.default=cosmetic.default==='cyber'?'cyber':'classic'; render(); return cosmetic; }
-  function setSpectators(value){ spectator=Array.isArray(value)?value.includes(opts.viewerId):!!value; tankGhost3DInvalidate(false); releaseAllControls(false); resetTankInputGate(); resetTankPrediction('spectator'); render(); return spectator; }
+  function setSpectators(value){ spectator=Array.isArray(value)?value.includes(opts.viewerId):!!value; releaseAllControls(false); resetTankInputGate(); resetTankPrediction('spectator'); render(); return spectator; }
   function destroy(){
     if (!destroyed) releaseAllControls(true);
-    destroyed=true; disposeTankGhost3DPresenter(); disposeTankInputGate(); disposeTankPrediction(); disposeTankFeedback(); aiEpoch++; tankWaveCProcessEpoch++; tankWaveCProcessRevision++; aiPending.clear(); aiThinkGate.clear(); clearTransientTimers(); clearTankWaveCProcessTimers(); clearInterval(simulationTimer); clearInterval(aiTimer);
+    destroyed=true;tankFinalArtRequest++;clearTankFinalArtSurface();tankFinalArtAssets=null;tankFinalArtActive=false; disposeTankInputGate(); disposeTankPrediction(); disposeTankFeedback(); aiEpoch++; tankWaveCProcessEpoch++; tankWaveCProcessRevision++; aiPending.clear(); aiThinkGate.clear(); clearTransientTimers(); clearTankWaveCProcessTimers(); clearInterval(simulationTimer); clearInterval(aiTimer);
     if (document.removeEventListener){ document.removeEventListener('keydown',keyDown); document.removeEventListener('keyup',keyUp); }
     if (document.removeEventListener) document.removeEventListener('visibilitychange',onVisibilityChange);
     if (typeof window!=='undefined' && window.removeEventListener){ window.removeEventListener('blur',onWindowBlur); window.removeEventListener('pointerup',releaseFirePointer); window.removeEventListener('pointercancel',releaseFirePointer); }
     area.style.touchAction=previousTouchAction; area.style.overscrollBehavior=previousOverscroll; area.style.display=previousDisplay; area.style.flexDirection=previousFlexDirection; area.style.alignItems=previousAlignItems; area.style.justifyContent=previousJustifyContent;
   }
   resetLocal();
+  if(tankFinalArtRequested)initTankFinalArtSurface();
   return { reset,onMove:opts.onMove,onRestart:resetLocal,destroy,snapshot,onRestore,onAuthoritySnapshot,onAuthorityResult,
     serialize:()=>({state:snapshot(),presentation:{season,cosmetic},stats:getMatchStats()}),
     fixedUpdate,getMatchStats,getPerformanceStats,setSeason,setCosmetic,renderCosmetic:setCosmetic,setSpectators,finishMatch,

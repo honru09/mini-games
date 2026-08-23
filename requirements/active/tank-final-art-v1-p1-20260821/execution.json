@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "taskId": "p1-02-tank-final-art-v1-20260821",
+  "productionUnitId": "P1-02",
+  "familyId": "G-12-TANK-FINAL-ART-V1",
+  "state": "IMPLEMENTED_OWNER_CLEARED_LOCAL_VISIBLE_NOT_RELEASED",
+  "build": {
+    "characters": 1990675,
+    "bytes": 2005245,
+    "sha256": "FDD06C32CBBF4CA6E9A94720CE35DE03D6E49270E51DE0D7131D52097591FC44"
+  },
+  "deliverables": {
+    "sourceMasters": 25,
+    "runtimeVariants": 50,
+    "runtimeBytes": 376668,
+    "boardLayers": 3,
+    "objectAtoms": 12,
+    "semanticVfx": 8,
+    "cameraPresets": 2,
+    "sourceOnlyImageGenBoards": 5
+  },
+  "verification": {
+    "machineContracts": "PASS",
+    "qualityGates": "PASS",
+    "buildCheck": "PASS",
+    "localSingleChromiumMatrix": "PASS",
+    "completeNpmTest": "PENDING_FINAL_RUN"
+  },
+  "evidence": [
+    "art-source/games/tank/final-art-v1/asset-family-manifest-v1.json",
+    "art-source/games/tank/final-art-v1/PROMPT_AND_PROVENANCE.md",
+    "art-source/games/tank/final-art-v1/TECHNICAL_REVIEW_Reviewer_A.md",
+    "art-source/games/tank/final-art-v1/OWNER_AUTHORIZED_ART_CLEARANCE.md",
+    "art-source/games/tank/final-art-v1/EXTERNAL_REFERENCE_TRANSMISSION.json",
+    "art-source/production/ghost-game-art-program-v1/P1-02_LOCAL_ACCEPTANCE.md",
+    "requirements/active/tank-final-art-v1-p1-20260821/current-build-tank-visible-matrix-20260821.json",
+    "qa/tank-final-art-contract.js"
+  ],
+  "next": "P1-03 / G-11-TETRIS-FINAL-ART-V1",
+  "release": "LOCAL_ONLY_NOT_RELEASED"
+}

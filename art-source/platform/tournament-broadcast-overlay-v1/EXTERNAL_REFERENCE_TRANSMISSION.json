@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "familyId": "P-TOURNAMENT-BROADCAST-OVERLAY-V1",
+  "externalReferenceInputs": [],
+  "thirdPartyTransmissions": [],
+  "blockedLicenseFilesRead": 0,
+  "blockedLicenseFilesTransmitted": 0,
+  "runtimeBoundary": "No external pixel, layer, silhouette, palette, text or icon enters runtime."
+}

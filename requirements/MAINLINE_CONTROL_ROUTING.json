@@ -217,7 +217,7 @@
       "disposition": "NOW_CLOSURE",
       "stage": "CLOSE",
       "workMode": "LOCAL_IMPLEMENT_AND_PROVE",
-      "summary": "现有 UI、2.5D Game Stage、性能、资产治理与本地证据的收口项；Ghost3D Foundation 仅冻结兼容/可选实验层，保持 Rule/Authority/Protocol/Reward/Replay、未取得 OWNER_AUTHORIZED_ART_CLEARANCE 的原创候选与外部受限素材边界。",
+      "summary": "现有 UI、唯一 2.5D Game Stage、性能、资产治理与本地证据的收口项；Three/Ghost3D runtime 已退役清除，历史证据仅作 historical-as-of，继续保持 Rule/Authority/Protocol/Reward/Replay、原创候选与外部受限素材边界。",
       "ids": [
         "ART-020", "ART-021", "ART-028", "ART-030",
         "UI-007", "UI-009", "UI-019", "UI-020", "UI-021", "UI-022", "UI-023", "UI-024", "UI-025", "UI-026", "UI-027", "UI-028", "UI-035", "UI-037",
@@ -281,7 +281,7 @@
       "id": "deferred-data-and-parity",
       "disposition": "DEFERRED_MAINLINE",
       "stage": "PARITY",
-      "workMode": "SEQUENCED_AFTER_GHOST3D_FOUNDATION",
+      "workMode": "SEQUENCED_AFTER_25D_PRESENTATION_DEMO",
       "summary": "规则权威、反作弊、性能与资产交付的下一层深化，必须建立在 2.5D Presentation Demo、真实数据和现有 fallback 边界之上；Three.js 只作为冻结的可选实验层。",
       "ids": [
         "ART-029",

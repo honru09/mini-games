@@ -16,7 +16,8 @@ const SERVER_PATH = path.join(ROOT, 'server', 'index.js');
 const shop = fs.readFileSync(SHOP_PATH, 'utf8');
 const online = fs.readFileSync(ONLINE_PATH, 'utf8');
 const shell = fs.readFileSync(SHELL_PATH, 'utf8');
-const template = fs.readFileSync(TEMPLATE_PATH, 'utf8');
+const { readPresentationSource } = require('./presentation-source');
+const template = readPresentationSource();
 const server = fs.readFileSync(SERVER_PATH, 'utf8');
 const failures = [];
 

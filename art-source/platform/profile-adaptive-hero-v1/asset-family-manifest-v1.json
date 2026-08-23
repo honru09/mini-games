@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "productionUnitId": "P2-12",
+  "familyId": "P-PROFILE-ADAPTIVE-HERO-V1",
+  "sourceAssetId": "ART-PROFILE-ADAPTIVE-HERO-V1",
+  "artworkVersion": 1,
+  "status": "implemented_local_release_evidence_pending",
+  "clearance": "OWNER_AUTHORIZED_ART_CLEARANCE",
+  "sourceLicense": "PROJECT_OWNED_AI_GENERATED",
+  "featureFlag": {
+    "id": "mg_art_profile_adaptive_hero_v1",
+    "enabledValue": "1",
+    "defaultEnabled": true,
+    "rollback": "0"
+  },
+  "source": {
+    "path": "art-source/platform/profile-adaptive-hero-v1/source/profile-adaptive-hero-master-v1.png",
+    "bytes": 2284943,
+    "sha256": "5BE12BD686C761C9C157FEA72090C4EAFCA1FCF262E4DE8A628C60B219C04638",
+    "width": 1536,
+    "height": 1024,
+    "alpha": false
+  },
+  "runtimeFiles": [
+    {
+      "path": "public/assets/platform/profile-adaptive-hero-v1/profile-adaptive-hero-desktop-v1.webp",
+      "bytes": 93170,
+      "sha256": "71D8ABE39BE1EDFC71B5F653A77B139C163A368D53EFFBD2952A4017644B8F84",
+      "width": 1200,
+      "height": 800,
+      "alpha": false
+    },
+    {
+      "path": "public/assets/platform/profile-adaptive-hero-v1/profile-adaptive-hero-mobile-v1.webp",
+      "bytes": 55454,
+      "sha256": "BE0357F3BDA26584DCF18DE27D071244F0438DAA314535BAC6F8056B2D3FCA62",
+      "width": 720,
+      "height": 720,
+      "alpha": false
+    },
+    {
+      "path": "public/assets/platform/profile-adaptive-hero-v1/profile-adaptive-hero-poster-v1.webp",
+      "bytes": 24588,
+      "sha256": "E76671E9951F28901EDF5467ADD45DE426C82F8A64A7E3E2831AE3562350F85B",
+      "width": 600,
+      "height": 400,
+      "alpha": false
+    },
+    {
+      "path": "public/assets/platform/profile-adaptive-hero-v1/profile-adaptive-hero-static-v1.webp",
+      "bytes": 73256,
+      "sha256": "4EB7D222200E5A7941B4D26AE389F979E48AF6939B3817E3E8A79E6CD151128C",
+      "width": 1200,
+      "height": 800,
+      "alpha": false
+    }
+  ],
+  "reviewFiles": [
+    {
+      "path": "art-source/platform/profile-adaptive-hero-v1/review/profile-adaptive-hero-contact-sheet-v1.png",
+      "bytes": 824278,
+      "sha256": "7E65BB8540C4AB62529A87E916E9241B9A35BD141AB0653CA388F7E9D8E5A058",
+      "width": 1200,
+      "height": 980
+    }
+  ],
+  "runtimeBytes": 246468,
+  "runtimeByteBudget": 1048576,
+  "externalReferenceInputs": 0,
+  "thirdPartyTransmissions": 0,
+  "authorityBoundary": "presentation-only profile hero backdrop that reacts to local service-authoritative play history; no profile mutation, entitlement, reward, ranking, protocol, realtime, analytics or Supabase write",
+  "fallback": "existing profile CSS gradient, profile identity HTML and game icon fallback",
+  "releaseState": "LOCAL_ONLY_NOT_RELEASED"
+}

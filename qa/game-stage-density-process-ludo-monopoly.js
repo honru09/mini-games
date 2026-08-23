@@ -5,11 +5,12 @@
 // and expose a clear, disposable process without touching rules or wire data.
 const fs = require('fs');
 const path = require('path');
+const { readPresentationSource } = require('./presentation-source');
 
 const root = path.resolve(__dirname, '..');
-const template = fs.readFileSync(path.join(root, 'public', 'index-template.html'), 'utf8');
-const ludo = fs.readFileSync(path.join(root, 'public', 'src', 'games', 'ludo.js'), 'utf8');
-const monopoly = fs.readFileSync(path.join(root, 'public', 'src', 'games', 'monopoly.js'), 'utf8');
+const template = readPresentationSource();
+const ludo = fs.readFileSync(path.join(root, 'public', 'src', 'games', 'ludo.js'), 'utf8').replace(/\r\n/g, '\n');
+const monopoly = fs.readFileSync(path.join(root, 'public', 'src', 'games', 'monopoly.js'), 'utf8').replace(/\r\n/g, '\n');
 const marker = '/* ================= Game Stage Wave C · Ludo / Monopoly =================';
 const start = template.indexOf(marker);
 const end = start >= 0 ? template.indexOf('</style>', start) : -1;
@@ -311,7 +312,7 @@ try {
     protocol: 'monopoly-auction-v1', matchId: 'density-process',
     auction: { auctionId: 'density-auction', propertyId: 2, status: 'open', currentBid: 300, currentBidder: -1, endAt: Date.now() + 5000, eligiblePlayers: [0, 1], revision: 1 },
   });
-  const tradeRail = auctionRuntime.area.querySelector('.monopoly-wave-c-process');
+  const tradeRail = auctionRuntime.extra.querySelector('.monopoly-wave-c-process');
   check('Monopoly auction is explicit while trade remains read-only and unavailable', auctionRuntime.area.dataset.monopolyProcess === 'auction' && tradeRail && tradeRail.dataset.monopolyTrade === 'unavailable');
   auctionRuntime.game.destroy();
 

@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "familyId": "P-HONRU-SEASONAL-V1",
+  "provider": "OpenAI Codex built-in ImageGen",
+  "model": "runtime-managed built-in image generation",
+  "sentOn": "2026-08-22",
+  "transmissionScope": "One project-owned owner-cleared Honru identity anchor only; no external blocked-license material and no repository-wide upload.",
+  "inputs": [
+    {
+      "sourcePath": "art-source/brand/ghost-game/honru/context-reactions-v1/source/honru-hand-corrected-master-v1.png",
+      "sourceSha256": "owner-cleared-anchor-sha-recorded-in-context-reactions-v1-manifest"
+    }
+  ],
+  "tasks": [
+    {"taskId":"exec-a63d8b96-ffcc-4ac4-93d2-478a860e5d93","edition":"spring-bloom","output":"source/honru-spring-bloom-master-v1.png"},
+    {"taskId":"exec-4d3e177c-407b-4e53-86b0-2b0e4ecbc1bf","edition":"summer-cloud","output":"source/honru-summer-cloud-master-v1.png"},
+    {"taskId":"exec-aa642cbc-0f30-4dad-a0a1-a8b3d9b4b533","edition":"autumn-leaf","output":"source/honru-autumn-leaf-master-v1.png"},
+    {"taskId":"exec-c3f57c41-8521-465e-90e7-1b8976800d58","edition":"winter-star","output":"source/honru-winter-star-master-v1.png"}
+  ]
+}

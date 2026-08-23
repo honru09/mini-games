@@ -1,0 +1,236 @@
+/* Product surfaces: Games, Playline, Profile and the immersive Game Stage. */
+html[data-layout-system="v1"] .games-workspace {
+  gap: var(--ghost-layout-gap);
+}
+
+html[data-layout-system="v1"] .games-workspace-tabs {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  padding: 8px;
+}
+
+html[data-layout-system="v1"] .games-workspace-grid {
+  grid-template-columns: minmax(0, 1fr) var(--ghost-layout-sidebar);
+  gap: var(--ghost-layout-gap);
+}
+
+html[data-layout-system="v1"] :is(.games-workspace-main, .games-workspace-side, .playline-main, .playline-side, .profile-route-main, .profile-route-side) {
+  min-width: 0;
+}
+
+html[data-layout-system="v1"] .games-workspace-side,
+html[data-layout-system="v1"] .playline-side {
+  position: sticky;
+  top: 94px;
+  align-self: start;
+}
+
+html[data-layout-system="v1"] .games-workspace-side > *,
+html[data-layout-system="v1"] .playline-side > *,
+html[data-layout-system="v1"] .profile-route-side > * {
+  min-width: 0;
+}
+
+html[data-layout-system="v1"] .games-workspace-panel .game-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+html[data-layout-system="v1"] .games-workspace-panel .game-card {
+  min-height: 246px;
+  padding: 12px;
+}
+
+html[data-layout-system="v1"] .games-workspace-panel .game-card .desc {
+  min-height: 3em;
+  overflow-wrap: anywhere;
+}
+
+html[data-layout-system="v1"] .games-workspace-panel .game-card .game-card-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+  margin-top: auto;
+}
+
+html[data-layout-system="v1"] .games-workspace-panel .game-card .game-card-actions .btn {
+  width: 100%;
+  min-height: var(--ghost-layout-control-height);
+}
+
+html[data-layout-system="v1"] .games-workspace-side .room-panel,
+html[data-layout-system="v1"] .games-workspace-side .lobby-panel,
+html[data-layout-system="v1"] .games-workspace-side .online-panel {
+  overflow: hidden;
+}
+
+html[data-layout-system="v1"] .games-workspace-side :is(.room-actions, .online-row, .lobby-row) {
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+html[data-layout-system="v1"] .games-workspace-side :is(input, select, textarea) {
+  max-width: 100%;
+  min-width: 0;
+}
+
+html[data-layout-system="v1"] .playline-layout {
+  grid-template-columns: minmax(0, 1fr) var(--ghost-layout-sidebar);
+  gap: var(--ghost-layout-gap);
+}
+
+html[data-layout-system="v1"] .playline-feed,
+html[data-layout-system="v1"] .playline-composer,
+html[data-layout-system="v1"] .playline-side {
+  min-width: 0;
+}
+
+html[data-layout-system="v1"] .playline-feed {
+  width: min(100%, 760px);
+  margin-inline: auto;
+}
+
+html[data-layout-system="v1"] .playline-card,
+html[data-layout-system="v1"] .playline-composer,
+html[data-layout-system="v1"] .playline-side-card {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+html[data-layout-system="v1"] .playline-card-actions {
+  align-items: stretch;
+}
+
+html[data-layout-system="v1"] .playline-card-actions .btn {
+  min-width: var(--ghost-layout-control-height);
+  min-height: var(--ghost-layout-control-height);
+}
+
+html[data-layout-system="v1"] .profile-route-priority,
+html[data-layout-system="v1"] .profile-route-content {
+  gap: var(--ghost-layout-gap);
+}
+
+html[data-layout-system="v1"] :is(.profile-route-hero, .profile-growth-card, .profile-route-section) {
+  min-width: 0;
+}
+
+html[data-layout-system="v1"] .profile-route-hero-scrim {
+  min-width: 0;
+}
+
+html[data-layout-system="v1"] :is(.profile-route-name, .profile-route-signature, .profile-route-title, .profile-route-presence) {
+  overflow-wrap: anywhere;
+}
+
+html[data-layout-system="v1"] :is(.profile-game-grid, .profile-achievement-grid) {
+  min-width: 0;
+}
+
+html[data-layout-system="v1"] #screen-game.game-stage {
+  --stage-shell-gap: 10px;
+}
+
+html[data-layout-system="v1"] #screen-game.game-stage :is(.game-stage-header, .game-stage-seats, .game-stage-command, .game-stage-main) {
+  min-width: 0;
+}
+
+html[data-layout-system="v1"] #screen-game.game-stage .game-stage-header {
+  gap: 10px;
+  padding-inline: clamp(8px, 1.8vw, 18px);
+}
+
+html[data-layout-system="v1"] #screen-game.game-stage .game-stage-title-wrap {
+  min-width: 0;
+  overflow: hidden;
+}
+
+html[data-layout-system="v1"] #screen-game.game-stage :is(.game-stage-title-wrap h2, .game-stage-mode) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+html[data-layout-system="v1"] #screen-game.game-stage .game-stage-command {
+  scrollbar-gutter: stable;
+}
+
+html[data-layout-system="v1"] :is(button, input, select, textarea, .game-card, .games-workspace-tab):focus-visible {
+  outline: 3px solid var(--focus-color, var(--accent));
+  outline-offset: var(--ghost-layout-focus-offset);
+}
+
+@media (max-width: 1100px) {
+  html[data-layout-system="v1"] :is(.games-workspace-grid, .playline-layout) {
+    grid-template-columns: minmax(0, 1fr) minmax(240px, 300px);
+  }
+}
+
+@media (max-width: 900px) {
+  html[data-layout-system="v1"] :is(.games-workspace-grid, .playline-layout) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  html[data-layout-system="v1"] :is(.games-workspace-side, .playline-side) {
+    position: static;
+  }
+
+  html[data-layout-system="v1"] .games-workspace-side {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  html[data-layout-system="v1"] .games-workspace-tabs {
+    grid-template-columns: 1fr;
+  }
+
+  html[data-layout-system="v1"] .games-workspace-panel .game-grid {
+    grid-template-columns: 1fr;
+  }
+
+  html[data-layout-system="v1"] .games-workspace-panel .game-card {
+    min-height: 0;
+  }
+
+  html[data-layout-system="v1"] .games-workspace-side {
+    grid-template-columns: 1fr;
+  }
+
+  html[data-layout-system="v1"] .playline-composer-tools {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  html[data-layout-system="v1"] :is(.playline-composer-actions, .playline-side-actions) {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  html[data-layout-system="v1"] :is(.playline-composer-actions, .playline-side-actions) .btn {
+    width: 100%;
+  }
+
+  html[data-layout-system="v1"] .profile-route-hero {
+    min-height: 370px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-layout-system="v1"] *,
+  html[data-layout-system="v1"] *::before,
+  html[data-layout-system="v1"] *::after {
+    scroll-behavior: auto !important;
+  }
+}
+
+@media (forced-colors: active) {
+  html[data-layout-system="v1"] :is(.home-glass-card, .games-workspace-tabs, .games-workspace-tab) {
+    forced-color-adjust: auto;
+    border-color: CanvasText;
+    background: Canvas;
+    color: CanvasText;
+    box-shadow: none;
+  }
+}

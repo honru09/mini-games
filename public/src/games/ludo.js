@@ -76,36 +76,8 @@ function gameLudo(area, extra, n, opts){
   let ludoWaveBMountFailed = false;
   let ludoWaveBStage = null, ludoWaveBBoardFrame = null, ludoWaveBMeta = null;
   let ludoWaveBTurn = null, ludoWaveBState = null, ludoWaveBRankings = null, ludoWaveBCommand = null;
-  // Ghost3D is a frozen developer experiment. The retained DOM/Canvas 2.5D
-  // surface is the production presentation; only the exact local value "1"
-  // opts into the renderer island. It never participates in authority.
-  const LUDO_GHOST3D_STORAGE_KEY = 'mg_ghost3d_ludo_v1';
-  const LUDO_GHOST3D_QUALITY_STORAGE_KEY = 'mg_ghost3d_ludo_quality_v1';
-  const LUDO_GHOST3D_QUALITIES = new Set(['HIGH','BALANCED','LOW']);
-  function ludoGhost3DEnabled(){
-    if (!ludoWaveBActive) return false;
-    try {
-      const storage = typeof window !== 'undefined' ? window.localStorage : null;
-      return !!storage && typeof storage.getItem === 'function' && storage.getItem(LUDO_GHOST3D_STORAGE_KEY) === '1';
-    } catch (_error) {
-      return false;
-    }
-  }
-  function ludoGhost3DInitialQuality(){
-    try {
-      const storage = typeof window !== 'undefined' ? window.localStorage : null;
-      const value = storage && typeof storage.getItem === 'function' ? storage.getItem(LUDO_GHOST3D_QUALITY_STORAGE_KEY) : null;
-      return LUDO_GHOST3D_QUALITIES.has(value) ? value : 'BALANCED';
-    } catch (_error) {
-      return 'BALANCED';
-    }
-  }
-  let ludoGhost3DActive = ludoGhost3DEnabled();
-  let ludoGhost3DSlot = null, ludoGhost3DHost = null, ludoGhost3DModule = null;
-  let ludoGhost3DGeneration = 0, ludoGhost3DPresentationRevision = 0, ludoGhost3DAcceptedRevision = null;
-  let ludoGhost3DLastFingerprint = '', ludoGhost3DImportPending = false, ludoGhost3DQueued = false, ludoGhost3DRecoverQueued = false;
-  let ludoGhost3DPendingMotions = [], ludoGhost3DListeners = [], ludoGhost3DMediaQuery = null, ludoDestroyed = false;
-  let ludoOutcomeScheduled = false, ludoOutcomeVisible = false, ludoTerminalCameraExpected = false, ludoOutcomeTimer = null;
+  let ludoDestroyed = false;
+  let ludoOutcomeScheduled = false, ludoOutcomeVisible = false, ludoOutcomeTimer = null;
   let ludoPresentationResizeWindow = null, cancelLudoPresentationResize = null;
   function ludoOutcomeOptions(){
     const placement = getMatchStats().placement;
@@ -123,7 +95,6 @@ function gameLudo(area, extra, n, opts){
   function revealLudoOutcome(){
     ludoOutcomeTimer = null;
     ludoOutcomeScheduled = false;
-    ludoTerminalCameraExpected = false;
     if (ludoDestroyed || opts.destroyed || !over || ludoOutcomeVisible) return false;
     ludoOutcomeVisible = true;
     showVictoryOverlay(area, ludoOutcomeOptions());
@@ -131,30 +102,12 @@ function gameLudo(area, extra, n, opts){
   }
   function queueLudoOutcome(){
     if (!over || ludoOutcomeVisible || ludoOutcomeScheduled) return false;
-    const quality = ludoGhost3DInitialQuality();
-    const rendererReady = ludoGhost3DActive && ((ludoGhost3DSlot && ludoGhost3DSlot.dataset &&
-      ludoGhost3DSlot.dataset.ghost3dReady === 'true') || ludoTerminalCameraExpected);
-    const delay = rendererReady && !prefersReducedMotion() && quality !== 'LOW'
-      ? (quality === 'HIGH' ? 520 : 420)
-      : 0;
-    // Default-off, fallback, LOW and reduced-motion keep the original immediate
-    // dialog.  Only an active animated renderer waits until ranking so its
-    // finite podium camera beat remains visible before the blocking surface.
-    if (delay <= 0) return revealLudoOutcome();
-    if (ludoWaveCProcess !== 'ranking') return false;
-    ludoOutcomeScheduled = true;
-    const outcomeEpoch = epoch;
-    ludoOutcomeTimer = setTimeout(() => {
-      ludoOutcomeTimer = null;
-      if (outcomeEpoch === epoch) revealLudoOutcome();
-    }, delay);
-    return true;
+    return revealLudoOutcome();
   }
   function clearLudoOutcomeTimer(){
     if (ludoOutcomeTimer !== null) clearTimeout(ludoOutcomeTimer);
     ludoOutcomeTimer = null;
     ludoOutcomeScheduled = false;
-    ludoTerminalCameraExpected = false;
   }
   function ludoWaveBClass(node, className, enabled){
     if (!node || !node.classList) return;
@@ -203,14 +156,11 @@ function gameLudo(area, extra, n, opts){
     ludoWaveCProcessDetail = processDetail;
     paintLudoWaveCProcess();
     if (publishBridge === false) return;
-    // Foundation terminal state is one-way.  Ludo becomes terminal only when
-    // its local process has settled into ranking, never merely because over is set.
-    if (changed && process === 'ranking' && ludoGhost3DHost) {
-      ludoTerminalCameraExpected = !!(over && ludoGhost3DActive && ludoGhost3DSlot && ludoGhost3DSlot.dataset &&
-        ludoGhost3DSlot.dataset.ghost3dReady === 'true' && !prefersReducedMotion() && ludoGhost3DInitialQuality() !== 'LOW');
-      restartLudoGhost3DHost('terminal');
+    if (changed && process === 'ranking' && typeof emitGameStage25DEvent === 'function') {
+      const viewerIndex = opts.online && Number.isInteger(Number(opts.myIdx)) && pids[Number(opts.myIdx)] !== undefined ? Number(opts.myIdx) : 0;
+      const outcome = spectator || !pids.includes(winner) ? 'draw' : (pids[viewerIndex] === winner ? 'win' : 'loss');
+      emitGameStage25DEvent({type:'phase',game:'ludo',phase:process,detail:processDetail,reducedMotion:prefersReducedMotion(),outcome});
     }
-    else queueLudoGhost3DFrame();
     if (process === 'ranking' && over) queueLudoOutcome();
   }
   function settleLudoWaveCProcess(next, detail){
@@ -274,13 +224,12 @@ function gameLudo(area, extra, n, opts){
     ludoWaveBMeta.appendChild(ludoWaveCProcessRail);
     ludoWaveBMeta.appendChild(ludoWaveBRankings);
     ludoWaveBBoardFrame.appendChild(board);
-    mountLudoGhost3DSlot();
     ludoWaveBStage.appendChild(ludoWaveBBoardFrame);
-    ludoWaveBStage.appendChild(ludoWaveBMeta);
     area.appendChild(ludoWaveBStage);
     ludoWaveBCommand = el('div', 'ludo-wave-b-command');
     ludoWaveBCommand.appendChild(turnHud);
     ludoWaveBCommand.appendChild(diceBtn);
+    ludoWaveBCommand.appendChild(ludoWaveBMeta);
     extra.appendChild(ludoWaveBCommand);
     ludoWaveBClass(area, 'ludo-wave-b-arena', true);
     ludoWaveBClass(board, 'ludo-wave-b-board', true);
@@ -295,7 +244,6 @@ function gameLudo(area, extra, n, opts){
     ludoWaveBData(turnHud, 'ludo-region', 'turn');
     ludoWaveBData(diceBtn, 'ludo-control', 'dice');
     paintLudoWaveCProcess();
-    syncLudoGhost3DBridge();
     } catch (_error) {
       try { releaseLudoWaveBPresentation(); } catch (_cleanupError) {}
       ludoWaveBMountFailed = true;
@@ -303,8 +251,6 @@ function gameLudo(area, extra, n, opts){
     }
   }
   function releaseLudoWaveBPresentation(){
-    disposeLudoGhost3DBridge();
-    ludoGhost3DActive = false;
     if (ludoWaveBStage){
       if (board.parentNode === ludoWaveBBoardFrame) area.appendChild(board);
       if (turnHud.parentNode === ludoWaveBCommand) extra.appendChild(turnHud);
@@ -345,373 +291,6 @@ function gameLudo(area, extra, n, opts){
     }
     ludoWaveBActive = true;
     if (!ludoWaveBStage) mountLudoWaveBPresentation();
-    if (ludoWaveBActive && ludoWaveBStage) syncLudoGhost3DBridge();
-  }
-  function mountLudoGhost3DSlot(){
-    if (!ludoGhost3DActive || !ludoWaveBBoardFrame || ludoGhost3DSlot) return null;
-    const slot = el('div', 'ludo-ghost3d-slot');
-    slot.setAttribute('aria-hidden', 'true');
-    slot.dataset.ghost3dReady = 'false';
-    slot.dataset.ghost3dGeneration = String(ludoGhost3DGeneration);
-    ludoGhost3DSlot = slot;
-    ludoWaveBBoardFrame.appendChild(slot);
-    return slot;
-  }
-  function ludoGhost3DCurrent(generation){
-    return !ludoDestroyed && !opts.destroyed && !!ludoGhost3DSlot && generation === ludoGhost3DGeneration;
-  }
-  function ludoGhost3DSetReady(ready, generation){
-    if (!ludoGhost3DCurrent(generation)) return false;
-    const value = ready === true ? 'true' : 'false';
-    ludoGhost3DSlot.dataset.ghost3dReady = value;
-    if (ludoWaveBBoardFrame && ludoWaveBBoardFrame.dataset) ludoWaveBBoardFrame.dataset.ghost3dReady = value;
-    return ready === true;
-  }
-  function ludoGhost3DReducedMotion(){
-    try {
-      if (typeof prefersReducedMotion === 'function') return !!prefersReducedMotion();
-    } catch (_error) {}
-    return !!(ludoGhost3DMediaQuery && ludoGhost3DMediaQuery.matches);
-  }
-  function ludoGhost3DFactory(){
-    const root = typeof globalThis !== 'undefined' ? globalThis : (typeof window !== 'undefined' ? window : null);
-    const factory = root && root.Ghost3DFoundation;
-    return factory && typeof factory.create === 'function' ? factory : null;
-  }
-  function ludoGhost3DListen(target, type, handler, options){
-    if (!target || typeof target.addEventListener !== 'function') return;
-    target.addEventListener(type, handler, options);
-    ludoGhost3DListeners.push({ target, type, handler, options, legacy:false });
-  }
-  function ludoGhost3DListenLegacy(target, type, handler){
-    if (!target || typeof target.addListener !== 'function') return;
-    target.addListener(handler);
-    ludoGhost3DListeners.push({ target, type, handler, legacy:true });
-  }
-  function releaseLudoGhost3DListeners(){
-    ludoGhost3DListeners.forEach(listener => {
-      if (!listener || !listener.target) return;
-      if (listener.legacy && typeof listener.target.removeListener === 'function') listener.target.removeListener(listener.handler);
-      else if (!listener.legacy && typeof listener.target.removeEventListener === 'function') listener.target.removeEventListener(listener.type, listener.handler, listener.options);
-    });
-    ludoGhost3DListeners = [];
-    ludoGhost3DMediaQuery = null;
-  }
-  function applyLudoGhost3DLifecycle(action, reason){
-    const host = ludoGhost3DHost;
-    if (!host || typeof host.apply !== 'function') return false;
-    try { return !!host.apply({ type:'lifecycle', action, reason }); }
-    catch (_error) { return false; }
-  }
-  function installLudoGhost3DListeners(){
-    if (!ludoGhost3DActive || ludoGhost3DListeners.length) return;
-    const doc = typeof document !== 'undefined' ? document : null;
-    const root = typeof window !== 'undefined' ? window : null;
-    ludoGhost3DListen(doc, 'visibilitychange', () => {
-      const hidden = !!(doc && doc.hidden);
-      applyLudoGhost3DLifecycle(hidden ? 'hidden' : 'visible', 'document');
-    });
-    ludoGhost3DListen(root, 'ghostgame:shellchange', event => {
-      const detail = event && event.detail ? event.detail : null;
-      const active = !!(detail && detail.active === true && detail.gameId === 'ludo');
-      applyLudoGhost3DLifecycle(active ? 'resume' : 'suspend', 'shell');
-    });
-    try {
-      ludoGhost3DMediaQuery = root && typeof root.matchMedia === 'function'
-        ? root.matchMedia('(prefers-reduced-motion: reduce)') : null;
-    } catch (_error) {
-      ludoGhost3DMediaQuery = null;
-    }
-    if (ludoGhost3DMediaQuery){
-      const onChange = event => {
-        const host = ludoGhost3DHost;
-        if (!host || typeof host.apply !== 'function') return;
-        const reducedMotion = !!(event && typeof event.matches === 'boolean' ? event.matches : ludoGhost3DMediaQuery.matches);
-        try { host.apply({ type:'environment', reducedMotion }); } catch (_error) {}
-      };
-      if (typeof ludoGhost3DMediaQuery.addEventListener === 'function') ludoGhost3DListen(ludoGhost3DMediaQuery, 'change', onChange);
-      else ludoGhost3DListenLegacy(ludoGhost3DMediaQuery, 'change', onChange);
-    }
-    if (doc && doc.hidden) applyLudoGhost3DLifecycle('hidden', 'document');
-  }
-  function ludoGhost3DFreeze(value){
-    if (Array.isArray(value)) return Object.freeze(value.map(ludoGhost3DFreeze));
-    if (value && typeof value === 'object'){
-      const copy = {};
-      Object.keys(value).forEach(key => { copy[key] = ludoGhost3DFreeze(value[key]); });
-      return Object.freeze(copy);
-    }
-    return value;
-  }
-  function ludoGhost3DCanRoll(){
-    if (spectator || over || phase !== 'roll') return false;
-    try { if (opts.isReplaying && opts.isReplaying()) return false; } catch (_error) { return false; }
-    if (opts.online && curIdx !== opts.myIdx) return false;
-    return !(opts.ai && opts.ai.has(curIdx));
-  }
-  function ludoGhost3DCanSelectToken(tokenIndex){
-    if (spectator || over || phase !== 'pick' || !Number.isSafeInteger(tokenIndex) || tokenIndex < 0 || tokenIndex >= 4) return false;
-    try { if (opts.isReplaying && opts.isReplaying()) return false; } catch (_error) { return false; }
-    if (opts.online && curIdx !== opts.myIdx) return false;
-    if (opts.ai && opts.ai.has(curIdx)) return false;
-    return movable().includes(tokenIndex);
-  }
-  function ludoGhost3DFrame(){
-    const canRoll = ludoGhost3DCanRoll();
-    const selectableTokens = movable().filter(tokenIndex => ludoGhost3DCanSelectToken(tokenIndex));
-    const canSelect = selectableTokens.length > 0;
-    const stats = getMatchStats();
-    const status = ludoWaveBStatus() === 'finished' ? 'ended' : ludoWaveBStatus();
-    return {
-      kind:'ludo-3d-frame-v1',
-      board:{
-        trackLength:TRACK,
-        home:HOME,
-        starts:START.slice(),
-        players:pids.map((pid, seat) => ({ seat, pid, colour:pid })),
-        pieces:pids.flatMap((pid, seat) => tokens[seat].map((position, tokenIndex) => ({ seat, pid, tokenIndex, position }))),
-      },
-      turn:{
-        activeSeat:curIdx,
-        activePlayer:curIdx,
-        activePid:curPid(),
-        phase,
-        dice,
-        canRoll,
-        canSelect,
-        selectableTokens,
-        movableTokenIndexes:selectableTokens.slice(),
-      },
-      dice:{ value:dice },
-      view:{ quarterTurns:geometry().viewQuarterTurns },
-      process:{ stage:ludoWaveCProcess, detail:ludoWaveCProcessDetail },
-      standings:pids.map((pid, seat) => ({ seat, pid, rank:stats.placement[seat], piecesFinished:stats.piecesFinished[seat] })),
-      status,
-      ended:!!over,
-      winnerPid:winner,
-      winnerSeat:pids.indexOf(winner),
-      terminal:ludoWaveCProcess === 'ranking',
-    };
-  }
-  function queueLudoGhost3DMotion(event){
-    if (!ludoGhost3DActive || !ludoGhost3DHost || !event || typeof event !== 'object') return false;
-    ludoGhost3DPendingMotions.push({ generation:ludoGhost3DGeneration, event });
-    return true;
-  }
-  function publishLudoGhost3DFrame(generation){
-    if (!ludoGhost3DCurrent(generation) || !ludoGhost3DHost || typeof ludoGhost3DHost.apply !== 'function') return false;
-    const next = ludoGhost3DFrame();
-    const fingerprint = JSON.stringify(next);
-    const pending = ludoGhost3DPendingMotions.filter(entry => entry.generation === generation);
-    if (fingerprint === ludoGhost3DLastFingerprint && !pending.length) return false;
-    const revision = ++ludoGhost3DPresentationRevision;
-    const frame = ludoGhost3DFreeze({ ...next, revision });
-    let result;
-    try { result = ludoGhost3DHost.apply({ type:'frame', frame }); }
-    catch (_error) { return false; }
-    if (!result || result.accepted !== true) return false;
-    ludoGhost3DLastFingerprint = fingerprint;
-    ludoGhost3DAcceptedRevision = revision;
-    const retained = ludoGhost3DPendingMotions.filter(entry => entry.generation !== generation);
-    pending.forEach(entry => {
-      let motionResult = null;
-      try { motionResult = ludoGhost3DHost.apply({ type:'motion', event:{ ...entry.event, revision } }); } catch (_error) {}
-      if (!motionResult || motionResult.accepted !== true) retained.push(entry);
-    });
-    if (frame.terminal === true && frame.process && frame.process.stage === 'ranking') {
-      try {
-        ludoGhost3DHost.apply({ type:'motion', event:{
-          type:'terminal', winnerSeat:frame.winnerSeat, standings:frame.standings, revision,
-        } });
-      } catch (_error) {}
-    }
-    ludoGhost3DPendingMotions = retained;
-    return true;
-  }
-  function queueLudoGhost3DFrame(){
-    if (!ludoGhost3DActive || !ludoGhost3DHost || ludoGhost3DQueued || ludoDestroyed || opts.destroyed) return;
-    const generation = ludoGhost3DGeneration;
-    ludoGhost3DQueued = true;
-    Promise.resolve().then(() => {
-      ludoGhost3DQueued = false;
-      publishLudoGhost3DFrame(generation);
-    });
-  }
-  function ludoGhost3DHandleInput(command, _snapshot, generation){
-    if (!ludoGhost3DCurrent(generation) || !command || typeof command !== 'object' ||
-      !Number.isSafeInteger(command.revision) || command.revision !== ludoGhost3DAcceptedRevision) return false;
-    if (command.type !== 'select_token') return false;
-    const tokenIndex = command.tokenIndex;
-    if (!ludoGhost3DCanSelectToken(tokenIndex)) return false;
-    pick(curPid(), tokenIndex);
-    return true;
-  }
-  function ludoGhost3DForwardInput(input, generation){
-    if (!ludoGhost3DCurrent(generation) || !ludoGhost3DHost || typeof ludoGhost3DHost.apply !== 'function') return false;
-    const message = input && input.type === 'input' ? input : { type:'input', command:input };
-    try { return ludoGhost3DHost.apply(message); }
-    catch (_error) { return false; }
-  }
-  function ludoGhost3DContextLost(reason, generation){
-    if (!ludoGhost3DCurrent(generation) || !ludoGhost3DHost || typeof ludoGhost3DHost.apply !== 'function') return false;
-    ludoGhost3DSetReady(false, generation);
-    const safeReason = typeof reason === 'string' ? reason.slice(0, 96) : 'renderer';
-    let result = null;
-    try { result = ludoGhost3DHost.apply({ type:'context-lost', reason:safeReason }); } catch (_error) {}
-    queueLudoGhost3DRecovery();
-    return result;
-  }
-  function ludoGhost3DSupported(module){
-    if (!module || typeof module.isLudo3DSupported !== 'function') return false;
-    try { return module.isLudo3DSupported() === true; }
-    catch (_error) { return false; }
-  }
-  function ludoGhost3DCreateAdapter(module, generation){
-    const create = module && (typeof module.createLudo3DAdapter === 'function'
-      ? module.createLudo3DAdapter : (typeof module.createAdapter === 'function' ? module.createAdapter : null));
-    if (!create || !ludoGhost3DCurrent(generation)) return null;
-    try {
-      return create({
-        mountElement:ludoGhost3DSlot,
-        onInput:input => ludoGhost3DForwardInput(input, generation),
-        emitInput:input => ludoGhost3DForwardInput(input, generation),
-        onContextLost:reason => ludoGhost3DContextLost(reason, generation),
-        onError:() => ludoGhost3DSetReady(false, generation),
-        onReady:() => ludoGhost3DSetReady(true, generation),
-        quality:ludoGhost3DInitialQuality(),
-        reducedMotion:ludoGhost3DReducedMotion(),
-      });
-    } catch (_error) {
-      return null;
-    }
-  }
-  function queueLudoGhost3DRecovery(){
-    if (!ludoGhost3DActive || ludoGhost3DRecoverQueued || !ludoGhost3DModule || !ludoGhost3DHost) return;
-    const generation = ludoGhost3DGeneration;
-    ludoGhost3DRecoverQueued = true;
-    Promise.resolve().then(() => {
-      ludoGhost3DRecoverQueued = false;
-      if (!ludoGhost3DCurrent(generation) || !ludoGhost3DHost || !ludoGhost3DSupported(ludoGhost3DModule)) return;
-      const adapter = ludoGhost3DCreateAdapter(ludoGhost3DModule, generation);
-      if (!adapter) return;
-      let result = null;
-      try { result = ludoGhost3DHost.apply({ type:'recover', adapter }); } catch (_error) {}
-      if (!result || result.accepted !== true){
-        try { if (typeof adapter.dispose === 'function') adapter.dispose(); } catch (_error) {}
-        ludoGhost3DSetReady(false, generation);
-      } else {
-        // A motion rejected while the fallback owned the surface gets a fresh
-        // accepted frame after recovery instead of being silently discarded.
-        queueLudoGhost3DFrame();
-      }
-    });
-  }
-  function loadLudoGhost3DModule(){
-    if (!ludoGhost3DActive || !ludoGhost3DHost || !ludoGhost3DSlot || ludoDestroyed || opts.destroyed) return;
-    if (ludoGhost3DModule){ queueLudoGhost3DRecovery(); return; }
-    if (ludoGhost3DImportPending) return;
-    const generation = ludoGhost3DGeneration;
-    ludoGhost3DImportPending = true;
-    const root = typeof globalThis !== 'undefined' ? globalThis : (typeof window !== 'undefined' ? window : null);
-    const GameModuleLoader = root && root.GameModuleLoader;
-    if (!GameModuleLoader || typeof GameModuleLoader.load !== 'function') {
-      ludoGhost3DImportPending = false;
-      if (ludoGhost3DCurrent(generation)) ludoGhost3DSetReady(false, generation);
-      return;
-    }
-    try { if (typeof GameModuleLoader.prefetch === 'function') GameModuleLoader.prefetch('ludo'); } catch (_error) {}
-    Promise.resolve(GameModuleLoader.load('ludo', { resource:'renderer' })).then(result => {
-      ludoGhost3DImportPending = false;
-      if (ludoDestroyed || opts.destroyed || !ludoGhost3DSlot) return;
-      const module = result && result.ok === true ? result.module : null;
-      if (!module) {
-        if (ludoGhost3DCurrent(generation)) ludoGhost3DSetReady(false, generation);
-        return;
-      }
-      ludoGhost3DModule = module;
-      if (!ludoGhost3DCurrent(generation)){
-        if (ludoGhost3DHost) loadLudoGhost3DModule();
-        return;
-      }
-      if (ludoGhost3DSupported(module)) queueLudoGhost3DRecovery();
-      else ludoGhost3DSetReady(false, generation);
-    }).catch(() => {
-      ludoGhost3DImportPending = false;
-      if (ludoGhost3DCurrent(generation)) ludoGhost3DSetReady(false, generation);
-    });
-  }
-  function restartLudoGhost3DHost(reason){
-    if (!ludoGhost3DActive || ludoDestroyed || opts.destroyed || !ludoGhost3DSlot) return false;
-    const factory = ludoGhost3DFactory();
-    if (!factory) return false;
-    const previous = ludoGhost3DHost;
-    const generation = ++ludoGhost3DGeneration;
-    const retainedMotions = reason === 'terminal'
-      ? ludoGhost3DPendingMotions.map(entry => ({ ...entry, generation })) : [];
-    ludoGhost3DQueued = false;
-    ludoGhost3DRecoverQueued = false;
-    ludoGhost3DLastFingerprint = '';
-    ludoGhost3DAcceptedRevision = null;
-    ludoGhost3DPendingMotions = retainedMotions;
-    ludoGhost3DSetReady(false, generation);
-    if (previous && typeof previous.dispose === 'function'){
-      try { previous.dispose(); } catch (_error) {}
-    }
-    try {
-      ludoGhost3DHost = factory.create({
-        quality:ludoGhost3DInitialQuality(),
-        reducedMotion:ludoGhost3DReducedMotion(),
-        onInput:(command, snapshot) => ludoGhost3DHandleInput(command, snapshot, generation),
-        onFailure:() => ludoGhost3DSetReady(false, generation),
-      });
-    } catch (_error) {
-      ludoGhost3DHost = null;
-      return false;
-    }
-    if (!ludoGhost3DHost || typeof ludoGhost3DHost.apply !== 'function'){
-      ludoGhost3DHost = null;
-      return false;
-    }
-    if (ludoGhost3DSlot.dataset) ludoGhost3DSlot.dataset.ghost3dGeneration = String(generation);
-    installLudoGhost3DListeners();
-    queueLudoGhost3DFrame();
-    loadLudoGhost3DModule();
-    return true;
-  }
-  function disposeLudoGhost3DBridge(){
-    ludoGhost3DGeneration++;
-    ludoGhost3DQueued = false;
-    ludoGhost3DRecoverQueued = false;
-    ludoGhost3DPendingMotions = [];
-    ludoGhost3DLastFingerprint = '';
-    ludoGhost3DAcceptedRevision = null;
-    const host = ludoGhost3DHost;
-    ludoGhost3DHost = null;
-    if (host && typeof host.dispose === 'function'){
-      try { host.dispose(); } catch (_error) {}
-    }
-    releaseLudoGhost3DListeners();
-    if (ludoGhost3DSlot){
-      ludoGhost3DSlot.dataset.ghost3dReady = 'false';
-      if (typeof ludoGhost3DSlot.remove === 'function') ludoGhost3DSlot.remove();
-      else if (ludoGhost3DSlot.parentNode && typeof ludoGhost3DSlot.parentNode.removeChild === 'function') ludoGhost3DSlot.parentNode.removeChild(ludoGhost3DSlot);
-    }
-    if (ludoWaveBBoardFrame && ludoWaveBBoardFrame.dataset) delete ludoWaveBBoardFrame.dataset.ghost3dReady;
-    ludoGhost3DSlot = null;
-  }
-  function syncLudoGhost3DBridge(){
-    const enabled = ludoGhost3DEnabled();
-    if (!enabled){
-      const active = ludoGhost3DActive || !!ludoGhost3DHost || !!ludoGhost3DSlot || ludoGhost3DListeners.length > 0;
-      ludoGhost3DActive = false;
-      if (active) disposeLudoGhost3DBridge();
-      return false;
-    }
-    ludoGhost3DActive = true;
-    const slot = mountLudoGhost3DSlot() || ludoGhost3DSlot;
-    if (!slot) return false;
-    if (!ludoGhost3DHost) restartLudoGhost3DHost('mount');
-    return !!ludoGhost3DHost;
   }
   function ludoWaveBStatus(){
     if (over) return 'finished';
@@ -1123,8 +702,9 @@ function gameLudo(area, extra, n, opts){
   }
   function renderBoard(){
     syncLudoWaveBPresentation();
-    const w = ludoWaveBBoardContentWidth() || area.clientWidth || 520;
-    const h = Number(area.clientHeight) || 0;
+    const arenaSize = typeof measureGameStageArena === 'function' ? measureGameStageArena(area,520,0) : {width:Number(area.clientWidth)||520,height:Number(area.clientHeight)||0};
+    const w = ludoWaveBBoardContentWidth() || arenaSize.width || 520;
+    const h = arenaSize.height;
     const heightLimit = h > 320 ? Math.max(260, Math.min(680, h - 16)) : 640;
     S = Math.min(w, heightLimit);
     if (board.style && typeof board.style.setProperty === 'function') board.style.setProperty('--ludo-wave-c-board-size', S + 'px');
@@ -1291,7 +871,6 @@ function gameLudo(area, extra, n, opts){
     renderPlayers(curIdx, infos, null, pids.map(pid => PLAYER_COLORS[pid]));
     updateLudoWaveBPresentation();
     decorateLudoFinalPodium();
-    queueLudoGhost3DFrame();
   }
   function roll(){
     if (spectator || over || phase !== 'roll') return;
@@ -1373,25 +952,7 @@ function gameLudo(area, extra, n, opts){
     }
     const matchFinished = arr.every(v => v === HOME);
     const extraTurn = !matchFinished && dice === 6;
-    const nextActiveSeat = matchFinished || extraTurn ? pi : (pi + 1) % pids.length;
-    queueLudoGhost3DMotion({
-      type:'piece_moved',
-      actor:{ seat:pi, pid },
-      seat:pi,
-      pid,
-      tokenIndex:ti,
-      from,
-      path:path.slice(),
-      destination,
-      takeoff:wasBase,
-      capturedTokens:capturedTokens.map(token => ({ seat:token.pi, pid:token.pid, tokenIndex:token.ti, from:token.position })),
-      captures:capturedTokens.length,
-      reachedHome:destination === HOME,
-      matchFinished,
-      extraTurn,
-      nextActiveSeat,
-      nextActivePid:pids[nextActiveSeat],
-    });
+    if (typeof emitGameStage25DEvent === 'function') emitGameStage25DEvent({type:'phase',game:'ludo',phase:capturedTokens.length?'capture':(wasBase?'takeoff':(destination===HOME?'finish':'move')),detail:destination,reducedMotion:prefersReducedMotion()});
     const moveAudioSequence = ++audioMoveSequence;
     audioCue(capturedTokens.length ? 'ludo_capture' : (destination === HOME ? 'ludo_home' : 'ludo_move'), {
       actionId: 'ludo-move-' + epoch + '-' + moveAudioSequence + '-' + pi + '-' + ti + '-' + destination,
@@ -1563,14 +1124,13 @@ function gameLudo(area, extra, n, opts){
     clearLudoFinalArtVfx();
     tokens = pids.map(() => Array(4).fill(-1));
     curIdx = 0; phase = 'roll'; dice = 0; over = false; winner = -1; aiPending = false; audioMoveSequence = 0;
-    startedAt = Date.now(); finishedAt = 0; captures = 0; takeoffs = 0; movingToken = null; ludoGhost3DPendingMotions = [];
-    ludoOutcomeScheduled = false; ludoOutcomeVisible = false; ludoTerminalCameraExpected = false;
+    startedAt = Date.now(); finishedAt = 0; captures = 0; takeoffs = 0; movingToken = null;
+    ludoOutcomeScheduled = false; ludoOutcomeVisible = false;
     area.style.touchAction = spectator ? 'auto' : 'none';
     remoteInputs = [];
     diceBtn.disabled = false;
     dice3d.reset();
     setLudoWaveCProcess('roll', '', false);
-    if (ludoGhost3DHost) restartLudoGhost3DHost('reset');
     renderBoard();
     setStatus(t('ludo_initial_turn'));
     notifyLudoIdle();
@@ -1593,13 +1153,12 @@ function gameLudo(area, extra, n, opts){
   function onRestore(value){
     const state = value && value.state ? value.state : value;
     if (!state || !Array.isArray(state.tokens) || state.tokens.length !== pids.length) return false;
-    epoch++; audioMoveSequence = 0; clearLudoWaveCProcessTimers(); clearLudoOutcomeTimer(); clearLudoFinalArtVfx(); movingToken = null; ludoGhost3DPendingMotions = [];
-    ludoOutcomeScheduled = false; ludoOutcomeVisible = false; ludoTerminalCameraExpected = false;
+    epoch++; audioMoveSequence = 0; clearLudoWaveCProcessTimers(); clearLudoOutcomeTimer(); clearLudoFinalArtVfx(); movingToken = null;
+    ludoOutcomeScheduled = false; ludoOutcomeVisible = false;
     tokens = state.tokens.map(list => Array.isArray(list) ? list.slice(0, 4).map(v => Math.max(-1, Math.min(HOME, Number(v) || 0))) : Array(4).fill(-1));
     curIdx = Math.max(0, Math.min(pids.length - 1, Number(state.curIdx) || 0)); phase = ['roll','rolling','pick'].includes(state.phase) ? state.phase : 'roll';
     dice = Math.max(0, Math.min(6, Number(state.dice) || 0)); over = !!state.over; winner = Number.isInteger(state.winner) ? state.winner : -1;
     setLudoWaveCProcess(over ? 'ranking' : (phase === 'rolling' ? 'dice' : (phase === 'pick' ? 'pick' : 'roll')), '', false);
-    if (ludoGhost3DHost) restartLudoGhost3DHost('restore');
     if (value && value.presentation){ boardTheme = value.presentation.boardTheme === 'grass' ? 'grass' : 'classic'; cosmetic = normalizeCosmetic(value.presentation.cosmetic); }
     renderBoard(); notifyLudoIdle(); return true;
   }
@@ -1609,7 +1168,7 @@ function gameLudo(area, extra, n, opts){
   setStatus(t('ludo_initial_turn'));
   return {
     reset, onMove: opts.onMove, onRestart: resetLocal,
-    destroy: () => { epoch++; clearLudoWaveCProcessTimers(); ludoFinalArtRequest++; clearLudoOutcomeTimer(); clearLudoFinalArtVfx(); ludoFinalPieceUrlCache.clear(); ludoFinalPieceRequests.clear(); ludoDestroyed = true; opts.destroyed = true; releaseLudoPresentationResize(); aiPending = false; remoteInputs = []; ludoGhost3DPendingMotions = []; dice3d.reset(); releaseLudoWaveBPresentation(); area.style.touchAction = previousTouchAction; area.style.overscrollBehavior = previousOverscroll; notifyLudoIdle(true); },
+    destroy: () => { epoch++; clearLudoWaveCProcessTimers(); ludoFinalArtRequest++; clearLudoOutcomeTimer(); clearLudoFinalArtVfx(); ludoFinalPieceUrlCache.clear(); ludoFinalPieceRequests.clear(); ludoDestroyed = true; opts.destroyed = true; releaseLudoPresentationResize(); aiPending = false; remoteInputs = []; dice3d.reset(); releaseLudoWaveBPresentation(); area.style.touchAction = previousTouchAction; area.style.overscrollBehavior = previousOverscroll; notifyLudoIdle(true); },
     whenIdle: whenLudoIdle,
     snapshot, onRestore,
     serialize: () => ({ state: snapshot(), presentation: { boardTheme, cosmetic: { ...cosmetic, players:{...cosmetic.players} } }, stats: getMatchStats() }),

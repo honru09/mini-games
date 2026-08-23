@@ -1,0 +1,302 @@
+{
+  "familyId": "P-HONRU-EDGE-CURSOR-V1",
+  "sourceId": "ART-HONRU-EDGE-CURSOR-V1",
+  "flag": "mg_art_honru_edge_cursor_v1",
+  "generatedAt": "2026-08-21T08:50:54.767Z",
+  "sourceMastersCount": 15,
+  "runtimeVariantsCount": 18,
+  "totalRuntimeBytes": 111367,
+  "byteBudget": 1048576,
+  "sourceMasters": [
+    {
+      "role": "cursor-idle-32",
+      "path": "art-source/platform/honru-edge-cursor/visual-v1/runtime-source/cursor-idle-32.svg",
+      "sha256": "ABAD7F8F957E467FDAFD916EF1F35C6782C4D171A6D85C40E4A33B5D85C3283D",
+      "bytes": 620,
+      "alpha": true
+    },
+    {
+      "role": "cursor-idle-64",
+      "path": "art-source/platform/honru-edge-cursor/visual-v1/runtime-source/cursor-idle-64.svg",
+      "sha256": "31FC90176CF11313E42C37F8DD8DD912AC46D96738D9BA4E5A1B55126FD9896C",
+      "bytes": 620,
+      "alpha": true
+    },
+    {
+      "role": "cursor-pressed-32",
+      "path": "art-source/platform/honru-edge-cursor/visual-v1/runtime-source/cursor-pressed-32.svg",
+      "sha256": "EA97BE0CC880DBFFD4EDFE2C3303E3A61FFA737A3686D7716604F2190143C0FD",
+      "bytes": 401,
+      "alpha": true
+    },
+    {
+      "role": "cursor-pressed-64",
+      "path": "art-source/platform/honru-edge-cursor/visual-v1/runtime-source/cursor-pressed-64.svg",
+      "sha256": "BDAAEBC71CF2D592B35D9663F8A1D0D23B5347EDBED36E8FAA6A2A69DE2A047C",
+      "bytes": 401,
+      "alpha": true
+    },
+    {
+      "role": "cursor-scroll-down-32",
+      "path": "art-source/platform/honru-edge-cursor/visual-v1/runtime-source/cursor-scroll-down-32.svg",
+      "sha256": "7222B4667F6573F4D6688EE06DECE7C6E881A7C883FFDC6AC441A38CE64B6517",
+      "bytes": 739,
+      "alpha": true
+    },
+    {
+      "role": "cursor-scroll-down-64",
+      "path": "art-source/platform/honru-edge-cursor/visual-v1/runtime-source/cursor-scroll-down-64.svg",
+      "sha256": "590D7BF80B46CB8978748739863170353CBD270E01AD40DC58893020BE642F0D",
+      "bytes": 739,
+      "alpha": true
+    },
+    {
+      "role": "cursor-scroll-left-32",
+      "path": "art-source/platform/honru-edge-cursor/visual-v1/runtime-source/cursor-scroll-left-32.svg",
+      "sha256": "816E7D62587AD90CA8BFB82F71241F1BB3A9744EE25413429D35E7A4F8A9335A",
+      "bytes": 739,
+      "alpha": true
+    },
+    {
+      "role": "cursor-scroll-left-64",
+      "path": "art-source/platform/honru-edge-cursor/visual-v1/runtime-source/cursor-scroll-left-64.svg",
+      "sha256": "B673F8B4F5B2728918DAF2363022B4E63A80030C7235A5D99137F943FC29FC91",
+      "bytes": 739,
+      "alpha": true
+    },
+    {
+      "role": "cursor-scroll-right-32",
+      "path": "art-source/platform/honru-edge-cursor/visual-v1/runtime-source/cursor-scroll-right-32.svg",
+      "sha256": "99F835BC09FD16D916347D6A627F898DE33CBF95C88E800B13B089003E0275ED",
+      "bytes": 739,
+      "alpha": true
+    },
+    {
+      "role": "cursor-scroll-right-64",
+      "path": "art-source/platform/honru-edge-cursor/visual-v1/runtime-source/cursor-scroll-right-64.svg",
+      "sha256": "B2A654C38121CDBC7D585258A8E8F855C07AC859CB4D0448973FBEDFB879E7A9",
+      "bytes": 739,
+      "alpha": true
+    },
+    {
+      "role": "cursor-scroll-up-32",
+      "path": "art-source/platform/honru-edge-cursor/visual-v1/runtime-source/cursor-scroll-up-32.svg",
+      "sha256": "04BE9C51FC604CF1070B01FDD9D5F7CEC39166287FCEF27FAA3F992A8809E085",
+      "bytes": 739,
+      "alpha": true
+    },
+    {
+      "role": "cursor-scroll-up-64",
+      "path": "art-source/platform/honru-edge-cursor/visual-v1/runtime-source/cursor-scroll-up-64.svg",
+      "sha256": "D0242714C4A00EEB34BE32649E912317E41374D245D43F7587290940B42AEEDB",
+      "bytes": 739,
+      "alpha": true
+    },
+    {
+      "role": "edge-games-peek",
+      "path": "art-source/platform/honru-edge-cursor/visual-v1/runtime-source/edge-games-peek.svg",
+      "sha256": "9C421558DFB3658CC39ABFDC3571F9014801B6246DCF94E4AA21C3BE08CEE9A6",
+      "bytes": 2477,
+      "alpha": true
+    },
+    {
+      "role": "edge-playline-wave",
+      "path": "art-source/platform/honru-edge-cursor/visual-v1/runtime-source/edge-playline-wave.svg",
+      "sha256": "5C4ED2C1891ECE7510A7D306E7F25DD65861D98C6CADC6C0F0F15709504488DF",
+      "bytes": 2475,
+      "alpha": true
+    },
+    {
+      "role": "edge-profile-grab",
+      "path": "art-source/platform/honru-edge-cursor/visual-v1/runtime-source/edge-profile-grab.svg",
+      "sha256": "E05C31D46D2EFB8AF022B7985CC92F17C716DEFB529948F39E4055027D338034",
+      "bytes": 2477,
+      "alpha": true
+    }
+  ],
+  "runtimeVariants": [
+    {
+      "role": "edge-games-peek",
+      "variant": "normal",
+      "path": "public/assets/platform/honru-edge-cursor/visual-v1/edge-games-peek.webp",
+      "sha256": "76CFF4387AC43814EF16CCC244AD39E3F28E94FA6C9D2C4966D584FD59BC9E66",
+      "bytes": 17836,
+      "width": 640,
+      "height": 480,
+      "alpha": true
+    },
+    {
+      "role": "edge-games-peek",
+      "variant": "static",
+      "path": "public/assets/platform/honru-edge-cursor/visual-v1/edge-games-peek-static.webp",
+      "sha256": "E3BBB25A13E63F5551F86A171F4E18598569AA781EA036F018D78A0B41393AA3",
+      "bytes": 15940,
+      "width": 640,
+      "height": 480,
+      "alpha": true
+    },
+    {
+      "role": "edge-playline-wave",
+      "variant": "normal",
+      "path": "public/assets/platform/honru-edge-cursor/visual-v1/edge-playline-wave.webp",
+      "sha256": "7AA4B58D119A2A839BDA157A5D869328BA2B89F674685EAE6B44AA71DC17A0A4",
+      "bytes": 13588,
+      "width": 640,
+      "height": 480,
+      "alpha": true
+    },
+    {
+      "role": "edge-playline-wave",
+      "variant": "static",
+      "path": "public/assets/platform/honru-edge-cursor/visual-v1/edge-playline-wave-static.webp",
+      "sha256": "D515B100A9EFBBA91AF190A7A9EE8EA238A2DFC25DD9E2A258F146F66EE3B04E",
+      "bytes": 12360,
+      "width": 640,
+      "height": 480,
+      "alpha": true
+    },
+    {
+      "role": "edge-profile-grab",
+      "variant": "normal",
+      "path": "public/assets/platform/honru-edge-cursor/visual-v1/edge-profile-grab.webp",
+      "sha256": "BD460EE7E4EEFF80F308AFE8B13261A92405A075B13605F5DA1BB2710C353136",
+      "bytes": 18456,
+      "width": 640,
+      "height": 480,
+      "alpha": true
+    },
+    {
+      "role": "edge-profile-grab",
+      "variant": "static",
+      "path": "public/assets/platform/honru-edge-cursor/visual-v1/edge-profile-grab-static.webp",
+      "sha256": "97818E2CE487D005318A0D628EDC14F5054A7A855E3692891D572CE843F939F8",
+      "bytes": 16640,
+      "width": 640,
+      "height": 480,
+      "alpha": true
+    },
+    {
+      "role": "cursor-idle",
+      "variant": "32",
+      "path": "public/assets/platform/honru-edge-cursor/visual-v1/cursor-idle-32.png",
+      "sha256": "4EA38A38BD2898E1066E5F14D5D0450AFD10ED71FC0A60A1B9482A4AF3A92418",
+      "bytes": 992,
+      "width": 32,
+      "height": 32,
+      "alpha": true
+    },
+    {
+      "role": "cursor-idle",
+      "variant": "64",
+      "path": "public/assets/platform/honru-edge-cursor/visual-v1/cursor-idle-64.png",
+      "sha256": "598964589926DA25BBBCD12AA69CEFF5DF0E124A93C3414902F8C23BD13FC6BA",
+      "bytes": 1754,
+      "width": 64,
+      "height": 64,
+      "alpha": true
+    },
+    {
+      "role": "cursor-pressed",
+      "variant": "32",
+      "path": "public/assets/platform/honru-edge-cursor/visual-v1/cursor-pressed-32.png",
+      "sha256": "03FC6D743AA5A8CE3112943C61114B238FC83A5EC9079E0F939F0CFCF3207FDB",
+      "bytes": 877,
+      "width": 32,
+      "height": 32,
+      "alpha": true
+    },
+    {
+      "role": "cursor-pressed",
+      "variant": "64",
+      "path": "public/assets/platform/honru-edge-cursor/visual-v1/cursor-pressed-64.png",
+      "sha256": "A4EA6941237142193B7BB69F4FECFC7121CF957AE8A4ED587512600F5CEF24B8",
+      "bytes": 1480,
+      "width": 64,
+      "height": 64,
+      "alpha": true
+    },
+    {
+      "role": "cursor-scroll-up",
+      "variant": "32",
+      "path": "public/assets/platform/honru-edge-cursor/visual-v1/cursor-scroll-up-32.png",
+      "sha256": "E6820F13CD7E3759BC29CC3FCCBFB5055BDDAEAD424F9F6361316AC2800CF011",
+      "bytes": 1043,
+      "width": 32,
+      "height": 32,
+      "alpha": true
+    },
+    {
+      "role": "cursor-scroll-up",
+      "variant": "64",
+      "path": "public/assets/platform/honru-edge-cursor/visual-v1/cursor-scroll-up-64.png",
+      "sha256": "C6A4201D2F79042208265BB0D6B0D21C19196A88C7575B5C5FE7F157EE2E80A6",
+      "bytes": 1834,
+      "width": 64,
+      "height": 64,
+      "alpha": true
+    },
+    {
+      "role": "cursor-scroll-down",
+      "variant": "32",
+      "path": "public/assets/platform/honru-edge-cursor/visual-v1/cursor-scroll-down-32.png",
+      "sha256": "ADA127ED8E7A432517D6C9680E0AEA3E78B4ED7BA835A0FA21AAAC5745555662",
+      "bytes": 1030,
+      "width": 32,
+      "height": 32,
+      "alpha": true
+    },
+    {
+      "role": "cursor-scroll-down",
+      "variant": "64",
+      "path": "public/assets/platform/honru-edge-cursor/visual-v1/cursor-scroll-down-64.png",
+      "sha256": "06FC2215F3BEF97EEAEFF4D464B537552007C1DFA69EC287DFE63669280AF63E",
+      "bytes": 1833,
+      "width": 64,
+      "height": 64,
+      "alpha": true
+    },
+    {
+      "role": "cursor-scroll-left",
+      "variant": "32",
+      "path": "public/assets/platform/honru-edge-cursor/visual-v1/cursor-scroll-left-32.png",
+      "sha256": "E91C12D1A78A4E549A1524FA00071759D58B73AA0C8BC8715019B0EAB225BC37",
+      "bytes": 1035,
+      "width": 32,
+      "height": 32,
+      "alpha": true
+    },
+    {
+      "role": "cursor-scroll-left",
+      "variant": "64",
+      "path": "public/assets/platform/honru-edge-cursor/visual-v1/cursor-scroll-left-64.png",
+      "sha256": "62F1CBBA50284F3A4DCB361E02FAB44EFB98CF734FF612E43335ECD0EA6CE00F",
+      "bytes": 1826,
+      "width": 64,
+      "height": 64,
+      "alpha": true
+    },
+    {
+      "role": "cursor-scroll-right",
+      "variant": "32",
+      "path": "public/assets/platform/honru-edge-cursor/visual-v1/cursor-scroll-right-32.png",
+      "sha256": "0AA8F41C59B7C94B83A037B9090AEF23EDB085A1B790C3424DC9FDDA720A7171",
+      "bytes": 1030,
+      "width": 32,
+      "height": 32,
+      "alpha": true
+    },
+    {
+      "role": "cursor-scroll-right",
+      "variant": "64",
+      "path": "public/assets/platform/honru-edge-cursor/visual-v1/cursor-scroll-right-64.png",
+      "sha256": "3625A8275E219D5EFF7386BBA409512135C4361F47DC84CFD894318EDDA20309",
+      "bytes": 1813,
+      "width": 64,
+      "height": 64,
+      "alpha": true
+    }
+  ],
+  "reviewBoards": [
+    "art-source/platform/honru-edge-cursor/visual-v1/review/honru-edge-cursor-contact-sheet-v1.png"
+  ]
+}

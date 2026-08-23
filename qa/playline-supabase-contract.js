@@ -76,10 +76,12 @@ check('rate events are bounded to service-side action metadata',
   /idx_playline_rate_events_author_kind_created/i.test(sql));
 
 for (const table of ['playline_posts', 'playline_rate_events']) {
+  const serviceGrant = new RegExp('grant\\s+all\\s+on\\s+table\\s+' + table + '\\s+to\\s+service_role', 'i').test(sql) ||
+    new RegExp('grant\\s+select,\\s*insert,\\s*update,\\s*delete\\s+on\\s+table[\\s\\S]*?\\b' + table + '\\b[\\s\\S]*?to\\s+service_role', 'i').test(sql);
   check(table + ' has RLS and no browser grants',
     new RegExp('alter\\s+table\\s+' + table + '\\s+enable\\s+row\\s+level\\s+security', 'i').test(sql) &&
     new RegExp('revoke\\s+all\\s+on\\s+table\\s+' + table + '\\s+from\\s+public,\\s*anon,\\s*authenticated', 'i').test(sql) &&
-    new RegExp('grant\\s+all\\s+on\\s+table\\s+' + table + '\\s+to\\s+service_role', 'i').test(sql));
+    serviceGrant);
 }
 
 const rpcSpecs = [

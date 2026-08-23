@@ -1,0 +1,399 @@
+{
+  "schemaVersion": 1,
+  "productionUnitId": "P2-04",
+  "familyId": "P-PERSONAL-HOME-SCENE-V1",
+  "sourceAssetId": "ART-PERSONAL-HOME-SCENE-V1",
+  "artworkVersion": 1,
+  "status": "OWNER_AUTHORIZED_ART_CLEARANCE",
+  "license": "project-owned-deterministic-vector",
+  "externalReferencePolicy": "EXTERNAL_REFERENCE_ONLY / blocked-license inputs were not read, copied, traced, recolored, or transmitted.",
+  "themes": [
+    "light",
+    "dark"
+  ],
+  "viewports": {
+    "desktop": {
+      "width": 1600,
+      "height": 700
+    },
+    "mobile": {
+      "width": 900,
+      "height": 900
+    }
+  },
+  "layers": [
+    "background",
+    "midground",
+    "foreground"
+  ],
+  "featureFlags": {
+    "operator": "all",
+    "enabledValue": "1",
+    "defaultEnabled": true,
+    "ids": [
+      "mg_art_personal_home_scene_v1"
+    ]
+  },
+  "fallback": {
+    "chain": "layered scene → static composite → existing Home ambient CSS → no decorative scene"
+  },
+  "sourceMasters": [
+    {
+      "id": "personal-home-light-desktop-background",
+      "path": "art-source/platform/personal-home-scene-v1/source-layers/light/desktop/personal-home-light-desktop-background-v1.svg",
+      "sha256": "1BEAEC7D190A05909770789FAD584255F71141C68C5DCD9606B4F7508BE77B5D",
+      "bytes": 607,
+      "format": "svg",
+      "width": 1600,
+      "height": 700,
+      "role": "background"
+    },
+    {
+      "id": "personal-home-light-desktop-midground",
+      "path": "art-source/platform/personal-home-scene-v1/source-layers/light/desktop/personal-home-light-desktop-midground-v1.svg",
+      "sha256": "C524C4BF3D7DBF1D452D269D99029374957AC89ECA0800E57A107B45F9E5860A",
+      "bytes": 2620,
+      "format": "svg",
+      "width": 1600,
+      "height": 700,
+      "role": "midground"
+    },
+    {
+      "id": "personal-home-light-desktop-foreground",
+      "path": "art-source/platform/personal-home-scene-v1/source-layers/light/desktop/personal-home-light-desktop-foreground-v1.svg",
+      "sha256": "A0448BC677DA0C71229D5498460F34F1FF6C14687215F492FE605E0C57B71B7D",
+      "bytes": 1264,
+      "format": "svg",
+      "width": 1600,
+      "height": 700,
+      "role": "foreground"
+    },
+    {
+      "id": "personal-home-light-mobile-background",
+      "path": "art-source/platform/personal-home-scene-v1/source-layers/light/mobile/personal-home-light-mobile-background-v1.svg",
+      "sha256": "09C838D6C5E9535881F76C409A97319BF43EB1C43BDC13AD281DFDDD0CBA35D2",
+      "bytes": 524,
+      "format": "svg",
+      "width": 900,
+      "height": 900,
+      "role": "background"
+    },
+    {
+      "id": "personal-home-light-mobile-midground",
+      "path": "art-source/platform/personal-home-scene-v1/source-layers/light/mobile/personal-home-light-mobile-midground-v1.svg",
+      "sha256": "23F7363FC0AEF660EBBB2A8F273585714A37ED5A8E21D340603F65BED21AFEFB",
+      "bytes": 2655,
+      "format": "svg",
+      "width": 900,
+      "height": 900,
+      "role": "midground"
+    },
+    {
+      "id": "personal-home-light-mobile-foreground",
+      "path": "art-source/platform/personal-home-scene-v1/source-layers/light/mobile/personal-home-light-mobile-foreground-v1.svg",
+      "sha256": "8A57A090228E66323F9754523E99E308A94A62F28F1927EA76CE3CE94CBBAD17",
+      "bytes": 1242,
+      "format": "svg",
+      "width": 900,
+      "height": 900,
+      "role": "foreground"
+    },
+    {
+      "id": "personal-home-dark-desktop-background",
+      "path": "art-source/platform/personal-home-scene-v1/source-layers/dark/desktop/personal-home-dark-desktop-background-v1.svg",
+      "sha256": "4BB4CDB3870C943CA364F6C8F6AC95D2B05A24759FD7A3F12B37C713296142BB",
+      "bytes": 943,
+      "format": "svg",
+      "width": 1600,
+      "height": 700,
+      "role": "background"
+    },
+    {
+      "id": "personal-home-dark-desktop-midground",
+      "path": "art-source/platform/personal-home-scene-v1/source-layers/dark/desktop/personal-home-dark-desktop-midground-v1.svg",
+      "sha256": "94FB3798DC00DDD590418484548B16369B5B9566F2F23B4AAD8F956A339F6A55",
+      "bytes": 2620,
+      "format": "svg",
+      "width": 1600,
+      "height": 700,
+      "role": "midground"
+    },
+    {
+      "id": "personal-home-dark-desktop-foreground",
+      "path": "art-source/platform/personal-home-scene-v1/source-layers/dark/desktop/personal-home-dark-desktop-foreground-v1.svg",
+      "sha256": "A33B3080618BC845E65BB41876AF121E6846EF4229B7792255B44A5DFCBD8294",
+      "bytes": 1264,
+      "format": "svg",
+      "width": 1600,
+      "height": 700,
+      "role": "foreground"
+    },
+    {
+      "id": "personal-home-dark-mobile-background",
+      "path": "art-source/platform/personal-home-scene-v1/source-layers/dark/mobile/personal-home-dark-mobile-background-v1.svg",
+      "sha256": "98AB0DE17D9A952E0E5783C3BC8C6772B1A92CCB9BE708E44655C250864BC7E9",
+      "bytes": 859,
+      "format": "svg",
+      "width": 900,
+      "height": 900,
+      "role": "background"
+    },
+    {
+      "id": "personal-home-dark-mobile-midground",
+      "path": "art-source/platform/personal-home-scene-v1/source-layers/dark/mobile/personal-home-dark-mobile-midground-v1.svg",
+      "sha256": "C0222466462448F4EE6CAA241D9C4155114230E995141F2D56C9F4D8A7B72217",
+      "bytes": 2655,
+      "format": "svg",
+      "width": 900,
+      "height": 900,
+      "role": "midground"
+    },
+    {
+      "id": "personal-home-dark-mobile-foreground",
+      "path": "art-source/platform/personal-home-scene-v1/source-layers/dark/mobile/personal-home-dark-mobile-foreground-v1.svg",
+      "sha256": "7651B7DF30DC7C7FD21E449CB6F7257DE225CF7320472824E596E9AEA22C384B",
+      "bytes": 1242,
+      "format": "svg",
+      "width": 900,
+      "height": 900,
+      "role": "foreground"
+    }
+  ],
+  "runtimeVariants": [
+    {
+      "id": "personal-home-light-desktop-background",
+      "path": "public/assets/platform/personal-home-scene-v1/light/desktop/personal-home-light-desktop-background-v1.webp",
+      "sha256": "DCF618E21D5ADCF7AF909E5CB3627962C035F8ACAE32FDAB47F10887D2D3E1A2",
+      "bytes": 7592,
+      "format": "webp",
+      "width": 1600,
+      "height": 700,
+      "alpha": false,
+      "role": "background"
+    },
+    {
+      "id": "personal-home-light-desktop-midground",
+      "path": "public/assets/platform/personal-home-scene-v1/light/desktop/personal-home-light-desktop-midground-v1.webp",
+      "sha256": "8FB391C2C14D4F6279DD8ADA2F88DC542B479F8CF63632458DCABAAAAEA95778",
+      "bytes": 18510,
+      "format": "webp",
+      "width": 1600,
+      "height": 700,
+      "alpha": true,
+      "role": "midground"
+    },
+    {
+      "id": "personal-home-light-desktop-foreground",
+      "path": "public/assets/platform/personal-home-scene-v1/light/desktop/personal-home-light-desktop-foreground-v1.webp",
+      "sha256": "546881CDC917B424DDD026E776990FF0DB73632D06344571F8973C9F13A80FB3",
+      "bytes": 11366,
+      "format": "webp",
+      "width": 1600,
+      "height": 700,
+      "alpha": true,
+      "role": "foreground"
+    },
+    {
+      "id": "personal-home-light-desktop-static",
+      "path": "public/assets/platform/personal-home-scene-v1/light/desktop/personal-home-light-desktop-static-v1.webp",
+      "sha256": "E5A9740526D753F9EFBE1DCE475F95FAB83538351BE459B74F37757941112074",
+      "bytes": 20250,
+      "format": "webp",
+      "width": 1600,
+      "height": 700,
+      "alpha": false,
+      "role": "static"
+    },
+    {
+      "id": "personal-home-light-poster",
+      "path": "public/assets/platform/personal-home-scene-v1/light/preview/personal-home-light-poster-v1.webp",
+      "sha256": "65E5D284B9FEC517648863A97D418D4A81A5E1F3512298FC41EE1047232B9DFF",
+      "bytes": 7146,
+      "format": "webp",
+      "width": 640,
+      "height": 360,
+      "alpha": false,
+      "role": "poster"
+    },
+    {
+      "id": "personal-home-light-mini",
+      "path": "public/assets/platform/personal-home-scene-v1/light/preview/personal-home-light-mini-v1.webp",
+      "sha256": "D9DA4A2BAF9F4A92F1A93BB515C0521AE2E212C6BA93FEDF2C3175FBC4A497AE",
+      "bytes": 2770,
+      "format": "webp",
+      "width": 320,
+      "height": 180,
+      "alpha": false,
+      "role": "mini"
+    },
+    {
+      "id": "personal-home-light-mobile-background",
+      "path": "public/assets/platform/personal-home-scene-v1/light/mobile/personal-home-light-mobile-background-v1.webp",
+      "sha256": "836FE9BBCDA0BB6782ED86BE86F0F7449CFBA876E6803AD2994BBFDF4B220554",
+      "bytes": 5696,
+      "format": "webp",
+      "width": 900,
+      "height": 900,
+      "alpha": false,
+      "role": "background"
+    },
+    {
+      "id": "personal-home-light-mobile-midground",
+      "path": "public/assets/platform/personal-home-scene-v1/light/mobile/personal-home-light-mobile-midground-v1.webp",
+      "sha256": "F32BB6EBA8A437782A53198AB701FB5DC9AD059D627DFE981BEE84CD0C6FAB6B",
+      "bytes": 13400,
+      "format": "webp",
+      "width": 900,
+      "height": 900,
+      "alpha": true,
+      "role": "midground"
+    },
+    {
+      "id": "personal-home-light-mobile-foreground",
+      "path": "public/assets/platform/personal-home-scene-v1/light/mobile/personal-home-light-mobile-foreground-v1.webp",
+      "sha256": "BDD7904D5A0D428D5D027FF4C3057BD317F9A3F0B903EC37FA5A68B274DB0ADE",
+      "bytes": 9602,
+      "format": "webp",
+      "width": 900,
+      "height": 900,
+      "alpha": true,
+      "role": "foreground"
+    },
+    {
+      "id": "personal-home-light-mobile-static",
+      "path": "public/assets/platform/personal-home-scene-v1/light/mobile/personal-home-light-mobile-static-v1.webp",
+      "sha256": "DA7A5789779DA5B650C8C97377D951EC0D772BEFE4A71FCA03BA770032F42A53",
+      "bytes": 15616,
+      "format": "webp",
+      "width": 900,
+      "height": 900,
+      "alpha": false,
+      "role": "static"
+    },
+    {
+      "id": "personal-home-dark-desktop-background",
+      "path": "public/assets/platform/personal-home-scene-v1/dark/desktop/personal-home-dark-desktop-background-v1.webp",
+      "sha256": "06DB9F2584959818FE28EA0B4C2EE9FB35EAD1022E66B649D8343DC5B21E93BF",
+      "bytes": 8442,
+      "format": "webp",
+      "width": 1600,
+      "height": 700,
+      "alpha": false,
+      "role": "background"
+    },
+    {
+      "id": "personal-home-dark-desktop-midground",
+      "path": "public/assets/platform/personal-home-scene-v1/dark/desktop/personal-home-dark-desktop-midground-v1.webp",
+      "sha256": "C3A98A57FBF2730140CBF8814FDAFE15908746BC417ADB65C52DCA5FFFCF0B95",
+      "bytes": 18920,
+      "format": "webp",
+      "width": 1600,
+      "height": 700,
+      "alpha": true,
+      "role": "midground"
+    },
+    {
+      "id": "personal-home-dark-desktop-foreground",
+      "path": "public/assets/platform/personal-home-scene-v1/dark/desktop/personal-home-dark-desktop-foreground-v1.webp",
+      "sha256": "9645346C7F34863F9291E731A9489E6FDD52327E60314DADB13D2EDD07BE6C18",
+      "bytes": 12720,
+      "format": "webp",
+      "width": 1600,
+      "height": 700,
+      "alpha": true,
+      "role": "foreground"
+    },
+    {
+      "id": "personal-home-dark-desktop-static",
+      "path": "public/assets/platform/personal-home-scene-v1/dark/desktop/personal-home-dark-desktop-static-v1.webp",
+      "sha256": "3563A02E76EB8C9EB288F2FBF2C935F935B518143F9CB971C8AEFD125C2F6A07",
+      "bytes": 20536,
+      "format": "webp",
+      "width": 1600,
+      "height": 700,
+      "alpha": false,
+      "role": "static"
+    },
+    {
+      "id": "personal-home-dark-poster",
+      "path": "public/assets/platform/personal-home-scene-v1/dark/preview/personal-home-dark-poster-v1.webp",
+      "sha256": "356FB203FDCD1B6D4BB5717EA6CB613B2B7C60D3328141C20DAB62DCE7F53225",
+      "bytes": 7608,
+      "format": "webp",
+      "width": 640,
+      "height": 360,
+      "alpha": false,
+      "role": "poster"
+    },
+    {
+      "id": "personal-home-dark-mini",
+      "path": "public/assets/platform/personal-home-scene-v1/dark/preview/personal-home-dark-mini-v1.webp",
+      "sha256": "3C6C0CDC5E85B7CF8FDD9F249B74D2182E5B0BA0CC8781D59AB0C0CF92E72F64",
+      "bytes": 2816,
+      "format": "webp",
+      "width": 320,
+      "height": 180,
+      "alpha": false,
+      "role": "mini"
+    },
+    {
+      "id": "personal-home-dark-mobile-background",
+      "path": "public/assets/platform/personal-home-scene-v1/dark/mobile/personal-home-dark-mobile-background-v1.webp",
+      "sha256": "A7F3F8AC872FBDFDC8B1B190004BB6B362ACC344D82AB948AC56BB01F5DED39F",
+      "bytes": 6072,
+      "format": "webp",
+      "width": 900,
+      "height": 900,
+      "alpha": false,
+      "role": "background"
+    },
+    {
+      "id": "personal-home-dark-mobile-midground",
+      "path": "public/assets/platform/personal-home-scene-v1/dark/mobile/personal-home-dark-mobile-midground-v1.webp",
+      "sha256": "F5524AC8CE0F7C7247B81E25A5011FAA0E131EA50D7041F1DD38D6D1B6DEB71D",
+      "bytes": 13254,
+      "format": "webp",
+      "width": 900,
+      "height": 900,
+      "alpha": true,
+      "role": "midground"
+    },
+    {
+      "id": "personal-home-dark-mobile-foreground",
+      "path": "public/assets/platform/personal-home-scene-v1/dark/mobile/personal-home-dark-mobile-foreground-v1.webp",
+      "sha256": "D0C286BD474F99FDF3F3815A3280C689AB86E9CA200F594534C836E23C701CCD",
+      "bytes": 10848,
+      "format": "webp",
+      "width": 900,
+      "height": 900,
+      "alpha": true,
+      "role": "foreground"
+    },
+    {
+      "id": "personal-home-dark-mobile-static",
+      "path": "public/assets/platform/personal-home-scene-v1/dark/mobile/personal-home-dark-mobile-static-v1.webp",
+      "sha256": "66BA218376C06099875552687BD3AD4C0A1A4C07295DE2624218EBF9DCA5942E",
+      "bytes": 15368,
+      "format": "webp",
+      "width": 900,
+      "height": 900,
+      "alpha": false,
+      "role": "static"
+    }
+  ],
+  "reviewBoards": [
+    {
+      "path": "art-source/platform/personal-home-scene-v1/review/personal-home-scene-contact-sheet-v1.png",
+      "sha256": "5DA45D1C7B70FB00A8B208EB84C5D83A4C0C6B3368264BFD6AC81A51A6E64ACC",
+      "bytes": 73932
+    }
+  ],
+  "metrics": {
+    "sourceMasterCount": 12,
+    "runtimeVariantCount": 20,
+    "runtimeBytes": 228532,
+    "runtimeByteBudget": 2097152,
+    "withinBudget": true
+  },
+  "authority": "presentation-only Home decoration; no account, owned, purchase, reward, protocol, realtime 3D, chat, replay, AI, analytics or Supabase capability"
+}

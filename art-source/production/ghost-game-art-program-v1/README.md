@@ -4,13 +4,13 @@
 
 本目录把用户附件中的全量美术需求冻结为 33 个严格有序的核销单元：P0 12 个、P1 9 个、P2 12 个。执行顺序以 `production-ledger-v1.json` 为准；附件中的每项需求均保留，不因合并为权威母版而消失。
 
-当前进度：`9 / 33 = 27.27%`；P0：`9 / 12 = 75%`；P1/P2：`0%`。已核销单元均为 `IMPLEMENTED / OWNER_AUTHORIZED_ART_CLEARANCE / LOCAL_ONLY / RELEASE_EVIDENCE_PENDING`；当前构建的本地代码/资产/机器证据为 `100%`，当前构建浏览器可见证据、第二浏览器/真机/真实网络/发布证据为 `0%`。下一单元严格为 `P0-10 / P-PLAYER-CHARACTER-LAYERED-V1`。
+当前进度：`32 / 33 = 96.97%`；P0：`12 / 12 = 100%`；P1：`9 / 9 = 100%`；P2：`11 / 12 = 91.67%`（P2-07 为冻结可选实验）。已核销单元均为 `IMPLEMENTED / OWNER_AUTHORIZED_ART_CLEARANCE / LOCAL_ONLY / RELEASE_EVIDENCE_PENDING`；P2-01 至 P2-06 已完成既定本地资产/2.5D 演出，P2-08 已完成 Settings 幽灵频谱，P2-09 已完成三类 Playline 社交分享模板，P2-10 已完成赛事状态/轮次/领跑者/三桌赛况 Overlay，P2-11 已完成四季商城策展陈列与原创主视觉，P2-12 已完成按常玩游戏变化的 Profile Hero 表现层（原创观测台主视觉 + 桌面/移动/Poster/Static 派生，不新增经济事实）。当前构建已完成单一 Codex Chromium 桌面/390×844 本地可见证据；第二浏览器、真机、真实网络、低端性能与发布证据仍待执行。`P2-07 / P-GLB-CHARACTER-PROP-EXPANSION-V1` 继续冻结；美术序列下一步转入 `PROVE` 外部证据准备。
 
 ## 2026-08-19 2.5D 重排
 
-用户已把视觉技术主线改为 `Vanilla DOM + CSS + Canvas + GSAP` 的共享 2.5D 空间语言。现有 Ghost3D/Three 代码与证据冻结保留为兼容/实验层，不删除、不继续作为六款美术必经路径。美术默认交付改为前景/中景/背景母版、透明原子、接触阴影、遮罩和语义 VFX；GLB/复杂模型不再是当前单元的完成条件。完整映射见 `ART_2_5D_REALIGNMENT_20260819.md`。
+用户已把视觉技术主线改为 `Vanilla DOM + CSS + Canvas + GSAP` 的共享 2.5D 空间语言。Ghost3D/Three runtime 已从当前生产构建清除；旧代码、截图与报告只保留 historical-as-of 证据，不再作为兼容、实验、回滚或六款美术必经路径。美术默认交付改为前景/中景/背景母版、透明原子、接触阴影、遮罩和语义 VFX；GLB/复杂模型不再是当前单元的完成条件。完整映射见 `ART_2_5D_REALIGNMENT_20260819.md`。
 
-这次重排不改变 33 个单元数量、P0→P1→P2 顺序、已完成百分比、Honru 已确认形象、资产 SHA/clearance 或发布状态。`P2-07` 保留原 Requirement/Family ID，但冻结为只有 Gomoku 2.5D Demo 出现可复核能力缺口时才重启的可选实验。P0-09 继续是下一严格单元。
+这次重排不改变 33 个单元数量、P0→P1→P2 顺序、Honru 已确认形象、资产 SHA/clearance 或发布状态。`P2-07` 保留原 Requirement/Family ID，但冻结为只有 Gomoku 2.5D Demo 出现可复核能力缺口时才重启的可选实验。P0、P1 与 P2-01 至 P2-06、P2-08 至 P2-12 已完成本地表现/资产与机器证据；下一步转入 `PROVE`，不隐式恢复 P2-07。
 
 ## 执行规则
 

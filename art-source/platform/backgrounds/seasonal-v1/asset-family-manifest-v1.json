@@ -1,0 +1,143 @@
+{
+  "schemaVersion": 1,
+  "productionUnitId": "P2-01",
+  "familyId": "P-SEASONAL-BACKGROUNDS-V1",
+  "sourceAssetId": "ART-SEASONAL-BACKGROUNDS-V1",
+  "artworkVersion": 1,
+  "status": "OWNER_AUTHORIZED_ART_CLEARANCE",
+  "license": "project-owned-ai-generated",
+  "sourceGeneration": "OpenAI Codex built-in ImageGen with project-owned North Star references",
+  "externalReferenceTransmissionCount": 0,
+  "seasons": [
+    "spring",
+    "summer",
+    "autumn",
+    "winter"
+  ],
+  "sourceMasters": [
+    {
+      "season": "spring",
+      "path": "art-source/platform/backgrounds/seasonal-v1/source/spring-signal-garden-master-v1.png",
+      "sha256": "21ce377abb0e5c59d7de5b519ee054434a50885d84fcbe367c3a7926a6a9316d",
+      "bytes": 1823640,
+      "width": 1663,
+      "height": 945,
+      "mode": "RGB"
+    },
+    {
+      "season": "summer",
+      "path": "art-source/platform/backgrounds/seasonal-v1/source/summer-cloud-harbor-master-v1.png",
+      "sha256": "8882b89dc842d4f21ce631b7e31be29d671b6fc1d9e3f5c978b25cd85ecb6afe",
+      "bytes": 1854948,
+      "width": 1672,
+      "height": 941,
+      "mode": "RGB"
+    },
+    {
+      "season": "autumn",
+      "path": "art-source/platform/backgrounds/seasonal-v1/source/autumn-collector-walk-master-v1.png",
+      "sha256": "30e5f0efa64d05f8ac90c36294da0e7926bf4218d46f5ddd811718de60d88b8f",
+      "bytes": 2280200,
+      "width": 1672,
+      "height": 941,
+      "mode": "RGB"
+    },
+    {
+      "season": "winter",
+      "path": "art-source/platform/backgrounds/seasonal-v1/source/winter-star-observatory-master-v1.png",
+      "sha256": "72fa872545893c70400e3b234cb32768aa645aec5b849536d4eaa5bbecec9b67",
+      "bytes": 1975234,
+      "width": 1672,
+      "height": 941,
+      "mode": "RGB"
+    }
+  ],
+  "runtimeVariants": {
+    "spring-desktop": "public/assets/backgrounds/seasonal-v1/spring/spring-desktop-v1.webp",
+    "spring-mobile": "public/assets/backgrounds/seasonal-v1/spring/spring-mobile-v1.webp",
+    "spring-poster": "public/assets/backgrounds/seasonal-v1/spring/spring-poster-v1.webp",
+    "spring-mini": "public/assets/backgrounds/seasonal-v1/spring/spring-mini-v1.webp",
+    "spring-animated": "public/assets/backgrounds/seasonal-v1/spring/spring-animated-v1.webp",
+    "summer-desktop": "public/assets/backgrounds/seasonal-v1/summer/summer-desktop-v1.webp",
+    "summer-mobile": "public/assets/backgrounds/seasonal-v1/summer/summer-mobile-v1.webp",
+    "summer-poster": "public/assets/backgrounds/seasonal-v1/summer/summer-poster-v1.webp",
+    "summer-mini": "public/assets/backgrounds/seasonal-v1/summer/summer-mini-v1.webp",
+    "summer-animated": "public/assets/backgrounds/seasonal-v1/summer/summer-animated-v1.webp",
+    "autumn-desktop": "public/assets/backgrounds/seasonal-v1/autumn/autumn-desktop-v1.webp",
+    "autumn-mobile": "public/assets/backgrounds/seasonal-v1/autumn/autumn-mobile-v1.webp",
+    "autumn-poster": "public/assets/backgrounds/seasonal-v1/autumn/autumn-poster-v1.webp",
+    "autumn-mini": "public/assets/backgrounds/seasonal-v1/autumn/autumn-mini-v1.webp",
+    "autumn-animated": "public/assets/backgrounds/seasonal-v1/autumn/autumn-animated-v1.webp",
+    "winter-desktop": "public/assets/backgrounds/seasonal-v1/winter/winter-desktop-v1.webp",
+    "winter-mobile": "public/assets/backgrounds/seasonal-v1/winter/winter-mobile-v1.webp",
+    "winter-poster": "public/assets/backgrounds/seasonal-v1/winter/winter-poster-v1.webp",
+    "winter-mini": "public/assets/backgrounds/seasonal-v1/winter/winter-mini-v1.webp",
+    "winter-animated": "public/assets/backgrounds/seasonal-v1/winter/winter-animated-v1.webp"
+  },
+  "variantIntegrity": {
+    "spring-desktop": "df44a9495f947981162841097a6bb14fa83d28d34c9b74d526b2b4d8400dfe0e",
+    "spring-mobile": "93df1d18127faa8bd8065efead334259eb0133a8dc98bc7eae4e514847a6d7d3",
+    "spring-poster": "95414079a37d312c5ff858a26d423af5ccf3f4edd4a4db69efe60035c54e25f2",
+    "spring-mini": "7a566f23d083d9f58a6441e3fb8efb82075c92f024195c8f1bb8adb956ba8603",
+    "spring-animated": "da6e1f55d325f8707f72e9cd6c87b71da0141e356729267398ec36178ec02997",
+    "summer-desktop": "7bc4ba40b25299b5d2a0c7db915be1c272cc7cc888d2b01d82cd8941cd87eca6",
+    "summer-mobile": "4916c6291304a65cbf7efd121fd7969acb7fd046863fdcb58a455780a1ac6f61",
+    "summer-poster": "c74305b61d6e0451de55b9cc7db2a5cf0058c878524713f575c02688d691f577",
+    "summer-mini": "206b09f6b2f47d1ae098680da2bada61bb7105793854e7c1acb5d0d04e502686",
+    "summer-animated": "53d885ac9ec0a7662a3d8b8903de14930839a524756ea10680b5cae8e1388dac",
+    "autumn-desktop": "fb8186e4cd992b75de2b8e956803044db4841a46e8886582a3d2ed74ba747c21",
+    "autumn-mobile": "9221a8c32c514e6c7cd7b6e7edbbd270f38dcd49008f98f4b6aa1da03a7c2c4c",
+    "autumn-poster": "33b1b7442560175a63b46b5fc5fbf331be2d6960a4e0941c663188810191bf6a",
+    "autumn-mini": "21fbce7f1eaaaf6a0356fa3d7f382cb8abc9f4ca21c42c0391caa54c838edf77",
+    "autumn-animated": "670267eb099b35b33f873407a26841798b90a42be0b83e03fe40f4fc7600fed8",
+    "winter-desktop": "582495499f903f723970eb2d1f3b2813276a9f56a22ba874a4b5540819396a11",
+    "winter-mobile": "cbf112de7e2060db6672374f72b2010ac8ad34d0bf637ebab2da492b33dd8841",
+    "winter-poster": "d2c89a3c973f5a2ae97766f9b15518316aefa9243e828260da7b97625f5c0b32",
+    "winter-mini": "050dcedfb5a30f8327a72024ea4717545058efddedc2b79929c09a424fb7a520",
+    "winter-animated": "49b1290f379c154cac1481e61d2a52c7c0c12436d48caeb644c74e38f8012e9b"
+  },
+  "variantBytes": {
+    "spring-desktop": 119596,
+    "spring-mobile": 69896,
+    "spring-poster": 23398,
+    "spring-mini": 26822,
+    "spring-animated": 205202,
+    "summer-desktop": 128294,
+    "summer-mobile": 80252,
+    "summer-poster": 25408,
+    "summer-mini": 29356,
+    "summer-animated": 237710,
+    "autumn-desktop": 162014,
+    "autumn-mobile": 101260,
+    "autumn-poster": 28354,
+    "autumn-mini": 32708,
+    "autumn-animated": 258886,
+    "winter-desktop": 126542,
+    "winter-mobile": 83180,
+    "winter-poster": 23852,
+    "winter-mini": 27420,
+    "winter-animated": 232488
+  },
+  "reviewBoards": [
+    "art-source/platform/backgrounds/seasonal-v1/review/seasonal-backgrounds-contact-sheet-v1.png"
+  ],
+  "featureFlags": {
+    "operator": "all",
+    "enabledValue": "1",
+    "defaultEnabled": true,
+    "ids": [
+      "mg_art_seasonal_backgrounds_v1"
+    ]
+  },
+  "metrics": {
+    "sourceMasterCount": 4,
+    "runtimeVariantCount": 20,
+    "runtimeBytes": 2022638,
+    "runtimeByteBudget": 10485760,
+    "withinBudget": true
+  },
+  "fallback": {
+    "chain": "seasonal animated -> same-season desktop -> prior Premium Background -> CSS theme surface"
+  },
+  "authority": "presentation only; no Battle Pass, Remote Config, season clock, reward, social ranking, protocol, or persistence capability"
+}

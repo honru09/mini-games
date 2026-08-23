@@ -16,6 +16,11 @@ const HISTORICAL_T2_BROWSER_EVIDENCE_PATH = path.join(ROOT, 'requirements', 'act
 const HISTORICAL_P4_BROWSER_EVIDENCE_PATH = path.join(ROOT, 'requirements', 'active', 'latest-browser-visible-matrix-prove-p4-20260815', 'evidence', 'current-build-single-browser-verification-202608160305.json');
 const CURRENT_GCOINS_BROWSER_EVIDENCE_PATH = path.join(ROOT, 'requirements', 'active', 'gcoins-presentation-unification-p1-20260815', 'evidence', 'current-build-single-browser-gcoins-202608151907.json');
 const CURRENT_HONRU_BROWSER_EVIDENCE_PATH = path.join(ROOT, 'requirements', 'active', 'honru-emoji-runtime-p0-20260811', 'current-build-single-browser-honru-art-202608162216.json');
+const CURRENT_IMMERSIVE_STAGE_EVIDENCE_PATH = path.join(ROOT, 'requirements', 'active', 'visual-25d-repush-p0-20260819', 'evidence', 'immersive-stage-20260820', 'current-build-visible-matrix.json');
+const CURRENT_TANK_FINAL_ART_EVIDENCE_PATH = path.join(ROOT, 'requirements', 'active', 'tank-final-art-v1-p1-20260821', 'current-build-tank-visible-matrix-20260821.json');
+const CURRENT_MAINTENANCE_VISIBLE_EVIDENCE_PATH = path.join(ROOT, 'requirements', 'active', 'latest-browser-visible-matrix-prove-p4-20260815', 'evidence', 'current-build-visible-maintenance-2026082222.json');
+const CURRENT_AUTH_VISIBLE_EVIDENCE_PATH = path.join(ROOT, 'requirements', 'active', 'latest-browser-visible-matrix-prove-p4-20260815', 'evidence', 'current-build-auth-visible-20260822.json');
+const CURRENT_IDENTITY_BADGE_EVIDENCE_PATH = path.join(ROOT, 'art-source', 'platform', 'identity', 'badge-system-v1', 'LOCAL_BROWSER_EVIDENCE_20260822.json');
 const REPORT_DIR = path.join(ROOT, '简易报告');
 const STATUS_ORDER = ['verified', 'implemented', 'partial', 'planned', 'not_executed', 'blocked'];
 const STATUS_LABELS = {
@@ -58,6 +63,32 @@ function currentBrowserEvidenceSummary() {
   if (drift && drift.status === 'active' && drift.artifact && drift.expectedFromSources && drift.artifact.sha256 === sha) {
     return `并行前端/3D 窗口仍在写入：现有构建产物 SHA-256 ${sha} 落后于当前源码期望 ${drift.expectedFromSources.sha256}，两者均不能冒充稳定当前构建或当前浏览器证据。`;
   }
+  if (fs.existsSync(CURRENT_TANK_FINAL_ART_EVIDENCE_PATH)) {
+    const evidence = JSON.parse(fs.readFileSync(CURRENT_TANK_FINAL_ART_EVIDENCE_PATH, 'utf8'));
+    const isCurrent = evidence.build && evidence.build.sha256 === sha && evidence.build.bytes === build.length;
+    if (isCurrent && evidence.evidenceClass === 'LOCAL_SINGLE_CHROMIUM_SIMULATION_ONLY' &&
+        Array.isArray(evidence.scenarios) && evidence.scenarios.length === 6 && evidence.scenarios.every(scenario => scenario.result === 'PASS') &&
+        evidence.console && evidence.console.warningCount === 0 && evidence.console.errorCount === 0) {
+      return `单一 Codex in-app Chromium 已对当前 SHA-256 ${sha} 完成 Tank Final Art 聚焦矩阵：desktop light/dark、390×844、reduced-motion、forced-colors、live fire、零横向溢出与 console warn/error=0；这不是完整路由/终局/三语/双主题/六款逐 FX 矩阵，也不是第二浏览器、真机、真实网络或低端性能证据。`;
+    }
+  }
+  if (fs.existsSync(CURRENT_MAINTENANCE_VISIBLE_EVIDENCE_PATH)) {
+    const evidence = JSON.parse(fs.readFileSync(CURRENT_MAINTENANCE_VISIBLE_EVIDENCE_PATH, 'utf8'));
+    const isCurrent = evidence.build && evidence.build.sha256 === sha && evidence.build.bytes === build.length;
+    if (isCurrent && evidence.evidenceClass === 'LOCAL_SINGLE_CHROMIUM_VISIBLE_PARTIAL_ONLY' && evidence.claim === 'current_build_single_browser_maintenance_partial' &&
+        Array.isArray(evidence.scenarios) && evidence.scenarios.length === 6 && evidence.scenarios.every(scenario => scenario.result === 'PASS') &&
+        evidence.browser && evidence.browser.consoleWarningCount === 0 && evidence.browser.consoleErrorCount === 0) {
+      return `单一 Codex in-app Chromium 已对当前 SHA-256 ${sha} 完成维护窄范围可见复核：认证页、访客 Home、Games、坦克摇杆/D-pad 切换与五子棋无方向键 6/6 场景通过，零横向溢出且 console warn/error=0；尚无完整路由/终局/三语/双主题矩阵，也不是第二浏览器、真机、真实网络或 Supabase 证据。`;
+    }
+  }
+  if (fs.existsSync(CURRENT_IMMERSIVE_STAGE_EVIDENCE_PATH)) {
+    const evidence = JSON.parse(fs.readFileSync(CURRENT_IMMERSIVE_STAGE_EVIDENCE_PATH, 'utf8'));
+    const isCurrent = evidence.build && evidence.build.sha256 === sha && evidence.build.utf8Bytes === build.length;
+    if (isCurrent && evidence.evidenceClass === 'LOCAL_SINGLE_CHROMIUM_SIMULATION_ONLY' &&
+        evidence.matrix && evidence.matrix.scenarioCount === 36 && evidence.matrix.result === 'PASS') {
+      return `单一 Codex in-app Chromium 已对当前 SHA-256 ${sha} 完成六视口 × 六款游戏共 36 个 Immersive Game Stage 布局/操作场景：页面零横纵溢出、操作至少 44px，六张截图已归档；这不是完整路由/终局/三语/双主题/逐 FX 矩阵，也不是第二浏览器、真机、真实网络或低端 GPU/热量证据。`;
+    }
+  }
   if (fs.existsSync(CURRENT_P5_BROWSER_EVIDENCE_PATH)) {
     const evidence = JSON.parse(fs.readFileSync(CURRENT_P5_BROWSER_EVIDENCE_PATH, 'utf8'));
     const isCurrent = evidence.build && evidence.build.sha256 === sha && evidence.build.bytes === build.length;
@@ -95,6 +126,27 @@ function currentBrowserEvidenceSummary() {
     }
   }
 
+  if (fs.existsSync(CURRENT_IDENTITY_BADGE_EVIDENCE_PATH)) {
+    const evidence = JSON.parse(fs.readFileSync(CURRENT_IDENTITY_BADGE_EVIDENCE_PATH, 'utf8'));
+    const auth = fs.existsSync(CURRENT_AUTH_VISIBLE_EVIDENCE_PATH) ? JSON.parse(fs.readFileSync(CURRENT_AUTH_VISIBLE_EVIDENCE_PATH, 'utf8')) : null;
+    const isCurrent = evidence.build && evidence.build.sha256 === sha && evidence.build.bytes === build.length;
+    const authCurrent = auth && auth.build && auth.build.sha256 === sha && auth.build.bytes === build.length &&
+      Array.isArray(auth.scenarios) && auth.scenarios.length === 5 && auth.scenarios.every(scenario => scenario.result === 'PASS');
+    if (isCurrent && evidence.familyId === 'P-IDENTITY-BADGE-SYSTEM-V1' && evidence.desktop && evidence.mobile390x844) {
+      return `单一 Codex in-app Chromium 已对当前 SHA-256 ${sha} 完成 P1-09 身份徽章聚焦复核：Games 排行榜、Profile、成就墙、Shop、390×844、资源解码与零横向溢出；${authCurrent ? '同一当前构建还完成认证页 1280×720/390×844、三语言、双主题、黑夜 Logo 反白、44px 与 console 0 窄复核；' : ''}尚无全站路由/终局/六款逐 FX 完整矩阵，也不是第二浏览器、真机、真实网络或低端性能证据。`;
+    }
+  }
+
+  if (fs.existsSync(CURRENT_AUTH_VISIBLE_EVIDENCE_PATH)) {
+    const evidence = JSON.parse(fs.readFileSync(CURRENT_AUTH_VISIBLE_EVIDENCE_PATH, 'utf8'));
+    const isCurrent = evidence.build && evidence.build.sha256 === sha && evidence.build.bytes === build.length;
+    if (isCurrent && evidence.claim === 'current_build_single_browser_auth_visible_partial' &&
+        evidence.evidenceClass === 'LOCAL_SINGLE_CHROMIUM_VISIBLE_PARTIAL_ONLY' &&
+        Array.isArray(evidence.scenarios) && evidence.scenarios.length === 5 && evidence.scenarios.every(scenario => scenario.result === 'PASS')) {
+      return `单一 Codex in-app Chromium 已对当前 SHA-256 ${sha} 完成认证页窄范围可见复核：1280×720/390×844、三语言、双主题、黑夜 Logo 反白、44px 触控下限、零横向溢出与 console warn/error=0；尚无登录后四区、六款 Game Stage、终局与逐语义 FX 完整矩阵，也不是第二浏览器、真机或真实网络证据。`;
+    }
+  }
+
   return `现有单浏览器证据与当前构建哈希不一致，只能作为历史 as-of 证据；当前 SHA-256 为 ${sha}。`;
 }
 
@@ -121,7 +173,29 @@ function tech027BuildIdentitySummary() {
   const currentSha = crypto.createHash('sha256').update(current).digest('hex').toUpperCase();
   const drift = readStatus().parallelBuildDrift20260819;
   let currentVisible = '尚无与其匹配的浏览器可见证据';
-  if (fs.existsSync(CURRENT_P5_BROWSER_EVIDENCE_PATH)) {
+  if (fs.existsSync(CURRENT_TANK_FINAL_ART_EVIDENCE_PATH)) {
+    const evidence = JSON.parse(fs.readFileSync(CURRENT_TANK_FINAL_ART_EVIDENCE_PATH, 'utf8'));
+    if (evidence.evidenceClass === 'LOCAL_SINGLE_CHROMIUM_SIMULATION_ONLY' && Array.isArray(evidence.scenarios) && evidence.scenarios.length === 6 &&
+        evidence.scenarios.every(scenario => scenario.result === 'PASS') && evidence.build && evidence.build.sha256 === currentSha && evidence.build.bytes === current.length) {
+      currentVisible = '已有与其匹配的 Tank desktop light/dark、390×844、reduced-motion、forced-colors 与 live-fire 单 Chromium 聚焦矩阵，但尚无完整路由/终局/三语/双主题/六款逐 FX 矩阵';
+    }
+  }
+  if (currentVisible === '尚无与其匹配的浏览器可见证据' && fs.existsSync(CURRENT_MAINTENANCE_VISIBLE_EVIDENCE_PATH)) {
+    const evidence = JSON.parse(fs.readFileSync(CURRENT_MAINTENANCE_VISIBLE_EVIDENCE_PATH, 'utf8'));
+    if (evidence.evidenceClass === 'LOCAL_SINGLE_CHROMIUM_VISIBLE_PARTIAL_ONLY' && evidence.claim === 'current_build_single_browser_maintenance_partial' &&
+        Array.isArray(evidence.scenarios) && evidence.scenarios.length === 6 && evidence.scenarios.every(scenario => scenario.result === 'PASS') &&
+        evidence.build && evidence.build.sha256 === currentSha && evidence.build.bytes === current.length) {
+      currentVisible = '已有与其匹配的当前构建认证页/Home/Games、坦克摇杆/D-pad 与五子棋无方向键 6 场景单 Chromium 维护窄证据，但尚无完整路由/终局/三语/双主题矩阵';
+    }
+  }
+  if (currentVisible === '尚无与其匹配的浏览器可见证据' && fs.existsSync(CURRENT_IMMERSIVE_STAGE_EVIDENCE_PATH)) {
+    const evidence = JSON.parse(fs.readFileSync(CURRENT_IMMERSIVE_STAGE_EVIDENCE_PATH, 'utf8'));
+    if (evidence.evidenceClass === 'LOCAL_SINGLE_CHROMIUM_SIMULATION_ONLY' && evidence.matrix && evidence.matrix.scenarioCount === 36 &&
+        evidence.matrix.result === 'PASS' && evidence.build && evidence.build.sha256 === currentSha && evidence.build.utf8Bytes === current.length) {
+      currentVisible = '已有与其匹配的六视口 × 六游戏 36 场景 Immersive Stage 布局/操作单 Chromium 矩阵，但尚无完整路由/终局/三语/双主题/逐 FX 矩阵';
+    }
+  }
+  if (currentVisible === '尚无与其匹配的浏览器可见证据' && fs.existsSync(CURRENT_P5_BROWSER_EVIDENCE_PATH)) {
     const evidence = JSON.parse(fs.readFileSync(CURRENT_P5_BROWSER_EVIDENCE_PATH, 'utf8'));
     if (evidence.currency === 'current' && evidence.claim === 'current_build_single_browser_visible_matrix_p4' && evidence.fullRouteMatrixCurrentBuild === true &&
         evidence.build && evidence.build.sha256 === currentSha && evidence.build.bytes === current.length) {
@@ -135,13 +209,29 @@ function tech027BuildIdentitySummary() {
       currentVisible = '已有与其匹配的 Honru/Emoji 单 Chromium 窄证据，但尚无当前五档四区/六款 Game Stage 完整矩阵';
     }
   }
+  if (currentVisible === '尚无与其匹配的浏览器可见证据' && fs.existsSync(CURRENT_AUTH_VISIBLE_EVIDENCE_PATH)) {
+    const evidence = JSON.parse(fs.readFileSync(CURRENT_AUTH_VISIBLE_EVIDENCE_PATH, 'utf8'));
+    if (evidence.evidenceClass === 'LOCAL_SINGLE_CHROMIUM_VISIBLE_PARTIAL_ONLY' && Array.isArray(evidence.scenarios) && evidence.scenarios.length === 5 &&
+        evidence.scenarios.every(scenario => scenario.result === 'PASS') && evidence.build && evidence.build.sha256 === currentSha && evidence.build.bytes === current.length) {
+      currentVisible = '已有与其匹配的认证页 1280×720/390×844、三语、双主题、黑夜 Logo、44px 与零横溢出单 Chromium 窄证据，但尚无登录后四区/六款 Game Stage/终局/逐 FX 完整矩阵';
+    }
+  }
+  if (fs.existsSync(CURRENT_IDENTITY_BADGE_EVIDENCE_PATH)) {
+    const evidence = JSON.parse(fs.readFileSync(CURRENT_IDENTITY_BADGE_EVIDENCE_PATH, 'utf8'));
+    if (evidence.familyId === 'P-IDENTITY-BADGE-SYSTEM-V1' && evidence.desktop && evidence.mobile390x844 &&
+        evidence.build && evidence.build.sha256 === currentSha && evidence.build.bytes === current.length) {
+      const auth = fs.existsSync(CURRENT_AUTH_VISIBLE_EVIDENCE_PATH) ? JSON.parse(fs.readFileSync(CURRENT_AUTH_VISIBLE_EVIDENCE_PATH, 'utf8')) : null;
+      const authCurrent = auth && auth.build && auth.build.sha256 === currentSha && auth.build.bytes === current.length;
+      currentVisible = `已有与其匹配的 P1-09 Games/Profile/成就墙/Shop/390×844 身份徽章聚焦矩阵${authCurrent ? '及认证页三语/双主题/44px 窄证据' : ''}，但尚无全站路由/终局/六款逐 FX 完整矩阵`;
+    }
+  }
   const t3 = readHistoricalBrowserBuildIdentity(CURRENT_T3_BROWSER_EVIDENCE_PATH, 'T3 narrow');
   const t2 = readHistoricalBrowserBuildIdentity(HISTORICAL_T2_BROWSER_EVIDENCE_PATH, 'T2 full matrix');
   const p4 = readHistoricalBrowserBuildIdentity(HISTORICAL_P4_BROWSER_EVIDENCE_PATH, 'P4 full matrix');
   const p5 = readHistoricalBrowserBuildIdentity(CURRENT_P5_BROWSER_EVIDENCE_PATH, 'latest historical full matrix');
   const honru = readHistoricalBrowserBuildIdentity(CURRENT_HONRU_BROWSER_EVIDENCE_PATH, 'Honru directed-throw narrow');
   const currentIdentity = drift && drift.status === 'active' && drift.artifact && drift.expectedFromSources && drift.artifact.sha256 === currentSha
-    ? `构建身份边界：并行写入尚未冻结，现有产物 SHA-256 \`${currentSha}\` / ${current.length.toLocaleString('en-US')} bytes，源码期望 \`${drift.expectedFromSources.sha256}\` / ${Number(drift.expectedFromSources.bytes).toLocaleString('en-US')} bytes；两者尚未闭环且不得冒充当前稳定构建或浏览器证据；`
+    ? `构建身份边界：并行写入尚未冻结，现有产物 SHA-256 \`${currentSha}\` / ${current.length.toLocaleString('en-US')} bytes，源码期望 \`${drift.expectedFromSources.sha256}\` / ${Number(drift.expectedFromSources.bytes).toLocaleString('en-US')} bytes；两者尚未闭环且不得冒充当前稳定构建或浏览器证据；当前可见状态：${currentVisible}；`
     : `构建身份边界：当前本地构建为 SHA-256 \`${currentSha}\` / ${current.length.toLocaleString('en-US')} bytes，${currentVisible}；`;
   return currentIdentity +
     `最近完整单浏览器矩阵 \`${p5.sha256}\`、Honru 定向投掷窄证据 \`${honru.sha256}\`、T3 窄证据 \`${t3.sha256}\`、历史 T2 五档矩阵 \`${t2.sha256}\` 与历史 P4 五档矩阵 \`${p4.sha256}\` 均仅为 historical-as-of，绝不冒充当前。`;
@@ -457,7 +547,7 @@ function makeTotalReport(ledger, routing, routingIndex) {
     '',
     `当前共收录 **${items.length} 项唯一原子需求**，分为六条互不混改的工作流。已验证关闭 **${counts.verified || 0}** 项；已有实现但仍待当前验证或最终闭环证据 **${counts.implemented || 0}** 项；功能性未完成、未执行或受阻 **${functionalUnfinished}** 项；合计 **${openLoop}** 项尚未达到 \`verified\`。`,
     '',
-    `当前产品节点分为两层：**线上是 \`${onlineBaseline}\` 的已发布基线；本地层包含尚未发布的 Playline、全局私信、Game Stage Wave B/Wave C、六款 default-on 且可 exact-zero 回滚的 Ghost3D、UI Motion Closure P1、PWA Offline i18n v13 修复、G Coins 表现统一、T5 传输修复、T6 shadow，以及 T7 六类 Server Boundary、Node fresh-child、Reward/Economy outbox、Reward/Progression Projection 与 P8–P12 Clock/Timer owner 纵切。** 本地预检覆盖 Tetris 乱序/重复、Tank frame/tick 高水位、codec 健康协商、旧 WebSocket callback 与 DM 数值序去重；它不是实际网络整形。T7 继续保持 partial；P12 已迁移 heartbeat owner、单次时间采样和分域异常隔离，剩余正式 token TTL、其他 lifecycle、outbox/gameplay/transport timer 与 Metrics generatedAt 尚未迁移。${browserEvidenceSummary} Service Worker v13 的安全更新链与三语词典回退证据继续单独成立。第二浏览器、物理真机/触控、真实网络、线上最新构建、真实 Supabase 与真实性能仍未执行；设备与 Supabase Gate 是 NON_BLOCKING_FOR_DEVELOPMENT / RELEASE_EVIDENCE_PENDING。原创美术 Gate 已 OPEN_BY_OWNER_AUTHORIZATION；现有候选在逐族取得 OWNER_AUTHORIZED_ART_CLEARANCE 前仍保持原状态，但人工/Reviewer B/IP/Golden Set 咨询不再阻塞开发、runtime 或未来发布候选，且未执行时不得冒充 PASS。`,
+    `当前产品节点分为两层：**线上是 \`${onlineBaseline}\` 的已发布基线；本地层包含尚未发布的 Playline、全局私信、Game Stage Wave B/Wave C、DOM/CSS/Canvas + GSAP 的唯一 2.5D 表现主线、UI Motion Closure P1、PWA Offline i18n v15 修复、G Coins 表现统一、T5 传输修复、T6 shadow，以及 T7 六类 Server Boundary、Node fresh-child、Reward/Economy outbox、Reward/Progression Projection 与 P8–P12 Clock/Timer owner 纵切。旧 Ghost3D/Three.js runtime 已退役并从构建、缓存和质量门清除，只保留 historical-as-of 文档证据。** 本地预检覆盖 Tetris 乱序/重复、Tank frame/tick 高水位、codec 健康协商、旧 WebSocket callback 与 DM 数值序去重；它不是实际网络整形。T7 继续保持 partial；P12 已迁移 heartbeat owner、单次时间采样和分域异常隔离，剩余正式 token TTL、其他 lifecycle、outbox/gameplay/transport timer 与 Metrics generatedAt 尚未迁移。${browserEvidenceSummary} Service Worker v15 的安全更新链与三语词典回退证据继续单独成立。第二浏览器、物理真机/触控、真实网络、线上最新构建、真实 Supabase 与真实性能仍未执行；设备与 Supabase Gate 是 NON_BLOCKING_FOR_DEVELOPMENT / RELEASE_EVIDENCE_PENDING。原创美术 Gate 已 OPEN_BY_OWNER_AUTHORIZATION；现有候选在逐族取得 OWNER_AUTHORIZED_ART_CLEARANCE 前仍保持原状态，但人工/Reviewer B/IP/Golden Set 咨询不再阻塞开发、runtime 或未来发布候选，且未执行时不得冒充 PASS。`,
     '',
     `CONTROL 已完成；权威路由当前仍为 \`${routing.authority.currentStage}\`，本地收口证据已准备好，下一授权阶段为 \`${routing.authority.nextStage}\` 取证：每一个原子需求都有且只有一个主线路由。\`NOW_CLOSURE\` 中的已验证项只作回归基线，\`NON_BLOCKING_FOR_DEVELOPMENT\` 收录开发可继续但发布证据仍待补齐的需求；三条共享 Gate 分别记录设备/网络、Supabase 生产证据与原创美术所有者清除，\`DEFERRED_MAINLINE\` 和 \`FUTURE_EXPANSION\` 不与当前取证批次混合。可确定性验证项默认由机器继续；设备与 Supabase 缺口只限制相应发布证据。原创 Ghost-native 美术使用 OWNER_AUTHORIZED_ART_CLEARANCE，人工清稿、独立 Reviewer B、IP/法律意见与逐资产 Golden Set 是 OPTIONAL_ADVISORY_EVIDENCE，不得伪造成 PASS，也不得继续作为施工或未来发布候选阻塞。任何线上发布仍只接受用户当前明确命令。`,
     '',
@@ -509,7 +599,7 @@ function makeTotalReport(ledger, routing, routingIndex) {
     '## 单主线执行顺序',
     '',
     '1. **CONTROL（已完成，持续守护）**：维护台账、路由、三个共享 Gate、状态语义和发布冻结；Defect/Acceptance Gap/Shared Repair 归回原 ID。',
-    '2. **CLOSE / UI、Ghost3D、PWA 与 G Coins 收口（持续推进）**：Foundation、六款 Renderer、四区 Route Motion、PWA Offline i18n v13 与 G Coins 复合金额均已建立窄边界并保留 fallback；继续完成 CLOSE 中尚未收口的本地批次，同时准备 PROVE 的发布证据。',
+    '2. **CLOSE / UI、2.5D、PWA 与 G Coins 收口（持续推进）**：DepthScene/Camera/Transition、四区 Route Motion、PWA Offline i18n v15 与 G Coins 复合金额均已建立窄边界并保留 DOM/Canvas fallback；Ghost3D/Three.js runtime 已退役，不再是兼容或回滚路径。继续完成 CLOSE 中尚未收口的本地批次，同时准备 PROVE 的发布证据。',
     '3. **PROVE**：补齐第二浏览器、Android、iPhone、Tablet、横竖屏、三语言、双主题、reduced-motion 与真实网络发布证据；缺少这些环境不阻断继续开发。',
     '4. **DATA**：准备并在授权环境中验证真实 Supabase、迁移、RLS、并发、加密备份、隔离恢复、非破坏回滚和多实例；缺生产凭证时继续合同、fake adapter 与可逆修正，不冒充生产事实。',
     '5. **ART → PARITY → LOOP → COMMUNITY → PLATFORM**：原创 Ghost-native 美术按 OWNER_AUTHORIZED_ART_CLEARANCE 进入可逆 runtime 候选，人工清稿/Reviewer B/IP/Golden Set 仅作可选风险咨询；随后推进六款统一体验、快速开局/教学/经济闭环、受治理社区，最后才是原生/商店、新游戏和未来 Renderer。',
@@ -539,10 +629,29 @@ function makeTotalReport(ledger, routing, routingIndex) {
   ].join('\n');
 }
 
+const TRANSIENT_WRITE_CODES = new Set(['UNKNOWN', 'EBUSY', 'EPERM', 'EACCES']);
+
+function writeFileWithTransientRetry(filePath, content, writer = fs.writeFileSync) {
+  const maxAttempts = 5;
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      writer(filePath, content, 'utf8');
+      return;
+    } catch (error) {
+      const retryable = error && TRANSIENT_WRITE_CODES.has(error.code);
+      if (!retryable || attempt === maxAttempts) throw error;
+      // Windows scanners/indexers can briefly hold a generated Markdown file.
+      // Keep the retry local, bounded, and synchronous because this CLI has no
+      // concurrent work to preserve while it writes the seven reports.
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, attempt * 25);
+    }
+  }
+}
+
 function writeIfChanged(filePath, content) {
   const previous = fs.existsSync(filePath) ? fs.readFileSync(filePath, 'utf8') : null;
   if (previous === content) return false;
-  fs.writeFileSync(filePath, content, 'utf8');
+  writeFileWithTransientRetry(filePath, content);
   return true;
 }
 
@@ -563,4 +672,6 @@ function main() {
   console.log(`PROGRESS_REPORTS_OK files=${writes.length} changed=${changed} requirements=${ledger.requirements.length}`);
 }
 
-main();
+if (require.main === module) main();
+
+module.exports = { writeFileWithTransientRetry };

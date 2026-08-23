@@ -1,43 +1,66 @@
-/* Honru as the 2.5D spatial guide: idle, pointer attention, game entry and result. */
+/* Honru as the 2.5D spatial guide: identity-preserving edge art and a native cursor. */
 (function installGhostMascot25D(root){
   'use strict';
-  let host=null,frame=0,lastPointer=null,selectedCard=null,flightTimer=null,flight=null,destroyed=false;
+  const EDGE_ROLES=Object.freeze({games:'edge-games-peek',playline:'edge-playline-wave',profile:'edge-profile-grab'});
+  const CURSOR_STATES=Object.freeze(['idle','pressed','scroll-up','scroll-down','scroll-left','scroll-right']);
+  const CURSOR_STORAGE_KEY='mg_honru_cursor_enabled';
+  let host=null,edgeHost=null,selectedCard=null,flightTimer=null,flight=null,destroyed=false;
+  let edgeSeq=0,edgeMotionLoader=null,edgeMotion=null,edgeRoute='';
+  let cursorEnabled=readCursorEnabled(),cursorInstalled=false,cursorHandlers=null,cursorGeneration=0,cursorScrollTimer=null;
+  let gazeInstalled=false,gazeFrame=0,gazeX=0,gazeY=0;
+
   function reduced(){try{return !!root.matchMedia&&root.matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(_error){return false;}}
+  function finePointer(){try{return !!root.matchMedia&&root.matchMedia('(hover: hover) and (pointer: fine)').matches;}catch(_error){return false;}}
   function enabled(){return !destroyed&&!!(root.DepthScene25D&&root.DepthScene25D.isEnabled&&root.DepthScene25D.isEnabled());}
   function resolveHost(){return typeof document!=='undefined'?document.querySelector('.hero-honru[data-honru-brand-state]'):null;}
-  function renderGaze(){
-    frame=0;if(!host||!lastPointer||reduced()||!enabled())return;
-    const rect=host.getBoundingClientRect(),cx=rect.left+rect.width/2,cy=rect.top+rect.height*.46;
-    const dx=Math.max(-1,Math.min(1,(lastPointer.clientX-cx)/Math.max(1,innerWidth*.35))),dy=Math.max(-1,Math.min(1,(lastPointer.clientY-cy)/Math.max(1,innerHeight*.35)));
-    host.style.setProperty('--honru-gaze-x',(dx*5).toFixed(2)+'px');host.style.setProperty('--honru-gaze-y',(dy*3).toFixed(2)+'px');host.style.setProperty('--honru-gaze-ry',(dx*4).toFixed(2)+'deg');host.style.setProperty('--honru-gaze-rx',(-dy*3).toFixed(2)+'deg');
+  function readCursorEnabled(){try{const value=root.localStorage&&root.localStorage.getItem(CURSOR_STORAGE_KEY);return value!=='0';}catch(_error){return true;}}
+  function activeRouteNode(){if(typeof document==='undefined')return null;return [...document.querySelectorAll('[data-app-route]')].find(node=>!node.classList.contains('hidden')&&!node.hasAttribute('inert'))||null;}
+  function activeRoute(){const node=activeRouteNode();return node&&String(node.getAttribute('data-app-route')||'')||'';}
+  function setCursorState(state){if(!cursorEnabled||!finePointer()||typeof document==='undefined')return;const next=CURSOR_STATES.includes(state)?state:'idle';document.documentElement.dataset.honruCursorState=next;}
+  function clearCursorState(){if(typeof document!=='undefined'&&document.documentElement){delete document.documentElement.dataset.honruCursorState;document.documentElement.classList.remove('honru-cursor-active');}}
+  function removeStyleProperty(node,name){if(!node||!node.style)return;try{if(typeof node.style.removeProperty==='function')node.style.removeProperty(name);else if(name in node.style)node.style[name]='';}catch(_error){}}
+  function removeCursorProperties(){if(typeof document==='undefined'||!document.documentElement)return;const rootNode=document.documentElement;['--honru-cursor-idle','--honru-cursor-pressed','--honru-cursor-scroll-up','--honru-cursor-scroll-down','--honru-cursor-scroll-left','--honru-cursor-scroll-right'].forEach(name=>removeStyleProperty(rootNode,name));}
+  function installCursorListeners(){
+    if(cursorInstalled||typeof document==='undefined')return;
+    const onDown=()=>setCursorState('pressed'),onUp=()=>setCursorState('idle');
+    const onWheel=event=>{if(!cursorEnabled||!finePointer())return;const dx=Number(event&&event.deltaX)||0,dy=Number(event&&event.deltaY)||0;if(Math.abs(dx)<Math.abs(dy))setCursorState(dy<0?'scroll-up':'scroll-down');else if(Math.abs(dx)>0)setCursorState(dx<0?'scroll-left':'scroll-right');if(cursorScrollTimer)clearTimeout(cursorScrollTimer);cursorScrollTimer=setTimeout(()=>{cursorScrollTimer=null;setCursorState('idle');},420);};
+    const onVisibility=()=>{if(document.hidden){if(cursorScrollTimer)clearTimeout(cursorScrollTimer);cursorScrollTimer=null;setCursorState('idle');}};
+    cursorHandlers={onDown,onUp,onWheel,onVisibility};document.addEventListener('pointerdown',onDown,true);document.addEventListener('pointerup',onUp,true);document.addEventListener('pointercancel',onUp,true);document.addEventListener('wheel',onWheel,{passive:true});document.addEventListener('visibilitychange',onVisibility);cursorInstalled=true;
   }
-  function pointer(event){if(!host||!enabled()||event.pointerType==='touch')return;lastPointer=event;if(!frame)frame=requestAnimationFrame(renderGaze);}
-  function mount(){
-    if(destroyed||!enabled())return false;
-    const next=resolveHost();if(next===host)return !!host;if(host)unmount();host=next;if(!host)return false;
-    host.classList.add('honru-mascot25d');host.dataset.honruMotion='idle';root.addEventListener('pointermove',pointer,{passive:true});return true;
+  function uninstallCursorListeners(){if(!cursorInstalled||typeof document==='undefined'||!cursorHandlers)return;const {onDown,onUp,onWheel,onVisibility}=cursorHandlers;document.removeEventListener('pointerdown',onDown,true);document.removeEventListener('pointerup',onUp,true);document.removeEventListener('pointercancel',onUp,true);document.removeEventListener('wheel',onWheel);document.removeEventListener('visibilitychange',onVisibility);cursorHandlers=null;cursorInstalled=false;}
+  function applyCursor(){
+    const generation=++cursorGeneration;
+    if(!cursorEnabled||!finePointer()||typeof resolveHonruEdgeCursorUrl!=='function'||typeof document==='undefined'){uninstallCursorListeners();clearCursorState();removeCursorProperties();if(typeof document!=='undefined'&&document.documentElement)document.documentElement.classList.remove('honru-cursor-active');return false;}
+    installCursorListeners();
+    Promise.all(CURSOR_STATES.map(state=>resolveHonruEdgeCursorUrl('cursor-'+state+'-32',false))).then(urls=>{
+      if(generation!==cursorGeneration||!cursorEnabled||!document.documentElement)return;if(urls.some(url=>!url)){clearCursorState();removeCursorProperties();return;}
+      CURSOR_STATES.forEach((state,index)=>document.documentElement.style.setProperty('--honru-cursor-'+state,'url("'+urls[index].replace(/"/g,'\\"')+'") 4 2'));document.documentElement.classList.add('honru-cursor-active');setCursorState('idle');
+    }).catch(()=>{if(generation===cursorGeneration){clearCursorState();removeCursorProperties();}});return true;
   }
-  function unmount(){if(frame)cancelAnimationFrame(frame);frame=0;root.removeEventListener('pointermove',pointer);if(host){host.classList.remove('honru-mascot25d');delete host.dataset.honruMotion;['--honru-gaze-x','--honru-gaze-y','--honru-gaze-rx','--honru-gaze-ry'].forEach(name=>host.style.removeProperty(name));}host=null;}
-  function selectCard(card){if(selectedCard&&selectedCard.dataset)delete selectedCard.dataset.depthSelected;selectedCard=card&&card.nodeType===1?card:null;if(selectedCard)selectedCard.dataset.depthSelected='true';return selectedCard;}
-  function makeFlight(target){
-    if(typeof document==='undefined'||!target)return null;
-    const source=host&&host.querySelector('img'),flightNode=document.createElement('img');flightNode.className='honru-flight25d';flightNode.alt='';flightNode.setAttribute('aria-hidden','true');flightNode.src=source&&source.currentSrc||source&&source.src||(typeof assetUrl==='function'?assetUrl('brand/honru-mascot-v1.svg'):'assets/brand/honru-mascot-v1.svg');
-    if(source&&source.getBoundingClientRect){const rect=source.getBoundingClientRect();flightNode.style.left=rect.left+'px';flightNode.style.top=rect.top+'px';flightNode.style.width=Math.max(1,rect.width)+'px';flightNode.style.height=Math.max(1,rect.height)+'px';}
-    document.body.appendChild(flightNode);return flightNode;
+  function setCursorEnabled(value,options){cursorEnabled=value!==false;if(!(options&&options.persist===false)){try{root.localStorage&&root.localStorage.setItem(CURSOR_STORAGE_KEY,cursorEnabled?'1':'0');}catch(_error){}}return applyCursor();}
+  function setGaze(hostNode,x,y){if(!hostNode||reduced())return;gazeX=Math.max(-1,Math.min(1,Number(x)||0));gazeY=Math.max(-1,Math.min(1,Number(y)||0));if(gazeFrame)return;gazeFrame=root.requestAnimationFrame?root.requestAnimationFrame(()=>{gazeFrame=0;if(!hostNode.isConnected)return;hostNode.style.setProperty('--honru-gaze-x',(gazeX*2.4).toFixed(2)+'px');hostNode.style.setProperty('--honru-gaze-y',(gazeY*2.4).toFixed(2)+'px');}):0;}
+  function installGaze(){
+    if(gazeInstalled||!host||typeof document==='undefined'||reduced())return;
+    const layer=document.createElement('span');layer.className='honru-gaze-layer';layer.setAttribute('aria-hidden','true');layer.innerHTML='<span class="honru-gaze-dot honru-gaze-dot-left"></span><span class="honru-gaze-dot honru-gaze-dot-right"></span>';host.appendChild(layer);
+    const onMove=event=>{const rect=host.getBoundingClientRect();if(!rect.width||!rect.height)return;setGaze(host,(event.clientX-(rect.left+rect.width/2))/(rect.width/2),(event.clientY-(rect.top+rect.height/2))/(rect.height/2));};const onLeave=()=>setGaze(host,0,0);
+    host.addEventListener('pointermove',onMove,{passive:true});host.addEventListener('pointerleave',onLeave,{passive:true});host._honruGazeCleanup=()=>{host.removeEventListener('pointermove',onMove);host.removeEventListener('pointerleave',onLeave);if(layer.isConnected)layer.remove();};gazeInstalled=true;
   }
-  function enterGame(card){
-    const target=card||selectedCard;if(!target||!enabled()||reduced())return null;if(!host)mount();
-    if(flightTimer){clearTimeout(flightTimer);flightTimer=null;}if(flight&&flight.isConnected)flight.remove();flight=makeFlight(target);
-    if(root.CameraSystem25D)root.CameraSystem25D.to('enter',{target,stage:document.getElementById('screen-game'),mascot:flight,duration:.72});
-    if(flight)flightTimer=setTimeout(()=>{flightTimer=null;if(flight&&flight.isConnected)flight.remove();flight=null;},900);
-    return flight;
-  }
-  function result(outcome){if(host)host.dataset.honruMotion=outcome==='win'?'result-win':outcome==='loss'?'result-lose':'result-draw';if(root.CameraSystem25D)root.CameraSystem25D.to('result',{target:document.getElementById('board-area')});}
+  function clearGaze(){if(host&&host._honruGazeCleanup){try{host._honruGazeCleanup();}catch(_error){}delete host._honruGazeCleanup;}gazeInstalled=false;gazeFrame=0;gazeX=0;gazeY=0;}
+  function mount(){if(destroyed||!enabled())return false;const next=resolveHost();if(next!==host){if(host)unmount();host=next;}if(!host)return false;host.classList.add('honru-mascot25d');host.dataset.honruMotion='idle';installGaze();mountEdge();return true;}
+  function unmount(){clearGaze();if(host){host.classList.remove('honru-mascot25d');delete host.dataset.honruMotion;['--honru-gaze-x','--honru-gaze-y','--honru-gaze-rx','--honru-gaze-ry'].forEach(name=>removeStyleProperty(host,name));}host=null;clearEdge();}
+  function selectCard(card){const next=card&&card.nodeType===1?card:null;if(next===selectedCard){if(next){next.dataset.depthSelected='true';if(typeof ensureGameSelectedObjectNode==='function')ensureGameSelectedObjectNode(next,next.dataset.gameId);}return selectedCard;}if(selectedCard&&selectedCard.dataset){delete selectedCard.dataset.depthSelected;const oldObject=selectedCard.querySelector&&selectedCard.querySelector('.game-icon-selected-object');if(oldObject)oldObject.remove();}selectedCard=next;if(selectedCard){selectedCard.dataset.depthSelected='true';if(typeof ensureGameSelectedObjectNode==='function')ensureGameSelectedObjectNode(next,next.dataset.gameId);}return selectedCard;}
+  function makeFlight(target){if(typeof document==='undefined'||!target)return null;const source=host&&host.querySelector('img'),flightNode=document.createElement('img');flightNode.className='honru-flight25d';flightNode.alt='';flightNode.setAttribute('aria-hidden','true');flightNode.src=source&&source.currentSrc||source&&source.src||(typeof assetUrl==='function'?assetUrl('brand/honru-mascot-v1.svg'):'assets/brand/honru-mascot-v1.svg');if(source&&source.getBoundingClientRect){const rect=source.getBoundingClientRect();flightNode.style.left=rect.left+'px';flightNode.style.top=rect.top+'px';flightNode.style.width=Math.max(1,rect.width)+'px';flightNode.style.height=Math.max(1,rect.height)+'px';}document.body.appendChild(flightNode);return flightNode;}
+  function enterGame(card){const target=card||selectedCard;if(!target||!enabled()||reduced())return null;if(!host)mount();if(flightTimer){clearTimeout(flightTimer);flightTimer=null;}if(flight&&flight.isConnected)flight.remove();flight=makeFlight(target);if(root.CameraSystem25D)root.CameraSystem25D.to('enter',{target,stage:document.getElementById('screen-game'),mascot:flight,duration:.72});if(flight)flightTimer=setTimeout(()=>{flightTimer=null;if(flight&&flight.isConnected)flight.remove();flight=null;},900);return flight;}
+  function result(outcome,options){if(host)host.dataset.honruMotion=outcome==='win'?'result-win':outcome==='loss'?'result-lose':'result-draw';if((!options||options.camera!==false)&&root.CameraSystem25D&&typeof document!=='undefined')root.CameraSystem25D.to('result',{target:document.getElementById('board-area')});}
   function reset(){if(host)host.dataset.honruMotion='idle';selectCard(null);}
-  function refresh(){if(enabled())return mount();unmount();return false;}
-  function destroy(){if(destroyed)return;if(flightTimer)clearTimeout(flightTimer);flightTimer=null;if(flight&&flight.isConnected)flight.remove();flight=null;unmount();reset();destroyed=true;}
-  function snapshot(){return Object.freeze({mounted:!!host,state:host&&host.dataset.honruMotion||'unmounted',selectedGame:selectedCard&&selectedCard.dataset.gameId||null,reducedMotion:reduced(),enabled:enabled()});}
-  const api=Object.freeze({mount,unmount,refresh,selectCard,enterGame,result,reset,snapshot,destroy});root.GhostMascot25D=api;
+  function edgeRoleFor(route){return EDGE_ROLES[route]||'';}
+  function clearEdge(){edgeSeq+=1;edgeRoute='';if(edgeMotion&&edgeMotion.kill){try{edgeMotion.kill();}catch(_error){}}edgeMotion=null;if(edgeHost&&edgeHost.isConnected)edgeHost.remove();edgeHost=null;}
+  function animateEdge(node){if(!node)return;if(reduced()||!root.DepthScene25D||!root.DepthScene25D.isEnabled()){node.style.opacity='1';node.style.transform='none';return;}node.style.opacity='0';node.style.transform='scale(.92)';if(!edgeMotionLoader)edgeMotionLoader=import('./depth-motion-entry.js').then(moduleValue=>moduleValue&&typeof moduleValue.createDepthMotionAdapter==='function'?moduleValue.createDepthMotionAdapter():null).catch(()=>null);edgeMotionLoader.then(adapter=>{if(!adapter||!node.isConnected||edgeHost!==node){if(node.isConnected){node.style.opacity='1';node.style.transform='none';}return;}edgeMotion=adapter.run({mode:'overview',target:node,duration:.34});}).catch(()=>{if(node.isConnected){node.style.opacity='1';node.style.transform='none';}});}
+  function mountEdge(){if(typeof document==='undefined'||!enabled()||typeof resolveHonruEdgeCursorUrl!=='function')return false;const route=activeRoute(),role=edgeRoleFor(route),routeNode=activeRouteNode();if(!role||!routeNode){clearEdge();return false;}if(edgeHost&&edgeHost.isConnected&&edgeRoute===route)return true;clearEdge();edgeRoute=route;const seq=++edgeSeq,node=document.createElement('div');node.className='honru-edge-guide';node.dataset.honruEdgeRole=role;node.setAttribute('aria-hidden','true');node.innerHTML='<img alt="" decoding="async">';routeNode.appendChild(node);edgeHost=node;const img=node.querySelector('img');resolveHonruEdgeCursorUrl(role,reduced()).then(url=>{if(seq!==edgeSeq||!node.isConnected)return;if(!url){node.remove();if(edgeHost===node)edgeHost=null;return;}img.onload=()=>{if(seq!==edgeSeq||!node.isConnected)return;node.dataset.assetState='ready';animateEdge(node);};img.onerror=()=>{if(node.isConnected)node.remove();if(edgeHost===node)edgeHost=null;};img.src=url;}).catch(()=>{if(seq===edgeSeq&&node.isConnected)node.remove();});return true;}
+  function refresh(){applyCursor();if(enabled())return mount();unmount();return false;}
+  function destroy(){if(destroyed)return;destroyed=true;if(flightTimer)clearTimeout(flightTimer);flightTimer=null;if(cursorScrollTimer)clearTimeout(cursorScrollTimer);cursorScrollTimer=null;if(flight&&flight.isConnected)flight.remove();flight=null;unmount();reset();uninstallCursorListeners();clearCursorState();removeCursorProperties();cursorGeneration+=1;}
+  function snapshot(){return Object.freeze({mounted:!!host,state:host&&host.dataset.honruMotion||'unmounted',selectedGame:selectedCard&&selectedCard.dataset.gameId||null,reducedMotion:reduced(),enabled:enabled(),edgeRoute,edgeMounted:!!edgeHost,cursorEnabled,cursorAvailable:finePointer()});}
+  const api=Object.freeze({mount,unmount,refresh,selectCard,enterGame,result,reset,setCursorEnabled,isCursorEnabled:()=>cursorEnabled,snapshot,destroy});root.GhostMascot25D=api;
   if(typeof module!=='undefined'&&module.exports)module.exports=api;
-  if(typeof document!=='undefined'){if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mount,{once:true});else mount();}
+  if(typeof document!=='undefined'){if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{mount();applyCursor();},{once:true});else{mount();applyCursor();}}
 })(typeof globalThis!=='undefined'?globalThis:this);

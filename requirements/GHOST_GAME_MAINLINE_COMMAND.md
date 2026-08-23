@@ -13,19 +13,20 @@
   SHA-256 `23771CEAF5E14AB3B5454D88E7C294451F84AB649C30A94CE4FD1057508BD406`
 - 用户 2026-08-19《Ghost Game 2.5D 游戏重推指南》（附件 SHA-256
   `E6FD38CE8338CBFCCFD76AEE54932C088DE398386CBAB090B9813229D89397E7`）
-  覆盖此前“六款默认 Ghost3D”表现方向：保留 Ghost3D 为冻结的可选实验层，当前表现主线改为
-  Vanilla DOM/CSS/Canvas + GSAP 的统一 2.5D 空间语言。
+  覆盖此前“六款默认 Ghost3D”表现方向：当前表现主线改为 Vanilla DOM/CSS/Canvas + GSAP
+  的统一 2.5D 空间语言。用户 2026-08-19 后续瘦身命令进一步裁决 Three/Ghost3D runtime
+  已退役并安全清除；历史目录与证据只保留 historical-as-of 含义。
 
 冲突裁决顺序：用户当前明确命令 > 本文件的阶段顺序 > 原子需求台账事实 > 分类进度报告。长报告负责设计意图与论证，本文件负责每次执行时的短路径。
 
 ## 唯一主线
 
 1. `CONTROL`：冻结范围、修 release/status drift、把外部依赖合并为共享 Gate。
-2. `CLOSE`：现有 UI + 2.5D DepthScene/Camera/Transition + Gomoku 完整可见 Demo 收口；Ghost3D Foundation 只保留兼容与可选实验，不再扩张。
+2. `CLOSE`：现有 UI + 2.5D DepthScene/Camera/Transition + 六款语义表现收口；3D runtime 不再作为兼容、实验或回滚路径。
 3. `PROVE`：第二浏览器、Android、iPhone、Tablet、双方向、三语言、双主题、reduced-motion、真实网络。
 4. `DATA`：真实 Supabase 凭证、加密备份、迁移、RLS、隔离恢复、回滚、并发、多实例、Cluster。
 5. `ART`：已有 Honru/Emoji/G Coins/Player Character/游戏素材按 `OWNER_AUTHORIZED_ART_CLEARANCE` 完成精修、机器视觉/技术/相似风险审查、runtime 派生与设备验收；人工清稿、Reviewer B、IP/法律意见和逐资产 Golden Set 仅为可选咨询。
-6. `PARITY`：六款共享 2.5D 空间语言、规则、Authority、输入、性能与 fallback 达到统一下限；Three.js 仍为可选实验适配器。
+6. `PARITY`：六款共享 2.5D 空间语言、规则、Authority、输入、性能与 fallback 达到统一下限；不重新引入 Three.js 第二表现链。
 7. `LOOP`：Quick Play、教学、AFK/计时/投降、Durable Recovery、角色经济和经济观测。
 8. `COMMUNITY`：Playline 生产治理；其后才是 Global Chat、Guild 与更广 UGC。
 9. `PLATFORM`：Native、Store、新游戏和未来 Renderer 扩展。
@@ -41,7 +42,7 @@
 - 一批只允许一个主要产品目标；发现外部门禁时可做下一阶段准备，不切入无关新方向。
 - 用户可见能力必须有可见证据；静态合同、DOM/VM 和无截图自动化不能把视觉状态提升为 `verified`。
 
-## 2.5D Presentation 与冻结 Ghost3D Foundation
+## 2.5D Presentation 唯一运行时
 
 当前生产表现固定分层：
 
@@ -59,7 +60,8 @@ DOM + CSS + Canvas + lazy GSAP Adapter
 
 - `DepthScene` 统一 background/world/foreground 三层；`CameraSystem` 只表达 overview/hover/enter/active/focus/impact/result/exit 语义，不拥有规则或输入。
 - 单步动效用 GSAP Core，多步转场用 Timeline，所有动效遵循 transform/autoAlpha、可清理、reduced-motion 与性能门禁；局内权威状态不得依赖 ScrollTrigger。
-- 页面和 Game Stage 保持 `DOM Shell + Canvas/DOM Arena + DOM HUD/Controls/Social`；Three.js/GLB 仅存在于冻结的可选实验层，不进入当前 2.5D 主线。
+- 页面和 Game Stage 保持 `DOM Shell + Canvas/DOM Arena + DOM HUD/Controls/Social`；Three.js、Ghost3D Foundation、六款 renderer/presenter、loader、专属 SW cache 与 feature flag 已从运行时清除。
+- 旧 3D 需求目录、截图和报告只作历史决策/构建证据；不得作为当前 capability、运行时入口、回滚路径或测试依赖。未来如有特殊 3D 需求必须重新立项，不得隐式恢复旧链。
 - 首个 2.5D Demo 固定为 Home → Games → Gomoku → Result → Games，必须使用真实语义事件并提供静态回退；再按 Gomoku → Ludo → Monopoly → Xiangqi → Tetris → Tank 推广。
 
 ## Motion 与 GSAP 门禁

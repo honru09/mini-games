@@ -12,6 +12,11 @@ const tankSource = fs.readFileSync(path.join(ROOT, 'public/src/games/tank.js'), 
 const xiangqiSource = fs.readFileSync(path.join(ROOT, 'public/src/games/xiangqi.js'), 'utf8');
 const failures = [];
 
+// Xiangqi presentation uses a resize observer + one-shot RAF. Keep this
+// harness deterministic without changing the browser runtime contract.
+const requestAnimationFrame = fn => { if (typeof fn === 'function') fn(); return 1; };
+const cancelAnimationFrame = () => {};
+
 function check(name, value, detail) {
   console.log((value ? 'PASS  ' : 'FAIL  ') + name + (value || !detail ? '' : ' :: ' + detail));
   if (!value) failures.push(name);
@@ -41,6 +46,12 @@ check('no GSAP or remote asset runtime dependency is introduced',
   !/\bgsap\b|ScrollTrigger|https?:\/\//i.test(tankSource + xiangqiSource));
 check('Tank geometry is not capped by the old 620px width', !/Math\.min\([^\n]*620/.test(tankSource));
 check('Xiangqi geometry is not capped by the old 560px width', !/Math\.min\(w,\s*560\)/.test(xiangqiSource));
+check('Xiangqi exposes one-use undo state without adding it to authority-shaped snapshots',
+  /let undoUsed\s*=\s*false,\s*undoPending\s*=\s*false/.test(xiangqiSource) && /function performUndo\(\)/.test(xiangqiSource) &&
+  /xiangqi-undo-button/.test(xiangqiSource) && !/undoUsed|undoPending|allowUndo/.test(xqSnapshot));
+check('Xiangqi online undo waits for authority instead of requiring local undo history',
+  /historyAvailable\s*=\s*opts\.online\s*\?\s*moveCount\s*>\s*0\s*:\s*undoHistory\.length\s*>\s*0/.test(xiangqiSource) &&
+  /Number\(opts\.myIdx\)\s*===\s*\(cur\s*\^\s*1\)/.test(xiangqiSource));
 check('presentation timers use explicit epoch/revision guards and cleanup',
   /clearTankWaveCProcessTimers\(\)/.test(tankSource) && /clearXiangqiWaveCProcessTimers\(\)/.test(xiangqiSource) &&
   /tankWaveCProcessEpoch|xiangqiWaveCProcessEpoch|motionEpoch/.test(tankSource + xiangqiSource) &&
@@ -237,6 +248,15 @@ try {
   check('Xiangqi move is observable before it settles', xq.game.getPresentationState().process === 'move');
   xq.flush();
   check('Xiangqi ordinary move settles to turn after its motion callback', xq.game.getPresentationState().process === 'turn');
+  const xqUndoButton = xq.extra.querySelector('.xiangqi-undo-button');
+  check('Xiangqi enables one local undo after a legal move',
+    !!xqUndoButton && xqUndoButton.disabled === false && xqUndoButton.dataset.undoState === 'ready');
+  xqUndoButton.dispatch('click');
+  const xqUndoSnapshot = JSON.stringify(xq.game.snapshot());
+  xqUndoButton.dispatch('click');
+  check('Xiangqi local undo restores the latest move and remains consumed',
+    xq.game.snapshot().moveCount === 0 && xq.game.snapshot().board[6][0] && !xq.game.snapshot().board[5][0] &&
+    JSON.stringify(xq.game.snapshot()) === xqUndoSnapshot && xqUndoButton.disabled === true && xqUndoButton.dataset.undoState === 'used');
   const captureBoard = Array.from({ length:10 }, () => Array(9).fill(null));
   captureBoard[0][4] = { p:1, t:'k' }; captureBoard[9][4] = { p:0, t:'k' }; captureBoard[6][4] = { p:0, t:'p' };
   captureBoard[8][0] = { p:0, t:'r' }; captureBoard[7][0] = { p:1, t:'p' };
@@ -262,6 +282,19 @@ try {
     pendingAfterRestore === 0 && xq.game.getPresentationState().process === 'terminal');
   xq.game.destroy();
   check('Xiangqi destroy clears every presentation callback', xq.jobs.size === 0);
+
+  const noUndoXq = runtime(xiangqiSource, 'gameXiangqi', { width:640, height:620, opts:{ allowUndo:false } });
+  check('Xiangqi does not mount an undo action when the room disables it', !noUndoXq.extra.querySelector('.xiangqi-undo-button'));
+  noUndoXq.game.destroy();
+
+  const aiUndoXq = runtime(xiangqiSource, 'gameXiangqi', { width:640, height:620, reducedMotion:true, opts:{ ai:new Set([1]) } });
+  aiUndoXq.game.onMove({ from:[6,0], to:[5,0] }, 0);
+  aiUndoXq.game.onMove({ from:[3,0], to:[4,0] }, 1);
+  const aiUndoXqButton = aiUndoXq.extra.querySelector('.xiangqi-undo-button');
+  aiUndoXqButton.dispatch('click');
+  check('Xiangqi AI undo rolls back the complete player and AI round',
+    aiUndoXq.game.snapshot().moveCount === 0 && aiUndoXq.game.snapshot().board[6][0] && aiUndoXq.game.snapshot().board[3][0] && aiUndoXqButton.dataset.undoState === 'used');
+  aiUndoXq.game.destroy();
 
   const reducedXq = runtime(xiangqiSource, 'gameXiangqi', { width:390, height:844, reducedMotion:true });
   reducedXq.game.onMove({ from:[6,0], to:[5,0] }, 0);
@@ -305,7 +338,7 @@ try {
     const xqViewport = runtime(xiangqiSource, 'gameXiangqi', viewport);
     const xqField = xqViewport.area.querySelector('.xiangqi-board');
     const xqFieldWidth = Number.parseFloat(xqField && xqField.style.width), xqFieldHeight = Number.parseFloat(xqField && xqField.style.height);
-    const compactLandscape = viewport.width >= 480 && viewport.height > 0 && viewport.height < 450;
+    const compactLandscape = viewport.width >= 360 && viewport.height > 0 && viewport.height < 450;
     const sideRail = (viewport.width >= 700 && viewport.height >= 450) || compactLandscape;
     const railWidth = Math.max(180, Math.min(260, Math.round(viewport.width * .25)));
     const stackedReserve = viewport.width < 480 ? 88 : 108;

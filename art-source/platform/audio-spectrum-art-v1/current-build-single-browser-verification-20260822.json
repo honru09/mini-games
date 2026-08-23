@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "verifiedAt": "2026-08-22T15:36:00+09:00",
+  "build": {
+    "path": "public/index.html",
+    "characters": 2091345,
+    "utf8Bytes": 2106098,
+    "sha256": "D7B483C3769A28CB63FF3C00A72B9D8548FDA7CE7797E7EB842AB71A805B7F82"
+  },
+  "browser": "Codex in-app Chromium",
+  "scope": "P2-08 focused Settings spectrum flow only",
+  "checks": {
+    "desktopVisible": true,
+    "barCount": 12,
+    "semanticCueStateObserved": "live",
+    "lightThemeReadable": true,
+    "darkThemeReadable": true,
+    "languages": { "zh-CN": true, "en-US": true, "uk-UA": true },
+    "narrowViewport": {
+      "requested": "390x844",
+      "effectiveCssWidth": 375,
+      "spectrumWidth": 304,
+      "documentHorizontalOverflowPx": 0,
+      "bodyHorizontalOverflowPx": 0
+    },
+    "visibleReducedMotion": {
+      "cueState": "live",
+      "inlineTransformBarCount": 0,
+      "motionClassPresent": false
+    },
+    "closeCleanup": { "spectrumDomCount": 0, "dialogCount": 0 },
+    "consoleWarnErrorCount": 0
+  },
+  "notClaims": [
+    "not a complete current-build route/game/final-state matrix",
+    "not a second browser",
+    "not a physical Android/iPhone/Tablet",
+    "not real network shaping",
+    "not low-end performance evidence",
+    "not release evidence"
+  ]
+}

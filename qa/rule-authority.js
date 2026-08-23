@@ -18,6 +18,10 @@ const afterIllegal=x.snapshot(1100).clock.remainingMsByPlayer[0];
 check('Xiangqi Rule Authority：非法棋步不会提交棋钟或动作序号',!xIllegal.ok&&beforeIllegal===afterIllegal&&x.lastSeq[0]===0);
 const x1=x.acceptMove(0,{matchId:'x-rule',seq:1,from:[6,0],to:[5,0]},1200),xBad=x.acceptMove(0,{matchId:'x-rule',seq:1,from:[6,2],to:[8,2]},1201);
 check('Xiangqi Rule Authority：服务端验证兵移动后才推进棋钟',x1.ok&&x1.event.payload.clock.activePlayer===1&&x1.event.payload.clock.remainingMsByPlayer[0]===9800&&xBad.reason==='ERR_NOT_ACTIVE_PLAYER');
+const xWrongUndo=x.undo(1,1250),xUndo=x.undo(0,1260),xContinue=x.acceptMove(0,{matchId:'x-rule',seq:2,from:[6,0],to:[5,0]},1270);
+check('Xiangqi Rule Authority：仅最后落子者可悔棋且 Revision 单调推进',
+  xWrongUndo.reason==='ERR_NOT_LAST_MOVER'&&xUndo.ok&&xUndo.event.payload.moveNumber===0&&xUndo.event.payload.revision>x1.event.payload.revision);
+check('Xiangqi Rule Authority：悔棋不回退动作序号并可用下一 Seq 继续',x.lastSeq[0]===2&&xContinue.ok&&xContinue.event.payload.moveNumber===1);
 check('Xiangqi Rule Authority：Reconnect Snapshot 含棋盘与 Clock Hash',x.snapshot(1300).board.length===10&&x.snapshot(1300).hash);
 
 const m=new MonopolyRuleAuthority({matchId:'m-rule',playerCount:3,matchSeed:'m-rule',auctionDurationMs:1000});

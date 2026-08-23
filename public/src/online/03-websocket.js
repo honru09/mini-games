@@ -411,7 +411,7 @@ const online = {
     }
     settings = settings || {};
     if (this.connected){
-      this.send({ type:'create', payload:{ capacity:Math.max(2,Math.min(5,Number(settings.capacity)||playerCount||2)), visibility:settings.visibility || 'public', allowSpectators:settings.allowSpectators !== false } });
+      this.send({ type:'create', payload:{ capacity:Math.max(2,Math.min(5,Number(settings.capacity)||playerCount||2)), visibility:settings.visibility || 'public', allowSpectators:settings.allowSpectators !== false, allowUndo:settings.allowUndo !== false } });
       this.status(t('room_creating'));
     } else {
       this.pending = { type:'create', settings };
@@ -882,7 +882,7 @@ const online = {
             room: p.room, game: p.game || null, capacity: this.capacity,
             players: p.players || [], size: p.size || 1, onlineSize: p.onlineSize || 1,
             seats: p.seats || [], humanCount:p.humanCount || 0, aiCount:p.aiCount || 0,
-            visibility:p.visibility || 'public', allowSpectators:p.allowSpectators !== false,
+            visibility:p.visibility || 'public', allowSpectators:p.allowSpectators !== false, allowUndo:p.allowUndo !== false,
             started: !!p.started, settled:!!p.settled, matchId: p.matchId || null,
           };
           this._audioRoomSummary=detachedRoomAudioSummary(this.roomInfo);
@@ -988,6 +988,13 @@ const online = {
         if (this._replaying) this._liveMoveQueue.push({ payload: msg.payload, player: msg.player });
         else if (this.game && currentGame && currentGame.onMove){ currentGame.onMove(msg.payload, msg.player); if(this.isHost)setTimeout(()=>this.publishGameState(),0); }
         break;
+      case 'undo':
+        if (this.game === 'gomoku' && currentGame && currentGame.onRestore){
+          const events = Array.isArray(msg.payload && msg.payload.moveLog) ? msg.payload.moveLog : [];
+          const hist = events.map(item => item && Array.isArray(item.payload) ? item.payload : null).filter(item => item && item.length === 2);
+          currentGame.onRestore({ hist, cur:hist.length % 2, over:false, last:hist.length ? hist[hist.length - 1] : null }, 'undo');
+        }
+        break;
       case 'tank_snapshot':
         {
           const tankSnapshot=this.decodeTankSnapshot(msg.payload);
@@ -1067,7 +1074,20 @@ const online = {
         if(this.isSpectator&&msg.payload)toast(t('spectator_result',(msg.payload.results||[]).map(item=>t('spectator_result_entry',t('player_number',item.slot+1),item.rank)).join(' · ')));
         break;
       case 'gameplay_error':
-        if(msg.payload&&msg.payload.reason&&!['stale_seq','legacy_move_rejected'].includes(msg.payload.reason))console.warn('Gameplay protocol:',msg.payload.reason);
+        if(msg.payload&&msg.payload.reason){
+          const reason=String(msg.payload.reason);
+          if(currentGame&&typeof currentGame.onUndoRejected==='function'&&(
+            msg.payload.protocol==='undo-v1'||reason.startsWith('ERR_UNDO_')||reason==='ERR_NOT_LAST_MOVER'
+          ))currentGame.onUndoRejected(reason);
+          const undoErrorKey={
+            ERR_UNDO_DISABLED:'undo_error_disabled',
+            ERR_UNDO_ALREADY_USED:'undo_error_already_used',
+            ERR_UNDO_UNAVAILABLE:'undo_error_unavailable',
+            ERR_NOT_LAST_MOVER:'undo_error_not_last_mover',
+          }[reason];
+          if(undoErrorKey)toast(t(undoErrorKey));
+          else if(!['stale_seq','legacy_move_rejected'].includes(reason))console.warn('Gameplay protocol:',reason);
+        }
         break;
       case 'restart':
         {
@@ -1584,28 +1604,53 @@ function startOnlineGame(id, sizeOverride){
   if(typeof updateGameStageStateStrip==='function')updateGameStageStateStrip();
   runCountdown();
 }
+function onlineGameIconNode(gameId,options){
+  const settings=options&&typeof options==='object'?options:{},meta=GAMES[gameId];
+  if(meta&&typeof gameIconNode==='function')return gameIconNode(gameId,{role:settings.role||'icon',size:settings.size||44,className:settings.className||'',loading:settings.loading||'lazy',fallback:meta.icon||'🎮'});
+  const fallback=el('span',settings.className||'online-game-icon',meta&&meta.icon||'🎮');fallback.setAttribute('aria-hidden','true');return fallback;
+}
+function onlineSystemMarkerNode(markerId,options){
+  if(typeof gameSystemMarkerNode!=='function')return null;
+  return gameSystemMarkerNode(markerId,options||{});
+}
+function communityCardArtNode(role,className){
+  if(typeof document==='undefined'||typeof resolveCommunityReplayTournamentCardUrl!=='function')return null;
+  const img=el('img','community-card-art '+(className||''));img.alt='';img.setAttribute('aria-hidden','true');img.loading='lazy';img.decoding='async';img.hidden=true;
+  const reduced=typeof matchMedia==='function'&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+  resolveCommunityReplayTournamentCardUrl(role,reduced).then(url=>{if(url&&img.isConnected!==false){img.src=url;img.hidden=false;}}).catch(()=>{});
+  return img;
+}
 function renderReplayList(items){
   const holder=$('my-card');if(!holder||!account)return;
   const old=document.querySelector&&document.querySelector('.replay-entry');if(old)old.remove();
   const button=el('button','btn replay-entry',t('replay_open'));button.addEventListener('click',()=>{
-    const bd=el('div','modal-backdrop replay-list-modal'),card=el('div','modal-card');card.appendChild(el('h3',null,t('replay_title')));
+    const bd=el('div','modal-backdrop replay-list-modal'),card=el('div','modal-card');const art=communityCardArtNode('card-replay','replay-card-art');if(art)card.appendChild(art);card.appendChild(el('h3',null,t('replay_title')));
     if(!items.length)card.appendChild(el('p','muted',t('replay_empty')));
-    items.forEach(item=>{const row=el('div','replay-row');row.appendChild(el('span',null,(GAMES[item.game]&&GAMES[item.game].icon||'🎮')+' '+(GAMES[item.game]&&t(GAMES[item.game].nameKey)||item.game)));row.appendChild(el('span','muted',t('replay_events',item.eventCount)));const open=el('button','btn',t('replay_watch'));open.addEventListener('click',()=>online.requestReplay(item.replayId));row.appendChild(open);if(item.canShare){const share=el('button','btn',t('replay_share'));share.addEventListener('click',()=>online.shareReplay(item.replayId));row.appendChild(share);if(item.shared){const revoke=el('button','btn btn-danger',t('replay_unshare'));revoke.addEventListener('click',()=>online.unshareReplay(item.replayId));row.appendChild(revoke);}}card.appendChild(row);});
+    items.forEach(item=>{const row=el('div','replay-row'),identity=el('span','replay-game-identity');identity.appendChild(onlineGameIconNode(item.game,{size:44,className:'replay-game-icon'}));identity.appendChild(el('span','replay-game-name',GAMES[item.game]&&t(GAMES[item.game].nameKey)||item.game));row.appendChild(identity);row.appendChild(el('span','muted',t('replay_events',item.eventCount)));const open=el('button','btn',t('replay_watch'));open.addEventListener('click',()=>online.requestReplay(item.replayId));row.appendChild(open);if(item.canShare){const share=el('button','btn',t('replay_share'));share.addEventListener('click',()=>online.shareReplay(item.replayId));row.appendChild(share);if(item.shared){const revoke=el('button','btn btn-danger',t('replay_unshare'));revoke.addEventListener('click',()=>online.unshareReplay(item.replayId));row.appendChild(revoke);}}card.appendChild(row);});
     const close=el('button','btn btn-primary',t('close'));close.addEventListener('click',()=>bd.remove());card.appendChild(close);bd.appendChild(card);document.body.appendChild(bd);
   });
   holder.appendChild(button);
 }
 function renderReplayPlayer(replay){
   if(!replay||!Array.isArray(replay.moveLog))return;
-  const bd=el('div','modal-backdrop replay-player-modal'),card=el('div','modal-card');card.appendChild(el('h3',null,t('replay_player_title')));card.appendChild(el('p','muted',t('replay_privacy_note')));
+  const bd=el('div','modal-backdrop replay-player-modal'),card=el('div','modal-card'),art=communityCardArtNode('card-replay','replay-card-art');if(art)card.appendChild(art);const heading=el('h3','replay-player-heading');heading.appendChild(onlineGameIconNode(replay.game,{role:'theme-icon',size:64,className:'replay-player-game-icon',loading:'eager'}));heading.appendChild(el('span',null,t('replay_player_title')));card.appendChild(heading);card.appendChild(el('p','muted',t('replay_privacy_note')));
   const progress=el('input','replay-progress');progress.type='range';progress.min=0;progress.max=replay.moveLog.length;progress.value=0;progress.style.width='100%';card.appendChild(progress);
   const speed=el('select','nick-input');[0.5,1,2,4].forEach(value=>{const option=el('option');option.value=String(value);option.textContent=value+'×';speed.appendChild(option);});card.appendChild(speed);
   const play=el('button','btn btn-primary',t('replay_play'));const pause=el('button','btn',t('replay_pause'));const status=el('p','muted',t('replay_step',0,replay.moveLog.length));card.appendChild(play);card.appendChild(pause);card.appendChild(status);
-  let timer=null,index=0;const stop=()=>{if(timer)clearInterval(timer);timer=null;};const applyIndex=()=>{if(!currentGame||typeof currentGame.onMove!=='function')showGame(replay.game);const event=replay.moveLog[index];if(event&&currentGame&&currentGame.onMove)currentGame.onMove(event.payload,event.player);progress.value=index;status.textContent=t('replay_step',index,replay.moveLog.length);};
-  progress.addEventListener('input',()=>{stop();index=Number(progress.value)||0;showGame(replay.game);for(let i=0;i<index;i++){const event=replay.moveLog[i];if(currentGame&&currentGame.onMove)currentGame.onMove(event.payload,event.player);}status.textContent=t('replay_step',index,replay.moveLog.length);});
-  play.addEventListener('click',()=>{stop();timer=setInterval(()=>{if(index>=replay.moveLog.length){stop();return;}applyIndex();index++;},Math.max(80,500/Number(speed.value||1)));});pause.addEventListener('click',stop);
+  let timer=null,index=0,started=false;
+  const replaySeats=Math.max(2,Math.min(5,replay.moveLog.reduce((max,event)=>Math.max(max,Number(event&&event.player)||0),0)+1));
+  const cinematic=()=>typeof ReplayCinematic25D!=='undefined'&&ReplayCinematic25D;
+  const stop=()=>{if(timer)clearInterval(timer);timer=null;};
+  const updateStatus=()=>{progress.value=String(index);status.textContent=t('replay_step',index,replay.moveLog.length);};
+  const enter=()=>{online._replaying=true;playerCount=replaySeats;showGame(replay.game);started=true;const bridge=cinematic();if(bridge&&typeof bridge.begin==='function')bridge.begin({stage:$('screen-game'),target:$('board-area'),total:replay.moveLog.length});};
+  const rebuildTo=target=>{if(started&&currentGame&&typeof currentGame.destroy==='function')currentGame.destroy();currentGame=null;started=false;enter();index=0;while(index<target){const event=replay.moveLog[index];if(event&&currentGame&&typeof currentGame.onMove==='function')currentGame.onMove(event.payload,event.player);index++;}updateStatus();const bridge=cinematic();if(bridge&&typeof bridge.beat==='function')bridge.beat({index,total:replay.moveLog.length,target:$('board-area'),seeking:true});};
+  const applyNext=()=>{if(!started)enter();if(index>=replay.moveLog.length){stop();const bridge=cinematic();if(bridge&&typeof bridge.complete==='function')bridge.complete({target:$('board-area')});return false;}const event=replay.moveLog[index];if(event&&currentGame&&typeof currentGame.onMove==='function')currentGame.onMove(event.payload,event.player);index++;updateStatus();const bridge=cinematic();if(bridge&&typeof bridge.beat==='function')bridge.beat({index,total:replay.moveLog.length,target:$('board-area')});if(index>=replay.moveLog.length){stop();if(bridge&&typeof bridge.complete==='function')bridge.complete({target:$('board-area')});}return true;};
+  progress.addEventListener('input',()=>{stop();rebuildTo(Math.max(0,Math.min(replay.moveLog.length,Number(progress.value)||0)));});
+  play.addEventListener('click',()=>{if(index>=replay.moveLog.length)rebuildTo(0);stop();applyNext();if(index<replay.moveLog.length)timer=setInterval(applyNext,Math.max(80,500/Number(speed.value||1)));});
+  pause.addEventListener('click',()=>{stop();const bridge=cinematic();if(bridge&&typeof bridge.pause==='function')bridge.pause({target:$('board-area')});});
   if(replay.canShare){const share=el('button','btn',t('replay_share'));share.addEventListener('click',()=>online.shareReplay(replay.replayId));card.appendChild(share);}
-  const close=el('button','btn',t('close'));close.addEventListener('click',()=>{stop();bd.remove();});card.appendChild(close);bd.appendChild(card);document.body.appendChild(bd);
+  let dialogClose=null,cleaned=false;const cleanup=()=>{if(cleaned)return;cleaned=true;stop();const bridge=cinematic();if(bridge&&typeof bridge.end==='function')bridge.end('replay_dialog_close');online._replaying=false;releaseModalScrollLock(bd);if(started&&typeof showHub==='function')showHub();};const closeReplay=()=>typeof dialogClose==='function'?dialogClose():(cleanup(),bd.remove(),true);
+  const close=el('button','btn',t('close'));close.addEventListener('click',closeReplay);card.appendChild(close);bd.appendChild(card);acquireModalScrollLock(bd);document.body.appendChild(bd);if(typeof setupAccessibleOverlayDialog==='function')dialogClose=setupAccessibleOverlayDialog(bd,card,play,t('replay_player_title'),cleanup);else bd.addEventListener('click',event=>{if(event.target===bd)closeReplay();});
 }
 function copyReplayShareUrl(token){
   if(!token)return;
@@ -1640,10 +1685,12 @@ function renderRoomPanel(){
         const profile={...(profileByUid(seat.userId)||{}),uid:seat.userId,name:seat.nickname,avatar:seat.avatar,frame:seat.frame,effect:seat.effect,nameFx:seat.nameFx,lang:seat.lang};
         const av=el('button','game-stage-avatar-button');av.type='button';av.setAttribute('aria-label',t('room_host_profile_aria',localizedPlayerName(seat.nickname)));av.disabled=!seat.userId;av.appendChild(avatarStageNode(profile,38));av.addEventListener('click',()=>seat.userId&&openProfileModal(seat.userId));card.appendChild(av);
         const seatName=el('div','seat-name');seatName.appendChild(typeof playerIdentityNameNode==='function'?playerIdentityNameNode(profile):nameFxNode(profile,seat.nickname||''));if(seat.userId===deviceUid)seatName.appendChild(el('span',null,t('profile_mine')));card.appendChild(seatName);
-        const badges=el('div','seat-badges');if(seat.host)badges.appendChild(el('span','seat-badge',t('stage_host')));badges.appendChild(el('span','seat-badge '+(seat.ready?'ready':''),t(seat.ready?'ready':'not_ready')));if(!seat.online)badges.appendChild(el('span','seat-badge',t('offline')));card.appendChild(badges);
+        const badges=el('div','seat-badges');if(seat.host)badges.appendChild(el('span','seat-badge',t('stage_host')));const readyBadge=el('span','seat-badge '+(seat.ready?'ready':''));if(seat.ready){const marker=onlineSystemMarkerNode('ready',{size:24,className:'seat-state-marker'});if(marker)readyBadge.appendChild(marker);}readyBadge.appendChild(el('span',null,t(seat.ready?'ready':'not_ready')));badges.appendChild(readyBadge);if(!seat.online)badges.appendChild(el('span','seat-badge',t('offline')));card.appendChild(badges);
       }else if(seat.type==='ai'){
+        card.dataset.aiDifficulty=String(seat.aiDifficulty||'normal');
+        if(typeof aiDifficultyVisualNode==='function'){const difficultyArt=aiDifficultyVisualNode(seat.aiDifficulty||'normal','seat',{className:'room-ai-difficulty-art'});if(difficultyArt)card.appendChild(difficultyArt);}
         card.appendChild(avatarStageNode({avatar:seat.avatar||141,frame:0,effect:0},38));const seatName=el('div','seat-name');appendPlayerName(seatName,seat.nickname,'ai_default_name');card.appendChild(seatName);
-        const badges=el('div','seat-badges');badges.appendChild(el('span','seat-badge bot',t('stage_ai')));badges.appendChild(el('span','seat-badge ready',t('ready')));card.appendChild(badges);
+        const badges=el('div','seat-badges'),aiBadge=el('span','seat-badge bot'),aiMarker=onlineSystemMarkerNode('ai',{size:24,className:'seat-state-marker'}),readyBadge=el('span','seat-badge ready'),readyMarker=onlineSystemMarkerNode('ready',{size:24,className:'seat-state-marker'});if(aiMarker)aiBadge.appendChild(aiMarker);aiBadge.appendChild(el('span',null,t('stage_ai')));if(readyMarker)readyBadge.appendChild(readyMarker);readyBadge.appendChild(el('span',null,t('ready')));badges.appendChild(aiBadge);badges.appendChild(readyBadge);card.appendChild(badges);
         card.appendChild(el('div','seat-meta',(seat.aiDifficulty||'normal').toUpperCase()+' · '+(seat.aiPersona||'teacher')));
         if(online.isHost&&!info.started){const remove=el('button','btn btn-ghost',t('remove_ai'));remove.addEventListener('click',()=>online.removeAI(seat.seatId));card.appendChild(remove);}
       }else{
@@ -1654,7 +1701,10 @@ function renderRoomPanel(){
     });
   }
   const selectedGameName = info.game && GAMES[info.game] ? t(GAMES[info.game].nameKey) : '';
-  $('room-status').textContent = watching ? t('spectator_readonly') : (info.started ? t('match_in_progress') : (info.canStart ? t('all_ready_start') : (info.game ? t('room_selected_ready', selectedGameName) : t('room_wait_host_select'))));
+  const roomStatus=$('room-status'),roomStatusText=watching ? t('spectator_readonly') : (info.started ? t('match_in_progress') : (info.canStart ? t('all_ready_start') : (info.game ? t('room_selected_ready', selectedGameName) : t('room_wait_host_select'))));
+  roomStatus.textContent='';
+  const roomStatusMarker=onlineSystemMarkerNode(info.started?'live':info.canStart?'ready':'waiting',{size:32,className:'room-status-marker'});if(roomStatusMarker)roomStatus.appendChild(roomStatusMarker);
+  roomStatus.appendChild(el('span','room-status-label',roomStatusText));
   const actions = $('room-actions');
   actions.innerHTML = '';
   if(watching){
@@ -1681,6 +1731,7 @@ function renderRoomPanel(){
       const invite=markGuestSocialControl(el('button','btn',t('invite_player')));invite.addEventListener('click',openInvitePicker);actions.appendChild(invite);
       const visibility=el('button','btn',info.visibility==='private'?t('make_public'):t('make_private'));visibility.addEventListener('click',()=>online.send({type:'room_settings',payload:{visibility:info.visibility==='private'?'public':'private'}}));actions.appendChild(visibility);
       const watch=el('button','btn',info.allowSpectators?t('disable_spectators'):t('enable_spectators'));watch.addEventListener('click',()=>online.send({type:'room_settings',payload:{allowSpectators:!info.allowSpectators}}));actions.appendChild(watch);
+      if(!info.started&&(info.game==='gomoku'||info.game==='xiangqi')){const undo=el('button','btn',info.allowUndo===false?t('enable_undo'):t('disable_undo'));undo.addEventListener('click',()=>online.send({type:'room_settings',payload:{allowUndo:info.allowUndo===false}}));actions.appendChild(undo);}
     }
   }
   if(tournamentUiAvailable()&&online.tournamentState&&Array.isArray(online.tournamentState.standings)&&online.tournamentState.standings.some(item=>item.id===deviceUid)){
@@ -1702,7 +1753,38 @@ function tournamentUiAvailable(){
 }
 function closeTournamentStateModal(){
   if(typeof document==='undefined'||!document.querySelectorAll)return;
-  document.querySelectorAll('.tournament-state-modal,.tournament-create-modal').forEach(node=>node.remove());
+  document.querySelectorAll('.tournament-state-modal,.tournament-create-modal').forEach(removeTournamentModalNode);
+}
+function removeTournamentModalNode(node){
+  if(!node)return;
+  const closeDialog=node.__ghostTournamentDialogClose;
+  if(typeof closeDialog==='function'){node.__ghostTournamentDialogClose=null;try{return closeDialog();}catch(_error){}}
+  const handle=node.__ghostTournamentBroadcastOverlayHandle;
+  if(handle&&typeof handle.destroy==='function')try{handle.destroy();}catch(_error){}
+  node.__ghostTournamentBroadcastOverlayHandle=null;
+  if(typeof node.remove==='function')node.remove();
+}
+function tournamentBroadcastModel(state,format,status,effectiveStatus){
+  const standings=Array.isArray(state&&state.standings)?state.standings:[],leader=standings.find(item=>Number(item&&item.rank)===1)||standings[0]||null;
+  const tone=effectiveStatus==='round_playing'?'live':effectiveStatus==='round_complete'?'complete':effectiveStatus==='finished'?'finished':effectiveStatus==='waiting'?'waiting':'neutral';
+  return {
+    tone,
+    kicker:t('tournament_broadcast_label'),
+    title:t('tournament_title',t('game_'+state.gameId),format),
+    status,
+    round:state.round,
+    maxRounds:state.maxRounds,
+    roundLabel:Number(state.round)>0?t('tournament_broadcast_round',state.round,state.maxRounds):t('tournament_broadcast_waiting_round'),
+    leaderLabel:t('tournament_broadcast_leader'),
+    leaderName:leader&&leader.id||'—',
+    leaderScore:leader?t('tournament_broadcast_points',leader.points):'',
+    tablesLabel:t('tournament_broadcast_tables'),
+    emptyLabel:t('tournament_broadcast_no_table'),
+    tables:(Array.isArray(state.pairings)?state.pairings:[]).slice(0,3).map(pair=>{
+      const key='tournament_pair_status_'+pair.status,label=t(key);
+      return {label:t('tournament_broadcast_table',pair.table),players:(pair.players||[]).join(t('versus_separator')),status:label===key?String(pair.status||''):label,tone:pair.status==='playing'||pair.status==='bound'?'live':pair.status==='complete'?'complete':'waiting'};
+    })
+  };
 }
 function openTournamentCreate(info){
   if(!tournamentUiAvailable())return;
@@ -1722,10 +1804,12 @@ function openTournamentCreate(info){
 }
 function renderTournamentState(state){
   if(!tournamentUiAvailable())return closeTournamentStateModal();
-  if(!state)return;let bd=document.querySelector&&document.querySelector('.tournament-state-modal');if(bd)bd.remove();bd=el('div','modal-backdrop tournament-state-modal');const card=el('div','modal-card');
+  if(!state)return;let bd=document.querySelector&&document.querySelector('.tournament-state-modal');if(bd)removeTournamentModalNode(bd);bd=el('div','modal-backdrop tournament-state-modal');const card=el('div','modal-card tournament-state-card');let closeTournament=()=>removeTournamentModalNode(bd);
   const format=t('tournament_format_'+state.format),effectiveStatus=['expired','declined'].includes(state.guardStatus)?state.guardStatus:state.status,status=t('tournament_status_'+effectiveStatus);
-  card.appendChild(el('h3',null,'🏆 '+t('tournament_title',t('game_'+state.gameId),format)));card.appendChild(el('p','muted',t('tournament_state_line',status,state.round,state.maxRounds)));
-  const standings=el('div','tournament-standings');(state.standings||[]).forEach(item=>standings.appendChild(el('div','roster-item',t('tournament_standing_line',item.rank,item.id,item.points,item.wins,item.draws,item.losses))));card.appendChild(standings);
+  let broadcastHandle=null;if((typeof tournamentBroadcastOverlayEnabled!=='function'||tournamentBroadcastOverlayEnabled())&&typeof GhostTournamentBroadcastOverlay!=='undefined'&&GhostTournamentBroadcastOverlay&&typeof GhostTournamentBroadcastOverlay.mount==='function')try{broadcastHandle=GhostTournamentBroadcastOverlay.mount(card,tournamentBroadcastModel(state,format,status,effectiveStatus));}catch(_error){broadcastHandle=null;}
+  if(broadcastHandle)bd.__ghostTournamentBroadcastOverlayHandle=broadcastHandle;else{const art=communityCardArtNode('card-tournament','tournament-card-art');if(art)card.appendChild(art);}
+  const tournamentHeading=el('h3','tournament-identity-heading');if(typeof identityBadgeNode==='function')tournamentHeading.appendChild(identityBadgeNode('tournament','champion',{size:'48',className:'tournament-heading-badge',fallback:'🏆'}));else tournamentHeading.appendChild(el('span',null,'🏆'));tournamentHeading.appendChild(el('span',null,t('tournament_title',t('game_'+state.gameId),format)));card.appendChild(tournamentHeading);card.appendChild(el('p','muted',t('tournament_state_line',status,state.round,state.maxRounds)));
+  const standings=el('div','tournament-standings');(state.standings||[]).forEach(item=>{const rank=Math.max(1,Number(item.rank)||1),role=rank===1?'champion':rank<=3?'finalist':Number(item.points)>0?'contender':'participant',row=el('div','roster-item tournament-standing-row');if(typeof identityBadgeNode==='function')row.appendChild(identityBadgeNode('tournament',role,{size:'32',className:'tournament-standing-badge'}));row.appendChild(el('span',null,t('tournament_standing_line',item.rank,item.id,item.points,item.wins,item.draws,item.losses)));standings.appendChild(row);});card.appendChild(standings);
   const owner=state.ownerUid===deviceUid;
   const consents=state.consents||{},allConsented=(state.standings||[]).every(item=>consents[item.id]===true);
   if(state.status==='waiting'&&consents[deviceUid]!==true&&effectiveStatus==='waiting'){
@@ -1747,7 +1831,7 @@ function renderTournamentState(state){
         watch.addEventListener('click',()=>{
           if(online.isSpectator)online.send({type:'spectate_leave'});
           online.spectate(pair.matchRoomId,pair.roomMetadata.serverMatchId);
-          bd.remove();
+          closeTournament();
         });
         card.appendChild(watch);
       }
@@ -1760,8 +1844,11 @@ function renderTournamentState(state){
   });
   if(owner&&state.status==='waiting'&&effectiveStatus==='waiting'){const start=el('button','btn btn-primary',t('tournament_start'));start.disabled=!allConsented;start.addEventListener('click',()=>online.send({type:'tournament_start',payload:{tournamentId:state.tournamentId}}));card.appendChild(start);}
   if(owner&&state.status==='round_complete'){const next=el('button','btn btn-primary',t('tournament_next'));next.addEventListener('click',()=>online.send({type:'tournament_next',payload:{tournamentId:state.tournamentId}}));card.appendChild(next);}
-  const close=el('button','btn',t('close'));close.addEventListener('click',()=>bd.remove());card.appendChild(close);bd.appendChild(card);document.body.appendChild(bd);
+  const close=el('button','btn',t('close'));close.addEventListener('click',()=>closeTournament());card.appendChild(close);
+  closeTournament=mountOnlineOverlayDialog(bd,card,close,t('tournament_title',t('game_'+state.gameId),format),()=>{const handle=bd.__ghostTournamentBroadcastOverlayHandle;bd.__ghostTournamentBroadcastOverlayHandle=null;if(handle&&typeof handle.destroy==='function')try{handle.destroy();}catch(_error){}});
+  bd.__ghostTournamentDialogClose=closeTournament;
 }
+if(typeof window!=='undefined'&&window&&typeof window.addEventListener==='function')window.addEventListener('languagechange',()=>{const open=typeof document!=='undefined'&&document.querySelector&&document.querySelector('.tournament-state-modal');if(open&&tournamentUiAvailable()&&typeof online!=='undefined'&&online&&online.tournamentState)renderTournamentState(online.tournamentState);});
 function playerNameValue(value){
   return typeof value === 'string' && value.trim() ? value : '';
 }
@@ -1969,7 +2056,7 @@ function renderLobby(){
     const hostProf = { uid:r.hostUid, avatar:r.hostAvatar, name:r.hostName, frame:r.hostFrame, effect:r.hostEffect, nameFx:r.hostNameFx, lang:r.hostLang };
     const hostButton=el('button','lobby-host-profile');hostButton.type='button';hostButton.setAttribute('aria-label',t('room_host_profile_aria',r.hostName||t('social_player')));hostButton.appendChild(avatarStageNode(hostProf,30));hostButton.disabled=!r.hostUid;hostButton.addEventListener('click',e=>{if(e&&e.stopPropagation)e.stopPropagation();if(r.hostUid)openProfileModal(r.hostUid);});row.appendChild(hostButton);
     const info = el('div','info');
-    const head=el('div','lobby-room-head'),roomName=el('div','nm');if(typeof playerIdentityNameNode==='function')roomName.appendChild(playerIdentityNameNode(hostProf,{includeLanguage:true}));else{appendPlayerName(roomName,r.hostName);if(r.hostLang)roomName.appendChild(document.createTextNode(' '+langFlag(r.hostLang)));}roomName.appendChild(el('span',null,t('host_room_suffix')));head.appendChild(roomName);head.appendChild(el('span','lobby-status-badge '+(r.started?'is-playing':'is-waiting'),t(r.started?'room_status_playing':'room_status_waiting')));info.appendChild(head);
+    const head=el('div','lobby-room-head'),roomName=el('div','nm');if(typeof playerIdentityNameNode==='function')roomName.appendChild(playerIdentityNameNode(hostProf,{includeLanguage:true}));else{appendPlayerName(roomName,r.hostName);if(r.hostLang)roomName.appendChild(document.createTextNode(' '+langFlag(r.hostLang)));}roomName.appendChild(el('span',null,t('host_room_suffix')));head.appendChild(roomName);const statusBadge=el('span','lobby-status-badge '+(r.started?'is-playing':'is-waiting')),statusMarker=onlineSystemMarkerNode(r.started?'live':'waiting',{size:24,className:'lobby-status-marker'});if(statusMarker)statusBadge.appendChild(statusMarker);statusBadge.appendChild(el('span','lobby-status-label',t(r.started?'room_status_playing':'room_status_waiting')));head.appendChild(statusBadge);info.appendChild(head);
     info.appendChild(el('div','meta',t('lobby_room_meta',r.size,r.capacity,r.game && GAMES[r.game] ? t(GAMES[r.game].nameKey) : t('not_selected'))));
     const secondary=el('div','lobby-secondary-meta');secondary.appendChild(el('span',null,t('lobby_human_ai_meta',r.humanCount||0,r.aiCount||0)));secondary.appendChild(el('span',null,t(canSpectate?'lobby_spectate_available':'lobby_spectate_unavailable')));info.appendChild(secondary);
     row.appendChild(info);

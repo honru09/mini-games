@@ -1,0 +1,185 @@
+{
+  "schemaVersion": 1,
+  "familyId": "G-15-MONOPOLY-FINAL-ART-V1",
+  "sourceId": "ART-036-MONOPOLY-FINAL-ART-V1",
+  "productionUnitId": "P1-01",
+  "status": "SOURCE_EXTRACTION_IN_PROGRESS",
+  "license": "project-owned-original",
+  "runtimeIntegration": "NOT_STARTED",
+  "sources": {
+    "board": {
+      "path": "art-source/games/monopoly/final-art-v1/monopoly-city-board-source-v1.png",
+      "sha256": "55080E72E43421E05E74B65597E6DF28E514813E9D6E61D11352B3C010B42E78",
+      "bytes": 2728436,
+      "width": 1254,
+      "height": 1254,
+      "channels": 3,
+      "hasAlpha": false,
+      "decision": "accepted-source-master"
+    },
+    "falseTransparency": {
+      "path": "art-source/games/monopoly/final-art-v1/monopoly-building-prop-kit-source-v1.png",
+      "sha256": "194C36981A720E186EEB4CB2B2C7FDCB8B304C668EC4702587A64EB9458DE8CC",
+      "bytes": 1533539,
+      "width": 1254,
+      "height": 1254,
+      "channels": 3,
+      "hasAlpha": false,
+      "decision": "rejected-for-runtime",
+      "reason": "RGB checkerboard was baked into pixels; retained as source-only visual evidence"
+    },
+    "chroma": {
+      "path": "art-source/games/monopoly/final-art-v1/monopoly-building-prop-kit-chroma-source-v1.png",
+      "sha256": "BC8F077577D1A0DFF083BF22E3BE7F57E76665221E1BD9FAB27769D03414A72F",
+      "bytes": 1531174,
+      "width": 1448,
+      "height": 1086,
+      "channels": 3,
+      "hasAlpha": false,
+      "decision": "accepted-for-deterministic-alpha-extraction",
+      "matte": "#FF00FF requested; generated field varies and is removed by bounded chroma model"
+    }
+  },
+  "objectAtoms": [
+    {
+      "id": "townhouse-sage",
+      "path": "art-source/games/monopoly/final-art-v1/derived/atoms/townhouse-sage-source-v1.png",
+      "sha256": "6925D1D17DCF480213D118418EC6CDDD81D55297DB7F73499392C4B6DFE66769",
+      "bytes": 39155,
+      "width": 340,
+      "height": 297,
+      "transparent": 47936,
+      "partial": 3480,
+      "opaque": 49564,
+      "magentaRisk": 0,
+      "edgeVisible": 0
+    },
+    {
+      "id": "city-hall-ink",
+      "path": "art-source/games/monopoly/final-art-v1/derived/atoms/city-hall-ink-source-v1.png",
+      "sha256": "C629075DD372B3F8509E316B700B6CE75E085CC1887C856B37AF302713120E53",
+      "bytes": 47330,
+      "width": 375,
+      "height": 376,
+      "transparent": 76775,
+      "partial": 2526,
+      "opaque": 61699,
+      "magentaRisk": 0,
+      "edgeVisible": 0
+    },
+    {
+      "id": "market-pavilion-blue",
+      "path": "art-source/games/monopoly/final-art-v1/derived/atoms/market-pavilion-blue-source-v1.png",
+      "sha256": "4EE2D3F88372BC7CC63A7DE7856A070A7EA69EF81A84D8F019B1E85C0695D40D",
+      "bytes": 42138,
+      "width": 379,
+      "height": 317,
+      "transparent": 57646,
+      "partial": 2351,
+      "opaque": 60146,
+      "magentaRisk": 0,
+      "edgeVisible": 0
+    },
+    {
+      "id": "tower-landmark-coral",
+      "path": "art-source/games/monopoly/final-art-v1/derived/atoms/tower-landmark-coral-source-v1.png",
+      "sha256": "920DBAF423D6C5397E2D563D84F0C16165117BECFD9F7288B4169AF2616E23C4",
+      "bytes": 40918,
+      "width": 345,
+      "height": 397,
+      "transparent": 79615,
+      "partial": 5136,
+      "opaque": 52214,
+      "magentaRisk": 0,
+      "edgeVisible": 0
+    },
+    {
+      "id": "wrought-gate-sage",
+      "path": "art-source/games/monopoly/final-art-v1/derived/atoms/wrought-gate-sage-source-v1.png",
+      "sha256": "EF2307BA8FAE10CDE611496AB354D20CCF1DA7F86AB706B2F7B0C37CB475B368",
+      "bytes": 40151,
+      "width": 372,
+      "height": 305,
+      "transparent": 61536,
+      "partial": 9171,
+      "opaque": 42753,
+      "magentaRisk": 0,
+      "edgeVisible": 0
+    },
+    {
+      "id": "chance-card-stack",
+      "path": "art-source/games/monopoly/final-art-v1/derived/atoms/chance-card-stack-source-v1.png",
+      "sha256": "17594CA625F6F9332DA6C6C629D08BA8ADB410486FF7C765EE299FD6D29F417C",
+      "bytes": 46820,
+      "width": 384,
+      "height": 310,
+      "transparent": 59487,
+      "partial": 4074,
+      "opaque": 55479,
+      "magentaRisk": 0,
+      "edgeVisible": 0
+    }
+  ],
+  "characterDependencies": [
+    {
+      "path": "art-source/player-character/layered-v1/source/poses/idle-front-v1.png",
+      "sha256": "6159525283787606DACB98A2FB11B9FF71F5F66A65DF30CEDF606E36C3FA9197",
+      "bytes": 63463,
+      "width": 512,
+      "height": 512,
+      "channels": 4,
+      "hasAlpha": true,
+      "role": "reused-p0-10-character-pose"
+    },
+    {
+      "path": "art-source/player-character/layered-v1/source/poses/walk-contact-a-v1.png",
+      "sha256": "ADAF038E38C3CC53AE1167AF72DD2E9C6BA28891A50842AC7BB02BCFC7D9C108",
+      "bytes": 59973,
+      "width": 512,
+      "height": 512,
+      "channels": 4,
+      "hasAlpha": true,
+      "role": "reused-p0-10-character-pose"
+    },
+    {
+      "path": "art-source/player-character/layered-v1/source/poses/walk-passing-b-v1.png",
+      "sha256": "F5716724C53935EB0EA7F8159436172D882487E97A245A1EA95A34D1F0B06C48",
+      "bytes": 61781,
+      "width": 512,
+      "height": 512,
+      "channels": 4,
+      "hasAlpha": true,
+      "role": "reused-p0-10-character-pose"
+    },
+    {
+      "path": "art-source/player-character/layered-v1/source/poses/victory-compact-v1.png",
+      "sha256": "F377D07B41DD728CDC613EEE0E50AE912A257BE517013C4C6D24FDB12F338D80",
+      "bytes": 88999,
+      "width": 512,
+      "height": 512,
+      "channels": 4,
+      "hasAlpha": true,
+      "role": "reused-p0-10-character-pose"
+    }
+  ],
+  "reviewBoards": [
+    {
+      "path": "art-source/games/monopoly/final-art-v1/review/generated/monopoly-object-atoms-light-dark-v1.png",
+      "sha256": "BA97B9909063DC978966EB0BEFADFA5E4856E8F526C9032B25FA2721CF9295E8",
+      "bytes": 140441,
+      "width": 1120,
+      "height": 840
+    }
+  ],
+  "metrics": {
+    "objectAtoms": 6,
+    "runtimeVariants": 0,
+    "sourceBytes": 256512
+  },
+  "boundaries": {
+    "authority": "presentation-only; no Rule/Authority/Protocol/Reward/Economy/Replay/AI/Persistence changes",
+    "fallback": "current Monopoly DOM/CSS/Canvas board and existing P0-10 character/code token",
+    "renderer": "DOM/CSS/Canvas + GSAP 2.5D only; no Three/Ghost3D dependency",
+    "release": "LOCAL_ONLY_NOT_RELEASED"
+  }
+}

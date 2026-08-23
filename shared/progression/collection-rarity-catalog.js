@@ -25,15 +25,15 @@
     rare:Object.freeze({
       avatars:Object.freeze([33,34,35,40,41,46,47,51,52,104,105,112,113,120,121,128,129,136,137,144,145]),
       frames:Object.freeze([3,4,5]),
-      effects:Object.freeze([3]),
-      backgrounds:Object.freeze([9,10,20,22,24,26,28,30]),
+      effects:Object.freeze([3,5]),
+      backgrounds:Object.freeze([9,10,20,22,24,26,28,30,32,34,36,38]),
       game_cosmetics:Object.freeze([2001,2011,2012,2021,2041,2051]),
     }),
     epic:Object.freeze({
       avatars:Object.freeze([53,55,106,107,114,115,122,123,130,131,138,139,146,147]),
       frames:Object.freeze([6,7,8]),
-      effects:Object.freeze([4]),
-      backgrounds:Object.freeze([21,23,25,27,29,31]),
+      effects:Object.freeze([4,6,7,8]),
+      backgrounds:Object.freeze([21,23,25,27,29,31,33,35,37,39]),
       game_cosmetics:Object.freeze([2013,2031,2042]),
     }),
   });

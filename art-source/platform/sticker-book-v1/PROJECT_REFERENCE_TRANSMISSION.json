@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "familyId": "P-COLLECTIBLE-STICKER-BOOK-V1",
+  "sourceFamily": "P-HONRU-CONTEXT-REACTIONS-V1",
+  "provider": "local deterministic Sharp derivation",
+  "model": "none",
+  "transmissionScope": "local-only inherited runtime paths; no upload",
+  "inputs": ["public/assets/brand/honru/context-reactions-v1/contexts/"],
+  "tasks": [{"taskId":"local-sticker-book-contact-sheet-v1","output":"review/sticker-book-contact-sheet-v1.png"}]
+}

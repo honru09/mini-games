@@ -3,7 +3,8 @@
 const fs=require('fs'),path=require('path');
 const root=path.resolve(__dirname,'..');
 const read=rel=>fs.readFileSync(path.join(root,rel),'utf8');
-const template=read('public/index-template.html'),shell=read('public/src/core/02-app-shell.js'),roster=read('public/src/ui/07-roster.js'),motion=read('public/src/core/12-game-stage-motion.js'),adapter=read('public/game-stage-motion-entry.js');
+const { readPresentationSource } = require('./presentation-source');
+const template=readPresentationSource(),shell=read('public/src/core/02-app-shell.js'),roster=read('public/src/ui/07-roster.js'),motion=read('public/src/core/12-game-stage-motion.js'),adapter=read('public/game-stage-motion-entry.js');
 let failures=0;const check=(name,value,detail='')=>{const ok=!!value;console.log(`${ok?'PASS':'FAIL'}  ${name}${ok||!detail?'':' :: '+detail}`);if(!ok)failures++;};
 check('共享 State Strip 具有模式、连接、观众三个独立语义槽',/id="game-stage-state-strip"/.test(template)&&/id="game-stage-state-mode"/.test(template)&&/id="game-stage-state-connection"/.test(template)&&/id="game-stage-state-spectators"/.test(template));
 check('状态栏具备可访问 live region 与语义状态属性',/id="status-bar"[^>]*role="status"[^>]*aria-live="polite"[^>]*data-stage-status-kind="neutral"/.test(template));

@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "taskId": "p1-02-tank-final-art-v1-20260821",
+  "productionUnitId": "P1-02",
+  "familyId": "G-12-TANK-FINAL-ART-V1",
+  "status": "implemented_owner_cleared_release_evidence_pending",
+  "release": "LOCAL_ONLY_NOT_RELEASED",
+  "objective": "把 Tank 本体、地形、掩体、弹道、爆炸与 HUD 交付为 DOM/CSS/Canvas + GSAP 2.5D 可消费的 Ghost-native 分层资产族",
+  "in": [
+    "background/midground/foreground 三层竞技场母版",
+    "透明坦克、墙体、掩体、基地、炮弹、命中和接触阴影原子",
+    "开火、命中、爆炸、护盾、受击、击毁和终局语义 VFX",
+    "desktop/mobile 与 reduced-motion 静态派生",
+    "Manifest、Catalog、feature flag、fallback、rollback 与专项 QA"
+  ],
+  "out": [
+    "不改变 Tank Authority、Protocol、Snapshot、Prediction、Replay、Reward 或 Economy",
+    "不把 HP、弹药、摇杆、方向、分数、倒计时或玩家身份烘焙进位图",
+    "不要求 GLB、Three.js 或全 3D 地图",
+    "不提交、不推送、不部署"
+  ],
+  "next": "完成本批最终 npm test 后，严格进入 P1-03 / G-11-TETRIS-FINAL-ART-V1"
+}

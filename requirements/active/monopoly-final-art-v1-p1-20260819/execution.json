@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "taskId": "p1-01-monopoly-final-art-v1-20260819",
+  "productionUnitId": "P1-01",
+  "familyId": "G-15-MONOPOLY-FINAL-ART-V1",
+  "status": "LOCAL_ACCEPTED_AWAITING_RELEASE_COMMAND",
+  "release": "LOCAL_ONLY_NOT_RELEASED",
+  "executedAt": "2026-08-21T12:16:07+09:00",
+  "build": {
+    "characters": 1967839,
+    "utf8Bytes": 1982521,
+    "sha256": "176D108FAEEE8BE2D42274BDCD7462A43D6623371B3F4F2E9F46EFB2C037D9FC",
+    "source": "node scripts/build.js"
+  },
+  "localVisibleEvidence": "requirements/active/monopoly-final-art-v1-p1-20260819/evidence/current-build-monopoly-vfx-redraw-2026082112.json",
+  "externalGates": {
+    "secondBrowser": "NOT_EXECUTED",
+    "physicalAndroidIphoneTablet": "NOT_EXECUTED",
+    "realNetworkShaping": "NOT_EXECUTED",
+    "lowEndFpsGpuThermal": "NOT_EXECUTED",
+    "release": "NOT_AUTHORIZED"
+  },
+  "rollback": "Set mg_art_monopoly_final_v1=0 or fail closed to existing Monopoly DOM/CSS/Canvas + P0-10 character fallback."
+}

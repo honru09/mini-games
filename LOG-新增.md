@@ -1,6 +1,39 @@
 # 新增日志
 
+## 2026-08-23 11:52
+
+- 新增布局系统 V5 的 11 个表现源码模块：平台基础、游戏桌面、响应式/无障碍、胜负与 Profile、动效、品牌壳层、Game Stage 基础/Wave、2.5D 空间、沉浸式舞台、游戏图标。
+- 新增 `scripts/split-platform-runtime-v5.js`，记录历史平台 CSS 的确定性职责切分。
+- 新增《界面排版重构·布局系统 V5：CSS 职责深拆》简易报告，登记当前构建哈希和未发布边界。
+
+## 2026-08-23 12:10
+
+- 新增 PROVE 浏览器连接器预检记录：绑定当前构建 SHA-256 `6AA8EF0C…19E9246`，明确初始化路径错误、未读取 Cookie/Storage、未截图且不构成可见通过。
+
+- 2026-08-22 18:10｜确认共享窗口新增 P2-12 原创 Profile Hero 主视觉、desktop/mobile/poster/static 四个 WebP、Manifest/素材库登记和运行时解析入口；全部保持 local-only/owner-cleared。
+
+- 2026-08-22 17:45｜新增 P2-11 商店限定套装本地收口：四季 Ghost-native 策展卡、原创主视觉桌面/移动/poster 派生、精确 N/4 进度、P2-11 Local Acceptance、中文简易报告与项目状态条目。
+- 2026-08-22 17:45｜新增 `scripts/generate-shop-limited-sets-v1.js` 的代码健康 allowlist 登记与 P2-11 专项证据入口；下一主线路由到 P2-12。
+- 2026-08-22 17:50｜新增商城 Runtime Manifest 的明确 `runtime_path` 主路径记录，使 P2-11 三个 variants 与素材库治理审计可追溯同构。
+- 2026-08-22 17:55｜新增 P2-12 Profile Adaptive Hero：确定性常玩游戏模型、复用资产合同/Skill 路由、机器视觉审查、Local Acceptance、专项 QA 与中文简易报告；下一步转 PROVE。
+
+- 2026-08-22 00:00｜新增 `P-IDENTITY-BADGE-SYSTEM-V1`：34 个 Ghost-native 确定性 SVG 母版、102 个 32/48/64 WebP 变体（143,090 bytes）、Manifest/Catalog、九入口 Skill 路由、零外部传输记录、机器技术/视觉审查、所有者清除、专项 QA 与单一 Chromium 聚焦可见证据；覆盖排行榜、成就、任务、胜场精通、收藏稀有度、玩家称号和赛事身份。
+
+- 2026-08-21 14:40｜新增 P1-03 俄罗斯方块（Tetris）终版美术接入 (`G-11-TETRIS-FINAL-ART-V1`)：包含 25 个 SVG 矢量母版、50 个 WebP 运行时变体、Manifest/Catalog 双层资产注册、原子加载与优雅回退、2.5D Camera/VFX phase 事件桥接、`qa/tetris-final-art-contract.js` 专项契约及本地核销报告 `P1-03_LOCAL_ACCEPTANCE.md`；未新增外部依赖，未改动后端协议或线上数据。
+
+- 2026-08-21 14:02｜新增五子棋美漫落子动效渲染管线（`comicImpactIntensity` 局势强化检测、`generateComicShapes` 预生成多边形顶点与粒子几何数据、`COMIC_STONE_FRAMES` 逐帧 Squash/Stretch 形变关键帧表、`comicBoardShake` 局域物理冲量、`drawBurstPath` 不规则手绘爆花、`drawComicHalftoneDots` 半调网点场、`drawComicShockRingPath` 动态手绘冲击环与断裂消隐、`drawComicAnimatedStone` 材质图层三明治夹心渲染与五连斩切线）；未新增任何拟声词文字，未引入外部依赖。
+
+- 2026-08-21 11:37｜新增 P1-01 Monopoly Final Art 当前构建五视口可见证据、active execution.json、响应式命令布局合同、审批矩阵正式族记录和中文收口简报；未新增协议、数据库或线上资源。
+
+- 2026-08-19 19:24｜补齐 P0-12 收口证据同步：记录 32 项资产合同、39 项 runtime 合同、最终构建指纹及下一单元 P1-01 路由；未新增运行时能力、协议、数据或线上资源。
+
+- 2026-08-19 18:04｜新增 P0-12 Game Icon System v2：36 个 SVG 源稿、72 个 WebP runtime、4 张检查板、六款跨页面图标/封面裁切/主题物件/选中物件、12 类状态 marker、Skill 路由、外部库存全事实上下文、Manifest/Catalog、专项 QA、验收件与本地收口报告；未提交、推送或部署。
+
+- 2026-08-19 15:49｜新增 P0-11 最终机器证据：三张亮暗底/小尺寸检查板、MACHINE_VISUAL_REVIEW、38 条 runtime 场景、Effect 5/8 requestId/replay 回归与当前构建哈希记录；未新增协议、数据库结构、奖励规则或线上资源。
+
 > 简易记录项目新增内容。每次改动完成前更新；格式：`日期 时间｜新增内容`。
+
+- 2026-08-19 15:25｜新增 P0-11 Avatar Frame/Effect 真实素材化：8 个头像框、8 个头像效果、四档尺寸、static/dynamic/high-contrast 变体、Manifest/Catalog、Skill Routing、provenance、机器视觉审查、专项 QA、active task 与本地收口报告；运行时 192 个变体共 533844 bytes，并增加跨进程生成独占锁，未部署线上。
 
 - 2026-08-12 16:40｜新增 Theme Contrast Design System P1 冻结合同、专项 QA 和本地收口简报；专项已接入 pretest、完整 test 与 Fast Quality Gates。
 - 2026-08-12 17:24｜新增 Theme Contrast P1 修正后最终验证记录：Quality Gates 通过，完整 npm test 189.0 秒通过，双构建哈希一致；Terra Max 终审重试因 429 未返回可采纳结论，按 reviewer limit 记录。
@@ -519,3 +552,233 @@
 # 2026年08月18日 23:42
 
 - 补记 P11 最终验证证据：完整 `npm test` 同步子进程 `NPM_TEST_EXIT=0`，并新增取消失败后的 native fallback 回归记录。
+
+## 2026-08-19 13:44
+
+- 新增 2.5D 设备/网络模拟证据 `requirements/active/latest-browser-visible-matrix-prove-p4-20260815/evidence/simulated-device-network-performance-20260819.json` 与四张真实 PNG 截图，明确单 Chromium 模拟和 historical-as-of 边界。
+- 新增 `简易报告/视觉2.5D重推-P0本地验证收口-202608191344.md`，记录 2.5D 主线、素材库审计、全量测试和 P0-11 下一单元。
+
+## 2026-08-19 22:32
+
+- 新增 `qa/visual-25d-only-runtime.js`，锁定唯一 2.5D runtime，禁止 Three/Ghost3D renderer、loader、专属 SW cache 和 feature branch 回流。
+- 新增 Tank authority 高水位回归断言，确保从旧 3D receipt 中提取出的通用 `serverTick` 投影继续服务联机校正和 2.5D 表现层。
+
+## 2026-08-20
+
+- 新增八种共享局内语义 FX 能力：`ring / sweep / burst / lift / slash / focus / spin / result`；由六款既有 accepted-action/phase/result 事件驱动，不新增游戏规则、网络 wire 或权威状态。
+- 新增局内 FX 资源预算与降级合同：桌面/手机临时节点上限、reduced-motion 静态化、forced-colors 装饰隐藏、后台页即时清理，以及退出/重进/销毁无迟到 timer、无节点累积。
+- 新增 `depth-motion-25d-v3` 非位移 accepted-action pulse、克制 Enter/Focus/Result 编排和无效抖动防回归合同；未新增 ScrollTrigger、首屏插件、Three.js、Ghost3D、产品 Requirement ID、协议、数据库字段或线上资源。
+- 新增 Immersive Game Stage v2 合同：全视口 Arena、自适应 HUD Dock、六款独立控制高度、低高度横屏单一右侧轨道、Ludo/Monopoly Meta HUD 所有权、游戏测量扣除 Dock padding。
+- 新增 `requirements/active/visual-25d-repush-p0-20260819/evidence/immersive-stage-20260820/`：六张当前构建截图与 `current-build-visible-matrix.json`，记录六视口 × 六游戏 36 个局内场景、44px 操作下限、零页面溢出和严格外部证据 non-claims。
+- 新增 2026-08-20 七份自动进度报告，并让 TECH-027 报告生成器识别当前 Immersive Stage 部分矩阵、继续明确历史完整矩阵和外部设备/网络证据边界。
+
+## 2026-08-21
+
+- 新增 `qa/undo-online.js` 双客户端 WebSocket 专项，覆盖房间禁用、非最后落子者拒绝、Gomoku/Xiangqi 每局一次、象棋回退后续走、新局重置。
+- 新增 Gomoku/Xiangqi 动态悔棋合同：本地一次、AI 整轮、在线 pending/authority ack、禁用房间不挂载与对手不可代撤。
+- 新增 `requirements/active/visual-25d-repush-p0-20260819/evidence/gomoku-xiangqi-undo-20260821/current-build-focused-verification.json`，记录当前构建机器回归与 390×844 单 Chromium 聚焦可见检查，并明确全部外部证据 non-claims。
+- 新增当前最终构建对账记录：`176D108FAEEE8BE2D42274BDCD7462A43D6623371B3F4F2E9F46EFB2C037D9FC`（1,967,839 characters / 1,982,521 bytes），并在 390×844 单 Chromium 复核 Gomoku Canvas 以无 `rotateX` 的等比入口呈现，棋盘约 374×374、棋子保持圆形。
+- 新增当前构建完整回归证据：Quality Gates 以 `QUALITY_GATES_FAST_ALL_PASS` 结束，完整 `npm test` exit 0，报告生成零漂移且最终 build check 仍绑定 `176D108F…37D9FC`。
+
+## 2026-08-21 12:23
+
+- 新增 P1-01 Monopoly 最新构建 VFX 重绘聚焦证据 `requirements/active/monopoly-final-art-v1-p1-20260819/evidence/current-build-monopoly-vfx-redraw-2026082112.json`，记录 `landing`/`purchase`、三层 decode、26 个语义节点、零横溢出与 console 0；其余 VFX、reduced-motion、forced-colors 保持 `NOT_EXECUTED`。
+- 新增 Monopoly VFX 重绘与九角色接线回归断言，防止后续 `board.innerHTML` 让表现节点落入脱离 DOM 的旧 host。
+
+## 2026-08-21 15:05
+
+- 新增 Gomoku Pop Art / 美漫落子动效渲染管线：包含 20 帧 30FPS 12 层三明治 Canvas 局部动效（半调网点、高饱和纯色爆花底块、粗黑描边、Squash/Stretch 棋子材质、白色尖角爆心、瞬态闪光、动态 Shock Ring、碎片飞溅与五连斩冲击切线），支持战术威胁强化（普通/关键手/五连获胜手）与无障碍安全降级。
+- 新增 Tetris Final Art P1-03 (`G-11-TETRIS-FINAL-ART-V1`)：包含 25 个 SVG 矢量母版、50 个 WebP 变体，生成脚本 `scripts/generate-tetris-final-runtime-v1.js`，契约测试 `qa/tetris-final-art-contract.js` 与本地验收凭证 `P1-03_LOCAL_ACCEPTANCE.md`。
+- 新增 Xiangqi Final Art P1-04 (`G-16-XIANGQI-FINAL-ART-V1`)：包含 25 个 SVG 矢量母版、50 个 WebP 变体，生成脚本 `scripts/generate-xiangqi-final-runtime-v1.js`，契约测试 `qa/xiangqi-final-art-contract.js` 与本地验收凭证 `P1-04_LOCAL_ACCEPTANCE.md`。
+- 新增 Shop Complete Art P1-05 (`P-SHOP-COMPLETE-ART-V1`)：包含 24 个 SVG 矢量母版、48 个 WebP 变体（5 稀有度边框、5 展台、6 分类图标、6 购买反馈 VFX、2 相机预设），生成脚本 `scripts/generate-shop-complete-runtime-v1.js`，契约测试 `qa/shop-complete-art-contract.js` 与本地验收凭证 `P1-05_LOCAL_ACCEPTANCE.md`。
+- 新增 `package.json` 可执行测试入口 `"test:xiangqi-final-art"` 与 `"test:shop-complete-art"`。
+- 新增 `GEMINI_AGENT_LOG.md` 作为全量执行事实源与统一日志交接文档。
+
+## 2026-08-21 16:39
+
+- 新增本轮最终收口证据条目：`npm run quality:gates` 以 `QUALITY_GATES_FAST_ALL_PASS` 通过，完整 `npm test` 以退出码 0 通过，重连专项单独复跑 `RECONNECT_ALL_PASS`。
+- 新增当前构建身份记录：`public/index.html` 1,997,314 characters / 2,011,884 bytes / SHA-256 `8433CD4A5AEFF32BD40BE6FDB20A48416C25572A9A07BDAEE50E3D8319352CD3`。
+
+## 2026-08-21 17:40
+
+- 新增 PROVE 本地预检证据确认：模拟设备矩阵 28/28 路由、12/12 Game Stage、网络模拟 30/30 场景与主线路由合同均通过；这些证据仍明确标记为单 Chromium/确定性模拟，不授予真机、第二浏览器或发布结论。
+- 新增当前并行美术接入后的构建身份：`public/index.html` 2,004,977 characters / 2,019,547 bytes / SHA-256 `FDBFA8346951917CC70493A366895A1526D766DBE457679FDD74BE8F99D6A835`。
+
+## 2026-08-21 17:43
+
+- 新增最新美术运行时汇总后的构建身份：`public/index.html` 2,016,755 characters / 2,031,325 bytes / SHA-256 `20447778D9116760FC8B31A240E821CDFDF2D18E8700B1C66A5A86924AD985FF`。
+
+## 2026-08-21 17:46
+
+- 新增最终稳定构建身份：`public/index.html` 2,018,177 characters / 2,032,751 bytes / SHA-256 `3F947C39DD766ACFFEDEA9727CC2B02291C60D49CAA58D1158145D64E2F1EDBE`。
+
+## 2026-08-21 17:50
+
+- 新增 2.5D 契约回归覆盖：允许 Honru 角色节点局部 pointermove/pointerleave 凝视监听，同时禁止 document/root 全局指针跟踪，并要求监听清理。
+- 新增最新构建身份：`public/index.html` 2,019,081 characters / 2,033,655 bytes / SHA-256 `C5A9578FCAA9E9349AD55D07EADA180EA6404012E31D01E8FDE6CD902094A939`。
+
+## 2026-08-21 18:04
+
+- 新增并行窗口最终对账构建身份：`public/index.html` 2,019,218 characters / 2,033,792 bytes / SHA-256 `D544E41089EE833970B39D97F768A2E9201DCBA590F525E267187464C29AC3CC`。
+- 新增最终回归证据：`QUALITY_GATES_FAST_ALL_PASS`，完整 `npm test` 的 pretest、主测试与 posttest 全链退出码 0。
+
+## 2026-08-22 10:33
+
+- 新增空白清理后的最终构建身份：`public/index.html` 2,019,186 characters / 2,033,760 bytes / SHA-256 `A35BE9083591357E73B6BA8C5C22870345F5D8287045A6D667A27BFADBD74D8E`。
+
+## 2026-08-22 10:34
+
+- 新增代码健康运维白名单项：`scripts/generate-identity-badge-system-v1.js`。
+
+## 2026-08-22 10:42
+
+- 新增 `package.json` 测试入口 `test:identity-badge-system`，为新增身份徽章 QA 建立可执行登记。
+
+## 2026-08-22 10:45
+
+- 新增商城稀有度 QA DOM stub 的 `appendChild` 最小接口，覆盖身份徽章子节点挂载路径。
+- 新增测试桩的子节点文本聚合，覆盖真实 DOM `textContent` 语义。
+
+## 2026-08-22 10:52
+
+- 新增最终并行融合构建身份：`public/index.html` 2,029,343 characters / 2,043,996 bytes / SHA-256 `96A0793CFDC7DB831233F8B687F4788331BA0C85206E1CDB2C525280E15E7BE3`。
+- 新增最终验证证据：身份徽章专项、商城稀有度专项、`QUALITY_GATES_FAST_ALL_PASS` 和完整 `npm test`（exit code 0）均通过。
+
+## 2026-08-22 10:58
+
+- 新增当前构建认证页单 Chromium 可见证据：1280×720 与 390×844、三语言、双主题、黑夜 Logo 反白、44px 触控下限、零横向溢出和 console warn/error=0。
+- 新增证据文件 `requirements/active/latest-browser-visible-matrix-prove-p4-20260815/evidence/current-build-auth-visible-20260822.json`。
+
+## 2026-08-22 11:03
+
+- 新增 D2DD 当前构建认证页复采证据，并与并行窗口的 P1-09 身份徽章聚焦证据合并到 TECH-027 当前可见边界。
+- 新增进度台账对“当前身份徽章聚焦矩阵 + 尚无全站完整矩阵”的明确识别。
+
+## 2026-08-22 12:06
+
+- 新增 `test:supabase-wizard-secret-redaction` npm 入口，并把 Supabase 生产向导凭证脱敏专项纳入统一 Quality Gates。
+- 新增游戏主线接管证据：Tetris/Xiangqi Final Art 已在当前 `7BCA9218…F41DF2` 构建真实消费批准素材，并有桌面、390×844 与 reduced-motion 单 Chromium 聚焦复核。
+- 新增 P2-01 Seasonal Backgrounds 接纳验证：91 项、4 个原创母版、20 个运行时变体、8 个可回滚目录项全部通过。
+- 新增对并行窗口 `scripts/supabase-encrypted-backup.js` 的运维工具白名单接纳；该脚本保持显式调用、Windows DPAPI + AES-256-GCM、无默认生产执行。
+
+## 2026-08-22 12:42
+
+- 新增 P2-02 `P-HONRU-SEASONAL-V1` 冻结合同、九技能路由、项目自有输入传输记录和四季限定 Honru provenance。
+- 新增四张最高质量内置 ImageGen 色键源图及确定性 Alpha 母版、16 个透明 WebP 派生与 4×4 review contact sheet；总 Runtime 147,572 bytes，仍未接入 Manifest。
+- 新增 Sol Max 只读审计结论：P2-02 只做四季表现胶囊，不引入日期、LiveOps、商城、协议、聊天、奖励或 P2-03 贴纸册能力。
+
+## 2026-08-22 13:55
+
+- 新增 P2-03 `P-COLLECTIBLE-STICKER-BOOK-V1` 专项 QA：16 格继承 Context 贴纸册、Manifest/Catalog 同构、三语言回退、Profile Library 接入与服务端边界检查。
+- 新增 P2-03 本地收口证据与统一生产台账顺序记录，下一严格单元推进为 P2-04。
+
+## 2026-08-22 14:10
+
+- 新增 P2-04 `P-PERSONAL-HOME-SCENE-V1` 本地接入记录：昼夜双主题个人 Home 2.5D 背景/中景/前景、桌面/移动变体、静态回退与专项 QA。
+- 新增 P2-04 项目状态条目，下一严格单元推进为 P2-05 观战镜头。
+
+## 2026-08-22 14:25
+
+- 新增最终本地收口证据：P2-02、P2-03、P2-04 专项回归、构建哈希对账与最终 Quality Gates 通过状态。
+
+## 2026-08-22 14:55
+
+- 新增 P2-05 `G-SPECTATOR-CAMERA-ADVANCED-V1` 合同、九图像 Skill 路由、Local Acceptance 与专项 `qa/spectator-camera-advanced-v1.js`。
+- 新增观战中立构图：保留 overview/focus/impact/result 四个语义预设、reduced-motion/隐藏/销毁静态回退，不新增位图、协议或规则能力。
+
+## 2026-08-22 15:17
+
+- 新增 P2-06 `P-REPLAY-CINEMATIC-V1` 三层 2.5D Replay 演出、六态生命周期与专用懒加载 GSAP Timeline Adapter。
+- 新增 Replay 播放安全边界：不启动本地 AI、不创建 solo ticket、不进入正常奖励 `onEnd`，seek/close/visibility 均有清理与静态回退。
+- 新增 `qa/replay-cinematic-v1.js`、P2-06 合同/Skill 路由/Local Acceptance 与中文收口简报。
+- 新增最终隔离端口完整 `npm test`、Quality Gates、Replay 专项与确定性构建通过证据。
+
+## 2026-08-22 15:37
+
+- 新增 P2-08 `P-AUDIO-SPECTRUM-ART-V1`：Settings 12 柱 Ghost-native 代码原生频谱、三语状态、双主题、窄屏与 forced-colors/reduced-motion 静态回退。
+- 新增脱敏音频表现 envelope：只含 accepted cue 类别、强度、声像、主题 track、有效可听状态和本地生命周期布尔值，不读取 PCM、麦克风或私有数据。
+- 新增有限懒加载 GSAP Core pulse、feature flag 回滚、专项 QA、合同、九图像 Skill 路由和中文收口简报。
+- 新增最终 Quality Gates 与隔离端口完整 `npm test` 退出码 0 证据。
+
+## 2026-08-22 16:35
+
+- 新增 P2-10 `P-TOURNAMENT-BROADCAST-OVERLAY-V1`：赛事状态、轮次、领跑者和最多三桌赛况的 Ghost-native 代码原生 Overlay。
+- 新增有限懒加载 GSAP Core/Timeline 入场、reduced-motion/后台/销毁清理、feature flag 与旧 `card-tournament` 回退。
+- 新增 1200×630 主审查板、1200×2088 三语联系表、九图像 Skill 路由、完整 provenance/许可/相似风险与专项 QA。
+
+## 2026-08-22 16:54
+
+- 新增 P2-10 最终收口证据：权威 `round=0` 等待态、统一可访问 Dialog、弹层内动态切语、启用态赛事卡底 decode、仅 live 有限脉冲及 reduced-motion 动态清理均通过回归。
+- 新增 Sol Max 只读复审完成记录；`GAME-028` 继续保持 `planned / FUTURE_EXPANSION`，不冒充真正直播或高级观战能力。
+
+## 2026-08-22 17:45
+
+- 新增 P2-11 `P-SHOP-LIMITED-SETS-V1`：四套 Ghost-native 季节组合陈列、精确 4 项收集进度、既有单品预览/购买入口与 1536×1024 主视觉的桌面/移动/海报派生。
+- 新增 P2-11 九路图像 Skill 路由、Manifest、素材库登记、技术审查与专项 `qa/shop-limited-sets-v1.js`。
+- 新增商城价格目录与 Supabase `apply_purchase_v1` 三方 111 项同构回归，覆盖季节背景与 Effect 5–8。
+
+## 2026-08-22 21:32
+
+- 新增 P2-11/P2-12 主线收口简报，记录 32/33（96.97%）美术生产进度、PROVE 转段和当前未发布边界。
+- 新增最终全链验证证据索引：完整 `npm test` 退出码 0、构建检查、进度台账、简报合同与素材库审计。
+- 新增当前构建单一 Chromium 登录页可见证据：中文、暗色主题 Logo 反白、无横向溢出与 console error=0；明确标注外部设备/网络未执行。
+
+## 2026-08-22 21:57
+
+- 新增维护审计简报：UI/局内控件、美术、音频与 Supabase 融合状态统一记录。
+- 新增完整维护回归证据：`npm test`、`npm run quality:gates`、构建检查、进度台账、简报合同、素材库审计与 `git diff --check` 均通过。
+- 新增当前本地构建身份记录：2,151,596 characters / 2,166,356 bytes / SHA-256 `0653A69BB9FB78DBD244D1310BC2197E3C29C4EAE6D6B7A1E87B898659A8A600`。
+
+## 2026-08-22 22:08
+
+- 新增五子棋旧触摸方向盘清理后的最终回归证据：专项 Gomoku、完整 `npm test`、`quality:gates`、构建检查、台账、简报合同和素材库审计全部通过。
+
+## 2026-08-22 22:22
+
+- 新增当前构建单 Chromium 可见维护证据：认证页、访客 Home、Games、坦克摇杆/D-pad 切换与五子棋无方向键局内场景；6/6 场景通过，console warn/error=0。
+- 新增证据明确记录第二浏览器、真机、真实网络、完整矩阵与生产 Supabase 仍未执行。
+
+## 2026-08-22 22:26
+
+- 新增 PROVE 生成器与进度台账对维护窄证据的识别合同，避免当前窄证据被误判为“无当前证据”。
+
+## 2026-08-22 23:10
+
+- 新增审批 Gate 对当前构建维护窄证据的识别分支，要求构建哈希、6/6 场景、零 console 错误与历史矩阵标记同时成立。
+
+## 2026-08-22 23:40
+
+- 新增 `public/ghost-layout.css` 外部布局系统、`qa/layout-system-v1.js`、布局专项简报与项目状态节点；覆盖首页、游戏中心、Playline、Profile、Game Stage 的响应式几何与溢出策略。
+
+## 2026-08-22 23:56
+
+- 新增 `public/styles/00-layout-tokens.css`、`10-layout-shell.css`、`20-layout-surfaces.css`、`30-layout-commerce.css` 四个可独立审阅的布局模块；`ghost-layout.css` 改为稳定 manifest。
+- 新增布局 V2 模块化收口报告，记录 Games 房间、Playline、Profile、商城排版与 Service Worker v17 预缓存边界。
+
+## 2026-08-23 00:09
+
+- 新增 `public/styles/40-layout-content.css`，覆盖弹层、私信、Profile 编辑/成就弹层与 Game Stage 内容轨的滚动、换行、安全区和窄屏布局。
+- 新增布局 V3 内容密度与弹层收口报告，登记 Service Worker v18 预缓存边界。
+
+## 2026-08-23 11:02
+
+- 新增 `public/styles/platform-runtime.css`、`community-ai-surfaces.css`、`identity-broadcast.css`、`profile-adaptive-hero.css`、`tank-controls.css` 五个表现源码模块。
+- 新增 `qa/presentation-source.js`、`qa/presentation-source-contract.js` 与 `scripts/migrate-presentation-styles.js`，建立生产外链与 QA 合成读取接缝。
+- 新增《界面排版重构-布局系统V4-历史内联CSS源码迁移-202608231102.md》，登记迁移哈希、Service Worker v19、当前构建和 PROVE 边界。
+
+## 2026-08-23 11:05
+
+- 本次 PROVE 预检未新增产品代码、素材或线上资源；仅记录浏览器连接器 kernel assets 路径错误，保持当前构建可见证据 `NOT_EXECUTED`。
+
+## 2026-08-23 12:29
+
+- 新增 T7 P13 正式 Session Token TTL Sweep：Auth/Profile `sweep_expired`、future-token fail-closed、Adapter 失败回滚、Cluster leader-owned repeat lease、失效会话关闭与 Supabase 同步 seam。
+- 新增 P13 active task、验收/执行证据、中文简易报告与专项 QA 断言；本地专项回归通过，未部署线上。
+
+## 2026-08-23 13:01
+
+- 新增 T7 P14 Supabase outbox cadence active task、验收/执行证据与中文简易报告；Reward/AI 重试统一进入单一 ServerClockTimer owner。
+# 2026年08月22日 继续执行
+
+- 新增 P2-11 商店限定套装本地收口事实：四季 Ghost-native 策展卡、原创主视觉桌面/移动/poster 派生、P2-11 Local Acceptance、中文简易报告与项目状态条目。
+- 新增 `scripts/generate-shop-limited-sets-v1.js` 的代码健康 allowlist 登记；新增 P2-11 专项证据入口与下一主线 P2-12 路由。

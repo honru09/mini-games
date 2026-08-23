@@ -40,6 +40,10 @@ if(catalog){
   Object.keys(expected).forEach(category=>check(category+' current stable IDs are fully and uniquely catalogued',JSON.stringify(actual[category])===JSON.stringify(expected[category]),JSON.stringify({expected:expected[category],actual:actual[category]})));
   check('every catalog entry is frozen and has a known explicit tier',(catalog.ENTRY_LIST||[]).every(entry=>Object.isFrozen(entry)&&expected[entry.category].includes(entry.id)&&catalog.RARITY_ORDER.includes(entry.tier)));
   check('known stable and default-free IDs return their explicit entries',catalog.entryFor('avatars',0)&&catalog.entryFor('frames',0)&&catalog.entryFor('effects',0)&&catalog.entryFor('backgrounds',0)&&catalog.entryFor('avatars',30)&&catalog.entryFor('avatars','100')&&catalog.entryFor('game_cosmetics',2051));
+  const newEffectEntries=[5,6,7,8].map(id=>catalog.entryFor('effects',id));
+  check('new effect 5-8 IDs have explicit catalogue entries',newEffectEntries.every((entry,index)=>entry&&entry.id===index+5&&entry.category==='effects'&&catalog.RARITY_ORDER.includes(entry.tier)));
+  const newEffectsOwned=catalog.deriveOwnedCollection({effects:[5,6,7,8]});
+  check('owning effect 5-8 never creates an unclassified collection warning',newEffectsOwned.ownedCount===4&&newEffectsOwned.unknownOwnedCount===0,Object.prototype.toString.call(newEffectsOwned));
   check('unknown, inherited, malformed and hostile IDs do not receive a guessed tier',catalog.entryFor('avatars',999)===null&&catalog.entryFor('avatars',Symbol('bad'))===null&&catalog.entryFor('unknown',30)===null);
   const inherited=Object.create({avatars:[30]});
   const summary=catalog.deriveOwnedCollection({avatars:[0,30,'30',100,999,{},Symbol('bad')],frames:[0,1,1],effects:[0,4],backgrounds:[0,20],game_cosmetics:[2001]},inherited);
@@ -56,14 +60,15 @@ const shell=fs.readFileSync(path.join(ROOT,'public','src','core','02-app-shell.j
 const shop=fs.readFileSync(path.join(ROOT,'public','src','shop','06-shop.js'),'utf8');
 const profile=fs.readFileSync(path.join(ROOT,'public','src','shop','05-profile.js'),'utf8');
 const online=fs.readFileSync(path.join(ROOT,'public','src','online','03-websocket.js'),'utf8');
-const html=fs.readFileSync(path.join(ROOT,'public','index-template.html'),'utf8');
+const { readPresentationSource } = require('./presentation-source');
+const html=readPresentationSource();
 const locales=['zh-CN.json','en-US.json','uk-UA.json'].map(file=>JSON.parse(fs.readFileSync(path.join(ROOT,'public','locales',file),'utf8')));
 check('browser build loads collection catalog after journey and before profile consumer',build.indexOf('../../shared/progression/collection-rarity-catalog.js')>build.indexOf('../../shared/progression/profile-journey.js')&&build.indexOf('../../shared/progression/collection-rarity-catalog.js')<build.indexOf('core/02-app-shell.js'));
 check('own Profile renders a local catalogue progress and distribution',/CollectionRarityCatalog\.deriveOwnedCollection\(owned\)/.test(shell)&&/profile-collection-rarity/.test(shell));
 check('shop cards render a safe rarity badge without changing purchase state',/collectionRarityBadge/.test(shop)&&/entryFor\(category,item\.id\)/.test(shop));
 if(catalog){
   const badgeSource=sourceSlice(shop,'function collectionRarityBadge','function shopCatalogItems','商城稀有度标签');
-  const badgeContext=vm.createContext({CollectionRarityCatalog:catalog,t:key=>key,el:(tag,className,text)=>({tagName:tag,className,textContent:text,attributes:{},setAttribute(key,value){this.attributes[key]=value;}})});
+  const badgeContext=vm.createContext({CollectionRarityCatalog:catalog,t:key=>key,el:(tag,className,text)=>({tagName:tag,className,textContent:text||'',attributes:{},children:[],appendChild(child){this.children.push(child);this.textContent+=(child&&child.textContent)||'';return child;},setAttribute(key,value){this.attributes[key]=value;}})});
   vm.runInContext(badgeSource+'\nglobalThis.__collectionRarityBadge=collectionRarityBadge;',badgeContext,{filename:'06-shop.js:collection-rarity'});
   const known=badgeContext.__collectionRarityBadge('backgrounds',{id:20}),unknown=badgeContext.__collectionRarityBadge('backgrounds',{id:999});
   check('shop rarity helper reads only the explicit entry and leaves unknown cards unlabelled',known&&known.attributes['data-rarity']==='rare'&&known.textContent==='shop_rarity_label'&&unknown===null);

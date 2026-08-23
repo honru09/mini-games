@@ -164,6 +164,69 @@ check('legacy bare token hash migrates once and remains valid for the injected T
   assert.strictEqual(runtime.boundary.session({ action: 'verify_token', user: account, token }).ok, false);
 });
 
+check('sweep_expired removes expired, future and malformed records with stable counts', () => {
+  const runtime = fixture();
+  const account = user('sweep');
+  const validHash = runtime.boundary.session({ action: 'hash_token', token: 'valid-token-for-sweep-12345678901234567890' }).tokenHash;
+  const expiredHash = runtime.boundary.session({ action: 'hash_token', token: 'expired-token-for-sweep-12345678901234567890' }).tokenHash;
+  const futureHash = runtime.boundary.session({ action: 'hash_token', token: 'future-token-for-sweep-12345678901234567890' }).tokenHash;
+  const at = runtime.now;
+  account.authTokens = [
+    `t2$${at - 500}$${validHash}`,
+    `t2$${at - 1001}$${expiredHash}`,
+    `t2$${at + 1}$${futureHash}`,
+    'not-a-token-record',
+  ];
+  runtime.adapter.put(account);
+  const swept = runtime.boundary.session({ action: 'sweep_expired', at });
+  assert.strictEqual(swept.ok, true);
+  assert.strictEqual(swept.scannedUsers, 1);
+  assert.strictEqual(swept.updatedUsers, 1);
+  assert.strictEqual(swept.removedRecords, 3);
+  assert.strictEqual(swept.failedUsers, 0);
+  assert.deepStrictEqual(swept.changedUids, ['sweep']);
+  assert.deepStrictEqual(account.authTokens, [`t2$${at - 500}$${validHash}`]);
+  assert.strictEqual(runtime.boundary.session({ action: 'verify_hash', user: account, tokenHash: validHash }).ok, true);
+  assert.strictEqual(runtime.boundary.session({ action: 'verify_hash', user: account, tokenHash: futureHash }).ok, false);
+  // changedUids is an internal persistence seam and must never become a profile/wire field.
+  assert.strictEqual(Object.prototype.hasOwnProperty.call(swept, 'uid'), false);
+});
+
+check('sweep_expired restores the in-memory record when Adapter persistence fails', () => {
+  const account = user('sweep-failure');
+  const at = 1_700_000_000_000;
+  const hash = cryptoHashFor('rollback-token-12345678901234567890');
+  account.authTokens = [`t2$${at - 1001}$${hash}`];
+  let stored = account;
+  const adapter = {
+    get: uid => String(uid) === stored.uid ? stored : null,
+    list: () => [stored],
+    put: () => { throw new Error('adapter_write_failed'); },
+    remove: () => false,
+  };
+  const boundary = createAuthProfileBoundary({
+    adapter,
+    now: () => at,
+    tokenTtlMs: 1000,
+    tokenLimit: 5,
+  });
+  const before = stored.authTokens.slice();
+  const swept = boundary.session({ action: 'sweep_expired', at });
+  assert.strictEqual(swept.ok, false);
+  assert.strictEqual(swept.scannedUsers, 1);
+  assert.strictEqual(swept.updatedUsers, 0);
+  assert.strictEqual(swept.removedRecords, 0);
+  assert.strictEqual(swept.failedUsers, 1);
+  assert.deepStrictEqual(stored.authTokens, before);
+});
+
+function cryptoHashFor(value) {
+  return createAuthProfileBoundary({
+    adapter: createMemoryAuthProfileAdapter(),
+    now: () => 1_700_000_000_000,
+  }).session({ action: 'hash_token', token: value }).tokenHash;
+}
+
 check('logout revokes only the current token', () => {
   const runtime = fixture();
   const account = user('logout');

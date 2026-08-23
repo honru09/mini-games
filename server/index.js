@@ -548,7 +548,7 @@ const ROOM_PRESENCE_RETRY_LIMIT=Math.max(1,Math.min(8,Number(process.env.ROOM_PR
 const ROOM_PRESENCE_QUARANTINED_MUTATIONS=new Set([
   'match_expression','match_chat_send','move','bot_move','tank_input','bot_tank_input','tetris_lock_claim','tetris_attack_claim',
   'tetris_ko_claim','tetris_action','bot_tetris_action','tetris_state','xiangqi_action','monopoly_action','monopoly_auction_open','monopoly_bid','monopoly_turn_end',
-  'game_state','result','start','restart','end_game','select_game','ready','room_settings','add_ai','remove_ai','invite',
+  'game_state','result','start','restart','end_game','select_game','ready','room_settings','undo','add_ai','remove_ai','invite',
 ]);
 function roomPresenceRetryDelay(attempt){
   const base=Math.max(250,Math.min(5000,Number(process.env.ROOM_PRESENCE_RETRY_MS)||1000));
@@ -1408,7 +1408,7 @@ function profileDbRow(u){
     achievements: u.achievements || [], playmates: u.playmates || {},
     signature: u.signature || '', country_region: u.countryRegion || '', gender_tag: u.genderTag || 'hidden',
     presence_preference: u.presencePreference || 'joinable', presence_visibility: u.presenceVisibility || 'everyone', showcase: u.showcase || null,
-    daily: u.daily || { play: 0, win: 0, streak: 0 }, daily_key: u.dailyKey || '', daily_task_key: u.dailyTaskKey || '', daily_tasks: u.dailyTasks || null, name_fx: u.nameFx || 0,
+    daily: u.daily || { play: 0, win: 0, streak: 0 }, daily_key: u.dailyKey || '', daily_task_key: u.dailyTaskKey || '', daily_tasks: u.dailyTasks || { play: 0, win: 0, streak: 0, claimed: [], claimIds: {} }, name_fx: u.nameFx || 0,
     auth_tokens: Array.isArray(u.authTokens) ? u.authTokens.slice(-5) : [],
     recent_results: Array.isArray(u.recentResults) ? u.recentResults.slice(-500) : [],
     purchase_requests: Array.isArray(u.purchaseRequests) ? u.purchaseRequests.slice(-100) : [],
@@ -1957,7 +1957,7 @@ function broadcastLobby(){
 }
 function roomPayload(r){
   const outcome = roomPresenceBoundary.room({ action:'payload', room:r });
-  return outcome.ok ? outcome.payload : { room:r && r.id || null, players:[], seats:[], size:0, activePlayerCount:0, humanCount:0, aiCount:0, onlineSize:0, spectatorCount:0, maxSpectators:0, started:false, settled:false, matchId:null, visibility:'public', allowSpectators:false, testAdminSandbox:false, canStart:false, host:{uid:null,seatId:null}, gameplay:null };
+  return outcome.ok ? outcome.payload : { room:r && r.id || null, players:[], seats:[], size:0, activePlayerCount:0, humanCount:0, aiCount:0, onlineSize:0, spectatorCount:0, maxSpectators:0, started:false, settled:false, matchId:null, visibility:'public', allowSpectators:false, allowUndo:false, testAdminSandbox:false, canStart:false, host:{uid:null,seatId:null}, gameplay:null };
 }
 function tetrisPresentationPayload(r){
   if(!(r&&r.tetrisPresentation instanceof Map))return[];
@@ -2046,6 +2046,7 @@ function resetRoomMatch(r){
   r.moveLog = [];
   r.moveLogBytes = 0;
   r.moveLogTruncated = false;
+  r.undoUsed = false;
   r.tankInputSeq = {};
   r.tankAuthoritySeq = 0;
   r.tankFinalSent = false;
@@ -2337,8 +2338,8 @@ const SHOP_PRICES = {
     ...Array.from({length:6}, (_, theme) => Array.from({length:6}, (_, offset) => [100 + theme * 8 + offset + 2, [10,12,14,16,18,18][offset]])).flat(),
   ]),
   frames: { 1:10,2:12,3:16,4:20,5:24,6:28,7:32,8:36 },
-  effects: { 1:10,2:12,3:12,4:20 },
-  backgrounds: { 7:18,8:18,9:22,10:20,20:24,21:32,22:24,23:32,24:24,25:32,26:24,27:32,28:24,29:32,30:24,31:32 },
+  effects: { 1:10,2:12,3:12,4:20,5:20,6:24,7:28,8:32 },
+  backgrounds: { 7:18,8:18,9:22,10:20,20:24,21:32,22:24,23:32,24:24,25:32,26:24,27:32,28:24,29:32,30:24,31:32,32:24,33:32,34:24,35:32,36:24,37:32,38:24,39:32 },
   game_cosmetics: { 2001:8,2011:10,2012:10,2013:10,2021:12,2031:14,2041:12,2042:12,2051:12 },
 };
 const GAME_COSMETIC_CATALOG = Object.freeze([
@@ -3835,6 +3836,7 @@ function startRoomMatch(r, options={}){
   r.moveLog = [];
   r.moveLogBytes = 0;
   r.moveLogTruncated = false;
+  r.undoUsed = false;
   r.tankInputSeq = {};
   r.tankAuthoritySeq = 0;
   r.tankFinalSent = false;
@@ -4583,6 +4585,44 @@ function relayRoomMove(room, player, payload, except, record){
   broadcast(room, { type:'move', payload, seq:event.seq, player:event.player }, except);
   return true;
 }
+function handleRoomUndo(session, room, payload){
+  if (!room || !room.started || room.settled || !room.matchId) return false;
+  if (room.allowUndo !== true || room.undoUsed === true){
+    session.sendText(JSON.stringify({type:'gameplay_error',payload:{protocol:'undo-v1',reason:room.allowUndo===true?'ERR_UNDO_ALREADY_USED':'ERR_UNDO_DISABLED'}}));
+    return true;
+  }
+  if (payload && String(payload.matchId || '') !== String(room.matchId || '')){
+    session.sendText(JSON.stringify({type:'gameplay_error',payload:{protocol:'undo-v1',reason:'ERR_INVALID_STATE'}}));
+    return true;
+  }
+  const seat=seatForSession(room,session);if(!seat||seat.type!=='human')return true;
+  if (!['gomoku','xiangqi'].includes(room.game)){
+    session.sendText(JSON.stringify({type:'gameplay_error',payload:{protocol:'undo-v1',reason:'ERR_UNSUPPORTED_GAME'}}));
+    return true;
+  }
+  if (room.game === 'xiangqi' && room.xiangqiRuleAuthority){
+    const accepted=room.xiangqiRuleAuthority.undo(seat.seatId,Date.now());
+    if(!accepted.ok){session.sendText(JSON.stringify({type:'gameplay_error',payload:{protocol:PROTOCOL_VERSIONS.xiangqiRules,reason:accepted.reason}}));return true;}
+    if(Array.isArray(room.moveLog)&&room.moveLog.length)room.moveLog.pop();
+    room.undoUsed=true;
+    broadcast(room,accepted.event);
+    return true;
+  }
+  if (room.game === 'xiangqi'){
+    session.sendText(JSON.stringify({type:'gameplay_error',payload:{protocol:'undo-v1',reason:'ERR_UNDO_UNAVAILABLE'}}));
+    return true;
+  }
+  const log=Array.isArray(room.moveLog)?room.moveLog:[];
+  const last=log[log.length-1];
+  if(!last||Number(last.player)!==Number(seat.seatId)){
+    session.sendText(JSON.stringify({type:'gameplay_error',payload:{protocol:'undo-v1',reason:'ERR_NOT_LAST_MOVER'}}));
+    return true;
+  }
+  log.pop();
+  room.undoUsed=true;
+  broadcast(room,{type:'undo',payload:{protocol:'undo-v1',game:room.game,matchId:room.matchId,moveLog:log.map(item=>({seq:item.seq,player:item.player,payload:item.payload})),undoUsed:true}});
+  return true;
+}
 
 function spectatorSnapshot(r){
   const cosmetics = [...r.clients.entries()].map(([session, player]) => {
@@ -5004,6 +5044,8 @@ class Session {
             payload: { category, id, requestId:purchaseRef, replayed: result.duplicate === true, alreadyOwned: result.alreadyOwned === true, profile: profileObj(u) },
           }));
           broadcastLeaderboard();
+        }).catch(() => {
+          this.sendText(JSON.stringify({ type: 'purchase_error', payload:{category,id,requestId:purchaseRef}, msg: '购买同步失败，请稍后重试', reason: 'purchase_sync_failed' }));
         });
         return;
       }
@@ -5192,6 +5234,7 @@ class Session {
         id: roomId, host: this, clients: new Map([[this, 0]]), game: null, capacity: cap,
         seats:Array.from({length:cap}, (_, seatId) => seatId === 0 ? humanSeatFromSession(this, 0, true) : emptySeat(seatId)),
         visibility:testSandbox ? 'private' : normalizeRoomVisibility(payload && payload.visibility), allowSpectators:testSandbox ? false : payload && payload.allowSpectators !== false,
+        allowUndo:testSandbox ? false : payload && payload.allowUndo !== false, undoUsed:false,
         testAdminSandbox:testSandbox,
         started: false, matchId: null, resultClaims: new Map(), settled: false, disputed: false,
         moveSeq: 0, moveLog: [], moveLogBytes: 0, moveLogTruncated: false,
@@ -5413,7 +5456,7 @@ class Session {
       return;
     }
     if (this.spectatorRoom){
-      if (['move','bot_move','tank_input','bot_tank_input','tetris_lock_claim','tetris_attack_claim','tetris_ko_claim','tetris_action','xiangqi_action','monopoly_action','monopoly_auction_open','monopoly_bid','game_state','start','restart','end_game','select_game','ready','room_settings','add_ai','remove_ai'].includes(type)){
+      if (['move','bot_move','tank_input','bot_tank_input','tetris_lock_claim','tetris_attack_claim','tetris_ko_claim','tetris_action','xiangqi_action','monopoly_action','monopoly_auction_open','monopoly_bid','game_state','start','restart','end_game','select_game','ready','room_settings','undo','add_ai','remove_ai'].includes(type)){
         this.sendText(JSON.stringify({ type:'spectator_error', msg:'观战模式为只读，不能发送游戏输入', reason:'spectator_readonly' }));
       }
       return;
@@ -5441,6 +5484,7 @@ class Session {
       }
       if (payload && payload.visibility !== undefined) r.visibility = normalizeRoomVisibility(payload.visibility);
       if (payload && payload.allowSpectators !== undefined) r.allowSpectators = payload.allowSpectators === true;
+      if (payload && payload.allowUndo !== undefined) r.allowUndo = payload.allowUndo === true;
       if (!r.allowSpectators && r.spectators instanceof Map){
         for (const spectator of r.spectators.keys()){
           spectatorAccessGuard.leave(spectator.sessionId);
@@ -5450,6 +5494,10 @@ class Session {
         r.spectators.clear();
       }
       broadcastRoom(r); broadcastLobby();
+      return;
+    }
+    if (type === 'undo'){
+      handleRoomUndo(this,r,payload || {});
       return;
     }
     if (type === 'add_ai'){
@@ -6027,6 +6075,39 @@ const metricsHistorySweep=serverClockTimer.schedule({
   },
 });
 if(!metricsHistorySweep.ok)recordOperationalError('metrics_history_schedule',new Error(metricsHistorySweep.reason));
+
+const AUTH_TOKEN_SWEEP_INTERVAL_MS=Math.max(60000,Math.min(24*60*60*1000,Number(process.env.AUTH_TOKEN_SWEEP_INTERVAL_MS)||60*60*1000));
+const AUTH_TOKEN_SWEEP_TIMER_OWNER='auth-token-expiry-sweep';
+async function runAuthTokenExpirySweep({now}={}){
+  if(clusterCoordinator.enabled&&!clusterCoordinator.isLeader())return {ok:true,skipped:true,reason:'not_cluster_leader'};
+  const result=authProfileBoundary.session({action:'sweep_expired',at:now});
+  if(!result.ok||result.failedUsers)recordOperationalError('auth_token_expiry_sweep',new Error(result.reason||'auth_unavailable'));
+  const changed=new Set(Array.isArray(result.changedUids)?result.changedUids.map(String):[]);
+  if(!changed.size)return result;
+  saveDB();
+  for(const uid of changed){
+    const user=db.users[uid];
+    if(user&&!user.ephemeral){
+      try{await sbSyncAuthProfile(user);}catch(error){recordOperationalError('supabase_auth_token_sweep',error);}
+    }
+  }
+  for(const session of [...sessions]){
+    if(!session.alive||!changed.has(String(session.uid)))continue;
+    const user=session.uid&&db.users[session.uid];
+    if(user&&session.tokenHash&&!userHasTokenHash(user,session.tokenHash)){
+      try{session.sendText(JSON.stringify({type:'auth_error',msg:'会话已到期',reason:'session_expired'}));}catch(_error){}
+      try{session.close(true);}catch(_error){}
+    }
+  }
+  return result;
+}
+const authTokenExpirySweep=serverClockTimer.schedule({
+  owner:AUTH_TOKEN_SWEEP_TIMER_OWNER,
+  delayMs:AUTH_TOKEN_SWEEP_INTERVAL_MS,
+  repeat:true,
+  run:runAuthTokenExpirySweep,
+});
+if(!authTokenExpirySweep.ok)recordOperationalError('auth_token_expiry_schedule',new Error(authTokenExpirySweep.reason||'clock_timer_unavailable'));
 server.once('close',()=>serverClockTimer.dispose());
 
 async function bootstrapConfiguredTestAdmin(){
@@ -6051,10 +6132,31 @@ sbLoadProfiles().then(bootstrapConfiguredTestAdmin).then(() => clusterCoordinato
   console.error('测试管理员启动引导失败（reason=' + TestAdmin.TEST_ADMIN_REASON + '）');
   process.exitCode = 1;
 });
-// outbox 失败后不依赖下一次重启；同一 resultId 的 RPC 是幂等的，可安全重试。
+// Outbox 失败后不依赖下一次重启；同一 resultId 的 RPC 是幂等的，可安全重试。
+// 两类 outbox 共用一个 ServerClockTimer owner，避免双 interval 在多实例中
+// 分别漂移；每个 drain 独立收口，单类异常不会取消下一次 retry lease。
+const SUPABASE_OUTBOX_SYNC_TIMER_OWNER='supabase-outbox-sync';
+function runSupabaseOutboxSync(){
+  if(!useSupabase||!clusterCoordinator.isLeader())return Promise.resolve({ok:true,skipped:true});
+  // Keep the two drains on one persistence lane.  Both can call saveDB();
+  // concurrent atomic renames are unsafe on Windows and unnecessary for an
+  // idempotent retry queue.  The second drain still runs after a first-drain
+  // rejection so one outbox cannot starve the other.
+  const reward=Promise.resolve().then(()=>retryPendingRewardSync());
+  const ai=reward.catch(()=>undefined).then(()=>retryPendingAILearningSync());
+  return Promise.allSettled([reward,ai]).then(results=>{
+    results.forEach((item,index)=>{
+      if(item.status==='rejected')recordOperationalError(index===0?'supabase_reward_outbox_retry':'supabase_ai_outbox_retry',item.reason instanceof Error?item.reason:new Error(String(item.reason||'outbox_retry_failed')));
+    });
+    return {ok:results.every(item=>item.status==='fulfilled')};
+  });
+}
 if (useSupabase){
-  const rewardSyncSweep = setInterval(() => { if(clusterCoordinator.isLeader())retryPendingRewardSync(); }, REWARD_SYNC_RETRY_MS);
-  if (rewardSyncSweep.unref) rewardSyncSweep.unref();
-  const aiLearningSyncSweep = setInterval(() => { if(clusterCoordinator.isLeader())retryPendingAILearningSync(); }, REWARD_SYNC_RETRY_MS);
-  if (aiLearningSyncSweep.unref) aiLearningSyncSweep.unref();
+  const supabaseOutboxSync=serverClockTimer.schedule({
+    owner:SUPABASE_OUTBOX_SYNC_TIMER_OWNER,
+    delayMs:REWARD_SYNC_RETRY_MS,
+    repeat:true,
+    run:runSupabaseOutboxSync,
+  });
+  if(!supabaseOutboxSync.ok)recordOperationalError('supabase_outbox_schedule',new Error(supabaseOutboxSync.reason||'clock_timer_unavailable'));
 }

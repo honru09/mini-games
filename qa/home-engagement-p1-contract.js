@@ -3,7 +3,8 @@
 /* Home Engagement P1: public Home pulse behavior, privacy boundary and daily local dismissal. */
 const fs=require('fs'),path=require('path'),vm=require('vm');
 const ROOT=path.join(__dirname,'..');const read=file=>fs.readFileSync(path.join(ROOT,file),'utf8');
-const template=read('public/index-template.html'),shell=read('public/src/core/02-app-shell.js'),pkg=read('package.json'),packageJson=JSON.parse(pkg),server=read('server/index.js');
+const { readPresentationSource } = require('./presentation-source');
+const template=readPresentationSource(),shell=read('public/src/core/02-app-shell.js'),pkg=read('package.json'),packageJson=JSON.parse(pkg),server=read('server/index.js');
 const locales=['zh-CN','en-US','uk-UA'].map(lang=>JSON.parse(read('public/locales/'+lang+'.json')));
 let catalog=null,fail=0;
 function check(name,ok,detail){console.log((ok?'PASS  ':'FAIL  ')+name);if(!ok){fail++;if(detail)console.error(detail);}}

@@ -1,0 +1,394 @@
+{
+  "familyId": "P-AI-DIFFICULTY-VISUAL-V1",
+  "sourceId": "ART-043-AI-DIFFICULTY-VISUAL-V1",
+  "flag": "mg_art_ai_difficulty_visual_v1",
+  "generatedAt": "2026-08-21T08:22:50.243Z",
+  "sourceMastersCount": 13,
+  "runtimeVariantsCount": 26,
+  "totalRuntimeBytes": 157404,
+  "byteBudget": 1048576,
+  "sourceMasters": [
+    {
+      "role": "card-easy",
+      "path": "art-source/platform/ai-difficulty/visual-v1/runtime-source/card-easy.svg",
+      "sha256": "31A0751F608FF7CC56B6B85FFDEBB8E7F9403EBD98A79760085E986DF9481A7C",
+      "bytes": 1305,
+      "width": 640,
+      "height": 360,
+      "alpha": true
+    },
+    {
+      "role": "card-normal",
+      "path": "art-source/platform/ai-difficulty/visual-v1/runtime-source/card-normal.svg",
+      "sha256": "92340AC717C5E55B7554665A307E393031BD9401807521B84279E07198A74463",
+      "bytes": 1318,
+      "width": 640,
+      "height": 360,
+      "alpha": true
+    },
+    {
+      "role": "card-hard",
+      "path": "art-source/platform/ai-difficulty/visual-v1/runtime-source/card-hard.svg",
+      "sha256": "FE764ED8C01ABD103C66492207E173B134957F101437210D3A635A9DE2885C36",
+      "bytes": 1267,
+      "width": 640,
+      "height": 360,
+      "alpha": true
+    },
+    {
+      "role": "seat-easy",
+      "path": "art-source/platform/ai-difficulty/visual-v1/runtime-source/seat-easy.svg",
+      "sha256": "51F0A6390F4F55138B924885B372975E0A4953E664A5BF621A310C9E45AEE796",
+      "bytes": 1448,
+      "width": 256,
+      "height": 256,
+      "alpha": true
+    },
+    {
+      "role": "seat-normal",
+      "path": "art-source/platform/ai-difficulty/visual-v1/runtime-source/seat-normal.svg",
+      "sha256": "8B07B94F2BF66D6DBD216B164D9A3B2EE7BC7D154D0E3879F279314D7AF7DCD9",
+      "bytes": 1467,
+      "width": 256,
+      "height": 256,
+      "alpha": true
+    },
+    {
+      "role": "seat-hard",
+      "path": "art-source/platform/ai-difficulty/visual-v1/runtime-source/seat-hard.svg",
+      "sha256": "1BC789C17CBCF18D42AF8610FF97ED9A941035A953834191708C9CC446CB3983",
+      "bytes": 1400,
+      "width": 256,
+      "height": 256,
+      "alpha": true
+    },
+    {
+      "role": "mark-easy",
+      "path": "art-source/platform/ai-difficulty/visual-v1/runtime-source/mark-easy.svg",
+      "sha256": "6A8C5A71D4632A0E3682C509BEB2ADEDF431515FAF288EA108C017838B350165",
+      "bytes": 899,
+      "width": 128,
+      "height": 128,
+      "alpha": true
+    },
+    {
+      "role": "mark-normal",
+      "path": "art-source/platform/ai-difficulty/visual-v1/runtime-source/mark-normal.svg",
+      "sha256": "C1B6080B40D9293FDA698B45D6C4CB124F11D3F68B7F756DE85870CE5FF461C1",
+      "bytes": 918,
+      "width": 128,
+      "height": 128,
+      "alpha": true
+    },
+    {
+      "role": "mark-hard",
+      "path": "art-source/platform/ai-difficulty/visual-v1/runtime-source/mark-hard.svg",
+      "sha256": "08E2A9CB7223394158BC7E09F760EEC105BCEDD0152EC3F80DF6E7F1E91E2F8C",
+      "bytes": 851,
+      "width": 128,
+      "height": 128,
+      "alpha": true
+    },
+    {
+      "role": "vfx-thinking",
+      "path": "art-source/platform/ai-difficulty/visual-v1/runtime-source/vfx-thinking.svg",
+      "sha256": "51A9A5B3A895DF88965679331C0047F4136E09DDE1C7EF80FD46B0FFD9A54B05",
+      "bytes": 802,
+      "width": 256,
+      "height": 256,
+      "alpha": true
+    },
+    {
+      "role": "vfx-decided",
+      "path": "art-source/platform/ai-difficulty/visual-v1/runtime-source/vfx-decided.svg",
+      "sha256": "75C4D7FFFD20758D2AA27FEB246768C023AECFE11C14F7D4252015E82C0CEF92",
+      "bytes": 721,
+      "width": 256,
+      "height": 256,
+      "alpha": true
+    },
+    {
+      "role": "camera-desktop",
+      "path": "art-source/platform/ai-difficulty/visual-v1/runtime-source/camera-desktop.svg",
+      "sha256": "67F3F7323E0667DE0EDD43D78025DCBD15F65BF88444807CB03B2E95D26F0D30",
+      "bytes": 137,
+      "width": 1,
+      "height": 1,
+      "alpha": true
+    },
+    {
+      "role": "camera-mobile",
+      "path": "art-source/platform/ai-difficulty/visual-v1/runtime-source/camera-mobile.svg",
+      "sha256": "67F3F7323E0667DE0EDD43D78025DCBD15F65BF88444807CB03B2E95D26F0D30",
+      "bytes": 137,
+      "width": 1,
+      "height": 1,
+      "alpha": true
+    }
+  ],
+  "runtimeVariants": [
+    {
+      "role": "card-easy",
+      "variant": "normal",
+      "path": "public/assets/platform/ai-difficulty/visual-v1/card-easy.webp",
+      "sha256": "1758F1F88109EDB4336F64FF3A7017FA2D89D41A96C8F3AE7F768D94C33A13AF",
+      "bytes": 7150,
+      "width": 640,
+      "height": 360,
+      "alpha": true
+    },
+    {
+      "role": "card-easy",
+      "variant": "static",
+      "path": "public/assets/platform/ai-difficulty/visual-v1/card-easy-static.webp",
+      "sha256": "DDA869ADF41E45BDCDACC75ECBC69033FBEE1CE7DD97CF7A4B3B71618F9D789D",
+      "bytes": 5594,
+      "width": 640,
+      "height": 360,
+      "alpha": true
+    },
+    {
+      "role": "card-normal",
+      "variant": "normal",
+      "path": "public/assets/platform/ai-difficulty/visual-v1/card-normal.webp",
+      "sha256": "5EBB60E679D488B02257BFA8ABE25717480C44874E30115E49D6226B01F850B3",
+      "bytes": 9122,
+      "width": 640,
+      "height": 360,
+      "alpha": true
+    },
+    {
+      "role": "card-normal",
+      "variant": "static",
+      "path": "public/assets/platform/ai-difficulty/visual-v1/card-normal-static.webp",
+      "sha256": "CC021A4DB3495F52E63BE16E71B3ACCB519948462042D28035140662191E6990",
+      "bytes": 7104,
+      "width": 640,
+      "height": 360,
+      "alpha": true
+    },
+    {
+      "role": "card-hard",
+      "variant": "normal",
+      "path": "public/assets/platform/ai-difficulty/visual-v1/card-hard.webp",
+      "sha256": "78CD7D63DBFC1577A6C968312860B2B710DC164D5C3E0F6EF0BF31BB3E9FD7B3",
+      "bytes": 8192,
+      "width": 640,
+      "height": 360,
+      "alpha": true
+    },
+    {
+      "role": "card-hard",
+      "variant": "static",
+      "path": "public/assets/platform/ai-difficulty/visual-v1/card-hard-static.webp",
+      "sha256": "6671AB87ABA375143FEDA296C32E0060B1DE27EB89F180B89217812EAA65CEA4",
+      "bytes": 6288,
+      "width": 640,
+      "height": 360,
+      "alpha": true
+    },
+    {
+      "role": "seat-easy",
+      "variant": "normal",
+      "path": "public/assets/platform/ai-difficulty/visual-v1/seat-easy.webp",
+      "sha256": "1B9014C188E6E57A86D3DDC6367793B4D6C94BA307CD1E2F130515272ED51667",
+      "bytes": 11702,
+      "width": 256,
+      "height": 256,
+      "alpha": true
+    },
+    {
+      "role": "seat-easy",
+      "variant": "static",
+      "path": "public/assets/platform/ai-difficulty/visual-v1/seat-easy-static.webp",
+      "sha256": "5A467FBDAFAABF40350910AFC3620303B63AF0DF5D8EA1EBEF4798E8F5B15B78",
+      "bytes": 10044,
+      "width": 256,
+      "height": 256,
+      "alpha": true
+    },
+    {
+      "role": "seat-normal",
+      "variant": "normal",
+      "path": "public/assets/platform/ai-difficulty/visual-v1/seat-normal.webp",
+      "sha256": "F9EDFA68487A0314BAF61882756802B7CCD3977C3E73667E56FB9C2B9A167CC1",
+      "bytes": 13698,
+      "width": 256,
+      "height": 256,
+      "alpha": true
+    },
+    {
+      "role": "seat-normal",
+      "variant": "static",
+      "path": "public/assets/platform/ai-difficulty/visual-v1/seat-normal-static.webp",
+      "sha256": "D7F75A7890DF76B79CF4AC1B72739E327E1DB577C71A3F7724AB4D592A0A7B24",
+      "bytes": 11886,
+      "width": 256,
+      "height": 256,
+      "alpha": true
+    },
+    {
+      "role": "seat-hard",
+      "variant": "normal",
+      "path": "public/assets/platform/ai-difficulty/visual-v1/seat-hard.webp",
+      "sha256": "3BDB60696126E0D3D3895136BF6930D70EB314407042113D7343F6611CF8435D",
+      "bytes": 12764,
+      "width": 256,
+      "height": 256,
+      "alpha": true
+    },
+    {
+      "role": "seat-hard",
+      "variant": "static",
+      "path": "public/assets/platform/ai-difficulty/visual-v1/seat-hard-static.webp",
+      "sha256": "511F3328C654C24B8AC76DDDFFB7B4429FAB2029FAF94D4FB79940994FBF1AFF",
+      "bytes": 10958,
+      "width": 256,
+      "height": 256,
+      "alpha": true
+    },
+    {
+      "role": "mark-easy",
+      "variant": "normal",
+      "path": "public/assets/platform/ai-difficulty/visual-v1/mark-easy.webp",
+      "sha256": "B2C838D6965E6AD32AB58E6B9ADA6AF7EEFAF86C9A227B3789E9159B2E6FB685",
+      "bytes": 3710,
+      "width": 128,
+      "height": 128,
+      "alpha": true
+    },
+    {
+      "role": "mark-easy",
+      "variant": "static",
+      "path": "public/assets/platform/ai-difficulty/visual-v1/mark-easy-static.webp",
+      "sha256": "AC5350627AE1548DDBF711881B4251F49314C5F95A4E965D58A9EDE1AE258779",
+      "bytes": 3220,
+      "width": 128,
+      "height": 128,
+      "alpha": true
+    },
+    {
+      "role": "mark-normal",
+      "variant": "normal",
+      "path": "public/assets/platform/ai-difficulty/visual-v1/mark-normal.webp",
+      "sha256": "C1E5219BA9C0348D18B62D2F4ED337C3DF4A6C92BDE5E7CD9DE89AE1D7AFD6EB",
+      "bytes": 4816,
+      "width": 128,
+      "height": 128,
+      "alpha": true
+    },
+    {
+      "role": "mark-normal",
+      "variant": "static",
+      "path": "public/assets/platform/ai-difficulty/visual-v1/mark-normal-static.webp",
+      "sha256": "521E09E5FA332CCD99C39D55253E1A07C48229E66691410E92C05F8EC142BCAF",
+      "bytes": 4208,
+      "width": 128,
+      "height": 128,
+      "alpha": true
+    },
+    {
+      "role": "mark-hard",
+      "variant": "normal",
+      "path": "public/assets/platform/ai-difficulty/visual-v1/mark-hard.webp",
+      "sha256": "65DF1242902A827BF81E0519003F12343D2167EDE692E1DD00D8985D2422E824",
+      "bytes": 3610,
+      "width": 128,
+      "height": 128,
+      "alpha": true
+    },
+    {
+      "role": "mark-hard",
+      "variant": "static",
+      "path": "public/assets/platform/ai-difficulty/visual-v1/mark-hard-static.webp",
+      "sha256": "04565259CC172A93EF1DDD2949AF1C8425A168879D787467ABE68D1B61DF8F29",
+      "bytes": 3026,
+      "width": 128,
+      "height": 128,
+      "alpha": true
+    },
+    {
+      "role": "vfx-thinking",
+      "variant": "normal",
+      "path": "public/assets/platform/ai-difficulty/visual-v1/vfx-thinking.webp",
+      "sha256": "AF1AD0112C8EC3DA7EF691FF60013C37CD85F496EF9105F256B933300E4A073D",
+      "bytes": 4300,
+      "width": 256,
+      "height": 256,
+      "alpha": true
+    },
+    {
+      "role": "vfx-thinking",
+      "variant": "static",
+      "path": "public/assets/platform/ai-difficulty/visual-v1/vfx-thinking-static.webp",
+      "sha256": "6C4AF9D10FF6D420A707BF5A77B418ACB3DD077AACD298FCC2F2CECAA44DE834",
+      "bytes": 3794,
+      "width": 256,
+      "height": 256,
+      "alpha": true
+    },
+    {
+      "role": "vfx-decided",
+      "variant": "normal",
+      "path": "public/assets/platform/ai-difficulty/visual-v1/vfx-decided.webp",
+      "sha256": "E8BE8BBC85A64AE32202A4F19FD6CA76007BDE2DF7B15F9D4D63E86DE3B46EC3",
+      "bytes": 6346,
+      "width": 256,
+      "height": 256,
+      "alpha": true
+    },
+    {
+      "role": "vfx-decided",
+      "variant": "static",
+      "path": "public/assets/platform/ai-difficulty/visual-v1/vfx-decided-static.webp",
+      "sha256": "F9E0072FAE682F0FD4E74452E0F59B79241AE43FEA033E06880627279B83402C",
+      "bytes": 5580,
+      "width": 256,
+      "height": 256,
+      "alpha": true
+    },
+    {
+      "role": "camera-desktop",
+      "variant": "normal",
+      "path": "public/assets/platform/ai-difficulty/visual-v1/camera-desktop.webp",
+      "sha256": "8F867907A98951EE0E779CFA7CD4BB0827808311273ED401FF9E04165C9A64D2",
+      "bytes": 74,
+      "width": 1,
+      "height": 1,
+      "alpha": true
+    },
+    {
+      "role": "camera-desktop",
+      "variant": "static",
+      "path": "public/assets/platform/ai-difficulty/visual-v1/camera-desktop-static.webp",
+      "sha256": "537D601CCAFB26C0AD0D7235B59BE5AAC8CB60E2A8A0207257EA939AC39F929E",
+      "bytes": 72,
+      "width": 1,
+      "height": 1,
+      "alpha": true
+    },
+    {
+      "role": "camera-mobile",
+      "variant": "normal",
+      "path": "public/assets/platform/ai-difficulty/visual-v1/camera-mobile.webp",
+      "sha256": "8F867907A98951EE0E779CFA7CD4BB0827808311273ED401FF9E04165C9A64D2",
+      "bytes": 74,
+      "width": 1,
+      "height": 1,
+      "alpha": true
+    },
+    {
+      "role": "camera-mobile",
+      "variant": "static",
+      "path": "public/assets/platform/ai-difficulty/visual-v1/camera-mobile-static.webp",
+      "sha256": "537D601CCAFB26C0AD0D7235B59BE5AAC8CB60E2A8A0207257EA939AC39F929E",
+      "bytes": 72,
+      "width": 1,
+      "height": 1,
+      "alpha": true
+    }
+  ],
+  "reviewBoards": [
+    "art-source/platform/ai-difficulty/visual-v1/review/ai-difficulty-visual-contact-sheet-v1.png"
+  ]
+}

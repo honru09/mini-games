@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" style="background:transparent;">
+        <circle cx="128" cy="128" r="50" fill="#F59E0B" stroke="#B45309" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="128" cy="128" r="38" fill="none" stroke="#FDE68A" stroke-width="4"/>
+        <text x="128" y="142" font-size="44" font-weight="900" text-anchor="middle" fill="#B45309">💵</text>
+        <path d="M128,40 L128,70 M116,52 L128,40 L140,52" stroke="#F43F5E" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>

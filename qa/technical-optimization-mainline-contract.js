@@ -61,26 +61,22 @@ assert(plan.waves.slice(8).every(wave => wave.status === 'planned'), 'future tec
 assert.strictEqual(plan.release, 'LOCAL_ONLY_NOT_RELEASED', 'technical authorization must not grant release');
 
 for (const marker of [
-  'TankSnapshotWireCodec', 'TankPredictionAdapter', 'RendererRuntimeGovernor',
+  'TankSnapshotWireCodec', 'TankPredictionAdapter',
   'GameplayInputGate', 'BoardAIWorkerBroker', 'EngagementIntegrityAnalyzer',
-  'ClientDiagnosticsRing', 'GameModuleLoader', 'ServerBoundaryAdapters'
+  'ClientDiagnosticsRing', 'ServerBoundaryAdapters'
 ]) assert(contract.includes(marker), `deep module contract must include ${marker}`);
 
 for (const [relative, marker] of [
   ['public/src/core/13-client-diagnostics-ring.js', 'ClientDiagnosticsRing'],
-  ['public/src/core/13-renderer-runtime-governor.js', 'RendererRuntimeGovernor'],
-  ['public/src/core/13-renderer-quality-adapter.js', 'RendererQualityAdapter'],
-  ['qa/client-diagnostics-buffer.js', 'CLIENT_DIAGNOSTICS_BUFFER_ALL_PASS'],
-  ['qa/renderer-runtime-governor.js', 'RENDERER_RUNTIME_GOVERNOR_ALL_PASS']
+  ['qa/client-diagnostics-buffer.js', 'CLIENT_DIAGNOSTICS_BUFFER_ALL_PASS']
 ]) assert(read(relative).includes(marker), `T1 artifact must include ${marker}`);
 
 const buildScript = read('scripts/build.js');
-  assert(buildScript.includes("core/13-client-diagnostics-ring.js") && buildScript.includes("core/13-renderer-runtime-governor.js") && buildScript.includes("core/13-renderer-quality-adapter.js"), 'T1 modules must be present in the deterministic build graph');
-assert(buildScript.includes("core/14-game-module-loader.js"), 'T2 Loader must be present in the deterministic build graph');
-assert(read('public/src/core/14-game-module-loader.js').includes('GameModuleLoader'), 'T2 Loader artifact must be present');
-assert(read('qa/game-module-loader.js').includes('GAME_MODULE_LOADER_ALL_PASS'), 'T2 Loader QA must be registered');
+assert(buildScript.includes("core/13-client-diagnostics-ring.js"), 'the retained diagnostics module must be present in the deterministic build graph');
+assert(!/renderer-runtime-governor|renderer-quality-adapter|game-module-loader|ghost3d/i.test(buildScript),
+  'retired renderer control modules must be absent from the deterministic build graph');
 assert(read('qa/build-check-write.js').includes('BUILD_CHECK_WRITE_ALL_PASS'), 'T2 deterministic build QA must be registered');
-assert(read('qa/sw-game-module-preheat.js').includes('SW_GAME_MODULE_PREHEAT_ALL_PASS'), 'T2 SW preheat QA must be registered');
+assert(read('qa/visual-25d-only-runtime.js').includes('VISUAL_25D_ONLY_RUNTIME_ALL_PASS'), '2.5D-only retirement QA must be registered');
 
 for (const [relative, marker] of [
   ['public/src/core/15-feedback-bus.js', 'FeedbackBus'],
@@ -165,7 +161,7 @@ const activeParallelBuildDrift = projectStatus.parallelBuildDrift20260819 &&
 const buildIdentityIsBound = acceptance.includes(currentBuildSha) ||
   (activeParallelBuildDrift && acceptance.includes('并行构建状态') &&
    acceptance.includes('自动生成 TECH-027 报告') && acceptance.includes('build --check') &&
-   read('简易报告/项目总需求进度报告-20260819.md').includes(currentBuildSha));
+   read('简易报告/项目总需求进度报告-20260821.md').includes(currentBuildSha));
 assert(acceptance.includes('## T5 已完成') && buildIdentityIsBound,
   'T5/T7 acceptance must bind a stable build or explicitly record current parallel build drift');
 

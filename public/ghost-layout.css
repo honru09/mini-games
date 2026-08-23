@@ -1,0 +1,12 @@
+/*
+ * Ghost Game layout manifest v1.
+ *
+ * Keep the public URL stable for older cached shells, while the actual
+ * presentation modules live under styles/ and can be reviewed independently.
+ * The import order is intentional: tokens -> shell -> product surfaces.
+ */
+@import url("./styles/00-layout-tokens.css");
+@import url("./styles/10-layout-shell.css");
+@import url("./styles/20-layout-surfaces.css");
+@import url("./styles/30-layout-commerce.css");
+@import url("./styles/40-layout-content.css");

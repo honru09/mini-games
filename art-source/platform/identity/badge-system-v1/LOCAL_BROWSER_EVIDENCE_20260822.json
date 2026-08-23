@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "familyId": "P-IDENTITY-BADGE-SYSTEM-V1",
+  "capturedAt": "2026-08-22T00:00:00+09:00",
+  "browser": "Codex in-app Chromium",
+  "build": {
+    "path": "public/index.html",
+    "characters": 2029526,
+    "bytes": 2044179,
+    "sha256": "D2DDA5720FD70133D62A7ACED582951E4EA56DCA55B4DBFE906B147B3624DA04"
+  },
+  "desktop": {
+    "gamesLeaderboard": { "rows": 10, "badges": 10, "decoded": 10, "fallbackVisible": 0, "horizontalOverflow": 0, "rawKeys": 0 },
+    "profile": { "badges": 23, "decoded": 23, "fallbackVisible": 0, "byGroup": { "achievement": 8, "mastery": 6, "rarity": 4, "task": 4, "title": 1 }, "horizontalOverflow": 0 },
+    "achievementDialog": { "badges": 8, "decoded": 8, "earned": 1, "locked": 7, "horizontalOverflow": 0 },
+    "shop": { "badges": 38, "decoded": 38, "tiers": ["starter", "uncommon", "rare", "epic"], "horizontalOverflow": 0 }
+  },
+  "mobile390x844": {
+    "shop": { "badges": 38, "decoded": 38, "minimumVisibleBadgeWidth": 22, "horizontalOverflow": 0 },
+    "profile": { "badges": 23, "decoded": 23, "achievementColumns": 1, "gameColumns": 2, "horizontalOverflow": 0 },
+    "heroRepair": { "identityCopyWidth": 188, "nameWidth": 188, "characterPosition": "absolute", "characterWidth": 84 }
+  },
+  "console": "No new badge-related warning or error observed during the focused flow.",
+  "scope": "Single local Chromium focused evidence only. Not a second browser, physical device, real network, low-end performance, production or release proof."
+}
+

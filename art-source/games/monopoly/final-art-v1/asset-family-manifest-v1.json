@@ -1,0 +1,702 @@
+{
+  "schemaVersion": 1,
+  "productionUnitId": "P1-01",
+  "familyId": "G-15-MONOPOLY-FINAL-ART-V1",
+  "sourceAssetId": "ART-036-MONOPOLY-FINAL-ART-V1",
+  "sourceExtractionManifest": "art-source/games/monopoly/final-art-v1/source-extraction-manifest-v1.json",
+  "artworkVersion": 1,
+  "status": "OWNER_AUTHORIZED_ART_CLEARANCE",
+  "license": "project-owned-deterministic-svg-sharp",
+  "runtimeStrategy": "Vanilla DOM + CSS + Canvas + GSAP 2.5D; no GLB/Three dependency",
+  "externalReferenceContext": {
+    "status": "SOURCE_ONLY_EXTERNAL_INFLUENCED_CONCEPTS_ONLY",
+    "license": "EXTERNAL_REFERENCE_ONLY / blocked-license",
+    "register": "asset-library/external-source-register-20260813.json",
+    "transmissionRecord": "art-source/games/monopoly/final-art-v1/EXTERNAL_REFERENCE_TRANSMISSION.json",
+    "runtimeBoundary": "No blocked-license pixel, layer, preview or generated concept is present in runtime variants."
+  },
+  "sources": [
+    {
+      "role": "board-background",
+      "path": "art-source/games/monopoly/final-art-v1/runtime-source/board-background-v1.svg",
+      "sha256": "5D64C435A66130072AFB3D80C58EEB74F9154A66A6D9AA3DCDE90633AFDB392B",
+      "bytes": 6128,
+      "width": 1056,
+      "height": 1056,
+      "alpha": false,
+      "kind": "layer"
+    },
+    {
+      "role": "board-midground",
+      "path": "art-source/games/monopoly/final-art-v1/runtime-source/board-midground-v1.svg",
+      "sha256": "9AE990B5AF4CC5C0DD7F44B8717248746307D10EBD84AFE0A960F32BFA7E1D18",
+      "bytes": 3699,
+      "width": 1056,
+      "height": 1056,
+      "alpha": true,
+      "kind": "layer"
+    },
+    {
+      "role": "board-foreground",
+      "path": "art-source/games/monopoly/final-art-v1/runtime-source/board-foreground-v1.svg",
+      "sha256": "8A06931529F9EE6C00DE608E00876858445FC81E554394FA483E8874A33409D4",
+      "bytes": 1969,
+      "width": 1056,
+      "height": 1056,
+      "alpha": true,
+      "kind": "layer"
+    },
+    {
+      "role": "object-townhouse",
+      "path": "art-source/games/monopoly/final-art-v1/runtime-source/object-townhouse-v1.svg",
+      "sha256": "B40AE97B6A72DCE6BAEBB4327C456DD58CB737ED1C3AFD0C73D276C6E8592B08",
+      "bytes": 893,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "object"
+    },
+    {
+      "role": "object-hall",
+      "path": "art-source/games/monopoly/final-art-v1/runtime-source/object-hall-v1.svg",
+      "sha256": "49C20EFCC8FA178A065B69E7D02DCF23A24C62B07772496B0E221631CEA5E017",
+      "bytes": 1110,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "object"
+    },
+    {
+      "role": "object-market",
+      "path": "art-source/games/monopoly/final-art-v1/runtime-source/object-market-v1.svg",
+      "sha256": "5F87779964700C72A5A4AD5B9D57622A274449C87230A3228BAA933EA1830051",
+      "bytes": 999,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "object"
+    },
+    {
+      "role": "object-tower",
+      "path": "art-source/games/monopoly/final-art-v1/runtime-source/object-tower-v1.svg",
+      "sha256": "8047C5D64A55D4E0E39291C2DBFB6511FE8FCA3A8E5FA80194BF9B4F625D3616",
+      "bytes": 1110,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "object"
+    },
+    {
+      "role": "object-gate",
+      "path": "art-source/games/monopoly/final-art-v1/runtime-source/object-gate-v1.svg",
+      "sha256": "A463F545F762F67C0AC3A2676B6EFA3FA7219B4DEC8C2AC9FF672F4777EE0428",
+      "bytes": 491,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "object"
+    },
+    {
+      "role": "object-chance-card",
+      "path": "art-source/games/monopoly/final-art-v1/runtime-source/object-chance-card-v1.svg",
+      "sha256": "54A414F7A43D728851DA6534FA20A03BEA2A9239F9D9AD9BD3F2846FA5987251",
+      "bytes": 1033,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "object"
+    },
+    {
+      "role": "object-key-token",
+      "path": "art-source/games/monopoly/final-art-v1/runtime-source/object-key-token-v1.svg",
+      "sha256": "8DB767F96F8691A87760AA760C0D745F88BA5E0F0261966A33286641A651E78F",
+      "bytes": 482,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "object"
+    },
+    {
+      "role": "object-coin",
+      "path": "art-source/games/monopoly/final-art-v1/runtime-source/object-coin-v1.svg",
+      "sha256": "D0CDD5D4AACFE25E6EC36224F31ADAD26B6A1491A4771BF392A790E4984E8623",
+      "bytes": 1005,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "object"
+    },
+    {
+      "role": "object-bell",
+      "path": "art-source/games/monopoly/final-art-v1/runtime-source/object-bell-v1.svg",
+      "sha256": "A228E97430BD52C7B071D7D5F2ED133858DAB7E71202810EB58519880D63C1E6",
+      "bytes": 608,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "object"
+    },
+    {
+      "role": "vfx-landing",
+      "path": "art-source/games/monopoly/final-art-v1/runtime-source/vfx-landing-v1.svg",
+      "sha256": "3D019EDEF6E4E63149852A3FD4C7EBDE4724949E32F59AB49B92886AE06D111E",
+      "bytes": 719,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "semantic-vfx"
+    },
+    {
+      "role": "vfx-opportunity",
+      "path": "art-source/games/monopoly/final-art-v1/runtime-source/vfx-opportunity-v1.svg",
+      "sha256": "5E0E91DF160EAC7BDB68CEF572BF9192E7EB2522C0A8D9BF3CEE4891F76A58B3",
+      "bytes": 695,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "semantic-vfx"
+    },
+    {
+      "role": "vfx-auction",
+      "path": "art-source/games/monopoly/final-art-v1/runtime-source/vfx-auction-v1.svg",
+      "sha256": "C7E0DCAAEECA5ED23E5D481CF71F17199DA188E7CEF88E030E45565680BE1DBE",
+      "bytes": 899,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "semantic-vfx"
+    },
+    {
+      "role": "vfx-purchase",
+      "path": "art-source/games/monopoly/final-art-v1/runtime-source/vfx-purchase-v1.svg",
+      "sha256": "3F7CDC9908DC077F9B455C078D41BD9BFE238D2C936BDAD2A79B769A32C61A2A",
+      "bytes": 774,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "semantic-vfx"
+    },
+    {
+      "role": "vfx-payment",
+      "path": "art-source/games/monopoly/final-art-v1/runtime-source/vfx-payment-v1.svg",
+      "sha256": "3FEFF1627A8A0D3F65AC1E2A23046798A8533BF1E88AAD6288408F346260C0F3",
+      "bytes": 2245,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "semantic-vfx"
+    },
+    {
+      "role": "vfx-tax",
+      "path": "art-source/games/monopoly/final-art-v1/runtime-source/vfx-tax-v1.svg",
+      "sha256": "AF20EB4EA2BD16717F5DBDAF3487378753592A8E229B066045E03896AF7158BB",
+      "bytes": 1333,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "semantic-vfx"
+    },
+    {
+      "role": "vfx-bankruptcy",
+      "path": "art-source/games/monopoly/final-art-v1/runtime-source/vfx-bankruptcy-v1.svg",
+      "sha256": "BF3414BA192244FA2CD1BF13EF7890CC6C3D6A63BE07E3887C8AAB474F307E68",
+      "bytes": 1537,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "semantic-vfx"
+    },
+    {
+      "role": "vfx-turn-result",
+      "path": "art-source/games/monopoly/final-art-v1/runtime-source/vfx-turn-result-v1.svg",
+      "sha256": "249DC3767AB5D97456610247C3434402AB5058B44623A9365BE6A826CDC50860",
+      "bytes": 882,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "semantic-vfx"
+    },
+    {
+      "role": "vfx-final-result",
+      "path": "art-source/games/monopoly/final-art-v1/runtime-source/vfx-final-result-v1.svg",
+      "sha256": "2977761687D09ADDF403B2684B72884C39D3E0614FBB6E339EA5D7BD43ECB0B0",
+      "bytes": 1054,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "semantic-vfx"
+    },
+    {
+      "role": "camera-desktop",
+      "path": "art-source/games/monopoly/final-art-v1/runtime-source/camera-desktop-v1.svg",
+      "sha256": "2581B4BBB7C13DC560081A1EA15E2CA01C37B4D6A18BF34046014C019582F6BA",
+      "bytes": 400,
+      "width": 1280,
+      "height": 720,
+      "alpha": false,
+      "kind": "camera"
+    },
+    {
+      "role": "camera-mobile",
+      "path": "art-source/games/monopoly/final-art-v1/runtime-source/camera-mobile-v1.svg",
+      "sha256": "C3E49666EC7C3DBE288C107165A6AE4016DD32E0CEBDE1ED49278B9A6E0DA499",
+      "bytes": 397,
+      "width": 720,
+      "height": 960,
+      "alpha": false,
+      "kind": "camera"
+    }
+  ],
+  "variants": [
+    {
+      "role": "board-background",
+      "path": "public/assets/games/monopoly/final-art-v1/board-background-v1.webp",
+      "sha256": "7C86CA743665C5CD26D38A1F4AB85DF821BA6BF18F94E95AE6CBAB5499913ADE",
+      "bytes": 24394,
+      "width": 1056,
+      "height": 1056,
+      "alpha": false
+    },
+    {
+      "role": "board-background-static",
+      "path": "public/assets/games/monopoly/final-art-v1/board-background-static-v1.webp",
+      "sha256": "7C86CA743665C5CD26D38A1F4AB85DF821BA6BF18F94E95AE6CBAB5499913ADE",
+      "bytes": 24394,
+      "width": 1056,
+      "height": 1056,
+      "alpha": false
+    },
+    {
+      "role": "board-midground",
+      "path": "public/assets/games/monopoly/final-art-v1/board-midground-v1.webp",
+      "sha256": "CB9FF31CED6ABBB207902B89FD67C8220E575075F626858D881BFF9DB1A7B30A",
+      "bytes": 20146,
+      "width": 1056,
+      "height": 1056,
+      "alpha": true
+    },
+    {
+      "role": "board-midground-static",
+      "path": "public/assets/games/monopoly/final-art-v1/board-midground-static-v1.webp",
+      "sha256": "CB9FF31CED6ABBB207902B89FD67C8220E575075F626858D881BFF9DB1A7B30A",
+      "bytes": 20146,
+      "width": 1056,
+      "height": 1056,
+      "alpha": true
+    },
+    {
+      "role": "board-foreground",
+      "path": "public/assets/games/monopoly/final-art-v1/board-foreground-v1.webp",
+      "sha256": "5C6B3B55FC45F35B688F8111B0C793C6AF9EB1D60186790657217CE26A567D68",
+      "bytes": 16304,
+      "width": 1056,
+      "height": 1056,
+      "alpha": true
+    },
+    {
+      "role": "board-foreground-static",
+      "path": "public/assets/games/monopoly/final-art-v1/board-foreground-static-v1.webp",
+      "sha256": "5C6B3B55FC45F35B688F8111B0C793C6AF9EB1D60186790657217CE26A567D68",
+      "bytes": 16304,
+      "width": 1056,
+      "height": 1056,
+      "alpha": true
+    },
+    {
+      "role": "object-townhouse",
+      "path": "public/assets/games/monopoly/final-art-v1/object-townhouse-v1.webp",
+      "sha256": "8416D75A523BACBE337309953727D5B54A0727DF1228C22822EB1B6CD8C9274D",
+      "bytes": 4726,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "object-townhouse-static",
+      "path": "public/assets/games/monopoly/final-art-v1/object-townhouse-static-v1.webp",
+      "sha256": "8416D75A523BACBE337309953727D5B54A0727DF1228C22822EB1B6CD8C9274D",
+      "bytes": 4726,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "object-hall",
+      "path": "public/assets/games/monopoly/final-art-v1/object-hall-v1.webp",
+      "sha256": "3F57C480052A2FF6BDF9DC0F40E93342026F3556C9153314297DDA0305BFA99E",
+      "bytes": 4800,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "object-hall-static",
+      "path": "public/assets/games/monopoly/final-art-v1/object-hall-static-v1.webp",
+      "sha256": "3F57C480052A2FF6BDF9DC0F40E93342026F3556C9153314297DDA0305BFA99E",
+      "bytes": 4800,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "object-market",
+      "path": "public/assets/games/monopoly/final-art-v1/object-market-v1.webp",
+      "sha256": "7D6C0DB2A2247C736A7B66D19D00A6F084BCB404887CF12FF197AF3548D28CD9",
+      "bytes": 5170,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "object-market-static",
+      "path": "public/assets/games/monopoly/final-art-v1/object-market-static-v1.webp",
+      "sha256": "7D6C0DB2A2247C736A7B66D19D00A6F084BCB404887CF12FF197AF3548D28CD9",
+      "bytes": 5170,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "object-tower",
+      "path": "public/assets/games/monopoly/final-art-v1/object-tower-v1.webp",
+      "sha256": "AA3739CB26A5A18F9D71E3AE7F2EE1B2E24A12541343E58DEF11DD0BD5457E31",
+      "bytes": 4924,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "object-tower-static",
+      "path": "public/assets/games/monopoly/final-art-v1/object-tower-static-v1.webp",
+      "sha256": "AA3739CB26A5A18F9D71E3AE7F2EE1B2E24A12541343E58DEF11DD0BD5457E31",
+      "bytes": 4924,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "object-gate",
+      "path": "public/assets/games/monopoly/final-art-v1/object-gate-v1.webp",
+      "sha256": "F9AB6EF2078011232EA2B1EEC0E9BFD22DF12E6C94A1B68975E0C09E91CDA8BF",
+      "bytes": 6658,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "object-gate-static",
+      "path": "public/assets/games/monopoly/final-art-v1/object-gate-static-v1.webp",
+      "sha256": "F9AB6EF2078011232EA2B1EEC0E9BFD22DF12E6C94A1B68975E0C09E91CDA8BF",
+      "bytes": 6658,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "object-chance-card",
+      "path": "public/assets/games/monopoly/final-art-v1/object-chance-card-v1.webp",
+      "sha256": "DB9DB3C54D70B06E13A3BE05245168C6A784E2D9F801A53746266FF8CDA58AE4",
+      "bytes": 7792,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "object-chance-card-static",
+      "path": "public/assets/games/monopoly/final-art-v1/object-chance-card-static-v1.webp",
+      "sha256": "DB9DB3C54D70B06E13A3BE05245168C6A784E2D9F801A53746266FF8CDA58AE4",
+      "bytes": 7792,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "object-key-token",
+      "path": "public/assets/games/monopoly/final-art-v1/object-key-token-v1.webp",
+      "sha256": "80BEA9E7ADFC96C17129FE704D239844F0C2F140151DC4F8EFAC775E79058EE5",
+      "bytes": 7764,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "object-key-token-static",
+      "path": "public/assets/games/monopoly/final-art-v1/object-key-token-static-v1.webp",
+      "sha256": "80BEA9E7ADFC96C17129FE704D239844F0C2F140151DC4F8EFAC775E79058EE5",
+      "bytes": 7764,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "object-coin",
+      "path": "public/assets/games/monopoly/final-art-v1/object-coin-v1.webp",
+      "sha256": "5A853BE5CA06C9F7E461B825D3950D775D31583ECFD5A2268649B126CD92953B",
+      "bytes": 8882,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "object-coin-static",
+      "path": "public/assets/games/monopoly/final-art-v1/object-coin-static-v1.webp",
+      "sha256": "5A853BE5CA06C9F7E461B825D3950D775D31583ECFD5A2268649B126CD92953B",
+      "bytes": 8882,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "object-bell",
+      "path": "public/assets/games/monopoly/final-art-v1/object-bell-v1.webp",
+      "sha256": "80E97F0C03CA2F88C76D61B72C2ECF303260CCC1A7206E53B38217EDC0818417",
+      "bytes": 7032,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "object-bell-static",
+      "path": "public/assets/games/monopoly/final-art-v1/object-bell-static-v1.webp",
+      "sha256": "80E97F0C03CA2F88C76D61B72C2ECF303260CCC1A7206E53B38217EDC0818417",
+      "bytes": 7032,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "vfx-landing",
+      "path": "public/assets/games/monopoly/final-art-v1/vfx-landing-v1.webp",
+      "sha256": "B672E2283175F807E1D35C520669D0EA22868F8C7210937C7D982A8A4996F9C2",
+      "bytes": 8186,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "vfx-landing-static",
+      "path": "public/assets/games/monopoly/final-art-v1/vfx-landing-static-v1.webp",
+      "sha256": "B672E2283175F807E1D35C520669D0EA22868F8C7210937C7D982A8A4996F9C2",
+      "bytes": 8186,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "vfx-opportunity",
+      "path": "public/assets/games/monopoly/final-art-v1/vfx-opportunity-v1.webp",
+      "sha256": "DF007714FE827878FB01747C49E426A155DA977FC27930E729387AE72DA04D3F",
+      "bytes": 6544,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "vfx-opportunity-static",
+      "path": "public/assets/games/monopoly/final-art-v1/vfx-opportunity-static-v1.webp",
+      "sha256": "DF007714FE827878FB01747C49E426A155DA977FC27930E729387AE72DA04D3F",
+      "bytes": 6544,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "vfx-auction",
+      "path": "public/assets/games/monopoly/final-art-v1/vfx-auction-v1.webp",
+      "sha256": "2C5208E39B314B6A8EB98E9D6170C08792E76FC8F7693C39B16971435B28299B",
+      "bytes": 10622,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "vfx-auction-static",
+      "path": "public/assets/games/monopoly/final-art-v1/vfx-auction-static-v1.webp",
+      "sha256": "2C5208E39B314B6A8EB98E9D6170C08792E76FC8F7693C39B16971435B28299B",
+      "bytes": 10622,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "vfx-purchase",
+      "path": "public/assets/games/monopoly/final-art-v1/vfx-purchase-v1.webp",
+      "sha256": "9B554ED0B54CDBC9086ECDCD7D917DF97950C2C90099456C148E8B997C2B9CF8",
+      "bytes": 16978,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "vfx-purchase-static",
+      "path": "public/assets/games/monopoly/final-art-v1/vfx-purchase-static-v1.webp",
+      "sha256": "9B554ED0B54CDBC9086ECDCD7D917DF97950C2C90099456C148E8B997C2B9CF8",
+      "bytes": 16978,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "vfx-payment",
+      "path": "public/assets/games/monopoly/final-art-v1/vfx-payment-v1.webp",
+      "sha256": "A78A5D44E14A2F5E87D12CFE77809786FC8DC88B2C3D60357F285988F6616B46",
+      "bytes": 10366,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "vfx-payment-static",
+      "path": "public/assets/games/monopoly/final-art-v1/vfx-payment-static-v1.webp",
+      "sha256": "A78A5D44E14A2F5E87D12CFE77809786FC8DC88B2C3D60357F285988F6616B46",
+      "bytes": 10366,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "vfx-tax",
+      "path": "public/assets/games/monopoly/final-art-v1/vfx-tax-v1.webp",
+      "sha256": "B70E497E164D0D5300F9462574179D4E2F4C8FA35248659AAA00CAE650D5338C",
+      "bytes": 6138,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "vfx-tax-static",
+      "path": "public/assets/games/monopoly/final-art-v1/vfx-tax-static-v1.webp",
+      "sha256": "B70E497E164D0D5300F9462574179D4E2F4C8FA35248659AAA00CAE650D5338C",
+      "bytes": 6138,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "vfx-bankruptcy",
+      "path": "public/assets/games/monopoly/final-art-v1/vfx-bankruptcy-v1.webp",
+      "sha256": "59F3B3471DCF57F4B72F5C08B60CF59391BB18DCC62A5231BB1AA8EC80F55946",
+      "bytes": 6334,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "vfx-bankruptcy-static",
+      "path": "public/assets/games/monopoly/final-art-v1/vfx-bankruptcy-static-v1.webp",
+      "sha256": "59F3B3471DCF57F4B72F5C08B60CF59391BB18DCC62A5231BB1AA8EC80F55946",
+      "bytes": 6334,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "vfx-turn-result",
+      "path": "public/assets/games/monopoly/final-art-v1/vfx-turn-result-v1.webp",
+      "sha256": "756E2D1B104CB355D5FFEE50024F974CD88494A16FA725EC1048614D359CBC05",
+      "bytes": 7030,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "vfx-turn-result-static",
+      "path": "public/assets/games/monopoly/final-art-v1/vfx-turn-result-static-v1.webp",
+      "sha256": "756E2D1B104CB355D5FFEE50024F974CD88494A16FA725EC1048614D359CBC05",
+      "bytes": 7030,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "vfx-final-result",
+      "path": "public/assets/games/monopoly/final-art-v1/vfx-final-result-v1.webp",
+      "sha256": "6FEB1C92E3242FED485CFD71039BDB85ED5DA7CBE2044E98D177F656DEE965C8",
+      "bytes": 12382,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "vfx-final-result-static",
+      "path": "public/assets/games/monopoly/final-art-v1/vfx-final-result-static-v1.webp",
+      "sha256": "6FEB1C92E3242FED485CFD71039BDB85ED5DA7CBE2044E98D177F656DEE965C8",
+      "bytes": 12382,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "camera-desktop",
+      "path": "public/assets/games/monopoly/final-art-v1/camera-desktop-v1.webp",
+      "sha256": "52D86BE26E19849B271CAA3C75B0D1C6FBDB15D6C30E5CDFF4F6F2312A85EA55",
+      "bytes": 5926,
+      "width": 1280,
+      "height": 720,
+      "alpha": false
+    },
+    {
+      "role": "camera-desktop-static",
+      "path": "public/assets/games/monopoly/final-art-v1/camera-desktop-static-v1.webp",
+      "sha256": "52D86BE26E19849B271CAA3C75B0D1C6FBDB15D6C30E5CDFF4F6F2312A85EA55",
+      "bytes": 5926,
+      "width": 1280,
+      "height": 720,
+      "alpha": false
+    },
+    {
+      "role": "camera-mobile",
+      "path": "public/assets/games/monopoly/final-art-v1/camera-mobile-v1.webp",
+      "sha256": "60A8831BF14FF76DB65F602D818C1DC142E9B0BA35A32B6C6F4AFAD6D3DE2403",
+      "bytes": 5438,
+      "width": 720,
+      "height": 960,
+      "alpha": false
+    },
+    {
+      "role": "camera-mobile-static",
+      "path": "public/assets/games/monopoly/final-art-v1/camera-mobile-static-v1.webp",
+      "sha256": "60A8831BF14FF76DB65F602D818C1DC142E9B0BA35A32B6C6F4AFAD6D3DE2403",
+      "bytes": 5438,
+      "width": 720,
+      "height": 960,
+      "alpha": false
+    }
+  ],
+  "reviewBoards": [
+    {
+      "path": "art-source/games/monopoly/final-art-v1/review/runtime/monopoly-final-runtime-contact-sheet-v1.png",
+      "sha256": "282B8AB467F078E8C9600FFFF66B4C62EB7D204BD91827CAFB53B3AEC7803BF6",
+      "bytes": 25628,
+      "width": 960,
+      "height": 640
+    }
+  ],
+  "characterStrategy": {
+    "sourceOnlyConcept": "art-source/games/monopoly/final-art-v1/monopoly-player-character-action-sheet-source-v1.png",
+    "runtime": "reuse P0-10 player-character-v1 manifest-backed layers; no new model pixels in runtime"
+  },
+  "featureFlags": {
+    "operator": "all",
+    "enabledValue": "1",
+    "defaultEnabled": true,
+    "ids": [
+      "mg_art_monopoly_final_v1"
+    ]
+  },
+  "metrics": {
+    "sourceMasterCount": 23,
+    "runtimeVariantCount": 46,
+    "runtimeBytes": 429072,
+    "runtimeByteBudget": 6291456,
+    "withinBudget": true,
+    "boardLayerCount": 3,
+    "objectAtomCount": 9,
+    "semanticVfxCount": 9
+  },
+  "authorityBoundary": "presentation-only; 24-cell layout, labels, prices, ownership, money, phase, auction, replay, reward and rule state remain DOM/Rule Authority/Protocol",
+  "fallback": {
+    "chain": "Monopoly final art -> existing CSS/DOM/Canvas board + P0-10 character layers -> neutral token/marker"
+  },
+  "release": "LOCAL_ONLY_NOT_RELEASED"
+}

@@ -9,7 +9,8 @@ const ROOT = path.resolve(__dirname, '..');
 const read = relative => fs.readFileSync(path.join(ROOT, relative), 'utf8');
 const shellSource = read('public/src/core/02-app-shell.js');
 const rosterSource = read('public/src/ui/07-roster.js');
-const template = read('public/index-template.html');
+const { readPresentationSource } = require('./presentation-source');
+const template = readPresentationSource();
 const GAME_IDS = ['gomoku', 'ludo', 'monopoly', 'tank', 'tetris', 'xiangqi'];
 let failures = 0;
 

@@ -1,0 +1,758 @@
+{
+  "schemaVersion": 1,
+  "productionUnitId": "P1-03",
+  "familyId": "G-11-TETRIS-FINAL-ART-V1",
+  "sourceAssetId": "ART-037-TETRIS-FINAL-ART-V1",
+  "artworkVersion": 1,
+  "status": "OWNER_AUTHORIZED_ART_CLEARANCE",
+  "license": "project-owned-deterministic-svg-sharp",
+  "runtimeStrategy": "Vanilla DOM + CSS + Canvas + GSAP 2.5D; no GLB/Three dependency",
+  "sourceOnlyInputs": {
+    "cover": "art-source/games/tetris/mg_tetris_cover_source_v02.png",
+    "wellSurface": "art-source/games/tetris/well_surface_master.png",
+    "externalInfluence": "task-scoped semantic-only reference lane; no external pixels in runtime"
+  },
+  "sources": [
+    {
+      "role": "board-background",
+      "path": "art-source/games/tetris/final-art-v1/runtime-source/board-background-v1.svg",
+      "sha256": "7AA559859BBED63CE245B19FB46B288221EF9F0035E0831BE4AD127B1853D39A",
+      "bytes": 1636,
+      "width": 1056,
+      "height": 720,
+      "alpha": false,
+      "kind": "layer"
+    },
+    {
+      "role": "board-midground",
+      "path": "art-source/games/tetris/final-art-v1/runtime-source/board-midground-v1.svg",
+      "sha256": "DECEF23FE4EEF2FA1555EB86E6D7ED7A4CD9C4728A016C2708B246DA658043FD",
+      "bytes": 3633,
+      "width": 1056,
+      "height": 720,
+      "alpha": false,
+      "kind": "layer"
+    },
+    {
+      "role": "board-foreground",
+      "path": "art-source/games/tetris/final-art-v1/runtime-source/board-foreground-v1.svg",
+      "sha256": "CB7420604AE54699F4BB99FB84323EB9EB0633B1694D6C2D5996BEDB8DFDD691",
+      "bytes": 426,
+      "width": 1056,
+      "height": 720,
+      "alpha": false,
+      "kind": "layer"
+    },
+    {
+      "role": "object-block-i",
+      "path": "art-source/games/tetris/final-art-v1/runtime-source/object-block-i-v1.svg",
+      "sha256": "C7AE34B78E4461511C9A763749CFB99785A19F22F82BA6EBF3E06AEA61B2BB43",
+      "bytes": 592,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "object"
+    },
+    {
+      "role": "object-block-o",
+      "path": "art-source/games/tetris/final-art-v1/runtime-source/object-block-o-v1.svg",
+      "sha256": "9694FA58DA393D191B0C95C455B2AB23D212B161EF8B3303CEDCA5383039B060",
+      "bytes": 592,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "object"
+    },
+    {
+      "role": "object-block-t",
+      "path": "art-source/games/tetris/final-art-v1/runtime-source/object-block-t-v1.svg",
+      "sha256": "C7BF2306CDA8E767919298D5103D0891BAAD3EDDB9014BE24BF20DF08FBDE17E",
+      "bytes": 592,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "object"
+    },
+    {
+      "role": "object-block-s",
+      "path": "art-source/games/tetris/final-art-v1/runtime-source/object-block-s-v1.svg",
+      "sha256": "532EE4D7C8F84652180254E8584515E38A8D0DB4E2E7DA53A9868700266F7668",
+      "bytes": 592,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "object"
+    },
+    {
+      "role": "object-block-z",
+      "path": "art-source/games/tetris/final-art-v1/runtime-source/object-block-z-v1.svg",
+      "sha256": "3F3A43F92524BD03FDD6DDAC87F4A0EFCBCDD35852991F213645CA6BD19B2CBA",
+      "bytes": 592,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "object"
+    },
+    {
+      "role": "object-block-j",
+      "path": "art-source/games/tetris/final-art-v1/runtime-source/object-block-j-v1.svg",
+      "sha256": "6D8E723BB785995A272011CF198B48DE4F7432DC5326EECE7229344EAC7EB9E7",
+      "bytes": 592,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "object"
+    },
+    {
+      "role": "object-block-l",
+      "path": "art-source/games/tetris/final-art-v1/runtime-source/object-block-l-v1.svg",
+      "sha256": "D3029F4FDB3B1F7C81158E688BFEDC1200E5C5F348249D082419C4CC788A2F7B",
+      "bytes": 592,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "object"
+    },
+    {
+      "role": "object-block-ghost",
+      "path": "art-source/games/tetris/final-art-v1/runtime-source/object-block-ghost-v1.svg",
+      "sha256": "B298286146EA5A64069D41A9F8AC4EF95498F8BF1977CAB1D210ED1EE549D2C8",
+      "bytes": 381,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "object"
+    },
+    {
+      "role": "object-block-garbage",
+      "path": "art-source/games/tetris/final-art-v1/runtime-source/object-block-garbage-v1.svg",
+      "sha256": "40ED89459A057EFCD0C9C2FC0E7A3A6D5318518A3178033B00A51E11D76F3EB1",
+      "bytes": 660,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "object"
+    },
+    {
+      "role": "object-well-frame",
+      "path": "art-source/games/tetris/final-art-v1/runtime-source/object-well-frame-v1.svg",
+      "sha256": "F465A31D8F3411E745F23FE7F374C5BB6363450F231A3523BE0CB372976F5170",
+      "bytes": 343,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "object"
+    },
+    {
+      "role": "object-next-frame",
+      "path": "art-source/games/tetris/final-art-v1/runtime-source/object-next-frame-v1.svg",
+      "sha256": "C94B11DD2E2799B11643195557CB13B18995B33B4ED9167CEB5718F6DB37B218",
+      "bytes": 326,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "object"
+    },
+    {
+      "role": "object-hold-frame",
+      "path": "art-source/games/tetris/final-art-v1/runtime-source/object-hold-frame-v1.svg",
+      "sha256": "E9FC698A5471D0A3264B346E0417C22BEF58860C8EB64FE06FB2AD50B6DE0EF1",
+      "bytes": 326,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "object"
+    },
+    {
+      "role": "vfx-line-clear",
+      "path": "art-source/games/tetris/final-art-v1/runtime-source/vfx-line-clear-v1.svg",
+      "sha256": "8A6DC88C445DD5464B8F8281E1ABDA3E8BC00BDDA02CAD5B9B580F38836846A0",
+      "bytes": 612,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "semantic-vfx"
+    },
+    {
+      "role": "vfx-hard-drop",
+      "path": "art-source/games/tetris/final-art-v1/runtime-source/vfx-hard-drop-v1.svg",
+      "sha256": "73DAAAC75A7AC37752F8DB78F25ADC39AF3D2278F2A276079078EA50FB22152F",
+      "bytes": 580,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "semantic-vfx"
+    },
+    {
+      "role": "vfx-t-spin",
+      "path": "art-source/games/tetris/final-art-v1/runtime-source/vfx-t-spin-v1.svg",
+      "sha256": "ABD6E394AFAA5374959DC9EC158794EDDCD3CBC6A3099A88D0A5F9B5D5D269EB",
+      "bytes": 541,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "semantic-vfx"
+    },
+    {
+      "role": "vfx-b2b",
+      "path": "art-source/games/tetris/final-art-v1/runtime-source/vfx-b2b-v1.svg",
+      "sha256": "78D7BBFD0C81215D001482834EBFF78A82EFC4C9B04892F4B320DE747365FFC9",
+      "bytes": 534,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "semantic-vfx"
+    },
+    {
+      "role": "vfx-combo",
+      "path": "art-source/games/tetris/final-art-v1/runtime-source/vfx-combo-v1.svg",
+      "sha256": "418CC708568B1D1C8C8152739E53A6797152EEDD9FB5ACDFA53F3587EC2CFF70",
+      "bytes": 559,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "semantic-vfx"
+    },
+    {
+      "role": "vfx-perfect-clear",
+      "path": "art-source/games/tetris/final-art-v1/runtime-source/vfx-perfect-clear-v1.svg",
+      "sha256": "62117ABC66C195CD9289D0C59D523CC03E6DE23833E9AB1347F4CD961D1B2476",
+      "bytes": 547,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "semantic-vfx"
+    },
+    {
+      "role": "vfx-incoming-garbage",
+      "path": "art-source/games/tetris/final-art-v1/runtime-source/vfx-incoming-garbage-v1.svg",
+      "sha256": "B512AC63188FE29CF21B9F080EFCA3A35AFBA0DCD1914E36C2F6F95A4D36CC77",
+      "bytes": 489,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "semantic-vfx"
+    },
+    {
+      "role": "vfx-ko",
+      "path": "art-source/games/tetris/final-art-v1/runtime-source/vfx-ko-v1.svg",
+      "sha256": "EC339A1308BEC74D29B4CBF53DEA9F34B68620030FE30960B7733C0BBFBB7E93",
+      "bytes": 585,
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "kind": "semantic-vfx"
+    },
+    {
+      "role": "camera-desktop",
+      "path": "art-source/games/tetris/final-art-v1/runtime-source/camera-desktop-v1.svg",
+      "sha256": "F843C88BFC845E53F5AF59C112464C19C3989220FBFBB5CEA444E666413FF6E0",
+      "bytes": 397,
+      "width": 960,
+      "height": 720,
+      "alpha": false,
+      "kind": "camera"
+    },
+    {
+      "role": "camera-mobile",
+      "path": "art-source/games/tetris/final-art-v1/runtime-source/camera-mobile-v1.svg",
+      "sha256": "15358280C52E73D67CB518E170A6A8863FB68D946AA33DCE9CBB787A4DC0E4C1",
+      "bytes": 396,
+      "width": 720,
+      "height": 960,
+      "alpha": false,
+      "kind": "camera"
+    }
+  ],
+  "variants": [
+    {
+      "role": "board-background",
+      "path": "public/assets/games/tetris/final-art-v1/board-background-v1.webp",
+      "sha256": "9BA45201885D423AD11D350EF4C4E7D0C3AF8BBAAA763C5851D01895C287F55D",
+      "bytes": 7318,
+      "width": 1056,
+      "height": 720,
+      "alpha": false
+    },
+    {
+      "role": "board-background-static",
+      "path": "public/assets/games/tetris/final-art-v1/board-background-static-v1.webp",
+      "sha256": "9BA45201885D423AD11D350EF4C4E7D0C3AF8BBAAA763C5851D01895C287F55D",
+      "bytes": 7318,
+      "width": 1056,
+      "height": 720,
+      "alpha": false
+    },
+    {
+      "role": "board-midground",
+      "path": "public/assets/games/tetris/final-art-v1/board-midground-v1.webp",
+      "sha256": "39546F80472DC00990632C747EB671C6CE274812BD9836CA03A644778A8FAC81",
+      "bytes": 10162,
+      "width": 1056,
+      "height": 720,
+      "alpha": false
+    },
+    {
+      "role": "board-midground-static",
+      "path": "public/assets/games/tetris/final-art-v1/board-midground-static-v1.webp",
+      "sha256": "39546F80472DC00990632C747EB671C6CE274812BD9836CA03A644778A8FAC81",
+      "bytes": 10162,
+      "width": 1056,
+      "height": 720,
+      "alpha": false
+    },
+    {
+      "role": "board-foreground",
+      "path": "public/assets/games/tetris/final-art-v1/board-foreground-v1.webp",
+      "sha256": "6E355306C7C67C9F1B87990DE3D1937C537F4A5ED8D3248C04D381938CC0BA41",
+      "bytes": 5732,
+      "width": 1056,
+      "height": 720,
+      "alpha": false
+    },
+    {
+      "role": "board-foreground-static",
+      "path": "public/assets/games/tetris/final-art-v1/board-foreground-static-v1.webp",
+      "sha256": "6E355306C7C67C9F1B87990DE3D1937C537F4A5ED8D3248C04D381938CC0BA41",
+      "bytes": 5732,
+      "width": 1056,
+      "height": 720,
+      "alpha": false
+    },
+    {
+      "role": "object-block-i",
+      "path": "public/assets/games/tetris/final-art-v1/object-block-i-v1.webp",
+      "sha256": "0F9173C655CF875162F4B646F210C272FE9B618DB0746FE80AAAF1D15C9DFF18",
+      "bytes": 5682,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "object-block-i-static",
+      "path": "public/assets/games/tetris/final-art-v1/object-block-i-static-v1.webp",
+      "sha256": "0F9173C655CF875162F4B646F210C272FE9B618DB0746FE80AAAF1D15C9DFF18",
+      "bytes": 5682,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "object-block-o",
+      "path": "public/assets/games/tetris/final-art-v1/object-block-o-v1.webp",
+      "sha256": "DA8E2056A5E3171DC766D7F57F794706180EC51031EF2C013EAD4DCDFC174FF6",
+      "bytes": 6476,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "object-block-o-static",
+      "path": "public/assets/games/tetris/final-art-v1/object-block-o-static-v1.webp",
+      "sha256": "DA8E2056A5E3171DC766D7F57F794706180EC51031EF2C013EAD4DCDFC174FF6",
+      "bytes": 6476,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "object-block-t",
+      "path": "public/assets/games/tetris/final-art-v1/object-block-t-v1.webp",
+      "sha256": "08C9E8EEE1EEBE21088036F691D4927A4BDE46CB2B286E842C34978AA3588ED2",
+      "bytes": 5248,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "object-block-t-static",
+      "path": "public/assets/games/tetris/final-art-v1/object-block-t-static-v1.webp",
+      "sha256": "08C9E8EEE1EEBE21088036F691D4927A4BDE46CB2B286E842C34978AA3588ED2",
+      "bytes": 5248,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "object-block-s",
+      "path": "public/assets/games/tetris/final-art-v1/object-block-s-v1.webp",
+      "sha256": "A20A3EDD1206FF4882BF22D89EC8DDEEBCDF68E34B6AEB253B10B31FF2D37A03",
+      "bytes": 5536,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "object-block-s-static",
+      "path": "public/assets/games/tetris/final-art-v1/object-block-s-static-v1.webp",
+      "sha256": "A20A3EDD1206FF4882BF22D89EC8DDEEBCDF68E34B6AEB253B10B31FF2D37A03",
+      "bytes": 5536,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "object-block-z",
+      "path": "public/assets/games/tetris/final-art-v1/object-block-z-v1.webp",
+      "sha256": "C1C08226E0659C30D6C415FC276C2B18E7FD27E8662487F13DE9368223C39245",
+      "bytes": 6116,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "object-block-z-static",
+      "path": "public/assets/games/tetris/final-art-v1/object-block-z-static-v1.webp",
+      "sha256": "C1C08226E0659C30D6C415FC276C2B18E7FD27E8662487F13DE9368223C39245",
+      "bytes": 6116,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "object-block-j",
+      "path": "public/assets/games/tetris/final-art-v1/object-block-j-v1.webp",
+      "sha256": "A484725C69D57908E386EF6603F5E1B09DDDCEA61F1891F896D3B82EC7842558",
+      "bytes": 5452,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "object-block-j-static",
+      "path": "public/assets/games/tetris/final-art-v1/object-block-j-static-v1.webp",
+      "sha256": "A484725C69D57908E386EF6603F5E1B09DDDCEA61F1891F896D3B82EC7842558",
+      "bytes": 5452,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "object-block-l",
+      "path": "public/assets/games/tetris/final-art-v1/object-block-l-v1.webp",
+      "sha256": "F5D126A31C4C204DB150488E6549F2A3793C19AD96CBE398719F4EF3180646BD",
+      "bytes": 6456,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "object-block-l-static",
+      "path": "public/assets/games/tetris/final-art-v1/object-block-l-static-v1.webp",
+      "sha256": "F5D126A31C4C204DB150488E6549F2A3793C19AD96CBE398719F4EF3180646BD",
+      "bytes": 6456,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "object-block-ghost",
+      "path": "public/assets/games/tetris/final-art-v1/object-block-ghost-v1.webp",
+      "sha256": "30B37832D3E85440DEA15C7AC6807CBDC58E1E1025FDF34060C90C33F3DD8F7B",
+      "bytes": 8998,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "object-block-ghost-static",
+      "path": "public/assets/games/tetris/final-art-v1/object-block-ghost-static-v1.webp",
+      "sha256": "30B37832D3E85440DEA15C7AC6807CBDC58E1E1025FDF34060C90C33F3DD8F7B",
+      "bytes": 8998,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "object-block-garbage",
+      "path": "public/assets/games/tetris/final-art-v1/object-block-garbage-v1.webp",
+      "sha256": "82E7E799BB7FA3E6F7863F5FF266B690AAECB8738FD873AE4D77DAD6D5CD51DE",
+      "bytes": 8994,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "object-block-garbage-static",
+      "path": "public/assets/games/tetris/final-art-v1/object-block-garbage-static-v1.webp",
+      "sha256": "82E7E799BB7FA3E6F7863F5FF266B690AAECB8738FD873AE4D77DAD6D5CD51DE",
+      "bytes": 8994,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "object-well-frame",
+      "path": "public/assets/games/tetris/final-art-v1/object-well-frame-v1.webp",
+      "sha256": "02C3F34D77CCA573ACB5D0FC6970EC6D8A9840005E7B360410CA1B9FA298FA5A",
+      "bytes": 3514,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "object-well-frame-static",
+      "path": "public/assets/games/tetris/final-art-v1/object-well-frame-static-v1.webp",
+      "sha256": "02C3F34D77CCA573ACB5D0FC6970EC6D8A9840005E7B360410CA1B9FA298FA5A",
+      "bytes": 3514,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "object-next-frame",
+      "path": "public/assets/games/tetris/final-art-v1/object-next-frame-v1.webp",
+      "sha256": "AFBE7591349B56D482BF99D4AEF1EFF985F73148F2006B8847AB432DC47DB153",
+      "bytes": 2772,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "object-next-frame-static",
+      "path": "public/assets/games/tetris/final-art-v1/object-next-frame-static-v1.webp",
+      "sha256": "AFBE7591349B56D482BF99D4AEF1EFF985F73148F2006B8847AB432DC47DB153",
+      "bytes": 2772,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "object-hold-frame",
+      "path": "public/assets/games/tetris/final-art-v1/object-hold-frame-v1.webp",
+      "sha256": "658575301D9B9034DC0A1672D165266AC143A3F8F8A021E815B31A802824902D",
+      "bytes": 2786,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "object-hold-frame-static",
+      "path": "public/assets/games/tetris/final-art-v1/object-hold-frame-static-v1.webp",
+      "sha256": "658575301D9B9034DC0A1672D165266AC143A3F8F8A021E815B31A802824902D",
+      "bytes": 2786,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "vfx-line-clear",
+      "path": "public/assets/games/tetris/final-art-v1/vfx-line-clear-v1.webp",
+      "sha256": "331DF09B6E45F2561FE72369FC9A9E942740984BA7CADBAF259531F387849E2D",
+      "bytes": 7272,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "vfx-line-clear-static",
+      "path": "public/assets/games/tetris/final-art-v1/vfx-line-clear-static-v1.webp",
+      "sha256": "331DF09B6E45F2561FE72369FC9A9E942740984BA7CADBAF259531F387849E2D",
+      "bytes": 7272,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "vfx-hard-drop",
+      "path": "public/assets/games/tetris/final-art-v1/vfx-hard-drop-v1.webp",
+      "sha256": "E4FCD7950F799944EA1F279709E53664975BF19C5E3448ED10D9463B82B99516",
+      "bytes": 10128,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "vfx-hard-drop-static",
+      "path": "public/assets/games/tetris/final-art-v1/vfx-hard-drop-static-v1.webp",
+      "sha256": "E4FCD7950F799944EA1F279709E53664975BF19C5E3448ED10D9463B82B99516",
+      "bytes": 10128,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "vfx-t-spin",
+      "path": "public/assets/games/tetris/final-art-v1/vfx-t-spin-v1.webp",
+      "sha256": "68712245EE9C31C9294F7A0FA80DB153D3D6B2CDC230F7968F8539804D528CA8",
+      "bytes": 18836,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "vfx-t-spin-static",
+      "path": "public/assets/games/tetris/final-art-v1/vfx-t-spin-static-v1.webp",
+      "sha256": "68712245EE9C31C9294F7A0FA80DB153D3D6B2CDC230F7968F8539804D528CA8",
+      "bytes": 18836,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "vfx-b2b",
+      "path": "public/assets/games/tetris/final-art-v1/vfx-b2b-v1.webp",
+      "sha256": "7ED7D1F29577148DC36EA10A8F2BAE111CD6DA1E832364FC203B3D245BE5439B",
+      "bytes": 20108,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "vfx-b2b-static",
+      "path": "public/assets/games/tetris/final-art-v1/vfx-b2b-static-v1.webp",
+      "sha256": "7ED7D1F29577148DC36EA10A8F2BAE111CD6DA1E832364FC203B3D245BE5439B",
+      "bytes": 20108,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "vfx-combo",
+      "path": "public/assets/games/tetris/final-art-v1/vfx-combo-v1.webp",
+      "sha256": "E75097F254C29E92E93CA6C99CE88C58DEFD4FFFBD855A78CE5A6A484ECFF6AF",
+      "bytes": 17920,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "vfx-combo-static",
+      "path": "public/assets/games/tetris/final-art-v1/vfx-combo-static-v1.webp",
+      "sha256": "E75097F254C29E92E93CA6C99CE88C58DEFD4FFFBD855A78CE5A6A484ECFF6AF",
+      "bytes": 17920,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "vfx-perfect-clear",
+      "path": "public/assets/games/tetris/final-art-v1/vfx-perfect-clear-v1.webp",
+      "sha256": "09CDD899D096B567EEAC3A0BE2A0FB0E2AD8D3B57799958586171C6AA6F084A0",
+      "bytes": 20618,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "vfx-perfect-clear-static",
+      "path": "public/assets/games/tetris/final-art-v1/vfx-perfect-clear-static-v1.webp",
+      "sha256": "09CDD899D096B567EEAC3A0BE2A0FB0E2AD8D3B57799958586171C6AA6F084A0",
+      "bytes": 20618,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "vfx-incoming-garbage",
+      "path": "public/assets/games/tetris/final-art-v1/vfx-incoming-garbage-v1.webp",
+      "sha256": "8545CBF238ECA42DC0E59C6FA8A9779DBE50853606F4DF23640AB6E2510834D6",
+      "bytes": 12618,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "vfx-incoming-garbage-static",
+      "path": "public/assets/games/tetris/final-art-v1/vfx-incoming-garbage-static-v1.webp",
+      "sha256": "8545CBF238ECA42DC0E59C6FA8A9779DBE50853606F4DF23640AB6E2510834D6",
+      "bytes": 12618,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "vfx-ko",
+      "path": "public/assets/games/tetris/final-art-v1/vfx-ko-v1.webp",
+      "sha256": "F5FD23854716DF4E608B54CAB8FCB92D90AFEC1DF0CA2CE256402AA2A08F3D3F",
+      "bytes": 18984,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "vfx-ko-static",
+      "path": "public/assets/games/tetris/final-art-v1/vfx-ko-static-v1.webp",
+      "sha256": "F5FD23854716DF4E608B54CAB8FCB92D90AFEC1DF0CA2CE256402AA2A08F3D3F",
+      "bytes": 18984,
+      "width": 512,
+      "height": 512,
+      "alpha": true
+    },
+    {
+      "role": "camera-desktop",
+      "path": "public/assets/games/tetris/final-art-v1/camera-desktop-v1.webp",
+      "sha256": "2298E3DC6C5CC9AF816394502BE737BB2249A38F31F7B39E859934B04D88196B",
+      "bytes": 5632,
+      "width": 960,
+      "height": 720,
+      "alpha": false
+    },
+    {
+      "role": "camera-desktop-static",
+      "path": "public/assets/games/tetris/final-art-v1/camera-desktop-static-v1.webp",
+      "sha256": "2298E3DC6C5CC9AF816394502BE737BB2249A38F31F7B39E859934B04D88196B",
+      "bytes": 5632,
+      "width": 960,
+      "height": 720,
+      "alpha": false
+    },
+    {
+      "role": "camera-mobile",
+      "path": "public/assets/games/tetris/final-art-v1/camera-mobile-v1.webp",
+      "sha256": "7CDD919E96919B627782E4B8CEF8C3A58326814ECC16EA036857976D2579397A",
+      "bytes": 5462,
+      "width": 720,
+      "height": 960,
+      "alpha": false
+    },
+    {
+      "role": "camera-mobile-static",
+      "path": "public/assets/games/tetris/final-art-v1/camera-mobile-static-v1.webp",
+      "sha256": "7CDD919E96919B627782E4B8CEF8C3A58326814ECC16EA036857976D2579397A",
+      "bytes": 5462,
+      "width": 720,
+      "height": 960,
+      "alpha": false
+    }
+  ],
+  "reviewBoards": [
+    {
+      "path": "art-source/games/tetris/final-art-v1/review/tetris-final-runtime-contact-sheet-v1.png",
+      "sha256": "EDE0FC77B53BC782E045537841C72B3394271195B26E2C34B3D367CA2DFCC6EC",
+      "bytes": 78623,
+      "width": 1060,
+      "height": 462
+    }
+  ],
+  "featureFlags": {
+    "operator": "all",
+    "enabledValue": "1",
+    "defaultEnabled": true,
+    "ids": [
+      "mg_art_tetris_final_v1"
+    ]
+  },
+  "metrics": {
+    "sourceMasterCount": 25,
+    "runtimeVariantCount": 50,
+    "runtimeBytes": 457640,
+    "runtimeByteBudget": 6291456,
+    "withinBudget": true,
+    "boardLayerCount": 3,
+    "objectAtomCount": 12,
+    "semanticVfxCount": 8,
+    "cameraPresetCount": 2
+  },
+  "authorityBoundary": "presentation-only; TetrisRules v3, Protocol, Snapshot, KO, score, 7-Bag, Hold, Next and controls remain authoritative live DOM/Rules",
+  "fallback": {
+    "chain": "Tetris final art -> Tabletop Wave A paper well and CSS fallback"
+  },
+  "release": "LOCAL_ONLY_NOT_RELEASED",
+  "externalReferenceContext": {
+    "status": "SOURCE_ONLY_EXTERNAL_INFLUENCED",
+    "license": "EXTERNAL_REFERENCE_ONLY / blocked-license",
+    "transmissionRecord": "art-source/games/tetris/final-art-v1/EXTERNAL_REFERENCE_TRANSMISSION.json",
+    "runtimeBoundary": "No blocked-license pixel, layer, silhouette, palette, text or icon enters runtime."
+  }
+}

@@ -17,7 +17,8 @@ const path = require('path');
 
 const ROOT = path.join(__dirname, '..');
 const read = relative => fs.readFileSync(path.join(ROOT, relative), 'utf8');
-const template = read('public/index-template.html');
+const { readPresentationSource } = require('./presentation-source');
+const template = readPresentationSource();
 const roster = read('public/src/ui/07-roster.js');
 const websocket = read('public/src/online/03-websocket.js');
 const locales = Object.fromEntries(['zh-CN', 'en-US', 'uk-UA'].map(lang => [
@@ -104,7 +105,7 @@ check('容量只从所选游戏的 min/max 派生并在变更时重新约束',
   /Math\.min\(\s*meta\.max/.test(roomSetup));
 check('Room Launchpad 保留 pendingGame → create → room_update → select_game 兼容流程',
   /online\.pendingGame\s*=\s*gameId/.test(roomSetup) &&
-  /online\.create\s*\(\s*\{\s*capacity\s*,\s*visibility\s*,\s*allowSpectators\s*\}\s*\)/.test(roomSetup) &&
+  /online\.create\s*\(\s*\{\s*capacity\s*,\s*visibility\s*,\s*allowSpectators\s*,\s*allowUndo\s*\}\s*\)/.test(roomSetup) &&
   !/online\.create\s*\(\s*\{[^}]*\bgame\s*:/.test(roomSetup));
 check('Room Launchpad 含可用 Enter 提交的私密房间码表单',
   /createElement\(\s*['"]form['"]\s*\)/.test(roomSetup) &&
@@ -171,6 +172,7 @@ class LaunchpadNode {
   remove(){ if (this.parentNode) this.parentNode.children = this.parentNode.children.filter(child => child !== this); this.parentNode = null; this.setConnected(false); }
   matches(selector){
     if (selector === 'button') return this.tagName === 'BUTTON';
+    if (selector === 'input') return this.tagName === 'INPUT';
     const game = /^\[data-game-id="([^"]+)"\]$/.exec(selector);
     return !!(game && this.dataset.gameId === game[1]);
   }
@@ -208,6 +210,7 @@ try {
     gomoku:{ icon:'●', nameKey:'game_gomoku', min:2, max:2 },
     ludo:{ icon:'✈', nameKey:'game_ludo', min:2, max:4 },
     monopoly:{ icon:'◎', nameKey:'game_monopoly', min:2, max:5 },
+    xiangqi:{ icon:'♞', nameKey:'game_xiangqi', min:2, max:2 },
   };
   const context = {
     account:{ uid:'player-1' },
@@ -233,6 +236,18 @@ try {
   check('VM：通用 Launchpad 先禁用创建，选游戏后按该游戏人数范围创建',
     !!genericModal && !!createButton && createButton.disabled === true && !!gomoku);
   if (gomoku) gomoku.click();
+  const ludoChoice = genericModal && genericModal.find(node => node.dataset.gameId === 'ludo');
+  if (ludoChoice) ludoChoice.click();
+  const unsupportedUndo = genericModal && genericModal.querySelectorAll('input').filter(node => node.type === 'checkbox')[1];
+  const unsupportedUndoState = unsupportedUndo && { disabled:unsupportedUndo.disabled, checked:unsupportedUndo.checked };
+  const xiangqiChoice = genericModal && genericModal.find(node => node.dataset.gameId === 'xiangqi');
+  if (xiangqiChoice) xiangqiChoice.click();
+  const supportedUndo = genericModal && genericModal.querySelectorAll('input').filter(node => node.type === 'checkbox')[1];
+  check('VM：悔棋开关只在五子棋/象棋启用且切换游戏时 UI 与 payload 状态一致',
+    unsupportedUndoState && unsupportedUndoState.disabled === true && unsupportedUndoState.checked === false &&
+    supportedUndo && supportedUndo.disabled === false && supportedUndo.checked === true);
+  const gomokuAgain = genericModal && genericModal.find(node => node.dataset.gameId === 'gomoku');
+  if (gomokuAgain) gomokuAgain.click();
   const firstCapacity = genericModal && genericModal.find(node => node.className.includes('room-launchpad-capacity-choice'));
   if (createButton) createButton.click();
   check('VM：创建只传递既有 payload，并把选中游戏留给 pendingGame 兼容链',
@@ -320,6 +335,8 @@ check('待选游戏只在本次成功创建的同一房间更新时才消费',
     /if\s*\(\s*this\.room\s*\)\s*\{[\s\S]{0,220}this\.pendingGame\s*=\s*null[\s\S]{0,140}this\.pendingGameRoom\s*=\s*null/.test(onlineCreate) ||
     /if\s*\(\s*online\.room\s*&&\s*!online\.isSpectator\s*\)\s*\{[\s\S]{0,220}online\.pendingGame\s*=\s*null[\s\S]{0,140}online\.pendingGameRoom\s*=\s*null/.test(roomSetup)
   ));
+check('房间已满足开局条件时状态标记同步显示 ready',
+  /onlineSystemMarkerNode\(info\.started\?'live':info\.canStart\?'ready':'waiting'/.test(websocket));
 
 /* Copy must use the revised product promise without deleting factual game
  * descriptions elsewhere in the locales. */

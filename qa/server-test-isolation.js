@@ -4,7 +4,6 @@
 const assert = require('assert');
 const fs = require('fs');
 const http = require('http');
-const os = require('os');
 const path = require('path');
 const { spawn, spawnSync } = require('child_process');
 
@@ -27,6 +26,7 @@ const NODE_PROBE = path.join(ROOT, 'server', 'testing', 'node-process-isolation-
 const NODE_FIXTURE = path.join(ROOT, 'server', 'testing', 'node-process-cache-fixture.js');
 const NODE_HANG = path.join(ROOT, 'server', 'testing', 'node-process-hang.js');
 const NODE_OUTPUT = path.join(ROOT, 'server', 'testing', 'node-process-output.js');
+const TEST_TEMP_ROOT = path.join(ROOT, '.tmp', 'server-test-isolation');
 
 let assertions = 0;
 let failures = 0;
@@ -69,6 +69,11 @@ function pathEntryExists(target) {
 
 function delay(milliseconds) {
   return new Promise(resolve => setTimeout(resolve, milliseconds));
+}
+
+function makeTestTemp(prefix) {
+  fs.mkdirSync(TEST_TEMP_ROOT, { recursive:true });
+  return fs.mkdtempSync(path.join(TEST_TEMP_ROOT, prefix));
 }
 
 function within(promise, milliseconds, reason) {
@@ -156,7 +161,7 @@ async function registerAccount(port, username) {
   });
 
   await check('isolated lanes own distinct port, DATA_DIR, account namespace and injectable clock while shared lanes stay serial', async () => {
-    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'mini-games-t7-group-'));
+    const root = makeTestTemp('mini-games-t7-group-');
     const contexts = [];
     const sharedOrder = [];
     let isolatedActive = 0;
@@ -230,7 +235,7 @@ async function registerAccount(port, username) {
   });
 
   await check('failed isolated lane still releases DATA_DIR and reports a grouped failure', async () => {
-    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'mini-games-t7-failure-'));
+    const root = makeTestTemp('mini-games-t7-failure-');
     let dataDir = '';
     const group = IsolatedServerTestGroup.create({ root, prefix: 'failure' });
     try {
@@ -249,7 +254,7 @@ async function registerAccount(port, username) {
   });
 
   await check('fresh Node children isolate wall clock, module cache and environment snapshots', async () => {
-    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'mini-games-t7-process-'));
+    const root = makeTestTemp('mini-games-t7-process-');
     const parentDateNow = Date.now;
     const parentFixture = require(NODE_FIXTURE);
     parentFixture.touches = 37;
@@ -329,8 +334,8 @@ async function registerAccount(port, username) {
   });
 
   await check('lane cleanup unlinks live and dangling external directory links without traversing targets', async () => {
-    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'mini-games-t7-root-guard-'));
-    const outside = fs.mkdtempSync(path.join(os.tmpdir(), 'mini-games-t7-outside-'));
+    const root = makeTestTemp('mini-games-t7-root-guard-');
+    const outside = makeTestTemp('mini-games-t7-outside-');
     const liveTarget = path.join(outside, 'live-target');
     const danglingTarget = path.join(outside, 'dangling-target');
     const detachedTarget = path.join(outside, 'detached-target');
@@ -374,7 +379,7 @@ async function registerAccount(port, username) {
   });
 
   await check('two real server/index lanes concurrently consume distinct ports, DATA_DIRs and account namespaces', async () => {
-    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'mini-games-t7-real-servers-'));
+    const root = makeTestTemp('mini-games-t7-real-servers-');
     const group = IsolatedServerTestGroup.create({ root, prefix: 'real-server' });
     let activeServers = 0;
     let peakServers = 0;

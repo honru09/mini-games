@@ -1,0 +1,10 @@
+
+/* Tank control clarity: one movement surface at a time, with an explicit
+   switch. This prevents the joystick and D-pad competing for the same rail. */
+.tank-control-deck{grid-template-columns:minmax(0,1fr) minmax(82px,104px)!important;grid-template-areas:"move fire" "mode mode" "hint hint"!important;gap:8px 12px!important}
+.tank-joystick-wrap,.tank-dpad{grid-area:move}
+.tank-control-mode-toggle{grid-area:mode;justify-self:center;min-width:44px;min-height:44px;padding:7px 12px!important;border:1px solid color-mix(in srgb,var(--stage-ink) 30%,transparent);border-radius:999px;background:color-mix(in srgb,var(--stage-cream) 78%,transparent);color:var(--stage-ink);font-size:11px;font-weight:850;white-space:nowrap}
+.tank-joystick-wrap[hidden],.tank-dpad[hidden]{display:none!important}
+.tank-control-mode-toggle:focus-visible{outline:3px solid #4c89e8;outline-offset:3px}
+@media(max-width:420px){.tank-control-deck{grid-template-columns:minmax(0,1fr) minmax(76px,92px)!important;grid-template-areas:"move fire" "mode mode" "hint hint"!important}.tank-control-mode-toggle{font-size:10px}}
+@media(min-width:600px) and (min-height:601px) and (orientation:landscape){#screen-game.game-stage[data-shell-game="tank"] .tank-control-deck{grid-template-columns:minmax(0,1fr) 70px!important;grid-template-areas:"move fire" "mode mode"!important;gap:5px!important}.tank-control-mode-toggle{font-size:10px;padding:5px 8px!important}}

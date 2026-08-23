@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "familyId": "P-SEASONAL-BACKGROUNDS-V1",
+  "provider": "OpenAI Codex built-in ImageGen",
+  "model": "runtime-managed built-in image generation",
+  "sentOn": "2026-08-22",
+  "transmissionScope": "Two project-owned North Star images only, used for visual grammar; no external blocked-license material and no repository-wide upload.",
+  "inputs": [
+    {
+      "sourcePath": "art-source/ui/sticker-v1/component-demo.png",
+      "sourceSha256": "135DB655DC400FB35F960045B510EE450E007CCFAD03E308DEBF65E222DB1F61"
+    },
+    {
+      "sourcePath": "art-source/ui/sticker-v1/generated/core-ui-style-board-draft-v1.png",
+      "sourceSha256": "184E24BFD5C52F54FA240366787A0751E5078038E4FBDA17B91C61219F2B4DE5"
+    }
+  ],
+  "tasks": [
+    {"taskId":"exec-4ea535a9-71c6-467d-8e61-ddc694019c59","output":"source/spring-signal-garden-master-v1.png"},
+    {"taskId":"exec-47f4fcf3-689b-41df-a7b6-6e1b72ad9a24","output":"source/summer-cloud-harbor-master-v1.png"},
+    {"taskId":"exec-c8e9c21d-1a19-4662-8b10-2d20e61f41cf","output":"source/autumn-collector-walk-master-v1.png"},
+    {"taskId":"exec-baa00fe5-f231-461e-988d-36c380a42899","output":"source/winter-star-observatory-master-v1.png"}
+  ]
+}
+

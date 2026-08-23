@@ -7,7 +7,8 @@ const ROOT = path.resolve(__dirname, '..');
 const bridge = fs.readFileSync(path.join(ROOT, 'public/src/core/09-route-motion.js'), 'utf8');
 const shell = fs.readFileSync(path.join(ROOT, 'public/src/core/02-app-shell.js'), 'utf8');
 const roster = fs.readFileSync(path.join(ROOT, 'public/src/ui/07-roster.js'), 'utf8');
-const template = fs.readFileSync(path.join(ROOT, 'public/index-template.html'), 'utf8');
+const { readPresentationSource } = require('./presentation-source');
+const template = readPresentationSource();
 const build = fs.readFileSync(path.join(ROOT, 'scripts/build.js'), 'utf8');
 const entry = fs.readFileSync(path.join(ROOT, 'public/route-motion-entry.js'), 'utf8');
 let failures = 0;
@@ -21,7 +22,7 @@ check(/function requireGhostAuth\(mode\)\{[\s\S]{0,220}GhostRouteMotion\.settle\
 check(/function completeLocalLogout\(showLogin\)\{[\s\S]{0,220}GhostRouteMotion\.settle\('logout'\)/.test(roster), 'local logout cancels route presentation before account and connection state reset');
 check(/setAttribute\('aria-hidden','true'\)/.test(shell) && /setAttribute\('inert',''\)/.test(shell) && /node\.inert=true/.test(shell), 'route commit synchronizes hidden aria-hidden and inert');
 check((template.match(/data-app-route="(?:games|playline|profile)" aria-hidden="true" inert/g) || []).length === 3, 'initial hidden routes are absent from the accessibility and interaction trees before shell init');
-check((template.match(/data-route-motion-item/g) || []).length === 8, 'four routes expose only eight meaningful motion groups');
+check((template.match(/data-route-motion-item/g) || []).length === 10, 'four routes expose ten meaningful motion groups including the personal Home scene');
 check(!/@keyframes ghostRouteIn/.test(template) && !/\.app-route\{animation:ghostRouteIn/.test(template), 'legacy unconditional route entrance no longer competes with the runtime');
 check(/\.app-route\.route-motion-active\{will-change:transform,opacity\}/.test(template) && !/route-motion-entering\{(?:pointer-events|contain):/.test(template), 'template owns only compositing hints and never blocks or re-contains the committed target');
 check(/const TRANSIENT_CLASSES/.test(bridge) && /clearInline/.test(bridge) && /willChange/.test(bridge), 'bridge explicitly settles transient classes and inline state');

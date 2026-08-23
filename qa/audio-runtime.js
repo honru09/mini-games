@@ -373,6 +373,31 @@ check('zero haptics volume suppresses vibration while retaining audio', () => {
   assert.strictEqual(countAudioStarts(harness), starts + 1);
 });
 
+check('visual envelopes reflect effective zero-volume silence and emit cues only when audible', () => {
+  const harness = createHarness({ storage: { mg_audio_sfx: '1', mg_audio_sfx_volume: '1', mg_audio_master_volume: '1' } });
+  const envelopes = [];
+  harness.runtime.init();
+  harness.runtime.subscribeVisual(envelope => envelopes.push(envelope));
+  harness.document.dispatch('pointerdown');
+
+  harness.runtime.setPreferences({ mg_audio_master_volume: 0 });
+  let latest = envelopes[envelopes.length - 1];
+  assert.strictEqual(latest.kind, 'state');
+  assert.strictEqual(latest.sfxEnabled, true);
+  assert.strictEqual(latest.sfxAudible, false);
+  const silentCount = envelopes.length;
+  assert.strictEqual(harness.runtime.emit('ui_confirm', { id: 'visual-muted' }).accepted, true);
+  assert.strictEqual(envelopes.length, silentCount);
+
+  harness.runtime.setPreferences({ mg_audio_master_volume: 1, mg_audio_sfx_volume: 0.5 });
+  latest = envelopes[envelopes.length - 1];
+  assert.strictEqual(latest.sfxAudible, true);
+  assert.strictEqual(harness.runtime.emit('ui_confirm', { id: 'visual-audible' }).accepted, true);
+  latest = envelopes[envelopes.length - 1];
+  assert.strictEqual(latest.kind, 'cue');
+  assert.strictEqual(latest.cueType, 'ui_confirm');
+});
+
 checkAsync('async resume rejection leaves runtime locked and retryable', async () => {
   const harness = createHarness();
   let attempts = 0;

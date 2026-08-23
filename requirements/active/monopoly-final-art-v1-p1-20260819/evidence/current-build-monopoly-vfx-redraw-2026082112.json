@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-08-21T12:16:07+09:00",
+  "captureSurface": "Codex in-app Chromium",
+  "evidenceClass": "LOCAL_SINGLE_CHROMIUM_FOCUSED_CURRENT_BUILD",
+  "build": {
+    "characters": 1967839,
+    "utf8Bytes": 1982521,
+    "sha256": "176D108FAEEE8BE2D42274BDCD7462A43D6623371B3F4F2E9F46EFB2C037D9FC"
+  },
+  "route": "isolated local preview http://127.0.0.1:8094/",
+  "game": "monopoly",
+  "featureFlag": "mg_art_monopoly_final_v1",
+  "viewport": {
+    "width": 797,
+    "height": 698,
+    "devicePixelRatio": 1,
+    "boardFramePx": 561.25,
+    "commandRailPx": {"width": 523.99, "height": 165.18},
+    "semanticBoardNodes": 26,
+    "documentHorizontalOverflowPx": 0,
+    "visibleButtonsBelow44": 0,
+    "threeArtLayersDecode": true,
+    "artState": "active"
+  },
+  "vfx": {
+    "rolesObserved": ["landing", "purchase"],
+    "rolesNotExecuted": ["opportunity", "auction", "payment", "tax", "bankruptcy", "turn-result", "final-result"],
+    "hostConnectedAfterBoardRedraw": true,
+    "connectedVfxNodes": ["landing", "purchase"]
+  },
+  "console": {"errors": 0, "warnings": 0, "source": "previewTab2.dev.logs()"},
+  "reducedMotion": "NOT_EXECUTED",
+  "forcedColors": "NOT_EXECUTED",
+  "scope": "Focused current-build browser evidence for the Monopoly redraw/VFX repair only. It does not replace the prior five-viewport layout matrix, and it is not second-browser, physical-device, real-network, low-end-performance, Supabase or release evidence."
+}

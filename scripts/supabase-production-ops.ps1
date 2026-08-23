@@ -12,6 +12,7 @@ $Root = Split-Path -Parent $PSScriptRoot
 $Schema = Join-Path $Root 'supabase\schema.sql'
 $Acceptance = Join-Path $Root 'supabase\production-acceptance.sql'
 $Rollback = Join-Path $Root 'supabase\non-destructive-rollback.sql'
+$EncryptedBackup = Join-Path $PSScriptRoot 'supabase-encrypted-backup.js'
 if (-not $BackupDirectory) { $BackupDirectory = Join-Path $Root '.ops-backups' }
 
 function Require-Tool([string]$Name) {
@@ -92,7 +93,14 @@ function Ensure-BackupStorage {
     } elseif (Test-BitLockerProtectedVolume $resolvedBackupDirectory) {
       $mode = 'bitlocker'
     } else {
-      throw 'BLOCKED_EXTERNAL: 备份目录既无真实 EFS 属性，也不在已启用保护的 BitLocker 卷；cipher 退出码不能证明加密。'
+      $node = Require-Tool 'node'
+      if (-not (Test-Path -LiteralPath $EncryptedBackup)) { throw 'BLOCKED_EXTERNAL: 缺少应用层加密备份工具。' }
+      $dpapiSelfTestOutput = @(& $node $EncryptedBackup self-test)
+      $dpapiSelfTestExit = $LASTEXITCODE
+      if ($dpapiSelfTestExit -ne 0 -or $dpapiSelfTestOutput -notcontains 'DPAPI_AES_GCM_SELF_TEST_PASS') {
+        throw 'BLOCKED_EXTERNAL: EFS/BitLocker 不可用，且 Windows DPAPI + AES-256-GCM 自检失败。'
+      }
+      $mode = 'dpapi-aes-gcm'
     }
   } else {
     if ([Environment]::GetEnvironmentVariable('SUPABASE_BACKUP_ENCRYPTED_VOLUME_CONFIRM') -ne 'YES') {
@@ -104,6 +112,12 @@ function Ensure-BackupStorage {
   return [pscustomobject]@{ Directory = $resolvedBackupDirectory; Mode = $mode }
 }
 
+function Remove-BackupArtifacts([string]$Target) {
+  foreach ($candidate in @($Target, "$Target.meta.json")) {
+    if (Test-Path -LiteralPath $candidate) { Remove-Item -LiteralPath $candidate -Force }
+  }
+}
+
 function New-VerifiedBackup([string]$DatabaseUrl) {
   $identity = Get-SupabaseDatabaseIdentity $DatabaseUrl 'SUPABASE_DB_URL'
   Assert-ApiProjectMatchesDatabase $identity
@@ -112,26 +126,57 @@ function New-VerifiedBackup([string]$DatabaseUrl) {
   $storage = Ensure-BackupStorage
   $resolvedBackupDirectory = $storage.Directory
   $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
-  $target = if ($BackupFile) { [IO.Path]::GetFullPath($BackupFile) } else { Join-Path $BackupDirectory "supabase-$stamp.dump" }
+  $defaultName = if ($storage.Mode -eq 'dpapi-aes-gcm') { "supabase-$stamp.dump.aes" } else { "supabase-$stamp.dump" }
+  $target = if ($BackupFile) { [IO.Path]::GetFullPath($BackupFile) } else { Join-Path $BackupDirectory $defaultName }
   $target = [IO.Path]::GetFullPath($target)
   $backupPrefix = $resolvedBackupDirectory.TrimEnd([IO.Path]::DirectorySeparatorChar) + [IO.Path]::DirectorySeparatorChar
   if (-not $target.StartsWith($backupPrefix, [StringComparison]::OrdinalIgnoreCase)) { throw 'BackupFile 必须位于受保护的 BackupDirectory 内。' }
-  if ([IO.Path]::GetExtension($target) -ne '.dump') { throw 'BackupFile 必须使用 .dump 扩展名。' }
-  try { Invoke-WithDatabase $DatabaseUrl { & $pgDump --dbname $DatabaseUrl --format=custom --no-owner --no-acl --file $target } }
-  catch { if (Test-Path -LiteralPath $target) { Remove-Item -LiteralPath $target -Force }; throw }
-  if (-not (Test-Path -LiteralPath $target) -or (Get-Item -LiteralPath $target).Length -lt 1024) {
-    if (Test-Path -LiteralPath $target) { Remove-Item -LiteralPath $target -Force }
+  if ($storage.Mode -eq 'dpapi-aes-gcm' -and -not $target.EndsWith('.dump.aes', [StringComparison]::OrdinalIgnoreCase)) {
+    throw '应用层加密 BackupFile 必须使用 .dump.aes 扩展名。'
+  }
+  if ($storage.Mode -ne 'dpapi-aes-gcm' -and [IO.Path]::GetExtension($target) -ne '.dump') {
+    throw '卷级加密 BackupFile 必须使用 .dump 扩展名。'
+  }
+  try {
+    if ($storage.Mode -eq 'dpapi-aes-gcm') {
+      $previousDbUrl = [Environment]::GetEnvironmentVariable('SUPABASE_DB_URL')
+      $previousDumpPath = [Environment]::GetEnvironmentVariable('PG_DUMP_PATH')
+      $previousRestorePath = [Environment]::GetEnvironmentVariable('PG_RESTORE_PATH')
+      try {
+        [Environment]::SetEnvironmentVariable('SUPABASE_DB_URL', $DatabaseUrl)
+        [Environment]::SetEnvironmentVariable('PG_DUMP_PATH', $pgDump)
+        [Environment]::SetEnvironmentVariable('PG_RESTORE_PATH', $pgRestore)
+        & (Require-Tool 'node') $EncryptedBackup backup $target | Out-Null
+        if ($LASTEXITCODE -ne 0) { throw '应用层加密备份或验证失败（数据库响应已隐藏）。' }
+      } finally {
+        [Environment]::SetEnvironmentVariable('SUPABASE_DB_URL', $previousDbUrl)
+        [Environment]::SetEnvironmentVariable('PG_DUMP_PATH', $previousDumpPath)
+        [Environment]::SetEnvironmentVariable('PG_RESTORE_PATH', $previousRestorePath)
+      }
+    } else {
+      Invoke-WithDatabase $DatabaseUrl { & $pgDump --dbname $DatabaseUrl --format=custom --no-owner --no-acl --file $target }
+    }
+  } catch { Remove-BackupArtifacts $target; throw }
+  $minimumBytes = if ($storage.Mode -eq 'dpapi-aes-gcm') { 64 } else { 1024 }
+  if (-not (Test-Path -LiteralPath $target) -or (Get-Item -LiteralPath $target).Length -lt $minimumBytes) {
+    Remove-BackupArtifacts $target
     throw '备份文件不存在或过小；残片已删除。'
   }
+  if ($storage.Mode -eq 'dpapi-aes-gcm' -and -not (Test-Path -LiteralPath "$target.meta.json")) {
+    Remove-BackupArtifacts $target
+    throw '应用层加密备份元数据不存在；残片已删除。'
+  }
   if ($storage.Mode -eq 'efs' -and ((Get-Item -LiteralPath $target).Attributes -band [IO.FileAttributes]::Encrypted) -eq 0) {
-    Remove-Item -LiteralPath $target -Force
+    Remove-BackupArtifacts $target
     throw 'BLOCKED_EXTERNAL: 备份文件未继承 EFS 加密属性，已删除未加密残片。'
   }
   if (-not ($IsWindows -or $env:OS -eq 'Windows_NT')) { & chmod 600 $target; if ($LASTEXITCODE -ne 0) { throw '无法限制备份文件权限。' } }
-  & $pgRestore --list $target | Out-Null
-  if ($LASTEXITCODE -ne 0) {
-    Remove-Item -LiteralPath $target -Force
-    throw 'pg_restore 无法读取刚生成的备份；无效文件已删除。'
+  if ($storage.Mode -ne 'dpapi-aes-gcm') {
+    & $pgRestore --list $target | Out-Null
+    if ($LASTEXITCODE -ne 0) {
+      Remove-BackupArtifacts $target
+      throw 'pg_restore 无法读取刚生成的备份；无效文件已删除。'
+    }
   }
   $hash = (Get-FileHash -Algorithm SHA256 -LiteralPath $target).Hash.ToLowerInvariant()
   Write-Host "BACKUP_VERIFIED: $target"
@@ -139,9 +184,10 @@ function New-VerifiedBackup([string]$DatabaseUrl) {
   $retentionRaw = [Environment]::GetEnvironmentVariable('SUPABASE_BACKUP_RETENTION_DAYS')
   if ([string]::IsNullOrWhiteSpace($retentionRaw)) { $retentionRaw = '7' }
   $retention = [Math]::Max(1, [Math]::Min(30, [int]$retentionRaw))
-  Get-ChildItem -LiteralPath $resolvedBackupDirectory -File -Filter 'supabase-*.dump' | Where-Object {
+  Get-ChildItem -LiteralPath $resolvedBackupDirectory -File | Where-Object {
+    $_.Name -match '^supabase-.*\.dump(?:\.aes)?$' -and
     $_.FullName -ne $target -and $_.LastWriteTimeUtc -lt [DateTime]::UtcNow.AddDays(-$retention)
-  } | ForEach-Object { Remove-Item -LiteralPath $_.FullName -Force }
+  } | ForEach-Object { Remove-BackupArtifacts $_.FullName }
   return $target
 }
 
@@ -206,7 +252,23 @@ switch ($Action) {
     }
     $pgRestore = Require-Tool 'pg_restore'
     $dump = New-VerifiedBackup $source
-    Invoke-WithDatabase $target { & $pgRestore --dbname $target --clean --if-exists --no-owner --no-acl --exit-on-error $dump }
+    if ($dump.EndsWith('.dump.aes', [StringComparison]::OrdinalIgnoreCase)) {
+      $previousTarget = [Environment]::GetEnvironmentVariable('SUPABASE_TARGET_DB_URL')
+      $previousRestorePath = [Environment]::GetEnvironmentVariable('PG_RESTORE_PATH')
+      try {
+        [Environment]::SetEnvironmentVariable('SUPABASE_TARGET_DB_URL', $target)
+        [Environment]::SetEnvironmentVariable('PG_RESTORE_PATH', $pgRestore)
+        & (Require-Tool 'node') $EncryptedBackup restore $dump | Out-Null
+        if ($LASTEXITCODE -ne 0) { throw '隔离目标的应用层加密恢复失败（数据库响应已隐藏）。' }
+      } finally {
+        [Environment]::SetEnvironmentVariable('SUPABASE_TARGET_DB_URL', $previousTarget)
+        [Environment]::SetEnvironmentVariable('PG_RESTORE_PATH', $previousRestorePath)
+      }
+    } else {
+      Invoke-WithDatabase $target { & $pgRestore --dbname $target --clean --if-exists --no-owner --no-acl --exit-on-error $dump }
+    }
+    # 备份使用 --no-acl；在隔离目标重放同一幂等 schema 以恢复 RLS、RPC 与 service_role GRANT。
+    Invoke-WithDatabase $target { & $psql --dbname $target -X --set ON_ERROR_STOP=1 --single-transaction --file $Schema }
     Invoke-WithDatabase $target { & $psql --dbname $target -X --set ON_ERROR_STOP=1 --file $Acceptance }
     Write-Host 'RESTORE_DRILL_PASS: 仅临时目标已恢复并通过验收。'
   }

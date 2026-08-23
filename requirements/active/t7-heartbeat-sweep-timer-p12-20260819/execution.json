@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "task": "t7-heartbeat-sweep-timer-p12-20260819",
-  "state": "IMPLEMENTED_LOCAL",
-  "recordedAt": "2026-08-19T09:48:57+09:00",
+  "state": "VERIFIED_LOCAL",
+  "recordedAt": "2026-08-19T13:44:00+09:00",
   "implemented": [
     "server/index.js heartbeat sweep uses one repeating ServerClockTimer lease and one sampled now",
     "server/boundaries/heartbeat-sweep-isolation.js contains synchronous per-domain faults behind one run Interface",
@@ -16,10 +16,12 @@
     "node qa/timer-audit.js (TIMER_AUDIT_ALL_PASS)",
     "Room/Presence, Ghost Auth, Connection Route and Reconnect regressions",
     "Tournament unit/auto/atomic/recovery regressions",
-    "node --experimental-websocket qa/e2e-online.js on E2E_PORT=39222 (E2E_ALL_PASS; exit 0)"
+    "node --experimental-websocket qa/e2e-online.js on E2E_PORT=39222 (E2E_ALL_PASS; exit 0)",
+    "complete npm test main chain, E2E and ws-close passed; posttest passed independently after concurrent build evidence was classified historical_as_of",
+    "npm run quality:gates (QUALITY_GATES_FAST_ALL_PASS)",
+    "node scripts/build.js --check (5731F0D016AFF0A7403B609FE98A7A1D6D3453C13BCD99CFBFE4067090135921)"
   ],
   "pending": [
-    "quality gates, complete npm test and stable deterministic build after parallel frontend/3D writers finish",
     "remaining token/room/chat/outbox/gameplay/transport timer owners",
     "current browser/second browser/physical devices/real network",
     "real Supabase/RLS/concurrency/backup/restore/multi-instance",

@@ -470,7 +470,7 @@ async function setLanguage(lang) {
   if (typeof initStaticPlatformIcons === 'function') initStaticPlatformIcons();
   if (typeof currentGameId !== 'undefined' && currentGameId && typeof GAMES !== 'undefined' && GAMES[currentGameId] && typeof $ === 'function') {
     const gameTitle = $('game-title');
-    if (gameTitle) gameTitle.textContent = GAMES[currentGameId].icon + ' ' + GAMES[currentGameId].name;
+    if (gameTitle && (typeof renderGameTitle !== 'function' || !renderGameTitle(currentGameId))) gameTitle.textContent = GAMES[currentGameId].icon + ' ' + GAMES[currentGameId].name;
   }
   renderHub();
   renderLeaderboard();

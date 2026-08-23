@@ -6,7 +6,8 @@ const path = require('path');
 const ROOT = path.resolve(__dirname, '..');
 const read = relative => fs.readFileSync(path.join(ROOT, relative), 'utf8');
 const shop = read('public/src/shop/06-shop.js');
-const template = read('public/index-template.html');
+const { readPresentationSource } = require('./presentation-source');
+const template = readPresentationSource();
 const surface = read('public/src/core/11-surface-motion.js');
 const pkg = JSON.parse(read('package.json'));
 

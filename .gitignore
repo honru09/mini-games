@@ -1,5 +1,6 @@
 ﻿node_modules/
 data/
+.tmp/
 .tmp-chrome-wavec/
 .codex-tmp/
 *.log
@@ -10,6 +11,8 @@ data/
 .env.*
 !.env.example
 *.dump
+*.dump.aes
+*.dump.aes.meta.json
 
 # 工具生成物与 Office 临时锁文件不进入版本库
 __pycache__/

@@ -566,15 +566,27 @@ begin
       when 36 then 10 when 37 then 10 when 38 then 12 when 39 then 12 when 40 then 15 when 41 then 18
       when 42 then 12 when 43 then 12 when 44 then 15 when 45 then 15 when 46 then 18 when 47 then 18
       when 48 then 12 when 49 then 15 when 50 then 15 when 51 then 18 when 52 then 22 when 53 then 22
-      when 54 then 12 when 55 then 30 else null end
+      when 54 then 12 when 55 then 30
+      when 102 then 10 when 103 then 12 when 104 then 14 when 105 then 16 when 106 then 18 when 107 then 18
+      when 110 then 10 when 111 then 12 when 112 then 14 when 113 then 16 when 114 then 18 when 115 then 18
+      when 118 then 10 when 119 then 12 when 120 then 14 when 121 then 16 when 122 then 18 when 123 then 18
+      when 126 then 10 when 127 then 12 when 128 then 14 when 129 then 16 when 130 then 18 when 131 then 18
+      when 134 then 10 when 135 then 12 when 136 then 14 when 137 then 16 when 138 then 18 when 139 then 18
+      when 142 then 10 when 143 then 12 when 144 then 14 when 145 then 16 when 146 then 18 when 147 then 18
+      else null end
     when 'frames' then case p_item_id
       when 1 then 10 when 2 then 12 when 3 then 16 when 4 then 20 when 5 then 24 when 6 then 28
       when 7 then 32 when 8 then 36 else null end
     when 'effects' then case p_item_id
-      when 1 then 10 when 2 then 12 when 3 then 12 when 4 then 20 else null end
+      when 1 then 10 when 2 then 12 when 3 then 12 when 4 then 20 when 5 then 20 when 6 then 24
+      when 7 then 28 when 8 then 32 else null end
     when 'backgrounds' then case p_item_id
       when 1 then 10 when 2 then 10 when 3 then 10 when 4 then 12 when 5 then 12 when 6 then 15
-      when 7 then 18 when 8 then 18 when 9 then 22 when 10 then 20 else null end
+      when 7 then 18 when 8 then 18 when 9 then 22 when 10 then 20
+      when 20 then 24 when 21 then 32 when 22 then 24 when 23 then 32 when 24 then 24 when 25 then 32
+      when 26 then 24 when 27 then 32 when 28 then 24 when 29 then 32 when 30 then 24 when 31 then 32
+      when 32 then 24 when 33 then 32 when 34 then 24 when 35 then 32 when 36 then 24 when 37 then 32
+      when 38 then 24 when 39 then 32 else null end
     when 'game_cosmetics' then case p_item_id
       when 2001 then 8 when 2011 then 10 when 2012 then 10 when 2013 then 10 when 2021 then 12
       when 2031 then 14 when 2041 then 12 when 2042 then 12 when 2051 then 12 else null end
@@ -1699,8 +1711,14 @@ revoke all on table cluster_event_cursors from public, anon, authenticated;
 revoke all on table metrics_snapshots from public, anon, authenticated;
 revoke all on table playline_posts from public, anon, authenticated;
 revoke all on table playline_rate_events from public, anon, authenticated;
-grant all on table playline_posts to service_role;
-grant all on table playline_rate_events to service_role;
+grant select, insert, update, delete on table
+  profiles, history, reward_history, economy_ledger, analytics_events,
+  ai_learning_models, ai_learning_experiences,
+  friend_requests, friendships, blocks, reports,
+  direct_messages, direct_message_reads,
+  cluster_instances, cluster_leases, platform_events, cluster_event_cursors, metrics_snapshots,
+  playline_posts, playline_rate_events
+to service_role;
 revoke all on sequence history_id_seq from anon, authenticated;
 revoke all on sequence reward_history_id_seq from anon, authenticated;
 revoke all on sequence economy_ledger_id_seq from anon, authenticated;
@@ -1711,8 +1729,12 @@ revoke all on sequence platform_events_id_seq from public, anon, authenticated;
 revoke all on sequence metrics_snapshots_id_seq from public, anon, authenticated;
 revoke all on sequence playline_posts_seq_seq from public, anon, authenticated;
 revoke all on sequence playline_rate_events_id_seq from public, anon, authenticated;
-grant usage, select on sequence playline_posts_seq_seq to service_role;
-grant usage, select on sequence playline_rate_events_id_seq to service_role;
+grant usage, select on sequence
+  history_id_seq, reward_history_id_seq, economy_ledger_id_seq, analytics_events_id_seq,
+  ai_learning_experiences_id_seq, direct_messages_seq_seq,
+  platform_events_id_seq, metrics_snapshots_id_seq,
+  playline_posts_seq_seq, playline_rate_events_id_seq
+to service_role;
 
 -- 常用管理查询（供日后在 Dashboard 使用）
 -- 1) 全球总榜：select name, coins, total, played from profiles order by coins desc;

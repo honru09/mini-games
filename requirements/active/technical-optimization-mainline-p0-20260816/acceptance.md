@@ -1,6 +1,8 @@
 # 技术优化主线验收
 
-当前结论：`T7 PARTIAL — P7 REWARD_PROGRESSION + P8 BOUNDARY_CLOCK_INJECTION + P12 HEARTBEAT_SWEEP_TIMER IMPLEMENTED_LOCAL`；保留历史合同标记：`P11 RECONNECT_LIFECYCLE_TIMER VERIFIED_LOCAL`。T0 AUTHORIZATION_AND_CONTRACT_COMPLETE，T1–T6 已完成各自声明范围。T7 已完成六个 Server Boundary、Node fresh-child、P5 Reward outbox、P6 Operational Metrics Clock/Timer、P7 Reward/Progression Projection、P8 六 Boundary 显式 now 注入、P9 Room Graph Recovery、P10 Ephemeral Cleanup、P11 Reconnect Lifecycle 与 P12 Heartbeat Sweep Timer。P12 保留访客 `close(true)`、普通超时 `close()`、AFK/赛事/resume TTL 语义，只统一 owner、单次时间采样和分域异常隔离；其余 lifecycle timer、outbox cadence、gameplay tick、transport deadline 与 `server/gameplay/metrics.js generatedAt` 仍未迁移，因此 `TECH-040` 与 T7 保持 `partial`。四窗口并行构建状态由自动生成 TECH-027 报告与 `build --check` 动态绑定；P12 的统一 Quality Gates 与完整 `npm test` 正在本批末复核，三条共享 Gate 不因本批改变，也不授予发布。
+当前结论：`T7 PARTIAL — P7 REWARD_PROGRESSION + P8 BOUNDARY_CLOCK_INJECTION + P12 HEARTBEAT_SWEEP_TIMER IMPLEMENTED_LOCAL`；保留历史合同标记：`P11 RECONNECT_LIFECYCLE_TIMER VERIFIED_LOCAL`。T0 AUTHORIZATION_AND_CONTRACT_COMPLETE，T1–T6 已完成各自声明范围。T7 已完成六个 Server Boundary、Node fresh-child、P5 Reward outbox、P6 Operational Metrics Clock/Timer、P7 Reward/Progression Projection、P8 六 Boundary 显式 now 注入、P9 Room Graph Recovery、P10 Ephemeral Cleanup、P11 Reconnect Lifecycle 与 P12 Heartbeat Sweep Timer。P12 保留访客 `close(true)`、普通超时 `close()`、AFK/赛事/resume TTL 语义，只统一 owner、单次时间采样和分域异常隔离；其余 lifecycle timer、outbox cadence、gameplay tick、transport deadline 与 `server/gameplay/metrics.js generatedAt` 仍未迁移，因此 `TECH-040` 与 T7 保持 `partial`。当前共享构建的统一 Quality Gates、完整 `npm test`、`build --check` 与确定性双构建均已通过；三条共享 Gate 不因本批改变，也不授予发布。
+
+当前共享构建对账：`public/index.html` 2,057,803 characters / 2,072,554 bytes / SHA-256 `63B4C63E9143AA182460B64D64D1F3AA79F0DF7BFE59DE53F02913E46C91EE9F`；`node scripts/build.js --check` 已通过。当前包含六款 2.5D Game Stage、P1 全部美术运行时、P2-01 Seasonal Backgrounds、P2-02 Honru Seasonal、P2-03 Sticker Book 与 P2-04 Personal Home Scene；既有浏览器矩阵只绑定各自历史构建，不扩大 T7 的实现或发布结论，尚无当前完整浏览器矩阵。
 
 ## T1 已完成（本地）
 
@@ -48,7 +50,7 @@
 - Xiangqi 与 Gomoku 只在显式 `technicalFeatures.boardAIWorkerV1`、本地 AI、非在线、非观众时启用；Worker 仅返回候选 ID，主线程重新执行合法性/空位检查并进入既有 `doMove`/`applyMove`。Gomoku 超过 200 个完整合法候选时跳过优化，不静默截断。
 - 原同步搜索、DeepSeek、学习路径、在线权威和奖励/回放边界均保留；reset/restore/spectator/destroy 清理请求、Worker、TT 与计时状态。
 - T4 专项：`npm run test:technical-optimization-t4`，覆盖 Kernel、Worker VM/wire、Broker 生命周期、Xiangqi/Gomoku parity 与调用方 fallback。
-- 当前构建：`public/index.html` 1,785,103 characters / 1,799,646 bytes / SHA-256 `3C714ECACE20B4CAC4020B53AAFB2F5F9F68F68884D18F71BD3C826BDE3811EE`。
+- 当前构建：`public/index.html` 2,057,803 characters / 2,072,554 bytes / SHA-256 `63B4C63E9143AA182460B64D64D1F3AA79F0DF7BFE59DE53F02913E46C91EE9F`（以 `node scripts/build.js --check` 为准；该身份只绑定本地构建，不冒充完整浏览器矩阵或发布证据）。
 
 ## T5 已完成（本地、默认关闭）
 
@@ -120,7 +122,7 @@ Action Entropy/APM 当前只允许 shadow/audit；本 Wave 绝不改 Reward、�
 - heartbeat 从原生 interval 迁移为唯一 `heartbeat-sweep` repeat owner；访客/普通超时、房间 AFK、赛事清理和 resume TTL 共用 lease 注入的同一 `now`。
 - `HeartbeatSweepIsolation.run()` 隔离单 session、room、tournament 与 resume 分域；访客通知、`close(true)` 和 cleanup 也分别隔离，错误记录失败不再让 repeat owner 失活。
 - `qa/heartbeat-sweep.js` 用 Manual Clock 动态证明首 tick 故障后同 tick 后续操作和第二 tick 仍执行，并锁定 guest `close(true)`、普通 timeout `close()` 与最终零 pending；Timer Audit 改为 heartbeat block 内静态合同。
-- ServerClock/Heartbeat、T7 focused、Room/Presence、Ghost Auth、Connection Route、Reconnect、Tournament unit/Auto/Atomic/Recovery 与独立端口 E2E 均通过；统一 Quality Gates 与完整 `npm test` 待本批末更新。
+- ServerClock/Heartbeat、T7 focused、Room/Presence、Ghost Auth、Connection Route、Reconnect、Tournament unit/Auto/Atomic/Recovery 与独立端口 E2E 均通过；当前共享构建的统一 Quality Gates 与完整 `npm test` 也已通过。
 
 ## T7 Match Protocol 纵切已完成（本地）
 
@@ -158,3 +160,8 @@ Action Entropy/APM 当前只允许 shadow/audit；本 Wave 绝不改 Reward、�
 - 所有可确定性机器验证项默认继续，失败后修复并重新验证。
 - 外部环境一旦连接即可自动运行对应脚本，无需逐项询问；没有环境则保留 `NOT_EXECUTED / RELEASE_EVIDENCE_PENDING`，不得扩大为开发 `BLOCKED`。
 - 人工清稿、独立自然人 Reviewer B、IP/法律意见与逐资产 Golden Set 是 `OPTIONAL_ADVISORY_EVIDENCE`：未执行时不得冒充 PASS，但不阻塞开发、runtime 或发布候选。自动测试和所有者清除均不自行授予发布权；commit、push、Pages 或 Render 仍必须取得当前用户的独立明确命令。
+
+## 当前并行构建身份（P2-08 接入后）
+
+- 当前 `public/index.html` 已由 `node scripts/build.js` 确定性生成，SHA-256 `D7B483C3769A28CB63FF3C00A72B9D8548FDA7CE7797E7EB842AB71A805B7F82` / 2,106,098 bytes；字符数 2,091,345；`node scripts/build.js --check` 已通过。
+- P1-06/P1-07/P1-08/P1-09 与 P2-01 只新增装饰性卡面、AI 难度/席位视觉、Honru 边缘姿态/原生光标、身份徽章和季节背景；Tetris/Xiangqi Final Art 接管修复只补齐既有批准素材的真实消费与表现层 VFX，不改变 T5/T7 协议、Authority、Timer、Reward、AI 合法性或传输事实。当前构建仅有两款 Final Art 聚焦可见证据，完整浏览器矩阵仍缺失，旧矩阵继续标记 `historical-as-of`。

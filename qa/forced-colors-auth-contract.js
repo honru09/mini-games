@@ -5,7 +5,8 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..');
-const template = fs.readFileSync(path.join(ROOT, 'public', 'index-template.html'), 'utf8');
+const { readPresentationSource } = require('./presentation-source');
+const template = readPresentationSource();
 
 function declaredMinHeight(selector) {
   const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

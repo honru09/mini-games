@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "productionUnitId": "P2-11",
+  "familyId": "P-SHOP-LIMITED-SETS-V1",
+  "sourceAssetId": "ART-SHOP-LIMITED-SETS-V1",
+  "artworkVersion": 1,
+  "status": "implemented_local_release_evidence_pending",
+  "clearance": "OWNER_AUTHORIZED_ART_CLEARANCE",
+  "sourceLicense": "PROJECT_OWNED_AI_GENERATED",
+  "featureFlag": {
+    "id": "mg_art_shop_limited_sets_v1",
+    "enabledValue": "1",
+    "defaultEnabled": true,
+    "rollback": "0"
+  },
+  "source": {
+    "path": "art-source/platform/shop/limited-sets-v1/source/seasonal-vault-hero-master-v1.png",
+    "bytes": 2954315,
+    "sha256": "C8F44DC38BB368B51F4E9BF2134BC7D16FC19560DA8D92E4F92126484AEE1FB9",
+    "width": 1536,
+    "height": 1024,
+    "alpha": false
+  },
+  "runtimeFiles": [
+    {
+      "path": "public/assets/platform/shop/limited-sets-v1/seasonal-vault-hero-desktop-v1.webp",
+      "bytes": 253004,
+      "sha256": "5CEBAE7EDCBFA930B06DD7FCFF75B9E4AC4539FBBA942F120BCCD7F0C6A224C0",
+      "width": 1200,
+      "height": 800,
+      "alpha": false
+    },
+    {
+      "path": "public/assets/platform/shop/limited-sets-v1/seasonal-vault-hero-mobile-v1.webp",
+      "bytes": 152558,
+      "sha256": "3FBA2941EDE13D609C6C4ED69C58CE5D1EA40514892E7C1F7BFF6DABDB1BD1CE",
+      "width": 720,
+      "height": 720,
+      "alpha": false
+    },
+    {
+      "path": "public/assets/platform/shop/limited-sets-v1/seasonal-vault-hero-poster-v1.webp",
+      "bytes": 73080,
+      "sha256": "17DC24A7792B3AFAE8BBC9059ED6B4FF2100094046C106FBE64A13ACF7FED106",
+      "width": 600,
+      "height": 400,
+      "alpha": false
+    }
+  ],
+  "reviewFiles": [
+    {
+      "path": "art-source/platform/shop/limited-sets-v1/review/shop-limited-sets-contact-sheet-v1.png",
+      "bytes": 1871180,
+      "sha256": "641FEC3A0958EB424227897610061B19CCC9DFFDE959F9DC62812D59F434428A",
+      "width": 1200,
+      "height": 980
+    }
+  ],
+  "runtimeBytes": 478642,
+  "runtimeByteBudget": 524288,
+  "externalReferenceInputs": 0,
+  "thirdPartyTransmissions": 0,
+  "authorityBoundary": "presentation-only curated seasonal storefront; no price, entitlement, bundle transaction, availability clock, discount, pass, remote config or persistence ownership",
+  "fallback": "existing Shop header, tabs, catalog cards and individual server-authoritative purchases",
+  "releaseState": "LOCAL_ONLY_NOT_RELEASED"
+}

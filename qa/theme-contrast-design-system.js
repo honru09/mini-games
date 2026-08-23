@@ -5,7 +5,8 @@ const path = require('path');
 
 const ROOT = path.join(__dirname, '..');
 const read = file => fs.readFileSync(path.join(ROOT, file), 'utf8');
-const template = read('public/index-template.html');
+const { readPresentationSource } = require('./presentation-source');
+const template = readPresentationSource();
 const utils = read('public/src/core/01-utils.js');
 const packageJson = JSON.parse(read('package.json'));
 const gates = read('scripts/quality-gates.js');

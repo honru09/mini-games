@@ -53,6 +53,12 @@ powershell -ExecutionPolicy Bypass -File scripts/supabase-production-wizard.ps1
 4. 运行 `supabase/schema.sql` 完成数据库结构构建
 5. 运行 `supabase/production-acceptance.sql` 以验证所有表权限（RLS）以及集群 RPC 是否准备就绪
 
+Windows 上优先使用 EFS/BitLocker 卷保存 `.dump`。如果当前卷不支持二者，运维脚本会自动切换到
+`scripts/supabase-encrypted-backup.js`：`pg_dump` 输出不落地明文，而是流式写入 AES-256-GCM 密文，
+随机 AES 密钥由当前 Windows 用户的 DPAPI 包裹；生成后再把密文解密流直接送入
+`pg_restore --list` 验证。备份由 `.dump.aes` 与同名 `.meta.json` 共同组成，两者都继承受限 ACL，
+恢复必须在同一 Windows 用户上下文执行。
+
 ## 5. 多实例与恢复演练测试
 
 生产门禁要求证明不仅可以备份，还能隔离恢复。向导会提示你输入一个作为“恢复演练目标”的备用空白 Supabase 项目的 URI。

@@ -50,6 +50,14 @@ for (const id of [
 check('矩阵覆盖 Honru、Emoji、G Coins、Tank、ART-036、M0 与外部素材',
   ['Honru v2', 'Honru Emoji', 'G Coins', 'Tank', 'Player Character', 'Monopoly', 'M0 Teacher', '外部 RPG / Q 版 UI']
     .every(token => matrix.includes(token)));
+const monopolyFinalEntry = byId.get('G-15-MONOPOLY-FINAL-ART-V1');
+const monopolyFinalRow = (matrix.match(/^\| Monopoly Final v1[^\n]*$/m) || [''])[0];
+check('矩阵覆盖 Monopoly Final v1 正式所有者清除族',
+  monopolyFinalEntry?.status === 'integrated-local-only' &&
+  monopolyFinalRow.includes('OWNER_AUTHORIZED_ART_CLEARANCE') &&
+  monopolyFinalRow.includes('23 SVG source masters') && monopolyFinalRow.includes('46 WebP runtime variants') &&
+  monopolyFinalRow.includes('429,072') && monopolyFinalRow.includes('mg_art_monopoly_final_v1') &&
+  monopolyFinalRow.includes('current-build-monopoly-visible-matrix-20260821.json'));
 check('矩阵显式保留 Pixel Avatar 的 Prompt 不可恢复事实', matrix.includes('精确 Prompt `NOT_RECOVERED`'));
 const pixelApproval = read('art-source/platform/avatars/v3-honru-pixel-p0-20260811/APPROVAL_STATUS.md');
 const pixelProvenance = read('art-source/platform/avatars/v3-honru-pixel-p0-20260811/PROMPT_AND_PROVENANCE.md');

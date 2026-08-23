@@ -19,7 +19,8 @@ const SHOP_PATH = path.join(ROOT, 'public', 'src', 'shop', '06-shop.js');
 const ROSTER_PATH = path.join(ROOT, 'public', 'src', 'ui', '07-roster.js');
 const LOCALE_DIR = path.join(ROOT, 'public', 'locales');
 
-const template = fs.readFileSync(TEMPLATE_PATH, 'utf8');
+const { readPresentationSource } = require('./presentation-source');
+const template = readPresentationSource();
 const assets = fs.readFileSync(ASSETS_PATH, 'utf8');
 const shop = fs.readFileSync(SHOP_PATH, 'utf8');
 const roster = fs.readFileSync(ROSTER_PATH, 'utf8');

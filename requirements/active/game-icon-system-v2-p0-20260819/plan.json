@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "id": "game-icon-system-v2-p0-20260819",
+  "objective": "把 P0-12 六款游戏图标与状态标记接入 DOM/CSS/Canvas + GSAP 2.5D 生产表现层",
+  "steps": [
+    {"step":"复用 owner-cleared 源稿并验证 72 个 runtime 变体","status":"completed"},
+    {"step":"接入 Home、Games、Profile、Game Stage 与 Room 消费点","status":"completed"},
+    {"step":"补齐 2.5D selected-object、reduced-motion、forced-colors 与多级回退","status":"completed"},
+    {"step":"执行资产、运行时、DOM、质量门禁与完整测试","status":"completed"},
+    {"step":"真实浏览器、真机、真实网络与低端性能可见验收","status":"pending_external_gate"}
+  ],
+  "release": "LOCAL_ONLY_NO_COMMIT_NO_PUSH_NO_DEPLOY"
+}
+

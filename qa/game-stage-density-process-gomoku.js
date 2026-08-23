@@ -62,12 +62,11 @@ check('Gomoku canvas exposes a localizable focusable grid and shared keyboard pl
   /canvas\.setAttribute\('tabindex',\s*'0'\)/.test(SOURCE) && /canvas\.setAttribute\('role',\s*'grid'\)/.test(SOURCE) &&
   /data-i18n-aria-label',\s*'game_gomoku'/.test(SOURCE) && /handleGomokuKeyboardInput/.test(SOURCE) &&
   /placeLocalGomokuMove/.test(SOURCE));
-check('Gomoku owns a localised touch equivalent with four directions, a semantic confirm, and 44px targets',
-  /gomoku-touch-controls/.test(touchMountSource) && /gomokuTouchDirection/.test(touchMountSource) &&
-  /gomokuTouchControl\s*=\s*'confirm'/.test(touchMountSource) && /data-i18n',\s*textKey/.test(touchMountSource) &&
-  /data-i18n-aria-label',\s*'gomoku_your_turn_hint'/.test(touchMountSource) &&
-  /style\.minWidth\s*=\s*'44px'/.test(SOURCE) && /style\.minHeight\s*=\s*'44px'/.test(SOURCE) &&
-  /releaseGomokuTouchControls\(\)/.test(touchReleaseSource));
+check('Gomoku removes the redundant on-screen direction pad while retaining keyboard placement',
+  !/mountGomokuTouchControls\(\);/.test(SOURCE) &&
+  !/gomokuTouchControls|gomokuTouchButtons|gomoku-touch-controls|mountGomokuTouchControls/.test(SOURCE) &&
+  /canvas\.setAttribute\('tabindex',\s*'0'\)/.test(SOURCE) &&
+  /handleGomokuKeyboardInput/.test(SOURCE) && /placeLocalGomokuMove/.test(SOURCE));
 
 function makeNode(tag) {
   const classes = new Set();
@@ -222,24 +221,9 @@ try {
   check('destroy clears every disposable Gomoku presentation callback', live.jobs.size === 0);
 
   const touch = run({ reducedMotion:true });
-  const touchControls = findByClass(touch.extra, 'gomoku-touch-controls');
-  const touchUp = findByClass(touch.extra, 'gomoku-touch-up');
-  const touchRight = findByClass(touch.extra, 'gomoku-touch-right');
-  const touchDown = findByClass(touch.extra, 'gomoku-touch-down');
-  const touchLeft = findByClass(touch.extra, 'gomoku-touch-left');
-  const touchConfirm = findByClass(touch.extra, 'gomoku-touch-confirm');
-  const touchButtons = [touchUp, touchRight, touchDown, touchLeft, touchConfirm];
-  check('touch control deck mounts five localised controls with 44px-equivalent targets',
-    !!touchControls && touchControls.getAttribute('role') === 'group' && touchControls.dataset.gomokuTouchState === 'ready' &&
-    touchButtons.every(button => button && button.style.minWidth === '44px' && button.style.minHeight === '44px' && button.style.width === '44px' && button.style.height === '44px') &&
-    touchUp.getAttribute('data-i18n') === 'tank_up' && touchRight.getAttribute('data-i18n-aria-label') === 'tank_right_aria' &&
-    touchConfirm.getAttribute('data-i18n-aria-label') === 'gomoku_your_turn_hint');
-  const rightPrevented = tap(touchRight);
-  check('a touch direction moves the shared semantic cursor without mutating Gomoku rules',
-    rightPrevented && findByClass(touch.area, 'gomoku-wave-b-board').dataset.gomokuKeyboardCell === 'I8' && touchControls.dataset.gomokuKeyboardCell === 'I8' && touch.game.snapshot().hist.length === 0);
-  const touchConfirmPrevented = tap(touchConfirm);
-  check('touch confirm uses the normal legal placement route and keeps the stable snapshot contract',
-    touchConfirmPrevented && JSON.stringify(touch.game.snapshot()) === JSON.stringify({ hist:[[7,8]], cur:1, over:false, last:[7,8] }));
+  check('touch layout omits the removed Gomoku direction pad',
+    !findByClass(touch.extra, 'gomoku-touch-controls') &&
+    !findByClass(touch.extra, 'gomoku-touch-up') && !findByClass(touch.extra, 'gomoku-touch-confirm'));
   touch.game.destroy();
 
   const keyboard = run({ reducedMotion:true });
@@ -273,15 +257,8 @@ try {
     spectatorBoard.dataset.gomokuKeyboardCell === 'I8' && spectatorSends === 0 && spectatorKeyboard.game.snapshot().hist.length === 0);
   spectatorKeyboard.game.destroy();
 
-  let spectatorTouchSends = 0;
-  const spectatorTouch = run({ reducedMotion:true, opts:{ online:true, myIdx:0, spectator:true, sendMove() { spectatorTouchSends++; } } });
-  const spectatorTouchRight = findByClass(spectatorTouch.extra, 'gomoku-touch-right');
-  const spectatorTouchConfirm = findByClass(spectatorTouch.extra, 'gomoku-touch-confirm');
-  tap(spectatorTouchRight);
-  const spectatorTouchConfirmPrevented = tap(spectatorTouchConfirm);
-  check('spectators can inspect with touch controls but cannot confirm, mutate, or send a move',
-    spectatorTouchRight.disabled === false && spectatorTouchConfirm.disabled === true && spectatorTouchConfirmPrevented &&
-    findByClass(spectatorTouch.area, 'gomoku-wave-b-board').dataset.gomokuKeyboardCell === 'I8' && spectatorTouchSends === 0 && spectatorTouch.game.snapshot().hist.length === 0);
+  const spectatorTouch = run({ reducedMotion:true, opts:{ online:true, myIdx:0, spectator:true, sendMove() {} } });
+  check('spectators have no removed Gomoku touch direction controls', !findByClass(spectatorTouch.extra, 'gomoku-touch-controls'));
   spectatorTouch.game.destroy();
 
   let waitingSends = 0;
@@ -291,32 +268,21 @@ try {
   check('a non-current online player cannot place or send a keyboard move', waitingSends === 0 && waitingKeyboard.game.snapshot().hist.length === 0);
   waitingKeyboard.game.destroy();
 
-  let waitingTouchSends = 0;
-  const waitingTouch = run({ reducedMotion:true, opts:{ online:true, myIdx:1, sendMove() { waitingTouchSends++; } } });
-  const waitingTouchConfirm = findByClass(waitingTouch.extra, 'gomoku-touch-confirm');
-  const waitingTouchConfirmPrevented = tap(waitingTouchConfirm);
-  check('a non-current online player sees touch confirm disabled and cannot send a move',
-    waitingTouchConfirm.disabled === true && waitingTouchConfirmPrevented && waitingTouchSends === 0 && waitingTouch.game.snapshot().hist.length === 0);
+  const waitingTouch = run({ reducedMotion:true, opts:{ online:true, myIdx:1, sendMove() {} } });
+  check('waiting online players have no removed Gomoku touch direction controls', !findByClass(waitingTouch.extra, 'gomoku-touch-controls'));
   waitingTouch.game.destroy();
 
   const touchLifecycle = run({ reducedMotion:true });
-  const lifecycleControls = findByClass(touchLifecycle.extra, 'gomoku-touch-controls');
-  const lifecycleRight = findByClass(touchLifecycle.extra, 'gomoku-touch-right');
-  const lifecycleConfirm = findByClass(touchLifecycle.extra, 'gomoku-touch-confirm');
-  tap(lifecycleRight);
   touchLifecycle.game.onRestore({ hist:[[7,8]], cur:1, over:false, last:[7,8] });
   const restoredSnapshot = JSON.stringify(touchLifecycle.game.snapshot());
-  const restoreTapPrevented = tap(lifecycleConfirm);
-  check('restore updates the shared touch cursor permission when its focused cell becomes occupied',
-    lifecycleControls.dataset.gomokuKeyboardCell === 'I8' && lifecycleConfirm.disabled === true && restoreTapPrevented && JSON.stringify(touchLifecycle.game.snapshot()) === restoredSnapshot && touchLifecycle.jobs.size === 0);
+  check('restore keeps Gomoku stable without reintroducing touch controls',
+    !findByClass(touchLifecycle.extra, 'gomoku-touch-controls') && JSON.stringify(touchLifecycle.game.snapshot()) === restoredSnapshot && touchLifecycle.jobs.size === 0);
   touchLifecycle.game.onRestart();
-  check('reset recenters the touch cursor and restores a legal confirm affordance',
-    lifecycleControls.dataset.gomokuKeyboardCell === 'H8' && lifecycleConfirm.disabled === false && touchLifecycle.jobs.size === 0);
+  check('reset keeps the removed touch controls absent', !findByClass(touchLifecycle.extra, 'gomoku-touch-controls') && touchLifecycle.jobs.size === 0);
   const lifecycleSnapshot = JSON.stringify(touchLifecycle.game.snapshot());
   touchLifecycle.game.destroy();
-  const destroyedTouchTapPrevented = tap(lifecycleRight) || tap(lifecycleConfirm);
   check('destroy removes touch listeners and the control deck without residual callbacks',
-    !findByClass(touchLifecycle.extra, 'gomoku-touch-controls') && !destroyedTouchTapPrevented && JSON.stringify(touchLifecycle.game.snapshot()) === lifecycleSnapshot && touchLifecycle.jobs.size === 0);
+    !findByClass(touchLifecycle.extra, 'gomoku-touch-controls') && JSON.stringify(touchLifecycle.game.snapshot()) === lifecycleSnapshot && touchLifecycle.jobs.size === 0);
 
   const destroyedKeyboard = run({ reducedMotion:true });
   const destroyedBoard = findByClass(destroyedKeyboard.area, 'gomoku-wave-b-board');

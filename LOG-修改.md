@@ -1,5 +1,43 @@
 # 修改日志
 
+- 2026-08-23 11:52｜将 `index-template.html` 的表现层从 5 个外链扩展为 15 个有序模块；`scripts/migrate-presentation-styles.js`、`qa/presentation-source-contract.js` 与布局缓存合同同步为 V5。
+- 2026-08-23 11:52｜Service Worker 升级为 `ghost-game-shell-v20-20260823` 并预缓存 15 个表现模块；重新构建 `public/index.html`，当前 SHA-256 为 `6AA8EF0C1CE035DD8008C7A5479495029B54779088404977F2FFA735219E9246`。
+- 2026-08-23 11:58｜质量门首次发现新增 V5 拆分脚本未进入 Code Health 运维白名单；补登记 `scripts/split-platform-runtime-v5.js` 后 `npm run quality:gates` 真实退出码 0，未改动其他窗口脚本。
+- 2026-08-23 12:02｜为 `qa/presentation-source-contract.js` 增加 V5 模块与 V4 源归档的逐字节/固定哈希断言；专项与 Quality Gates 再次通过。
+- 2026-08-23 12:10｜PROVE 连接器复试仍被 kernel assets 路径错误拦截；仅登记当前构建预检，不提升浏览器、真机或发布状态。
+- 2026-08-23 12:13｜表现源合同增加 V4 归档不得进入生产模板或 Service Worker 的断言，确认 V5 不产生重复下载；构建哈希保持不变。
+
+- 2026-08-22 18:10｜整合并审核共享窗口生成的 P2-12 原创 Hero 主视觉与四个 WebP 派生：补齐 Manifest `runtime_path`、素材库索引 SHA 与 P2-12 文档/台账的真实资产边界；未把新图像误写成 code-only。
+- 2026-08-22 18:12｜统一 PROJECT_STATUS 与 P2-12 简报的资产族路径到 `art-source/platform/profile-adaptive-hero-v1`，补记 Prompt/Manifest/四个 WebP 运行时证据。
+- 2026-08-22 18:14｜共享窗口完成 Profile Hero 运行时接入后，当前确定性构建更新为 `2,154,257 characters / 2,169,019 bytes / SHA-256 07A04A98B01E650A1BE1FD3A2898A31DA94C1FECA05E3D3B748AD9DC24854861`；状态与简报同步更新。
+
+- 2026-08-22 17:45｜修改美术生产台账与 README：P2-11 从 queued 更新为 `implemented_owner_cleared_release_evidence_pending`，总进度更新为 31/33（93.94%），下一单元为 P2-12。
+- 2026-08-22 17:45｜修改项目状态：登记 P2-11 证据、经济边界、Supabase 111 项目录同构修复和本地未发布边界；最终构建哈希将在本轮确定性构建后回填。
+- 2026-08-22 17:45｜修改简易报告入口，收录 P2-11 简报；未改动其他窗口的产品能力、规则、协议、数据或外部 Gate 状态。
+- 2026-08-22 17:50｜修改 `asset-library/catalog.json` 的生产 Manifest 索引 SHA-256，匹配新增 P2-11 `runtime_path` 字段；修复 `asset-library-audit` 的非封面运行时路径缺口。
+- 2026-08-22 17:55｜将 P2-11 Local Acceptance 与简易报告回填最终确定性构建指纹 `438BFF…09F8DF`（2,143,263 characters / 2,158,021 bytes），并保留浏览器/真机/生产发布待执行边界。
+- 2026-08-22 17:55｜修改 Profile Hero：按 `played×2 + wins×3` 选择主游戏，加入图标/局数/胜场摘要、六款 tone token、三语空态与 reduced-motion/forced-colors fallback；未修改 Profile wire、经济、协议或服务器。
+- 2026-08-22 17:58｜P2-12 确定性构建完成：`2,150,453 characters / 2,165,215 bytes / SHA-256 E276F3F4825E0496514527FB8DC61003876268659FDF4362EC9AB6FB60582DF1`；P2-11 的 438BFF… 为其单元收口快照，不冒充当前构建。
+- 2026-08-22 18:05｜共享工作树出现新的已授权前端改动后重新执行确定性构建，当前最新身份更新为 `2,154,093 characters / 2,168,855 bytes / SHA-256 BEC8707B73EE7C6973B93810EDE51E9F0863F9A67CD651DB4181D9C0867140A4`；未覆盖其他窗口源码。
+- 2026-08-22 18:02｜修正 P2-12 专项 QA 的生产台账读取（`units`）并放宽 Ludo Final Art 进度合同以接受“所有非冻结单元完成、无 nextUnit”的真实状态；同步登记并行窗口现有 Profile 生成脚本 allowlist，质量门禁恢复可验证。
+- 2026-08-22 17:55｜修改生产台账、PROJECT_STATUS、分类报告入口和七份进度报告生成事实：P2-12 实现后美术序列为 32/33（96.97%），P2-07 保持冻结，下一阶段为 PROVE。
+
+- 2026-08-22 00:00｜完成 P1-09 身份徽章表现层接入：Games 排行榜、本人/公开 Profile、Profile Compare、成就墙、每日任务、Shop 稀有度和赛事排名统一消费 `identityBadgeNode()`；修复隐藏图片与原生 lazy loading 互锁导致 WebP 不请求的问题，并把 390px Profile 角色改为右上角装饰，避免身份文案被压成窄列。未修改经济、胜场、价格、协议或数据。
+
+- 2026-08-21 14:40｜完成 P1-03 俄罗斯方块（Tetris）终版美术接入 (`G-11-TETRIS-FINAL-ART-V1`) 与 2.5D 纯净收口：确定性生成 25 矢量母版 + 50 WebP 变体（457,640 bytes < 6 MiB 预算），并在 asset_manifest、catalog.json 注册；在 `06-assets.js` 和 `tetris.js` 接入原子解码与优雅回退；彻底移除 `tetris.js` 中所有残留 Ghost3D 代码，对接 2.5D phase/result 事件与 input gate 链路；通过全部 QA 契约、质量门禁与全量 `npm test`；同步构建产物 `1,998,009 characters / 2,012,716 bytes / SHA-256 3432DFD279B96EA1EBACC0582DB2A0E2D5E96D54B0384E3AE6D6573071ADA9D9`。
+
+- 2026-08-21 14:02｜完成五子棋（Gomoku）美漫 / Pop Art 风格落子动效系统升级：实现 20 帧 30FPS 分镜脚本（棋子下坠速度线、纵向拉伸、接触 Squash 形变与 Hit Stop 停顿、白色不对称尖角爆心、粗黑描边黄色次层爆花、主 Comic Burst 爆花、半调网点平面阵列、手绘 Comic Shock Ring 冲击波扩散与分段消隐、彩色碎片/墨点飞溅、二次轻触回弹稳定、落点 3x3 局域物理冲量震感、关键手增强与五连斩切线）、无障碍 `prefersReducedMotion` 平缓回退，以及 Canvas 测试 Mock 环境安全封装；同步构建产物 `2,011,108 characters / 2,025,815 bytes / SHA-256 564D33774D48323964C8509822A596787761FC84183206A4301F22B45E0A91C9`。
+
+- 2026-08-21 11:37｜修改 Monopoly 局内响应式布局：桌面右侧 Command Rail、平板/手机/矮横屏显式 dice/actions/money/state/meta 所有权，修正 44px 目标、重复 Meta 与流程条裁切；同步 ART-036/GAME-045/GAME-050/UI-037/ART-017/ART-033/ART-034、PROJECT_STATUS、生产台账、报告和审批矩阵。当前本地构建 SHA-256 `6050108EEE3A3F5D3EDC0DC83574FEDBA09CC8BBB9B3508F6ECD0E6E8992C4EC`，线上未变。
+
+- 2026-08-19 19:24｜修正 P0-12 证据数字为 `32/39`，同步最终构建 `2,207,000 characters / 2,221,728 bytes / SHA-256 1D7D25B39785484E9F4E36FD5819474D8DE67B9D97F133BB8D301815E0529716`，并校正 2.5D/PROJECT_STATUS 的当前构建引用；专项回归与 DOM 冒烟保持 exit 0。
+
+- 2026-08-19 18:04｜完成 P0-12 runtime 跨页面接入与最终收口：修正 Manifest gameId 解析、selected-object/marker 失败回退、Room DOM smoke、marker 透明 gutter 和 review board 全尺寸覆盖，并补齐空 marker 折叠与排行榜 marker 不溢出；32+39 项专项、Manifest/资产库、i18n、2.5D、DOM、Room、联机 E2E、Quality Gates 与完整 npm test 全部通过，最终稳定构建为 2,207,000 characters / 2,221,728 bytes / SHA-256 `1D7D25B3…E0529716`。
+
+- 2026-08-19 15:49｜完成 P0-11 最终修正与回归：source ID 归回 ART-020，forced-colors 始终优先 high-contrast，110% 装饰显示按更高分辨率选档；补齐 192 文件真实 SHA/字节/尺寸/Alpha、失败回滚、Effect 5/8 购买幂等、收藏分类和 Windows 工作区内 T7 隔离测试。Quality Gates 与完整 npm test 通过，构建为 2,177,608 characters / 2,192,311 bytes / SHA-256 902D0147…2C0164，未部署。
+
+- 2026-08-19 15:25｜修改统一身份表现、商城目录、服务端头像效果价格、三语商品名称与头像素材 CSS：统一身份节点按 allowlist 加载 P0-11 素材，成功后撤下对应 CSS fallback，失败恢复；forced-colors 优先 high-contrast，装饰按 110% 显示尺寸向上选档避免插值；在既有 effects 分类追加服务端权威 ID 5–8，复用购买/owned/requestId 路径，不改变协议、数据库结构、奖励、游戏规则或线上配置。
+
 > 简易记录项目修改内容。每次改动完成前更新；格式：`日期 时间｜修改内容`。
 
 - 2026-08-12 16:40｜统一 light/dark 语义色层，修正焦点、disabled、Toast、登录 Logo、PWA 顶栏、Premium Background textTone 与 Game Stage 主题独立；清理旧运行时主题 CSS 并保留旧存储迁移和游戏 cyber 皮肤。专项、三语、DOM、响应式、Quality Gates 与完整回归通过，线上未变。
@@ -600,3 +638,275 @@
 # 2026年08月18日 23:42
 
 - 修改 `server/index.js` 的 `cancelServerTimer()`：lease cancel 抛错或返回 false 时回退 `clearTimeout`，并完成 Node/Timer Audit/连接恢复/重连在线复核。
+
+# 2026年08月19日 13:44
+
+- 修改 2.5D active task 与 P12 active/acceptance：记录当前构建 `C823AF30…C1D213`、完整 npm test/posttest、质量门和报告合同最终通过；保留浏览器/真机/真实 Supabase/发布未执行边界。
+- 修改 `asset-library/catalog.json`：同步并行窗口更新后的生产 Manifest SHA，并修正玩家角色母图真实尺寸；修改 `scripts/generate-player-character-layered-v1.js` 读取母图真实尺寸，避免下次生成回写错误声明。
+- 修改 `qa/ludo-final-art-contract.js`：进度断言从旧 `9/33` 同步到台账真实 `10/33` 与下一单元 P0-11。
+- 修改 `qa/simulated-device-matrix-contract.js` 关联证据为真实 PNG；四张历史截图完成格式/尺寸/hash 校验。
+
+## 2026-08-19 22:32
+
+- 将产品表现主线收敛为唯一 `DOM + CSS + Canvas + GSAP` 2.5D runtime；同步修改构建入口、Service Worker、六款游戏、模板、package、Quality Gates、主线命令、需求台账、项目状态与自动报告生成器，旧 3D 证据只保留 `historical-as-of`。
+- 从旧 Ghost3D 耦合中保留并独立化真正服务 2.5D 的语义能力：Monopoly 紧凑舞台的 Command 掷骰控制迁移，以及 Tank authority `serverTick` 单调高水位投影；二者均新增/更新回归合同。
+- 最终 `npm run quality:gates`、完整 `npm test`、双客户端 E2E、2.5D-only 合同和确定性双构建全部通过；当前构建为 1,889,997 characters / 1,904,725 bytes / SHA-256 `91E7475D9D23AA8EB57C266B3A3A5D271011E2DBF12EC75E79EE91103CAA28CF`。未提交、推送或部署。
+
+## 2026-08-20
+
+- 修改共享 `GameStage25D`：六款游戏按真实语义事件映射各自色调、强度与方向，并统一驱动 `ring / sweep / burst / lift / slash / focus / spin / result` 八种局内 FX；Gomoku 落点、Ludo 起飞/捕获/完成、Monopoly 行走/购买/事件/拍卖、Xiangqi 吃子/将军、Tetris 消行/Combo/B2B/T-Spin/Perfect Clear/垃圾行、Tank 开火/命中/KO/得分均获得差异化表现。
+- 修改 `CameraSystem25D` 与 lazy GSAP adapter 至 `depth-motion-25d-v3`：常规 accepted-action 的 impact 收敛为非位移 scale pulse，移除横向 shake/rotation；Enter/Focus/Result 继续使用克制、可中断的 timeline，只动画 transform/autoAlpha，并在完成或中断后清理临时 `will-change`/GSAP 属性。
+- 修改 Game Stage CSS：增加六款 `--stage-fx-color`、前景聚光、核心/射线/粒子层和八类形态；桌面临时节点上限约 13、手机约 9，reduced-motion 收敛为单一静态核心，forced-colors 隐藏装饰 FX。
+- 修改生命周期与 QA 合同：新事件替换旧 FX，`document.hidden`、`exit / clear / destroy` 清理 marker、FX、recovery timer 与 data 属性；DOM 测试桩缺少 `style.setProperty` 时使用安全兼容 helper。上一轮 Three/Ghost3D 精确退役已在 2026-08-19 22:32 完整归档，本段完成累计同步；未提交、推送或部署。
+- 修改 Game Stage 为沉浸式全视口 Arena：压缩 Header、Seat Rail 和窗口间距，桌面/平板/手机统一使用底部 HUD Dock；低高度横屏使用左侧完整 Arena + 右侧单一 HUD 轨道，不再让棋盘与多个侧窗争抢宽度。
+- 修改六款局内尺寸预算与测量：Gomoku/Ludo/Monopoly/Tetris/Tank/Xiangqi 分别拥有适配控制区高度；Ludo/Monopoly 过程与排名 Meta 从 Arena 旧侧窗迁入 HUD DOM；Xiangqi 横屏紧凑阈值调整为 360px；Tetris 七控件和 Tank 摇杆、四向 D-pad、开火在窄屏保持完整且至少 44px。
+- 当前构建在单一 Codex in-app Chromium 完成 360×800、390×844、844×390、768×1024、1024×768、1440×900 六视口 × 六游戏共 36 个 Game Stage 布局/操作场景：页面横/纵溢出为 0，六张截图和矩阵 JSON 已归档。该证据不冒充第二浏览器、物理真机、真实网络或低端 GPU/热量。
+- 最终 `npm run quality:gates` 为 `QUALITY_GATES_FAST_ALL_PASS`，完整 `npm test` 主链/E2E/WS/posttest 退出码 0；`build --check` 与两次确定性重建均为 1,930,802 characters / 1,945,530 bytes / SHA-256 `4BCB27270281350EA2D73F9A7B6AD5B8A9F12720F7902DFBB47D4AE3FDA96A98`。未提交、推送或部署。
+
+## 2026-08-21
+
+- 修改 Gomoku 局内输入：移除手机方向盘/确认键，只保留直接棋盘触控与键盘无障碍输入；手机 390×844 棋盘和棋框保持 1:1，棋子不再被整体透视压扁。
+- 修改 Gomoku 落点反馈：删除持久 last-move 图片层，只保留短时径向核心、8 条射线与 4 个粒子；修复异步 VFX 相互作废后 pending 图片永久残留，并为资源加载失败/迟到增加有界清理。
+- 修改 Gomoku/Xiangqi 悔棋：建房可开关、每局全房间最多一次、只允许最后落子者撤回自己的棋；AI 局回退完整“玩家 + AI”一轮，服务端拒绝对手代撤与第二次悔棋。
+- 修改 Xiangqi Rule Authority：修正历史状态反序列化，回退后 revision 和动作 seq 保持单调并可继续走子；新局重置 `undoUsed`。
+- 修改 Room Launchpad：分离悔棋用户偏好与游戏支持状态，飞行棋等不支持游戏显示 unchecked+disabled，切回五子棋/象棋时 UI 与实际 create payload 一致。
+- 修改三语言悔棋错误提示、WebSocket 拒绝回滚和专项 QA；当前构建为 1,941,078 characters / 1,955,752 bytes / SHA-256 `A5F8E143830D48FBB978026B137D4433FFFD99F6FF225AF6E0DD5C08C6CF0F1C`，保持本地未发布。
+- 重新生成并对账当前最终构建：`public/index.html` 1,967,839 characters / 1,982,521 bytes / SHA-256 `176D108FAEEE8BE2D42274BDCD7462A43D6623371B3F4F2E9F46EFB2C037D9FC`；补入 Gomoku 入口动画 1:1 修复后的当前构建聚焦证据，保持本地未发布、未提交、未推送、未部署。
+- 当前 `176D108F…37D9FC` 构建复跑完整 `npm run quality:gates`（`QUALITY_GATES_FAST_ALL_PASS`）与完整 `npm test`（exit 0），最终 `node scripts/build.js --check` 仍为同一字符数、字节数和 SHA；未提交、推送或部署。
+
+## 2026-08-21 12:23
+
+- 修改 Monopoly Final Art 生命周期：棋盘每次重绘前作废旧 host 引用，并把当前短时 VFX 重新挂载到连接中的三层美术树；补齐破产、回合结算及联机 Authority 事件的 VFX 映射，不改变规则、协议、奖励或经济。
+- 修改游戏卡预览：指针进入、键盘焦点与激活共用稳定选择 seam；同一游戏卡重复选择复用 `selected-object` 节点，切卡才清理旧装饰。
+- 同步 P1-01 execution、acceptance、PROJECT_STATUS、报告索引和最新构建身份为 `176D108F…037D9FC`；保持本地未发布。
+
+## 2026-08-21 15:05
+
+- 修改 Gomoku 美漫 Pop Art 风格落子动效管线：实现 20 帧 30FPS 12 层三明治 Canvas 局部动效（半调网点、纯色爆花底块、粗黑描边、Squash/Stretch 棋子材质、白色尖角爆心、瞬态闪光、动态 Shock Ring、碎片飞溅与五连斩冲击切线），支持战术威胁强化与无障碍/测试桩安全降级。
+- 修改 Tetris (`G-11-TETRIS-FINAL-ART-V1`)：接入 P1-03 终版美术，彻底清除残留 3D 代码，对接 2.5D phase/result 事件与 Input Gate 链路。
+- 修改 Xiangqi (`G-16-XIANGQI-FINAL-ART-V1`)：接入 P1-04 终版美术，清除残留 3D 代码，规范化 `xqDifficultyProfile` 搜索预算与候选学习，修复 2.5D 过程链事件契约。
+- 修改 Shop (`P-SHOP-COMPLETE-ART-V1`)：接入 P1-05 完整商城美术，生成 5 阶稀有度框、5 阶展台、6 分类图标与 6 购买反馈 VFX，支持 2.5D 纯净表现。
+- 最终构建通过全部资产契约测试 (`XIANGQI_FINAL_ART_CONTRACT_ALL_PASS` / `SHOP_COMPLETE_ART_CONTRACT_ALL_PASS`)、`ALL_PASS` (DOM smoke) 与 `PROGRESS_LEDGER_ALL_PASS`。保持本地未发布。
+
+## 2026-08-21 16:39
+
+- 修改 `qa/code-health-sweep.js`：将 `scripts/generate-community-replay-tournament-cards-v1.js` 登记为显式素材运维白名单，代码健康扫描恢复全绿。
+- 修改 `PROJECT_STATUS.json`、`requirements/active/technical-optimization-mainline-p0-20260816/acceptance.md` 与 `简易报告/README.md`：统一当前构建字符数、字节数和 SHA-256，修复并行构建状态与报告索引漂移。
+- 修改并重新生成 2026-08-21 分类/总进度报告，保持当前构建与 historical-as-of 浏览器证据分界，不提升为跨设备或发布证据。
+- 修改完成后复跑 `node scripts/build.js --check`、`node qa/progress-ledger.js`、`node qa/approval-gate-policy.js`、`node qa/technical-optimization-mainline-contract.js`，均通过。
+
+## 2026-08-21 17:40
+
+- 修改构建汇总：吸收并行美术窗口对 `public/src/core/06-assets.js` 的新增运行时资产接入，重新执行 `node scripts/build.js --write/--check`，当前构建统一为 `FDBFA834…D6A835` / 2,019,547 bytes。
+- 修改 `PROJECT_STATUS.json`、技术优化验收、简易报告索引与 2026-08-21 总报告中的构建身份，清除 `5DB4…` 旧快照漂移。
+- 修改完成后保留 `GATE-DEVICE-BROWSER-NETWORK` 的外部证据边界；浏览器连接器初始化仍因本机内核资源路径错误保持 `NOT_EXECUTED`。
+
+## 2026-08-21 17:43
+
+- 修改 `qa/code-health-sweep.js`：登记 `generate-ai-difficulty-visual-v1.js` 与 `generate-honru-edge-cursor-v1.js` 两个新增素材运维脚本。
+- 修改构建与报告对账：吸收并行窗口最后一批 Honru/AI/素材运行时接入，重新生成并同步 `PROJECT_STATUS.json`、技术验收和七份进度报告至 `20447778…AD985FF`。
+
+## 2026-08-21 17:46
+
+- 修改 `qa/code-health-sweep.js`：去除重复白名单项，`CODE_HEALTH_SWEEP_ALL_PASS` 已恢复。
+- 修改并重新生成报告/状态构建身份，当前源码与生成物已通过 `node scripts/build.js --check`，统一为 `3F947C39…E2F1EDBE`。
+
+## 2026-08-21 17:50
+
+- 修改 `qa/visual-25d-contract.js`：将过宽的 Honru `pointermove` 禁止断言收窄为禁止全局 document/root 监听，保留并校验局部角色节点凝视监听及清理。
+- 修改 `PROJECT_STATUS.json`、技术优化验收与简易报告索引，统一当前构建为 `C5A9578F…094A939` / 2,033,655 bytes / 2,019,081 characters。
+- 修改完成后通过 `node qa/visual-25d-contract.js`，并重新执行确定性构建写入/检查。
+
+## 2026-08-21 18:04
+
+- 修改并统一 `PROJECT_STATUS.json`、技术优化验收、简易报告索引和自动进度报告至当前 `D544E410…AC3CC` 构建身份。
+- 修改后重新运行 2.5D、DOM、代码健康、审批策略、技术优化主线专项、完整 Quality Gates 与完整 `npm test`，全部通过。
+
+## 2026-08-22 10:33
+
+- 修改 `public/src/games/tetris.js` 与 `public/src/games/xiangqi.js`：只清理空白行尾随空格，不改变规则、Authority、协议、输入或表现语义。
+- 修改并重新生成 `public/index.html`、项目状态、技术验收和七份自动进度报告，统一为 `A35BE908…BD74D8E`。
+
+## 2026-08-22 10:34
+
+- 修改 `qa/code-health-sweep.js`：登记并行窗口新增的身份徽章素材生成脚本，保持未注册脚本健康门禁可验证。
+
+## 2026-08-22 10:42
+
+- 修改 `package.json`：登记 `qa/identity-badge-system-v1.js` 的独立测试入口，修复代码健康门禁发现的未注册 QA。
+
+## 2026-08-22 10:45
+
+- 修改 `qa/collection-rarity-catalog.js`：补齐 `appendChild` 测试桩，保持测试与生产稀有度标签 DOM 合同一致。
+- 修改同一测试桩以聚合子节点文本，避免轻量 VM 与真实 DOM 的 `textContent` 语义偏差。
+
+## 2026-08-22 10:52
+
+- 修改并统一项目状态、技术验收、简易报告索引及七份自动进度报告至 `96A0793C…15E7BE3` 当前构建。
+- 修改完成后通过最终确定性构建检查、审批策略与技术优化主线合同，保持旧浏览器矩阵为 historical-as-of。
+
+## 2026-08-22 10:58
+
+- 修改 `scripts/generate-progress-reports.js`、`PROJECT_STATUS.json` 与简易报告索引：识别当前认证页窄证据，同时明确它不等于登录后四区/六款游戏完整矩阵。
+
+## 2026-08-22 11:03
+
+- 修改认证页证据、项目状态和进度报告生成器：构建身份从 96A0 同步至当前 `D2DDA572…3624DA04`，并融合 P1-09 Games/Profile/成就墙/Shop/390×844 可见证据。
+- 修改 `qa/progress-ledger.js`：允许新的当前聚焦证据类型，同时继续要求“尚无全站完整矩阵”的诚实边界。
+- 修改 `package.json`：合并两个窗口重复登记的 `test:identity-badge-system`，保留唯一测试入口。
+
+## 2026-08-22 12:06
+
+- 修改 `package.json` 与 `scripts/quality-gates.js`：融合 Supabase 向导脱敏 QA，不覆盖并行窗口已登记的季节背景测试。
+- 修改 `PROJECT_STATUS.json`、技术优化验收与简易报告索引：同步当前构建为 2,042,876 characters / 2,057,627 bytes / SHA-256 `7BCA9218944694748A5A87DA36950D184ACC5DBC678974BCADA0DC3FCCF41DF2`，旧矩阵继续标记 historical-as-of。
+- 修改并重新生成七份分类进度报告，接纳游戏主线修复和 P2-01 并行成果；当前仍为 `LOCAL_ONLY / NOT_RELEASED`。
+- 修改 P2-01 素材库语义：四个 PNG 源母板保持 `reference-only`，只有 20 个批准 WebP 派生通过 `P-SEASONAL-BACKGROUNDS-V1` 进入 Runtime Manifest；生成器与 92 项专项同步锁定该边界。
+- 修改 `qa/code-health-sweep.js`：接纳 12:09 并行新增的 Supabase 加密备份运维脚本，避免将合法外部门禁工具误判为未登记产品脚本。
+- 修改 P2-01 专项以接纳并行窗口更完整的 Catalog 分层：一个 `P-SEASONAL-BACKGROUNDS-V1` 集成家族拥有 20 个 WebP，四个源母板各自只登记原始 PNG 且保持 `reference-only`。
+
+## 2026-08-22 12:42
+
+- 修改 P2-02 资产流水：拒绝首张伪透明棋盘格输出，改用统一 `#00FF00` 色键并确定性去背；四季身份锚、按键眼、三峰火焰和 Q 版无手指幽灵手通过接触表复核。
+- 修改生成边界为仅当前 `activeEdition` 懒加载、16 个本地 WebP、单 edition 512 KiB 预算；当前尚未修改 `06-assets.js`、Manifest、协议或页面消费。
+
+## 2026-08-22 13:55
+
+- 修改 `qa/code-health-sweep.js`：登记既有 `generate-sticker-book-v1.js` 运维脚本，恢复脚本白名单健康门禁。
+- 修改旧 `qa/sticker-art-contract.js`：将历史 M0 Gomoku Sticker 合同限定在旧 Sticker atom，避免误审 P2-03 的继承式贴纸册；P2-03 改由独立专项合同校验。
+- 修改生产美术台账：将 P2-03 放回严格 `P2-02 → P2-03 → P2-04` 顺序，并同步当前构建对账与 QA 入口。
+- 修改并生成前端壳后完成专项回归；当前构建仍保持 `C7ED65B8…B6B8CF5`，未执行线上部署。
+
+## 2026-08-22 14:10
+
+- 修改 `qa/ludo-final-art-contract.js` 与 P0-10 专项：生产台账按权威 `order` 字段排序，抵御并行窗口追加 P2 单元造成的数组顺序抖动。
+- 修改 `qa/ui-route-motion-contract.js`、`qa/route-scroll-plural.js`：纳入 P2-04 个人 Home 场景的十组转场节点与刷新 seam。
+- 修改 `qa/code-health-sweep.js`：登记 P2-04 生成脚本并去除并行重复登记。
+- 修改七份进度记录与简易报告索引的当前构建边界：`63B4C63E…C91EE9F`，仍未形成当前浏览器可见证据。
+
+## 2026-08-22 14:25
+
+- 修改最终进度边界：P2-04 已完成，下一严格主线为 P2-05；当前本地构建固定为 2,057,803 characters / 2,072,554 bytes / SHA-256 `63B4C63E9143AA182460B64D64D1F3AA79F0DF7BFE59DE53F02913E46C91EE9F`。
+- 修改并复核 Quality Gates、专项 QA 与构建漂移检查；完整 `npm test` 全链无失败证据，仍保持 `LOCAL_ONLY / NOT_RELEASED`。
+
+## 2026-08-22 14:55
+
+- 修改 `CameraSystem25D`、Game Stage 与 CSS：以 `player / spectator-neutral` 可逆 composition 连接已有观战桥，观战角色变化时切换一次，避免快照重复动画。
+- 修改生产台账与报告：美术生产进度更新为 P0 12/12、P1 9/9、P2 5/12，总计 26/33（78.79%）；下一严格单元为 P2-06 Replay 电影式演出。
+- 修改生成报告的并行构建说明，使当前构建仍明确显示“尚无匹配浏览器可见证据”；当前构建为 2,061,463 characters / 2,076,214 bytes / SHA-256 `82877C3044233BB874874716688979E46FCC2AB8C0145825F5E4F4FC722A3CEF`。
+- 通过 Quality Gates 和完整 `npm test`；首次完整链只因并行端口 8145 抢占失败，使用隔离端口 19445 重跑后全链通过。
+
+## 2026-08-22 15:17
+
+- 修改 Replay 入口、Roster 与联机消费层，接入 overview/play/pause/seek/result 语义演出并修正事件计数、关闭和焦点生命周期。
+- 修改 Replay 模式副作用边界，保证历史回放不驱动本地 AI、solo 票据、奖励或正常对局结束流程。
+- 修改生产美术台账和项目状态：P0 12/12、P1 9/9、P2 6/12，总计 27/33（81.82%）；P2-07 保持冻结，下一可执行单元为 P2-08。
+- 修改并重新生成当前聚合构建：2,075,347 characters / 2,090,098 bytes / SHA-256 `BFAEEEE42AC6F191A15EBC258DE55D858AA717B4539E9F299DC48B66B0E880D8`。
+
+## 2026-08-22 15:37
+
+- 修改 `GhostAudioRuntime`：增加最多四个脱敏视觉订阅者，并让零 master/SFX/music 音量按有效静音处理，不再发出虚假 Live 频谱 cue。
+- 修改频谱懒加载生命周期：设置弹层销毁后才完成的 GSAP Adapter 会立即 dispose，不能重新激活或残留上下文。
+- 修改 DOM Smoke 的 `style.setProperty/removeProperty/getPropertyValue` 最小桩，并让 Ludo 生产顺序合同正确识别已冻结 P2-07 后继续完成的 P2-08。
+- 修改生产台账、项目状态和七份分类进度报告：P0 12/12、P1 9/9、P2 7/12，总计 28/33（84.85%）；下一可执行单元为 P2-09。
+- 修改并固定当前构建为 2,091,345 characters / 2,106,098 bytes / SHA-256 `D7B483C3769A28CB63FF3C00A72B9D8548FDA7CE7797E7EB842AB71A805B7F82`。
+
+## 2026-08-22 16:35
+
+- 修改管理员赛事状态弹层：在不开放普通玩家入口、不改赛事协议的前提下接入 P2-10 Overlay，并在关闭、切桌和状态替换时释放动效。
+- 修改三语言、窄屏、forced-colors 与 reduced-motion 表现；动态只使用 transform/autoAlpha，不增加鼠标跟随或持续循环。
+- 修改生产台账和项目状态：P0 12/12、P1 9/9、P2 9/12，总计 30/33（90.91%）；P2-07 保持冻结，下一单元为 P2-11。
+- 修改并生成当前聚合构建：2,128,965 characters / 2,143,723 bytes / SHA-256 `47CE38AB0955C9C74AE76C82CC5B40C1E95F6285FE27DD3EDDA33B4E2D6C2DFF`。
+- 修正 P2-08 Manifest 对共享模板的脆弱哈希绑定：专属运行时文件继续锁定 SHA，共享接入文件只登记路径；P2-08 专项与 P2-10 隔离端口完整 `npm test` 均通过。
+
+## 2026-08-22 16:54
+
+- 修改 P2-10 Manifest，将最终 Overlay 源码固定为 13,075 bytes / SHA-256 `16BFA9D097073C5449EB97F42D0AA02323F12D5E5A7F984EB4F5A11796CAB2D7`；迟到 Adapter 在执行前再次检查动态 reduced-motion，避免偏好切换竞态。
+- 修改 P2-10 收口报告、项目状态和七份分类报告的当前构建身份；动态 reduced-motion 竞态修正后的最终聚合构建为 2,128,980 characters / 2,143,738 bytes / SHA-256 `6D00D5BEE45D9F19A2707F0211E9E8C257A3D28585718A0D23A5D0F95229EAEB`。
+- 当前 `6D00D5BE…229EAEB` 构建已通过隔离端口完整 `npm test`，终态标记为 `NPM_TEST_FINAL_PASS_P2_10_CURRENT`。
+- 修改 P2-08 Manifest/QA 的证据治理：只对本族专属 Runtime 固定 bytes/SHA，共享 Audio/App Shell/Assets/Template/Build/Package 改为存在性与功能合同校验，避免后续合法 UI 批次制造伪哈希漂移。
+
+## 2026-08-22 17:45
+
+- 修改商城四季陈列预览：季节组合现在使用明确头像/边框/效果/背景成员与精确 `N/4` owned 计算；季节背景商品的组合预览不再无效 no-op。
+- 修改 Supabase `apply_purchase_v1` 价格白名单与服务端目录同构，并为异步购买 RPC 增加稳定 rejection → `purchase_sync_failed` 回执。
+- 修改 P2-11 合同/技术审查，明确“限定”是本地策展语义，不是限时销售、折扣、库存或 Battle Pass。
+# 2026年08月22日 继续执行
+
+- 修改美术生产台账与 README：P2-11 从 queued 更新为 `implemented_owner_cleared_release_evidence_pending`，总进度更新为 31/33（93.94%），下一单元为 P2-12。
+- 修改项目状态：登记 P2-11 证据、经济边界、Supabase 111 项目录同构修复和本地未发布边界；最终构建哈希待本轮确定性构建后回填。
+- 修改简易报告入口，收录 P2-11 简报；未改动其他窗口的产品能力、规则、协议、数据或外部 Gate 状态。
+
+## 2026-08-22 21:32
+
+- 修改简易报告入口，收录 P2-11/P2-12 全链收口报告，并将主线节点明确为 CLOSE → PROVE。
+- 修改最终验证事实：第二次完整 `npm test` 退出码 0；当前构建保持 2,154,257 characters / 2,169,019 bytes / SHA-256 `07A04A98B01E650A1BE1FD3A2898A31DA94C1FECA05E3D3B748AD9DC24854861`。
+- 修正一次性 Tank Delta Online 失败的状态记录：独立专项与随后完整全链均通过，未保留调试输出或代码改动。
+- 补充最终简报中的 `npm run quality:gates` 通过证据（`QUALITY_GATES_FAST_ALL_PASS`）。
+- 修改 PROVE 证据索引，登记当前 `07A04A98…54861` 构建的本地登录页可见复核与外部证据边界。
+
+## 2026-08-22 21:57
+
+- 修改五子棋局内控件：移除触摸方向键/方向盘挂载，保留棋盘直接落子与键盘无障碍操作。
+- 修改坦克局内控制：默认只显示摇杆，使用一个切换按钮在摇杆与 D-pad 间互斥切换；切换时清理旧输入，键盘输入保持兼容，三语文案同步。
+- 修改坦克/五子棋专项 QA、沉浸式舞台与最终美术合同，使其匹配新的单控件与无五子棋方向键行为。
+- 修改进度报告/TECH-027 生成身份，使其与当前确定性构建 `498B3B94…4D28AD45` 同步；重新生成后进度台账通过。
+- 审计并确认六款游戏最终美术、季节背景、Honru、Game Icons、素材库和音频 seam 已接入 Runtime，保持 presentation-only、fallback 与可逆开关边界。
+- 审计并确认 Supabase 真实迁移、RLS、备份、隔离恢复与 RPC surface 已有证据；保留真实非破坏回滚、并发幂等、多实例租约/PubSub、Render 环境更新与部署为未执行项。
+- 修改当前构建与报告身份：五子棋冗余触摸方向盘代码和清理调用已移除，最终本地构建为 2,151,596 characters / 2,166,356 bytes / SHA-256 `0653A69BB9FB78DBD244D1310BC2197E3C29C4EAE6D6B7A1E87B898659A8A600`。
+
+## 2026-08-22 22:08
+
+- 修改最终维护记录：确认冗余五子棋触摸控制整段及残留清理调用均已移除，报告/构建/测试身份保持一致。
+
+## 2026-08-22 22:22
+
+- 修改 PROVE 证据索引：登记当前构建 `5F7BEE5D…F7A783` 的单 Chromium 维护复核，不提升为完整跨设备或发布验证。
+- 修改首页轮播分页控件：命中区提升到 44×44px，视觉条保持 5px，加入焦点可见样式，修复触控目标过小问题。
+
+## 2026-08-22 22:26
+
+- 修改 `generate-progress-reports.js` 与 `qa/progress-ledger.js`：登记当前构建维护窄证据并明确其仍不等于完整五档/跨设备/发布证据。
+
+## 2026-08-22 23:10
+
+- 修改 `qa/approval-gate-policy.js`：将当前构建 6/6 单 Chromium 维护证据纳入报告索引一致性校验；同步维护报告与 README 的当前构建哈希和状态。
+
+## 2026-08-22 23:40
+
+- 修改 `public/index-template.html` 加载外部布局样式，修改 `public/sw.js` 升级 v16 并预缓存布局文件，修改 `package.json` 注册布局专项测试；当前构建更新为 `8774724A…CBBC081`。
+
+## 2026-08-22 23:56
+
+- 修改 `public/ghost-layout.css` 为 tokens/shell/surfaces/commerce 模块 manifest，扩展 Games 房间、Playline、Profile、商城的列宽、换行、滚动与窄屏降级规则。
+- 修改 `public/sw.js` 升级 v17 并预缓存四个布局模块；同步 `qa/layout-system-v1.js`、`PROJECT_STATUS.json` 与简易报告入口。
+
+## 2026-08-23 00:09
+
+- 修改 `public/ghost-layout.css` 加载内容密度模块，修改 `public/sw.js` 升级 v18 并预缓存 `40-layout-content.css`。
+- 修改布局专项 QA 与项目状态证据清单，保持表现层范围和未发布边界。
+
+## 2026-08-23 11:02
+
+- 修改 `public/index-template.html`：按原级联顺序移除 5 个历史内联 `<style>` 块，改为 `data-presentation-style` 外链，结构与 CSS 拼接字节保持一致。
+- 修改 `public/sw.js`：升级 `ghost-game-shell-v19-20260823` 并预缓存五个表现模块。
+- 修改 `package.json`、`qa/code-health-sweep.js` 及美术/Profile/Shop/社交/Game Stage/主题/动效专项 QA：统一使用 presentation-source seam，避免测试依赖单 HTML 内联 CSS。
+- 修改 `PROJECT_STATUS.json`：布局节点推进为 `currentLayoutSystemV4`，绑定当前构建 `6BFC54CE…C6B9D076` 与本批证据。
+- 修改进度报告索引和生成报告中的当前构建身份；未改变规则、Authority、协议、经济、社交数据、美术资产或音频运行时。
+
+## 2026-08-23 11:05
+
+- 记录 PROVE 预检：浏览器插件初始化因本机 kernel assets 路径错误失败；未读取浏览器敏感存储，当前构建可见矩阵保持 `NOT_EXECUTED`，不把连接失败当作通过。
+
+## 2026-08-23 12:29
+
+- 修改 `server/boundaries/auth-profile.js`：token TTL 未来时间 fail-closed，并增加 `sweep_expired` 批量清扫与失败恢复。
+- 修改 `server/index.js`：新增 `auth-token-expiry-sweep` ServerClockTimer owner、leader gate、持久化/远端同步和 `session_expired` 关闭语义。
+- 修改 `qa/auth-profile-boundary.js` 与 `qa/timer-audit.js`：加入过期/未来/畸形 token、Adapter 回滚、内部 UID 隔离和定时器接线回归。
+- 修改 `PRODUCT_REQUIREMENTS_LEDGER.json`、`PROJECT_STATUS.json`，将 P13 归回 TECH-039/040/052；不新建重复 Requirement ID。
+- 统一回归后确认 `npm run quality:gates`、完整 `npm test`（退出码 0）、确定性构建检查、项目状态/进度台账/简报合同与 `git diff --check` 均通过；当前构建 SHA-256 为 `6AA8EF0C1CE035DD8008C7A5479495029B54779088404977F2FFA735219E9246`。
+
+## 2026-08-23 13:01
+
+- 修改 `server/index.js`：以 `supabase-outbox-sync` ServerClockTimer 统一 Reward/AI Learning retry，使用 `Promise.allSettled` 做类型级异常隔离。
+- 修改 `qa/timer-audit.js`、`PRODUCT_REQUIREMENTS_LEDGER.json`、`PROJECT_STATUS.json` 与进度入口，登记 P14；不新建重复 Requirement ID。
+- 修正 P14 回归中发现的 Windows `leaderboard.json.tmp` rename 竞争：Reward/AI drain 改为同一 lease 内串行并保持独立失败记录；Supabase Adapter 26 项专项复跑通过。

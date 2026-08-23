@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "programId": "GHOST-GAME-ART-PROGRAM-V1",
   "orderedBy": "user attachment priority P0 -> P1 -> P2; original order within each priority",
-  "updatedAt": "2026-08-19T12:08:00+09:00",
+  "updatedAt": "2026-08-22T00:00:00+09:00",
   "status": "IN_PROGRESS_LOCAL_ONLY_NOT_RELEASED",
   "visualNorthStar": [
     {
@@ -37,38 +37,1832 @@
     "release remains explicit-current-user-command-only"
   ],
   "units": [
-    {"order":1,"id":"P0-01","familyId":"P-AUTH-LAUNCH-ART-V1","name":"认证页主视觉与启动 Loading","status":"implemented_owner_cleared_release_evidence_pending","completion":{"sourceAndRuntimePercent":100,"localImplementationPercent":100,"machineEvidencePercent":100,"localVisibleEvidencePercent":0,"realEnvironmentPercent":0,"releasePercent":0},"deliverables":{"runtimeAssetIds":5,"runtimeVariants":48,"sourceMasters":23,"reviewBoards":3,"runtimeBytes":533561},"evidence":["art-source/platform/auth/ghost-wake-v1/asset-family-manifest-v1.json","art-source/platform/auth/ghost-wake-v1/PROMPT_AND_PROVENANCE.md","art-source/platform/auth/ghost-wake-v1/TECHNICAL_REVIEW_Reviewer_A.md","art-source/platform/auth/ghost-wake-v1/OWNER_AUTHORIZED_ART_CLEARANCE.md","art-source/production/ghost-game-art-program-v1/P0-01_LOCAL_ACCEPTANCE.md"],"scope":["auth light/dark desktop/mobile hero","login/register/legacy/guest states","Honru welcome/wait/error/connecting/recovered","auth status icons","first-login guide","PWA splash/maskable/offline launch"],"requirements":["ART-002","ART-003","ART-004","ART-005","ART-006","ART-007","ART-008","ART-009","ART-010","ART-011","ART-031","ART-032","UI-001","UI-002","UI-003","UI-008","TECH-007","TECH-033","TECH-037"]},
-    {"order":2,"id":"P0-02","familyId":"P-PLATFORM-SCENES-V1","name":"Home/Games/Room/Playline 平台动态背景","status":"implemented_owner_cleared_release_evidence_pending","completion":{"sourceAndRuntimePercent":100,"localImplementationPercent":100,"machineEvidencePercent":100,"localVisibleEvidencePercent":0,"realEnvironmentPercent":0,"releasePercent":0},"deliverables":{"runtimeAssetIds":1,"runtimeVariants":80,"sourceMasters":48,"reviewBoards":4,"runtimeBytes":1259316},"evidence":["art-source/platform/scenes/signal-worlds-v1/asset-family-manifest-v1.json","art-source/platform/scenes/signal-worlds-v1/PROMPT_AND_PROVENANCE.md","art-source/platform/scenes/signal-worlds-v1/TECHNICAL_REVIEW_Reviewer_A.md","art-source/platform/scenes/signal-worlds-v1/OWNER_AUTHORIZED_ART_CLEARANCE.md","art-source/production/ghost-game-art-program-v1/P0-02_LOCAL_ACCEPTANCE.md","qa/platform-scenes-contract.js"],"scope":["four route scene masters","desktop/mobile/poster/mini","layered far/mid/foreground","static/reduced/low-bandwidth fallbacks"],"requirements":["ART-021","UI-006","UI-007","UI-011","UI-023","TECH-033","TECH-034","TECH-049"]},
-    {"order":3,"id":"P0-03","familyId":"P-GAME-STAGE-SHARED-ART-V1","name":"统一 Game Stage 舞台与共享事件 VFX","status":"implemented_owner_cleared_release_evidence_pending","completion":{"sourceAndRuntimePercent":100,"localImplementationPercent":100,"machineEvidencePercent":100,"localVisibleEvidencePercent":0,"realEnvironmentPercent":0,"releasePercent":0},"deliverables":{"runtimeAssetIds":1,"runtimeVariants":22,"sourceMasters":11,"reviewBoards":1,"runtimeBytes":165048},"evidence":["art-source/platform/game-stage/shared-v1/asset-family-manifest-v1.json","art-source/platform/game-stage/shared-v1/PROMPT_AND_PROVENANCE.md","art-source/platform/game-stage/shared-v1/TECHNICAL_REVIEW_Reviewer_A.md","art-source/platform/game-stage/shared-v1/OWNER_AUTHORIZED_ART_CLEARANCE.md","art-source/production/ghost-game-art-program-v1/P0-03_LOCAL_ACCEPTANCE.md","qa/game-stage-art-contract.js"],"scope":["stage shell","seat rail","command tray","spectator base","status lamps/rings/badges","nine semantic event VFX","2.5D Game Stage primary consumption; renderer-neutral semantic events"],"requirements":["ART-013","ART-015","ART-016","ART-017","GAME-019","GAME-042","GAME-043","GAME-048","GAME-049","GAME-050","GAME-051","GAME-052","TECH-049","TECH-054"]},
-    {"order":4,"id":"P0-04","familyId":"P-MODAL-ILLUSTRATION-V1","name":"全套 Modal Header Illustration","status":"implemented_owner_cleared_release_evidence_pending","completion":{"sourceAndRuntimePercent":100,"localImplementationPercent":100,"machineEvidencePercent":100,"localVisibleEvidencePercent":0,"realEnvironmentPercent":0,"releasePercent":0},"deliverables":{"runtimeAssetIds":1,"runtimeVariants":324,"sourceMasters":27,"reviewBoards":4,"runtimeBytes":2112306},"evidence":["art-source/platform/modal/illustrations-v1/asset-family-manifest-v1.json","art-source/platform/modal/illustrations-v1/PROMPT_AND_PROVENANCE.md","art-source/platform/modal/illustrations-v1/TECHNICAL_REVIEW_Reviewer_A.md","art-source/platform/modal/illustrations-v1/OWNER_AUTHORIZED_ART_CLEARANCE.md","art-source/production/ghost-game-art-program-v1/P0-04_LOCAL_ACCEPTANCE.md","qa/modal-art-contract.js"],"scope":["all 27 attachment modal/state semantics","512 transparent masters","160/240/320 runtime","neutral/success/warning/error","no-text/static fallback"],"requirements":["ART-005","ART-016","ART-025","ART-026","UI-019","UI-020","UI-021","UI-024","UI-025","UI-032","UI-035","UI-037"]},
-    {"order":5,"id":"P0-05","familyId":"P-LOADING-STATE-ART-V1","name":"Loading、Empty、Offline、Error 与进度视觉","status":"implemented_owner_cleared_release_evidence_pending","completion":{"sourceAndRuntimePercent":100,"localImplementationPercent":100,"machineEvidencePercent":100,"localVisibleEvidencePercent":0,"realEnvironmentPercent":0,"releasePercent":0},"deliverables":{"runtimeAssetIds":1,"runtimeVariants":36,"sourceMasters":12,"reviewBoards":1,"runtimeBytes":268762,"contexts":22,"progressSemantics":9},"evidence":["art-source/platform/loading/state-art-v1/asset-family-manifest-v1.json","art-source/platform/loading/state-art-v1/PROMPT_AND_PROVENANCE.md","art-source/platform/loading/state-art-v1/TECHNICAL_REVIEW_Reviewer_A.md","art-source/platform/loading/state-art-v1/OWNER_AUTHORIZED_ART_CLEARANCE.md","art-source/production/ghost-game-art-program-v1/P0-05_LOCAL_ACCEPTANCE.md","qa/loading-art-contract.js"],"scope":["22 loading/recovery contexts","fullscreen/page/six-game/retry families","nine progress semantics","DOM/CSS numeric fill retained"],"requirements":["TECH-033","TECH-034","TECH-049","UI-023","UI-031","UI-032","GAME-040","SOC-029"]},
-    {"order":6,"id":"P0-06","familyId":"G-02-GOMOKU-FINAL-ART-V1","name":"五子棋最终棋盘、棋子、材质和反馈","status":"implemented_owner_cleared_release_evidence_pending","completion":{"sourceAndRuntimePercent":100,"localImplementationPercent":100,"machineEvidencePercent":100,"localVisibleEvidencePercent":0,"realEnvironmentPercent":0,"releasePercent":0},"deliverables":{"runtimeAssetIds":1,"runtimeVariants":36,"sourceMasters":18,"reviewBoards":1,"runtimeBytes":477912,"boardThemes":4,"pieceMaterials":5,"semanticVfx":7,"cameraPresets":2},"evidence":["art-source/games/gomoku/final-art-v1/asset-family-manifest-v1.json","art-source/games/gomoku/final-art-v1/PROMPT_AND_PROVENANCE.md","art-source/games/gomoku/final-art-v1/TECHNICAL_REVIEW_Reviewer_A.md","art-source/games/gomoku/final-art-v1/OWNER_AUTHORIZED_ART_CLEARANCE.md","art-source/production/ghost-game-art-program-v1/P0-06_LOCAL_ACCEPTANCE.md","qa/gomoku-final-art-contract.js"],"scope":["four board themes","five piece materials","last move/win/draw/thinking/spectate/reconnect VFX","desktop/mobile camera","first 2.5D demo art baseline","CSS/Canvas 2.5D primary; existing Three renderer optional compatibility"],"requirements":["ART-033","GAME-042","GAME-048","ART-017","TECH-049"]},
-    {"order":7,"id":"P0-07","familyId":"G-07-LUDO-FINAL-ART-V1","name":"飞行棋最终棋盘、飞机、骰子和领奖台","status":"implemented_owner_cleared_release_evidence_pending","completion":{"sourceAndRuntimePercent":100,"localImplementationPercent":100,"machineEvidencePercent":100,"localVisibleEvidencePercent":0,"realEnvironmentPercent":0,"releasePercent":0},"deliverables":{"runtimeAssetIds":1,"runtimeVariants":68,"sourceMasters":34,"reviewBoards":2,"runtimeBytes":1163616,"boardThemes":4,"factionPoseAircraft":12,"routeAtoms":3,"dieAtlases":1,"semanticVfx":5,"podiums":3,"skins":4,"cameraPresets":2},"evidence":["art-source/games/ludo/final-art-v1/asset-family-manifest-v1.json","art-source/games/ludo/final-art-v1/PROMPT_AND_PROVENANCE.md","art-source/games/ludo/final-art-v1/SKILL_ROUTING.md","art-source/games/ludo/final-art-v1/TECHNICAL_REVIEW_Reviewer_A.md","art-source/games/ludo/final-art-v1/OWNER_AUTHORIZED_ART_CLEARANCE.md","art-source/production/ghost-game-art-program-v1/P0-07_LOCAL_ACCEPTANCE.md","qa/ludo-final-art-contract.js"],"scope":["four board themes with four airports and frozen 52-cell route","four factions and twelve aircraft pose atoms","three route atoms and six-face die atlas","five semantic VFX","2/3/4-player podiums","four skins and desktop/mobile camera presets","transparent 2.5D route/aircraft/podium atoms","Wave A/CSS/DOM primary; existing procedural Ghost3D optional compatibility"],"requirements":["ART-034","GAME-043","GAME-049","ART-017","TECH-049"]},
-    {"order":8,"id":"P0-08","familyId":"P-HONRU-CONTEXT-REACTIONS-V1","name":"Honru 局内投掷、命中、上下文和结算扩展","status":"implemented_owner_cleared_release_evidence_pending","completion":{"sourceAndRuntimePercent":100,"localImplementationPercent":100,"machineEvidencePercent":100,"localVisibleEvidencePercent":0,"realEnvironmentPercent":0,"releasePercent":0},"deliverables":{"runtimeAssetIds":1,"runtimeVariants":17,"sourceMasters":32,"reviewBoards":3,"runtimeBytes":629746,"contextStates":16,"quickVisualCells":16,"quickProtocolIds":6},"evidence":["art-source/brand/ghost-game/honru/context-reactions-v1/asset-family-manifest-v1.json","art-source/brand/ghost-game/honru/context-reactions-v1/PROMPT_AND_PROVENANCE.md","art-source/brand/ghost-game/honru/context-reactions-v1/SKILL_ROUTING.md","art-source/brand/ghost-game/honru/context-reactions-v1/TECHNICAL_REVIEW_Reviewer_A.md","art-source/brand/ghost-game/honru/context-reactions-v1/OWNER_AUTHORIZED_ART_CLEARANCE.md","art-source/production/ghost-game-art-program-v1/P0-08_LOCAL_ACCEPTANCE.md","qa/honru-context-reactions-v1.js"],"scope":["16 context states","16 quick visual stickers mapped to six stable protocol IDs","celebration/spectator/rematch reactions","2.5D spatial-guide consumption without changing approved Honru identity","atlas/runtime/fallback/cleanup"],"requirements":["ART-005","ART-024","ART-025","UI-035","SOC-017"]},
-    {"order":9,"id":"P0-09","familyId":"P-PROGRESSION-FEEDBACK-ART-V1","name":"Reward、XP、成就、任务与 G Coins 反馈","status":"implemented_owner_cleared_release_evidence_pending","completion":{"sourceAndRuntimePercent":100,"localImplementationPercent":100,"machineEvidencePercent":100,"localVisibleEvidencePercent":0,"realEnvironmentPercent":0,"releasePercent":0},"deliverables":{"runtimeAssetIds":1,"runtimeVariants":27,"sourceMasters":2,"sourceAtoms":9,"reviewBoards":1,"runtimeBytes":310540,"semanticIds":9,"sizes":[96,160,256]},"evidence":["art-source/platform/progression/feedback-v1/asset-family-manifest-v1.json","art-source/platform/progression/feedback-v1/PROMPT_AND_PROVENANCE.md","art-source/platform/progression/feedback-v1/SKILL_ROUTING.md","art-source/platform/progression/feedback-v1/TECHNICAL_REVIEW_Reviewer_A.md","art-source/platform/progression/feedback-v1/OWNER_AUTHORIZED_ART_CLEARANCE.md","art-source/production/ghost-game-art-program-v1/P0-09_LOCAL_ACCEPTANCE.md","scripts/generate-progression-feedback-art-v1.js","public/src/core/06-assets.js","public/src/ui/07-roster.js","public/src/core/04-social.js","public/src/core/02-app-shell.js","qa/progression-feedback-art-v1.js"],"scope":["reward breakdown header and reason rows","G Coins and XP decorative metric atoms","finite 2.5D coin/xp/level-up presentation hooks","task/achievement/win-streak/collection/unlock profile and modal states","static/reduced-motion/CSS/text fallback"],"requirements":["ART-026","ECO-016","ECO-018","ECO-019","ECO-020","ECO-028","UI-011","UI-021","UI-025"]},
-    {"order":10,"id":"P0-10","familyId":"P-PLAYER-CHARACTER-LAYERED-V1","name":"Player Character 七槽基础分层包","status":"queued","scope":["4-6 bodies","6-8 faces","8 hair","10-12 tops","6-8 bottoms","6 footwear","12-16 accessories","six poses","three compact actions"],"requirements":["SOC-031","ECO-029","UI-011","UI-025","GAME-045","ART-036"]},
-    {"order":11,"id":"P0-11","familyId":"P-AVATAR-FRAME-EFFECT-V1","name":"Avatar Frame 与 Effect 真实素材化","status":"queued","scope":["eight frames","eight effects","44/64/96/192","static/dynamic/high-contrast/reduced-motion","unified crop/light/playback"],"requirements":["ART-019","ART-020","UI-022","SOC-001","ECO-013","ECO-016"]},
-    {"order":12,"id":"P0-12","familyId":"P-GAME-ICON-SYSTEM-V2","name":"Home 六款游戏小图标与跨页面状态体系","status":"queued","scope":["six icons 44/64/96","cover crop/theme icon/selected 2.5D object","AI/mode/card/status/ranking/room markers","Emoji/CSS fallback"],"requirements":["ART-012","ART-014","ART-027","UI-011","UI-019","UI-020","TECH-031","TECH-033"]},
-    {"order":13,"id":"P1-01","familyId":"G-15-MONOPOLY-FINAL-ART-V1","name":"Monopoly 城市棋盘、建筑、角色、卡牌与反馈","status":"queued","scope":["layered city board and foreground character atoms","transparent buildings/props/cards/contact shadows","auction and result semantic VFX","DOM labels and rule data remain live","no GLB completion requirement"],"requirements":["ART-036","GAME-045","GAME-050","UI-037","ART-017","ECO-029","SOC-031"]},
-    {"order":14,"id":"P1-02","familyId":"G-12-TANK-FINAL-ART-V1","name":"Tank 本体、地形、掩体、弹道、爆炸与 HUD","status":"queued","scope":["Canvas arena background/midground/foreground layers","transparent tanks/terrain/cover/projectile/impact atoms","bounded screen-shake masks and reduced-motion stills","no full-3D map or GLB completion requirement"],"requirements":["ART-035","GAME-044","GAME-051","ART-017","TECH-034","TECH-049"]},
-    {"order":15,"id":"P1-03","familyId":"G-11-TETRIS-FINAL-ART-V1","name":"Tetris 方块皮肤、井、连击、攻击和 KO","status":"queued","scope":["well/incoming/opponent/KO depth layers","block skins and transparent attack/impact atoms","fast local 2.5D feedback with no camera rotation","DOM/Canvas grid and input clarity remain authoritative"],"requirements":["ART-014","ART-015","ART-016","ART-017","GAME-048","TECH-033","TECH-034","TECH-049"]},
-    {"order":16,"id":"P1-04","familyId":"G-16-XIANGQI-FINAL-ART-V1","name":"Xiangqi 棋盘、完整棋子、将军、棋钟和复盘","status":"queued","scope":["quiet layered board and contact shadows","complete transparent piece atoms","check/last-move/replay semantic focus VFX","restrained 2.5D camera; no GLB completion requirement"],"requirements":["ART-017","GAME-052","TECH-049"]},
-    {"order":17,"id":"P1-05","familyId":"P-SHOP-COMPLETE-ART-V1","name":"Shop 商品、稀有度、预览地台和购买反馈","status":"queued","requirements":["UI-021","ECO-013","ECO-014","ECO-015","ECO-016","ECO-029","ART-026","ART-027","TECH-033","TECH-034"]},
-    {"order":18,"id":"P1-06","familyId":"P-COMMUNITY-REPLAY-TOURNAMENT-CARDS-V1","name":"Playline、Replay、赛事与 OG 分享卡","status":"queued","requirements":["SOC-032","SOC-033","GAME-029","GAME-030","GAME-031","UI-024","UI-035","ECO-018","ECO-019","ECO-028"]},
-    {"order":19,"id":"P1-07","familyId":"P-AI-DIFFICULTY-VISUAL-V1","name":"AI 简单/普通/困难三档与 AI 席位视觉","status":"queued","requirements":["ART-018","GAME-005","GAME-007","SOC-002"]},
-    {"order":20,"id":"P1-08","familyId":"P-HONRU-EDGE-CURSOR-V1","name":"Honru 页面边缘姿态与鼠标光标","status":"queued","scope":["idle/hover/attention/enter-game/result spatial-guide states","pointer gaze driven by code rather than frame sprites","reuse approved Honru identity and Q-version ghost hands","static/reduced-motion fallback"],"requirements":["ART-022","ART-023","UI-012","UI-017","UI-018","TECH-054"]},
-    {"order":21,"id":"P1-09","familyId":"P-IDENTITY-BADGE-SYSTEM-V1","name":"排行榜、成就、收藏、赛事与身份徽章","status":"queued","requirements":["ART-027","ECO-017","ECO-018","ECO-019","ECO-020","ECO-028","GAME-029","UI-025"]},
-    {"order":22,"id":"P2-01","familyId":"P-SEASONAL-BACKGROUNDS-V1","name":"赛季背景包","status":"queued","requirements":["ART-021","ECO-021","ECO-022","SOC-024"]},
-    {"order":23,"id":"P2-02","familyId":"P-HONRU-SEASONAL-V1","name":"节日与活动限定 Honru","status":"queued","requirements":["ART-005","ART-022","ART-023","ART-024","ART-025"]},
-    {"order":24,"id":"P2-03","familyId":"P-COLLECTIBLE-STICKER-BOOK-V1","name":"可收藏贴纸册美术；持久收藏能力另行归类","status":"queued","requirements":["ART-024","ART-025"]},
-    {"order":25,"id":"P2-04","familyId":"P-PERSONAL-HOME-SCENE-V1","name":"个人 Home 小场景或桌面岛","status":"queued","scope":["personal background/midground/foreground scene layers","static/reduced/mobile variants","no real-time 3D requirement"],"requirements":["UI-011","ART-021"]},
-    {"order":26,"id":"P2-05","familyId":"G-SPECTATOR-CAMERA-ADVANCED-V1","name":"高级观战镜头","status":"queued","scope":["2.5D overview/focus/impact/result presets","neutral spectator composition","no rule authority and no mandatory 3D camera"],"requirements":["GAME-028","TECH-049"]},
-    {"order":27,"id":"P2-06","familyId":"P-REPLAY-CINEMATIC-V1","name":"Replay 电影式演出","status":"queued","scope":["2.5D layered replay beats","reversible GSAP Timeline consumption","static key-frame fallback","Replay facts remain authoritative data"],"requirements":["GAME-030","GAME-031","SOC-032","TECH-049","TECH-054"]},
-    {"order":28,"id":"P2-07","familyId":"P-GLB-CHARACTER-PROP-EXPANSION-V1","name":"可选 Renderer/GLB 角色与道具实验（冻结）","status":"queued_frozen_optional_experiment","executionDisposition":"FROZEN_UNTIL_MEASURED_25D_DEMO_GAP","scope":["not current mainline","retain stable requirement identity","reconsider only after Gomoku 2.5D demo visual/package/FPS/memory/input/a11y evidence","never remove DOM/CSS/Canvas fallback"],"requirements":["TECH-036","TECH-049","SOC-031","ECO-029","ART-017","ART-036"]},
-    {"order":29,"id":"P2-08","familyId":"P-AUDIO-SPECTRUM-ART-V1","name":"主题音效与视觉频谱；音频系统能力另行归类","status":"queued","requirements":[]},
-    {"order":30,"id":"P2-09","familyId":"P-SOCIAL-SHARE-TEMPLATES-V1","name":"社交分享模板","status":"queued","requirements":["SOC-033","GAME-030"]},
-    {"order":31,"id":"P2-10","familyId":"P-TOURNAMENT-BROADCAST-OVERLAY-V1","name":"赛事直播 Overlay；真正直播能力另行归类","status":"queued","requirements":["GAME-028","GAME-029","UI-034"]},
-    {"order":32,"id":"P2-11","familyId":"P-SHOP-LIMITED-SETS-V1","name":"商店限定套装","status":"queued","requirements":["UI-021","ECO-015","ECO-021","ECO-022","ECO-029"]},
-    {"order":33,"id":"P2-12","familyId":"P-PROFILE-ADAPTIVE-HERO-V1","name":"按常玩游戏变化的动态 Profile Hero","status":"queued","requirements":["UI-011","UI-025","ART-021","ECO-017"]}
+    {
+      "order": 1,
+      "id": "P0-01",
+      "familyId": "P-AUTH-LAUNCH-ART-V1",
+      "name": "认证页主视觉与启动 Loading",
+      "status": "implemented_owner_cleared_release_evidence_pending",
+      "completion": {
+        "sourceAndRuntimePercent": 100,
+        "localImplementationPercent": 100,
+        "machineEvidencePercent": 100,
+      "localVisibleEvidencePercent": 100,
+        "realEnvironmentPercent": 0,
+        "releasePercent": 0
+      },
+      "deliverables": {
+        "runtimeAssetIds": 5,
+        "runtimeVariants": 48,
+        "sourceMasters": 23,
+        "reviewBoards": 3,
+        "runtimeBytes": 533561
+      },
+      "evidence": [
+        "art-source/platform/auth/ghost-wake-v1/asset-family-manifest-v1.json",
+        "art-source/platform/auth/ghost-wake-v1/PROMPT_AND_PROVENANCE.md",
+        "art-source/platform/auth/ghost-wake-v1/TECHNICAL_REVIEW_Reviewer_A.md",
+        "art-source/platform/auth/ghost-wake-v1/OWNER_AUTHORIZED_ART_CLEARANCE.md",
+        "art-source/production/ghost-game-art-program-v1/P0-01_LOCAL_ACCEPTANCE.md"
+      ],
+      "scope": [
+        "auth light/dark desktop/mobile hero",
+        "login/register/legacy/guest states",
+        "Honru welcome/wait/error/connecting/recovered",
+        "auth status icons",
+        "first-login guide",
+        "PWA splash/maskable/offline launch"
+      ],
+      "requirements": [
+        "ART-002",
+        "ART-003",
+        "ART-004",
+        "ART-005",
+        "ART-006",
+        "ART-007",
+        "ART-008",
+        "ART-009",
+        "ART-010",
+        "ART-011",
+        "ART-031",
+        "ART-032",
+        "UI-001",
+        "UI-002",
+        "UI-003",
+        "UI-008",
+        "TECH-007",
+        "TECH-033",
+        "TECH-037"
+      ]
+    },
+    {
+      "order": 2,
+      "id": "P0-02",
+      "familyId": "P-PLATFORM-SCENES-V1",
+      "name": "Home/Games/Room/Playline 平台动态背景",
+      "status": "implemented_owner_cleared_release_evidence_pending",
+      "completion": {
+        "sourceAndRuntimePercent": 100,
+        "localImplementationPercent": 100,
+        "machineEvidencePercent": 100,
+        "localVisibleEvidencePercent": 100,
+        "realEnvironmentPercent": 0,
+        "releasePercent": 0
+      },
+      "deliverables": {
+        "runtimeAssetIds": 1,
+        "runtimeVariants": 80,
+        "sourceMasters": 48,
+        "reviewBoards": 4,
+        "runtimeBytes": 1259316
+      },
+      "evidence": [
+        "art-source/platform/scenes/signal-worlds-v1/asset-family-manifest-v1.json",
+        "art-source/platform/scenes/signal-worlds-v1/PROMPT_AND_PROVENANCE.md",
+        "art-source/platform/scenes/signal-worlds-v1/TECHNICAL_REVIEW_Reviewer_A.md",
+        "art-source/platform/scenes/signal-worlds-v1/OWNER_AUTHORIZED_ART_CLEARANCE.md",
+        "art-source/production/ghost-game-art-program-v1/P0-02_LOCAL_ACCEPTANCE.md",
+        "qa/platform-scenes-contract.js"
+      ],
+      "scope": [
+        "four route scene masters",
+        "desktop/mobile/poster/mini",
+        "layered far/mid/foreground",
+        "static/reduced/low-bandwidth fallbacks"
+      ],
+      "requirements": [
+        "ART-021",
+        "UI-006",
+        "UI-007",
+        "UI-011",
+        "UI-023",
+        "TECH-033",
+        "TECH-034",
+        "TECH-049"
+      ]
+    },
+    {
+      "order": 3,
+      "id": "P0-03",
+      "familyId": "P-GAME-STAGE-SHARED-ART-V1",
+      "name": "统一 Game Stage 舞台与共享事件 VFX",
+      "status": "implemented_owner_cleared_release_evidence_pending",
+      "completion": {
+        "sourceAndRuntimePercent": 100,
+        "localImplementationPercent": 100,
+        "machineEvidencePercent": 100,
+        "localVisibleEvidencePercent": 0,
+        "realEnvironmentPercent": 0,
+        "releasePercent": 0
+      },
+      "deliverables": {
+        "runtimeAssetIds": 1,
+        "runtimeVariants": 22,
+        "sourceMasters": 11,
+        "reviewBoards": 1,
+        "runtimeBytes": 165048
+      },
+      "evidence": [
+        "art-source/platform/game-stage/shared-v1/asset-family-manifest-v1.json",
+        "art-source/platform/game-stage/shared-v1/PROMPT_AND_PROVENANCE.md",
+        "art-source/platform/game-stage/shared-v1/TECHNICAL_REVIEW_Reviewer_A.md",
+        "art-source/platform/game-stage/shared-v1/OWNER_AUTHORIZED_ART_CLEARANCE.md",
+        "art-source/production/ghost-game-art-program-v1/P0-03_LOCAL_ACCEPTANCE.md",
+        "qa/game-stage-art-contract.js"
+      ],
+      "scope": [
+        "stage shell",
+        "seat rail",
+        "command tray",
+        "spectator base",
+        "status lamps/rings/badges",
+        "nine semantic event VFX",
+        "2.5D Game Stage primary consumption; renderer-neutral semantic events"
+      ],
+      "requirements": [
+        "ART-013",
+        "ART-015",
+        "ART-016",
+        "ART-017",
+        "GAME-019",
+        "GAME-042",
+        "GAME-043",
+        "GAME-048",
+        "GAME-049",
+        "GAME-050",
+        "GAME-051",
+        "GAME-052",
+        "TECH-049",
+        "TECH-054"
+      ]
+    },
+    {
+      "order": 4,
+      "id": "P0-04",
+      "familyId": "P-MODAL-ILLUSTRATION-V1",
+      "name": "全套 Modal Header Illustration",
+      "status": "implemented_owner_cleared_release_evidence_pending",
+      "completion": {
+        "sourceAndRuntimePercent": 100,
+        "localImplementationPercent": 100,
+        "machineEvidencePercent": 100,
+        "localVisibleEvidencePercent": 0,
+        "realEnvironmentPercent": 0,
+        "releasePercent": 0
+      },
+      "deliverables": {
+        "runtimeAssetIds": 1,
+        "runtimeVariants": 324,
+        "sourceMasters": 27,
+        "reviewBoards": 4,
+        "runtimeBytes": 2112306
+      },
+      "evidence": [
+        "art-source/platform/modal/illustrations-v1/asset-family-manifest-v1.json",
+        "art-source/platform/modal/illustrations-v1/PROMPT_AND_PROVENANCE.md",
+        "art-source/platform/modal/illustrations-v1/TECHNICAL_REVIEW_Reviewer_A.md",
+        "art-source/platform/modal/illustrations-v1/OWNER_AUTHORIZED_ART_CLEARANCE.md",
+        "art-source/production/ghost-game-art-program-v1/P0-04_LOCAL_ACCEPTANCE.md",
+        "qa/modal-art-contract.js"
+      ],
+      "scope": [
+        "all 27 attachment modal/state semantics",
+        "512 transparent masters",
+        "160/240/320 runtime",
+        "neutral/success/warning/error",
+        "no-text/static fallback"
+      ],
+      "requirements": [
+        "ART-005",
+        "ART-016",
+        "ART-025",
+        "ART-026",
+        "UI-019",
+        "UI-020",
+        "UI-021",
+        "UI-024",
+        "UI-025",
+        "UI-032",
+        "UI-035",
+        "UI-037"
+      ]
+    },
+    {
+      "order": 5,
+      "id": "P0-05",
+      "familyId": "P-LOADING-STATE-ART-V1",
+      "name": "Loading、Empty、Offline、Error 与进度视觉",
+      "status": "implemented_owner_cleared_release_evidence_pending",
+      "completion": {
+        "sourceAndRuntimePercent": 100,
+        "localImplementationPercent": 100,
+        "machineEvidencePercent": 100,
+        "localVisibleEvidencePercent": 0,
+        "realEnvironmentPercent": 0,
+        "releasePercent": 0
+      },
+      "deliverables": {
+        "runtimeAssetIds": 1,
+        "runtimeVariants": 36,
+        "sourceMasters": 12,
+        "reviewBoards": 1,
+        "runtimeBytes": 268762,
+        "contexts": 22,
+        "progressSemantics": 9
+      },
+      "evidence": [
+        "art-source/platform/loading/state-art-v1/asset-family-manifest-v1.json",
+        "art-source/platform/loading/state-art-v1/PROMPT_AND_PROVENANCE.md",
+        "art-source/platform/loading/state-art-v1/TECHNICAL_REVIEW_Reviewer_A.md",
+        "art-source/platform/loading/state-art-v1/OWNER_AUTHORIZED_ART_CLEARANCE.md",
+        "art-source/production/ghost-game-art-program-v1/P0-05_LOCAL_ACCEPTANCE.md",
+        "qa/loading-art-contract.js"
+      ],
+      "scope": [
+        "22 loading/recovery contexts",
+        "fullscreen/page/six-game/retry families",
+        "nine progress semantics",
+        "DOM/CSS numeric fill retained"
+      ],
+      "requirements": [
+        "TECH-033",
+        "TECH-034",
+        "TECH-049",
+        "UI-023",
+        "UI-031",
+        "UI-032",
+        "GAME-040",
+        "SOC-029"
+      ]
+    },
+    {
+      "order": 6,
+      "id": "P0-06",
+      "familyId": "G-02-GOMOKU-FINAL-ART-V1",
+      "name": "五子棋最终棋盘、棋子、材质和反馈",
+      "status": "implemented_owner_cleared_release_evidence_pending",
+      "completion": {
+        "sourceAndRuntimePercent": 100,
+        "localImplementationPercent": 100,
+        "machineEvidencePercent": 100,
+        "localVisibleEvidencePercent": 0,
+        "realEnvironmentPercent": 0,
+        "releasePercent": 0
+      },
+      "deliverables": {
+        "runtimeAssetIds": 1,
+        "runtimeVariants": 36,
+        "sourceMasters": 18,
+        "reviewBoards": 1,
+        "runtimeBytes": 477912,
+        "boardThemes": 4,
+        "pieceMaterials": 5,
+        "semanticVfx": 7,
+        "cameraPresets": 2
+      },
+      "evidence": [
+        "art-source/games/gomoku/final-art-v1/asset-family-manifest-v1.json",
+        "art-source/games/gomoku/final-art-v1/PROMPT_AND_PROVENANCE.md",
+        "art-source/games/gomoku/final-art-v1/TECHNICAL_REVIEW_Reviewer_A.md",
+        "art-source/games/gomoku/final-art-v1/OWNER_AUTHORIZED_ART_CLEARANCE.md",
+        "art-source/production/ghost-game-art-program-v1/P0-06_LOCAL_ACCEPTANCE.md",
+        "qa/gomoku-final-art-contract.js"
+      ],
+      "scope": [
+        "four board themes",
+        "five piece materials",
+        "last move/win/draw/thinking/spectate/reconnect VFX",
+        "desktop/mobile camera",
+        "first 2.5D demo art baseline",
+        "CSS/Canvas 2.5D primary; existing Three renderer optional compatibility"
+      ],
+      "requirements": [
+        "ART-033",
+        "GAME-042",
+        "GAME-048",
+        "ART-017",
+        "TECH-049"
+      ]
+    },
+    {
+      "order": 7,
+      "id": "P0-07",
+      "familyId": "G-07-LUDO-FINAL-ART-V1",
+      "name": "飞行棋最终棋盘、飞机、骰子和领奖台",
+      "status": "implemented_owner_cleared_release_evidence_pending",
+      "completion": {
+        "sourceAndRuntimePercent": 100,
+        "localImplementationPercent": 100,
+        "machineEvidencePercent": 100,
+        "localVisibleEvidencePercent": 0,
+        "realEnvironmentPercent": 0,
+        "releasePercent": 0
+      },
+      "deliverables": {
+        "runtimeAssetIds": 1,
+        "runtimeVariants": 68,
+        "sourceMasters": 34,
+        "reviewBoards": 2,
+        "runtimeBytes": 1163616,
+        "boardThemes": 4,
+        "factionPoseAircraft": 12,
+        "routeAtoms": 3,
+        "dieAtlases": 1,
+        "semanticVfx": 5,
+        "podiums": 3,
+        "skins": 4,
+        "cameraPresets": 2
+      },
+      "evidence": [
+        "art-source/games/ludo/final-art-v1/asset-family-manifest-v1.json",
+        "art-source/games/ludo/final-art-v1/PROMPT_AND_PROVENANCE.md",
+        "art-source/games/ludo/final-art-v1/SKILL_ROUTING.md",
+        "art-source/games/ludo/final-art-v1/TECHNICAL_REVIEW_Reviewer_A.md",
+        "art-source/games/ludo/final-art-v1/OWNER_AUTHORIZED_ART_CLEARANCE.md",
+        "art-source/production/ghost-game-art-program-v1/P0-07_LOCAL_ACCEPTANCE.md",
+        "qa/ludo-final-art-contract.js"
+      ],
+      "scope": [
+        "four board themes with four airports and frozen 52-cell route",
+        "four factions and twelve aircraft pose atoms",
+        "three route atoms and six-face die atlas",
+        "five semantic VFX",
+        "2/3/4-player podiums",
+        "four skins and desktop/mobile camera presets",
+        "transparent 2.5D route/aircraft/podium atoms",
+        "Wave A/CSS/DOM primary; existing procedural Ghost3D optional compatibility"
+      ],
+      "requirements": [
+        "ART-034",
+        "GAME-043",
+        "GAME-049",
+        "ART-017",
+        "TECH-049"
+      ]
+    },
+    {
+      "order": 8,
+      "id": "P0-08",
+      "familyId": "P-HONRU-CONTEXT-REACTIONS-V1",
+      "name": "Honru 局内投掷、命中、上下文和结算扩展",
+      "status": "implemented_owner_cleared_release_evidence_pending",
+      "completion": {
+        "sourceAndRuntimePercent": 100,
+        "localImplementationPercent": 100,
+        "machineEvidencePercent": 100,
+        "localVisibleEvidencePercent": 0,
+        "realEnvironmentPercent": 0,
+        "releasePercent": 0
+      },
+      "deliverables": {
+        "runtimeAssetIds": 1,
+        "runtimeVariants": 17,
+        "sourceMasters": 32,
+        "reviewBoards": 3,
+        "runtimeBytes": 629746,
+        "contextStates": 16,
+        "quickVisualCells": 16,
+        "quickProtocolIds": 6
+      },
+      "evidence": [
+        "art-source/brand/ghost-game/honru/context-reactions-v1/asset-family-manifest-v1.json",
+        "art-source/brand/ghost-game/honru/context-reactions-v1/PROMPT_AND_PROVENANCE.md",
+        "art-source/brand/ghost-game/honru/context-reactions-v1/SKILL_ROUTING.md",
+        "art-source/brand/ghost-game/honru/context-reactions-v1/TECHNICAL_REVIEW_Reviewer_A.md",
+        "art-source/brand/ghost-game/honru/context-reactions-v1/OWNER_AUTHORIZED_ART_CLEARANCE.md",
+        "art-source/production/ghost-game-art-program-v1/P0-08_LOCAL_ACCEPTANCE.md",
+        "qa/honru-context-reactions-v1.js"
+      ],
+      "scope": [
+        "16 context states",
+        "16 quick visual stickers mapped to six stable protocol IDs",
+        "celebration/spectator/rematch reactions",
+        "2.5D spatial-guide consumption without changing approved Honru identity",
+        "atlas/runtime/fallback/cleanup"
+      ],
+      "requirements": [
+        "ART-005",
+        "ART-024",
+        "ART-025",
+        "UI-035",
+        "SOC-017"
+      ]
+    },
+    {
+      "order": 9,
+      "id": "P0-09",
+      "familyId": "P-PROGRESSION-FEEDBACK-ART-V1",
+      "name": "Reward、XP、成就、任务与 G Coins 反馈",
+      "status": "implemented_owner_cleared_release_evidence_pending",
+      "completion": {
+        "sourceAndRuntimePercent": 100,
+        "localImplementationPercent": 100,
+        "machineEvidencePercent": 100,
+        "localVisibleEvidencePercent": 0,
+        "realEnvironmentPercent": 0,
+        "releasePercent": 0
+      },
+      "deliverables": {
+        "runtimeAssetIds": 1,
+        "runtimeVariants": 27,
+        "sourceMasters": 2,
+        "sourceAtoms": 9,
+        "reviewBoards": 1,
+        "runtimeBytes": 310540,
+        "semanticIds": 9,
+        "sizes": [
+          96,
+          160,
+          256
+        ]
+      },
+      "evidence": [
+        "art-source/platform/progression/feedback-v1/asset-family-manifest-v1.json",
+        "art-source/platform/progression/feedback-v1/PROMPT_AND_PROVENANCE.md",
+        "art-source/platform/progression/feedback-v1/SKILL_ROUTING.md",
+        "art-source/platform/progression/feedback-v1/TECHNICAL_REVIEW_Reviewer_A.md",
+        "art-source/platform/progression/feedback-v1/OWNER_AUTHORIZED_ART_CLEARANCE.md",
+        "art-source/production/ghost-game-art-program-v1/P0-09_LOCAL_ACCEPTANCE.md",
+        "scripts/generate-progression-feedback-art-v1.js",
+        "public/src/core/06-assets.js",
+        "public/src/ui/07-roster.js",
+        "public/src/core/04-social.js",
+        "public/src/core/02-app-shell.js",
+        "qa/progression-feedback-art-v1.js"
+      ],
+      "scope": [
+        "reward breakdown header and reason rows",
+        "G Coins and XP decorative metric atoms",
+        "finite 2.5D coin/xp/level-up presentation hooks",
+        "task/achievement/win-streak/collection/unlock profile and modal states",
+        "static/reduced-motion/CSS/text fallback"
+      ],
+      "requirements": [
+        "ART-026",
+        "ECO-016",
+        "ECO-018",
+        "ECO-019",
+        "ECO-020",
+        "ECO-028",
+        "UI-011",
+        "UI-021",
+        "UI-025"
+      ]
+    },
+    {
+      "order": 10,
+      "id": "P0-10",
+      "familyId": "P-PLAYER-CHARACTER-LAYERED-V1",
+      "name": "Player Character 七槽基础分层包",
+      "status": "implemented_owner_cleared_release_evidence_pending",
+      "completion": {
+        "sourceAndRuntimePercent": 100,
+        "localImplementationPercent": 100,
+        "machineEvidencePercent": 100,
+        "localVisibleEvidencePercent": 0,
+        "realEnvironmentPercent": 0,
+        "releasePercent": 0
+      },
+      "deliverables": {
+        "runtimeAssetIds": 1,
+        "runtimeVariants": 118,
+        "sourceMasters": 60,
+        "sourceLayers": 52,
+        "sourcePoses": 6,
+        "reviewBoards": 2,
+        "runtimeBytes": 283020,
+        "slotCount": 52,
+        "poses": 6,
+        "compactActions": 3
+      },
+      "evidence": [
+        "art-source/player-character/layered-v1/asset-family-manifest-v1.json",
+        "art-source/player-character/layered-v1/PROMPT_AND_PROVENANCE.md",
+        "art-source/player-character/layered-v1/SKILL_ROUTING.md",
+        "art-source/player-character/layered-v1/TECHNICAL_REVIEW_Reviewer_A.md",
+        "art-source/player-character/layered-v1/OWNER_AUTHORIZED_ART_CLEARANCE.md",
+        "art-source/production/ghost-game-art-program-v1/P0-10_LOCAL_ACCEPTANCE.md",
+        "scripts/generate-player-character-layered-v1.js",
+        "public/src/core/06-assets.js",
+        "public/src/ui/07-roster.js",
+        "public/src/games/monopoly-character-presentation.js",
+        "public/src/games/monopoly.js",
+        "qa/player-character-layered-art-v1.js"
+      ],
+      "scope": [
+        "body 4",
+        "face 6",
+        "hair 8",
+        "top 10",
+        "bottom 6",
+        "footwear 6",
+        "accessory 12",
+        "six poses",
+        "idle/walk/celebrate compact actions",
+        "transparent 2.5D layers; no GLB/bones"
+      ],
+      "requirements": [
+        "SOC-031",
+        "ECO-029",
+        "UI-011",
+        "UI-025",
+        "GAME-045",
+        "ART-036"
+      ]
+    },
+    {
+      "order": 11,
+      "id": "P0-11",
+      "familyId": "P-AVATAR-FRAME-EFFECT-V1",
+      "name": "Avatar Frame 与 Effect 真实素材化",
+      "status": "implemented_owner_cleared_release_evidence_pending",
+      "completion": {
+        "sourceAndRuntimePercent": 100,
+        "localImplementationPercent": 100,
+        "machineEvidencePercent": 100,
+        "localVisibleEvidencePercent": 0,
+        "realEnvironmentPercent": 0,
+        "releasePercent": 0
+      },
+      "deliverables": {
+        "runtimeAssetIds": 1,
+        "runtimeVariants": 192,
+        "sourceMasters": 48,
+        "reviewBoards": 3,
+        "runtimeBytes": 533844,
+        "frames": 8,
+        "effects": 8,
+        "sizes": [
+          44,
+          64,
+          96,
+          192
+        ],
+        "modes": [
+          "static",
+          "dynamic",
+          "high-contrast"
+        ]
+      },
+      "evidence": [
+        "art-source/platform/identity/avatar-frame-effect-v1/asset-family-manifest-v1.json",
+        "art-source/platform/identity/avatar-frame-effect-v1/PROMPT_AND_PROVENANCE.md",
+        "art-source/platform/identity/avatar-frame-effect-v1/SKILL_ROUTING.md",
+        "art-source/platform/identity/avatar-frame-effect-v1/TECHNICAL_REVIEW_Reviewer_A.md",
+        "art-source/platform/identity/avatar-frame-effect-v1/MACHINE_VISUAL_REVIEW.md",
+        "art-source/platform/identity/avatar-frame-effect-v1/OWNER_AUTHORIZED_ART_CLEARANCE.md",
+        "art-source/platform/identity/avatar-frame-effect-v1/review/avatar-frame-effect-small-runtime-review-v1.png",
+        "qa/avatar-frame-effect-art-v1.js",
+        "qa/avatar-frame-effect-runtime.js",
+        "scripts/generate-avatar-frame-effect-v1.js",
+        "public/src/core/06-assets.js",
+        "public/src/core/10-identity-presentation.js",
+        "public/src/ui/07-roster.js",
+        "public/index-template.html",
+        "server/index.js"
+      ],
+      "scope": [
+        "eight frames",
+        "eight effects",
+        "44/64/96/192",
+        "static/dynamic/high-contrast/reduced-motion",
+        "unified crop/light/playback",
+        "44/64 composited light/dark small-size review",
+        "Profile/Shop/Player Seat/DM/Playline identity presentation",
+        "effect catalogue IDs 5–8 reuse existing server-authoritative purchase/owned/requestId path"
+      ],
+      "requirements": [
+        "ART-020",
+        "UI-022",
+        "SOC-001",
+        "ECO-007",
+        "ECO-008",
+        "ECO-013",
+        "ECO-016"
+      ]
+    },
+    {
+      "order": 12,
+      "id": "P0-12",
+      "familyId": "P-GAME-ICON-SYSTEM-V2",
+      "name": "Home 六款游戏小图标与跨页面状态体系",
+      "status": "implemented_owner_cleared_release_evidence_pending",
+      "completion": {
+        "sourceAndRuntimePercent": 100,
+        "localImplementationPercent": 100,
+        "machineEvidencePercent": 100,
+        "localVisibleEvidencePercent": 0,
+        "realEnvironmentPercent": 0,
+        "releasePercent": 0
+      },
+      "deliverables": {
+        "runtimeAssetIds": 1,
+        "runtimeVariants": 72,
+        "sourceMasters": 36,
+        "reviewBoards": 4,
+        "runtimeBytes": 142914,
+        "gameIcons": 6,
+        "markers": 12,
+        "iconSizes": [
+          44,
+          64,
+          96
+        ],
+        "markerSizes": [
+          24,
+          32,
+          44
+        ]
+      },
+      "evidence": [
+        "art-source/platform/game-icons/cartoon-v2/asset-family-manifest-v2.json",
+        "art-source/platform/game-icons/cartoon-v2/PROMPT_AND_PROVENANCE.md",
+        "art-source/platform/game-icons/cartoon-v2/SKILL_ROUTING.md",
+        "art-source/platform/game-icons/cartoon-v2/TECHNICAL_REVIEW_Reviewer_A.md",
+        "art-source/platform/game-icons/cartoon-v2/MACHINE_VISUAL_REVIEW.md",
+        "art-source/platform/game-icons/cartoon-v2/OWNER_AUTHORIZED_ART_CLEARANCE.md",
+        "art-source/production/ghost-game-art-program-v1/P0-12_LOCAL_ACCEPTANCE.md",
+        "scripts/generate-game-icon-system-v2.js",
+        "public/src/core/06-assets.js",
+        "public/index-template.html",
+        "qa/game-icon-system-v2.js",
+        "qa/game-icon-system-runtime.js",
+        "qa/art-generator-exclusive-lock.js"
+      ],
+      "scope": [
+        "six icons 44/64/96",
+        "cover crop/theme icon/selected 2.5D object",
+        "12 generated markers; current consumers ai/online/ready/waiting/live/ranking",
+        "Home/Games/Profile/Game Stage/Room presentation consumers",
+        "Emoji/CSS/legacy cover fallback",
+        "cross-family Manifest/Catalog registry lock"
+      ],
+      "requirements": [
+        "ART-012",
+        "ART-014",
+        "ART-027",
+        "UI-011",
+        "UI-019",
+        "UI-020",
+        "TECH-031",
+        "TECH-033"
+      ]
+    },
+    {
+      "order": 13,
+      "id": "P1-01",
+      "familyId": "G-15-MONOPOLY-FINAL-ART-V1",
+      "name": "Monopoly 城市棋盘、建筑、角色、卡牌与反馈",
+      "status": "implemented_owner_cleared_release_evidence_pending",
+      "completion": {
+        "sourceAndRuntimePercent": 100,
+        "localImplementationPercent": 100,
+        "machineEvidencePercent": 100,
+        "localVisibleEvidencePercent": 100,
+        "realEnvironmentPercent": 0,
+        "releasePercent": 0
+      },
+      "deliverables": {
+        "runtimeAssetIds": 1,
+        "runtimeVariants": 46,
+        "sourceMasters": 23,
+        "reviewBoards": 2,
+        "runtimeBytes": 429072,
+        "boardLayers": 3,
+        "objectAtoms": 9,
+        "semanticVfx": 9,
+        "cameraPresets": 2,
+        "reusedCharacterPoses": 4
+      },
+      "evidence": [
+        "art-source/games/monopoly/final-art-v1/asset-family-manifest-v1.json",
+        "art-source/games/monopoly/final-art-v1/source-extraction-manifest-v1.json",
+        "art-source/games/monopoly/final-art-v1/PROMPT_AND_PROVENANCE.md",
+        "art-source/games/monopoly/final-art-v1/SKILL_ROUTING.md",
+        "art-source/games/monopoly/final-art-v1/TECHNICAL_REVIEW_Reviewer_A.md",
+        "art-source/games/monopoly/final-art-v1/OWNER_AUTHORIZED_ART_CLEARANCE.md",
+        "art-source/production/ghost-game-art-program-v1/P1-01_LOCAL_ACCEPTANCE.md",
+        "requirements/active/monopoly-final-art-v1-p1-20260819/execution.json",
+        "requirements/active/monopoly-final-art-v1-p1-20260819/evidence/current-build-monopoly-visible-matrix-20260821.json",
+        "scripts/generate-monopoly-final-art-v1.js",
+        "scripts/generate-monopoly-final-runtime-v1.js",
+        "public/src/core/06-assets.js",
+        "public/src/games/monopoly.js",
+        "public/index-template.html",
+        "qa/monopoly-final-art-contract.js",
+        "qa/game-stage-wave-c-layout.js"
+      ],
+      "scope": [
+        "layered city board and foreground character atoms",
+        "transparent buildings/props/cards/contact shadows",
+        "auction and result semantic VFX",
+        "DOM labels and rule data remain live",
+        "responsive desktop/tablet/phone command ownership repair",
+        "no GLB completion requirement"
+      ],
+      "requirements": [
+        "ART-036",
+        "GAME-045",
+        "GAME-050",
+        "UI-037",
+        "ART-017",
+        "ECO-029",
+        "SOC-031"
+      ]
+    },
+    {
+      "order": 14,
+      "id": "P1-02",
+      "familyId": "G-12-TANK-FINAL-ART-V1",
+      "name": "Tank 本体、地形、掩体、弹道、爆炸与 HUD",
+      "status": "implemented_owner_cleared_release_evidence_pending",
+      "completion": {
+        "sourceAndRuntimePercent": 100,
+        "localImplementationPercent": 100,
+        "machineEvidencePercent": 100,
+        "localVisibleEvidencePercent": 100,
+        "realEnvironmentPercent": 0,
+        "releasePercent": 0
+      },
+      "deliverables": {
+        "runtimeAssetIds": 1,
+        "runtimeVariants": 50,
+        "sourceMasters": 25,
+        "sourceOnlyImageGenBoards": 5,
+        "reviewBoards": 1,
+        "runtimeBytes": 376668,
+        "boardLayers": 3,
+        "objectAtoms": 12,
+        "semanticVfx": 8,
+        "cameraPresets": 2
+      },
+      "evidence": [
+        "art-source/games/tank/final-art-v1/asset-family-manifest-v1.json",
+        "art-source/games/tank/final-art-v1/PROMPT_AND_PROVENANCE.md",
+        "art-source/games/tank/final-art-v1/SKILL_ROUTING.md",
+        "art-source/games/tank/final-art-v1/EXTERNAL_REFERENCE_TRANSMISSION.json",
+        "art-source/games/tank/final-art-v1/TECHNICAL_REVIEW_Reviewer_A.md",
+        "art-source/games/tank/final-art-v1/OWNER_AUTHORIZED_ART_CLEARANCE.md",
+        "art-source/production/ghost-game-art-program-v1/P1-02_LOCAL_ACCEPTANCE.md",
+        "requirements/active/tank-final-art-v1-p1-20260821/execution.json",
+        "requirements/active/tank-final-art-v1-p1-20260821/current-build-tank-visible-matrix-20260821.json",
+        "scripts/generate-tank-final-runtime-v1.js",
+        "public/src/core/06-assets.js",
+        "public/src/games/tank.js",
+        "public/index-template.html",
+        "qa/tank-final-art-contract.js"
+      ],
+      "scope": [
+        "DOM/CSS/Canvas arena background/midground/foreground layers",
+        "transparent tanks/terrain/cover/projectile/impact atoms",
+        "live DOM HUD styling with no baked rule data",
+        "bounded transform/opacity VFX and reduced-motion stills",
+        "no full-3D map or GLB completion requirement"
+      ],
+      "requirements": [
+        "ART-035",
+        "GAME-044",
+        "GAME-051",
+        "ART-017",
+        "TECH-034",
+        "TECH-049"
+      ]
+    },
+    {
+      "order": 15,
+      "id": "P1-03",
+      "familyId": "G-11-TETRIS-FINAL-ART-V1",
+      "name": "Tetris 方块皮肤、井、连击、攻击和 KO",
+      "status": "implemented_owner_cleared_release_evidence_pending",
+      "completion": {
+        "sourceAndRuntimePercent": 100,
+        "localImplementationPercent": 100,
+        "machineEvidencePercent": 100,
+        "localVisibleEvidencePercent": 100,
+        "realEnvironmentPercent": 0,
+        "releasePercent": 0
+      },
+      "deliverables": {
+        "runtimeAssetIds": 1,
+        "runtimeVariants": 50,
+        "sourceMasters": 25,
+        "reviewBoards": 1,
+        "runtimeBytes": 457640,
+        "boardLayers": 3,
+        "objectAtoms": 12,
+        "semanticVfx": 8,
+        "cameraPresets": 2
+      },
+      "evidence": [
+        "art-source/games/tetris/final-art-v1/asset-family-manifest-v1.json",
+        "art-source/games/tetris/final-art-v1/PROMPT_AND_PROVENANCE.md",
+        "art-source/games/tetris/final-art-v1/SKILL_ROUTING.md",
+        "art-source/games/tetris/final-art-v1/EXTERNAL_REFERENCE_TRANSMISSION.json",
+        "art-source/games/tetris/final-art-v1/TECHNICAL_REVIEW_Reviewer_A.md",
+        "art-source/games/tetris/final-art-v1/OWNER_AUTHORIZED_ART_CLEARANCE.md",
+        "art-source/production/ghost-game-art-program-v1/P1-03_LOCAL_ACCEPTANCE.md",
+        "requirements/active/visual-25d-repush-p0-20260819/evidence/current-build-tetris-xiangqi-final-art-20260822.json",
+        "scripts/generate-tetris-final-runtime-v1.js",
+        "public/src/core/06-assets.js",
+        "public/src/games/tetris.js",
+        "qa/tetris-final-art-contract.js"
+      ],
+      "scope": [
+        "well/incoming/opponent/KO depth layers",
+        "block skins and transparent attack/impact atoms",
+        "fast local 2.5D feedback with no camera rotation",
+        "DOM/Canvas grid and input clarity remain authoritative"
+      ],
+      "requirements": [
+        "ART-014",
+        "ART-015",
+        "ART-016",
+        "ART-017",
+        "GAME-048",
+        "TECH-033",
+        "TECH-034",
+        "TECH-049"
+      ]
+    },
+    {
+      "order": 16,
+      "id": "P1-04",
+      "familyId": "G-16-XIANGQI-FINAL-ART-V1",
+      "name": "Xiangqi 棋盘、完整棋子、将军、棋钟和复盘",
+      "status": "implemented_owner_cleared_release_evidence_pending",
+      "completion": {
+        "sourceAndRuntimePercent": 100,
+        "localImplementationPercent": 100,
+        "machineEvidencePercent": 100,
+        "localVisibleEvidencePercent": 100,
+        "realEnvironmentPercent": 0,
+        "releasePercent": 0
+      },
+      "deliverables": {
+        "runtimeAssetIds": 1,
+        "runtimeVariants": 50,
+        "sourceMasters": 25,
+        "reviewBoards": 1,
+        "runtimeBytes": 870410,
+        "boardLayers": 3,
+        "pieceAtoms": 14,
+        "semanticVfx": 6,
+        "cameraPresets": 2
+      },
+      "evidence": [
+        "art-source/games/xiangqi/final-art-v1/asset-family-manifest-v1.json",
+        "art-source/games/xiangqi/final-art-v1/PROMPT_AND_PROVENANCE.md",
+        "art-source/games/xiangqi/final-art-v1/SKILL_ROUTING.md",
+        "art-source/games/xiangqi/final-art-v1/EXTERNAL_REFERENCE_TRANSMISSION.json",
+        "art-source/games/xiangqi/final-art-v1/TECHNICAL_REVIEW_Reviewer_A.md",
+        "art-source/games/xiangqi/final-art-v1/OWNER_AUTHORIZED_ART_CLEARANCE.md",
+        "art-source/production/ghost-game-art-program-v1/P1-04_LOCAL_ACCEPTANCE.md",
+        "requirements/active/visual-25d-repush-p0-20260819/evidence/current-build-tetris-xiangqi-final-art-20260822.json",
+        "scripts/generate-xiangqi-final-runtime-v1.js",
+        "public/src/core/06-assets.js",
+        "public/src/games/xiangqi.js",
+        "qa/xiangqi-final-art-contract.js"
+      ],
+      "scope": [
+        "quiet layered board and contact shadows",
+        "complete transparent piece atoms",
+        "check/last-move/replay semantic focus VFX",
+        "restrained 2.5D camera; no GLB completion requirement"
+      ],
+      "requirements": [
+        "ART-017",
+        "GAME-052",
+        "TECH-049"
+      ]
+    },
+    {
+      "order": 17,
+      "id": "P1-05",
+      "familyId": "P-SHOP-COMPLETE-ART-V1",
+      "name": "Shop 商品、稀有度、预览地台和购买反馈",
+      "status": "implemented_owner_cleared_release_evidence_pending",
+      "completion": {
+        "sourceAndRuntimePercent": 100,
+        "localImplementationPercent": 100,
+        "machineEvidencePercent": 100,
+        "localVisibleEvidencePercent": 100,
+        "realEnvironmentPercent": 0,
+        "releasePercent": 0
+      },
+      "deliverables": {
+        "runtimeAssetIds": 1,
+        "runtimeVariants": 48,
+        "sourceMasters": 24,
+        "reviewBoards": 1,
+        "runtimeBytes": 211010,
+        "rarityFrames": 5,
+        "pedestals": 5,
+        "categoryIcons": 6,
+        "semanticVfx": 6,
+        "cameraPresets": 2
+      },
+      "evidence": [
+        "art-source/platform/shop/complete-art-v1/asset-family-manifest-v1.json",
+        "art-source/platform/shop/complete-art-v1/PROMPT_AND_PROVENANCE.md",
+        "art-source/platform/shop/complete-art-v1/SKILL_ROUTING.md",
+        "art-source/platform/shop/complete-art-v1/EXTERNAL_REFERENCE_TRANSMISSION.json",
+        "art-source/platform/shop/complete-art-v1/TECHNICAL_REVIEW_Reviewer_A.md",
+        "art-source/platform/shop/complete-art-v1/OWNER_AUTHORIZED_ART_CLEARANCE.md",
+        "art-source/production/ghost-game-art-program-v1/P1-05_LOCAL_ACCEPTANCE.md",
+        "scripts/generate-shop-complete-runtime-v1.js",
+        "public/src/core/06-assets.js",
+        "qa/shop-complete-art-contract.js"
+      ],
+      "scope": [
+        "five rarity frames and display pedestals",
+        "six category tab icons and six purchase feedback VFX",
+        "static/reduced-motion fallbacks",
+        "DOM/CSS/Canvas 2.5D presentation with server-authoritative economy"
+      ],
+      "requirements": [
+        "UI-021",
+        "ECO-013",
+        "ECO-014",
+        "ECO-015",
+        "ECO-016",
+        "ECO-029",
+        "ART-026",
+        "ART-027",
+        "TECH-033",
+        "TECH-034"
+      ]
+    },
+    {
+      "order": 18,
+      "id": "P1-06",
+      "familyId": "P-COMMUNITY-REPLAY-TOURNAMENT-CARDS-V1",
+      "name": "Playline、Replay、赛事与 OG 分享卡",
+      "status": "implemented_owner_cleared_release_evidence_pending",
+      "completion": {
+        "sourceAndRuntimePercent": 100,
+        "localImplementationPercent": 100,
+        "machineEvidencePercent": 100,
+        "localVisibleEvidencePercent": 0,
+        "realEnvironmentPercent": 0,
+        "releasePercent": 0
+      },
+      "deliverables": {
+        "runtimeAssetIds": 1,
+        "runtimeVariants": 24,
+        "sourceMasters": 12,
+        "reviewBoards": 1,
+        "runtimeBytes": 253450,
+        "cardSurfaces": 6,
+        "semanticMarks": 4,
+        "ogSize": "1200x630"
+      },
+      "evidence": [
+        "art-source/platform/community-replay-tournament-cards-v1/asset-family-manifest-v1.json",
+        "art-source/platform/community-replay-tournament-cards-v1/PROMPT_AND_PROVENANCE.md",
+        "art-source/platform/community-replay-tournament-cards-v1/SKILL_ROUTING.md",
+        "art-source/platform/community-replay-tournament-cards-v1/EXTERNAL_REFERENCE_TRANSMISSION.json",
+        "art-source/platform/community-replay-tournament-cards-v1/TECHNICAL_REVIEW_Reviewer_A.md",
+        "art-source/platform/community-replay-tournament-cards-v1/MACHINE_VISUAL_REVIEW.md",
+        "art-source/platform/community-replay-tournament-cards-v1/OWNER_AUTHORIZED_ART_CLEARANCE.md",
+        "qa/community-replay-tournament-cards-v1.js",
+        "scripts/generate-community-replay-tournament-cards-v1.js",
+        "public/src/core/06-assets.js",
+        "public/src/core/07-playline.js",
+        "public/src/online/03-websocket.js",
+        "public/index-template.html"
+      ],
+      "requirements": [
+        "SOC-032",
+        "SOC-033",
+        "GAME-029",
+        "GAME-030",
+        "GAME-031",
+        "UI-024",
+        "UI-035",
+        "ECO-018",
+        "ECO-019",
+        "ECO-028"
+      ]
+    },
+    {
+      "order": 19,
+      "id": "P1-07",
+      "familyId": "P-AI-DIFFICULTY-VISUAL-V1",
+      "name": "AI 简单/普通/困难三档与 AI 席位视觉",
+      "status": "implemented_owner_cleared_release_evidence_pending",
+      "completion": {
+        "sourceAndRuntimePercent": 100,
+        "localImplementationPercent": 100,
+        "machineEvidencePercent": 100,
+        "localVisibleEvidencePercent": 0,
+        "realEnvironmentPercent": 0,
+        "releasePercent": 0
+      },
+      "deliverables": {
+        "runtimeAssetIds": 1,
+        "runtimeVariants": 26,
+        "sourceMasters": 13,
+        "reviewBoards": 1,
+        "runtimeBytes": 157404,
+        "difficultyLevels": 3,
+        "seatMedallions": 3,
+        "semanticVfx": 2
+      },
+      "evidence": [
+        "art-source/platform/ai-difficulty/visual-v1/asset-family-manifest-v1.json",
+        "art-source/platform/ai-difficulty/visual-v1/PROMPT_AND_PROVENANCE.md",
+        "art-source/platform/ai-difficulty/visual-v1/SKILL_ROUTING.md",
+        "art-source/platform/ai-difficulty/visual-v1/EXTERNAL_REFERENCE_TRANSMISSION.json",
+        "art-source/platform/ai-difficulty/visual-v1/TECHNICAL_REVIEW_Reviewer_A.md",
+        "art-source/platform/ai-difficulty/visual-v1/MACHINE_VISUAL_REVIEW.md",
+        "art-source/platform/ai-difficulty/visual-v1/OWNER_AUTHORIZED_ART_CLEARANCE.md",
+        "qa/ai-difficulty-visual-v1.js",
+        "scripts/generate-ai-difficulty-visual-v1.js",
+        "public/src/core/06-assets.js",
+        "public/src/core/05-ai-personas.js",
+        "public/src/core/02-app-shell.js",
+        "public/src/online/03-websocket.js",
+        "public/index-template.html"
+      ],
+      "requirements": [
+        "ART-018",
+        "GAME-005",
+        "GAME-007",
+        "SOC-002"
+      ]
+    },
+    {
+      "order": 20,
+      "id": "P1-08",
+      "familyId": "P-HONRU-EDGE-CURSOR-V1",
+      "name": "Honru 页面边缘姿态与鼠标光标",
+      "status": "implemented_owner_cleared_release_evidence_pending",
+      "completion": {
+        "sourceAndRuntimePercent": 100,
+        "localImplementationPercent": 100,
+        "machineEvidencePercent": 100,
+        "localVisibleEvidencePercent": 0,
+        "realEnvironmentPercent": 0,
+        "releasePercent": 0
+      },
+      "deliverables": {
+        "runtimeAssetIds": 1,
+        "runtimeVariants": 18,
+        "sourceMasters": 15,
+        "reviewBoards": 1,
+        "runtimeBytes": 111367,
+        "edgePoses": 3,
+        "cursorStates": 6,
+        "cursorSizes": [
+          32,
+          64
+        ]
+      },
+      "scope": [
+        "three non-blocking page-edge poses for Games/Playline/Profile",
+        "six native browser cursor states on fine pointers",
+        "2.4px maximum code-driven gaze highlight without moving the mascot",
+        "reuse approved Honru identity and Q-version ghost hands",
+        "settings opt-out and static/reduced-motion/system-cursor fallback"
+      ],
+      "requirements": [
+        "ART-022",
+        "ART-023",
+        "UI-012",
+        "UI-017",
+        "UI-018",
+        "TECH-054"
+      ],
+      "evidence": [
+        "art-source/platform/honru-edge-cursor/visual-v1/asset-family-manifest-v1.json",
+        "art-source/platform/honru-edge-cursor/visual-v1/PROMPT_AND_PROVENANCE.md",
+        "art-source/platform/honru-edge-cursor/visual-v1/SKILL_ROUTING.md",
+        "art-source/platform/honru-edge-cursor/visual-v1/EXTERNAL_REFERENCE_TRANSMISSION.json",
+        "art-source/platform/honru-edge-cursor/visual-v1/TECHNICAL_REVIEW_Reviewer_A.md",
+        "art-source/platform/honru-edge-cursor/visual-v1/MACHINE_VISUAL_REVIEW.md",
+        "art-source/platform/honru-edge-cursor/visual-v1/OWNER_AUTHORIZED_ART_CLEARANCE.md",
+        "art-source/production/ghost-game-art-program-v1/P1-08_LOCAL_ACCEPTANCE.md",
+        "scripts/generate-honru-edge-cursor-v1.js",
+        "public/src/core/26-ghost-mascot-motion.js",
+        "public/src/core/06-assets.js",
+        "public/src/core/02-app-shell.js",
+        "public/index-template.html",
+        "qa/honru-edge-cursor-v1.js"
+      ]
+    },
+    {
+      "order": 21,
+      "id": "P1-09",
+      "familyId": "P-IDENTITY-BADGE-SYSTEM-V1",
+      "name": "排行榜、成就、收藏、赛事与身份徽章",
+      "status": "implemented_owner_cleared_release_evidence_pending",
+      "completion": {
+        "sourceAndRuntimePercent": 100,
+        "localImplementationPercent": 100,
+        "machineEvidencePercent": 100,
+        "localVisibleEvidencePercent": 100,
+        "realEnvironmentPercent": 0,
+        "releasePercent": 0
+      },
+      "deliverables": {
+        "runtimeAssetIds": 1,
+        "runtimeVariants": 102,
+        "sourceMasters": 34,
+        "reviewBoards": 1,
+        "runtimeBytes": 143090,
+        "semanticBadges": 34,
+        "semanticDomains": 7,
+        "sizes": [
+          32,
+          48,
+          64
+        ]
+      },
+      "scope": [
+        "four leaderboard rank badges",
+        "eight achievement and four daily-task badges",
+        "five server-authoritative victory-mastery presentation tiers",
+        "four collection rarity and five player-title tiers",
+        "four tournament identity states",
+        "static decorative DOM assets with Emoji/Unicode/text fallback"
+      ],
+      "evidence": [
+        "art-source/platform/identity/badge-system-v1/asset-family-manifest-v1.json",
+        "art-source/platform/identity/badge-system-v1/PROMPT_AND_PROVENANCE.md",
+        "art-source/platform/identity/badge-system-v1/SKILL_ROUTING.md",
+        "art-source/platform/identity/badge-system-v1/EXTERNAL_REFERENCE_TRANSMISSION.json",
+        "art-source/platform/identity/badge-system-v1/TECHNICAL_REVIEW_Reviewer_A.md",
+        "art-source/platform/identity/badge-system-v1/MACHINE_VISUAL_REVIEW.md",
+        "art-source/platform/identity/badge-system-v1/LOCAL_BROWSER_EVIDENCE_20260822.json",
+        "art-source/platform/identity/badge-system-v1/OWNER_AUTHORIZED_ART_CLEARANCE.md",
+        "art-source/production/ghost-game-art-program-v1/P1-09_LOCAL_ACCEPTANCE.md",
+        "scripts/generate-identity-badge-system-v1.js",
+        "public/src/core/06-assets.js",
+        "public/src/core/04-social.js",
+        "public/src/core/02-app-shell.js",
+        "public/src/ui/07-roster.js",
+        "public/src/shop/05-profile.js",
+        "public/src/shop/06-shop.js",
+        "public/src/online/03-websocket.js",
+        "public/index-template.html",
+        "qa/identity-badge-system-v1.js"
+      ],
+      "requirements": [
+        "ART-027",
+        "ECO-017",
+        "ECO-018",
+        "ECO-019",
+        "ECO-020",
+        "ECO-028",
+        "GAME-029",
+        "UI-025"
+      ]
+    },
+    {
+      "order": 22,
+      "id": "P2-01",
+      "familyId": "P-SEASONAL-BACKGROUNDS-V1",
+      "name": "赛季背景包",
+      "status": "implemented_owner_cleared_release_evidence_pending",
+      "completion": {
+        "sourceAndRuntimePercent": 100,
+        "localImplementationPercent": 100,
+        "machineEvidencePercent": 100,
+        "localVisibleEvidencePercent": 0,
+        "realEnvironmentPercent": 0,
+        "releasePercent": 0
+      },
+      "deliverables": {
+        "runtimeAssetIds": 1,
+        "catalogItems": 8,
+        "runtimeVariants": 20,
+        "sourceMasters": 4,
+        "reviewBoards": 1,
+        "runtimeBytes": 2022638,
+        "seasons": 4
+      },
+      "scope": [
+        "spring/summer/autumn/winter no-text Ghost-native source masters",
+        "desktop/mobile/poster/mini/animated derivatives",
+        "existing Shop/Profile Premium Background consumption",
+        "presentation-only catalogue extension; no season clock, Battle Pass, Remote Config, reward or social ranking capability"
+      ],
+      "evidence": [
+        "art-source/platform/backgrounds/seasonal-v1/asset-family-manifest-v1.json",
+        "art-source/platform/backgrounds/seasonal-v1/PROMPT_AND_PROVENANCE.md",
+        "art-source/platform/backgrounds/seasonal-v1/SKILL_ROUTING.md",
+        "art-source/platform/backgrounds/seasonal-v1/TECHNICAL_REVIEW_Reviewer_A.md",
+        "art-source/platform/backgrounds/seasonal-v1/MACHINE_VISUAL_REVIEW.md",
+        "art-source/platform/backgrounds/seasonal-v1/OWNER_AUTHORIZED_ART_CLEARANCE.md",
+        "art-source/production/ghost-game-art-program-v1/P2-01_LOCAL_ACCEPTANCE.md",
+        "scripts/build-seasonal-backgrounds-v1.py",
+        "public/src/core/06-assets.js",
+        "public/src/shop/06-shop.js",
+        "server/index.js",
+        "shared/progression/collection-rarity-catalog.js",
+        "qa/seasonal-backgrounds-v1.js"
+      ],
+      "requirements": [
+        "ART-021",
+        "ECO-021",
+        "ECO-022",
+        "SOC-024"
+      ]
+    },
+    {
+      "order": 23,
+      "id": "P2-02",
+      "familyId": "P-HONRU-SEASONAL-V1",
+      "name": "节日与活动限定 Honru",
+      "status": "implemented_owner_cleared_release_evidence_pending",
+      "completion": {
+        "sourceAndRuntimePercent": 100,
+        "localImplementationPercent": 100,
+        "machineEvidencePercent": 100,
+        "localVisibleEvidencePercent": 0,
+        "realEnvironmentPercent": 0,
+        "releasePercent": 0
+      },
+      "deliverables": {
+        "runtimeAssetIds": 1,
+        "runtimeVariants": 16,
+        "sourceMasters": 4,
+        "reviewBoards": 1,
+        "runtimeBytes": 147572,
+        "editions": 4
+      },
+      "scope": [
+        "spring-bloom/summer-cloud/autumn-leaf/winter-star transparent Honru source masters",
+        "current build-time active edition only; no date/liveops/commerce capability",
+        "idle/ready/celebration presentation-only seasonal override; critical context states remain base Honru",
+        "deterministic WebP derivatives, strict fallback and single reversible feature flag"
+      ],
+      "outOfScope": [
+        "date/timezone/season clock",
+        "LiveOps/Remote Config/Battle Pass/tasks/rewards/ranking/price/owned",
+        "new Emoji/Context/Protocol IDs",
+        "cursor/edge seasonalization",
+        "Direct Chat/Match Chat/Rule/Authority/Reward/Replay/AI/Analytics/Supabase",
+        "P2-03 sticker book"
+      ],
+      "budget": {
+        "runtimeBytes": 147572,
+        "runtimeByteBudget": 2097152,
+        "singleEditionByteBudget": 524288
+      },
+      "evidence": [
+        "art-source/brand/ghost-game/honru/seasonal-v1/CONTRACT.md",
+        "art-source/brand/ghost-game/honru/seasonal-v1/SKILL_ROUTING.md",
+        "art-source/brand/ghost-game/honru/seasonal-v1/PROMPT_AND_PROVENANCE.md",
+        "art-source/brand/ghost-game/honru/seasonal-v1/asset-family-manifest-v1.json",
+        "art-source/brand/ghost-game/honru/seasonal-v1/PROJECT_REFERENCE_TRANSMISSION.json",
+        "art-source/brand/ghost-game/honru/seasonal-v1/EXTERNAL_REFERENCE_TRANSMISSION.json",
+        "art-source/brand/ghost-game/honru/seasonal-v1/review/honru-seasonal-contact-sheet-v1.png",
+        "art-source/brand/ghost-game/honru/seasonal-v1/OWNER_AUTHORIZED_ART_CLEARANCE.md",
+        "art-source/brand/ghost-game/honru/seasonal-v1/TECHNICAL_REVIEW_Reviewer_A.md",
+        "art-source/brand/ghost-game/honru/seasonal-v1/MACHINE_VISUAL_REVIEW.md",
+        "art-source/brand/ghost-game/honru/seasonal-v1/SIMILARITY_AND_IP_REVIEW.md",
+        "art-source/production/ghost-game-art-program-v1/P2-02_LOCAL_ACCEPTANCE.md",
+        "scripts/generate-honru-seasonal-v1.js",
+        "public/src/core/06-assets.js",
+        "public/src/core/02-app-shell.js",
+        "qa/honru-seasonal-v1.js"
+      ],
+      "requirements": [
+        "ART-005",
+        "ART-022",
+        "ART-023",
+        "ART-024",
+        "ART-025"
+      ]
+    },
+    {
+      "order": 26,
+      "id": "P2-05",
+      "familyId": "G-SPECTATOR-CAMERA-ADVANCED-V1",
+      "name": "高级观战镜头",
+      "status": "implemented_owner_cleared_release_evidence_pending",
+      "completion": {
+        "sourceAndRuntimePercent": 100,
+        "localImplementationPercent": 100,
+        "machineEvidencePercent": 100,
+        "localVisibleEvidencePercent": 0,
+        "realEnvironmentPercent": 0,
+        "releasePercent": 0
+      },
+      "scope": [
+        "2.5D overview/focus/impact/result presets",
+        "neutral spectator composition",
+        "no rule authority and no mandatory 3D camera"
+      ],
+      "outOfScope": [
+        "delay cache, privacy, anti-collusion and playback controls",
+        "Rule/Authority/Protocol/Reward/Replay/AI/Chat/Analytics/Supabase",
+        "Three.js or mandatory realtime 3D camera"
+      ],
+      "budget": {
+        "runtimeBytes": 0,
+        "runtimeByteBudget": 1048576
+      },
+      "evidence": [
+        "art-source/platform/spectator-camera-advanced-v1/CONTRACT.md",
+        "art-source/platform/spectator-camera-advanced-v1/SKILL_ROUTING.md",
+        "art-source/production/ghost-game-art-program-v1/P2-05_LOCAL_ACCEPTANCE.md",
+        "public/src/core/25-camera-system.js",
+        "public/src/core/02-app-shell.js",
+        "public/index-template.html",
+        "qa/spectator-camera-advanced-v1.js",
+        "npm run test:visual-25d",
+        "npm run quality:gates",
+        "npm test"
+      ],
+      "requirements": ["GAME-028", "TECH-049"]
+    },
+    {
+      "order": 27,
+      "id": "P2-06",
+      "familyId": "P-REPLAY-CINEMATIC-V1",
+      "name": "Replay 电影式演出",
+      "status": "implemented_owner_cleared_release_evidence_pending",
+      "completion": {
+        "sourceAndRuntimePercent": 100,
+        "localImplementationPercent": 100,
+        "machineEvidencePercent": 100,
+        "localVisibleEvidencePercent": 0,
+        "realEnvironmentPercent": 0,
+        "releasePercent": 0
+      },
+      "scope": [
+        "2.5D layered replay beats",
+        "reversible GSAP Timeline consumption",
+        "static key-frame fallback",
+        "Replay facts remain authoritative data"
+      ],
+      "outOfScope": [
+        "Replay protocol, TTL, visibility, sharing or persistence changes",
+        "complete deterministic rule replay gaps",
+        "Rule/Authority/Reward/AI/Chat/Analytics/Supabase",
+        "mandatory Three.js or realtime 3D"
+      ],
+      "budget": {"runtimeBytes": 0, "runtimeByteBudget": 1048576},
+      "evidence": [
+        "art-source/platform/replay-cinematic-v1/CONTRACT.md",
+        "art-source/platform/replay-cinematic-v1/SKILL_ROUTING.md",
+        "art-source/production/ghost-game-art-program-v1/P2-06_LOCAL_ACCEPTANCE.md",
+        "public/src/core/29-replay-cinematic.js",
+        "public/replay-cinematic-entry.js",
+        "public/src/online/03-websocket.js",
+        "public/src/ui/07-roster.js",
+        "public/index-template.html",
+        "qa/replay-cinematic-v1.js",
+        "npm run test:visual-25d",
+        "npm run quality:gates",
+        "npm test"
+      ],
+      "requirements": [
+        "GAME-030",
+        "GAME-031",
+        "SOC-032",
+        "TECH-049",
+        "TECH-054"
+      ]
+    },
+    {
+      "order": 28,
+      "id": "P2-07",
+      "familyId": "P-GLB-CHARACTER-PROP-EXPANSION-V1",
+      "name": "可选 Renderer/GLB 角色与道具实验（冻结）",
+      "status": "queued_frozen_optional_experiment",
+      "executionDisposition": "FROZEN_UNTIL_MEASURED_25D_DEMO_GAP",
+      "scope": [
+        "not current mainline",
+        "retain stable requirement identity",
+        "reconsider only after Gomoku 2.5D demo visual/package/FPS/memory/input/a11y evidence",
+        "never remove DOM/CSS/Canvas fallback"
+      ],
+      "requirements": [
+        "TECH-036",
+        "TECH-049",
+        "SOC-031",
+        "ECO-029",
+        "ART-017",
+        "ART-036"
+      ]
+    },
+    {
+      "order": 29,
+      "id": "P2-08",
+      "familyId": "P-AUDIO-SPECTRUM-ART-V1",
+      "name": "主题音效与视觉频谱；音频系统能力另行归类",
+      "status": "implemented_owner_cleared_release_evidence_pending",
+      "completion": {
+        "sourceAndRuntimePercent": 100,
+        "localImplementationPercent": 100,
+        "machineEvidencePercent": 100,
+        "localVisibleEvidencePercent": 100,
+        "realEnvironmentPercent": 0,
+        "releasePercent": 0
+      },
+      "scope": [
+        "12-bar Ghost-native code-native Settings spectrum",
+        "detached accepted-cue and theme-track visual envelopes",
+        "lazy finite GSAP Core pulse with static fallback",
+        "three-language, dual-theme, reduced-motion and forced-colors presentation"
+      ],
+      "outOfScope": [
+        "new audio files or external audio generation",
+        "PCM, AudioNode, AnalyserNode, microphone or recording access",
+        "Rule/Authority/Protocol/Reward/Replay/AI/Chat/Analytics/Supabase",
+        "mandatory Three.js or realtime 3D"
+      ],
+      "budget": {
+        "runtimeRasterBytes": 0,
+        "runtimeByteBudget": 131072
+      },
+      "evidence": [
+        "art-source/platform/audio-spectrum-art-v1/CONTRACT.md",
+        "art-source/platform/audio-spectrum-art-v1/SKILL_ROUTING.md",
+        "art-source/platform/audio-spectrum-art-v1/asset-family-manifest-v1.json",
+        "art-source/production/ghost-game-art-program-v1/P2-08_LOCAL_ACCEPTANCE.md",
+        "public/src/core/30-audio-spectrum-art.js",
+        "public/audio-spectrum-motion-entry.js",
+        "public/src/core/22-audio-runtime.js",
+        "public/src/core/02-app-shell.js",
+        "public/index-template.html",
+        "qa/audio-spectrum-art-v1.js",
+        "art-source/platform/audio-spectrum-art-v1/current-build-single-browser-verification-20260822.json",
+        "npm run test:audio-spectrum",
+        "npm run test:audio",
+        "npm run quality:gates",
+        "npm test"
+      ],
+      "requirements": [
+        "GAME-037",
+        "GAME-038",
+        "TECH-049"
+      ]
+    },
+    {
+      "order": 30,
+      "id": "P2-09",
+      "familyId": "P-SOCIAL-SHARE-TEMPLATES-V1",
+      "name": "社交分享模板",
+      "status": "implemented_owner_cleared_release_evidence_pending",
+      "completion": {
+        "sourceAndRuntimePercent": 100,
+        "localImplementationPercent": 100,
+        "machineEvidencePercent": 100,
+        "localVisibleEvidencePercent": 100,
+        "realEnvironmentPercent": 0,
+        "releasePercent": 0
+      },
+      "scope": [
+        "game/result/record Playline share template composition",
+        "1200x630 OG review and three-language contact sheet",
+        "strict display-string and role/tone allowlists",
+        "narrow-screen, reduced-motion, forced-colors and existing-card fallback"
+      ],
+      "outOfScope": [
+        "post/result/replay/identity/visibility/permission/signing facts",
+        "image upload, export, external sharing or media UGC",
+        "Rule/Authority/Protocol/Reward/AI/Chat/Analytics/Supabase",
+        "new third-party or blocked-license visual input"
+      ],
+      "budget": {
+        "runtimeRasterBytes": 0,
+        "reviewEvidenceBytes": 185012,
+        "runtimeByteBudget": 131072
+      },
+      "evidence": [
+        "art-source/platform/social-share-templates-v1/CONTRACT.md",
+        "art-source/platform/social-share-templates-v1/SKILL_ROUTING.md",
+        "art-source/platform/social-share-templates-v1/asset-family-manifest-v1.json",
+        "art-source/platform/social-share-templates-v1/review/social-share-template-og-1200x630.jpg",
+        "art-source/platform/social-share-templates-v1/review/social-share-template-contact-sheet.jpg",
+        "art-source/production/ghost-game-art-program-v1/P2-09_LOCAL_ACCEPTANCE.md",
+        "public/src/core/31-social-share-template.js",
+        "public/src/core/07-playline.js",
+        "public/index-template.html",
+        "qa/social-share-templates-v1.js",
+        "npm run test:social-share-templates",
+        "npm run quality:gates",
+        "npm test"
+      ],
+      "requirements": [
+        "SOC-033",
+        "GAME-030"
+      ]
+    },
+    {
+      "order": 31,
+      "id": "P2-10",
+      "familyId": "P-TOURNAMENT-BROADCAST-OVERLAY-V1",
+      "name": "赛事直播 Overlay；真正直播能力另行归类",
+      "status": "implemented_owner_cleared_release_evidence_pending",
+      "completion": {
+        "sourceAndRuntimePercent": 100,
+        "localImplementationPercent": 100,
+        "machineEvidencePercent": 100,
+        "localVisibleEvidencePercent": 100,
+        "realEnvironmentPercent": 0,
+        "releasePercent": 0
+      },
+      "scope": [
+        "code-native tournament status, round, leader and up-to-three-table broadcast overlay",
+        "1200x630 local review board and zh-CN/en-US/uk-UA contact sheet",
+        "finite lazy GSAP Core/Timeline intro with reduced-motion, hidden and destroy cleanup",
+        "admin-only existing tournament state modal integration with existing card fallback"
+      ],
+      "outOfScope": [
+        "video/audio stream, recording, replay, commentary or media broadcast",
+        "spectator delay buffer, permissions, tournament creation/binding/forfeit/recovery facts",
+        "Room/Rule/Authority/Protocol/Reward/Chat/Analytics/Supabase or persistence",
+        "normal-player Tournament UI exposure or new external/blocked-license visual input"
+      ],
+      "budget": {
+        "runtimeRasterBytes": 0,
+        "reviewEvidenceBytes": 258416,
+        "runtimeByteBudget": 131072
+      },
+      "evidence": [
+        "art-source/platform/tournament-broadcast-overlay-v1/CONTRACT.md",
+        "art-source/platform/tournament-broadcast-overlay-v1/SKILL_ROUTING.md",
+        "art-source/platform/tournament-broadcast-overlay-v1/PROMPT_AND_PROVENANCE.md",
+        "art-source/platform/tournament-broadcast-overlay-v1/asset-family-manifest-v1.json",
+        "art-source/platform/tournament-broadcast-overlay-v1/review/tournament-broadcast-overlay-1200x630.png",
+        "art-source/platform/tournament-broadcast-overlay-v1/review/tournament-broadcast-overlay-contact-sheet.png",
+        "art-source/production/ghost-game-art-program-v1/P2-10_LOCAL_ACCEPTANCE.md",
+        "public/src/core/32-tournament-broadcast-overlay.js",
+        "public/tournament-broadcast-motion-entry.js",
+        "public/src/online/03-websocket.js",
+        "public/index-template.html",
+        "qa/tournament-broadcast-overlay-v1.js",
+        "npm run test:tournament-broadcast-overlay",
+        "npm run quality:gates",
+        "npm test"
+      ],
+      "requirements": [
+        "GAME-028",
+        "GAME-029",
+        "UI-034"
+      ]
+    },
+    {
+      "order": 32,
+      "id": "P2-11",
+      "familyId": "P-SHOP-LIMITED-SETS-V1",
+      "name": "商店限定套装",
+      "status": "implemented_owner_cleared_release_evidence_pending",
+      "completion": {
+        "sourceAndRuntimePercent": 100,
+        "localImplementationPercent": 100,
+        "machineEvidencePercent": 100,
+        "localVisibleEvidencePercent": 100,
+        "realEnvironmentPercent": 0,
+        "releasePercent": 0
+      },
+      "scope": [
+        "四季 Ghost-native 视觉策展卡：春日信号、夏潮航线、秋灯典藏、冬夜观测",
+        "每套只引用既有 avatar/frame/effect/background 单品 ID，显示精确 N/4 owned 进度",
+        "组合预览与跳转既有单品 Tab；不创建套装购买或新经济事实",
+        "桌面、移动与 poster 变体由原创主视觉确定性派生并受 Manifest/flag/fallback 保护"
+      ],
+      "outOfScope": [
+        "bundle/purchase_set、套装 SKU、套装价格、折扣、库存、倒计时、Remote Config、Battle Pass",
+        "新 owned、Reward、Profile、协议、持久化或自动批量购买/装备",
+        "外部 blocked-license 像素/图层进入 Runtime、真实限时销售承诺"
+      ],
+      "budget": {
+      "sourceBytes": 2954315,
+        "runtimeBytes": 478642,
+        "runtimeByteBudget": 2097152
+      },
+      "evidence": [
+        "art-source/platform/shop/limited-sets-v1/CONTRACT.md",
+        "art-source/platform/shop/limited-sets-v1/SKILL_ROUTING.md",
+      "art-source/platform/shop/limited-sets-v1/asset-family-manifest-v1.json",
+      "art-source/platform/shop/limited-sets-v1/EXTERNAL_REFERENCE_TRANSMISSION.json",
+      "art-source/platform/shop/limited-sets-v1/PROMPT_AND_PROVENANCE.md",
+      "art-source/platform/shop/limited-sets-v1/OWNER_AUTHORIZED_ART_CLEARANCE.md",
+      "art-source/platform/shop/limited-sets-v1/TECHNICAL_REVIEW_Reviewer_A.md",
+      "art-source/platform/shop/limited-sets-v1/source/seasonal-vault-hero-master-v1.png",
+      "art-source/platform/shop/limited-sets-v1/review/shop-limited-sets-contact-sheet-v1.png",
+      "art-source/production/ghost-game-art-program-v1/P2-11_LOCAL_ACCEPTANCE.md",
+      "art-source/production/ghost-game-art-program-v1/P2-11_BROWSER_VISIBLE_ACCEPTANCE.json",
+      "art-source/production/ghost-game-art-program-v1/shop-limited-sets-browser-390x844.png",
+        "public/assets/platform/shop/limited-sets-v1/seasonal-vault-hero-desktop-v1.webp",
+        "public/assets/platform/shop/limited-sets-v1/seasonal-vault-hero-mobile-v1.webp",
+        "public/assets/platform/shop/limited-sets-v1/seasonal-vault-hero-poster-v1.webp",
+        "public/src/shop/06-shop.js",
+        "public/src/core/06-assets.js",
+        "public/index-template.html",
+        "server/index.js",
+        "supabase/schema.sql",
+        "qa/shop-limited-sets-v1.js",
+        "qa/shop-supabase-catalog-parity.js",
+        "npm run test:shop-limited-sets",
+        "node qa/shop-contract.js",
+        "node qa/shop-purchase-feedback-contract.js",
+        "node qa/ui-shop-layout-contract.js",
+        "node qa/shop-language-refresh-contract.js",
+        "node qa/supabase-schema.js",
+        "node qa/code-health-sweep.js",
+        "node scripts/build.js --check"
+      ],
+      "requirements": [
+        "UI-021",
+        "ECO-015",
+        "ECO-021",
+        "ECO-022",
+        "ECO-029"
+      ]
+    },
+    {
+      "order": 33,
+      "id": "P2-12",
+      "familyId": "P-PROFILE-ADAPTIVE-HERO-V1",
+      "name": "按常玩游戏变化的动态 Profile Hero",
+      "status": "implemented_owner_cleared_release_evidence_pending",
+      "completion": {
+        "sourceAndRuntimePercent": 100,
+        "localImplementationPercent": 100,
+        "machineEvidencePercent": 100,
+        "localVisibleEvidencePercent": 100,
+        "realEnvironmentPercent": 0,
+        "releasePercent": 0
+      },
+      "scope": [
+        "按既有 played/wins 聚合确定性突出常玩游戏：played×2 + wins×3",
+        "复用既有 Game Icon、Premium Background、Player Character 与身份资产",
+        "原创 3:2 Profile Hero 主视觉，桌面/移动/Poster/Static WebP 派生",
+        "Hero 主游戏图标、局数/胜场摘要、六款色调 token、空态与 fallback",
+        "三语、reduced-motion、forced-colors、移动窄屏与原有 Profile 操作保持兼容"
+      ],
+      "outOfScope": [
+        "外部像素、GLB、Three.js 或新 Renderer",
+        "新 Profile 字段、协议、owned、购买、Reward、经济、数据库、AI、Replay 或社交关系",
+        "P2-07 冻结的 GLB Character Prop Expansion 实验"
+      ],
+      "budget": {
+        "sourceBytes": 2284943,
+        "runtimeBytes": 246468,
+        "runtimeByteBudget": 1048576
+      },
+      "evidence": [
+        "art-source/platform/profile-adaptive-hero-v1/CONTRACT.md",
+        "art-source/platform/profile-adaptive-hero-v1/SKILL_ROUTING.md",
+        "art-source/platform/profile-adaptive-hero-v1/PROMPT_AND_PROVENANCE.md",
+        "art-source/platform/profile-adaptive-hero-v1/EXTERNAL_REFERENCE_TRANSMISSION.json",
+        "art-source/platform/profile-adaptive-hero-v1/asset-family-manifest-v1.json",
+        "art-source/platform/profile-adaptive-hero-v1/OWNER_AUTHORIZED_ART_CLEARANCE.md",
+        "art-source/platform/profile-adaptive-hero-v1/TECHNICAL_REVIEW_Reviewer_A.md",
+        "art-source/platform/profile-adaptive-hero-v1/source/profile-adaptive-hero-master-v1.png",
+        "art-source/platform/profile-adaptive-hero-v1/review/profile-adaptive-hero-contact-sheet-v1.png",
+        "art-source/production/ghost-game-art-program-v1/P2-12_LOCAL_ACCEPTANCE.md",
+        "art-source/production/ghost-game-art-program-v1/P2-12_BROWSER_VISIBLE_ACCEPTANCE.json",
+        "art-source/production/ghost-game-art-program-v1/profile-adaptive-hero-browser-390x844.png",
+        "public/src/core/02-app-shell.js",
+        "public/src/core/06-assets.js",
+        "public/index-template.html",
+        "public/locales/zh-CN.json",
+        "public/locales/en-US.json",
+        "public/locales/uk-UA.json",
+        "qa/profile-adaptive-hero-v1.js",
+        "npm run test:profile-adaptive-hero",
+        "npm run test:i18n",
+        "npm run quality:gates",
+        "npm test",
+        "node scripts/build.js --check"
+      ],
+      "requirements": [
+        "UI-011",
+        "UI-025",
+        "ART-021",
+        "ECO-017"
+      ]
+    },
+    {
+      "order": 24,
+      "id": "P2-03",
+      "familyId": "P-COLLECTIBLE-STICKER-BOOK-V1",
+      "name": "可收藏贴纸册美术；持久收藏能力另行归类",
+      "status": "implemented_owner_cleared_release_evidence_pending",
+      "completion": {
+        "sourceAndRuntimePercent": 100,
+        "localImplementationPercent": 100,
+        "machineEvidencePercent": 100,
+        "localVisibleEvidencePercent": 0,
+        "realEnvironmentPercent": 0,
+        "releasePercent": 0
+      },
+      "deliverables": {
+        "runtimeAssetIds": 1,
+        "runtimeVariants": 16,
+        "sourceMasters": 0,
+        "reviewBoards": 1,
+        "runtimeBytes": 388222,
+        "inheritedContextCells": 16
+      },
+      "scope": [
+        "reuse the 16 owner-cleared P0-08 Honru Context WebP cells as a read-only Profile Library sticker book",
+        "single reversible mg_art_sticker_book_v1 flag with localized label and empty-state fallback",
+        "deterministic contact sheet and Manifest/Catalog provenance; no copied pixels or new wire IDs"
+      ],
+      "outOfScope": [
+        "owned/collection persistence/purchase/reward/task/ranking",
+        "date/LiveOps/Remote Config/Battle Pass",
+        "new Emoji/Context/Protocol IDs",
+        "Direct Chat/Match Chat/Rule/Authority/Reward/Replay/AI/Analytics/Supabase",
+        "P2-04 personal Home scene"
+      ],
+      "budget": {
+        "runtimeBytes": 388222,
+        "runtimeByteBudget": 2097152
+      },
+      "evidence": [
+        "art-source/platform/sticker-book-v1/CONTRACT.md",
+        "art-source/platform/sticker-book-v1/SKILL_ROUTING.md",
+        "art-source/platform/sticker-book-v1/PROMPT_AND_PROVENANCE.md",
+        "art-source/platform/sticker-book-v1/asset-family-manifest-v1.json",
+        "art-source/platform/sticker-book-v1/PROJECT_REFERENCE_TRANSMISSION.json",
+        "art-source/platform/sticker-book-v1/EXTERNAL_REFERENCE_TRANSMISSION.json",
+        "art-source/platform/sticker-book-v1/review/sticker-book-contact-sheet-v1.png",
+        "art-source/platform/sticker-book-v1/OWNER_AUTHORIZED_ART_CLEARANCE.md",
+        "art-source/platform/sticker-book-v1/TECHNICAL_REVIEW_Reviewer_A.md",
+        "art-source/platform/sticker-book-v1/MACHINE_VISUAL_REVIEW.md",
+        "art-source/platform/sticker-book-v1/SIMILARITY_AND_IP_REVIEW.md",
+        "art-source/production/ghost-game-art-program-v1/P2-03_LOCAL_ACCEPTANCE.md",
+        "scripts/generate-sticker-book-v1.js",
+        "public/src/core/06-assets.js",
+        "public/src/core/02-app-shell.js",
+        "public/index-template.html",
+        "qa/sticker-book-v1.js"
+      ],
+      "requirements": [
+        "ART-024",
+        "ART-025"
+      ]
+    },
+    {
+      "order": 25,
+      "id": "P2-04",
+      "familyId": "P-PERSONAL-HOME-SCENE-V1",
+      "name": "个人 Home 小场景或桌面岛",
+      "status": "implemented_owner_cleared_release_evidence_pending",
+      "completion": {
+        "sourceAndRuntimePercent": 100,
+        "localImplementationPercent": 100,
+        "machineEvidencePercent": 100,
+        "localVisibleEvidencePercent": 0,
+        "realEnvironmentPercent": 0,
+        "releasePercent": 0
+      },
+      "deliverables": {
+        "runtimeAssetIds": 1,
+        "runtimeVariants": 20,
+        "sourceMasters": 12,
+        "reviewBoards": 1,
+        "runtimeBytes": 228532
+      },
+      "scope": [
+        "personal background/midground/foreground scene layers",
+        "light/dark desktop/mobile variants",
+        "static and reduced-motion-safe fallback",
+        "Home presentation-only decoration; no real-time 3D requirement"
+      ],
+      "outOfScope": [
+        "account or owned personalization",
+        "purchase/reward/task/ranking",
+        "date/liveops/remote config",
+        "Direct Chat/Match Chat/Rule/Authority/Reward/Replay/AI/Analytics/Supabase"
+      ],
+      "budget": {
+        "runtimeBytes": 228532,
+        "runtimeByteBudget": 2097152
+      },
+      "evidence": [
+        "art-source/platform/personal-home-scene-v1/CONTRACT.md",
+        "art-source/platform/personal-home-scene-v1/SKILL_ROUTING.md",
+        "art-source/platform/personal-home-scene-v1/PROMPT_AND_PROVENANCE.md",
+        "art-source/platform/personal-home-scene-v1/asset-family-manifest-v1.json",
+        "art-source/platform/personal-home-scene-v1/PROJECT_REFERENCE_TRANSMISSION.json",
+        "art-source/platform/personal-home-scene-v1/EXTERNAL_REFERENCE_TRANSMISSION.json",
+        "art-source/platform/personal-home-scene-v1/review/personal-home-scene-contact-sheet-v1.png",
+        "art-source/platform/personal-home-scene-v1/OWNER_AUTHORIZED_ART_CLEARANCE.md",
+        "art-source/platform/personal-home-scene-v1/TECHNICAL_REVIEW_Reviewer_A.md",
+        "art-source/platform/personal-home-scene-v1/MACHINE_VISUAL_REVIEW.md",
+        "art-source/platform/personal-home-scene-v1/SIMILARITY_AND_IP_REVIEW.md",
+        "art-source/production/ghost-game-art-program-v1/P2-04_LOCAL_ACCEPTANCE.md",
+        "scripts/generate-personal-home-scene-v1.js",
+        "public/src/core/06-assets.js",
+        "public/src/core/02-app-shell.js",
+        "public/index-template.html",
+        "qa/personal-home-scene-v1.js"
+      ],
+      "requirements": [
+        "UI-011",
+        "ART-021"
+      ]
+    }
   ]
 }

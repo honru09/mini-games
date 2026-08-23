@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" style="background:transparent;">
+        <polygon points="40,60 180,60 220,128 180,196 40,196" fill="#F43F5E" stroke="#BE123C" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="70" cy="128" r="14" fill="#FFFFFF"/>
+        <text x="140" y="142" font-size="36" font-weight="900" text-anchor="middle" fill="#FFFFFF">SALE</text>
+      </svg>

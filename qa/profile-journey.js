@@ -11,7 +11,9 @@ check('inherited owned collections cannot enter projection',complete.collection.
 const hostile=journey.deriveProfileJourney({wins:{gomoku:Symbol('bad')},achievements:null,owned:{avatars:[{},null,Symbol('bad')] }},{masteryApi:mastery,achievementTotal:Symbol('bad')});
 check('uncoercible and object values safely collapse',hostile.mastery.gameId==='gomoku'&&hostile.achievements.total===0&&hostile.collection.total===0);
 check('journey model contains no prices, rewards or purchase history',!/(coins|xp|price|reward|purchase|ledger)/i.test(JSON.stringify(model)));
-const build=fs.readFileSync(path.join(ROOT,'scripts/build.js'),'utf8'),shell=fs.readFileSync(path.join(ROOT,'public/src/core/02-app-shell.js'),'utf8'),html=fs.readFileSync(path.join(ROOT,'public/index-template.html'),'utf8');
+const build=fs.readFileSync(path.join(ROOT,'scripts/build.js'),'utf8'),shell=fs.readFileSync(path.join(ROOT,'public/src/core/02-app-shell.js'),'utf8');
+const { readPresentationSource } = require('./presentation-source');
+const html=readPresentationSource();
 check('browser build loads journey after mastery and before app shell',build.indexOf('../../shared/progression/profile-journey.js')>build.indexOf('../../shared/progression/victory-mastery.js')&&build.indexOf('../../shared/progression/profile-journey.js')<build.indexOf('core/02-app-shell.js'));
 check('profile consumes three goals through existing routes',/ProfileJourney\.deriveProfileJourney/.test(shell)&&/profile-journey-card/.test(shell)&&/openAchievementsModal/.test(shell)&&/openShop/.test(shell));
 check('journey cards have responsive and 44px presentation',/\.profile-journey-grid/.test(html)&&/\.profile-journey-card\{[^}]*min-height:/.test(html)&&/@media\(max-width:640px\)[\s\S]{0,2400}\.profile-journey-grid/.test(html));

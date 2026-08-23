@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-08-21T12:02:52+09:00",
+  "captureSurface": "Codex in-app Chromium",
+  "build": {
+    "characters": 1967471,
+    "utf8Bytes": 1982153,
+    "sha256": "07C376611E13C774E1B5FE348AE7934371273742D5886293C56FCBFBA2311FD8"
+  },
+  "route": "isolated local preview http://127.0.0.1:8094/",
+  "game": "monopoly",
+  "featureFlag": "mg_art_monopoly_final_v1",
+  "viewports": [
+    {"width":1280,"height":720,"boardFramePx":561.2,"commandRailPx":{"width":361.0,"height":594.2},"metadataWithinTray":true,"decode":true,"documentHorizontalOverflowPx":0,"visibleButtonsBelow44":0,"semanticBoardNodes":26},
+    {"width":1024,"height":768,"boardFramePx":561.2,"commandRailPx":{"width":314.2,"height":641.3},"metadataWithinTray":true,"decode":true,"documentHorizontalOverflowPx":0,"visibleButtonsBelow44":0,"semanticBoardNodes":26},
+    {"width":768,"height":1024,"boardFramePx":581.3,"commandRailPx":{"width":753.1,"height":211.5},"metadataWithinTray":true,"decode":true,"documentHorizontalOverflowPx":0,"visibleButtonsBelow44":0,"semanticBoardNodes":26},
+    {"width":390,"height":844,"boardFramePx":362.3,"commandRailPx":{"width":378.7,"height":251.8},"metadataWithinTray":true,"decode":true,"documentHorizontalOverflowPx":0,"visibleButtonsBelow44":0,"semanticBoardNodes":26},
+    {"width":844,"height":390,"boardFramePx":326.4,"commandRailPx":{"width":354.5,"height":277.0},"metadataWithinTray":true,"decode":true,"documentHorizontalOverflowPx":0,"visibleButtonsBelow44":0,"semanticBoardNodes":26}
+  ],
+  "visualChecks": {
+    "threeArtLayersDecode": true,
+    "artState": "active",
+    "vfxHostPresent": true,
+    "vfxRolesObserved": ["landing", "purchase"],
+    "vfxRolesNotExecuted": ["opportunity", "auction", "payment", "tax", "bankruptcy", "turn-result", "final-result"],
+    "consoleErrors": 0,
+    "consoleWarnings": 0,
+    "reducedMotion": "NOT_EXECUTED_IN_THIS_CAPTURE",
+    "forcedColors": "NOT_EXECUTED_IN_THIS_CAPTURE"
+  },
+  "scope": "Local visible evidence only; current build verified after board redraw with connected landing/purchase VFX hosts and zero browser console logs. Remaining VFX roles are NOT_EXECUTED in this capture; not second-browser, physical-device, real-network, low-end-performance, Supabase or release evidence."
+}

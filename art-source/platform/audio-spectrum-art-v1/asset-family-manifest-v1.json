@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "familyId": "P-AUDIO-SPECTRUM-ART-V1",
+  "assetId": "P-AUDIO-SPECTRUM-ART-V1-CODE-NATIVE",
+  "artworkVersion": 1,
+  "clearance": "OWNER_AUTHORIZED_ART_CLEARANCE",
+  "status": "implemented_local_release_evidence_pending",
+  "sourceLicense": "PROJECT_OWNED_CODE_NATIVE",
+  "runtimeType": "DOM_CSS_LAZY_GSAP",
+  "featureFlag": {
+    "id": "mg_art_audio_spectrum_v1",
+    "enabledValue": "1",
+    "defaultEnabled": true,
+    "rollback": "0"
+  },
+  "runtimeFiles": [
+    { "path": "public/src/core/30-audio-spectrum-art.js", "bytes": 9739, "sha256": "563E1A06FA2EDD3B3DBFEED53B6515AF66CB80C0388430280FAE07E36D2A6D24" },
+    { "path": "public/audio-spectrum-motion-entry.js", "bytes": 1785, "sha256": "F92E5ACD570A9DC86B7D8A1E55425B556E73E816802A867B57CD0D1443A76FE4" }
+  ],
+  "integrationFiles": [
+    "public/src/core/22-audio-runtime.js",
+    "public/src/core/02-app-shell.js",
+    "public/src/core/06-assets.js",
+    "public/index-template.html",
+    "scripts/build.js",
+    "package.json"
+  ],
+  "externalReferenceInputs": 0,
+  "thirdPartyTransmissions": 0,
+  "runtimeRasterBytes": 0,
+  "releaseState": "LOCAL_ONLY_NOT_RELEASED"
+}

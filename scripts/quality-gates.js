@@ -6,11 +6,20 @@ const crypto = require('crypto');
 const { spawnSync } = require('child_process');
 const root = path.resolve(__dirname, '..');
 let failed = false;
+const failures = [];
 function run(name, command, args) {
   const result = spawnSync(command, args, { cwd: root, stdio: 'inherit', shell: false });
   const ok = result.status === 0;
   console.log(`${ok ? 'PASS' : 'FAIL'} gate:${name}`);
-  if (!ok) failed = true;
+  if (!ok) {
+    failed = true;
+    failures.push({
+      name,
+      status: Number.isInteger(result.status) ? result.status : null,
+      signal: result.signal || null,
+      errorCode: result.error && result.error.code ? String(result.error.code) : null,
+    });
+  }
   return ok;
 }
 function hash(file) { return crypto.createHash('sha256').update(fs.readFileSync(path.join(root, file))).digest('hex'); }
@@ -22,10 +31,9 @@ run('code-health', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/code
 run('mainline-control', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/mainline-control-plane.js']);
 run('approval-gate-policy', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/approval-gate-policy.js']);
 run('supabase-gate-checklist-contract', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/supabase-gate-checklist-contract.js']);
+run('supabase-wizard-secret-redaction', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/supabase-wizard-secret-redaction.js']);
 run('technical-optimization-mainline', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/technical-optimization-mainline-contract.js']);
 run('client-diagnostics-buffer', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/client-diagnostics-buffer.js']);
-run('renderer-runtime-governor', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/renderer-runtime-governor.js']);
-run('renderer-quality-adapter', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/renderer-quality-adapter.js']);
 run('audio-cue-inventory', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/audio-cue-inventory.js', '--strict']);
 run('audio-authority-contract', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/audio-authority-contract.js']);
 run('audio-feedback-contract', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/audio-feedback-contract.js']);
@@ -34,9 +42,8 @@ run('audio-runtime', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/au
 run('audio-tone-profiles', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/audio-tone-profiles.js']);
 run('platform-audio-cues', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/platform-audio-cues.js']);
 run('unified-feedback-adapter', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/unified-feedback-adapter.js']);
-run('game-module-loader', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/game-module-loader.js']);
 run('build-check-write', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/build-check-write.js']);
-run('sw-game-module-preheat', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/sw-game-module-preheat.js']);
+run('presentation-source', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/presentation-source-contract.js']);
 run('feedback-bus', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/feedback-bus.js']);
 run('gameplay-input-gate', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/gameplay-input-gate.js']);
 run('local-feedback-adapter', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/local-feedback-adapter.js']);
@@ -69,58 +76,29 @@ run('server-clock-timer-t7', process.platform === 'win32' ? 'node.exe' : 'node',
 run('heartbeat-sweep-t7', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/heartbeat-sweep.js']);
 run('timer-audit-t7', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/timer-audit.js']);
 run('progress-ledger', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/progress-ledger.js']);
+run('progress-report-write-retry', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/progress-report-write-retry.js']);
 run('brief-report', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/brief-report-contract.js']);
 run('vertical-slice-definition', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/vertical-slice-definition.js']);
 run('adr-contract', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/adr-contract.js']);
 run('bug-intake-contract', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/bug-intake-contract.js']);
 run('performance-budget-contract', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/performance-budget-contract.js']);
 run('asset-library-governance', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/asset-library-governance.js']);
+run('player-character-layered-art', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/player-character-layered-art-v1.js']);
 run('art-approval-matrix', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/art-approval-matrix-contract.js']);
 run('external-asset-register', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/external-asset-register-contract.js']);
+run('honru-edge-cursor-v1', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/honru-edge-cursor-v1.js']);
+run('identity-badge-system-v1', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/identity-badge-system-v1.js']);
+run('seasonal-backgrounds-v1', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/seasonal-backgrounds-v1.js']);
 run('gomoku-final-art', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/gomoku-final-art-contract.js']);
 run('ludo-final-art', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/ludo-final-art-contract.js']);
+run('monopoly-final-art', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/monopoly-final-art-contract.js']);
+run('tank-final-art', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/tank-final-art-contract.js']);
+run('tetris-final-art', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/tetris-final-art-contract.js']);
 run('g-coins-contract', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/g-coins-contract.js']);
 run('g-coins-presentation', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/g-coins-presentation.js']);
-run('tabletop-camera-rig', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/tabletop-camera-rig-contract.js']);
-run('ghost3d-foundation', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/ghost3d-foundation.js']);
 run('visual-25d', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/visual-25d-contract.js']);
-run('gomoku-ghost3d-syntax', process.platform === 'win32' ? 'node.exe' : 'node', ['--check', 'public/three/gomoku-entry.js']);
-run('gomoku-ghost3d-esm-graph', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/gomoku-ghost3d-esm-graph.js']);
-run('gomoku-ghost3d-renderer', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/gomoku-ghost3d-renderer.js']);
-run('gomoku-ghost3d-contract', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/gomoku-ghost3d-contract.js']);
-run('gomoku-ghost3d-layout', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/gomoku-ghost3d-layout.js']);
-run('gomoku-ghost3d-cache', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/gomoku-ghost3d-cache.js']);
-run('ludo-ghost3d-syntax', process.platform === 'win32' ? 'node.exe' : 'node', ['--check', 'public/three/ludo-entry.js']);
-run('ludo-ghost3d-esm-graph', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/ludo-ghost3d-esm-graph.js']);
-run('ludo-ghost3d-renderer', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/ludo-ghost3d-renderer.js']);
-run('ludo-ghost3d-contract', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/ludo-ghost3d-contract.js']);
-run('ludo-ghost3d-layout', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/ludo-ghost3d-layout.js']);
-run('ludo-ghost3d-cache', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/ludo-ghost3d-cache.js']);
-run('monopoly-ghost3d-syntax', process.platform === 'win32' ? 'node.exe' : 'node', ['--check', 'public/three/monopoly-entry.js']);
-run('monopoly-ghost3d-esm-graph', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/monopoly-ghost3d-esm-graph.js']);
-run('monopoly-ghost3d-renderer', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/monopoly-ghost3d-renderer.js']);
-run('monopoly-ghost3d-contract', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/monopoly-ghost3d-contract.js']);
-run('monopoly-ghost3d-layout', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/monopoly-ghost3d-layout.js']);
-run('monopoly-ghost3d-cache', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/monopoly-ghost3d-cache.js']);
+run('visual-25d-only-runtime', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/visual-25d-only-runtime.js']);
 run('game-stage-wave-b-monopoly', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/game-stage-wave-b-monopoly.js']);
-run('xiangqi-ghost3d-syntax', process.platform === 'win32' ? 'node.exe' : 'node', ['--check', 'public/three/xiangqi-entry.js']);
-run('xiangqi-ghost3d-esm-graph', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/xiangqi-ghost3d-esm-graph.js']);
-run('xiangqi-ghost3d-renderer', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/xiangqi-ghost3d-renderer.js']);
-run('xiangqi-ghost3d-contract', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/xiangqi-ghost3d-contract.js']);
-run('xiangqi-ghost3d-layout', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/xiangqi-ghost3d-layout.js']);
-run('xiangqi-ghost3d-cache', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/xiangqi-ghost3d-cache.js']);
-run('tetris-ghost3d-syntax', process.platform === 'win32' ? 'node.exe' : 'node', ['--check', 'public/three/tetris-entry.js']);
-run('tetris-ghost3d-esm-graph', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/tetris-ghost3d-esm-graph.js']);
-run('tetris-ghost3d-renderer', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/tetris-ghost3d-renderer.js']);
-run('tetris-ghost3d-contract', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/tetris-ghost3d-contract.js']);
-run('tetris-ghost3d-layout', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/tetris-ghost3d-layout.js']);
-run('tetris-ghost3d-cache', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/tetris-ghost3d-cache.js']);
-run('tank-ghost3d-syntax', process.platform === 'win32' ? 'node.exe' : 'node', ['--check', 'public/three/tank-entry.js']);
-run('tank-ghost3d-esm-graph', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/tank-ghost3d-esm-graph.js']);
-run('tank-ghost3d-renderer', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/tank-ghost3d-renderer.js']);
-run('tank-ghost3d-contract', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/tank-ghost3d-contract.js']);
-run('tank-ghost3d-layout', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/tank-ghost3d-layout.js']);
-run('tank-ghost3d-cache', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/tank-ghost3d-cache.js']);
 run('route-motion-bridge-syntax', process.platform === 'win32' ? 'node.exe' : 'node', ['--check', 'public/src/core/09-route-motion.js']);
 run('route-motion-entry-syntax', process.platform === 'win32' ? 'node.exe' : 'node', ['--check', 'public/route-motion-entry.js']);
 run('route-motion-contract', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/ui-route-motion-contract.js']);
@@ -155,5 +133,17 @@ run('build-check', process.platform === 'win32' ? 'node.exe' : 'node', ['scripts
 const after = hash(generated);
 if (before !== after) { console.error('FAIL gate:build-check (check mutated public/index.html)'); failed = true; }
 else console.log('PASS gate:build-check (generated frontend stable and check was read-only)');
-if (failed) process.exit(1);
+if (failed) {
+  console.error(`QUALITY_GATES_FAILED count=${failures.length + (before !== after ? 1 : 0)}`);
+  failures.forEach(item => {
+    const details = [
+      Number.isInteger(item.status) ? `status=${item.status}` : '',
+      item.signal ? `signal=${item.signal}` : '',
+      item.errorCode ? `error=${item.errorCode}` : '',
+    ].filter(Boolean).join(' ');
+    console.error(`- ${item.name}${details ? ` ${details}` : ''}`);
+  });
+  if (before !== after) console.error('- build-check-mutated-output');
+  process.exit(1);
+}
 console.log('QUALITY_GATES_FAST_ALL_PASS');

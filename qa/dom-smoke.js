@@ -25,11 +25,15 @@ function makeCtxProxy(){
 }
 function makeEl(tag){
   const classes = new Set();
+  const style = {};
+  style.setProperty = (key, value) => { style[key] = String(value); };
+  style.removeProperty = key => { delete style[key]; };
+  style.getPropertyValue = key => style[key] || '';
   const e = {
     tagName: String(tag).toUpperCase(),
     children: [],
     parent: null,
-    style: {},
+    style,
     dataset: {},
     attributes: {},
     textContent: '',
@@ -242,7 +246,8 @@ async function main(){
   const englishAiMateName = G.aiMateDisplayName('ai_gambler', 'legacy-name');
   await G.setLanguage('uk-UA');
   check('乌克兰语切换覆盖游戏名称', G.GAMES.monopoly.name === 'Міні-монополія');
-  check('对局标题随语言切换即时更新', $('game-title').textContent.includes('Китайські шахи'));
+  const localizedGameTitle=$('game-title').querySelector('.game-title-label');
+  check('对局标题随语言切换即时更新', !!localizedGameTitle && localizedGameTitle.textContent.includes('Китайські шахи'));
   check('乌克兰语切换覆盖游戏顶栏且无中文或裸 key',
     JSON.stringify(gameTopLabels()) === JSON.stringify(['← Назад','⏹ Завершити гру','📖 Правила','🔄 Новий раунд']) &&
     untranslatedUi([document.querySelector('.game-top')]).length === 0);
@@ -266,9 +271,11 @@ async function main(){
   const coverCards = ['gomoku','ludo','monopoly','tank','tetris','xiangqi'].map(id => cards.find(card => card.dataset.gameId === id));
   check('六款大厅卡全部接入统一 16:9 美术封面', coverCards.every(card => card && card.classList.contains('has-cover') && !!card.querySelector('.game-cover')));
   const failedCover = gomokuCard && gomokuCard.querySelector('.game-cover');
-  const failedCoverImg = failedCover && failedCover.querySelector('img');
-  if (failedCoverImg) failedCoverImg.dispatch('error');
-  check('封面加载失败时保留 Emoji fallback', failedCover && failedCover.classList.contains('asset-failed') && failedCoverImg.style.display === 'none');
+  const failedCoverV2 = failedCover && failedCover.querySelector('.game-cover-v2');
+  const failedCoverLegacy = failedCover && failedCover.querySelector('.game-cover-legacy');
+  if (failedCoverV2){ failedCoverV2.setAttribute('src',failedCoverV2.src||''); failedCoverV2.dispatch('error'); }
+  if (failedCoverLegacy){ failedCoverLegacy.setAttribute('src',failedCoverLegacy.src||''); failedCoverLegacy.dispatch('error'); }
+  check('v2 与旧封面都失败时保留 Emoji fallback', failedCover && failedCover.classList.contains('asset-failed') && failedCoverV2.style.display === 'none' && failedCoverLegacy.style.display === 'none' && failedCover.querySelector('.game-cover-fallback').style.display === '');
 
   const manifestIds = assetManifest.assets.map(asset => asset.asset_id);
   const integratedPaths = [];
@@ -371,12 +378,14 @@ async function main(){
   localStorage.removeItem('mg_art_tabletop_wave_a');
 
   localStorage.setItem('mg_art_gomoku_v1', '0');
+  localStorage.setItem('mg_art_game_icon_system_v2', '0');
   G.renderHub();
   const rollbackGomokuCard = $('game-grid').children.find(card => card.dataset.gameId === 'gomoku');
   G.playerCount = 2; G.showGame('gomoku');
-  check('五子棋 feature flag 关闭后回退 Emoji 大厅卡', rollbackGomokuCard && !rollbackGomokuCard.classList.contains('has-cover'));
+  check('五子棋旧封面与 v2 图标总开关关闭后回退 Emoji 大厅卡', rollbackGomokuCard && !rollbackGomokuCard.classList.contains('has-cover'));
   check('五子棋旧美术 feature flag 关闭后仍可由默认 Wave A 开局', area().children[0] && area().children[0].classList.contains('tabletop-art-wave-a') && !area().children[0].classList.contains('game-art-v1'));
   localStorage.removeItem('mg_art_gomoku_v1');
+  localStorage.removeItem('mg_art_game_icon_system_v2');
   G.renderHub();
 
   /* 各游戏初始化（支持的人数组合） */

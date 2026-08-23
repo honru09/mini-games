@@ -377,7 +377,7 @@ async function verifyTankAuthorityOnline(host){
   const tankGuestControls=tankGuest.$('game-extra').querySelector('.tank-realtime-controls');
   const tankHostJoystick=tankHostControls.querySelector('.tank-joystick'),tankGuestJoystick=tankGuestControls.querySelector('.tank-joystick');
   const tankHostFire=tankHostControls.querySelector('.tank-fire'),tankGuestFire=tankGuestControls.querySelector('.tank-fire');
-  assert('坦克大战：联机双方显示八方向摇杆、降级按键和独立开炮控件',!!tankHostJoystick&&!!tankGuestJoystick&&!!tankHostControls.querySelector('.tank-dpad')&&!!tankGuestControls.querySelector('.tank-dpad')&&!!tankHostFire&&!!tankGuestFire);
+  assert('坦克大战：联机双方显示单一移动控件、切换按钮和独立开炮控件',!!tankHostJoystick&&!!tankGuestJoystick&&!!tankHostControls.querySelector('.tank-dpad')&&!!tankGuestControls.querySelector('.tank-dpad')&&!!tankHostControls.querySelector('.tank-control-mode-toggle')&&!!tankGuestControls.querySelector('.tank-control-mode-toggle')&&!!tankHostFire&&!!tankGuestFire&&tankHostControls.querySelector('.tank-dpad').hidden===true&&tankGuestControls.querySelector('.tank-dpad').hidden===true);
   assert('坦克大战：正式联机启用服务端权威协议',host.info().game.getRelayState().protocol==='tank-authority-v1'&&tankGuest.info().game.getRelayState().protocol==='tank-authority-v1');
   const hostProfile=host.info().roster.find(p=>p.uid===host.info().deviceUid),guestProfile=tankGuest.info().roster.find(p=>p.uid===tankGuest.info().deviceUid);
   const before={hostCoins:hostProfile.coins,hostTotal:hostProfile.total,hostPlayed:hostProfile.played.tank||0,
@@ -509,7 +509,7 @@ async function main(){
     assert('房主创建房间并拿到 6 位房间码', /^[A-Z0-9]{6}$/.test(room));
     await waitFor(host, () => !host.$('room-panel').classList.contains('hidden'), '房主房间面板出现', 4000);
     assert('大厅房间面板显示房间码', host.$('room-code-big').textContent === room);
-    assert('房间面板显示人数 1/2 与等待状态', host.$('room-info').textContent.includes('1/2') && host.$('room-status').textContent.includes('等待'));
+    assert('房间面板显示人数 1/2 与等待状态', host.$('room-info').textContent.includes('1/2') && host.$('room-status').querySelector('.room-status-label').textContent.includes('等待'));
     await waitFor(guest, () => btnByText(guest.$('lobby-list'), '加入') !== null, '大厅出现房主房间', 4000);
     assert('游戏大厅显示等待中的房间', guest.$('lobby-list').children.length >= 1);
 
@@ -605,7 +605,7 @@ async function main(){
     guest.context.window.__gameInfo.online.ws.close();
     await waitFor(host, () => host.info().game === null && host.info().online.roomInfo && host.info().online.roomInfo.size === 1, '房主收到离开通知', 4000);
     assert('房主回到大厅且房间面板保留等待', host.$('screen-game').classList.contains('hidden') && !host.$('screen-hub').classList.contains('hidden') &&
-      !host.$('room-panel').classList.contains('hidden') && (host.$('room-status').textContent.includes('等待') || host.$('room-status').textContent.includes('已选择')));
+      !host.$('room-panel').classList.contains('hidden') && (host.$('room-status').querySelector('.room-status-label').textContent.includes('等待') || host.$('room-status').querySelector('.room-status-label').textContent.includes('已选择')));
 
     /* 7. 离开旧房间，准备多游戏联机测试 */
     const leaveBtn = btnByText(host.$('room-actions'), '离开房间');

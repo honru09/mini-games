@@ -25,9 +25,6 @@ const MARKER = '<!-- BUILD:JS -->';
 // changing it is a product/build decision, not a filesystem enumeration.
 const MODULES = Object.freeze([
   'games/00-tabletop-perspective.js',
-  // Shared Ghost3D camera vocabulary is pure presentation data. Renderers
-  // own Three/GSAP objects and may consume these frozen poses lazily.
-  'games/00-tabletop-camera-rig.js',
   'core/00-i18n.js',
   'core/01-utils.js',
   'core/06-assets.js',
@@ -46,17 +43,7 @@ const MODULES = Object.freeze([
   'core/11-surface-motion.js',
   // Game Stage status feedback is a presentation-only, lazy GSAP island.
   'core/12-game-stage-motion.js',
-  // Technical runtime controls are inert until a caller explicitly creates
-  // an instance; they expose no DOM, game, network, or persistence behavior.
   'core/13-client-diagnostics-ring.js',
-  'core/13-renderer-device-profile.js',
-  'core/13-renderer-runtime-governor.js',
-  // Frame-budget recommendations become real Renderer quality changes only
-  // through this presentation-only, caller-rejectable adapter.
-  'core/13-renderer-quality-adapter.js',
-  // Game-scoped optional Renderer islands are resolved through this loader;
-  // the six logical game factories remain inline and synchronous.
-  'core/14-game-module-loader.js',
   // 2.5D-first platform presentation. These bridges are renderer-agnostic;
   // the optional GSAP adapter is lazy and the frozen Three islands stay off.
   'core/23-depth-scene.js',
@@ -64,6 +51,7 @@ const MODULES = Object.freeze([
   'core/26-ghost-mascot-motion.js',
   'core/27-page-transition.js',
   'core/28-game-stage-2_5d.js',
+  'core/29-replay-cinematic.js',
   // T3 semantic feedback and input seams are inert by default. The local
   // adapter owns only explicitly unlocked, bounded Tank audio/haptics.
   'core/15-feedback-bus.js',
@@ -73,6 +61,9 @@ const MODULES = Object.freeze([
   // the browser lifecycle bridge is loaded only after the pure adapters.
   'core/21-unified-feedback-adapter.js',
   'core/22-audio-runtime.js',
+  'core/30-audio-spectrum-art.js',
+  'core/31-social-share-template.js',
+  'core/32-tournament-broadcast-overlay.js',
   // T4 board AI remains a default-off local optimization.  Keep the pure
   // kernel before its broker and both before any game caller.
   'core/18-board-ai-kernel.js',
@@ -85,8 +76,6 @@ const MODULES = Object.freeze([
   'core/05-ai-personas.js',
   'online/03-websocket.js',
   'core/07-playline.js',
-  // Foundation is inert until an exact per-game opt-in bridge creates an instance.
-  'core/08-ghost3d-foundation.js',
   'shop/04-auth.js',
   'shop/05-profile.js',
   'shop/06-shop.js',
@@ -101,11 +90,7 @@ const MODULES = Object.freeze([
   'games/gomoku.js',
   'games/ludo.js',
   'games/monopoly.js',
-  // Tank owns the caller; its presentation-only deep module must exist first.
-  'games/tank-ghost3d-presenter.js',
   'games/tank.js',
-  // Tetris owns the caller; its presentation-only deep module must exist first.
-  'games/tetris-ghost3d-presenter.js',
   'games/tetris.js',
   'games/xiangqi.js',
   '08-registry.js',

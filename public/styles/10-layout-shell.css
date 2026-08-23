@@ -1,0 +1,227 @@
+/* Ghost Game shell and Home geometry. This module owns page-wide composition. */
+html[data-layout-system="v1"],
+html[data-layout-system="v1"] body {
+  min-width: 320px;
+  overflow-x: clip;
+}
+
+html[data-layout-system="v1"] #app {
+  width: min(100%, var(--ghost-layout-max));
+  max-width: var(--ghost-layout-max);
+  margin-inline: auto;
+  padding-inline: var(--ghost-layout-gutter);
+  padding-bottom: clamp(30px, 5vw, 64px);
+}
+
+html[data-layout-system="v1"] .app-header {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) auto;
+  align-items: center;
+  gap: 14px 24px;
+  min-height: var(--ghost-layout-nav-height);
+  margin-bottom: clamp(14px, 2vw, 26px);
+}
+
+html[data-layout-system="v1"] .ghost-brand-button,
+html[data-layout-system="v1"] .brand-tag,
+html[data-layout-system="v1"] .desktop-app-nav {
+  min-width: 0;
+}
+
+html[data-layout-system="v1"] .ghost-brand-button {
+  justify-self: start;
+  overflow: hidden;
+}
+
+html[data-layout-system="v1"] .brand-tag {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+html[data-layout-system="v1"] .desktop-app-nav {
+  justify-self: end;
+  max-width: 100%;
+}
+
+html[data-layout-system="v1"] .desktop-app-nav .app-nav-button {
+  min-width: var(--ghost-layout-control-height);
+  min-height: var(--ghost-layout-control-height);
+  white-space: nowrap;
+}
+
+html[data-layout-system="v1"] #screen-hub,
+html[data-layout-system="v1"] .app-route {
+  min-width: 0;
+}
+
+html[data-layout-system="v1"] .app-route:not(.hidden) {
+  width: 100%;
+}
+
+html[data-layout-system="v1"] .hero-carousel {
+  min-height: clamp(330px, 38vw, 470px);
+  border-radius: clamp(22px, 3vw, 34px);
+}
+
+html[data-layout-system="v1"] .hero-slide {
+  grid-template-columns: minmax(0, 1.04fr) minmax(220px, .96fr);
+  gap: clamp(18px, 4vw, 58px);
+  padding: clamp(26px, 5vw, 58px);
+}
+
+html[data-layout-system="v1"] .hero-copy {
+  width: min(100%, 610px);
+  min-width: 0;
+  align-self: center;
+}
+
+html[data-layout-system="v1"] .hero-copy :is(h1, h2, p) {
+  max-width: 18ch;
+  overflow-wrap: anywhere;
+}
+
+html[data-layout-system="v1"] .hero-copy p {
+  max-width: 42ch;
+}
+
+html[data-layout-system="v1"] .hero-honru,
+html[data-layout-system="v1"] .hero-orbit,
+html[data-layout-system="v1"] .hero-ghost-cluster {
+  justify-self: center;
+  align-self: center;
+  max-width: 100%;
+}
+
+html[data-layout-system="v1"] .home-personal-scene {
+  min-height: clamp(210px, 26vw, 340px);
+  margin-block: var(--ghost-layout-gap);
+}
+
+html[data-layout-system="v1"] .home-dashboard {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  grid-template-areas:
+    "welcome welcome welcome welcome welcome welcome status status status games games games"
+    "onboard onboard onboard onboard onboard onboard onboard onboard goal goal goal goal"
+    "pulse pulse pulse pulse pulse pulse pulse pulse pulse pulse pulse pulse";
+  gap: var(--ghost-layout-gap);
+  margin-top: var(--ghost-layout-gap);
+}
+
+html[data-layout-system="v1"] .home-dashboard > * {
+  min-width: 0;
+  margin: 0;
+}
+
+html[data-layout-system="v1"] .home-welcome { grid-area: welcome; }
+html[data-layout-system="v1"] .home-status-card { grid-area: status; }
+html[data-layout-system="v1"] .home-games-preview { grid-area: games; }
+html[data-layout-system="v1"] .home-onboarding { grid-area: onboard; }
+html[data-layout-system="v1"] .home-goal-card { grid-area: goal; }
+html[data-layout-system="v1"] .home-engagement-pulse,
+html[data-layout-system="v1"] .home-active-match-return { grid-area: pulse; }
+
+html[data-layout-system="v1"] .home-glass-card {
+  min-height: 100%;
+  padding: var(--ghost-layout-card-padding);
+}
+
+html[data-layout-system="v1"] .home-card-actions,
+html[data-layout-system="v1"] .home-pulse-actions,
+html[data-layout-system="v1"] .playline-composer-actions,
+html[data-layout-system="v1"] .playline-side-actions {
+  align-items: stretch;
+  flex-wrap: wrap;
+}
+
+html[data-layout-system="v1"] :is(.home-card-actions, .home-pulse-actions, .playline-composer-actions, .playline-side-actions) .btn {
+  min-width: var(--ghost-layout-control-height);
+  min-height: var(--ghost-layout-control-height);
+}
+
+html[data-layout-system="v1"] .route-heading {
+  width: 100%;
+  max-width: none;
+  margin-block: clamp(22px, 4vw, 46px) var(--ghost-layout-gap);
+}
+
+html[data-layout-system="v1"] .route-heading-with-actions {
+  align-items: end;
+}
+
+html[data-layout-system="v1"] .route-heading-copy {
+  min-width: 0;
+}
+
+html[data-layout-system="v1"] .route-heading h1 {
+  max-width: 16ch;
+  overflow-wrap: anywhere;
+}
+
+html[data-layout-system="v1"] :is(.home-card-copy, .route-heading-copy, .home-step-copy, .home-goal-copy) {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+html[data-layout-system="v1"] :is(.home-card-copy, .route-heading-copy) :is(p, .muted, small) {
+  max-width: var(--ghost-layout-readable);
+}
+
+@media (max-width: 900px) {
+  html[data-layout-system="v1"] .app-header {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+}
+
+@media (max-width: 640px) {
+  html[data-layout-system="v1"] #app {
+    padding-bottom: calc(var(--ghost-nav-height, 74px) + 24px);
+  }
+
+  html[data-layout-system="v1"] .app-header {
+    gap: 8px;
+  }
+
+  html[data-layout-system="v1"] .brand-tag {
+    display: none;
+  }
+
+  html[data-layout-system="v1"] .hero-carousel {
+    min-height: 500px;
+  }
+
+  html[data-layout-system="v1"] .hero-slide {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) 160px;
+    gap: 6px;
+    padding: 22px 18px 52px;
+  }
+
+  html[data-layout-system="v1"] .hero-copy :is(h1, h2) {
+    max-width: 12ch;
+    font-size: clamp(30px, 10vw, 42px);
+  }
+
+  html[data-layout-system="v1"] .home-dashboard {
+    grid-template-columns: 1fr;
+    grid-template-areas: "welcome" "status" "games" "onboard" "goal" "pulse";
+  }
+
+  html[data-layout-system="v1"] .home-step-list,
+  html[data-layout-system="v1"] .home-pulse-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  html[data-layout-system="v1"] .route-heading h1 {
+    font-size: clamp(32px, 11vw, 42px);
+  }
+
+  html[data-layout-system="v1"] .route-heading-with-actions {
+    align-items: center;
+  }
+
+  html[data-layout-system="v1"] .route-heading-actions {
+    flex: 0 0 auto;
+  }
+}

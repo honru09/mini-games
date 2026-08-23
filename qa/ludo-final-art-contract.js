@@ -4,7 +4,9 @@ const family=JSON.parse(fs.readFileSync(path.join(ROOT,'art-source/games/ludo/fi
 const manifest=JSON.parse(fs.readFileSync(path.join(ROOT,'public/assets/manifests/asset_manifest.json'),'utf8'));
 const catalog=JSON.parse(fs.readFileSync(path.join(ROOT,'asset-library/catalog.json'),'utf8'));
 const productionLedger=JSON.parse(fs.readFileSync(path.join(ROOT,'art-source/production/ghost-game-art-program-v1/production-ledger-v1.json'),'utf8'));
-const assets=fs.readFileSync(path.join(ROOT,'public/src/core/06-assets.js'),'utf8'),ludo=fs.readFileSync(path.join(ROOT,'public/src/games/ludo.js'),'utf8'),runtime=fs.readFileSync(path.join(ROOT,'public/src/games/00-tabletop-art-runtime.js'),'utf8'),html=fs.readFileSync(path.join(ROOT,'public/index-template.html'),'utf8');
+const assets=fs.readFileSync(path.join(ROOT,'public/src/core/06-assets.js'),'utf8'),ludo=fs.readFileSync(path.join(ROOT,'public/src/games/ludo.js'),'utf8'),runtime=fs.readFileSync(path.join(ROOT,'public/src/games/00-tabletop-art-runtime.js'),'utf8');
+const { readPresentationSource } = require('./presentation-source');
+const html=readPresentationSource();
 const provenance=fs.readFileSync(path.join(ROOT,'art-source/games/ludo/final-art-v1/PROMPT_AND_PROVENANCE.md'),'utf8'),clearance=fs.readFileSync(path.join(ROOT,'art-source/games/ludo/final-art-v1/OWNER_AUTHORIZED_ART_CLEARANCE.md'),'utf8');
 const skillRouting=fs.readFileSync(path.join(ROOT,'art-source/games/ludo/final-art-v1/SKILL_ROUTING.md'),'utf8'),productionReadme=fs.readFileSync(path.join(ROOT,'art-source/production/ghost-game-art-program-v1/README.md'),'utf8'),approvalMatrix=fs.readFileSync(path.join(ROOT,'requirements/ART_APPROVAL_MATRIX.md'),'utf8');
 let failures=0;function check(name,value,detail=''){console.log((value?'PASS ':'FAIL ')+name+(detail?' '+detail:''));if(!value)failures++;}function file(p){return path.join(ROOT,...String(p).replace(/\\/g,'/').split('/'));}function digest(f){const b=fs.readFileSync(f);return{sha256:crypto.createHash('sha256').update(b).digest('hex').toUpperCase(),bytes:b.length};}
@@ -26,11 +28,13 @@ check('Wave A override, CSS and reduced motion',runtime.includes('data-ludo-fina
 check('clearance keeps advisory/release boundaries',/OPTIONAL_ADVISORY_EVIDENCE/.test(clearance)&&/blocked-license/.test(clearance)&&/不构成.*发布批准/.test(clearance));
 const productionUnit=productionLedger.units.find(x=>x&&x.id==='P0-07'),skillNames=['imagegen','ai-image-generation','gpt-image','image','happy-image-gen','html-to-image','website-screenshot','code-to-image','og-image'];
 check('production ledger closes P0-07',!!productionUnit&&productionUnit.status==='implemented_owner_cleared_release_evidence_pending'&&Object.values(productionUnit.completion||{}).join(',')==='100,100,100,0,0,0'&&productionUnit.deliverables.runtimeVariants===68&&productionUnit.deliverables.sourceMasters===34&&productionUnit.deliverables.runtimeBytes===1163616&&productionUnit.evidence.includes('art-source/games/ludo/final-art-v1/SKILL_ROUTING.md'));
-check('program progress preserves P0-07 and advances strictly through P0-09',
-  /9\s*\/\s*33\s*=\s*27\.27%/.test(productionReadme)&&
-  /P0[^\n]*9\s*\/\s*12\s*=\s*75%/.test(productionReadme)&&
-  /P0-10\s*\/\s*P-PLAYER-CHARACTER-LAYERED-V1/.test(productionReadme)&&
-  ['P0-08','P0-09'].every(id=>!!productionLedger.units.find(x=>x&&x.id===id&&x.status==='implemented_owner_cleared_release_evidence_pending')));
+const completedStatus='implemented_owner_cleared_release_evidence_pending',frozenStatus='queued_frozen_optional_experiment',orderedUnits=productionLedger.units.slice().sort((a,b)=>Number(a&&a.order||0)-Number(b&&b.order||0)),completedUnits=orderedUnits.filter(x=>x&&x.status===completedStatus),p0Units=orderedUnits.filter(x=>x&&/^P0-/.test(x.id)),completedP0=p0Units.filter(x=>x.status===completedStatus),nextUnit=orderedUnits.find(x=>x&&x.status!==completedStatus&&x.status!==frozenStatus),nextIndex=orderedUnits.indexOf(nextUnit);
+const progressPercent=(done,total)=>Number.isInteger(done*100/total)?String(done*100/total):(done*100/total).toFixed(2);
+check('program progress is derived from the ledger and preserves strict order',
+  productionReadme.includes(`${completedUnits.length} / ${productionLedger.units.length} = ${progressPercent(completedUnits.length,productionLedger.units.length)}%`)&&
+  productionReadme.includes(`${completedP0.length} / ${p0Units.length} = ${progressPercent(completedP0.length,p0Units.length)}%`)&&
+  (!nextUnit || productionReadme.includes(`${nextUnit.id} / ${nextUnit.familyId}`))&&
+  (!nextUnit || (nextIndex===completedUnits.length+orderedUnits.filter(x=>x&&x.status===frozenStatus&&orderedUnits.indexOf(x)<nextIndex).length&&orderedUnits.slice(0,nextIndex).every(x=>x&&(x.status===completedStatus||x.status===frozenStatus))))&&completedUnits.includes(productionUnit));
 check('nine-entry skill routing is explicit',skillNames.every(name=>skillRouting.includes('`'+name+'`'))&&(skillRouting.match(/`NOT_APPLICABLE`/g)||[]).length===9&&/blocked-license/.test(skillRouting)&&/没有.*生成输入/.test(skillRouting));
 check('approval matrix indexes P0-07',approvalMatrix.includes('P0-07 Ludo Final')&&approvalMatrix.includes('`G-07-LUDO-FINAL-ART-V1`')&&approvalMatrix.includes('`1,163,616` bytes / 8 MiB'));
 if(failures){console.error('LUDO_FINAL_ART_CONTRACT_FAILURES='+failures);process.exit(1);}else console.log('LUDO_FINAL_ART_CONTRACT_ALL_PASS');

@@ -3,7 +3,8 @@
 /* UI Repair P0.8: Shop hierarchy/density contract; no commerce authority changes. */
 const fs=require('fs');const path=require('path');
 const ROOT=path.join(__dirname,'..');
-const template=fs.readFileSync(path.join(ROOT,'public','index-template.html'),'utf8');
+const { readPresentationSource } = require('./presentation-source');
+const template=readPresentationSource();
 const shop=fs.readFileSync(path.join(ROOT,'public','src','shop','06-shop.js'),'utf8');
 const server=fs.readFileSync(path.join(ROOT,'server','index.js'),'utf8');
 const locales=Object.fromEntries(['zh-CN','en-US','uk-UA'].map(lang=>[lang,JSON.parse(fs.readFileSync(path.join(ROOT,'public','locales',lang+'.json'),'utf8'))]));

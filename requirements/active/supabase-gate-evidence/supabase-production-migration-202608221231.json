@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 1,
+  "evidenceClass": "REAL_PRODUCTION_PARTIAL_EVIDENCE",
+  "generatedAt": "2026-08-22T12:31:30+09:00",
+  "projectRef": "bmkblcdncvgrhgwsfafm",
+  "result": "CORE_SCHEMA_AND_RLS_ACCEPTED",
+  "releaseStatus": "RELEASE_EVIDENCE_PENDING",
+  "completed": {
+    "projectIdentityAligned": true,
+    "databaseSessionConnection": "PASS",
+    "encryptedBackup": {
+      "status": "PASS",
+      "mode": "WINDOWS_DPAPI_WRAPPED_AES_256_GCM",
+      "plaintextDumpAtRest": false,
+      "pgRestoreListVerification": "PASS",
+      "artifacts": [
+        {
+          "name": "supabase-20260822-121235.dump.aes",
+          "sha256": "7bcb2e7098574e2d31af8c662c55c3816ef30aa49ea197b05449ced07749e66c"
+        },
+        {
+          "name": "supabase-20260822-121439.dump.aes",
+          "sha256": "aad44c8c35cfd9eac852d6c193ee6babca465368564afa16742216c95640c1e7"
+        },
+        {
+          "name": "supabase-20260822-122314.dump.aes",
+          "sha256": "f553bafdbff02fa54aaccb2d988e5ac50ce3d90da33c3207e5dd9ff2f30717ec"
+        }
+      ]
+    },
+    "transactionalSchemaMigration": "PASS",
+    "productionAcceptanceSql": "PRODUCTION_ACCEPTANCE_PASS",
+    "isolatedRestoreDrill": {
+      "status": "PASS",
+      "targetProjectRef": "pgwmhbqiobqmuawkonhz",
+      "method": "encrypted_custom_dump_to_pg_restore_sql_pipe_to_psql_public_schema_plus_idempotent_schema_replay",
+      "productionAcceptance": "PRODUCTION_ACCEPTANCE_PASS"
+    },
+    "rlsAndBrowserRoleRevocation": "PASS",
+    "serviceRoleTableCrud": "PASS",
+    "rewardPurchaseAiLearningDirectChatClusterRpcSurface": "PASS",
+    "postgrestStatusProbe": "PASS",
+    "openApiSurfaceDiscovery": "PRECHECK_PASS_RELEASE_EVIDENCE_PENDING"
+  },
+  "repairs": [
+    "fail-closed parsing and atomic line persistence for .env.supabase.local",
+    "production acceptance apply_reward_v1 signature aligned to four jsonb parameters",
+    "explicit least-privilege service_role CRUD grants and sequence access",
+    "DPAPI + AES-256-GCM streaming backup fallback when EFS and BitLocker are unavailable"
+  ],
+  "notCompleted": {
+    "nonDestructiveRollbackDrill": "NOT_EXECUTED",
+    "validTransactionConcurrencyAndIdempotency": "NOT_EXECUTED",
+    "twoInstanceLeasePubSubSingleWriter": "NOT_EXECUTED",
+    "renderEnvironmentUpdate": "NOT_EXECUTED",
+    "deployment": "NOT_EXECUTED"
+  },
+  "security": {
+    "credentialsPersistedInRepository": false,
+    "localCredentialFileGitIgnored": true,
+    "localCredentialAclCurrentUserOnly": true,
+    "credentialRotation": "REQUIRED_BECAUSE_CREDENTIALS_WERE_SHARED_IN_CHAT"
+  },
+  "boundary": "This evidence proves the production project's core schema, RLS, service-role access, RPC surface and encrypted backup. It does not open GATE-SUPABASE-PRODUCTION or authorize release, cluster coordination, Render changes or deployment."
+}

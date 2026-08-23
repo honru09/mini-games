@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "familyId": "P-HONRU-SEASONAL-V1",
+  "policy": "EXTERNAL_REFERENCE_ONLY / blocked-license inventory remained discoverable, but no external file, pixel, layer, preview, URL, PSD, AI or EPS object was transmitted.",
+  "externalRestrictedInputCount": 0,
+  "transmissions": [],
+  "runtimeExternalAssetCount": 0,
+  "externallyInfluencedCandidateCount": 0
+}

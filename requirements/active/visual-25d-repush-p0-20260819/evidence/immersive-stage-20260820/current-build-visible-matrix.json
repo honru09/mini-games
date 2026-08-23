@@ -1,0 +1,112 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-08-20T03:13:18+09:00",
+  "evidenceClass": "LOCAL_SINGLE_CHROMIUM_SIMULATION_ONLY",
+  "build": {
+    "path": "public/index.html",
+    "characters": 1930802,
+    "utf8Bytes": 1945530,
+    "sha256": "4BCB27270281350EA2D73F9A7B6AD5B8A9F12720F7902DFBB47D4AE3FDA96A98"
+  },
+  "runtime": {
+    "renderer": "DOM_CSS_CANVAS_GSAP_2_5D",
+    "threeJs": false,
+    "ghost3d": false,
+    "cameraAdapter": "depth-motion-25d-v3"
+  },
+  "matrix": {
+    "viewports": [
+      "360x800",
+      "390x844",
+      "844x390",
+      "768x1024",
+      "1024x768",
+      "1440x900"
+    ],
+    "games": [
+      "gomoku",
+      "ludo",
+      "monopoly",
+      "tetris",
+      "tank",
+      "xiangqi"
+    ],
+    "scenarioCount": 36,
+    "checks": [
+      "document horizontal overflow equals zero",
+      "document vertical overflow equals zero while Game Stage is active",
+      "board remains inside Arena and outside the interactive HUD controls",
+      "Command content remains internally bounded or deliberately scrollable",
+      "every rendered game action is at least 44 CSS px tall",
+      "header and seat rail remain visible",
+      "Tetris opponent well and all seven controls remain visible",
+      "Tank joystick, four-way D-pad and fire remain visible",
+      "Ludo and Monopoly legacy meta rails are removed from the Arena and owned by the HUD"
+    ],
+    "result": "PASS",
+    "android360x800Final": {
+      "scenarioCount": 6,
+      "documentOverflowX": 0,
+      "documentOverflowY": 0,
+      "minimumRenderedActionHeight": 44,
+      "maximumActionBottom": {
+        "gomoku": 788,
+        "ludo": 756,
+        "monopoly": 692,
+        "tetris": 797,
+        "tank": 798
+      },
+      "viewportBottom": 800
+    }
+  },
+  "screenshots": [
+    {
+      "path": "requirements/active/visual-25d-repush-p0-20260819/evidence/immersive-stage-20260820/android-360x800-tetris.png",
+      "utf8Bytes": 46960,
+      "sha256": "1FFD67FF3477030BAF22CC9C3BDE6712426A1ED7B33464BD21F01CD6CFE864A4"
+    },
+    {
+      "path": "requirements/active/visual-25d-repush-p0-20260819/evidence/immersive-stage-20260820/iphone-390x844-ludo.png",
+      "utf8Bytes": 58031,
+      "sha256": "7678240C38394D69476B1CA3A5139508DF882FBDE7E01DFD904D9D4B429A46F1"
+    },
+    {
+      "path": "requirements/active/visual-25d-repush-p0-20260819/evidence/immersive-stage-20260820/phone-landscape-844x390-gomoku.png",
+      "utf8Bytes": 48722,
+      "sha256": "5E3C2FE67827AE1A9DD3E853DA59989BB05E67E82B46721627FDFE21BFD4B4C5"
+    },
+    {
+      "path": "requirements/active/visual-25d-repush-p0-20260819/evidence/immersive-stage-20260820/tablet-portrait-768x1024-monopoly.png",
+      "utf8Bytes": 88715,
+      "sha256": "F67F452E274C12B61CBBA193622DA14321177C52119309470CC17477714511A4"
+    },
+    {
+      "path": "requirements/active/visual-25d-repush-p0-20260819/evidence/immersive-stage-20260820/tablet-landscape-1024x768-tetris.png",
+      "utf8Bytes": 71842,
+      "sha256": "F32C750453278664CC11851BB931141924A6036A4C58DDAC3E612802043D263C"
+    },
+    {
+      "path": "requirements/active/visual-25d-repush-p0-20260819/evidence/immersive-stage-20260820/desktop-1440x900-tank.png",
+      "utf8Bytes": 90386,
+      "sha256": "4FF78759A76DC263512AF5284585D5BE3F98EEA4260B3407F7548EB77BF80FA9"
+    }
+  ],
+  "automatedEvidence": {
+    "visual25d": "PASS",
+    "immersiveShell": "PASS",
+    "gameStageWaveB": "PASS",
+    "gameStageDensityFinal": "PASS",
+    "gameplayLoad": "PASS_10_25_50_SYNTHETIC_ROOMS",
+    "gameplayMemory": "PASS_1000_SESSION_CREATE_DESTROY",
+    "timerAudit": "PASS",
+    "simulatedDeviceMatrix": "PASS_LOCAL_ONLY",
+    "networkSimulation": "PASS_LOCAL_50_100_200MS_ONLY"
+  },
+  "nonClaims": [
+    "not a second browser engine",
+    "not a physical Android, iPhone or Tablet",
+    "not a real OS or carrier network shaper",
+    "not a low-end physical GPU, thermal or battery measurement",
+    "not production release evidence"
+  ]
+}

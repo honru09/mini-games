@@ -15,6 +15,7 @@ const facial = readJson('art-source/style/facial-kit.v1.json');
 const schema = readJson('art-source/style/source-manifest-v2.schema.json');
 const manifest = readJson('art-source/style/golden-set-source-manifest-v2.json');
 const runtimeManifest = readJson('public/assets/manifests/asset_manifest.json');
+const inheritedHonruManifest = readJson('art-source/brand/ghost-game/honru/context-reactions-v1/asset-family-manifest-v1.json');
 const bible = readText('art-source/style/ART_BIBLE_v1.md');
 const motion = readText('art-source/style/MOTION_SYSTEM_v1.md');
 const design = readText('art-source/ui/sticker-v1/DESIGN_SYSTEM_v3.md');
@@ -82,10 +83,25 @@ function hasExplicitReleaseBoundary(text){
 
 function sourceAssetForRuntime(runtimeAsset){
   if (!runtimeAsset || typeof runtimeAsset !== 'object') return null;
-  return manifest.assets.find(asset =>
+  const direct = manifest.assets.find(asset =>
     runtimeAsset.source_asset_id === asset.assetId ||
     runtimeAsset.catalog_key === asset.assetId ||
     (Array.isArray(asset.source && asset.source.paths) && asset.source.paths.includes(runtimeAsset.source))) || null;
+  if (direct) return direct;
+  // P2-03 is an inherited projection: its owner-cleared source authority is
+  // the P0-08 Honru mother, while the runtime family keeps a distinct stable
+  // source id for auditability. Normalize that sidecar here so the generic
+  // atomic-clearance contract can validate the same hash/fallback invariants.
+  if (runtimeAsset.source_asset_id === 'ART-HONRU-STICKER-BOOK-V1') {
+    const source = inheritedHonruManifest.sourceMother || inheritedHonruManifest.sourceChromaMother;
+    if (source && source.path && source.sha256) return {
+      assetId: 'ART-HONRU-STICKER-BOOK-V1',
+      artworkVersion: inheritedHonruManifest.artworkVersion,
+      source: { paths: [source.path], sha256: source.sha256 },
+      inheritedProjection: true,
+    };
+  }
+  return null;
 }
 
 const paletteKeys = ['ink900','ink700','paper50','cream100','green500','teal500','blue500','purple500','pink500','coral500','gold500','brown500'];
@@ -154,7 +170,12 @@ check('Future ImageGen prompts use the project style ID and exclude external ski
 check('Execution records verified style direction and honestly pending optional per-asset advice', execution.progress.userVisualNorthStar.status === 'verified' && execution.progress.humanDecision.status === 'partial' && execution.progress.humanDecision.missing.includes('per-asset APPROVE/REWORK/REJECT decisions'));
 const gomokuSourceEntry = manifest.assets.find(asset => asset.assetId === 'G-02-STICKER-V1');
 const gomokuRuntimeEntry = runtimeManifest.assets.find(asset => asset.asset_id === 'G-02-STICKER-BOARD-SURFACE-V1');
-const stickerRuntimeEntries = runtimeManifest.assets.filter(asset => sourceAssetForRuntime(asset) || String(asset && asset.asset_id || '').includes('STICKER'));
+// P2-03 is an inherited read-only Context projection with its own contract;
+// this legacy M0 contract must only inspect the original Gomoku Sticker atom.
+const stickerRuntimeEntries = runtimeManifest.assets.filter(asset => {
+  const id = String(asset && asset.asset_id || '');
+  return sourceAssetForRuntime(asset) || (id.includes('STICKER') && id !== 'P-COLLECTIBLE-STICKER-BOOK-V1');
+});
 const ownerClearedRuntimeEntries = stickerRuntimeEntries.filter(asset => asset.clearance === ownerClearance || asset.feature_flags && asset.feature_flags.default_enabled === true);
 const technicalPreviewEntries = stickerRuntimeEntries.filter(asset => !ownerClearedRuntimeEntries.includes(asset));
 check('M0 source sidecar remains source authority while runtime derivatives stay separate', !!gomokuSourceEntry && gomokuSourceEntry.status === 'draft' && gomokuSourceEntry.ipReview.status === 'pending' && gomokuSourceEntry.runtime.paths.length === 0 && (!gomokuRuntimeEntry || gomokuRuntimeEntry.source === gomokuSourceEntry.source.paths[0] && gomokuRuntimeEntry.runtime_path !== gomokuRuntimeEntry.source));
@@ -176,6 +197,7 @@ check('No Sticker entry can be half-promoted between source/preview and owner-cl
 }));
 check('Every owner-cleared Sticker runtime atomically pins source, public derivative, integrity, fallback, flags and clearance evidence', ownerClearedRuntimeEntries.every(asset => {
   const sourceAsset = sourceAssetForRuntime(asset);
+  const inheritedProjection = !!(sourceAsset && sourceAsset.inheritedProjection);
   const flags = asset.feature_flags;
   const flagIds = flags && Array.isArray(flags.ids) ? flags.ids : [];
   const runtimePath = String(asset.runtime_path || '');
@@ -183,14 +205,18 @@ check('Every owner-cleared Sticker runtime atomically pins source, public deriva
   const sourceSha = String(sourceAsset && sourceAsset.source && sourceAsset.source.sha256 || '').toLowerCase();
   const clearancePath = String(asset.clearance_record || '');
   const clearanceText = clearancePath && exists(clearancePath) ? readText(clearancePath) : '';
+  const runtimeBytes = inheritedProjection
+    ? Object.values(asset.variants || {}).reduce((sum, value) => sum + (exists(value) ? fs.statSync(path.join(ROOT, value)).size : 0), 0)
+    : (runtimePath && exists(runtimePath) ? fs.statSync(path.join(ROOT, runtimePath)).size : 0);
+  const clearanceTokens = [ownerClearance, sourceAsset && sourceAsset.assetId, sourceSha, integrity, 'M0 North Star', optionalAdvisory, 'NOT_EXECUTED', 'fallback', 'blocked-license', 'EXTERNAL_REFERENCE_ONLY', ...flagIds];
   return sourceAsset && /^[a-f0-9]{64}$/.test(sourceSha) && asset.source_asset_id === sourceAsset.assetId && asset.artwork_version === sourceAsset.artworkVersion &&
     asset.status === 'ready' && asset.clearance === ownerClearance && flags && flags.operator === 'all' && flags.enabled_value === '1' &&
     flags.default_enabled === true && flagIds.length > 0 && flagIds.every(id => /^mg_(?:art|ui|persona|avatar)_/.test(id)) &&
     runtimePath.startsWith('public/assets/') && !runtimePath.includes('art-source/') && exists(runtimePath) &&
     /^[a-f0-9]{64}$/.test(integrity) && sha256(runtimePath) === integrity &&
-    Number.isInteger(asset.actual_bytes) && Number.isInteger(asset.byte_budget) && asset.actual_bytes === fs.statSync(path.join(ROOT, runtimePath)).size && asset.actual_bytes > 0 && asset.actual_bytes <= asset.byte_budget &&
+    Number.isInteger(asset.actual_bytes) && Number.isInteger(asset.byte_budget) && asset.actual_bytes === runtimeBytes && asset.actual_bytes > 0 && asset.actual_bytes <= asset.byte_budget &&
     asset.fallback_asset_id && typeof asset.fallback === 'string' && asset.fallback.length > 0 &&
-    clearanceText && [ownerClearance, sourceAsset.assetId, sourceSha, integrity, 'M0 North Star', optionalAdvisory, 'NOT_EXECUTED', 'fallback', 'blocked-license', 'EXTERNAL_REFERENCE_ONLY', ...flagIds].every(token => clearanceText.includes(token)) &&
+    clearanceText && clearanceTokens.every(token => clearanceText.includes(token)) &&
     !hasFabricatedHumanPass(clearanceText) && assetsRuntime.includes(asset.asset_id) && flagIds.every(id => assetsRuntime.includes(id)) && assetsRuntime.includes('ownerClearedDefaultOnFlagEnabled');
 }));
 check('Current technical preview consumer stays exact-default-off while owner-cleared consumers use the reversible default-on helper', technicalPreviewEntries.every(asset => asset.feature_flags.ids.every(id => assetsRuntime.includes(id))) && assetsRuntime.includes('flags.default_enabled !== false') && ownerClearedRuntimeEntries.every(asset => assetsRuntime.includes('ownerClearedDefaultOnFlagEnabled')));

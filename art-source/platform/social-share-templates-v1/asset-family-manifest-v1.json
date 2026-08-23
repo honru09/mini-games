@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "productionUnitId": "P2-09",
+  "familyId": "P-SOCIAL-SHARE-TEMPLATES-V1",
+  "assetId": "P-SOCIAL-SHARE-TEMPLATES-V1-CODE-NATIVE",
+  "artworkVersion": 1,
+  "clearance": "OWNER_AUTHORIZED_ART_CLEARANCE",
+  "status": "implemented_local_release_evidence_pending",
+  "sourceLicense": "PROJECT_OWNED_CODE_NATIVE_AND_OWNER_CLEARED_P1_06",
+  "runtimeType": "DOM_CSS_EXISTING_WEBP",
+  "requirements": ["SOC-033", "GAME-030"],
+  "kinds": ["game_share", "result_share", "record_share"],
+  "baseArtRoles": ["card-playline", "card-result", "card-record"],
+  "featureFlag": {
+    "id": "mg_art_social_share_templates_v1",
+    "enabledValue": "1",
+    "defaultEnabled": true,
+    "rollback": "0"
+  },
+  "runtimeFiles": [
+    {"path":"public/src/core/31-social-share-template.js","bytes":6961,"sha256":"82A5240C1A1C07507846D280905A774D803909175EBC0D9159B4D61B954F016C"}
+  ],
+  "integrationFiles": [
+    "public/src/core/06-assets.js",
+    "public/src/core/07-playline.js",
+    "public/index-template.html",
+    "scripts/build.js"
+  ],
+  "reviewFiles": [
+    {"path":"art-source/platform/social-share-templates-v1/review/social-share-template-review.html","bytes":3220,"sha256":"56878E2802EAD7F7F5A893D7773884580B8F9D36986493016FEC1D08AD227F8B"},
+    {"path":"art-source/platform/social-share-templates-v1/review/social-share-template-og-1200x630.jpg","bytes":48331,"width":1200,"height":630,"sha256":"70838F5403E8B8052BA3A619EFF6DCCDAB33C96650630401CAECC5A10F76C4ED"},
+    {"path":"art-source/platform/social-share-templates-v1/review/social-share-template-contact-sheet.jpg","bytes":136681,"width":1265,"height":1978,"sha256":"45D26088CDEDEEED91CBD87A27E452CFC900E735611F10F8579972A1C3A19B55"}
+  ],
+  "runtimeRasterBytesAdded": 0,
+  "reusedOwnerClearedFamily": "P-COMMUNITY-REPLAY-TOURNAMENT-CARDS-V1",
+  "externalReferenceInputs": 0,
+  "thirdPartyTransmissions": 0,
+  "releaseState": "LOCAL_ONLY_NOT_RELEASED"
+}

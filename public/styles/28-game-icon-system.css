@@ -1,0 +1,164 @@
+/* ================= P1-02 Tank Final Art · middle viewport ownership =================
+   Landscape stages taller than the compact-landscape breakpoint used to
+   inherit the desktop bottom Dock.  That Dock removed too much Arena height,
+   while Tank's HUD and three control groups competed in one clipped row.  Keep
+   the live map/process rail in one column and give this range a dedicated right
+   command rail; Rule, Authority and input nodes stay exactly where they are. */
+#screen-game.game-stage[data-shell-game="tank"] .game-stage-arena{
+  flex-direction:column
+}
+@media(min-width:600px) and (min-height:601px) and (orientation:landscape){
+  #screen-game.game-stage[data-shell-game="tank"]{
+    --stage-command-size:auto;--tank-middle-command-rail:clamp(300px,30vw,380px)
+  }
+  #screen-game.game-stage[data-shell-game="tank"] .game-stage-arena{
+    padding:4px calc(var(--tank-middle-command-rail) + 10px) 4px 4px
+  }
+  #screen-game.game-stage[data-shell-game="tank"] .game-stage-command{
+    top:4px;right:4px;bottom:4px;left:auto;
+    width:var(--tank-middle-command-rail);height:auto;max-height:none;
+    grid-template-columns:minmax(0,1fr);
+    grid-template-rows:auto auto minmax(0,1fr) auto auto;
+    grid-template-areas:"state" "status" "controls" "tools" "banner";
+    align-content:start;gap:6px;padding:7px;overflow-x:hidden;overflow-y:auto
+  }
+  #screen-game.game-stage[data-shell-game="tank"] .game-stage-command #status-bar{
+    min-height:44px;max-height:none
+  }
+  #screen-game.game-stage[data-shell-game="tank"] .game-stage-command .game-extra{
+    flex-direction:column;align-items:stretch;justify-content:flex-start;
+    min-height:0;overflow-x:hidden;overflow-y:auto
+  }
+  #screen-game.game-stage[data-shell-game="tank"] .tank-arena-hud{
+    flex:0 0 auto;width:100%;margin:0;padding:4px 5px
+  }
+  #screen-game.game-stage[data-shell-game="tank"] .tank-control-deck{
+    flex:0 0 auto;grid-template-columns:76px minmax(132px,1fr) 70px!important;
+    grid-template-areas:"stick dpad fire"!important;gap:4px!important;
+    width:100%;max-height:none;padding:2px!important;border:0;background:transparent
+  }
+  #screen-game.game-stage[data-shell-game="tank"] .tank-joystick{
+    width:72px;height:72px;min-width:72px;min-height:72px
+  }
+  #screen-game.game-stage[data-shell-game="tank"] .tank-fire{
+    width:66px;height:66px;min-width:66px!important;min-height:66px!important
+  }
+  #screen-game.game-stage[data-shell-game="tank"] .tank-control-hint,
+  #screen-game.game-stage[data-shell-game="tank"] .tank-joystick-direction{display:none}
+  #screen-game.game-stage[data-shell-game="tank"] .game-stage-secondary-tools{
+    width:100%;max-width:100%;max-height:144px;overflow:auto
+  }
+}
+
+/* ================= P0-12 · Game Icon System v2 =================
+   Runtime art is decorative; localized names and existing Emoji/Lucide nodes
+   remain the semantic and failure-safe presentation. */
+.game-icon-asset,.game-system-marker{
+  position:relative;display:inline-grid;place-items:center;flex:0 0 auto;
+  min-width:0;max-width:100%;line-height:1;vertical-align:middle;isolation:isolate;
+  pointer-events:none;user-select:none;-webkit-user-select:none;
+}
+.game-icon-asset{--game-icon-size:44px;width:var(--game-icon-size);height:var(--game-icon-size)}
+.game-icon-role-icon,.game-icon-role-theme-icon{--game-icon-size:44px}
+.game-icon-role-selected-object{--game-icon-size:96px}
+.game-icon-role-cover-crop{width:100%;height:auto;aspect-ratio:16/9}
+.game-icon-asset-image,.game-system-marker-image{
+  position:absolute;inset:0;display:block;width:100%;height:100%;object-fit:contain;
+  opacity:0;transform:scale(.96);transition:opacity var(--dur-fast) var(--ease-out),transform var(--dur-fast) var(--ease-out);
+  pointer-events:none;
+}
+.game-icon-role-cover-crop>.game-icon-asset-image{object-fit:cover}
+.game-icon-fallback,.game-system-marker-fallback{
+  grid-area:1/1;display:grid;place-items:center;width:100%;height:100%;min-width:0;
+  opacity:1;visibility:visible;transition:opacity var(--dur-fast) var(--ease-out);
+  color:currentColor;line-height:1;
+}
+.game-icon-asset.asset-ready>.game-icon-asset-image,
+.game-system-marker.asset-ready>.game-system-marker-image{opacity:1;transform:none}
+.game-icon-asset.asset-ready>.game-icon-fallback,
+.game-system-marker.asset-ready>.game-system-marker-fallback{opacity:0;visibility:hidden}
+.game-icon-asset.asset-failed>.game-icon-asset-image,
+.game-system-marker.asset-failed>.game-system-marker-image{opacity:0}
+.game-icon-asset.asset-failed>.game-icon-fallback,
+.game-system-marker.asset-failed>.game-system-marker-fallback{opacity:1;visibility:visible}
+
+/* The cover keeps its Emoji below both independently failing image layers.
+   JS only marks asset-ready after either the v2 crop or legacy cover loads. */
+.game-cover{isolation:isolate}
+.game-cover>.game-cover-fallback{z-index:1;opacity:1;visibility:visible;transition:opacity var(--dur-fast) var(--ease-out)}
+.game-cover>:is(.game-cover-v2,.game-cover-legacy){z-index:2;pointer-events:none}
+.game-cover.asset-ready>.game-cover-fallback{opacity:0;visibility:hidden}
+.game-cover.asset-failed>.game-cover-fallback{opacity:1;visibility:visible}
+
+/* Selected objects are transient decoration and never own the click target. */
+.game-card,.room-launchpad-game-choice{position:relative;isolation:isolate}
+.game-icon-selected-object{
+  position:absolute;z-index:4;inset:clamp(28px,5vw,48px) 6px auto auto;
+  opacity:0;visibility:hidden;transform:translate3d(12px,8px,0) scale(.82) rotate(3deg);
+  transition:opacity var(--dur-fast) var(--ease-out),transform var(--dur-base) var(--ease-out);
+  pointer-events:none!important;
+}
+.game-card[data-depth-selected="true"]>.game-icon-selected-object,
+.room-launchpad-game-choice.is-selected>.game-icon-selected-object{
+  opacity:1;visibility:visible;transform:translate3d(0,0,0) scale(1) rotate(0);
+}
+.room-launchpad-game-choice>.game-icon-selected-object{
+  --game-icon-size:40px;inset:50% auto auto 3px;
+  transform:translate3d(-3px,-50%,0) scale(.78) rotate(-3deg);
+}
+.room-launchpad-game-choice.is-selected>.game-icon-selected-object{transform:translate3d(-3px,-50%,0) scale(1) rotate(0)}
+
+/* Context sizing keeps the system compact without shrinking interactive targets. */
+.game-title-content{display:inline-flex;align-items:center;gap:8px;min-width:0;max-width:100%}
+.game-title-icon{--game-icon-size:36px}
+.game-title-label{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.home-mini-games>.home-mini-game-icon{width:100%;height:54px;min-height:54px}
+.home-mini-games .game-icon-asset>.game-icon-fallback{min-height:0;border:0;border-radius:0;background:transparent;font-size:24px}
+.profile-game-icon.game-icon-asset{--game-icon-size:42px}
+.playline-game-picker-icon.game-icon-asset{--game-icon-size:44px}
+.shop-preview-game-icon.game-icon-asset{--game-icon-size:1em}
+.room-launchpad-game-icon.game-icon-asset{--game-icon-size:30px}
+.mode-group{max-width:100%;flex-wrap:wrap}
+.mode-group>.count-btn{min-width:44px;min-height:44px;max-width:100%}
+
+.game-system-marker{--game-marker-size:24px;width:var(--game-marker-size);height:var(--game-marker-size)}
+.mode-system-marker{--game-marker-size:24px}
+/* Empty decorative fallbacks collapse completely, preserving the original
+   Lucide/text layout until the bitmap is actually ready. */
+.game-system-marker-empty-fallback:not(.asset-ready){display:none}
+.mode-system-marker.asset-ready+.ui-icon{display:none}
+
+@media(max-width:480px){
+  .game-title-icon{--game-icon-size:32px}
+  .game-card>.game-icon-selected-object{--game-icon-size:72px;inset:24px 3px auto auto}
+  .room-launchpad-game-choice>.game-icon-selected-object{--game-icon-size:36px;inset:50% auto auto 3px}
+  .mode-group{width:100%}
+  .mode-group>.count-btn{flex:1 1 116px;min-width:0}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .game-icon-asset-image,.game-icon-fallback,.game-system-marker-image,.game-system-marker-fallback,
+  .game-cover>.game-cover-fallback,.game-cover>:is(.game-cover-v2,.game-cover-legacy),.game-icon-selected-object{
+    transition:none!important;
+  }
+  .game-card:hover,.room-launchpad-game-choice:hover{transform:none!important}
+  .game-card:hover .game-cover.asset-ready img,.game-icon-selected-object,
+  .game-card[data-depth-selected="true"]>.game-icon-selected-object,
+  .room-launchpad-game-choice.is-selected>.game-icon-selected-object{transform:none!important}
+  .room-launchpad-game-choice>.game-icon-selected-object,
+  .room-launchpad-game-choice.is-selected>.game-icon-selected-object{transform:translate3d(-3px,-50%,0)!important}
+}
+
+@media(forced-colors:active){
+  .game-icon-asset-image,.game-system-marker-image,.game-cover>:is(.game-cover-v2,.game-cover-legacy),
+  .game-icon-selected-object{display:none!important}
+  .game-icon-asset:not(.game-icon-selected-object)>.game-icon-fallback,
+  .game-system-marker:not(.mode-system-marker)>.game-system-marker-fallback{
+    display:grid!important;opacity:1!important;visibility:visible!important;color:CanvasText!important;
+  }
+  .game-cover>.game-cover-fallback{
+    display:flex!important;opacity:1!important;visibility:visible!important;color:CanvasText!important;
+  }
+  .game-system-marker-empty-fallback{display:none!important}
+  .mode-system-marker+.ui-icon,.mode-system-marker.asset-ready+.ui-icon{display:inline-flex!important}
+}

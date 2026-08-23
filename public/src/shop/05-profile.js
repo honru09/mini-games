@@ -11,7 +11,36 @@ function settleProfileSurfaceMotion(reason){const motion=typeof globalThis!=='un
 function closeProfileCompareLoading(){const current=activeProfileCompare;if(!current)return false;activeProfileCompare=null;if(typeof online!=='undefined'&&online.pendingProfileCompare&&online.pendingProfileCompare.requestId===current.requestId)online.pendingProfileCompare=null;if(typeof current.close==='function')current.close();else if(current.bd&&current.bd.remove)current.bd.remove();return true;}
 function beginProfileCompareRequest(uid,requestId){const id=String(uid||''),rid=String(requestId||'');if(!id||!rid)return false;closeProfileCompareLoading();const bd=el('div','modal-backdrop'),card=el('div','modal-card profile-loading-card');card.appendChild(el('h3',null,t('profile_compare_title')));card.appendChild(el('div','profile-loading-state',t('profile_compare_loading')));const cancel=el('button','btn',t('cancel'));cancel.addEventListener('click',closeProfileCompareLoading);card.appendChild(cancel);bd.appendChild(card);acquireModalScrollLock(bd);document.body.appendChild(bd);let close=()=>{if(bd.remove)bd.remove();};if(typeof setupAccessibleOverlayDialog==='function')close=setupAccessibleOverlayDialog(bd,card,cancel,t('profile_compare_title'),()=>{if(activeProfileCompare&&activeProfileCompare.requestId===rid)activeProfileCompare=null;if(typeof online!=='undefined'&&online.pendingProfileCompare&&online.pendingProfileCompare.requestId===rid)online.pendingProfileCompare=null;releaseModalScrollLock(bd);});activeProfileCompare={uid:id,requestId:rid,bd,close};return true;}
 function finishProfileCompareRequest(payload,reason){const current=activeProfileCompare;if(!current)return false;closeProfileCompareLoading();if(!payload){toast(t(reason==='profile_compare_forbidden'?'profile_compare_forbidden':'profile_compare_unavailable'));return true;}renderProfileComparePopup(payload);return true;}
-function renderProfileComparePopup(payload){const self=payload&&payload.self,friend=payload&&payload.friend;if(!self||!friend)return false;const bd=el('div','modal-backdrop'),card=el('div','modal-card profile-compare-card');card.appendChild(el('h3',null,t('profile_compare_title')));card.appendChild(el('p','profile-compare-subtitle',t('profile_compare_subtitle')));const grid=el('div','profile-compare-grid');[[self,'profile_compare_you'],[friend,'profile_compare_friend']].forEach(([profile,label])=>{const side=el('section','profile-compare-side');side.appendChild(el('h4',null,t(label)));side.appendChild(avatarStageNode(profile,54));const name=el('div','profile-compare-name');name.appendChild(profileNameNode(profile));side.appendChild(name);[['profile_compare_level',profile.level||1],['profile_compare_games',profile.total||0],['profile_compare_wins',profile.totalWins||0],['profile_compare_achievements',profile.achievementsCount||0]].forEach(([key,value])=>{const row=el('div','profile-compare-stat');row.appendChild(el('span',null,t(key)));row.appendChild(el('strong',null,String(value)));side.appendChild(row);});const gameList=el('div','profile-compare-games');(typeof GAME_KEYS!=='undefined'?GAME_KEYS:[]).filter(id=>GAMES[id]).forEach(id=>{const line=el('div','profile-compare-game');const mastery=profile.mastery&&profile.mastery.byGame&&profile.mastery.byGame[id],title=mastery&&mastery.current;line.appendChild(el('span',null,(GAMES[id].icon||'🎮')+' '+(GAMES[id].name||t(GAMES[id].nameKey))));line.appendChild(el('strong',null,String(profile.wins&&profile.wins[id]||0)+(title?' · '+title.badge+' '+t(title.nameKey):'')));gameList.appendChild(line);});side.appendChild(gameList);grid.appendChild(side);});card.appendChild(grid);const close=el('button','btn',t('close'));close.addEventListener('click',()=>{releaseModalScrollLock(bd);bd.remove();});card.appendChild(close);bd.appendChild(card);acquireModalScrollLock(bd);document.body.appendChild(bd);if(typeof setupAccessibleOverlayDialog==='function')setupAccessibleOverlayDialog(bd,card,close,t('profile_compare_title'),()=>releaseModalScrollLock(bd));else bd.addEventListener('click',event=>{if(event.target===bd){releaseModalScrollLock(bd);bd.remove();}});return true;}
+function renderProfileComparePopup(payload){
+  const self=payload&&payload.self,friend=payload&&payload.friend;
+  if(!self||!friend)return false;
+  const bd=el('div','modal-backdrop'),card=el('div','modal-card profile-compare-card');
+  card.appendChild(el('h3',null,t('profile_compare_title')));
+  card.appendChild(el('p','profile-compare-subtitle',t('profile_compare_subtitle')));
+  const grid=el('div','profile-compare-grid');
+  [[self,'profile_compare_you'],[friend,'profile_compare_friend']].forEach(([profile,label])=>{
+    const side=el('section','profile-compare-side');side.appendChild(el('h4',null,t(label)));side.appendChild(avatarStageNode(profile,54));
+    const name=el('div','profile-compare-name');name.appendChild(profileNameNode(profile));side.appendChild(name);
+    [['profile_compare_level',profile.level||1],['profile_compare_games',profile.total||0],['profile_compare_wins',profile.totalWins||0],['profile_compare_achievements',profile.achievementsCount||0]].forEach(([key,value])=>{const row=el('div','profile-compare-stat');row.appendChild(el('span',null,t(key)));row.appendChild(el('strong',null,String(value)));side.appendChild(row);});
+    const gameList=el('div','profile-compare-games');
+    (typeof GAME_KEYS!=='undefined'?GAME_KEYS:[]).filter(id=>GAMES[id]).forEach(id=>{
+      const line=el('div','profile-compare-game'),identity=el('span','profile-compare-game-identity');
+      const mastery=profile.mastery&&profile.mastery.byGame&&profile.mastery.byGame[id],title=mastery&&mastery.current;
+      identity.appendChild(typeof gameIconNode==='function'?gameIconNode(id,{role:'icon',size:44,className:'profile-compare-game-icon',fallback:GAMES[id].icon||'🎮'}):el('span','profile-compare-game-icon',GAMES[id].icon||'🎮'));
+      identity.appendChild(el('span','profile-compare-game-name',GAMES[id].name||t(GAMES[id].nameKey)));
+      line.appendChild(identity);
+      const masteryCopy=el('strong','profile-compare-mastery');masteryCopy.appendChild(el('span',null,String(profile.wins&&profile.wins[id]||0)));
+      if(title){masteryCopy.appendChild(el('span',null,' · '));if(typeof identityBadgeNode==='function')masteryCopy.appendChild(identityBadgeNode('mastery',String(title.threshold||1),{size:'32',className:'profile-compare-mastery-badge',fallback:title.badge}));masteryCopy.appendChild(el('span',null,t(title.nameKey)));}
+      line.appendChild(masteryCopy);
+      gameList.appendChild(line);
+    });
+    side.appendChild(gameList);grid.appendChild(side);
+  });
+  card.appendChild(grid);
+  const close=el('button','btn',t('close'));close.addEventListener('click',()=>{releaseModalScrollLock(bd);bd.remove();});card.appendChild(close);bd.appendChild(card);acquireModalScrollLock(bd);document.body.appendChild(bd);
+  if(typeof setupAccessibleOverlayDialog==='function')setupAccessibleOverlayDialog(bd,card,close,t('profile_compare_title'),()=>releaseModalScrollLock(bd));else bd.addEventListener('click',event=>{if(event.target===bd){releaseModalScrollLock(bd);bd.remove();}});
+  return true;
+}
 function closeProfileLoading(){
   const current = activeProfileLoading;
   if (!current) return false;
@@ -126,11 +155,14 @@ function renderProfilePopup(p, isMe){
   const hero = el('div','profile-hero bg-' + (p.background || 0));
   applyPremiumBackground(hero, p.background || 0, 'profile');
   const avWrap = el('div','hero-avatar');
-  const stage = el('div','avatar-stage effect-' + (p.effect || 0));
-  const fr = p.frame || 0;
-  if (fr) stage.appendChild(el('span','frame-ring ' + (SHOP.frames.find(f => f.id === fr) ? SHOP.frames.find(f => f.id === fr).cls : ''), ''));
-  stage.appendChild(avatarCanvas(p.avatar, 74, { animate:true }));
+  const stage = typeof playerIdentityAvatarNode==='function'
+    ? playerIdentityAvatarNode(p,{size:74,animate:true,stageClass:'avatar-stage'})
+    : (()=>{const fallback=el('span','avatar-stage');fallback.appendChild(avatarCanvas(Number(p.avatar)||0,74,{animate:false}));return fallback;})();
   avWrap.appendChild(stage);
+  if(typeof playerCharacterLayeredNode==='function'){
+    const characterArt=playerCharacterLayeredNode(p.playerCharacter,{size:'128',className:'profile-modal-character-art'});
+    if(characterArt)avWrap.appendChild(characterArt);
+  }
   hero.appendChild(avWrap);
   const pLv = p.level || levelFromXp(p.xp || 0);
   const pTitle = titleFor(pLv);
@@ -146,7 +178,8 @@ function renderProfilePopup(p, isMe){
   hero.appendChild(pname);
   const identity = el('div','profile-identity-scrim');
   const identityMeta = el('div','pmeta');
-  identityMeta.appendChild(el('span', null, pTitle.icon + ' ' + socialTitleName(pTitle)));
+  if(typeof identityBadgeNode==='function')identityMeta.appendChild(identityBadgeNode('title',String(pTitle.badgeId||pTitle.id||1),{size:'32',className:'profile-modal-title-badge',fallback:pTitle.icon}));else identityMeta.appendChild(el('span',null,pTitle.icon));
+  identityMeta.appendChild(el('span', null, socialTitleName(pTitle)));
   identityMeta.appendChild(el('span', null, ' · '));
   identityMeta.appendChild(el('span', null, profileRegionLabel(p.countryRegion)));
   const gender = profileGenderLabel(p.genderTag);
@@ -184,7 +217,10 @@ function renderProfilePopup(p, isMe){
   GAME_KEYS.filter(k => ((p.played && p.played[k]) || 0) > 0).forEach(k => {
     const s = el('div','stat-chip small');
     const mastery=p.mastery&&p.mastery.byGame&&p.mastery.byGame[k],title=mastery&&mastery.current;
-    s.textContent = GAMES[k].icon + ' ' + formatGamesCount((p.played && p.played[k]) || 0) + (title ? ' · ' + title.badge + ' ' + t(title.nameKey) : '');
+    s.appendChild(typeof gameIconNode==='function'?gameIconNode(k,{role:'icon',size:44,className:'profile-stat-game-icon',fallback:GAMES[k].icon||'🎮'}):el('span','profile-stat-game-icon',GAMES[k].icon||'🎮'));
+    const gameCopy=el('span','profile-stat-game-copy');gameCopy.appendChild(el('span',null,formatGamesCount((p.played&&p.played[k])||0)));
+    if(title){gameCopy.appendChild(el('span',null,' · '));if(typeof identityBadgeNode==='function')gameCopy.appendChild(identityBadgeNode('mastery',String(title.threshold||1),{size:'32',className:'profile-modal-mastery-badge',fallback:title.badge}));gameCopy.appendChild(el('span',null,t(title.nameKey)));}
+    s.appendChild(gameCopy);
     stats.appendChild(s);
   });
   card.appendChild(stats);

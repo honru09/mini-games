@@ -36,7 +36,7 @@ check('旧 #/chat 深链归一到 #/playline 并打开全局 DM',
   shell.includes("const next='#/playline'") &&
   /function enterGhostApp\([\s\S]*const legacyChat=[\s\S]*location\.hash/.test(shell) &&
   /const legacyChat[\s\S]*\^#\\\/chat/.test(shell) &&
-  /function enterGhostApp\([\s\S]*if\(legacyChat\)[\s\S]*DirectMessage\.open[\s\S]*btn-global-messages/.test(shell));
+  /function enterGhostApp\([\s\S]*if\(legacyChat\)[\s\S]*DirectMessage\.open[\s\S]*btn-playline-open-messages-header/.test(shell));
 
 check('旧/未知 Chat view 只保留玩家语义，不复活 Honru Chat',
   /function chatViewFromHash\(\)\{\s*return 'players';\s*\}/.test(shell) &&
@@ -52,9 +52,9 @@ check('Honru 签到协议仍与玩家私信分离',
 
 check('模板只提供一个全局 DM overlay mount，入口委托 DirectMessage',
   /<div id="direct-message-overlay-root" class="hidden" aria-hidden="true"><\/div>/.test(template) &&
-  /id="btn-global-messages"/.test(template) &&
-  /id="btn-playline-open-messages"/.test(template) &&
-  /globalMessages[\s\S]*DirectMessage\.open\(\{opener:globalMessages\}\)/.test(shell) &&
+  /id="btn-playline-open-messages-header"/.test(template) &&
+  !/id="btn-global-messages"/.test(template) &&
+  !/id="btn-playline-open-messages"/.test(template) &&
   /playlineMessages[\s\S]*DirectMessage\.open\(\{opener:playlineMessages\}\)/.test(shell));
 
 check('DirectMessage 暴露稳定的 presenter API',
@@ -91,7 +91,7 @@ check('direct-chat-v1 capability 与四个 C→S 操作保持不变',
   /['"]direct-chat-v1['"]/.test(online) &&
   /requestChatList\([^)]*\)[\s\S]{0,220}type:'chat_list'/.test(online) &&
   /requestChatHistory\(peerUid,beforeSeq\)[\s\S]{0,260}type:'chat_history'/.test(online) &&
-  /sendChatMessage\(peerUid,text,clientMessageId\)[\s\S]{0,320}type:'chat_send'[\s\S]*clientMessageId/.test(online) &&
+  /sendChatMessage\(peerUid,text,clientMessageId\)[\s\S]{0,520}type:'chat_send'[\s\S]*clientMessageId/.test(online) &&
   /markChatRead\(peerUid,throughSeq\)[\s\S]{0,220}type:'chat_read'/.test(online));
 
 for (const type of ['chat_state', 'chat_history', 'chat_message', 'chat_send_ok', 'chat_read_ok', 'chat_error']) {

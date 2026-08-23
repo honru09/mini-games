@@ -22,7 +22,9 @@ check('manifest paths are local and allowlisted',!!runtime&&Object.values(runtim
 const unit=ledger.units.find(item=>item&&item.id==='P0-09');
 check('production ledger advances exactly P0-09',!!unit&&unit.status==='implemented_owner_cleared_release_evidence_pending'&&unit.completion&&unit.completion.sourceAndRuntimePercent===100&&unit.completion.localImplementationPercent===100&&unit.deliverables.runtimeVariants===27&&unit.deliverables.runtimeBytes===310540);
 check('next unit remains P0-10',read('art-source/production/ghost-game-art-program-v1/README.md').includes('下一单元严格为 `P0-10 / P-PLAYER-CHARACTER-LAYERED-V1`'));
-const assets=read('public/src/core/06-assets.js'),roster=read('public/src/ui/07-roster.js'),social=read('public/src/core/04-social.js'),app=read('public/src/core/02-app-shell.js'),css=read('public/index-template.html');
+const assets=read('public/src/core/06-assets.js'),roster=read('public/src/ui/07-roster.js'),social=read('public/src/core/04-social.js'),app=read('public/src/core/02-app-shell.js');
+const { readPresentationSource } = require('./presentation-source');
+const css=readPresentationSource();
 check('resolver and fallback are presentation-only',assets.includes('resolveProgressionFeedbackUrl')&&assets.includes('PROGRESSION_FEEDBACK_ART_CLEARANCE_RECORD')&&assets.includes("progressionFeedbackNode")&&roster.includes('rewardFeedbackId'));
 check('reward/progression surfaces consume all requested semantic families',roster.includes("progressionFeedbackNode('gcoins'")&&roster.includes("progressionFeedbackNode('xp'")&&roster.includes("progressionFeedbackNode('level-up'")&&social.includes("progressionFeedbackNode('task'")&&social.includes("progressionFeedbackNode('achievement'")&&app.includes("progressionFeedbackNode('collection'")&&app.includes("achievementGoal.complete?'achievement':'unlock'")&&app.includes("key==='profile_stat_streak'"));
 check('2.5D/reduced-motion styling and GSAP surface hook remain',css.includes('progression-feedback-art')&&css.includes('prefers-reduced-motion:reduce')&&roster.includes("runOutcomeSurfaceMotion('reward-dialog'"));

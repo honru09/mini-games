@@ -2,9 +2,10 @@
 
 const fs = require('fs');
 const path = require('path');
+const { readPresentationSource } = require('./presentation-source');
 
 const root = path.join(__dirname, '..');
-const template = fs.readFileSync(path.join(root, 'public', 'index-template.html'), 'utf8');
+const template = readPresentationSource();
 const ludo = fs.readFileSync(path.join(root, 'public', 'src', 'games', 'ludo.js'), 'utf8');
 const monopoly = fs.readFileSync(path.join(root, 'public', 'src', 'games', 'monopoly.js'), 'utf8');
 const marker = '/* ================= Game Stage Wave B · Ludo / Monopoly =================';

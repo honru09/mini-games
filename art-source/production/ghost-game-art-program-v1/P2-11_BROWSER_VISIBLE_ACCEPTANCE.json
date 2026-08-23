@@ -1,0 +1,25 @@
+{
+  "unit": "P2-11 / P-SHOP-LIMITED-SETS-V1",
+  "capturedAt": "2026-08-22T18:00:00+09:00",
+  "surface": "Codex In-app Browser / localhost:8080",
+  "buildSha256": "438BFFCDF8D04FA34BEC717596CCF4DA68CC6372D900BA0342C0944CBA09F8DF",
+  "viewport": { "width": 390, "height": 844 },
+  "checks": {
+    "seasonalHeadingVisible": true,
+    "seasonalCardCount": 4,
+    "runtimePosterDecodeCount": 4,
+    "desktopCardsBeforeMobile": true,
+    "mobileCardWidths": [171,171,171,171],
+    "documentClientWidth": 390,
+    "documentScrollWidth": 390,
+    "zeroHorizontalOverflow": true,
+    "combinationPreviewShowsFourComponents": true,
+    "existingItemBrowseActionVisible": true,
+    "purchaseOrBundleMutationObserved": false,
+    "consoleWarningsOrErrors": 0
+  },
+  "artifacts": [
+    "art-source/production/ghost-game-art-program-v1/shop-limited-sets-browser-390x844.png"
+  ],
+  "boundary": "single local Chromium observation; not second browser, physical device, real network or release evidence"
+}

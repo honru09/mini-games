@@ -1,0 +1,11 @@
+{
+  "assetFamily": "P-COMMUNITY-REPLAY-TOURNAMENT-CARDS-V1",
+  "generatedAt": "2026-08-21T00:00:00.000Z",
+  "externalReferences": [],
+  "policy": {
+    "zeroExternalThirdPartyArt": true,
+    "blockedLicensePixelsTransmitted": false,
+    "allowlistOnly": true,
+    "licenseCheck": "CLEARED_ORIGINAL_VECTOR_PROGRAM"
+  }
+}

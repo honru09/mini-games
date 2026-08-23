@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 2,
+  "taskId": "p1-02-tank-final-art-v1-20260821",
+  "inventoryContext": {
+    "register": "asset-library/external-source-register-20260813.json",
+    "registeredFiles": 836,
+    "registeredBytes": 18567721249,
+    "runtimeLicense": "EXTERNAL_REFERENCE_ONLY / blocked-license"
+  },
+  "inputs": [
+    {
+      "sourcePath": "D:/BaiduNetdiskDownload/游戏素材/2D游戏角色素材RPG人物动画序列帧PNG透明图片休闲卡通Q版NPC怪物/11.png",
+      "sourceSha256": "7E7741749DAE753BEB3F2CBBAAA840DF3DD267818767FCBF3C2ABF818A1A2876",
+      "license": "EXTERNAL_REFERENCE_ONLY / blocked-license",
+      "transmissionScope": "task-scoped full-information preview; explosion frame-count and state-coverage semantics only"
+    },
+    {
+      "sourcePath": "D:/BaiduNetdiskDownload/游戏素材/卡通Q版休闲游戏UI界面手游弹窗按钮元素图标PSD分层设计素材模板/230717 游戏UI界面元素/界面/火山素材 (61).jpg",
+      "sourceSha256": "1292D584D2D018C445B0C0320C0C9F724FAC14522E0FDCC1F4090E6C0CADF016",
+      "license": "EXTERNAL_REFERENCE_ONLY / blocked-license",
+      "transmissionScope": "task-scoped full-information preview; single-purpose HUD readability semantics only"
+    }
+  ],
+  "calls": [
+    {
+      "provider": "OpenAI built-in imagegen",
+      "model": "runtime-managed",
+      "taskId": "exec-6a8b39d5-b92c-4cc8-891d-ceadc8577b2c",
+      "sentAt": "2026-08-21T11:17:26.1048007+09:00",
+      "inputSha256": [
+        "7E7741749DAE753BEB3F2CBBAAA840DF3DD267818767FCBF3C2ABF818A1A2876",
+        "1292D584D2D018C445B0C0320C0C9F724FAC14522E0FDCC1F4090E6C0CADF016"
+      ],
+      "outputPath": "art-source/games/tank/final-art-v1/source/tank-arena-source-v1.png",
+      "outputSha256": "0FCBE1B10F816BE63C617A7BFBFDC1267CEFF0706FFE09D14A248AC295C94854",
+      "transmissionScope": "full task brief plus two task-related blocked-license previews; semantic reference only"
+    },
+    {
+      "provider": "OpenAI built-in imagegen",
+      "model": "runtime-managed",
+      "taskId": "exec-8b47010a-6767-4e35-9c16-05e79a3cffd4",
+      "sentAt": "2026-08-21T11:19:34.6788537+09:00",
+      "inputSha256": [
+        "7E7741749DAE753BEB3F2CBBAAA840DF3DD267818767FCBF3C2ABF818A1A2876",
+        "1292D584D2D018C445B0C0320C0C9F724FAC14522E0FDCC1F4090E6C0CADF016"
+      ],
+      "outputPath": "art-source/games/tank/final-art-v1/source/tank-object-atoms-source-v1.png",
+      "outputSha256": "F305B88F8281814F29C86E976A6EDA10C08EAA4EA52A0C432FC4C62908C4C302",
+      "transmissionScope": "full task brief plus two task-related blocked-license previews; semantic reference only"
+    },
+    {
+      "provider": "OpenAI built-in imagegen",
+      "model": "runtime-managed",
+      "taskId": "exec-36036963-4910-4c6b-b37c-e7396653623a",
+      "sentAt": "2026-08-21T11:22:24.4952310+09:00",
+      "inputSha256": [
+        "7E7741749DAE753BEB3F2CBBAAA840DF3DD267818767FCBF3C2ABF818A1A2876",
+        "1292D584D2D018C445B0C0320C0C9F724FAC14522E0FDCC1F4090E6C0CADF016"
+      ],
+      "outputPath": "art-source/games/tank/final-art-v1/source/tank-semantic-vfx-source-v1.png",
+      "outputSha256": "FC077BD23197B1EABA186706491E2A85712ED87515CD2B6D72DBCFBF844C6E28",
+      "transmissionScope": "full task brief plus two task-related blocked-license previews; semantic reference only"
+    },
+    {
+      "provider": "OpenAI built-in imagegen",
+      "model": "runtime-managed",
+      "taskId": "exec-373f37e6-bcf8-44cf-a680-7165fdabc3f8",
+      "sentAt": "2026-08-21T11:27:31.0793879+09:00",
+      "inputSha256": ["F305B88F8281814F29C86E976A6EDA10C08EAA4EA52A0C432FC4C62908C4C302"],
+      "outputPath": "art-source/games/tank/final-art-v1/source/tank-object-atoms-chroma-source-v1.png",
+      "outputSha256": "79A6972B35A64E04C6586494A3EB788D3D5EE99E6D479EE6309E2E95042E241B",
+      "transmissionScope": "single generated-source edit; no blocked-license file retransmitted"
+    },
+    {
+      "provider": "OpenAI built-in imagegen",
+      "model": "runtime-managed",
+      "taskId": "exec-d82419ad-b378-4614-97d1-e48d02b75be9",
+      "sentAt": "2026-08-21T11:29:44.4344921+09:00",
+      "inputSha256": ["FC077BD23197B1EABA186706491E2A85712ED87515CD2B6D72DBCFBF844C6E28"],
+      "outputPath": "art-source/games/tank/final-art-v1/source/tank-semantic-vfx-chroma-source-v1.png",
+      "outputSha256": "7C6526C82993449F0DD220E408C5FA0EE01B5F92A26B937AD7536EE3AC132533",
+      "transmissionScope": "single generated-source edit; no blocked-license file retransmitted"
+    }
+  ],
+  "outputDisposition": "SOURCE_ONLY_EXTERNAL_INFLUENCED / SIMILARITY_REVIEW_REQUIRED",
+  "runtimeBoundary": "No external pixel, layer, silhouette, palette, text, icon shape or character may enter public/assets or runtime. Runtime is independently authored deterministic SVG/Sharp output."
+}

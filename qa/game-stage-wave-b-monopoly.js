@@ -163,9 +163,9 @@ try {
   const frame = h.area.querySelector('.monopoly-wave-b-board-frame');
   const board = h.area.querySelector('.monopoly-wave-b-board');
   const dice = h.area.querySelector('[data-monopoly-control="dice"]');
-  const state = h.area.querySelector('.monopoly-wave-b-state');
-  const trade = h.area.querySelector('.monopoly-wave-b-trade');
-  check('default flag mounts the entity board, turn, dice, state and safe trade seams',
+  const state = h.extra.querySelector('.monopoly-wave-b-state');
+  const trade = h.extra.querySelector('.monopoly-wave-b-trade');
+  check('default flag mounts a board-only Arena plus HUD-owned state and safe trade seams',
     !!stage && !!frame && !!board && !!dice && !!state && !!trade && board.parentNode === frame &&
     h.area.classList.contains('monopoly-wave-b-arena') && stage.dataset.monopolyPhase === 'roll' &&
     stage.dataset.monopolyStatus === 'active' && dice.dataset.monopolyDiceState === 'roll' &&
@@ -234,18 +234,18 @@ try {
     JSON.stringify(h.game.snapshot()) === beforeToggle);
 
   const buyRestored = h.game.onRestore(restoredState(2, 'buy')) === true;
-  const propertyNode = h.area.querySelector('.monopoly-wave-b-property');
+  const propertyNode = h.extra.querySelector('.monopoly-wave-b-property');
   const propertyValue = propertyNode && propertyNode.dataset.monopolyProperty;
   const chanceRestored = h.game.onRestore(restoredState(1, 'chance')) === true;
-  const chanceNode = h.area.querySelector('.monopoly-wave-b-chance');
-  const chanceStateNode = h.area.querySelector('.monopoly-wave-b-state');
+  const chanceNode = h.extra.querySelector('.monopoly-wave-b-chance');
+  const chanceStateNode = h.extra.querySelector('.monopoly-wave-b-state');
   check('buy and chance states only update stable read-only presentation metadata',
     buyRestored && propertyValue === '2' && chanceRestored && chanceNode && chanceNode.dataset.monopolyChance === 'active' && chanceStateNode && chanceStateNode.dataset.monopolyState === 'chance',
     JSON.stringify({ buyRestored, propertyValue, chanceRestored, chance: chanceNode && chanceNode.dataset, state: chanceStateNode && chanceStateNode.dataset }));
   h.game.onRestart();
   check('reset clears transient chance metadata without removing the active Wave B stage',
     h.area.querySelector('.monopoly-wave-b-stage').dataset.monopolyPhase === 'roll' &&
-    h.area.querySelector('.monopoly-wave-b-chance').dataset.monopolyChance === undefined);
+    h.extra.querySelector('.monopoly-wave-b-chance').dataset.monopolyChance === undefined);
   h.game.destroy();
   check('destroy releases wrappers and stale Wave B root marks while restoring Wave A children',
     !h.area.querySelector('.monopoly-wave-b-stage') && !h.area.classList.contains('monopoly-wave-b-arena') &&
@@ -267,7 +267,7 @@ try {
     auction: { auctionId: 'auction-1', propertyId: 2, status: 'open', currentBid: 300, currentBidder: -1, endAt: Date.now() + 5000, eligiblePlayers: [0, 1], revision: 1 },
   });
   check('auction metadata and bid controls consume the existing authority state without a trade control',
-    auctionAccepted === true && auctionHarness.area.querySelector('.monopoly-wave-b-auction').dataset.monopolyAuction === 'active' &&
+    auctionAccepted === true && auctionHarness.extra.querySelector('.monopoly-wave-b-auction').dataset.monopolyAuction === 'active' &&
     auctionHarness.extra.querySelectorAll('[data-monopoly-control="bid"]').length === 2 &&
     auctionHarness.extra.querySelectorAll('[data-monopoly-control="trade"]').length === 0);
   auctionHarness.game.destroy();

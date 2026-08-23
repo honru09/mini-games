@@ -1,0 +1,12 @@
+{
+  "taskId": "p0-11-avatar-frame-effect-v1-20260819",
+  "status": "IMPLEMENTED_LOCAL_MACHINE_VERIFIED",
+  "startedAt": "2026-08-19T13:50:00+09:00",
+  "completedAt": "2026-08-19T15:25:00+09:00",
+  "productionUnitId": "P0-11",
+  "familyId": "P-AVATAR-FRAME-EFFECT-V1",
+  "release": "LOCAL_ONLY_NOT_RELEASED",
+  "tests": ["node qa/avatar-frame-effect-art-v1.js", "node qa/avatar-frame-effect-runtime.js", "node qa/identity-presentation-contract.js", "node qa/ui-identity-preview-contract.js", "node qa/shop-contract.js", "node qa/collection-rarity-catalog.js", "node qa/asset-manifest-v2.js", "node scripts/asset-library-audit.js"],
+  "finalValidation": {"qualityGates":"PASS","npmTest":"PASS","buildCharacters":2177608,"buildBytes":2192311,"buildSha256":"902D01478F76ABC9A3D57EA5FF63913D43D295BBE9BDBC9422455757362C0164"},
+  "externalGates": {"deviceBrowserNetwork": "RELEASE_EVIDENCE_PENDING", "supabaseProduction": "RELEASE_EVIDENCE_PENDING", "artAdvisory": "OPTIONAL_ADVISORY_EVIDENCE"}
+}

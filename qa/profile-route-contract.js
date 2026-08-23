@@ -1,7 +1,9 @@
 'use strict';
 const fs=require('fs'),path=require('path');
 const ROOT=path.join(__dirname,'..'),read=file=>fs.readFileSync(path.join(ROOT,file),'utf8');
-const shell=read('public/src/core/02-app-shell.js'),template=read('public/index-template.html'),online=read('public/src/online/03-websocket.js');
+const shell=read('public/src/core/02-app-shell.js'),online=read('public/src/online/03-websocket.js');
+const { readPresentationSource }=require('./presentation-source');
+const template=readPresentationSource();
 let fail=0;function check(name,ok){console.log((ok?'PASS  ':'FAIL  ')+name);if(!ok)fail++;}
 check('Profile 使用装备背景并复用高级背景生命周期',/profile-route-hero profile-hero bg-/.test(shell)&&/applyPremiumBackground\(hero,account\.background\|\|0,'profile'\)/.test(shell)&&/releasePremiumBackground\(ghostProfileBackgroundNode\)/.test(shell));
 check('Profile 展示服务端 xpProgress 语义进度条',/account\.xpProgress/.test(shell)&&/role','progressbar'/.test(shell)&&/aria-valuenow/.test(shell));

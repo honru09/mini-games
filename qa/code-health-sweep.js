@@ -56,20 +56,43 @@ check('社交 Guard QA 有独立健康入口', /qa\/social-guards\.js/.test(pack
 
 const OPERATIONS_ALLOWLIST = Object.freeze([
   'scripts/art-gate-status.js',
+  'scripts/art-generator-lock.js',
   'scripts/device-qa-runner.js',
+  'scripts/generate-ai-difficulty-visual-v1.js',
   'scripts/generate-auth-art-v1.js',
+  'scripts/generate-avatar-frame-effect-v1.js',
+  'scripts/generate-community-replay-tournament-cards-v1.js',
   'scripts/generate-game-stage-art-v1.js',
+  'scripts/generate-game-icon-system-v2.js',
   'scripts/generate-gomoku-final-art-v1.js',
   'scripts/generate-honru-context-reactions-v1.js',
+  'scripts/generate-honru-edge-cursor-v1.js',
+  'scripts/generate-honru-seasonal-v1.js',
+  'scripts/generate-identity-badge-system-v1.js',
   'scripts/generate-loading-art-v1.js',
   'scripts/generate-ludo-final-art-v1.js',
+  'scripts/generate-monopoly-final-art-v1.js',
+  'scripts/generate-monopoly-final-runtime-v1.js',
   'scripts/generate-modal-art-v1.js',
   'scripts/generate-platform-scenes-v1.js',
+  'scripts/generate-personal-home-scene-v1.js',
+  'scripts/generate-profile-adaptive-hero-v1.js',
+  'scripts/generate-player-character-layered-v1.js',
+  'scripts/generate-progression-feedback-art-v1.js',
+  'scripts/generate-shop-complete-runtime-v1.js',
+  'scripts/generate-shop-limited-sets-v1.js',
+  'scripts/generate-sticker-book-v1.js',
+  'scripts/generate-tank-final-runtime-v1.js',
+  'scripts/generate-tetris-final-runtime-v1.js',
+  'scripts/generate-xiangqi-final-runtime-v1.js',
   'scripts/render-deploy.js',
   'scripts/render-env.js',
   'scripts/render-status.js',
+  'scripts/split-platform-runtime-v5.js',
   'scripts/supabase-backup-verify.js',
+  'scripts/supabase-encrypted-backup.js',
   'scripts/supabase-gate-checklist.js',
+  'scripts/migrate-presentation-styles.js',
   'scripts/ws-live-test.js',
 ]);
 const unregisteredScripts = scriptFiles.filter(file => !scriptReferences.has(file));
@@ -87,7 +110,10 @@ check('Manifest integrated 运行时文件全部存在且不越界', integratedP
   return normalized.startsWith('public/assets/') && !normalized.includes('../') && exists(normalized);
 }));
 const runtimeSources = [read('public/index-template.html'), ...filesUnder('public/src', file => file.endsWith('.js')).map(read)].join('\n');
-const flags = [...new Set((manifest.assets || []).flatMap(manifestFlags))].sort();
+// Source-ready art may declare the flag it will use before a runtime consumer
+// is integrated. Only integrated assets are required to have a live consumer;
+// this keeps staged production assets from masquerading as runtime capability.
+const flags = [...new Set(integrated.flatMap(manifestFlags))].sort();
 const staleFlags = flags.filter(flag => !runtimeSources.includes(flag));
 check('Manifest Feature Flag 均有运行时消费者', staleFlags.length === 0, staleFlags.join(', '));
 

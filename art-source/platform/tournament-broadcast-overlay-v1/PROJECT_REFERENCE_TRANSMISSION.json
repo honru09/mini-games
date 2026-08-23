@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "familyId": "P-TOURNAMENT-BROADCAST-OVERLAY-V1",
+  "scope": "local-workspace-only",
+  "inputs": [
+    "requirements/PRODUCT_REQUIREMENTS_LEDGER.json#GAME-028,GAME-029,UI-034",
+    "public/src/online/03-websocket.js#renderTournamentState",
+    "art-source/platform/community-replay-tournament-cards-v1"
+  ],
+  "provider": "local Codex skills and Codex Browser",
+  "transmissionScope": "project-owned requirements, code structure and fictional review copy only",
+  "credentials": false,
+  "productionData": false
+}

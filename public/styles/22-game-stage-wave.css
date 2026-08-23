@@ -1,0 +1,280 @@
+@media(max-width:640px){.playline-side{grid-template-columns:1fr}.playline-section-head{align-items:stretch;flex-direction:column}.playline-beta-badge{max-width:none;text-align:left}.playline-tabs{justify-content:flex-start}.playline-composer-actions{display:grid;grid-template-columns:1fr}.playline-composer-actions .btn{width:100%}.playline-game-picker-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* ================= Game Stage Wave B · Gomoku / Tetris =================
+   Presentation-only density layer. The game modules own rules and state; these
+   selectors only consume their stable DOM seams and remain inert for Wave A. */
+#screen-game.game-stage[data-shell-game="gomoku"] .gomoku-wave-b-arena{display:grid;place-items:center;align-content:center;justify-content:center;width:100%;min-height:0}
+#screen-game.game-stage[data-shell-game="gomoku"] .gomoku-wave-b-stage{position:relative;display:grid;place-items:center;width:min(100%,590px,calc(100dvh - 250px));margin:auto;padding:10px;border:2px solid var(--stage-line);border-radius:24px;background:linear-gradient(145deg,#fffaf0,#f2d9a8);box-shadow:0 6px 0 rgba(43,32,37,.24),0 18px 32px rgba(75,47,28,.16);box-sizing:border-box}
+#screen-game.game-stage[data-shell-game="gomoku"] .gomoku-wave-b-board-frame{position:relative;width:100%;aspect-ratio:1;min-width:0;border:2px solid var(--stage-line);border-radius:17px;background:linear-gradient(145deg,#f8e5b9,#e3b867);box-shadow:inset 0 0 0 4px rgba(255,255,255,.32),inset 0 -12px 20px rgba(79,48,24,.12);overflow:hidden;transition:transform var(--dur-base) var(--ease-standard)}
+#screen-game.game-stage[data-shell-game="gomoku"] .gomoku-wave-b-board{display:block;width:100%!important;max-width:none!important;height:auto!important;border:0!important;border-radius:12px!important;box-shadow:none!important;background-color:#f3e5c4}
+#screen-game.game-stage[data-shell-game="gomoku"] .gomoku-wave-b-meta{position:absolute;inset:9px;z-index:2;display:flex;align-items:flex-start;justify-content:space-between;gap:8px;pointer-events:none}
+#screen-game.game-stage[data-shell-game="gomoku"] .gomoku-wave-b-state,#screen-game.game-stage[data-shell-game="gomoku"] .gomoku-wave-b-last-move{display:block;max-width:52%;min-height:26px;padding:5px 8px;border:1px solid var(--stage-line);border-radius:99px;background:rgba(255,250,240,.9);box-shadow:0 2px 0 rgba(43,32,37,.16);color:var(--stage-ink);font-size:10px;font-weight:850;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#screen-game.game-stage[data-shell-game="gomoku"] .gomoku-wave-b-last-move{max-width:34%;background:var(--stage-ink);color:var(--stage-cream);font-variant-numeric:tabular-nums;letter-spacing:.08em}
+#screen-game.game-stage[data-shell-game="gomoku"]:has(.gomoku-wave-b-stage) .gomoku-turn-hud{display:grid;gap:5px;margin:0!important;padding:10px 11px;border:1px solid var(--stage-line);border-radius:14px;background:rgba(255,255,255,.5);color:var(--stage-ink);font-size:12px;line-height:1.35}
+#screen-game.game-stage[data-shell-game="gomoku"] .gomoku-wave-b-stage[data-gomoku-phase="thinking"] .gomoku-wave-b-state{border-color:#8e6ad8;background:rgba(142,106,216,.16)}
+#screen-game.game-stage[data-shell-game="gomoku"] .gomoku-wave-b-stage[data-gomoku-phase="won"] .gomoku-wave-b-state{border-color:#55a86f;background:rgba(85,168,111,.18)}
+
+#screen-game.game-stage[data-shell-game="tetris"] .tetris-wave-b{display:grid;grid-template-columns:minmax(0,1fr);place-items:center;align-content:start;width:100%;min-width:0}
+#screen-game.game-stage[data-shell-game="tetris"] .tetris-wave-b-layout{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(150px,.42fr)!important;align-items:start;gap:12px;width:min(100%,780px);margin:0 auto;padding:4px;box-sizing:border-box}
+#screen-game.game-stage[data-shell-game="tetris"] .tetris-wave-b-main{display:grid;grid-template-columns:minmax(0,1fr) 112px;grid-template-areas:"score score" "well preview";align-items:start;gap:9px;min-width:0;padding:8px;border:2px solid var(--stage-line);border-radius:20px;background:linear-gradient(145deg,rgba(255,255,255,.72),rgba(242,217,168,.62));box-shadow:0 5px 0 rgba(43,32,37,.22),0 15px 26px rgba(75,47,28,.12);box-sizing:border-box}
+#screen-game.game-stage[data-shell-game="tetris"] .tetris-wave-b-score{grid-area:score;display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0;margin:0!important;padding:8px 10px;border:1px solid var(--stage-line);border-radius:12px;background:var(--stage-ink);color:var(--stage-cream);font-size:12px;font-weight:850;line-height:1.25;text-align:left}
+#screen-game.game-stage[data-shell-game="tetris"] .tetris-wave-b-main-well{position:relative;grid-area:well;justify-self:center;min-width:0;min-height:0;border:3px solid var(--stage-line)!important;border-radius:14px!important;background-color:#171525!important;box-shadow:inset 0 0 0 2px rgba(255,255,255,.14),0 5px 0 rgba(43,32,37,.26),0 14px 24px rgba(32,21,45,.24)!important;transition:transform var(--dur-base) var(--ease-standard);isolation:isolate}
+#screen-game.game-stage[data-shell-game="tetris"] .tetris-wave-b-preview-deck{grid-area:preview;display:grid;align-content:start;gap:7px;min-width:0;margin:0;padding:0}
+#screen-game.game-stage[data-shell-game="tetris"] .tetris-preview-slot{display:grid;grid-template-columns:22px minmax(0,1fr);grid-template-rows:auto auto;align-items:center;gap:2px 5px;min-width:0;min-height:58px;padding:7px;border:1px solid var(--stage-line);border-radius:12px;background:rgba(255,250,240,.78);color:var(--stage-ink);box-sizing:border-box}
+#screen-game.game-stage[data-shell-game="tetris"] .tetris-preview-label{grid-column:1/-1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:9px;font-weight:850;letter-spacing:.06em;text-transform:uppercase;opacity:.72}
+#screen-game.game-stage[data-shell-game="tetris"] .tetris-preview-marker{display:grid;place-items:center;width:22px;height:22px;border-radius:7px;background:var(--stage-ink);color:var(--stage-cream);font-size:12px;font-weight:900}
+#screen-game.game-stage[data-shell-game="tetris"] .tetris-preview-value{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px;letter-spacing:.08em}
+#screen-game.game-stage[data-shell-game="tetris"] .tetris-preview-incoming{border-color:#e75a4d;background:rgba(231,90,77,.12)}
+#screen-game.game-stage[data-shell-game="tetris"] .tetris-preview-incoming .tetris-preview-marker{background:#e75a4d}
+#screen-game.game-stage[data-shell-game="tetris"] .tetris-wave-b-opponents{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));align-content:start;gap:8px;min-width:0;padding:8px;border:2px solid var(--stage-line);border-radius:20px;background:linear-gradient(160deg,var(--stage-cream),var(--stage-paper-deep));box-shadow:0 5px 0 rgba(43,32,37,.22),0 15px 26px rgba(75,47,28,.12);box-sizing:border-box}
+#screen-game.game-stage[data-shell-game="tetris"] .tetris-wave-b-opponent-card{display:grid;grid-template-rows:auto auto auto;align-content:start;gap:4px;min-width:0;margin:0!important;padding:7px!important;border:1px solid rgba(43,32,37,.28)!important;border-radius:12px!important;background:rgba(255,255,255,.55)!important;color:var(--stage-ink)!important;box-shadow:none!important;text-align:left}
+#screen-game.game-stage[data-shell-game="tetris"] .tetris-wave-b-opponent-card .mini-board{justify-self:center;max-width:100%;border-radius:8px!important}
+#screen-game.game-stage[data-shell-game="tetris"] .tetris-wave-b-opponent-card .tetris-mini-title{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:9px;line-height:1.25}
+#screen-game.game-stage[data-shell-game="tetris"] .tetris-wave-b-opponent-card .tetris-event{min-height:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#9f2f29;font-size:9px;line-height:1.2}
+#screen-game.game-stage[data-shell-game="tetris"] .tetris-wave-b-compact-status{grid-column:1/-1;min-width:0;padding:6px 7px;border-top:1px solid rgba(43,32,37,.2);color:rgba(43,32,37,.72);font-size:9px;line-height:1.3;overflow-wrap:anywhere}
+#screen-game.game-stage[data-shell-game="tetris"] .game-stage-command .tetris-wave-b-hud{display:grid;gap:4px;margin:0!important;padding:10px 11px;border:1px solid var(--stage-line);border-radius:14px;background:var(--stage-ink);color:var(--stage-cream);font-size:11px;font-weight:800;line-height:1.35}
+#screen-game.game-stage[data-shell-game="tetris"] .game-stage-command .tetris-wave-b-controls{display:grid;grid-template-columns:repeat(4,minmax(44px,1fr));gap:7px;width:100%;margin:0!important}
+#screen-game.game-stage[data-shell-game="tetris"] .game-stage-command .tetris-wave-b-control{min-width:44px!important;min-height:44px!important;padding:5px!important;font-size:15px;line-height:1.1}
+#screen-game.game-stage[data-shell-game="tetris"] .game-stage-command .tetris-wave-b-control[data-tetris-control="hold"]{font-size:10px;white-space:normal}
+#screen-game.game-stage[data-shell-game="tetris"] .game-stage-command .tetris-wave-b-control[data-tetris-control="hard-drop"]{grid-column:span 2}
+@media(min-width:521px) and (max-width:720px) and (orientation:portrait){
+  #screen-game.game-stage[data-shell-game="tetris"] .game-stage-main{grid-template-columns:minmax(0,1fr) minmax(250px,280px);grid-template-rows:minmax(0,1fr)}
+  #screen-game.game-stage[data-shell-game="tetris"] .game-stage-command{max-height:100%}
+}
+
+/* ================= Game Stage Wave C · Gomoku / Tetris =================
+   Disposable, code-native process rails.  They consume presentation data
+   attributes only; rules, snapshots, Replay and authority stay unchanged. */
+#screen-game.game-stage[data-shell-game="gomoku"] .gomoku-wave-b-stage:has(.gomoku-wave-c-process){grid-template-areas:"board process";grid-template-columns:minmax(0,1fr) minmax(148px,.28fr);align-items:stretch;gap:10px;width:min(100%,760px,calc(100dvh - 190px))}
+#screen-game.game-stage[data-shell-game="gomoku"] .gomoku-wave-b-stage:has(.gomoku-wave-c-process) .gomoku-wave-b-board-frame{grid-area:board;align-self:center}
+#screen-game.game-stage[data-shell-game="gomoku"] .gomoku-wave-c-process,#screen-game.game-stage[data-shell-game="tetris"] .tetris-wave-c-process{display:grid;align-content:center;gap:7px;min-width:0;width:100%;padding:9px 10px;border:1px solid rgba(76,43,21,.28);border-radius:14px;background:linear-gradient(135deg,rgba(67,90,193,.12),rgba(255,255,255,.68));box-shadow:inset 0 1px 0 rgba(255,255,255,.72),0 3px 0 rgba(76,43,21,.12);box-sizing:border-box;color:var(--stage-ink);pointer-events:none}
+#screen-game.game-stage[data-shell-game="gomoku"] .gomoku-wave-c-process{grid-area:process;align-self:stretch}
+#screen-game.game-stage[data-shell-game="gomoku"] .gomoku-wave-c-process-label,#screen-game.game-stage[data-shell-game="tetris"] .tetris-wave-c-process-label{display:block;min-width:0;color:var(--stage-ink);font-size:10px;font-weight:900;line-height:1.35;overflow-wrap:anywhere}
+#screen-game.game-stage[data-shell-game="gomoku"] .gomoku-wave-c-process-track,#screen-game.game-stage[data-shell-game="tetris"] .tetris-wave-c-process-track{display:grid;align-items:center;gap:3px;min-width:0;min-height:8px}
+#screen-game.game-stage[data-shell-game="gomoku"] .gomoku-wave-c-process-track{grid-template-columns:repeat(7,minmax(0,1fr))}
+#screen-game.game-stage[data-shell-game="tetris"] .tetris-wave-c-process-track{grid-template-columns:repeat(12,minmax(0,1fr))}
+#screen-game.game-stage[data-shell-game="gomoku"] .gomoku-wave-c-process-step,#screen-game.game-stage[data-shell-game="tetris"] .tetris-wave-c-process-step{display:block;min-width:0;height:7px;border-radius:999px;background:rgba(76,43,21,.17);box-shadow:inset 0 1px 1px rgba(255,255,255,.65);transform-origin:center;transition:transform var(--dur-base) var(--ease-standard),opacity var(--dur-base) var(--ease-standard),background-color var(--dur-base) var(--ease-standard),box-shadow var(--dur-base) var(--ease-standard)}
+#screen-game.game-stage[data-shell-game="gomoku"] .gomoku-wave-c-process-step[data-gomoku-process-active="true"]{background:linear-gradient(90deg,var(--accent),#f59e0b);box-shadow:0 2px 0 rgba(43,32,37,.2),0 5px 10px rgba(245,158,11,.25);transform:translateY(-2px) scaleY(1.22)}
+#screen-game.game-stage[data-shell-game="tetris"] .tetris-wave-c-process-step[data-tetris-process-active="true"]{box-shadow:0 2px 0 rgba(43,32,37,.2),0 5px 10px rgba(34,211,238,.22)}
+#screen-game.game-stage[data-shell-game="gomoku"] .gomoku-wave-b-stage[data-gomoku-process="line"] .gomoku-wave-c-process,#screen-game.game-stage[data-shell-game="gomoku"] .gomoku-wave-b-stage[data-gomoku-process="terminal"] .gomoku-wave-c-process{border-color:rgba(245,158,11,.72);box-shadow:inset 0 1px 0 rgba(255,255,255,.78),0 6px 14px rgba(245,158,11,.2)}
+#screen-game.game-stage[data-shell-game="tetris"] .tetris-wave-b-main-well[data-tetris-process="lock"],#screen-game.game-stage[data-shell-game="tetris"] .tetris-wave-b-main-well[data-tetris-process="line-clear"]{will-change:transform;transform:translateZ(0) scale(1.006)}
+#screen-game.game-stage[data-shell-game="tetris"] .tetris-wave-c-process[data-tetris-process="t-spin"],#screen-game.game-stage[data-shell-game="tetris"] .tetris-wave-c-process[data-tetris-process="perfect-clear"],#screen-game.game-stage[data-shell-game="tetris"] .tetris-wave-c-process[data-tetris-process="terminal"]{border-color:rgba(232,121,249,.72)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.78),0 6px 14px rgba(232,121,249,.2)!important}
+
+@media(max-width:720px){
+  #screen-game.game-stage[data-shell-game="gomoku"] .gomoku-wave-b-stage:has(.gomoku-wave-c-process){grid-template-areas:"board" "process";grid-template-columns:minmax(0,1fr);align-content:start;gap:7px;width:min(100%,calc(100dvh - 205px))}
+  #screen-game.game-stage[data-shell-game="gomoku"] .gomoku-wave-c-process{align-self:start;padding:7px 8px}
+  #screen-game.game-stage[data-shell-game="tetris"] .tetris-wave-c-process{padding:7px 8px!important}
+}
+@media(max-height:600px) and (orientation:landscape){
+  #screen-game.game-stage[data-shell-game="gomoku"] .gomoku-wave-b-stage:has(.gomoku-wave-c-process){grid-template-areas:"board process";grid-template-columns:minmax(0,1fr) minmax(138px,.28fr);gap:7px;width:min(100%,calc(100dvh - 90px))}
+  #screen-game.game-stage[data-shell-game="gomoku"] .gomoku-wave-c-process,#screen-game.game-stage[data-shell-game="tetris"] .tetris-wave-c-process{padding:6px 7px!important}
+  #screen-game.game-stage[data-shell-game="gomoku"] .gomoku-wave-c-process-label,#screen-game.game-stage[data-shell-game="tetris"] .tetris-wave-c-process-label{font-size:9px}
+}
+@media(prefers-reduced-motion:reduce){
+  #screen-game.game-stage[data-shell-game="gomoku"] .gomoku-wave-c-process,#screen-game.game-stage[data-shell-game="tetris"] .tetris-wave-c-process,#screen-game.game-stage[data-shell-game="gomoku"] .gomoku-wave-c-process-step,#screen-game.game-stage[data-shell-game="tetris"] .tetris-wave-c-process-step{transition:none!important;animation:none!important}
+  #screen-game.game-stage[data-shell-game="gomoku"] .gomoku-wave-b-board-frame,#screen-game.game-stage[data-shell-game="tetris"] .tetris-wave-b-main-well{transform:translateZ(0)!important;will-change:auto!important}
+  #screen-game.game-stage[data-shell-game="gomoku"] .gomoku-wave-c-process-step[data-gomoku-process-active="true"],#screen-game.game-stage[data-shell-game="tetris"] .tetris-wave-c-process-step[data-tetris-process-active="true"]{transform:none!important}
+}
+
+/* ================= Game Stage Wave B · Ludo / Monopoly =================
+   Code-native presentation density only. The game modules own rules, input and
+   authority; this layer consumes stable seams and keeps the Wave A fallback
+   visually intact when the shared flag is set to the exact string "0". */
+#screen-game.game-stage[data-shell-game="ludo"] .ludo-wave-b-arena{display:grid;place-items:center;align-content:center;min-width:0;min-height:0;width:100%;padding:4px;box-sizing:border-box}
+#screen-game.game-stage[data-shell-game="ludo"] .ludo-wave-b-stage{position:relative;display:grid;grid-template-areas:"board meta";grid-template-columns:minmax(0,1fr) minmax(154px,.34fr);align-items:stretch;gap:10px;width:min(100%,820px);min-width:0;margin:auto;padding:10px;border:2px solid var(--stage-line);border-radius:24px;background:linear-gradient(145deg,rgba(255,250,240,.94),rgba(242,217,168,.78));box-shadow:0 6px 0 rgba(43,32,37,.22),0 18px 30px rgba(75,47,28,.14);box-sizing:border-box}
+#screen-game.game-stage[data-shell-game="ludo"] .ludo-wave-b-board-frame{position:relative;grid-area:board;display:grid;place-items:center;min-width:0;aspect-ratio:1;border:2px solid var(--stage-line);border-radius:18px;background:linear-gradient(145deg,#f8e5b9,#e3b867);box-shadow:inset 0 0 0 4px rgba(255,255,255,.3),inset 0 -12px 20px rgba(79,48,24,.12);overflow:hidden}
+#screen-game.game-stage[data-shell-game="ludo"] .ludo-wave-b-board{width:min(100%,590px)!important;height:auto!important;border:0!important;border-radius:13px!important;box-shadow:none!important;background-color:#f3e5c4}
+#screen-game.game-stage[data-shell-game="ludo"] .ludo-wave-b-meta{grid-area:meta;display:grid;align-content:start;gap:8px;min-width:0;padding:4px}
+#screen-game.game-stage[data-shell-game="ludo"] .ludo-wave-b-turn,#screen-game.game-stage[data-shell-game="ludo"] .ludo-wave-b-state{display:block;min-width:0;padding:8px 9px;border:1px solid var(--stage-line);border-radius:12px;background:rgba(255,255,255,.68);box-shadow:0 2px 0 rgba(43,32,37,.14);color:var(--stage-ink);font-size:11px;font-weight:850;line-height:1.3;overflow-wrap:anywhere}
+#screen-game.game-stage[data-shell-game="ludo"] .ludo-wave-b-state{border-color:rgba(67,90,193,.35);background:rgba(67,90,193,.1)}
+#screen-game.game-stage[data-shell-game="ludo"] .ludo-wave-b-stage[data-ludo-status="thinking"] .ludo-wave-b-state{border-color:rgba(142,106,216,.55);background:rgba(142,106,216,.16)}
+#screen-game.game-stage[data-shell-game="ludo"] .ludo-wave-b-stage[data-ludo-status="finished"] .ludo-wave-b-state{border-color:rgba(85,168,111,.55);background:rgba(85,168,111,.16)}
+#screen-game.game-stage[data-shell-game="ludo"] .ludo-wave-b-rankings{display:grid;gap:5px;min-width:0;margin:0;padding:8px 8px 8px 26px;border:1px solid var(--stage-line);border-radius:14px;background:rgba(255,255,255,.44);color:var(--stage-ink);font-size:10px;line-height:1.3}
+#screen-game.game-stage[data-shell-game="ludo"] .ludo-wave-b-ranking{min-width:0;overflow-wrap:anywhere;padding:4px 5px;border-radius:8px}
+#screen-game.game-stage[data-shell-game="ludo"] .ludo-wave-b-ranking[data-ludo-active="true"]{background:var(--stage-ink);color:var(--stage-cream);font-weight:850}
+#screen-game.game-stage[data-shell-game="ludo"] .ludo-wave-b-command{display:grid;gap:8px;width:100%}
+#screen-game.game-stage[data-shell-game="ludo"] .game-stage-command .ludo-wave-b-turn-hud{display:grid;gap:5px;margin:0!important;padding:10px 11px;border:1px solid var(--stage-line);border-radius:14px;background:rgba(255,255,255,.5);color:var(--stage-ink);font-size:12px;line-height:1.35}
+#screen-game.game-stage[data-shell-game="ludo"] .game-stage-command .ludo-wave-b-dice{min-width:76px;min-height:76px;margin:0 auto;padding:6px;border-color:var(--stage-line);border-radius:18px;background:var(--stage-ink);box-shadow:0 5px 0 rgba(43,32,37,.22),0 12px 20px rgba(43,32,37,.16)}
+#screen-game.game-stage[data-shell-game="ludo"] .game-stage-command .ludo-wave-b-dice:disabled{filter:saturate(.45);opacity:.62}
+#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-arena{display:grid;place-items:center;align-content:center;min-width:0;min-height:0;width:100%;padding:4px;box-sizing:border-box}
+#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-stage{position:relative;display:grid;grid-template-areas:"board meta";grid-template-columns:minmax(0,1fr) minmax(170px,.34fr);align-items:stretch;gap:10px;width:min(100%,820px);min-width:0;margin:auto;padding:10px;border:2px solid var(--stage-line);border-radius:24px;background:linear-gradient(145deg,rgba(255,250,240,.94),rgba(242,217,168,.78));box-shadow:0 6px 0 rgba(43,32,37,.22),0 18px 30px rgba(75,47,28,.14);box-sizing:border-box}
+#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-board-frame{position:relative;grid-area:board;display:grid;place-items:center;min-width:0;aspect-ratio:1;border:2px solid var(--stage-line);border-radius:18px;background:linear-gradient(145deg,#f8e5b9,#e3b867);box-shadow:inset 0 0 0 4px rgba(255,255,255,.3),inset 0 -12px 20px rgba(79,48,24,.12);overflow:hidden}
+#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-board{width:min(100%,590px)!important;height:auto!important;border:0!important;border-radius:13px!important;box-shadow:none!important}
+#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-meta{grid-area:meta;display:grid;align-content:start;gap:7px;min-width:0;padding:4px}
+#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-meta>output{display:block;min-width:0;min-height:26px;padding:7px 8px;border:1px solid var(--stage-line);border-radius:11px;background:rgba(255,255,255,.68);box-shadow:0 2px 0 rgba(43,32,37,.14);color:var(--stage-ink);font-size:10px;font-weight:800;line-height:1.3;overflow-wrap:anywhere}
+#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-turn,#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-state,#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-property,#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-chance,#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-auction,#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-trade{min-width:0}
+#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-meta>output:empty{display:none}
+#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-meta .monopoly-wave-b-state{border-color:rgba(67,90,193,.35);background:rgba(67,90,193,.1)}
+#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-meta .monopoly-wave-b-auction{border-color:rgba(245,158,11,.56);background:rgba(245,158,11,.13)}
+#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-meta .monopoly-wave-b-trade{border-style:dashed;opacity:.78}
+#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-command{display:grid;gap:8px;width:100%}
+#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-dice{min-width:64px;min-height:64px;margin-inline:auto;padding:6px;border-radius:16px}
+#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-stage .monopoly-character-token{will-change:transform}
+#screen-game.game-stage[data-shell-game="monopoly"] .game-stage-command .monopoly-stage-state{order:0}
+@media(max-width:720px){
+  #screen-game.game-stage[data-shell-game="ludo"] .ludo-wave-b-stage,#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-stage{grid-template-areas:"board" "meta";grid-template-columns:minmax(0,1fr);width:100%;gap:8px;padding:7px;border-radius:18px}
+  #screen-game.game-stage[data-shell-game="ludo"] .ludo-wave-b-stage{grid-template-areas:"board" "meta"}
+  #screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-stage{grid-template-areas:"board" "meta"}
+  #screen-game.game-stage[data-shell-game="ludo"] .ludo-wave-b-meta,#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-meta{grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;gap:6px;padding:0}
+  #screen-game.game-stage[data-shell-game="ludo"] .ludo-wave-b-rankings{grid-column:1/-1;grid-template-columns:repeat(2,minmax(0,1fr));padding:7px 7px 7px 24px}
+  #screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-meta>output{min-height:30px}
+}
+@media(max-width:420px){
+  #screen-game.game-stage[data-shell-game="ludo"] .ludo-wave-b-meta,#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-meta{grid-template-columns:minmax(0,1fr)}
+  #screen-game.game-stage[data-shell-game="ludo"] .ludo-wave-b-rankings{grid-template-columns:minmax(0,1fr)}
+}
+@media(max-height:600px) and (orientation:landscape){
+  #screen-game.game-stage[data-shell-game="ludo"] .ludo-wave-b-stage,#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-stage{grid-template-areas:"board meta";grid-template-columns:minmax(0,1fr) minmax(150px,.34fr);width:min(100%,820px);padding:5px}
+  #screen-game.game-stage[data-shell-game="ludo"] .ludo-wave-b-meta,#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-meta{grid-template-columns:minmax(0,1fr);gap:5px}
+}
+@media(prefers-reduced-motion:reduce){
+  #screen-game.game-stage[data-shell-game="ludo"] .ludo-wave-b-board-frame,#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-stage{animation:none!important}
+  #screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-stage .monopoly-character-token{will-change:auto}
+}
+
+/* ================= Game Stage Wave C · Ludo / Monopoly =================
+   Full-Arena code-native density and turn-process choreography. This is a
+   presentation layer only: the games retain their existing DOM rules, wire,
+   Authority, rewards, Replay and AI-learning contracts. */
+#screen-game.game-stage[data-shell-game="ludo"] .ludo-wave-b-arena{--ludo-wave-c-board-size:min(100%,680px);display:grid;place-items:stretch;align-content:stretch;width:100%;height:100%;padding:clamp(5px,1.2vw,14px);overflow:hidden}
+#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-arena{--monopoly-wave-c-board-size:min(100%,680px);display:grid;place-items:stretch;align-content:stretch;width:100%;height:100%;padding:clamp(5px,1.2vw,14px);overflow:hidden}
+#screen-game.game-stage[data-shell-game="monopoly"] .game-stage-arena.monopoly-wave-b-arena{grid-template-columns:minmax(0,1fr);justify-content:stretch}
+#screen-game.game-stage[data-shell-game="ludo"] .ludo-wave-b-stage,#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-stage{position:relative;isolation:isolate;display:grid;grid-template-areas:"board meta";grid-template-columns:minmax(0,1fr) clamp(184px,22vw,310px);align-items:stretch;gap:clamp(8px,1.35vw,16px);width:100%;max-width:none;min-height:clamp(320px,calc(100dvh - 236px),760px);height:100%;margin:0;padding:clamp(8px,1.5vw,18px);border-radius:clamp(20px,2.4vw,32px);perspective:1200px;transform:translateZ(0);background:linear-gradient(145deg,rgba(255,254,247,.96),rgba(238,211,156,.84) 48%,rgba(185,134,76,.38));box-shadow:inset 0 1px 0 rgba(255,255,255,.92),inset 0 -22px 32px rgba(76,43,21,.13),0 8px 0 rgba(43,32,37,.22),0 24px 42px rgba(47,29,16,.18)}
+#screen-game.game-stage[data-shell-game="ludo"] .ludo-wave-b-stage::before,#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-stage::before{content:"";position:absolute;inset:8px;border:1px solid rgba(76,43,21,.2);border-radius:inherit;background:repeating-linear-gradient(115deg,rgba(255,255,255,.24) 0 1px,transparent 1px 12px);pointer-events:none;z-index:-1}
+#screen-game.game-stage[data-shell-game="ludo"] .ludo-wave-b-board-frame,#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-board-frame{display:grid;place-items:center;min-width:0;min-height:0;height:100%;padding:clamp(7px,1.4vw,16px);border-radius:clamp(16px,2vw,27px);transform:rotateX(.55deg) rotateY(-.35deg) translateZ(0);transform-style:preserve-3d;background:radial-gradient(circle at 28% 20%,rgba(255,255,255,.92),transparent 28%),repeating-linear-gradient(135deg,rgba(105,62,31,.05) 0 2px,transparent 2px 11px),linear-gradient(145deg,#f9e7bc,#c98c4d);box-shadow:inset 0 0 0 3px rgba(255,255,255,.48),inset 0 -16px 27px rgba(78,44,20,.18),0 12px 20px rgba(50,28,13,.18)}
+#screen-game.game-stage[data-shell-game="ludo"] .ludo-wave-b-board{width:var(--ludo-wave-c-board-size)!important;height:var(--ludo-wave-c-board-size)!important;max-width:100%;max-height:100%;border-radius:clamp(13px,1.5vw,21px)!important;box-shadow:inset 0 0 0 2px rgba(255,255,255,.48),0 8px 16px rgba(49,28,14,.17)!important;transform:translateZ(2px)}
+#screen-game.game-stage[data-shell-game="ludo"] .ludo-wave-b-board-frame{position:relative;overflow:hidden}
+#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-board{width:var(--monopoly-wave-c-board-size)!important;height:var(--monopoly-wave-c-board-size)!important;max-width:100%;max-height:100%;border-radius:clamp(13px,1.5vw,21px)!important;box-shadow:inset 0 0 0 2px rgba(255,255,255,.48),0 8px 16px rgba(49,28,14,.17)!important;transform:translateZ(2px)}
+#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-final-art-layers{position:absolute;inset:0;overflow:hidden;border-radius:inherit;pointer-events:none;isolation:isolate;z-index:0}
+#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-final-art-layer{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;user-select:none}
+#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-final-art-layer-midground{mix-blend-mode:multiply;opacity:.92;transform:translateZ(1px)}
+#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-final-art-layer-foreground{mix-blend-mode:normal;opacity:.94;transform:translateZ(2px)}
+#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-final-art-vfx-host{position:absolute;inset:0;display:grid;place-items:center;z-index:8;pointer-events:none}
+#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-final-art-vfx{width:min(62%,260px);height:min(62%,260px);object-fit:contain;filter:drop-shadow(0 8px 0 rgba(33,25,35,.18));animation:monopoly-final-art-vfx-in .24s ease-out both}
+@keyframes monopoly-final-art-vfx-in{from{opacity:0;transform:translateY(6px) scale(.88)}to{opacity:1;transform:translateY(0) scale(1)}}
+@media (prefers-reduced-motion:reduce){#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-final-art-vfx{animation:none!important}#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-final-art-layer-midground,#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-final-art-layer-foreground{transform:none!important}}
+#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-board-frame{position:relative;align-self:center;justify-self:center;width:min(100%,calc(100dvh - 280px));height:auto;aspect-ratio:1;overflow:hidden}
+/* The permanent DOM board owns small-screen density. Text is never removed
+   from the accessible name/title; compact tiles keep colour, ownership,
+   current-space and token signals rather than trying to stack three labels. */
+#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-board .monopoly-cell-label,#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-board .monopoly-cell-value{min-width:0;max-width:100%;overflow-wrap:anywhere;line-height:1.05}
+#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-board .monopoly-cell-glyph{display:none}
+#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-board .m-cell.is-current-cell{z-index:2;outline:2px solid var(--accent);outline-offset:1px;box-shadow:0 0 0 3px rgba(255,255,255,.78),0 0 0 5px color-mix(in srgb,var(--accent) 32%,transparent),var(--elev-2)}
+#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-board .monopoly-character-token[data-monopoly-active="true"]{z-index:5}
+#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-board[data-monopoly-density="compact"] .m-cell{gap:0;border-radius:7px;font-size:0}
+#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-board[data-monopoly-density="compact"] .monopoly-cell-label,#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-board[data-monopoly-density="compact"] .monopoly-cell-value,#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-board[data-monopoly-density="compact"] .property-owner-avatar{display:none}
+#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-board[data-monopoly-density="compact"] .monopoly-cell-glyph{display:grid;place-items:center;font-size:clamp(8px,2.5vw,12px);line-height:1;color:var(--stage-ink)}
+#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-board[data-monopoly-density="compact"] .m-cell .stripe{height:4px;border-radius:6px 6px 0 0}
+#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-board[data-monopoly-density="compact"] .m-cell .emo{font-size:clamp(10px,3.1vw,15px);line-height:1}
+#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-board[data-monopoly-density="compact"] .m-cell .owner-dot{right:-2px;bottom:-2px;width:9px;height:9px;border-width:1px}
+#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-board[data-monopoly-density="compact"] .m-marker.monopoly-character-token{transform:translate(-50%,-50%) scale(.8)}
+#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-board[data-monopoly-density="compact"] .m-center{gap:3px}
+#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-board[data-monopoly-density="compact"] .monopoly-turn-hud,#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-board[data-monopoly-density="compact"] .monopoly-leader-hud{display:none}
+#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-board[data-monopoly-density="compact"] .m-center .dice-row{gap:2px}
+#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-board[data-monopoly-density="compact"] .m-center .dice3d-wrap{width:40px!important;height:40px!important;flex:0 0 40px;perspective:190px;transform:scale(.74);transform-origin:center}
+#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-board[data-monopoly-density="micro"] .m-cell{gap:0;border-radius:5px;font-size:0}
+#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-board[data-monopoly-density="micro"] .monopoly-cell-label,#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-board[data-monopoly-density="micro"] .monopoly-cell-value,#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-board[data-monopoly-density="micro"] .property-owner-avatar{display:none}
+#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-board[data-monopoly-density="micro"] .monopoly-cell-glyph{display:grid;place-items:center;font-size:8px;line-height:1;color:var(--stage-ink)}
+#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-board[data-monopoly-density="micro"] .monopoly-turn-hud,#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-board[data-monopoly-density="micro"] .monopoly-leader-hud{display:none}
+#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-board[data-monopoly-density="micro"] .m-center{gap:2px}
+#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-board[data-monopoly-density="micro"] .m-center .dice-row{gap:2px}
+#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-board[data-monopoly-density="micro"] .m-cell .stripe{height:3px;border-radius:4px 4px 0 0}
+#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-board[data-monopoly-density="micro"] .m-cell .owner-dot{right:-1px;bottom:-1px;width:7px;height:7px}
+#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-board[data-monopoly-density="micro"] .m-cell .emo{font-size:10px}
+#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-board[data-monopoly-density="micro"] .monopoly-cell-glyph{font-size:8px}
+#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-board[data-monopoly-density="micro"] .m-marker.monopoly-character-token{transform:translate(-50%,-50%) scale(.5)}
+#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-board[data-monopoly-density="micro"] .m-center .dice3d-wrap{width:22px!important;height:22px!important;flex-basis:22px;perspective:130px;transform:scale(.5)}
+#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-command>.monopoly-wave-b-dice[data-monopoly-compact-control="command"]{order:-3;width:100%;min-height:68px;margin:0;line-height:1.2}
+#screen-game.game-stage[data-shell-game="ludo"] .ludo-wave-b-meta,#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-meta{align-content:stretch;grid-auto-rows:max-content;gap:clamp(7px,1vw,11px);padding:clamp(2px,.5vw,6px);border-radius:18px;background:linear-gradient(165deg,rgba(255,255,255,.4),rgba(112,70,36,.09));box-shadow:inset 0 1px 0 rgba(255,255,255,.62)}
+#screen-game.game-stage[data-shell-game="ludo"] .ludo-wave-b-turn,#screen-game.game-stage[data-shell-game="ludo"] .ludo-wave-b-state,#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-meta>output{min-height:34px;padding:9px 10px;border-radius:13px;background:linear-gradient(135deg,rgba(255,255,255,.9),rgba(255,247,230,.64));box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 3px 0 rgba(76,43,21,.12);font-size:11px}
+#screen-game.game-stage[data-shell-game="ludo"] .ludo-wave-c-process,#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-c-process{display:grid;gap:7px;min-width:0;padding:9px 10px;border:1px solid rgba(76,43,21,.28);border-radius:14px;background:linear-gradient(135deg,rgba(67,90,193,.12),rgba(255,255,255,.68));box-shadow:inset 0 1px 0 rgba(255,255,255,.72),0 3px 0 rgba(76,43,21,.12)}
+#screen-game.game-stage[data-shell-game="ludo"] .ludo-wave-c-process-label,#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-c-process-label{min-width:0;color:var(--stage-ink);font-size:10px;font-weight:900;line-height:1.35;overflow-wrap:anywhere}
+#screen-game.game-stage[data-shell-game="ludo"] .ludo-wave-c-process-track,#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-c-process-track{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:3px;min-height:8px}
+#screen-game.game-stage[data-shell-game="ludo"] .ludo-wave-c-process-step,#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-c-process-step{display:block;min-width:0;height:7px;border-radius:999px;background:rgba(76,43,21,.16);box-shadow:inset 0 1px 1px rgba(255,255,255,.65);transition:transform .22s ease,background-color .22s ease,box-shadow .22s ease}
+#screen-game.game-stage[data-shell-game="ludo"] .ludo-wave-c-process-step[data-ludo-process-active="true"],#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-c-process-step[data-monopoly-process-active="true"]{background:linear-gradient(90deg,var(--accent),#f59e0b);box-shadow:0 2px 0 rgba(43,32,37,.2),0 5px 10px rgba(245,158,11,.28);transform:translateY(-2px) scaleY(1.22)}
+#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-c-process-step[data-monopoly-trade="unavailable"]{opacity:.48;background:repeating-linear-gradient(90deg,rgba(76,43,21,.35) 0 2px,transparent 2px 4px)}
+#screen-game.game-stage[data-shell-game="ludo"] .ludo-wave-b-stage[data-ludo-process="dice"] .ludo-wave-b-board-frame,#screen-game.game-stage[data-shell-game="ludo"] .ludo-wave-b-stage[data-ludo-process="move"] .ludo-wave-b-board-frame,#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-stage[data-monopoly-process="walk"] .monopoly-wave-b-board-frame,#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-stage[data-monopoly-process="land"] .monopoly-wave-b-board-frame{will-change:transform}
+#screen-game.game-stage[data-shell-game="ludo"] .ludo-wave-b-stage[data-ludo-process="capture"] .ludo-wave-b-board-frame,#screen-game.game-stage[data-shell-game="ludo"] .ludo-wave-b-stage[data-ludo-process="finish"] .ludo-wave-b-board-frame,#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-stage[data-monopoly-process="buy"] .monopoly-wave-b-board-frame,#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-stage[data-monopoly-process="event"] .monopoly-wave-b-board-frame,#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-stage[data-monopoly-process="auction"] .monopoly-wave-b-board-frame{transform:rotateX(.55deg) rotateY(-.35deg) translateZ(0) scale(1.008)}
+#screen-game.game-stage[data-shell-game="ludo"] .ludo-wave-b-stage[data-ludo-process="ranking"] .ludo-wave-b-rankings{border-color:rgba(245,158,11,.72);box-shadow:inset 0 1px 0 rgba(255,255,255,.78),0 5px 14px rgba(245,158,11,.2)}
+#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-stage[data-monopoly-process="auction"] .monopoly-wave-b-auction{border-color:rgba(245,158,11,.8);box-shadow:0 4px 12px rgba(245,158,11,.18)}
+#screen-game.game-stage[data-shell-game="ludo"] .game-stage-command .ludo-wave-b-dice,#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-dice{min-width:clamp(68px,7vw,92px);min-height:clamp(68px,7vw,92px);transform:translateZ(0);box-shadow:0 6px 0 rgba(43,32,37,.22),0 14px 22px rgba(43,32,37,.16)}
+@media(max-width:900px){
+  #screen-game.game-stage[data-shell-game="ludo"] .ludo-wave-b-stage,#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-stage{grid-template-columns:minmax(0,1fr) minmax(164px,.34fr);min-height:clamp(300px,calc(100dvh - 224px),680px)}
+  #screen-game.game-stage[data-shell-game="ludo"] .ludo-wave-b-arena{--ludo-wave-c-board-size:min(100%,600px)}
+  #screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-arena{--monopoly-wave-c-board-size:min(100%,600px)}
+}
+@media(max-width:720px){
+  #screen-game.game-stage[data-shell-game="ludo"] .ludo-wave-b-arena,#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-arena{align-content:start;overflow:auto}
+  #screen-game.game-stage[data-shell-game="ludo"] .ludo-wave-b-stage,#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-stage{grid-template-areas:"board" "meta";grid-template-columns:minmax(0,1fr);min-height:0;height:auto;gap:8px;padding:7px;border-radius:20px}
+  #screen-game.game-stage[data-shell-game="ludo"] .ludo-wave-b-board-frame,#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-board-frame{min-height:min(63dvh,560px);padding:7px}
+  #screen-game.game-stage[data-shell-game="ludo"] .ludo-wave-b-arena{--ludo-wave-c-board-size:min(100%,min(63dvh,560px))}
+  #screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-arena{--monopoly-wave-c-board-size:min(100%,min(63dvh,560px))}
+  #screen-game.game-stage[data-shell-game="ludo"] .ludo-wave-b-meta,#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-meta{grid-template-columns:repeat(2,minmax(0,1fr));padding:0}
+  #screen-game.game-stage[data-shell-game="ludo"] .ludo-wave-b-rankings,#screen-game.game-stage[data-shell-game="ludo"] .ludo-wave-c-process,#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-c-process{grid-column:1/-1}
+}
+@media(max-width:420px){
+  #screen-game.game-stage[data-shell-game="ludo"] .ludo-wave-b-board-frame,#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-board-frame{min-height:min(58dvh,440px);padding:5px}
+  #screen-game.game-stage[data-shell-game="ludo"] .ludo-wave-b-arena{--ludo-wave-c-board-size:min(100%,min(58dvh,440px))}
+  #screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-arena{--monopoly-wave-c-board-size:min(100%,min(58dvh,440px))}
+  #screen-game.game-stage[data-shell-game="ludo"] .ludo-wave-b-meta,#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-meta{grid-template-columns:minmax(0,1fr)}
+}
+@media(max-width:720px) and (orientation:portrait){
+  /* A square board must derive from its one-column track, never a viewport
+     min-height; otherwise 390px portrait turns the board frame into a wide
+     horizontal-scroll surface. */
+  /* Make the explicit grid track consume the Arena before the stage's 100%
+     width resolves; an implicit auto track would shrink the whole playfield. */
+  #screen-game.game-stage[data-shell-game="ludo"] .ludo-wave-b-arena{grid-template-columns:minmax(0,1fr);justify-content:stretch}
+  #screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-arena{grid-template-columns:minmax(0,1fr);justify-content:stretch}
+  #screen-game.game-stage[data-shell-game="ludo"] .ludo-wave-b-board-frame{width:100%;height:auto;min-height:0;aspect-ratio:1}
+  #screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-stage{height:100%;min-height:0}
+  #screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-meta{display:none}
+  #screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-board-frame{justify-self:center;width:min(100%,clamp(248px,76vw,340px));height:auto;max-width:100%;min-height:0;aspect-ratio:1}
+  /* renderBoard() normally writes a pixel size inline. In portrait the DOM
+     fallback must instead fill this frame's content box, so its own width
+     cannot make the clipping frame scroll horizontally. */
+  #screen-game.game-stage[data-shell-game="ludo"] .ludo-wave-b-board{width:100%!important;height:100%!important;max-width:100%;max-height:100%;box-sizing:border-box}
+  #screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-board{width:100%!important;height:100%!important;max-width:100%;max-height:100%;box-sizing:border-box}
+}
+@media(max-height:600px) and (orientation:landscape){
+  #screen-game.game-stage[data-shell-game="ludo"] .ludo-wave-b-arena{--ludo-wave-c-board-size:min(100%,calc(100dvh - 104px))}
+  #screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-arena{--monopoly-wave-c-board-size:min(100%,calc(100dvh - 104px))}
+  #screen-game.game-stage[data-shell-game="ludo"] .ludo-wave-b-stage,#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-stage{grid-template-columns:minmax(0,1fr) minmax(148px,.3fr);min-height:0;height:100%;padding:6px}
+  #screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-stage{grid-template-columns:minmax(0,clamp(132px,calc(100dvh - 220px),380px)) minmax(148px,1fr);justify-content:center}
+  #screen-game.game-stage[data-shell-game="ludo"] .ludo-wave-b-board-frame,#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-board-frame{padding:5px}
+  #screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-board-frame{width:100%}
+}
+@media(prefers-reduced-motion:reduce){
+  #screen-game.game-stage[data-shell-game="ludo"] .ludo-wave-c-process,#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-c-process,#screen-game.game-stage[data-shell-game="ludo"] .ludo-wave-c-process-step,#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-c-process-step{transition:none!important;animation:none!important}
+  #screen-game.game-stage[data-shell-game="ludo"] .ludo-wave-b-board-frame,#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-board-frame{transform:translateZ(0)!important;will-change:auto}
+  #screen-game.game-stage[data-shell-game="ludo"] .ludo-wave-c-process-step[data-ludo-process-active="true"],#screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-c-process-step[data-monopoly-process-active="true"]{transform:none}
+}
+
+@media(max-width:720px){
+  #screen-game.game-stage[data-shell-game="gomoku"] .gomoku-wave-b-stage{width:min(100%,calc(100dvh - 238px));padding:7px;border-radius:18px}
+  #screen-game.game-stage[data-shell-game="gomoku"] .gomoku-wave-b-board-frame{border-radius:13px}
+  #screen-game.game-stage[data-shell-game="tetris"] .tetris-wave-b-layout{grid-template-columns:minmax(0,1fr)!important;width:100%;padding:0}
+  #screen-game.game-stage[data-shell-game="tetris"] .tetris-wave-b-main{grid-template-columns:minmax(0,1fr);grid-template-areas:"score" "well" "preview";justify-items:stretch;padding:8px;border-radius:17px}
+  #screen-game.game-stage[data-shell-game="tetris"] .tetris-wave-b-main-well{justify-self:center}
+  #screen-game.game-stage[data-shell-game="tetris"] .tetris-wave-b-preview-deck{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+  #screen-game.game-stage[data-shell-game="tetris"] .tetris-preview-slot{min-height:54px;padding:6px}
+  #screen-game.game-stage[data-shell-game="tetris"] .tetris-wave-b-opponents{grid-template-columns:repeat(2,minmax(0,1fr));padding:7px;border-radius:17px}
+}
+@media(max-width:420px){
+  #screen-game.game-stage[data-shell-game="gomoku"] .gomoku-wave-b-stage{width:100%;padding:5px}
+  #screen-game.game-stage[data-shell-game="tetris"] .tetris-wave-b-preview-deck{grid-template-columns:repeat(3,minmax(0,1fr))}
+  #screen-game.game-stage[data-shell-game="tetris"] .tetris-preview-label{font-size:8px}
+  #screen-game.game-stage[data-shell-game="tetris"] .tetris-preview-value{font-size:12px}
+}
+@media(max-height:600px) and (orientation:landscape){
+  #screen-game.game-stage[data-shell-game="gomoku"] .gomoku-wave-b-stage{width:min(100%,calc(100dvh - 105px));padding:5px}
+  #screen-game.game-stage[data-shell-game="tetris"] .tetris-wave-b-layout{grid-template-columns:minmax(0,1fr) minmax(150px,.42fr)!important}
+  #screen-game.game-stage[data-shell-game="tetris"] .tetris-wave-b-main{grid-template-columns:minmax(0,1fr) 104px}
+  #screen-game.game-stage[data-shell-game="tetris"] .tetris-wave-b-opponents{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(prefers-reduced-motion:reduce){
+  #screen-game.game-stage[data-shell-game="gomoku"] .gomoku-wave-b-stage[data-gomoku-phase="thinking"] .gomoku-wave-b-state{transition:none}
+  #screen-game.game-stage[data-shell-game="gomoku"] .gomoku-wave-b-board-frame,#screen-game.game-stage[data-shell-game="tetris"] .tetris-wave-b-main,#screen-game.game-stage[data-shell-game="tetris"] .tetris-wave-b-opponents{animation:none!important}
+}
+
+/* Games owns two deliberate workspaces: choosing a game and managing rooms. */

@@ -1,0 +1,274 @@
+{
+  "schemaVersion": 1,
+  "productionUnitId": "P2-02",
+  "familyId": "P-HONRU-SEASONAL-V1",
+  "sourceAssetId": "P-HONRU-SEASONAL-V1",
+  "artworkVersion": 1,
+  "status": "OWNER_AUTHORIZED_ART_CLEARANCE",
+  "license": "project-owned-ai-generated-derived",
+  "identityAnchor": "art-source/brand/ghost-game/honru/context-reactions-v1/source/honru-hand-corrected-master-v1.png",
+  "activeEdition": "summer-cloud",
+  "sourceMasters": [
+    {
+      "path": "art-source/brand/ghost-game/honru/seasonal-v1/source/honru-spring-bloom-master-v1-alpha.png",
+      "sha256": "9D36962324D1AEC20E11877AD85931CED93E85CEDB1BEE07622466FEE30455A3",
+      "bytes": 264214,
+      "width": 1254,
+      "height": 1254,
+      "format": "png",
+      "alpha": true,
+      "id": "spring-bloom-source",
+      "edition": "spring-bloom",
+      "sourceType": "owner-cleared-derived-alpha"
+    },
+    {
+      "path": "art-source/brand/ghost-game/honru/seasonal-v1/source/honru-summer-cloud-master-v1-alpha.png",
+      "sha256": "E165882A7961D3DBA53652A83E5305797283614B8E2A1FD90DC8206938BB76DE",
+      "bytes": 272821,
+      "width": 1254,
+      "height": 1254,
+      "format": "png",
+      "alpha": true,
+      "id": "summer-cloud-source",
+      "edition": "summer-cloud",
+      "sourceType": "owner-cleared-derived-alpha"
+    },
+    {
+      "path": "art-source/brand/ghost-game/honru/seasonal-v1/source/honru-autumn-leaf-master-v1-alpha.png",
+      "sha256": "382DF545B4AFC477AE32508651F8F598E4CFE3399C6C5DD49523E7B3D33440AC",
+      "bytes": 278652,
+      "width": 1254,
+      "height": 1254,
+      "format": "png",
+      "alpha": true,
+      "id": "autumn-leaf-source",
+      "edition": "autumn-leaf",
+      "sourceType": "owner-cleared-derived-alpha"
+    },
+    {
+      "path": "art-source/brand/ghost-game/honru/seasonal-v1/source/honru-winter-star-master-v1-alpha.png",
+      "sha256": "44C0A0D5E14567547EA185C48A3643B973EE27E3674B7C88AFE3AF0530D8B0F9",
+      "bytes": 262135,
+      "width": 1254,
+      "height": 1254,
+      "format": "png",
+      "alpha": true,
+      "id": "winter-star-source",
+      "edition": "winter-star",
+      "sourceType": "owner-cleared-derived-alpha"
+    }
+  ],
+  "runtimeVariants": [
+    {
+      "path": "public/assets/brand/honru/seasonal-v1/spring-bloom-hero-320-v1.webp",
+      "sha256": "377C98358A2EB858F7932D99C680E79554FEA666A053FB5CDFD4F8D29056C228",
+      "bytes": 13362,
+      "width": 320,
+      "height": 320,
+      "format": "webp",
+      "alpha": true,
+      "id": "spring-bloom-hero-320",
+      "edition": "spring-bloom",
+      "role": "hero-320"
+    },
+    {
+      "path": "public/assets/brand/honru/seasonal-v1/spring-bloom-reaction-160-v1.webp",
+      "sha256": "B2801F79CF721D2D7659A6A8D3FE86CB26C7C65F2C08945DF6D32B60DB89C14E",
+      "bytes": 6306,
+      "width": 160,
+      "height": 160,
+      "format": "webp",
+      "alpha": true,
+      "id": "spring-bloom-reaction-160",
+      "edition": "spring-bloom",
+      "role": "reaction-160"
+    },
+    {
+      "path": "public/assets/brand/honru/seasonal-v1/spring-bloom-mini-96-v1.webp",
+      "sha256": "B02ECA2E1C0516440A5606FFA4F0F933AC196A3B858AE5302986ABD038F5D649",
+      "bytes": 3710,
+      "width": 96,
+      "height": 96,
+      "format": "webp",
+      "alpha": true,
+      "id": "spring-bloom-mini-96",
+      "edition": "spring-bloom",
+      "role": "mini-96"
+    },
+    {
+      "path": "public/assets/brand/honru/seasonal-v1/spring-bloom-celebration-320-v1.webp",
+      "sha256": "377C98358A2EB858F7932D99C680E79554FEA666A053FB5CDFD4F8D29056C228",
+      "bytes": 13362,
+      "width": 320,
+      "height": 320,
+      "format": "webp",
+      "alpha": true,
+      "id": "spring-bloom-celebration-320",
+      "edition": "spring-bloom",
+      "role": "celebration-320"
+    },
+    {
+      "path": "public/assets/brand/honru/seasonal-v1/summer-cloud-hero-320-v1.webp",
+      "sha256": "E8D4A6B6EC7F0F082A7FA6EACBF210CD3D0D498063C7F46F8915C2B354274524",
+      "bytes": 12760,
+      "width": 320,
+      "height": 320,
+      "format": "webp",
+      "alpha": true,
+      "id": "summer-cloud-hero-320",
+      "edition": "summer-cloud",
+      "role": "hero-320"
+    },
+    {
+      "path": "public/assets/brand/honru/seasonal-v1/summer-cloud-reaction-160-v1.webp",
+      "sha256": "07FA6C037EFCDD801BF256CD52EC288BC5218E90AB73F3A914E69BACCA08A5DF",
+      "bytes": 6230,
+      "width": 160,
+      "height": 160,
+      "format": "webp",
+      "alpha": true,
+      "id": "summer-cloud-reaction-160",
+      "edition": "summer-cloud",
+      "role": "reaction-160"
+    },
+    {
+      "path": "public/assets/brand/honru/seasonal-v1/summer-cloud-mini-96-v1.webp",
+      "sha256": "7536CE9707CDC41F29DD3CF1DD2D65C2246657968729B9D79229E5444A3B3571",
+      "bytes": 3850,
+      "width": 96,
+      "height": 96,
+      "format": "webp",
+      "alpha": true,
+      "id": "summer-cloud-mini-96",
+      "edition": "summer-cloud",
+      "role": "mini-96"
+    },
+    {
+      "path": "public/assets/brand/honru/seasonal-v1/summer-cloud-celebration-320-v1.webp",
+      "sha256": "E8D4A6B6EC7F0F082A7FA6EACBF210CD3D0D498063C7F46F8915C2B354274524",
+      "bytes": 12760,
+      "width": 320,
+      "height": 320,
+      "format": "webp",
+      "alpha": true,
+      "id": "summer-cloud-celebration-320",
+      "edition": "summer-cloud",
+      "role": "celebration-320"
+    },
+    {
+      "path": "public/assets/brand/honru/seasonal-v1/autumn-leaf-hero-320-v1.webp",
+      "sha256": "02021926B33C2EA57BE43AF4F1C3C3C5B805174E817FA239E8AF091CF3A49295",
+      "bytes": 12348,
+      "width": 320,
+      "height": 320,
+      "format": "webp",
+      "alpha": true,
+      "id": "autumn-leaf-hero-320",
+      "edition": "autumn-leaf",
+      "role": "hero-320"
+    },
+    {
+      "path": "public/assets/brand/honru/seasonal-v1/autumn-leaf-reaction-160-v1.webp",
+      "sha256": "2C6CC26B9596AEEB1007D1B2B56AC0F81E38BB2EA491ABFC94F67F6D7A6A6D8E",
+      "bytes": 6026,
+      "width": 160,
+      "height": 160,
+      "format": "webp",
+      "alpha": true,
+      "id": "autumn-leaf-reaction-160",
+      "edition": "autumn-leaf",
+      "role": "reaction-160"
+    },
+    {
+      "path": "public/assets/brand/honru/seasonal-v1/autumn-leaf-mini-96-v1.webp",
+      "sha256": "9009ABFC0F5A5AB1398C22884C49863E9E201671BA6253A6BDC0CE4A3D74E423",
+      "bytes": 3638,
+      "width": 96,
+      "height": 96,
+      "format": "webp",
+      "alpha": true,
+      "id": "autumn-leaf-mini-96",
+      "edition": "autumn-leaf",
+      "role": "mini-96"
+    },
+    {
+      "path": "public/assets/brand/honru/seasonal-v1/autumn-leaf-celebration-320-v1.webp",
+      "sha256": "02021926B33C2EA57BE43AF4F1C3C3C5B805174E817FA239E8AF091CF3A49295",
+      "bytes": 12348,
+      "width": 320,
+      "height": 320,
+      "format": "webp",
+      "alpha": true,
+      "id": "autumn-leaf-celebration-320",
+      "edition": "autumn-leaf",
+      "role": "celebration-320"
+    },
+    {
+      "path": "public/assets/brand/honru/seasonal-v1/winter-star-hero-320-v1.webp",
+      "sha256": "7B774656D6AB249C8A70338204D4EE29DCEED3DA48376680B651E1C4965851F3",
+      "bytes": 15142,
+      "width": 320,
+      "height": 320,
+      "format": "webp",
+      "alpha": true,
+      "id": "winter-star-hero-320",
+      "edition": "winter-star",
+      "role": "hero-320"
+    },
+    {
+      "path": "public/assets/brand/honru/seasonal-v1/winter-star-reaction-160-v1.webp",
+      "sha256": "002E552A6355AF6E55151A1A8F085CD39AA462E66545BA93B167A587DACA83F0",
+      "bytes": 6774,
+      "width": 160,
+      "height": 160,
+      "format": "webp",
+      "alpha": true,
+      "id": "winter-star-reaction-160",
+      "edition": "winter-star",
+      "role": "reaction-160"
+    },
+    {
+      "path": "public/assets/brand/honru/seasonal-v1/winter-star-mini-96-v1.webp",
+      "sha256": "924BB51E7D66CF8977F7667CA39FD60556AFFF97DC89E13F270F3784B4F32560",
+      "bytes": 3814,
+      "width": 96,
+      "height": 96,
+      "format": "webp",
+      "alpha": true,
+      "id": "winter-star-mini-96",
+      "edition": "winter-star",
+      "role": "mini-96"
+    },
+    {
+      "path": "public/assets/brand/honru/seasonal-v1/winter-star-celebration-320-v1.webp",
+      "sha256": "7B774656D6AB249C8A70338204D4EE29DCEED3DA48376680B651E1C4965851F3",
+      "bytes": 15142,
+      "width": 320,
+      "height": 320,
+      "format": "webp",
+      "alpha": true,
+      "id": "winter-star-celebration-320",
+      "edition": "winter-star",
+      "role": "celebration-320"
+    }
+  ],
+  "featureFlags": {
+    "operator": "all",
+    "enabledValue": "1",
+    "defaultEnabled": true,
+    "ids": [
+      "mg_art_honru_seasonal_v1"
+    ]
+  },
+  "metrics": {
+    "sourceMasterCount": 4,
+    "runtimeVariantCount": 16,
+    "runtimeBytes": 147572,
+    "runtimeByteBudget": 2097152,
+    "withinBudget": true
+  },
+  "fallback": {
+    "chain": "seasonal -> Honru Context -> Honru States -> mascot SVG -> no decorative node"
+  },
+  "authority": "presentation-only; no date, liveops, commerce, protocol, reward, chat, replay, AI or persistence capability"
+}

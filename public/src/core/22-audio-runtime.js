@@ -35,6 +35,7 @@
     'mg_audio_haptics_volume', 'mg_audio_master_volume'
   ]);
   var TRACKS = Object.freeze({ home: true, game: true, result: true });
+  var MAX_VISUAL_LISTENERS = 4;
   var runtime = null;
 
   function freeze(value) { return Object.freeze(value); }
@@ -144,7 +145,54 @@
     var unlocked = false;
     var currentTrack = null;
     var listeners = [];
+    var visualListeners = [];
+    var visualGeneration = 0;
+    var lifecycleHidden = false;
     var mediaQuery = null;
+
+    function visualEnvelope(kind, cue) {
+      var safeCue = cue && typeof cue === 'object' ? cue : {};
+      return freeze({
+        version: '1.0',
+        kind: String(kind || 'state'),
+        cueType: typeof safeCue.type === 'string' ? safeCue.type : null,
+        intensity: finite(safeCue.intensity) ? clamp(safeCue.intensity, 0, 1, 1) : 0,
+        pan: finite(safeCue.pan) ? clamp(safeCue.pan, -1, 1, 0) : 0,
+        track: currentTrack,
+        unlocked: unlocked === true,
+        hidden: lifecycleHidden === true,
+        reducedMotion: reducedMotion(),
+        reducedEffects: settings.mg_audio_reduced_effects === true,
+        sfxEnabled: settings.mg_audio_sfx === true,
+        musicEnabled: settings.mg_audio_music === true,
+        sfxAudible: settings.mg_audio_sfx === true && settings.mg_audio_master_volume > 0 && settings.mg_audio_sfx_volume > 0,
+        musicAudible: settings.mg_audio_music === true && settings.mg_audio_master_volume > 0 && settings.mg_audio_music_volume > 0,
+        musicActive: unlocked === true && lifecycleHidden !== true && settings.mg_audio_music === true &&
+          settings.mg_audio_master_volume > 0 && settings.mg_audio_music_volume > 0 && !!currentTrack,
+        generation: visualGeneration
+      });
+    }
+    function publishVisual(kind, cue) {
+      visualGeneration = (visualGeneration + 1) % 1000000;
+      var envelope = visualEnvelope(kind, cue);
+      visualListeners.slice().forEach(function (listener) {
+        try { listener(envelope); } catch (_error) {}
+      });
+      return envelope;
+    }
+    function subscribeVisual(listener) {
+      if (typeof listener !== 'function' || visualListeners.length >= MAX_VISUAL_LISTENERS) return function ignoredVisualUnsubscribe() { return false; };
+      var active = true;
+      visualListeners.push(listener);
+      try { listener(visualEnvelope('state')); } catch (_error) {}
+      return function unsubscribeVisual() {
+        if (!active) return false;
+        active = false;
+        var index = visualListeners.indexOf(listener);
+        if (index !== -1) visualListeners.splice(index, 1);
+        return true;
+      };
+    }
 
     function busEnvironment(hidden) {
       return {
@@ -220,6 +268,7 @@
         unlocked = true;
         var hidden = typeof document !== 'undefined' && document.hidden === true;
         if (!hidden && currentTrack && settings.mg_audio_music) safeCall(function () { return adapter.playMusic(currentTrack); });
+        publishVisual('state');
         return outcome;
       }
       if (thenable(result)) {
@@ -234,6 +283,7 @@
     }
     function sync(hidden) {
       if (!ensure()) return false;
+      lifecycleHidden = hidden === true;
       var environment = busEnvironment(hidden);
       safeCall(function () { return bus.setEnvironment(environment); });
       safeCall(function () { return adapter.setLifecycle(adapterSettings(environment)); });
@@ -253,6 +303,7 @@
       sync(hidden);
       if (!settings.mg_audio_music) stopMusicVoice();
       else if (!hidden && unlocked && currentTrack) safeCall(function () { return adapter.playMusic(currentTrack); });
+      publishVisual('state');
       return freeze({ accepted: true, settings: freeze(copySettings(settings)) });
     }
     function emit(type, options) {
@@ -263,7 +314,10 @@
       var event = { type: String(type || ''), id: id };
       if (finite(opts.intensity)) event.intensity = Math.max(0, Math.min(1, opts.intensity));
       if (finite(opts.pan) && settings.mg_audio_spatial) event.pan = Math.max(-1, Math.min(1, opts.pan));
-      return safeCall(function () { return bus.emit(event); }) || freeze({ accepted: false, reason: 'error' });
+      var result = safeCall(function () { return bus.emit(event); }) || freeze({ accepted: false, reason: 'error' });
+      if (result && result.accepted === true && settings.mg_audio_sfx === true &&
+          settings.mg_audio_master_volume > 0 && settings.mg_audio_sfx_volume > 0 && lifecycleHidden !== true) publishVisual('cue', event);
+      return result;
     }
     function testTone() {
       var unlockedResult = unlock();
@@ -284,12 +338,16 @@
     function playMusic(track) {
       var safeTrack = TRACKS[track] ? track : 'home';
       currentTrack = safeTrack;
-      if (!ensure() || !settings.mg_audio_music || !unlocked) return freeze({ accepted: false, reason: 'inactive' });
-      return safeCall(function () { return adapter.playMusic(safeTrack); }) || freeze({ accepted: false, reason: 'error' });
+      if (!ensure() || !settings.mg_audio_music || !unlocked) { publishVisual('track'); return freeze({ accepted: false, reason: 'inactive' }); }
+      var result = safeCall(function () { return adapter.playMusic(safeTrack); }) || freeze({ accepted: false, reason: 'error' });
+      publishVisual('track');
+      return result;
     }
     function stopMusic() {
       currentTrack = null;
-      return stopMusicVoice();
+      var result = stopMusicVoice();
+      publishVisual('track');
+      return result;
     }
     function reset() {
       if (!ensure() || !adapter || !bus) return freeze({ accepted: false, reason: 'unavailable' });
@@ -306,6 +364,7 @@
       cueSequence = 0;
       var adapterState = adapter && typeof adapter.snapshot === 'function' ? adapter.snapshot() : null;
       unlocked = !!(adapterState && adapterState.unlocked === true);
+      publishVisual('reset');
       return freeze({ accepted: true, reason: null });
     }
     function setLifecycle(hidden) {
@@ -313,6 +372,7 @@
       sync(hidden === true);
       if (hidden === true) stopMusicVoice();
       else if (unlocked && settings.mg_audio_music && currentTrack) playMusic(currentTrack);
+      publishVisual('state');
       return true;
     }
     function installLifecycle() {
@@ -341,6 +401,7 @@
       ensure();
       if (initialized && listeners.length === 0) installLifecycle();
       sync(typeof document !== 'undefined' && document.hidden === true);
+      publishVisual('state');
       return snapshot();
     }
     function snapshot() {
@@ -354,6 +415,8 @@
     }
     function dispose() {
       listeners.splice(0).forEach(function (remove) { safeCall(remove); });
+      publishVisual('dispose');
+      visualListeners.length = 0;
       if (adapter && typeof adapter.dispose === 'function') safeCall(function () { return adapter.dispose(); });
       if (bus && typeof bus.dispose === 'function') safeCall(function () { return bus.dispose(); });
       adapter = null; bus = null; initialized = false; unlocked = false; currentTrack = null; mediaQuery = null;
@@ -361,7 +424,8 @@
     }
     return freeze({ init: init, unlock: unlock, emit: emit, testTone: testTone, setPreferences: setPreferences,
       getPreferences: function () { return freeze(copySettings(settings)); }, setLifecycle: setLifecycle,
-      playMusic: playMusic, stopMusic: stopMusic, reset: reset, snapshot: snapshot, dispose: dispose });
+      playMusic: playMusic, stopMusic: stopMusic, reset: reset, subscribeVisual: subscribeVisual,
+      snapshot: snapshot, dispose: dispose });
   }
 
   function getRuntime() {
@@ -380,6 +444,7 @@
     playMusic: function (track) { return getRuntime().playMusic(track); },
     stopMusic: function () { return getRuntime().stopMusic(); },
     reset: function () { return getRuntime().reset(); },
+    subscribeVisual: function (listener) { return getRuntime().subscribeVisual(listener); },
     snapshot: function () { return getRuntime().snapshot(); },
     dispose: function () { return getRuntime().dispose(); }
   });

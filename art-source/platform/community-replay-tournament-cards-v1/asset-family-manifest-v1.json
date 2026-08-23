@@ -1,0 +1,366 @@
+{
+  "familyId": "P-COMMUNITY-REPLAY-TOURNAMENT-CARDS-V1",
+  "sourceId": "ART-042-COMMUNITY-REPLAY-TOURNAMENT-CARDS-V1",
+  "flag": "mg_art_community_replay_tournament_cards_v1",
+  "generatedAt": "2026-08-21T07:17:10.857Z",
+  "sourceMastersCount": 12,
+  "runtimeVariantsCount": 24,
+  "totalRuntimeBytes": 253450,
+  "byteBudget": 2097152,
+  "sourceMasters": [
+    {
+      "role": "card-playline",
+      "path": "art-source/platform/community-replay-tournament-cards-v1/runtime-source/card-playline.svg",
+      "sha256": "3B361B9355BC65619A8EBDE5B2B6BED1044A45E08CE4C1B191C4928FA2D942FA",
+      "bytes": 2367,
+      "width": 1200,
+      "height": 630,
+      "alpha": true
+    },
+    {
+      "role": "card-replay",
+      "path": "art-source/platform/community-replay-tournament-cards-v1/runtime-source/card-replay.svg",
+      "sha256": "EC2FE3E4C73B1A43BA75EF348FE7A5A198514B54C57FE4F56C20310EF3C115CC",
+      "bytes": 2394,
+      "width": 1200,
+      "height": 630,
+      "alpha": true
+    },
+    {
+      "role": "card-tournament",
+      "path": "art-source/platform/community-replay-tournament-cards-v1/runtime-source/card-tournament.svg",
+      "sha256": "94D90CC4751CB8B1CEC94FE60752BFEC53A7ECE6940811ACF5FC25C0471D996A",
+      "bytes": 2364,
+      "width": 1200,
+      "height": 630,
+      "alpha": true
+    },
+    {
+      "role": "card-result",
+      "path": "art-source/platform/community-replay-tournament-cards-v1/runtime-source/card-result.svg",
+      "sha256": "2954C55C0F8914FB2E17C9B39039162C6D94B6CCE289D1244E5F1E7C6113FF02",
+      "bytes": 2160,
+      "width": 1200,
+      "height": 630,
+      "alpha": true
+    },
+    {
+      "role": "card-record",
+      "path": "art-source/platform/community-replay-tournament-cards-v1/runtime-source/card-record.svg",
+      "sha256": "3C2DFD7D9DCE9F4F3D16563A36485440E19FAB5F05FCFC4420F38E1256967645",
+      "bytes": 2113,
+      "width": 1200,
+      "height": 630,
+      "alpha": true
+    },
+    {
+      "role": "frame-og",
+      "path": "art-source/platform/community-replay-tournament-cards-v1/runtime-source/frame-og.svg",
+      "sha256": "00E6311E606CA2C24794F99AAF2FB272ACF97586B0A509332CE94C970DDA2F88",
+      "bytes": 1333,
+      "width": 1200,
+      "height": 630,
+      "alpha": true
+    },
+    {
+      "role": "mark-playline",
+      "path": "art-source/platform/community-replay-tournament-cards-v1/runtime-source/mark-playline.svg",
+      "sha256": "31B357ACCBADF0E03604274594E0319881430CFE39460B27FEC058182D6FD01C",
+      "bytes": 1285,
+      "width": 256,
+      "height": 256,
+      "alpha": true
+    },
+    {
+      "role": "mark-replay",
+      "path": "art-source/platform/community-replay-tournament-cards-v1/runtime-source/mark-replay.svg",
+      "sha256": "06E7E981057E35C8A73A9A399D9BBFEF7D60824001128832D293748B03261F16",
+      "bytes": 1253,
+      "width": 256,
+      "height": 256,
+      "alpha": true
+    },
+    {
+      "role": "mark-tournament",
+      "path": "art-source/platform/community-replay-tournament-cards-v1/runtime-source/mark-tournament.svg",
+      "sha256": "3FBB2E407B6104A3AFDFE1E32D8CA797F98F0DA51D0D816A286B486265766AA3",
+      "bytes": 1391,
+      "width": 256,
+      "height": 256,
+      "alpha": true
+    },
+    {
+      "role": "mark-share",
+      "path": "art-source/platform/community-replay-tournament-cards-v1/runtime-source/mark-share.svg",
+      "sha256": "299BDD7EDE37BB8970E795299142DFE707740ACD2866C2DDC2EFA46E79850812",
+      "bytes": 1341,
+      "width": 256,
+      "height": 256,
+      "alpha": true
+    },
+    {
+      "role": "camera-desktop",
+      "path": "art-source/platform/community-replay-tournament-cards-v1/runtime-source/camera-desktop.svg",
+      "sha256": "67F3F7323E0667DE0EDD43D78025DCBD15F65BF88444807CB03B2E95D26F0D30",
+      "bytes": 137,
+      "width": 1,
+      "height": 1,
+      "alpha": true
+    },
+    {
+      "role": "camera-mobile",
+      "path": "art-source/platform/community-replay-tournament-cards-v1/runtime-source/camera-mobile.svg",
+      "sha256": "67F3F7323E0667DE0EDD43D78025DCBD15F65BF88444807CB03B2E95D26F0D30",
+      "bytes": 137,
+      "width": 1,
+      "height": 1,
+      "alpha": true
+    }
+  ],
+  "runtimeVariants": [
+    {
+      "role": "card-playline",
+      "variant": "normal",
+      "path": "public/assets/platform/community-replay-tournament-cards-v1/card-playline.webp",
+      "sha256": "ACC4FEFB1409A44100CBA8D07F8515472AF8A74C83589B8FD4FD1FF1B1A96631",
+      "bytes": 20276,
+      "width": 1200,
+      "height": 630,
+      "alpha": true
+    },
+    {
+      "role": "card-playline",
+      "variant": "static",
+      "path": "public/assets/platform/community-replay-tournament-cards-v1/card-playline-static.webp",
+      "sha256": "327FD197B04F692B33D82D5793522D33D0EC15F036EBD2F3AFB110BE47C9889B",
+      "bytes": 14096,
+      "width": 1200,
+      "height": 630,
+      "alpha": true
+    },
+    {
+      "role": "card-replay",
+      "variant": "normal",
+      "path": "public/assets/platform/community-replay-tournament-cards-v1/card-replay.webp",
+      "sha256": "9D9185DDED80C1F2C355FF67201AFF5F5F528B3882702E01DB7CB324645D5BEC",
+      "bytes": 22146,
+      "width": 1200,
+      "height": 630,
+      "alpha": true
+    },
+    {
+      "role": "card-replay",
+      "variant": "static",
+      "path": "public/assets/platform/community-replay-tournament-cards-v1/card-replay-static.webp",
+      "sha256": "01729D6EDAFA6B3EB406E2A607AA3CC41DB6FFB7FBC338621E86DF0AA1EAE776",
+      "bytes": 15522,
+      "width": 1200,
+      "height": 630,
+      "alpha": true
+    },
+    {
+      "role": "card-tournament",
+      "variant": "normal",
+      "path": "public/assets/platform/community-replay-tournament-cards-v1/card-tournament.webp",
+      "sha256": "9FF5E25FB87A5196E38BD54F63CFF94C86F914B004F795145F2CE7C31FBC96FE",
+      "bytes": 23748,
+      "width": 1200,
+      "height": 630,
+      "alpha": true
+    },
+    {
+      "role": "card-tournament",
+      "variant": "static",
+      "path": "public/assets/platform/community-replay-tournament-cards-v1/card-tournament-static.webp",
+      "sha256": "BEEF847D840D412FBB1ECBE6521772EE4158146BE66141594C8189EF26661B4E",
+      "bytes": 16720,
+      "width": 1200,
+      "height": 630,
+      "alpha": true
+    },
+    {
+      "role": "card-result",
+      "variant": "normal",
+      "path": "public/assets/platform/community-replay-tournament-cards-v1/card-result.webp",
+      "sha256": "413E120FC52271785712C169F0D26871D7140AE71A76F739CF77493FD4E04EE6",
+      "bytes": 20090,
+      "width": 1200,
+      "height": 630,
+      "alpha": true
+    },
+    {
+      "role": "card-result",
+      "variant": "static",
+      "path": "public/assets/platform/community-replay-tournament-cards-v1/card-result-static.webp",
+      "sha256": "711A36DA0392AAAFFF3FC60A1F422FCC824895363B1914C11C272DD9535E73FA",
+      "bytes": 13918,
+      "width": 1200,
+      "height": 630,
+      "alpha": true
+    },
+    {
+      "role": "card-record",
+      "variant": "normal",
+      "path": "public/assets/platform/community-replay-tournament-cards-v1/card-record.webp",
+      "sha256": "31D3BF5D76D25C13D94B060E3186DCC56C54684FDFD99D26A936F25477D8836D",
+      "bytes": 24510,
+      "width": 1200,
+      "height": 630,
+      "alpha": true
+    },
+    {
+      "role": "card-record",
+      "variant": "static",
+      "path": "public/assets/platform/community-replay-tournament-cards-v1/card-record-static.webp",
+      "sha256": "8DAF4258066B99FC92378AC2D83A4DA73B1CFB1D5782CE92A46305B4E6593435",
+      "bytes": 17236,
+      "width": 1200,
+      "height": 630,
+      "alpha": true
+    },
+    {
+      "role": "frame-og",
+      "variant": "normal",
+      "path": "public/assets/platform/community-replay-tournament-cards-v1/frame-og.webp",
+      "sha256": "47564DD4D7DA788C0F5272BE43E334B0D29B33A43F908CC725CBD53B683D0C10",
+      "bytes": 11066,
+      "width": 1200,
+      "height": 630,
+      "alpha": true
+    },
+    {
+      "role": "frame-og",
+      "variant": "static",
+      "path": "public/assets/platform/community-replay-tournament-cards-v1/frame-og-static.webp",
+      "sha256": "0564E8FAF466D659A264FD007A2B3901CB83065C768076911F18D49532D798AE",
+      "bytes": 9892,
+      "width": 1200,
+      "height": 630,
+      "alpha": true
+    },
+    {
+      "role": "mark-playline",
+      "variant": "normal",
+      "path": "public/assets/platform/community-replay-tournament-cards-v1/mark-playline.webp",
+      "sha256": "3AA3595FA03A51BC944B4DAC98EF44F0D6AF29877D6AFDFB24C03EA28E986DB8",
+      "bytes": 5986,
+      "width": 256,
+      "height": 256,
+      "alpha": true
+    },
+    {
+      "role": "mark-playline",
+      "variant": "static",
+      "path": "public/assets/platform/community-replay-tournament-cards-v1/mark-playline-static.webp",
+      "sha256": "B5861E9F925D844140ED02327E0D016BB7CDC8097F0477819C3F133FD706309B",
+      "bytes": 5384,
+      "width": 256,
+      "height": 256,
+      "alpha": true
+    },
+    {
+      "role": "mark-replay",
+      "variant": "normal",
+      "path": "public/assets/platform/community-replay-tournament-cards-v1/mark-replay.webp",
+      "sha256": "6C9C66B82E5388D338088DD2600BC51C5687CD074B61022EA6CA3A714E09CCF1",
+      "bytes": 7230,
+      "width": 256,
+      "height": 256,
+      "alpha": true
+    },
+    {
+      "role": "mark-replay",
+      "variant": "static",
+      "path": "public/assets/platform/community-replay-tournament-cards-v1/mark-replay-static.webp",
+      "sha256": "33CEF6E8BEFF09734215DA1E3CE0D8EC908D2CC19D794A13C2EF751439EC3AF0",
+      "bytes": 6320,
+      "width": 256,
+      "height": 256,
+      "alpha": true
+    },
+    {
+      "role": "mark-tournament",
+      "variant": "normal",
+      "path": "public/assets/platform/community-replay-tournament-cards-v1/mark-tournament.webp",
+      "sha256": "118B1DCF399A9A8E440ADCEF8883F819832998A9E486943825548CFB4402DA55",
+      "bytes": 2600,
+      "width": 256,
+      "height": 256,
+      "alpha": true
+    },
+    {
+      "role": "mark-tournament",
+      "variant": "static",
+      "path": "public/assets/platform/community-replay-tournament-cards-v1/mark-tournament-static.webp",
+      "sha256": "5E4CCA4FCD410CCFA66858FEF6F016FD6F69D27BCAD0C5211D0DE7F8C8917345",
+      "bytes": 2236,
+      "width": 256,
+      "height": 256,
+      "alpha": true
+    },
+    {
+      "role": "mark-share",
+      "variant": "normal",
+      "path": "public/assets/platform/community-replay-tournament-cards-v1/mark-share.webp",
+      "sha256": "E84891CAA9D6A45B04ACBEEA16FA0F9D22BCD11766D109D9AA4C2EA01DA2EB40",
+      "bytes": 7550,
+      "width": 256,
+      "height": 256,
+      "alpha": true
+    },
+    {
+      "role": "mark-share",
+      "variant": "static",
+      "path": "public/assets/platform/community-replay-tournament-cards-v1/mark-share-static.webp",
+      "sha256": "D3EAC756B95D28CBB4376421D5491A375F5D463B4A914DCB5F37FD8D0B704E95",
+      "bytes": 6632,
+      "width": 256,
+      "height": 256,
+      "alpha": true
+    },
+    {
+      "role": "camera-desktop",
+      "variant": "normal",
+      "path": "public/assets/platform/community-replay-tournament-cards-v1/camera-desktop.webp",
+      "sha256": "8F867907A98951EE0E779CFA7CD4BB0827808311273ED401FF9E04165C9A64D2",
+      "bytes": 74,
+      "width": 1,
+      "height": 1,
+      "alpha": true
+    },
+    {
+      "role": "camera-desktop",
+      "variant": "static",
+      "path": "public/assets/platform/community-replay-tournament-cards-v1/camera-desktop-static.webp",
+      "sha256": "537D601CCAFB26C0AD0D7235B59BE5AAC8CB60E2A8A0207257EA939AC39F929E",
+      "bytes": 72,
+      "width": 1,
+      "height": 1,
+      "alpha": true
+    },
+    {
+      "role": "camera-mobile",
+      "variant": "normal",
+      "path": "public/assets/platform/community-replay-tournament-cards-v1/camera-mobile.webp",
+      "sha256": "8F867907A98951EE0E779CFA7CD4BB0827808311273ED401FF9E04165C9A64D2",
+      "bytes": 74,
+      "width": 1,
+      "height": 1,
+      "alpha": true
+    },
+    {
+      "role": "camera-mobile",
+      "variant": "static",
+      "path": "public/assets/platform/community-replay-tournament-cards-v1/camera-mobile-static.webp",
+      "sha256": "537D601CCAFB26C0AD0D7235B59BE5AAC8CB60E2A8A0207257EA939AC39F929E",
+      "bytes": 72,
+      "width": 1,
+      "height": 1,
+      "alpha": true
+    }
+  ],
+  "reviewBoards": [
+    "art-source/platform/community-replay-tournament-cards-v1/review/community-replay-tournament-cards-contact-sheet-v1.png"
+  ],
+  "htmlCssFallback": "art-source/platform/community-replay-tournament-cards-v1/review/og-card-template.html"
+}

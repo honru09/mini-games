@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 2,
+  "productionUnitId": "P1-03",
+  "familyId": "G-11-TETRIS-FINAL-ART-V1",
+  "inventoryContext": {
+    "sourceRegister": "asset-library/external-source-register-20260813.json",
+    "runtimeLicense": "EXTERNAL_REFERENCE_ONLY / blocked-license",
+    "observation": "External puzzle game reference materials used strictly for visual concept analysis; no external pixels, layers or silhouettes enter runtime."
+  },
+  "inputs": [
+    {
+      "sourcePath": "art-source/games/tetris/mg_tetris_cover_source_v02.png",
+      "sourceSha256": "4A1F6774640476E367C92461D4C1371B3E03BCF84988FDF7458EC02C5E7FA3A1",
+      "scope": "concept-reference"
+    },
+    {
+      "sourcePath": "art-source/games/tetris/well_surface_master.png",
+      "sourceSha256": "7E3E5B5E1E6B939F8BD5C16AE75773EB2C281AC7C246BA7FA0F4D3C5C7A92E4F",
+      "scope": "geometry-reference"
+    }
+  ],
+  "calls": [
+    {
+      "taskId": "tetris-final-art-source-gen-1",
+      "provider": "project-deterministic-pipeline",
+      "model": "sharp-svg-v1",
+      "sentAt": "2026-08-21T14:12:00+09:00",
+      "outputPath": "art-source/games/tetris/final-art-v1/runtime-source/board-background-v1.svg",
+      "outputSha256": "DETERMINISTIC_SVG"
+    }
+  ]
+}

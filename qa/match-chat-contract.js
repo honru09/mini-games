@@ -2,7 +2,9 @@
 
 /* Social Match P1: match-chat-v1 static source contract. */
 const fs=require('fs'),path=require('path');const ROOT=path.join(__dirname,'..');const read=file=>fs.readFileSync(path.join(ROOT,file),'utf8');
-const server=read('server/index.js'),client=read('public/src/online/03-websocket.js'),shell=read('public/src/core/02-app-shell.js'),template=read('public/index-template.html'),registry=read('requirements/PROTOCOL_REGISTRY.md'),readme=read('README.md'),pkg=read('package.json');
+const server=read('server/index.js'),client=read('public/src/online/03-websocket.js'),shell=read('public/src/core/02-app-shell.js'),registry=read('requirements/PROTOCOL_REGISTRY.md'),readme=read('README.md'),pkg=read('package.json');
+const { readPresentationSource }=require('./presentation-source');
+const template=readPresentationSource();
 const locales=['zh-CN','en-US','uk-UA'].map(lang=>JSON.parse(read('public/locales/'+lang+'.json')));let fail=0;function check(name,ok){console.log((ok?'PASS  ':'FAIL  ')+name);if(!ok)fail++;}
 function section(text,start,end){const a=text.indexOf(start),b=text.indexOf(end,a+start.length);return a>=0&&b>a?text.slice(a,b):'';}
 // Stop at the next protocol boundary so the static chat contract does not

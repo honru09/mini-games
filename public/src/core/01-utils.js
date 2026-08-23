@@ -134,6 +134,7 @@ function applyTheme(theme){
     else { btn.textContent = meta.icon; btn.title = label; }
   }
   if(typeof refreshPlatformScene==='function')refreshPlatformScene(typeof ghostAppRoute!=='undefined'?ghostAppRoute:'home');
+  if(typeof refreshPersonalHomeScene==='function')refreshPersonalHomeScene();
 }
 function themeName(meta){ return meta && meta.nameKey ? t(meta.nameKey) : (meta ? meta.name : ''); }
 function initTheme(){
@@ -758,6 +759,25 @@ function showVictoryOverlay(area, opts) {
     try { if (typeof triggerHonruGameReaction === 'function') triggerHonruGameReaction('rematch', { source:'outcome-restart' }); } catch {}
   });
   btnRow.appendChild(again);
+
+  if (typeof opts.onBackToGames === 'function') {
+    const backToGames = el('button', 'btn victory-btn victory-btn-games', t('back_to_games'));
+    backToGames.addEventListener('click', () => {
+      closeVictory();
+      try {
+        const reward = typeof document !== 'undefined' && document.querySelector ? document.querySelector('.reward-breakdown-overlay') : null;
+        if (reward && typeof reward.__accessibleDialogClose === 'function') reward.__accessibleDialogClose();
+        else if (reward && typeof reward.remove === 'function') reward.remove();
+      } catch (_error) {}
+      if (typeof playPresentationMusic === 'function') playPresentationMusic('home');
+      try { if (typeof clearHonruGameReaction === 'function') clearHonruGameReaction(); } catch {}
+      try { opts.onBackToGames(); } catch (_error) { if (typeof showHub === 'function') showHub(); }
+      // Route transitions are asynchronous and may be superseded by a
+      // pending reward/hash refresh. Keep the immersive shell fail-closed.
+      try { if (typeof showHub === 'function') showHub(); } catch (_error) {}
+    });
+    btnRow.appendChild(backToGames);
+  }
   
   if (opts.onInvite) {
     const invite = el('button', 'btn victory-btn', t('invite_player'));

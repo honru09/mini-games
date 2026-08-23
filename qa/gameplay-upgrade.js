@@ -15,7 +15,8 @@ const LOCAL_FEEDBACK_ADAPTER = fs.readFileSync(path.join(ROOT, 'public', 'src', 
 const TANK_PREDICTION_ADAPTER = fs.readFileSync(path.join(ROOT, 'public', 'src', 'core', '20-tank-prediction-adapter.js'), 'utf8');
 const TETRIS_RULES = fs.readFileSync(path.join(ROOT, 'shared', 'rules', 'tetris.js'), 'utf8');
 const ONLINE_SOURCE = fs.readFileSync(path.join(ROOT, 'public', 'src', 'online', '03-websocket.js'), 'utf8');
-const TEMPLATE = fs.readFileSync(path.join(ROOT, 'public', 'index-template.html'), 'utf8');
+const { readPresentationSource } = require('./presentation-source');
+const TEMPLATE = readPresentationSource();
 const failures = [];
 
 function assert(name, condition, detail){
@@ -310,6 +311,7 @@ function run(){
   const serverTankState={protocol:'tank-authority-v1',matchId:authorityTankMatch,serverTick:4,serverNow:Date.now(),startedAt:Date.now()-1000,endAt:Date.now()+179000,remainingMs:179000,season:'winter',
     players:authorityTankBase.tanks.map((tank,id)=>({...tank,x:id===1?8.5:tank.x,kills:id===1?2:0,shots:id===1?tank.shots+1:tank.shots})),projectiles:[],destructibles:authorityTankBase.grid,ack:[0,1],finished:false,order:null};
   assert('坦克 Authority Client：Snapshot Reconciliation 生效',authorityTank.game.onAuthoritySnapshot(serverTankState)===true&&Math.abs(authorityTank.game.snapshot().tanks[1].x-authorityTankBase.tanks[1].x)>.1);
+  assert('坦克 Authority Client：接受的 Server Tick 投影到公开单调快照高水位',authorityTank.game.getRelayState().lastAuthoritySeq===serverTankState.serverTick);
   assert('坦克 Prediction Adapter：只消费已接受 Authority snapshot 并保留旧回退',authorityTank.predictionStats.accepts===1&&authorityTank.predictionStats.lastAccept.protocol==='tank-authority-v1');
   assert('坦克 FeedbackBus：仅在 Authority 接受镜像后触发左右声像',authorityTank.feedbackBusStats&&authorityTank.feedbackBusStats.emits===1&&authorityTank.feedbackBusStats.lastCue.type==='tank_fire'&&authorityTank.feedbackBusStats.lastCue.pan>0&&authorityTank.audioStats.oscillators===1&&authorityTank.audioStats.panners[0].value>0);
   authorityTank.game.onAuthorityResult({matchId:authorityTankMatch,order:[1,0],stats:serverTankState.players});

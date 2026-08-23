@@ -65,7 +65,7 @@ function makeRuntime(){
     listenerCount(type){return (documentListeners.get(type)||new Set()).size;}
   };
   const el=(tag,cls,text)=>{const node=new Node(tag);node.className=cls||'';if(text!==undefined&&text!==null)node.textContent=String(text);return node;};
-  const labels={come_back:'再来一局',invite_player:'邀请玩家',share_button:'分享',reward_close:'关闭',reward_title_win:'胜利',reward_total:'总计',victory_podium_label:'比赛排名',victory_podium_rank:'名次'};
+  const labels={come_back:'再来一局',back_to_games:'返回游戏',invite_player:'邀请玩家',share_button:'分享',reward_close:'关闭',reward_title_win:'胜利',reward_total:'总计',victory_podium_label:'比赛排名',victory_podium_rank:'名次'};
   const sandbox={console,document,Math,Array,Set,Map,Object,String,Number,Boolean,JSON,
     el,t:(key,...args)=>labels[key]||key+(args.length?' '+args.join(' '):''),sfx(){},clearHonruGameReaction(){},setHonruPlatformReaction(){},setHonruResultReaction(){},
     CURRENCY:'💵',online:{isSpectator:false},rewardReasonLabel:()=>'',signedReward:(value,suffix)=>value?((value>0?'+':'')+value+suffix):''};
@@ -120,6 +120,13 @@ try{
   launcher.focus();vm.runInContext("showVictoryOverlay(area,{winner:0,winnerName:'A',coins:0,onRestart(){restartCount++;}})",runtime.context);
   overlay=area.children[0];card=overlay.children.find(node=>String(node.className).includes('victory-card'));buttons=card.querySelectorAll('button');buttons[0].dispatch('click',{target:buttons[0]});
   check('Victory 主操作复用统一关闭生命周期',!overlay.isConnected&&runtime.document.activeElement===launcher&&runtime.context.restartCount===1);
+
+  launcher.focus();runtime.context.backCount=0;runtime.context.backClosed=false;
+  vm.runInContext("showVictoryOverlay(area,{winner:0,winnerName:'A',coins:0,onRestart(){restartCount++;},onBackToGames(){backCount++;backClosed=!area.querySelector('.victory-overlay');}})",runtime.context);
+  overlay=area.children[0];card=overlay.children.find(node=>String(node.className).includes('victory-card'));buttons=card.querySelectorAll('button');
+  check('Victory 仅在提供回调时显示返回游戏出口',buttons.length===2&&buttons[1].textContent==='返回游戏');
+  buttons[1].dispatch('click',{target:buttons[1]});
+  check('返回游戏先关闭结果层再执行回调并清理焦点生命周期',!overlay.isConnected&&runtime.context.backCount===1&&runtime.context.backClosed===true&&runtime.document.activeElement===launcher&&runtime.document.listenerCount('keydown')===0);
 
   launcher.focus();vm.runInContext("showVictoryOverlay(area,{winner:0,winnerName:'A',coins:0,podium:[{rank:2,name:'B',color:'#00f'},{rank:1,name:'A',color:'#f00'}],onRestart(){restartCount++;}})",runtime.context);
   overlay=area.children[0];card=overlay.children.find(node=>String(node.className).includes('victory-card'));const podium=card.querySelector('.victory-podium'),podiumRows=podium&&podium.querySelectorAll('.victory-podium-row');

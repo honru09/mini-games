@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-08-19T17:57:31+09:00",
+  "task": "visual-25d-repush-p0-20260819",
+  "status": "PARTIAL_HISTORICAL_VISIBLE_EVIDENCE_CURRENT_BUILD_NOT_EXECUTED",
+  "historicalVisibleBuild": {
+    "characters": 2138474,
+    "utf8Bytes": 2153115,
+    "sha256": "0DE4CD5C928AFC5FE81B4D2583E2A0822AE212586C910E1D4CE6609A1E0EE64E",
+    "browser": "single Codex in-app Chromium",
+    "observed": [
+      "Desktop Home and Games 2.5D scene were visible",
+      "Desktop Gomoku Game Stage and a real piece placement impact were visible",
+      "390x844 had no horizontal overflow and the game-center title remained readable",
+      "A game card resolved to a matrix3d transform",
+      "Narrow Gomoku board was approximately 322x322 CSS pixels",
+      "Real piece placement transitioned camera mode impact to active and removed the transient impact node"
+    ],
+    "notObserved": [
+      "Complete real Result to Games return chain"
+    ]
+  },
+  "currentBuild": {
+    "characters": 2207000,
+    "utf8Bytes": 2221728,
+    "sha256": "1D7D25B39785484E9F4E36FD5819474D8DE67B9D97F133BB8D301815E0529716",
+    "buildCheck": "PASS",
+    "http": "127.0.0.1:8080 returned 200 with matching characters, UTF-8 bytes and SHA-256",
+    "machineVerification": [
+      "node scripts/asset-library-audit.js: PASS",
+      "node qa/player-character-layered-art-v1.js: PLAYER_CHARACTER_LAYERED_ART_ALL_PASS",
+      "node qa/dom-smoke.js: ALL_PASS",
+      "npm run test:visual-25d: VISUAL_25D_CONTRACT_ALL_PASS including exit/route, rapid re-entry, impact recovery and hidden-page late-timer behavior",
+      "npm run test:avatar-frame-effect-art: PASS with generator/reader mutual exclusion, 22 art checks and 38 runtime checks",
+      "npm test: exit 0 on the exact current source/build snapshot, including E2E, WebSocket and posttest",
+      "node scripts/build.js --check: PASS 2207000 characters / 2221728 UTF-8 bytes / SHA-256 1D7D25B39785484E9F4E36FD5819474D8DE67B9D97F133BB8D301815E0529716",
+      "node scripts/build.js --check: PASS"
+    ],
+    "visualStatus": "NOT_EXECUTED",
+    "blocker": "The final-build browser attempt failed the application trusted-code-path check during runtime initialization, before browser selection or navigation; no current-build screenshot or interaction claim was recorded"
+  },
+  "externalNotExecuted": [
+    "second desktop browser",
+    "physical Android",
+    "physical iPhone",
+    "physical Tablet",
+    "real 50/100/200ms network shaping",
+    "physical low-end GPU/FPS/thermal/memory verification"
+  ],
+  "claims": {
+    "currentBuildFullDemo": false,
+    "crossBrowser": false,
+    "physicalDevice": false,
+    "realNetwork": false,
+    "release": false
+  }
+}

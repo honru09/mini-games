@@ -126,7 +126,11 @@ function renderPersonaRow(){
     card.type = 'button';
     card.setAttribute('aria-pressed', String(currentAIDifficulty.id === difficulty.id));
     card.setAttribute('aria-label', aiDifficultyName(difficulty) + ' · ' + t(difficulty.descKey));
-    card.appendChild(el('span', 'persona-icon', difficulty.icon));
+    if(typeof aiDifficultyVisualNode==='function'){
+      const art=aiDifficultyVisualNode(difficulty.id,'card',{className:'ai-difficulty-card-art',loading:'eager'});
+      if(art)card.appendChild(art);
+    }
+    card.appendChild(typeof gameSystemMarkerNode==='function'?gameSystemMarkerNode('ai',{size:44,className:'persona-icon ai-difficulty-system-marker',fallback:difficulty.icon}):el('span', 'persona-icon', difficulty.icon));
     card.appendChild(el('span', 'persona-name', aiDifficultyName(difficulty)));
     card.appendChild(el('span', 'persona-desc', t(difficulty.descKey)));
     card.addEventListener('click', () => {

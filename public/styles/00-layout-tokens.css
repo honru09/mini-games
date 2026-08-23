@@ -1,0 +1,21 @@
+/* Ghost Game layout tokens. Keep geometry separate from component rules. */
+:root {
+  --ghost-layout-max: 1240px;
+  --ghost-layout-gutter: clamp(14px, 3vw, 32px);
+  --ghost-layout-gap: clamp(12px, 1.8vw, 22px);
+  --ghost-layout-card-padding: clamp(16px, 2vw, 26px);
+  --ghost-layout-control-height: 44px;
+  --ghost-layout-nav-height: 72px;
+  --ghost-layout-sidebar: minmax(260px, 340px);
+  --ghost-layout-readable: 70ch;
+  --ghost-layout-focus-offset: 3px;
+}
+
+@media (max-width: 640px) {
+  :root {
+    --ghost-layout-gutter: 10px;
+    --ghost-layout-gap: 10px;
+    --ghost-layout-card-padding: 15px;
+    --ghost-layout-sidebar: minmax(0, 1fr);
+  }
+}

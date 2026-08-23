@@ -1,10 +1,10 @@
 ﻿/* ================= 社交与留存：称号 / 成就 / 每日任务 / 最近一起玩 ================= */
 const TITLES = [
-  { id: 1, nameKey: 'social_title_1', icon: '🌱', minLevel: 1 },
-  { id: 2, nameKey: 'social_title_2', icon: '⚔️', minLevel: 3 },
-  { id: 3, nameKey: 'social_title_3', icon: '🎲', minLevel: 5 },
-  { id: 4, nameKey: 'social_title_4', icon: '♟️', minLevel: 8 },
-  { id: 5, nameKey: 'social_title_5', icon: '👑', minLevel: 12 },
+  { id: 1, nameKey: 'social_title_1', icon: '🌱', badgeId: '1', minLevel: 1 },
+  { id: 2, nameKey: 'social_title_2', icon: '⚔️', badgeId: '2', minLevel: 3 },
+  { id: 3, nameKey: 'social_title_3', icon: '🎲', badgeId: '3', minLevel: 5 },
+  { id: 4, nameKey: 'social_title_4', icon: '♟️', badgeId: '4', minLevel: 8 },
+  { id: 5, nameKey: 'social_title_5', icon: '👑', badgeId: '5', minLevel: 12 },
 ];
 function socialTitleName(item){ return t(item.nameKey); }
 function titleFor(level){
@@ -14,14 +14,14 @@ function titleFor(level){
 }
 
 const ACHIEVEMENTS = [
-  { id: 'first_win', nameKey: 'achievement_first_win', descKey: 'achievement_first_win_desc', icon: '🥇', check: p => (p.totalWins || 0) >= 1 },
-  { id: 'win_10', nameKey: 'achievement_win_10', descKey: 'achievement_win_10_desc', icon: '💎', check: p => (p.totalWins || 0) >= 10 },
-  { id: 'win_50', nameKey: 'achievement_win_50', descKey: 'achievement_win_50_desc', icon: '🏆', check: p => (p.totalWins || 0) >= 50 },
-  { id: 'streak_3', nameKey: 'achievement_streak_3', descKey: 'achievement_streak_3_desc', icon: '🔥', check: p => (p.bestStreak || 0) >= 3 },
-  { id: 'streak_5', nameKey: 'achievement_streak_5', descKey: 'achievement_streak_5_desc', icon: '⚡', check: p => (p.bestStreak || 0) >= 5 },
-  { id: 'level_5', nameKey: 'achievement_level_5', descKey: 'achievement_level_5_desc', icon: '🎖️', check: p => (p.level || levelFromXp(p.xp || 0)) >= 5 },
-  { id: 'all_games', nameKey: 'achievement_all_games', descKey: 'achievement_all_games_desc', icon: '🎯', check: p => ['gomoku','ludo','monopoly','tank','tetris','xiangqi'].every(id => Number((p.played || {})[id]) > 0) },
-  { id: 'social', nameKey: 'achievement_social', descKey: 'achievement_social_desc', icon: '🤝', check: p => Object.keys(p.playmates || {}).length >= 3 },
+  { id: 'first_win', badgeId:'first-win', nameKey: 'achievement_first_win', descKey: 'achievement_first_win_desc', icon: '🥇', check: p => (p.totalWins || 0) >= 1 },
+  { id: 'win_10', badgeId:'win-10', nameKey: 'achievement_win_10', descKey: 'achievement_win_10_desc', icon: '💎', check: p => (p.totalWins || 0) >= 10 },
+  { id: 'win_50', badgeId:'win-50', nameKey: 'achievement_win_50', descKey: 'achievement_win_50_desc', icon: '🏆', check: p => (p.totalWins || 0) >= 50 },
+  { id: 'streak_3', badgeId:'streak-3', nameKey: 'achievement_streak_3', descKey: 'achievement_streak_3_desc', icon: '🔥', check: p => (p.bestStreak || 0) >= 3 },
+  { id: 'streak_5', badgeId:'streak-5', nameKey: 'achievement_streak_5', descKey: 'achievement_streak_5_desc', icon: '⚡', check: p => (p.bestStreak || 0) >= 5 },
+  { id: 'level_5', badgeId:'level-5', nameKey: 'achievement_level_5', descKey: 'achievement_level_5_desc', icon: '🎖️', check: p => (p.level || levelFromXp(p.xp || 0)) >= 5 },
+  { id: 'all_games', badgeId:'all-games', nameKey: 'achievement_all_games', descKey: 'achievement_all_games_desc', icon: '🎯', check: p => ['gomoku','ludo','monopoly','tank','tetris','xiangqi'].every(id => Number((p.played || {})[id]) > 0) },
+  { id: 'social', badgeId:'social', nameKey: 'achievement_social', descKey: 'achievement_social_desc', icon: '🤝', check: p => Object.keys(p.playmates || {}).length >= 3 },
 ];
 function checkAchievements(profile){
   const earned = [];
@@ -36,10 +36,10 @@ function achievementsEarned(p){
 }
 
 const DAILY_TASKS = [
-  { id: 'play_1', nameKey: 'daily_play_1', icon: '🎮', target: 1, reward: 5, kind: 'play' },
-  { id: 'play_3', nameKey: 'daily_play_3', icon: '🕹️', target: 3, reward: 10, kind: 'play' },
-  { id: 'win_1', nameKey: 'daily_win_1', icon: '🏅', target: 1, reward: 8, kind: 'win' },
-  { id: 'streak_2', nameKey: 'daily_streak_2', icon: '🔥', target: 2, reward: 12, kind: 'streak' },
+  { id: 'play_1', badgeId:'play-1', nameKey: 'daily_play_1', icon: '🎮', target: 1, reward: 5, kind: 'play' },
+  { id: 'play_3', badgeId:'play-3', nameKey: 'daily_play_3', icon: '🕹️', target: 3, reward: 10, kind: 'play' },
+  { id: 'win_1', badgeId:'win-1', nameKey: 'daily_win_1', icon: '🏅', target: 1, reward: 8, kind: 'win' },
+  { id: 'streak_2', badgeId:'streak-2', nameKey: 'daily_streak_2', icon: '🔥', target: 2, reward: 12, kind: 'streak' },
 ];
 function dailyTasksState(profile){
   const now = new Date();
@@ -117,8 +117,8 @@ function openAchievementsModal(){
   ACHIEVEMENTS.forEach(a => {
     const isEarned=earnedSet.has(a.id);
     const item = el('div','ach-item ghost-outcome-detail-item' + (isEarned ? ' earned' : ' locked'));
-    item.appendChild(typeof progressionFeedbackNode==='function'
-      ? progressionFeedbackNode(isEarned?'achievement':'unlock',{size:'96',className:'ach-icon progression-achievement-art'})
+    item.appendChild(typeof identityBadgeNode==='function'
+      ? identityBadgeNode('achievement',a.badgeId,{size:'64',className:'ach-icon identity-achievement-art',fallback:a.icon})
       : el('span','ach-icon',a.icon));
     const info = el('div','ach-info');
     info.appendChild(el('div','ach-name', t(a.nameKey)));
@@ -183,7 +183,9 @@ function renderMyCard(){
   if (typeof appendTestAdminBadge === 'function') appendTestAdminBadge(nm,account,'card');
   info.appendChild(nm);
   const levelText=typeof testAdminLevelShortText === 'function' ? testAdminLevelShortText(account,lv) : t('level_short',lv);
-  info.appendChild(el('div', 'my-card-title', title.icon + ' ' + socialTitleName(title) + ' · ' + levelText));
+  const titleLine=el('div','my-card-title');
+  if(typeof identityBadgeNode==='function')titleLine.appendChild(identityBadgeNode('title',title.badgeId,{size:'32',className:'my-card-title-badge',fallback:title.icon}));else titleLine.appendChild(el('span',null,title.icon));
+  titleLine.appendChild(el('span',null,socialTitleName(title)+' · '+levelText));info.appendChild(titleLine);
   head.appendChild(info);
   card.appendChild(head);
   // 数据行
@@ -220,7 +222,7 @@ function renderMyCard(){
   const taskBar = el('div', 'my-card-taskbar');
   tasks.slice(0, 3).forEach(task => {
     const item = el('div', 'my-card-task' + (task.done ? ' done' : ''));
-    item.appendChild(el('span', null, task.icon));
+    item.appendChild(typeof identityBadgeNode==='function'?identityBadgeNode('task',task.badgeId,{size:'32',className:'my-card-task-badge',fallback:task.icon}):el('span',null,task.icon));
     item.appendChild(el('span', null, t(task.nameKey) + ' ' + task.cur + '/' + task.target));
     taskBar.appendChild(item);
   });

@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-08-22T11:55:44+09:00",
+  "build": {
+    "characters": 2042876,
+    "utf8Bytes": 2057627,
+    "sha256": "7BCA9218944694748A5A87DA36950D184ACC5DBC678974BCADA0DC3FCCF41DF2"
+  },
+  "environment": {
+    "browser": "Codex in-app Chromium",
+    "origin": "http://127.0.0.1:8090",
+    "language": "uk-UA",
+    "theme": "dark"
+  },
+  "desktop1280x720": {
+    "tetris": {
+      "finalArtState": "active",
+      "boardLayers": 4,
+      "runtimeCellArt": true,
+      "semanticVfxHost": true,
+      "documentHorizontalOverflow": 0,
+      "immersiveScrollLock": true
+    },
+    "xiangqi": {
+      "finalArtState": "active",
+      "layeredCanvasBoard": true,
+      "fourteenPieceFamilyLoaded": true,
+      "documentHorizontalOverflow": 0,
+      "immersiveScrollLock": true
+    },
+    "consoleWarnErrorCount": 0
+  },
+  "mobile390x844": {
+    "tetris": {
+      "finalArtState": "active",
+      "documentHorizontalOverflow": 0,
+      "visibleMutationControls": 7,
+      "minimumMutationControlHeight": 44.3165
+    },
+    "xiangqi": {
+      "finalArtState": "active",
+      "documentHorizontalOverflow": 0,
+      "boardWidth": 362,
+      "boardHeight": 402
+    },
+    "consoleWarnErrorCount": 0
+  },
+  "visibleReducedMotion": {
+    "mediaQueryMatched": true,
+    "tetrisStaticBoardVariants": true,
+    "tetrisStaticCellVariants": true,
+    "tetrisVfxAnimationName": "none",
+    "xiangqiFinalArtState": "active",
+    "xiangqiReducedMotionCss": true,
+    "consoleWarnErrorCount": 0
+  },
+  "repairs": [
+    "Tetris Final Art loader output is now consumed by board layers, block atoms and semantic VFX instead of remaining dead state.",
+    "Xiangqi Final Art initialization is now invoked and atomically decodes the board, fourteen pieces and six semantic VFX roles.",
+    "Xiangqi runtime role allowlist now matches the registered Manifest roles piece-land/check-alert/checkmate-burst.",
+    "Tetris and Xiangqi Final Art contracts are part of npm pretest."
+  ],
+  "notExecuted": [
+    "second desktop browser",
+    "physical Android/iPhone/Tablet",
+    "real network shaping",
+    "low-end FPS/GPU/thermal/memory",
+    "five-player real online Tetris",
+    "production deployment"
+  ],
+  "boundary": "Focused single-browser local visible evidence only. It proves the repaired current build displays both approved Final Art families; it does not release the device/network or production gates."
+}

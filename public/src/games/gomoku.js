@@ -133,7 +133,6 @@ function gameGomoku(area, extra, n, opts){
   // This is an equivalent, presentation-only touch route for the same
   // semantic cursor used by keyboard input. It deliberately never stores an
   // input mode in snapshots, Replay, or a network move payload.
-  let gomokuTouchControls = null, gomokuTouchButtons = null, gomokuTouchListeners = [];
   // Wave C is a disposable process rail. It deliberately never participates
   // in the board, move history, stable snapshot, Replay payload, or AI state.
   const GOMOKU_WAVE_C_PROCESS_STEPS = ['turn','aim','select','place','impact','line','terminal'];
@@ -142,13 +141,6 @@ function gameGomoku(area, extra, n, opts){
   let gomokuWaveCTerminalPending = false, gomokuWaveCTerminalLocked = false, gomokuDestroyed = false;
   const gomokuWaveCProcessTimers = new Set();
   let gomokuWaveCProcessRail = null, gomokuWaveCProcessLabel = null, gomokuWaveCProcessSteps = [];
-  // The optional Ghost3D bridge has its own presentation lifetime.  None of
-  // these values are part of the Gomoku rule snapshot, Replay, or transport.
-  let gomokuGhost3DSlot = null, gomokuGhost3DHost = null, gomokuGhost3DModule = null;
-  let gomokuGhost3DGeneration = 0, gomokuGhost3DPresentationRevision = 0, gomokuGhost3DAcceptedRevision = null;
-  let gomokuGhost3DLastFingerprint = '', gomokuGhost3DQueued = false, gomokuGhost3DImportPending = false;
-  let gomokuGhost3DRecoverQueued = false, gomokuGhost3DPendingPlacement = null, gomokuGhost3DListeners = [];
-  let gomokuGhost3DMediaQuery = null;
   // Wave B deliberately has its own local, presentation-only switch.  An
   // A missing key is the enabled default and only the exact string "0"
   // disables the slice. Unavailable storage still fails closed to Wave A.
@@ -163,28 +155,6 @@ function gameGomoku(area, extra, n, opts){
     }
   }
   const gomokuWaveBActive = gomokuWaveBEnabled();
-  // Ghost3D is a frozen developer experiment. The retained DOM/Canvas 2.5D
-  // surface is the production presentation; only the exact local value "1"
-  // opts into the renderer island. This never influences authoritative state.
-  function gomokuGhost3DEnabled(){
-    if (!gomokuWaveBActive) return false;
-    try {
-      const storage = typeof window !== 'undefined' ? window.localStorage : null;
-      return !!storage && typeof storage.getItem === 'function' && storage.getItem('mg_ghost3d_gomoku_v1') === '1';
-    } catch (_error) {
-      return false;
-    }
-  }
-  function gomokuGhost3DInitialQuality(){
-    try {
-      const storage = typeof window !== 'undefined' ? window.localStorage : null;
-      const quality = storage && typeof storage.getItem === 'function' ? storage.getItem('mg_ghost3d_gomoku_quality_v1') : null;
-      return quality === 'HIGH' || quality === 'BALANCED' || quality === 'LOW' ? quality : 'BALANCED';
-    } catch (_error) {
-      return 'BALANCED';
-    }
-  }
-  const gomokuGhost3DActive = gomokuGhost3DEnabled();
   const previousTouchAction = area.style.touchAction || '';
   const previousOverscroll = area.style.overscrollBehavior || '';
   area.style.touchAction = 'none';
@@ -563,20 +533,9 @@ function gameGomoku(area, extra, n, opts){
     return timer;
   }
   function showGomokuOutcome(outcome){
-    const quality = gomokuGhost3DInitialQuality();
-    const rendererReady = gomokuGhost3DActive && gomokuGhost3DSlot &&
-      gomokuGhost3DSlot.dataset && gomokuGhost3DSlot.dataset.ghost3dReady === 'true';
-    const delay = rendererReady && !prefersReducedMotion() && quality !== 'LOW'
-      ? (quality === 'HIGH' ? 980 : 860)
-      : 0;
     const reveal = () => {
       if (!gomokuDestroyed && !opts.destroyed && over) showVictoryOverlay(area, outcome);
     };
-    // Keep the authoritative result and accessible HUD immediate.  Only the
-    // blocking result dialog waits long enough for the renderer-local win-line
-    // read and terminal camera pose to become visible.  The same process timer
-    // owner cancels this work on reset, restore, exit, or destroy.
-    if (delay > 0) return gomokuWaveCLater(reveal, delay);
     reveal();
     return null;
   }
@@ -628,11 +587,6 @@ function gameGomoku(area, extra, n, opts){
     gomokuWaveCProcessDetail = processDetail;
     gomokuWaveCProcessRevision++;
     paintGomokuWaveCProcess();
-    // Foundation terminal state is intentionally latched.  A terminal visual
-    // therefore receives a new presentation generation instead of trying to
-    // reuse a host that may have accepted a prior terminal frame.
-    if (process === 'terminal') restartGomokuGhost3DHost('terminal');
-    else queueGomokuGhost3DFrame();
     return true;
   }
   function settleGomokuWaveCTerminal(detail){
@@ -644,7 +598,6 @@ function gameGomoku(area, extra, n, opts){
     gomokuWaveCProcessEpoch++;
     clearGomokuWaveCProcessTimers();
     moveImpact = null;
-    gomokuGhost3DPendingPlacement = null;
     gomokuWaveCTerminalPending = false;
     gomokuWaveCTerminalLocked = next === 'terminal';
     setGomokuWaveCProcess(next || 'turn');
@@ -709,7 +662,6 @@ function gameGomoku(area, extra, n, opts){
     gomokuWaveBMeta.appendChild(gomokuWaveBState);
     gomokuWaveBMeta.appendChild(gomokuWaveBLastMove);
     gomokuWaveBFrame.appendChild(canvas);
-    mountGomokuGhost3DSlot();
     gomokuWaveBFrame.appendChild(gomokuWaveBMeta);
     gomokuWaveBStage.appendChild(gomokuWaveBFrame);
     gomokuWaveBStage.appendChild(gomokuWaveCProcessRail);
@@ -755,467 +707,9 @@ function gameGomoku(area, extra, n, opts){
     gomokuWaveBStage = null; gomokuWaveBFrame = null; gomokuWaveBMeta = null; gomokuWaveBState = null; gomokuWaveBLastMove = null;
     gomokuWaveCProcessRail = null; gomokuWaveCProcessLabel = null; gomokuWaveCProcessSteps = [];
   }
-  function mountGomokuGhost3DSlot(){
-    if (!gomokuGhost3DActive || !gomokuWaveBFrame || gomokuGhost3DSlot) return null;
-    const slot = el('div', 'gomoku-ghost3d-slot');
-    slot.setAttribute('aria-hidden', 'true');
-    slot.dataset.ghost3dReady = 'false';
-    slot.dataset.ghost3dGeneration = String(gomokuGhost3DGeneration);
-    gomokuGhost3DSlot = slot;
-    gomokuWaveBFrame.appendChild(slot);
-    return slot;
-  }
-  function gomokuGhost3DCurrent(generation){
-    return !gomokuDestroyed && !opts.destroyed && !!gomokuGhost3DSlot && generation === gomokuGhost3DGeneration;
-  }
-  function gomokuGhost3DSetReady(ready, generation){
-    if (!gomokuGhost3DCurrent(generation)) return false;
-    const value = ready === true ? 'true' : 'false';
-    gomokuGhost3DSlot.dataset.ghost3dReady = value;
-    if (gomokuWaveBFrame && gomokuWaveBFrame.dataset) gomokuWaveBFrame.dataset.ghost3dReady = value;
-    return ready === true;
-  }
-  function gomokuGhost3DReducedMotion(){
-    try {
-      if (typeof prefersReducedMotion === 'function') return !!prefersReducedMotion();
-    } catch (_error) {}
-    return !!(gomokuGhost3DMediaQuery && gomokuGhost3DMediaQuery.matches);
-  }
-  function gomokuGhost3DFactory(){
-    const root = typeof globalThis !== 'undefined' ? globalThis : (typeof window !== 'undefined' ? window : null);
-    const factory = root && root.Ghost3DFoundation;
-    return factory && typeof factory.create === 'function' ? factory : null;
-  }
-  function gomokuGhost3DListen(target, type, handler, options){
-    if (!target || typeof target.addEventListener !== 'function') return;
-    target.addEventListener(type, handler, options);
-    gomokuGhost3DListeners.push({ target, type, handler, options, legacy:false });
-  }
-  function gomokuGhost3DListenLegacy(target, type, handler){
-    if (!target || typeof target.addListener !== 'function') return;
-    target.addListener(handler);
-    gomokuGhost3DListeners.push({ target, type, handler, legacy:true });
-  }
-  function releaseGomokuGhost3DListeners(){
-    gomokuGhost3DListeners.forEach(listener => {
-      if (!listener || !listener.target) return;
-      if (listener.legacy && typeof listener.target.removeListener === 'function') listener.target.removeListener(listener.handler);
-      else if (!listener.legacy && typeof listener.target.removeEventListener === 'function') listener.target.removeEventListener(listener.type, listener.handler, listener.options);
-    });
-    gomokuGhost3DListeners = [];
-    gomokuGhost3DMediaQuery = null;
-  }
-  function applyGomokuGhost3DLifecycle(action, reason){
-    const host = gomokuGhost3DHost;
-    if (!host || typeof host.apply !== 'function') return false;
-    try { return !!host.apply({ type:'lifecycle', action, reason }); }
-    catch (_error) { return false; }
-  }
-  function installGomokuGhost3DListeners(){
-    if (!gomokuGhost3DActive || gomokuGhost3DListeners.length) return;
-    const doc = typeof document !== 'undefined' ? document : null;
-    const root = typeof window !== 'undefined' ? window : null;
-    gomokuGhost3DListen(doc, 'visibilitychange', () => {
-      const hidden = !!(doc && doc.hidden);
-      applyGomokuGhost3DLifecycle(hidden ? 'hidden' : 'visible', 'document');
-    });
-    gomokuGhost3DListen(root, 'ghostgame:shellchange', event => {
-      const detail = event && event.detail ? event.detail : null;
-      const active = !!(detail && detail.active === true && detail.gameId === 'gomoku');
-      applyGomokuGhost3DLifecycle(active ? 'resume' : 'suspend', 'shell');
-    });
-    try {
-      gomokuGhost3DMediaQuery = root && typeof root.matchMedia === 'function'
-        ? root.matchMedia('(prefers-reduced-motion: reduce)') : null;
-    } catch (_error) {
-      gomokuGhost3DMediaQuery = null;
-    }
-    if (gomokuGhost3DMediaQuery){
-      const onChange = event => {
-        const host = gomokuGhost3DHost;
-        if (!host || typeof host.apply !== 'function') return;
-        const reducedMotion = !!(event && typeof event.matches === 'boolean' ? event.matches : gomokuGhost3DMediaQuery.matches);
-        try { host.apply({ type:'environment', reducedMotion }); } catch (_error) {}
-      };
-      if (typeof gomokuGhost3DMediaQuery.addEventListener === 'function') gomokuGhost3DListen(gomokuGhost3DMediaQuery, 'change', onChange);
-      else gomokuGhost3DListenLegacy(gomokuGhost3DMediaQuery, 'change', onChange);
-    }
-    if (doc && doc.hidden) applyGomokuGhost3DLifecycle('hidden', 'document');
-  }
-  function gomokuGhost3DFreeze(value){
-    if (Array.isArray(value)) return Object.freeze(value.map(gomokuGhost3DFreeze));
-    if (value && typeof value === 'object'){
-      const copy = {};
-      Object.keys(value).forEach(key => { copy[key] = gomokuGhost3DFreeze(value[key]); });
-      return Object.freeze(copy);
-    }
-    return value;
-  }
-  function gomokuGhost3DFrame(){
-    const stones = [];
-    for (let row = 0; row < N; row++) for (let col = 0; col < N; col++){
-      if (grid[row][col] !== -1) stones.push({ row, col, player:grid[row][col] });
-    }
-    const lastPlayer = last && grid[last[0]] ? grid[last[0]][last[1]] : null;
-    const lastMove = last && (lastPlayer === 0 || lastPlayer === 1)
-      ? { row:last[0], col:last[1], player:lastPlayer } : null;
-    let cursor = null;
-    const candidate = ghost || (gomokuKeyboardFocusActive ? gomokuKeyboardCell : null);
-    if (Array.isArray(candidate) && Number.isInteger(candidate[0]) && Number.isInteger(candidate[1]) &&
-      candidate[0] >= 0 && candidate[0] < N && candidate[1] >= 0 && candidate[1] < N &&
-      !over && !spectator && grid[candidate[0]][candidate[1]] === -1){
-      cursor = { row:candidate[0], col:candidate[1] };
-    }
-    return {
-      kind:'gomoku-3d-frame-v1',
-      board:{
-        size:N,
-        stones,
-        lastMove,
-        winningLine:winLine.map(cell => ({ row:cell[0], col:cell[1] })),
-      },
-      turn:{ activePlayer:cur, canSelect:canPlaceLocalGomokuMove() },
-      view:{ quarterTurns:gomokuViewTurns() === 2 ? 2 : 0 },
-      cursor,
-      process:{ stage:gomokuWaveCProcess, detail:gomokuWaveCProcessDetail, revision:gomokuWaveCProcessRevision },
-      ended:!!over,
-      terminal:gomokuWaveCProcess === 'terminal',
-    };
-  }
-  function publishGomokuGhost3DFrame(generation){
-    if (!gomokuGhost3DCurrent(generation) || !gomokuGhost3DHost || typeof gomokuGhost3DHost.apply !== 'function') return false;
-    const next = gomokuGhost3DFrame();
-    const fingerprint = JSON.stringify(next);
-    if (fingerprint === gomokuGhost3DLastFingerprint && !gomokuGhost3DPendingPlacement) return false;
-    const revision = ++gomokuGhost3DPresentationRevision;
-    const frame = gomokuGhost3DFreeze({ ...next, revision });
-    let result;
-    try { result = gomokuGhost3DHost.apply({ type:'frame', frame }); }
-    catch (_error) { return false; }
-    if (!result || result.accepted !== true) return false;
-    gomokuGhost3DLastFingerprint = fingerprint;
-    gomokuGhost3DAcceptedRevision = revision;
-    const placement = gomokuGhost3DPendingPlacement;
-    if (placement && placement.generation === generation){
-      gomokuGhost3DPendingPlacement = null;
-      try {
-        gomokuGhost3DHost.apply({ type:'motion', event:{
-          type:'piece_placed', row:placement.row, col:placement.col, player:placement.player, revision,
-        } });
-      } catch (_error) {}
-    }
-    const stage = next.process && next.process.stage;
-    const lastMove = next.board && next.board.lastMove;
-    if (stage === 'line' && Array.isArray(next.board.winningLine) && next.board.winningLine.length >= 2){
-      try {
-        gomokuGhost3DHost.apply({ type:'motion', event:{
-          type:'winning_line', winningLine:next.board.winningLine, winner:lastMove && lastMove.player, revision,
-        } });
-      } catch (_error) {}
-    } else if (stage === 'terminal') {
-      try {
-        gomokuGhost3DHost.apply({ type:'motion', event:{
-          type:'terminal', outcome:Array.isArray(next.board.winningLine) && next.board.winningLine.length >= 2 ? 'win' : 'draw',
-          winningLine:next.board.winningLine, winner:lastMove && lastMove.player, revision,
-        } });
-      } catch (_error) {}
-    }
-    return true;
-  }
-  function queueGomokuGhost3DFrame(){
-    if (!gomokuGhost3DActive || !gomokuGhost3DHost || gomokuGhost3DQueued || gomokuDestroyed || opts.destroyed) return;
-    const generation = gomokuGhost3DGeneration;
-    gomokuGhost3DQueued = true;
-    Promise.resolve().then(() => {
-      gomokuGhost3DQueued = false;
-      publishGomokuGhost3DFrame(generation);
-    });
-  }
-  function gomokuGhost3DHandleInput(command, _snapshot, generation){
-    if (!gomokuGhost3DCurrent(generation) || !command || typeof command !== 'object' ||
-      !Number.isSafeInteger(command.revision) || command.revision !== gomokuGhost3DAcceptedRevision) return false;
-    const type = command.type;
-    if (type === 'clear_aim'){
-      ghost = null;
-      if (gomokuWaveCProcess === 'aim' || gomokuWaveCProcess === 'select') setGomokuWaveCProcess('turn');
-      draw();
-      return true;
-    }
-    const row = command.row, col = command.col;
-    if ((type !== 'aim_cell' && type !== 'select_cell') || !Number.isSafeInteger(row) || !Number.isSafeInteger(col) ||
-      row < 0 || row >= N || col < 0 || col >= N) return false;
-    if (type === 'aim_cell'){
-      if (!canPlaceLocalGomokuMove() || grid[row][col] !== -1) return false;
-      gomokuKeyboardFocusActive = true;
-      setGomokuKeyboardCell(row, col);
-      ghost = [row, col];
-      setGomokuKeyboardProcess();
-      draw();
-      return true;
-    }
-    gomokuKeyboardFocusActive = true;
-    setGomokuKeyboardCell(row, col);
-    ghost = [row, col];
-    return placeLocalGomokuMove(row, col);
-  }
-  function gomokuGhost3DForwardInput(input, generation){
-    if (!gomokuGhost3DCurrent(generation) || !gomokuGhost3DHost || typeof gomokuGhost3DHost.apply !== 'function') return false;
-    const message = input && input.type === 'input' ? input : { type:'input', command:input };
-    try { return gomokuGhost3DHost.apply(message); }
-    catch (_error) { return false; }
-  }
-  function gomokuGhost3DContextLost(reason, generation){
-    if (!gomokuGhost3DCurrent(generation) || !gomokuGhost3DHost || typeof gomokuGhost3DHost.apply !== 'function') return false;
-    gomokuGhost3DSetReady(false, generation);
-    const safeReason = typeof reason === 'string' ? reason.slice(0, 96) : 'renderer';
-    let result = null;
-    try { result = gomokuGhost3DHost.apply({ type:'context-lost', reason:safeReason }); } catch (_error) {}
-    queueGomokuGhost3DRecovery();
-    return result;
-  }
-  function gomokuGhost3DSupported(module){
-    if (!module || typeof module.isGomoku3DSupported !== 'function') return false;
-    try { return module.isGomoku3DSupported() === true; }
-    catch (_error) { return false; }
-  }
-  function gomokuGhost3DCreateAdapter(module, generation){
-    const create = module && (typeof module.createGomoku3DAdapter === 'function'
-      ? module.createGomoku3DAdapter : (typeof module.createAdapter === 'function' ? module.createAdapter : null));
-    if (!create || !gomokuGhost3DCurrent(generation)) return null;
-    try {
-      return create({
-        mountElement:gomokuGhost3DSlot,
-        onInput:input => gomokuGhost3DForwardInput(input, generation),
-        emitInput:input => gomokuGhost3DForwardInput(input, generation),
-        onContextLost:reason => gomokuGhost3DContextLost(reason, generation),
-        onError:() => gomokuGhost3DSetReady(false, generation),
-        onReady:() => gomokuGhost3DSetReady(true, generation),
-        quality:gomokuGhost3DInitialQuality(),
-        reducedMotion:gomokuGhost3DReducedMotion(),
-      });
-    } catch (_error) {
-      return null;
-    }
-  }
-  function queueGomokuGhost3DRecovery(){
-    if (!gomokuGhost3DActive || gomokuGhost3DRecoverQueued || !gomokuGhost3DModule || !gomokuGhost3DHost) return;
-    const generation = gomokuGhost3DGeneration;
-    gomokuGhost3DRecoverQueued = true;
-    Promise.resolve().then(() => {
-      gomokuGhost3DRecoverQueued = false;
-      if (!gomokuGhost3DCurrent(generation) || !gomokuGhost3DHost || !gomokuGhost3DSupported(gomokuGhost3DModule)) return;
-      const adapter = gomokuGhost3DCreateAdapter(gomokuGhost3DModule, generation);
-      if (!adapter) return;
-      let result = null;
-      try { result = gomokuGhost3DHost.apply({ type:'recover', adapter }); } catch (_error) {}
-      if (!result || result.accepted !== true){
-        try { if (typeof adapter.dispose === 'function') adapter.dispose(); } catch (_error) {}
-        gomokuGhost3DSetReady(false, generation);
-      }
-    });
-  }
-  function loadGomokuGhost3DModule(){
-    if (!gomokuGhost3DActive || !gomokuGhost3DHost || !gomokuGhost3DSlot || gomokuDestroyed || opts.destroyed) return;
-    if (gomokuGhost3DModule){ queueGomokuGhost3DRecovery(); return; }
-    if (gomokuGhost3DImportPending) return;
-    const generation = gomokuGhost3DGeneration;
-    gomokuGhost3DImportPending = true;
-    const root = typeof globalThis !== 'undefined' ? globalThis : (typeof window !== 'undefined' ? window : null);
-    const GameModuleLoader = root && root.GameModuleLoader;
-    if (!GameModuleLoader || typeof GameModuleLoader.load !== 'function') {
-      gomokuGhost3DImportPending = false;
-      if (gomokuGhost3DCurrent(generation)) gomokuGhost3DSetReady(false, generation);
-      return;
-    }
-    try { if (typeof GameModuleLoader.prefetch === 'function') GameModuleLoader.prefetch('gomoku'); } catch (_error) {}
-    Promise.resolve(GameModuleLoader.load('gomoku', { resource:'renderer' })).then(result => {
-      gomokuGhost3DImportPending = false;
-      if (gomokuDestroyed || opts.destroyed || !gomokuGhost3DSlot) return;
-      const module = result && result.ok === true ? result.module : null;
-      if (!module) {
-        if (gomokuGhost3DCurrent(generation)) gomokuGhost3DSetReady(false, generation);
-        return;
-      }
-      gomokuGhost3DModule = module;
-      if (!gomokuGhost3DCurrent(generation)){
-        if (gomokuGhost3DHost) loadGomokuGhost3DModule();
-        return;
-      }
-      if (gomokuGhost3DSupported(module)) queueGomokuGhost3DRecovery();
-      else gomokuGhost3DSetReady(false, generation);
-    }).catch(() => {
-      gomokuGhost3DImportPending = false;
-      if (gomokuGhost3DCurrent(generation)) gomokuGhost3DSetReady(false, generation);
-    });
-  }
-  function restartGomokuGhost3DHost(_reason){
-    if (!gomokuGhost3DActive || gomokuDestroyed || opts.destroyed || !gomokuGhost3DSlot) return false;
-    const factory = gomokuGhost3DFactory();
-    if (!factory) return false;
-    const previous = gomokuGhost3DHost;
-    const generation = ++gomokuGhost3DGeneration;
-    const retainedPlacement = _reason === 'terminal' && gomokuGhost3DPendingPlacement
-      ? { ...gomokuGhost3DPendingPlacement, generation } : null;
-    gomokuGhost3DQueued = false;
-    gomokuGhost3DRecoverQueued = false;
-    gomokuGhost3DLastFingerprint = '';
-    gomokuGhost3DAcceptedRevision = null;
-    gomokuGhost3DPendingPlacement = retainedPlacement;
-    gomokuGhost3DSetReady(false, generation);
-    if (previous && typeof previous.dispose === 'function'){
-      try { previous.dispose(); } catch (_error) {}
-    }
-    try {
-      gomokuGhost3DHost = factory.create({
-        quality:gomokuGhost3DInitialQuality(),
-        reducedMotion:gomokuGhost3DReducedMotion(),
-        onInput:(command, snapshot) => gomokuGhost3DHandleInput(command, snapshot, generation),
-        onFailure:() => gomokuGhost3DSetReady(false, generation),
-      });
-    } catch (_error) {
-      gomokuGhost3DHost = null;
-      return false;
-    }
-    if (!gomokuGhost3DHost || typeof gomokuGhost3DHost.apply !== 'function'){
-      gomokuGhost3DHost = null;
-      return false;
-    }
-    if (gomokuGhost3DSlot.dataset) gomokuGhost3DSlot.dataset.ghost3dGeneration = String(generation);
-    installGomokuGhost3DListeners();
-    queueGomokuGhost3DFrame();
-    loadGomokuGhost3DModule();
-    return true;
-  }
-  function disposeGomokuGhost3DBridge(){
-    gomokuGhost3DGeneration++;
-    gomokuGhost3DQueued = false;
-    gomokuGhost3DRecoverQueued = false;
-    gomokuGhost3DPendingPlacement = null;
-    const host = gomokuGhost3DHost;
-    gomokuGhost3DHost = null;
-    if (host && typeof host.dispose === 'function'){
-      try { host.dispose(); } catch (_error) {}
-    }
-    releaseGomokuGhost3DListeners();
-    if (gomokuGhost3DSlot){
-      gomokuGhost3DSlot.dataset.ghost3dReady = 'false';
-      if (typeof gomokuGhost3DSlot.remove === 'function') gomokuGhost3DSlot.remove();
-      else if (gomokuGhost3DSlot.parentNode && typeof gomokuGhost3DSlot.parentNode.removeChild === 'function') gomokuGhost3DSlot.parentNode.removeChild(gomokuGhost3DSlot);
-    }
-    if (gomokuWaveBFrame && gomokuWaveBFrame.dataset) delete gomokuWaveBFrame.dataset.ghost3dReady;
-    gomokuGhost3DSlot = null;
-  }
-  function addGomokuTouchListener(node, type, handler){
-    node.addEventListener(type, handler);
-    gomokuTouchListeners.push({ node, type, handler });
-  }
-  function setGomokuTouchTargetSize(button){
-    // Keep the target size self-contained because this optional input surface
-    // can render in either the Wave A fallback or Wave B command tray.
-    button.style.minWidth = '44px';
-    button.style.minHeight = '44px';
-    button.style.width = '44px';
-    button.style.height = '44px';
-    button.style.justifySelf = 'center';
-  }
-  function updateGomokuTouchControls(){
-    if (!gomokuTouchControls || !gomokuTouchButtons) return;
-    const inputUnavailable = !!(opts.destroyed || gomokuDestroyed);
-    const [row, column] = gomokuKeyboardCell;
-    const canConfirm = !inputUnavailable && canPlaceLocalGomokuMove() && grid[row] && grid[row][column] === -1;
-    Object.keys(gomokuTouchButtons.directions || {}).forEach(direction => {
-      const button = gomokuTouchButtons.directions[direction];
-      button.disabled = inputUnavailable;
-      button.setAttribute('aria-disabled', inputUnavailable ? 'true' : 'false');
-    });
-    gomokuTouchButtons.confirm.disabled = !canConfirm;
-    gomokuTouchButtons.confirm.setAttribute('aria-disabled', canConfirm ? 'false' : 'true');
-    gomokuTouchControls.dataset.gomokuTouchState = inputUnavailable ? 'destroyed' : (canConfirm ? 'ready' : 'inspect');
-    gomokuTouchControls.dataset.gomokuKeyboardCell = gomokuWaveBCoordinate(gomokuKeyboardCell);
-  }
-  function moveGomokuTouchCursor(direction, event){
-    if (event && typeof event.preventDefault === 'function') event.preventDefault();
-    if (opts.destroyed || gomokuDestroyed) return;
-    const vector = { up:[-1,0], right:[0,1], down:[1,0], left:[0,-1] }[direction];
-    if (!vector) return;
-    gomokuKeyboardFocusActive = true;
-    moveGomokuKeyboardCell(vector[0], vector[1]);
-  }
-  function confirmGomokuTouchCursor(event){
-    if (event && typeof event.preventDefault === 'function') event.preventDefault();
-    if (opts.destroyed || gomokuDestroyed) return false;
-    gomokuKeyboardFocusActive = true;
-    const placed = placeLocalGomokuMove(gomokuKeyboardCell[0], gomokuKeyboardCell[1]);
-    if (!placed) updateGomokuTouchControls();
-    return placed;
-  }
-  function mountGomokuTouchControls(){
-    if (gomokuTouchControls) return;
-    const controls = el('section', 'gomoku-touch-controls');
-    controls.setAttribute('role', 'group');
-    controls.setAttribute('aria-label', t('game_gomoku'));
-    controls.setAttribute('data-i18n-aria-label', 'game_gomoku');
-    controls.dataset.gomokuTouchControls = 'true';
-    controls.style.display = 'grid';
-    controls.style.placeItems = 'center';
-    controls.style.width = 'min(100%, 164px)';
-    controls.style.margin = '0 auto';
-    controls.style.touchAction = 'manipulation';
-    const gridNode = el('div', 'gomoku-touch-control-grid');
-    gridNode.style.display = 'grid';
-    gridNode.style.gridTemplateColumns = 'repeat(3, minmax(44px, 1fr))';
-    gridNode.style.gridTemplateAreas = '". up ." "left confirm right" ". down ."';
-    gridNode.style.gap = '6px';
-    gridNode.style.width = '100%';
-    const directions = {};
-    [
-      ['up', 'tank_up', 'tank_up_aria'],
-      ['right', 'tank_right', 'tank_right_aria'],
-      ['down', 'tank_down', 'tank_down_aria'],
-      ['left', 'tank_left', 'tank_left_aria'],
-    ].forEach(([direction, textKey, ariaKey]) => {
-      const button = el('button', 'btn gomoku-touch-control gomoku-touch-' + direction, t(textKey));
-      button.type = 'button';
-      button.setAttribute('data-i18n', textKey);
-      button.setAttribute('data-i18n-aria-label', ariaKey);
-      button.setAttribute('aria-label', t(ariaKey));
-      button.dataset.gomokuTouchDirection = direction;
-      button.style.gridArea = direction;
-      setGomokuTouchTargetSize(button);
-      addGomokuTouchListener(button, 'click', event => moveGomokuTouchCursor(direction, event));
-      gridNode.appendChild(button);
-      directions[direction] = button;
-    });
-    // The centered stone glyph has no language-specific visible copy. Its
-    // accessible name reuses the existing localised Gomoku placement hint.
-    const confirm = el('button', 'btn gomoku-touch-control gomoku-touch-confirm', '●');
-    confirm.type = 'button';
-    confirm.setAttribute('data-i18n-aria-label', 'gomoku_your_turn_hint');
-    confirm.setAttribute('aria-label', t('gomoku_your_turn_hint'));
-    confirm.dataset.gomokuTouchControl = 'confirm';
-    confirm.style.gridArea = 'confirm';
-    confirm.style.fontSize = '18px';
-    setGomokuTouchTargetSize(confirm);
-    addGomokuTouchListener(confirm, 'click', confirmGomokuTouchCursor);
-    gridNode.appendChild(confirm);
-    controls.appendChild(gridNode);
-    extra.appendChild(controls);
-    gomokuTouchControls = controls;
-    gomokuTouchButtons = { directions, confirm };
-    updateGomokuTouchControls();
-  }
-  function releaseGomokuTouchControls(){
-    gomokuTouchListeners.forEach(({ node, type, handler }) => {
-      if (node && typeof node.removeEventListener === 'function') node.removeEventListener(type, handler);
-    });
-    gomokuTouchListeners = [];
-    if (gomokuTouchControls && typeof gomokuTouchControls.remove === 'function') gomokuTouchControls.remove();
-    else if (gomokuTouchControls && gomokuTouchControls.parentNode && typeof gomokuTouchControls.parentNode.removeChild === 'function') gomokuTouchControls.parentNode.removeChild(gomokuTouchControls);
-    gomokuTouchControls = null;
-    gomokuTouchButtons = null;
-  }
   mountGomokuWaveBPresentation();
-  mountGomokuTouchControls();
+  // Gomoku uses direct board placement. Keyboard arrows remain available for
+  // accessibility, while the redundant on-screen direction pad stays removed.
   function clearBoardAsset(){
     if (canvas.style && typeof canvas.style.removeProperty === 'function') canvas.style.removeProperty('--game-board-art');
     else if (canvas.style) canvas.style['--game-board-art'] = 'none';
@@ -1382,39 +876,546 @@ function gameGomoku(area, extra, n, opts){
       ctx.beginPath(); ctx.arc(x, y, radius - 3.5, 0, Math.PI*2); ctx.stroke();
     }
   }
+  // ========== Pop Art / Comic Book Impact System ==========
+  function comicImpactIntensity(r, c) {
+    const p = grid[r][c];
+    if (p === -1) return 'normal';
+    for (let di = 0; di < GOMOKU_DIRS.length; di++) {
+      const dr = GOMOKU_DIRS[di][0], dc = GOMOKU_DIRS[di][1];
+      let cnt = 1, openEnds = 0;
+      for (let s = 1; s >= -1; s -= 2) {
+        let nr = r + dr * s, nc = c + dc * s;
+        while (nr >= 0 && nr < N && nc >= 0 && nc < N && grid[nr][nc] === p) { cnt++; nr += dr * s; nc += dc * s; }
+        if (nr >= 0 && nr < N && nc >= 0 && nc < N && grid[nr][nc] === -1) openEnds++;
+      }
+      if (cnt >= 4 || (cnt === 3 && openEnds >= 2)) return 'critical';
+    }
+    const opp = p ^ 1;
+    for (let di = 0; di < GOMOKU_DIRS.length; di++) {
+      const dr = GOMOKU_DIRS[di][0], dc = GOMOKU_DIRS[di][1];
+      let adjOpp = 0;
+      for (let s = 1; s >= -1; s -= 2) {
+        let nr = r + dr * s, nc = c + dc * s;
+        while (nr >= 0 && nr < N && nc >= 0 && nc < N && grid[nr][nc] === opp) { adjOpp++; nr += dr * s; nc += dc * s; }
+      }
+      if (adjOpp >= 3) return 'critical';
+    }
+    return 'normal';
+  }
+
+  function generateComicShapes(player, intensity) {
+    const rng = () => Math.random();
+    const mul = intensity === 'win' ? 1.7 : (intensity === 'critical' ? 1.25 : 1.0);
+    const ib = [];
+    for (let i = 0; i < 12; i++) {
+      ib.push({ a: (i / 12) * Math.PI * 2 + (rng() - 0.5) * 0.3, r: i % 2 === 0 ? 0.9 + rng() * 0.45 : 0.3 + rng() * 0.2 });
+    }
+    const ob = [];
+    for (let i = 0; i < 14; i++) {
+      ob.push({ a: (i / 14) * Math.PI * 2 + (rng() - 0.5) * 0.25, r: i % 2 === 0 ? 0.85 + rng() * 0.5 : 0.35 + rng() * 0.2 });
+    }
+    const cb = [];
+    for (let i = 0; i < 22; i++) {
+      const spike = i % 2 === 0;
+      const extra = spike && rng() > 0.5;
+      cb.push({
+        a: (i / 22) * Math.PI * 2 + (rng() - 0.5) * 0.22,
+        r: spike ? (extra ? 1.2 + rng() * 0.65 : 0.8 + rng() * 0.4) : 0.32 + rng() * 0.22
+      });
+    }
+    const sr = [];
+    for (let i = 0; i < 36; i++) {
+      sr.push((rng() - 0.5) * 0.22);
+    }
+    const sl = [];
+    const lineCount = 3 + Math.floor(rng() * 2);
+    for (let i = 0; i < lineCount; i++) {
+      sl.push({ ox: (rng() - 0.5) * 0.8, len: 0.7 + rng() * 0.5, w: 1.8 + rng() * 1.8 });
+    }
+    const dCount = Math.round(intensity === 'win' ? 14 : (intensity === 'critical' ? 11 : 8));
+    const pal = player === 0
+      ? ['#FFD700', '#FF6B35', '#FF2D2D', '#FFFFFF', '#FFA726']
+      : ['#00D4FF', '#FFD700', '#A855F7', '#FFFFFF', '#38BDF8'];
+    const deb = [];
+    for (let i = 0; i < dCount; i++) {
+      deb.push({
+        a: rng() * Math.PI * 2,
+        spd: 1.8 + rng() * 3.8,
+        type: ['shard', 'dot', 'streak'][Math.floor(rng() * 3)],
+        color: pal[Math.floor(rng() * pal.length)],
+        size: 3 + rng() * 4.5,
+        rot: rng() * Math.PI * 2,
+        rs: (rng() - 0.5) * 0.7,
+      });
+    }
+    return {
+      ib, ob, cb, sr, sl, deb,
+      htA: rng() * 0.35,
+      flA: 0.24 + rng() * 0.11,
+      sd: rng() > 0.5 ? 1 : -1,
+      mul,
+    };
+  }
+
+  const COMIC_STONE_FRAMES = [
+    { oy: -1.2,  sx: 1.0,  sy: 1.05 },
+    { oy: -0.60, sx: 0.97, sy: 1.10 },
+    { oy: -0.16, sx: 0.94, sy: 1.14 },
+    { oy: 0,     sx: 1.12, sy: 0.88 },
+    { oy: 0,     sx: 1.10, sy: 0.90 },
+    { oy: 0,     sx: 1.04, sy: 0.98 },
+    { oy: 0,     sx: 1.01, sy: 0.99 },
+    { oy: 0,     sx: 1.0,  sy: 1.0  },
+    { oy: 0,     sx: 1.0,  sy: 1.0  },
+    { oy: -0.08, sx: 0.96, sy: 1.06 },
+    { oy: -0.03, sx: 1.01, sy: 0.97 },
+    { oy: 0,     sx: 1.03, sy: 0.96 },
+    { oy: 0,     sx: 1.0,  sy: 1.0  },
+  ];
+
+  function comicStoneTransform(frame) {
+    if (frame < 0) frame = 0;
+    if (frame >= COMIC_STONE_FRAMES.length) return { oy: 0, sx: 1, sy: 1 };
+    const d = COMIC_STONE_FRAMES[frame];
+    return { oy: d.oy * CELL, sx: d.sx, sy: d.sy };
+  }
+
+  function comicBoardShake(frame, shapes) {
+    if (!shapes) return null;
+    const d = shapes.sd, m = shapes.mul;
+    if (frame === 3) return { x: 1.8 * d * m, y: 2.2 * m };
+    if (frame === 4) return { x: -1.2 * d * m, y: 1.0 * m };
+    if (frame === 5) return { x: 0.6 * d * m, y: -0.6 * m };
+    if (frame === 14) return { x: -0.6 * d * m, y: -0.8 * m };
+    if (frame === 15) return { x: 0.3 * d * m, y: 0.4 * m };
+    return null;
+  }
+
+  function drawBurstPath(verts, cx, cy, size) {
+    if (typeof ctx.beginPath === 'function') ctx.beginPath();
+    for (let i = 0; i <= verts.length; i++) {
+      const v = verts[i % verts.length];
+      const vx = cx + Math.cos(v.a) * v.r * size;
+      const vy = cy + Math.sin(v.a) * v.r * size;
+      if (i === 0) { if (typeof ctx.moveTo === 'function') ctx.moveTo(vx, vy); continue; }
+      const pv = verts[(i - 1) % verts.length];
+      const pvx = cx + Math.cos(pv.a) * pv.r * size;
+      const pvy = cy + Math.sin(pv.a) * pv.r * size;
+      const wobble = v.r > 0.55 ? 1.5 : -1.5;
+      if (typeof ctx.quadraticCurveTo === 'function') {
+        ctx.quadraticCurveTo((pvx + vx) / 2 + wobble, (pvy + vy) / 2 - wobble, vx, vy);
+      } else if (typeof ctx.lineTo === 'function') {
+        ctx.lineTo(vx, vy);
+      }
+    }
+    if (typeof ctx.closePath === 'function') ctx.closePath();
+  }
+
+  function drawComicHalftoneDots(cx, cy, maxR, dotMax, alpha, angle) {
+    const spacing = dotMax * 3.4;
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = '#000000';
+    const ca = Math.cos(angle), sa = Math.sin(angle);
+    for (let gx = -maxR; gx <= maxR; gx += spacing) {
+      for (let gy = -maxR; gy <= maxR; gy += spacing) {
+        const rx = gx * ca - gy * sa, ry = gx * sa + gy * ca;
+        const d = Math.hypot(rx, ry);
+        if (d > maxR) continue;
+        const dr = dotMax * (1 - d / maxR) * 0.7;
+        if (dr < 0.45) continue;
+        ctx.beginPath();
+        ctx.arc(cx + rx, cy + ry, dr, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    ctx.restore();
+  }
+
+  function drawComicShockRingPath(cx, cy, radius, lw, alpha, offsets, brk) {
+    if (alpha <= 0) return;
+    ctx.save();
+    ctx.lineCap = 'round';
+    const n = offsets.length, bs = {};
+    const bc = Math.min(4, Math.floor(brk * 4));
+    for (let b = 0; b < bc; b++) {
+      bs[Math.floor(b * n / 4 + n / 8) % n] = 1;
+    }
+    const passes = [
+      { c: '#000000', w: lw + 3, a: alpha * 0.4 },
+      { c: '#FFFFFF', w: lw, a: alpha }
+    ];
+    for (let p = 0; p < passes.length; p++) {
+      ctx.strokeStyle = passes[p].c;
+      ctx.lineWidth = passes[p].w;
+      ctx.globalAlpha = passes[p].a;
+      ctx.beginPath();
+      let on = false;
+      for (let i = 0; i <= n; i++) {
+        if (bs[i % n]) {
+          if (on) { ctx.stroke(); ctx.beginPath(); on = false; }
+          continue;
+        }
+        const a = (i / n) * Math.PI * 2;
+        const r = radius * (1 + offsets[i % n]);
+        const x = cx + Math.cos(a) * r;
+        const y = cy + Math.sin(a) * r * 0.88;
+        if (!on) { ctx.moveTo(x, y); on = true; }
+        else { ctx.lineTo(x, y); }
+      }
+      if (on) ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawComicAnimatedStone(cx, cy, player, sx, sy) {
+    const fm = gomokuFinalArtActive && !stickerArtActive;
+    const tb = tabletopMode();
+    const sm = tb || (stickerArtActive && boardTheme === 'classic');
+    const skin = pieceSkin(player);
+    ctx.save();
+    if (typeof ctx.translate === 'function') ctx.translate(cx, cy);
+    if (typeof ctx.scale === 'function') ctx.scale(sx, sy);
+    if (typeof ctx.translate === 'function') ctx.translate(-cx, -cy);
+    if (fm) {
+      drawGomokuFinalStone(cx, cy, player, skin);
+    } else if (sm) {
+      drawStickerStone(cx, cy, player, skin);
+    } else {
+      const R = CELL * 0.42;
+      const g = ctx.createRadialGradient(cx - CELL * 0.14, cy - CELL * 0.16, CELL * 0.05, cx, cy, CELL * 0.44);
+      if (g && g.addColorStop) {
+        if (player === 0) {
+          g.addColorStop(0, skin === 'glow' ? '#7dd3fc' : '#586172');
+          g.addColorStop(0.32, skin === 'glow' ? '#1d4ed8' : '#202733');
+          g.addColorStop(1, '#05070b');
+        } else {
+          g.addColorStop(0, '#ffffff');
+          g.addColorStop(0.52, skin === 'glow' ? '#f0abfc' : '#f3efe4');
+          g.addColorStop(1, skin === 'glow' ? '#9333ea' : '#c8c0af');
+        }
+      }
+      ctx.save();
+      ctx.shadowColor = 'rgba(8,12,22,.32)';
+      ctx.shadowBlur = 7;
+      ctx.shadowOffsetY = 3;
+      ctx.fillStyle = g || (typeof PLAYER_COLORS !== 'undefined' ? PLAYER_COLORS[player] : (player === 0 ? '#202733' : '#f3efe4'));
+      ctx.beginPath();
+      ctx.arc(cx, cy, R, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+      ctx.strokeStyle = player === 0 ? 'rgba(255,255,255,.18)' : 'rgba(92,76,52,.25)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(cx, cy, CELL * 0.39, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
   function clearMoveImpact(){
     if (impactTimer){ clearTimeout(impactTimer); gomokuWaveCProcessTimers.delete(impactTimer); impactTimer = null; }
     moveImpact = null;
   }
-  function triggerMoveImpact(r,c){
+
+  function triggerMoveImpact(r, c){
     clearMoveImpact();
-    showGomokuFinalVfx('last', r, c);
     showGomokuFinalVfx('placement', r, c);
     const startedAt = Date.now(), reduced = prefersReducedMotion();
-    moveImpact = { r, c, startedAt, reduced, epoch:gomokuWaveCProcessEpoch, expiresAt: reduced ? Infinity : startedAt + 680 };
-    if (reduced) return;
+    if (reduced) {
+      moveImpact = { r, c, startedAt, reduced, frame: 20, epoch: gomokuWaveCProcessEpoch, expiresAt: startedAt + 240 };
+      draw();
+      clearMoveImpact();
+      return;
+    }
+    const player = grid[r] && grid[r][c] !== -1 ? grid[r][c] : (cur ^ 1);
+    const intensity = winLine.length > 0 ? 'win' : comicImpactIntensity(r, c);
+    const shapes = generateComicShapes(player, intensity);
+    moveImpact = {
+      r, c, startedAt, reduced, frame: 0, player, intensity, shapes,
+      epoch: gomokuWaveCProcessEpoch,
+      expiresAt: startedAt + 680,
+      winLine: intensity === 'win' && winLine.length > 0 ? winLine.map(w => w.slice()) : null,
+    };
+    draw();
     const tick = () => {
       if (opts.destroyed || gomokuDestroyed || !moveImpact || moveImpact.epoch !== gomokuWaveCProcessEpoch) return;
-      if (Date.now() >= moveImpact.expiresAt){ clearMoveImpact(); draw(); return; }
-      draw(); impactTimer = gomokuWaveCLater(tick, 50);
+      const elapsed = Date.now() - moveImpact.startedAt;
+      moveImpact.frame = Math.min(20, Math.floor(elapsed / 33.3));
+      if (Date.now() >= moveImpact.expiresAt || moveImpact.frame >= 20) {
+        clearMoveImpact();
+        draw();
+        return;
+      }
+      draw();
+      impactTimer = gomokuWaveCLater(tick, 33);
     };
-    impactTimer = gomokuWaveCLater(tick, 16);
+    impactTimer = gomokuWaveCLater(tick, 33);
   }
+
   function drawMoveImpact(){
     if (!moveImpact) return;
-    const view = gomokuViewCell(moveImpact.r, moveImpact.c), x = PAD + view[1]*CELL, y = PAD + view[0]*CELL;
-    const elapsed = Math.max(0, Date.now() - moveImpact.startedAt);
-    const progress = moveImpact.reduced ? 0 : Math.min(1, elapsed / Math.max(1, moveImpact.expiresAt - moveImpact.startedAt));
-    const alpha = moveImpact.reduced ? .72 : Math.max(0, .82 * (1 - progress));
-    ctx.save(); ctx.globalAlpha = alpha; ctx.strokeStyle = '#211923'; ctx.lineWidth = moveImpact.reduced ? 2.4 : 2.8; ctx.lineCap = 'round';
-    ctx.beginPath(); ctx.arc(x, y, CELL * (.48 + progress * .68), 0, Math.PI*2); ctx.stroke();
-    if (!moveImpact.reduced){
-      for (let i=0;i<8;i++){
-        const angle = i * Math.PI / 4, inner = CELL * (.62 + progress * .34), outer = CELL * (1.02 + progress * .28);
-        ctx.beginPath(); ctx.moveTo(x + Math.cos(angle)*inner, y + Math.sin(angle)*inner); ctx.lineTo(x + Math.cos(angle)*outer, y + Math.sin(angle)*outer); ctx.stroke();
+    const view = gomokuViewCell(moveImpact.r, moveImpact.c);
+    const cx = PAD + view[1] * CELL, cy = PAD + view[0] * CELL;
+    if (moveImpact.reduced) {
+      ctx.save();
+      ctx.globalAlpha = 0.5;
+      ctx.strokeStyle = '#F1B640';
+      ctx.lineWidth = 2.2;
+      ctx.beginPath();
+      ctx.arc(cx, cy, CELL * 0.5, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+      return;
+    }
+    const f = moveImpact.frame;
+    const shapes = moveImpact.shapes;
+    if (!shapes || f > 20) return;
+    const R = CELL * 0.42;
+    const player = moveImpact.player;
+    const mul = shapes.mul;
+    const tf = comicStoneTransform(f);
+    const stoneY = cy + tf.oy;
+
+    // 1. Drop shadow & prediction (frames 0–2)
+    if (f <= 2) {
+      ctx.save();
+      ctx.globalAlpha = 0.12 + 0.08 * (f / 2);
+      ctx.fillStyle = '#000000';
+      if (typeof ctx.translate === 'function') ctx.translate(cx, cy + R * 0.35);
+      if (typeof ctx.scale === 'function') ctx.scale(1, 0.35);
+      ctx.beginPath();
+      ctx.arc(0, 0, R * 0.55 * (1 + f * 0.2), 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+    if (f === 2) {
+      ctx.save();
+      ctx.globalAlpha = 0.8;
+      ctx.fillStyle = '#FFD700';
+      ctx.beginPath();
+      ctx.arc(cx, cy, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // 2. Speed lines behind falling stone (frames 0–2)
+    if (f <= 2) {
+      ctx.save();
+      ctx.strokeStyle = '#000000';
+      ctx.lineCap = 'round';
+      for (let li = 0; li < shapes.sl.length; li++) {
+        const s = shapes.sl[li];
+        const lx = cx + s.ox * R;
+        const ly = stoneY - R - 2;
+        const lLen = s.len * R * (0.7 + (f / 2) * 0.3);
+        ctx.lineWidth = s.w;
+        ctx.globalAlpha = 0.7;
+        ctx.beginPath();
+        ctx.moveTo(lx, ly);
+        ctx.lineTo(lx, ly - lLen);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    // 3. Halftone dots layer (frames 6–14)
+    if (f >= 6 && f <= 14) {
+      const htR = R * 2.6 * mul;
+      const htA = f <= 9 ? 0.45 : 0.45 * Math.max(0, 1 - (f - 9) / 5);
+      if (htA > 0.01) {
+        drawComicHalftoneDots(cx, cy, htR, 2.5, htA, shapes.htA);
       }
     }
-    ctx.restore();
+
+    // 4. Main comic burst (COMIC BURST) (frames 5–13)
+    if (f >= 5 && f <= 13) {
+      const cbScale = (f <= 7 ? [2.0, 2.6, 3.0][f - 5] : 3.0 * Math.max(0, 1 - (f - 7) / 6)) * mul;
+      if (cbScale > 0.1) {
+        const cbR = R * cbScale;
+        ctx.save();
+        drawBurstPath(shapes.cb, cx, cy, cbR);
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = Math.max(2.5, cbR * 0.055);
+        ctx.stroke();
+        ctx.fillStyle = player === 0 ? '#FF6B35' : '#00D4FF';
+        ctx.globalAlpha = Math.min(1, cbScale / 1.5);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    // 5. Yellow second layer burst (frames 3–9)
+    if (f >= 3 && f <= 9) {
+      const ybScale = (f <= 4 ? 1.5 : 1.5 * Math.max(0, 1 - (f - 4) / 5)) * mul;
+      if (ybScale > 0.1) {
+        const ybR = R * ybScale;
+        ctx.save();
+        drawBurstPath(shapes.ob, cx, cy, ybR);
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = Math.max(2.0, ybR * 0.045);
+        ctx.stroke();
+        ctx.fillStyle = '#FFD700';
+        ctx.globalAlpha = f <= 5 ? 1 : Math.max(0, 1 - (f - 5) / 4);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    // 6. White explosion core (frames 3–8)
+    if (f >= 3 && f <= 8) {
+      const wcScale = (f <= 4 ? 1.3 : 1.3 * Math.max(0, 1 - (f - 4) / 4)) * mul;
+      if (wcScale > 0.1) {
+        ctx.save();
+        drawBurstPath(shapes.ib, cx, cy, R * wcScale);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.globalAlpha = f <= 5 ? 1 : Math.max(0, 1 - (f - 5) / 3);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    // 7. Animated stone with squash/stretch (drawn here during frames 0–11)
+    if (f < 12) {
+      drawComicAnimatedStone(cx, stoneY, player, tf.sx, tf.sy);
+    }
+
+    // 8. Flash exposure (frame 3 only)
+    if (f === 3) {
+      ctx.save();
+      ctx.globalAlpha = shapes.flA;
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.arc(cx, cy, R * 3.5 * mul, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // 9. Debris particles (frames 4–15)
+    if (f >= 4 && f <= 15) {
+      const dProg = (f - 4) / 11;
+      ctx.save();
+      for (let di = 0; di < shapes.deb.length; di++) {
+        const d = shapes.deb[di];
+        const dist = d.spd * CELL * dProg * mul;
+        const dx = cx + Math.cos(d.a) * dist, dy = cy + Math.sin(d.a) * dist;
+        const dAlpha = dProg > 0.75 ? Math.max(0, (1 - dProg) / 0.25) : 1;
+        const dScale = dProg > 0.75 ? 0.3 + 0.7 * Math.max(0, (1 - dProg) / 0.25) : 1;
+        ctx.save();
+        ctx.globalAlpha = dAlpha;
+        if (typeof ctx.translate === 'function') ctx.translate(dx, dy);
+        if (typeof ctx.rotate === 'function') ctx.rotate(d.rot + d.rs * f);
+        if (typeof ctx.scale === 'function') ctx.scale(dScale, dScale);
+        if (d.type === 'shard') {
+          ctx.fillStyle = d.color;
+          ctx.strokeStyle = '#000000';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(0, -d.size);
+          ctx.lineTo(d.size * 0.7, d.size * 0.5);
+          ctx.lineTo(-d.size * 0.7, d.size * 0.5);
+          if (typeof ctx.closePath === 'function') ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+        } else if (d.type === 'dot') {
+          ctx.fillStyle = '#000000';
+          ctx.beginPath();
+          ctx.arc(0, 0, d.size * 0.5, 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          ctx.strokeStyle = d.color;
+          ctx.lineWidth = d.size * 0.4;
+          ctx.lineCap = 'round';
+          ctx.beginPath();
+          ctx.moveTo(-d.size, 0);
+          ctx.lineTo(d.size, 0);
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+      ctx.restore();
+    }
+
+    // 10. Shock ring (frames 8–17)
+    if (f >= 8 && f <= 17) {
+      const rProg = (f - 8) / 9;
+      const rR = R * (2.0 + rProg * 2.4) * mul;
+      const rAlpha = Math.max(0, 1 - rProg * 1.1);
+      const rBreak = f >= 14 ? (f - 14) / 3 : 0;
+      const rLw = Math.max(1, 2.5 * (1 - rProg * 0.5));
+      drawComicShockRingPath(cx, cy, rR, rLw, rAlpha, shapes.sr, rBreak);
+    }
+
+    // 11. Second-contact ring (frames 11–12)
+    if (f === 11 || f === 12) {
+      ctx.save();
+      ctx.globalAlpha = f === 11 ? 0.45 : 0.2;
+      ctx.strokeStyle = '#FFFFFF';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(cx, cy, R * 0.8, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // 12. Winning move sequential glow + comic slash line (frames 8+)
+    if (moveImpact.intensity === 'win' && moveImpact.winLine && f >= 8) {
+      const wl = moveImpact.winLine;
+      const hc = Math.min(wl.length, Math.floor((f - 8) * 1.5) + 1);
+      ctx.save();
+      for (let wi = 0; wi < hc; wi++) {
+        const wv = gomokuViewCell(wl[wi][0], wl[wi][1]);
+        const wx = PAD + wv[1] * CELL, wy = PAD + wv[0] * CELL;
+        ctx.globalAlpha = 0.45;
+        ctx.fillStyle = '#FFD700';
+        ctx.beginPath();
+        ctx.arc(wx, wy, R * 1.35, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 2;
+        ctx.globalAlpha = 0.5;
+        ctx.stroke();
+      }
+      ctx.restore();
+
+      if (f >= 12 && wl.length >= 2) {
+        const sa = Math.max(0, 1 - (f - 12) / 8);
+        if (sa > 0) {
+          const fv = gomokuViewCell(wl[0][0], wl[0][1]), lv = gomokuViewCell(wl[wl.length - 1][0], wl[wl.length - 1][1]);
+          let x1 = PAD + fv[1] * CELL, y1 = PAD + fv[0] * CELL, x2 = PAD + lv[1] * CELL, y2 = PAD + lv[0] * CELL;
+          const sdx = x2 - x1, sdy = y2 - y1, slen = Math.hypot(sdx, sdy) || 1;
+          x1 -= (sdx / slen) * R; y1 -= (sdy / slen) * R;
+          x2 += (sdx / slen) * R; y2 += (sdy / slen) * R;
+          ctx.save();
+          ctx.globalAlpha = sa;
+          ctx.lineCap = 'round';
+          ctx.strokeStyle = '#000000';
+          ctx.lineWidth = 9 * mul;
+          ctx.beginPath();
+          ctx.moveTo(x1, y1);
+          ctx.lineTo(x2, y2);
+          ctx.stroke();
+          ctx.strokeStyle = '#FFD700';
+          ctx.lineWidth = 4.5 * mul;
+          ctx.beginPath();
+          ctx.moveTo(x1, y1);
+          ctx.lineTo(x2, y2);
+          ctx.stroke();
+          const px = -sdy / slen, py = sdx / slen;
+          ctx.strokeStyle = '#FFFFFF';
+          ctx.lineWidth = 1.5;
+          ctx.globalAlpha = sa * 0.45;
+          for (let si = -2; si <= 2; si++) {
+            if (!si) continue;
+            ctx.beginPath();
+            ctx.moveTo(x1 + px * si * 6, y1 + py * si * 6);
+            ctx.lineTo(x2 + px * si * 6, y2 + py * si * 6);
+            ctx.stroke();
+          }
+          ctx.restore();
+        }
+      }
+    }
   }
   function drawGomokuKeyboardFocus(){
     if (!gomokuKeyboardFocusActive || !Array.isArray(gomokuKeyboardCell)) return;
@@ -1436,8 +1437,12 @@ function gameGomoku(area, extra, n, opts){
     canvas.dataset.viewQuarterTurns = String(gomokuViewTurns());
     const finalMode = gomokuFinalArtActive && !stickerArtActive;
     const stickerMode = tabletop || (stickerArtActive && boardTheme === 'classic');
+    const shake = (!moveImpact || moveImpact.reduced) ? null : comicBoardShake(moveImpact.frame, moveImpact.shapes);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.clearRect(0, 0, LOGICAL, LOGICAL);
+    if (shake && typeof ctx.translate === 'function') {
+      ctx.translate(shake.x, shake.y);
+    }
+    ctx.clearRect(shake ? -6 : 0, shake ? -6 : 0, LOGICAL + (shake ? 12 : 0), LOGICAL + (shake ? 12 : 0));
     ctx.strokeStyle = finalMode ? '#211923' : (tabletop ? '#443443' : (boardTheme === 'grass' ? 'rgba(30,61,31,.72)' : (stickerMode ? '#443443' : (legacyArtEnabled ? 'rgba(76,43,15,.68)' : '#8a6638'))));
     ctx.lineWidth = finalMode ? 2.6 : (stickerMode ? 3.2 : 1); ctx.lineCap = (finalMode || stickerMode) ? 'round' : 'butt';
     for (let i=0;i<N;i++){
@@ -1450,6 +1455,9 @@ function gameGomoku(area, extra, n, opts){
     }
     for (let r=0;r<N;r++) for (let c=0;c<N;c++){
       if (grid[r][c] === -1) continue;
+      if (moveImpact && !moveImpact.reduced && moveImpact.r === r && moveImpact.c === c && moveImpact.frame < 12) {
+        continue;
+      }
       const view = gomokuViewCell(r,c), x = PAD + view[1]*CELL, y = PAD + view[0]*CELL;
       const skin = pieceSkin(grid[r][c]);
       if (finalMode){ drawGomokuFinalStone(x, y, grid[r][c], skin); continue; }
@@ -1502,9 +1510,7 @@ function gameGomoku(area, extra, n, opts){
     }
     drawMoveImpact();
     drawGomokuKeyboardFocus();
-    updateGomokuTouchControls();
     updateHud();
-    queueGomokuGhost3DFrame();
   }
   function initStickerSurface(){
     if (!stickerArtRequested) return;
@@ -1641,9 +1647,6 @@ function gameGomoku(area, extra, n, opts){
     const moveAudioSequence = ++gomokuAudioSequence;
     audioCue('gomoku_place', { actionId:'gomoku-place-' + gomokuAudioSession + '-' + moveAudioSequence + '-' + r + '-' + c, reaction:'place' }, 1);
     if(typeof emitGameStage25DEvent==='function')emitGameStage25DEvent({type:'piece_landed',game:'gomoku',row:r,col:c,size:N,player:cur,reducedMotion:prefersReducedMotion()});
-    if (gomokuGhost3DActive && gomokuGhost3DHost){
-      gomokuGhost3DPendingPlacement = { row:r, col:c, player:cur, generation:gomokuGhost3DGeneration };
-    }
     if (checkGomokuWin(grid, r, c)){
       over = true; finishedAt = Date.now(); winLine = winningCells(r, c); ghost = null; area.style.touchAction = 'auto';
       audioCue('gomoku_line', { actionId:'gomoku-line-' + gomokuAudioSession + '-' + moveAudioSequence, reaction:'score' }, 1);
@@ -1658,7 +1661,7 @@ function gameGomoku(area, extra, n, opts){
       setStatus(t('result_winner',cur+1), true);
       showGomokuOutcome({
         winner: cur, winnerName: t('player_number',cur+1), emoji: '🎉',
-        subtitle: t('gomoku_five_line'), coins: 1, ...gomokuOutcomeAudio(cur, false), onRestart: reset, onShare: () => shareGameLink('gomoku'), onInvite: online.room && online.isHost ? () => openInvitePicker() : null
+        subtitle: t('gomoku_five_line'), coins: 1, ...gomokuOutcomeAudio(cur, false), onRestart: reset, onBackToGames: () => { if (typeof setAppRoute === 'function') setAppRoute('games', { reason:'outcome_games' }); else if (typeof showHub === 'function') showHub(); }, onShare: () => shareGameLink('gomoku'), onInvite: online.room && online.isHost ? () => openInvitePicker() : null
       });
       if(typeof emitGameStage25DEvent==='function'){
         const viewer=opts.online?Number(opts.myIdx):0;
@@ -1678,7 +1681,7 @@ function gameGomoku(area, extra, n, opts){
       draw(); renderPlayers(cur, null);
       setStatus(t('result_draw'), false);
       showGomokuOutcome({
-        winner: 0, emoji: '🤝', subtitle: t('gomoku_board_full_draw'), coins: 0, ...gomokuOutcomeAudio(0, true), onRestart: reset, onShare: () => shareGameLink('gomoku')
+        winner: 0, emoji: '🤝', subtitle: t('gomoku_board_full_draw'), coins: 0, ...gomokuOutcomeAudio(0, true), onRestart: reset, onBackToGames: () => { if (typeof setAppRoute === 'function') setAppRoute('games', { reason:'outcome_games' }); else if (typeof showHub === 'function') showHub(); }, onShare: () => shareGameLink('gomoku')
       });
       if(typeof emitGameStage25DEvent==='function')emitGameStage25DEvent({type:'result',game:'gomoku',outcome:'draw'});
       return true;
@@ -1720,7 +1723,6 @@ function gameGomoku(area, extra, n, opts){
     cur = 0; over = false; hist = []; last = null; winLine = []; ghost = null; startedAt = Date.now(); finishedAt = 0; gomokuAudioSequence = 0;
     setGomokuKeyboardCell(Math.floor(N / 2), Math.floor(N / 2));
     area.style.touchAction = spectator ? 'auto' : 'none';
-    if (gomokuGhost3DHost) restartGomokuGhost3DHost('reset');
     applyPresentation();
     draw(); renderPlayers(0, null);
     setStatus(opts.online ? t(cur === opts.myIdx ? 'gomoku_your_turn_hint' : 'gomoku_wait_opponent') : t('player_turn',1));
@@ -1773,7 +1775,6 @@ function gameGomoku(area, extra, n, opts){
     gomokuWaveCProcessEpoch++;
     clearGomokuWaveCProcessTimers();
     moveImpact = null;
-    gomokuGhost3DPendingPlacement = null;
     grid = Array.from({length:N}, () => Array(N).fill(-1)); hist = [];
     state.hist.forEach((move, index) => { if (Array.isArray(move) && move.length === 2 && grid[move[0]] && grid[move[0]][move[1]] === -1){ grid[move[0]][move[1]] = index % 2; hist.push([move[0], move[1]]); } });
     cur = Number(state.cur) === 1 ? 1 : 0; over = !!state.over; last = Array.isArray(state.last) ? state.last.slice(0, 2) : (hist.length ? hist[hist.length - 1].slice() : null);
@@ -1787,7 +1788,6 @@ function gameGomoku(area, extra, n, opts){
   if (gomokuFinalArtRequested) initGomokuFinalArtSurface();
   if (!tabletopMode()) initStickerSurface();
   resetLocal();
-  if (gomokuGhost3DActive) restartGomokuGhost3DHost('mount');
   return {
     reset, onMove: opts.onMove, onRestart: resetLocal, snapshot, onRestore,
     serialize: () => ({ state: snapshot(), presentation: { boardTheme, cosmetic:{default:cosmetic.default,players:{...cosmetic.players}} }, stats: getMatchStats() }),
@@ -1800,7 +1800,7 @@ function gameGomoku(area, extra, n, opts){
         canvas.removeEventListener('blur', handleGomokuKeyboardBlur);
         canvas.removeEventListener('keydown', handleGomokuKeyboardInput);
       }
-      clearMoveImpact(); disposeGomokuGhost3DBridge(); releaseGomokuTouchControls(); releaseGomokuWaveBPresentation();
+      clearMoveImpact(); releaseGomokuWaveBPresentation();
       area.style.touchAction = previousTouchAction; area.style.overscrollBehavior = previousOverscroll;
     },
   };

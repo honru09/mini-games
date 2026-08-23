@@ -85,40 +85,15 @@ function gameMonopoly(area, extra, n, opts){
   let monopolyWaveBStage=null,monopolyWaveBBoardFrame=null,monopolyWaveBMeta=null,monopolyWaveBCommand=null;
   let monopolyWaveBTurn=null,monopolyWaveBState=null,monopolyWaveBProperty=null,monopolyWaveBChance=null,monopolyWaveBAuction=null,monopolyWaveBTrade=null;
   let monopolyWaveBChanceModal=null,monopolyWaveBChanceCard=null;
+  const monopolyFinalArtRequested=typeof monopolyFinalArtEnabled==='function'&&monopolyFinalArtEnabled();
+  let monopolyFinalArtActive=false,monopolyFinalArtState=monopolyFinalArtRequested?'loading':'disabled';
+  let monopolyFinalArtRequest=0,monopolyFinalArtLayers=null,monopolyFinalArtVfxSeq=0,monopolyFinalArtVfxRole=null;
+  const monopolyFinalArtImageFactory=()=>typeof Image==='function'?new Image():null;
   // This density is derived only from the mounted DOM board's content box.
   // It is deliberately presentation-local: changing a viewport may reflow
   // labels and the retained roll control, but can never change a rule state.
   let monopolyWaveBBoardDensity='full';
-  // Ghost3D is a frozen developer experiment. The retained DOM/Canvas 2.5D
-  // surface is the production presentation; only the exact local value "1"
-  // opts into the renderer island.
-  const MONOPOLY_GHOST3D_STORAGE_KEY='mg_ghost3d_monopoly_v1';
-  const MONOPOLY_GHOST3D_QUALITY_STORAGE_KEY='mg_ghost3d_monopoly_quality_v1';
-  const MONOPOLY_GHOST3D_QUALITIES=new Set(['HIGH','BALANCED','LOW']);
-  const MONOPOLY_GHOST3D_PHASES=new Set(['roll','resolving','moving','buy','chance','auction','done','finished']);
-  const MONOPOLY_GHOST3D_PROCESS_STAGES=new Set(['roll','walk','land','buy','event','auction','trade','turn-end']);
-  const MONOPOLY_GHOST3D_PLAYER_STATES=new Set(['idle','moving','event','purchase','auction','turn','bankrupt','winner','settled']);
-  const MONOPOLY_GHOST3D_FACINGS=new Set(['north','east','south','west']);
-  function monopolyGhost3DEnabled(){
-    if(!monopolyWaveBActive)return false;
-    try{
-      const storage=typeof window!=='undefined'?window.localStorage:null;
-      return !!storage&&typeof storage.getItem==='function'&&storage.getItem(MONOPOLY_GHOST3D_STORAGE_KEY)==='1';
-    }catch(_error){return false;}
-  }
-  function monopolyGhost3DInitialQuality(){
-    try{
-      const storage=typeof window!=='undefined'?window.localStorage:null;
-      const value=storage&&typeof storage.getItem==='function'?storage.getItem(MONOPOLY_GHOST3D_QUALITY_STORAGE_KEY):null;
-      return MONOPOLY_GHOST3D_QUALITIES.has(value)?value:'BALANCED';
-    }catch(_error){return 'BALANCED';}
-  }
-  let monopolyGhost3DActive=monopolyGhost3DEnabled();
-  let monopolyGhost3DSlot=null,monopolyGhost3DHost=null,monopolyGhost3DModule=null;
-  let monopolyGhost3DGeneration=0,monopolyGhost3DAdapterEpoch=0,monopolyGhost3DPresentationRevision=0,monopolyGhost3DAcceptedRevision=null;
-  let monopolyGhost3DLastFingerprint='',monopolyGhost3DImportPending=false,monopolyGhost3DQueued=false,monopolyGhost3DRecoverQueued=false;
-  let monopolyGhost3DPendingMotion=null,monopolyGhost3DAuthorityMeta=null,monopolyGhost3DPresentationFrame=null,monopolyGhost3DLocalWalkHold=null;
-  let monopolyGhost3DListeners=[],monopolyGhost3DMediaQuery=null,monopolyDestroyed=false;
+  let monopolyDestroyed=false,monopolyPresentationMatchId='';
   let monopolyPresentationResizeWindow=null,monopolyPresentationResizeObserver=null,cancelMonopolyPresentationResize=null;
   let monopolyOutcomeScheduled=false,monopolyOutcomeVisible=false,monopolyOutcomeTimer=null,monopolyOutcomePending=null;
   // Wave C is visual choreography only. It describes the player-facing turn
@@ -167,11 +142,6 @@ function gameMonopoly(area, extra, n, opts){
     epoch++;
     clearMonopolyWaveCProcessTimers();
     clearMonopolyOutcomeTimer();
-    // A cancelled DOM walk must not leave a renderer-only transition behind.
-    // The game state remains authoritative; this only drops optional visual
-    // continuity that belongs to the current async turn.
-    monopolyGhost3DPendingMotion=null;
-    monopolyGhost3DLocalWalkHold=null;
     stopStageCountdown();
     const waiters = idleWaiters.splice(0);
     waiters.forEach(resolve => resolve());
@@ -359,7 +329,7 @@ function gameMonopoly(area, extra, n, opts){
   }
   const moneyRow = el('div','money-row');
   extra.appendChild(moneyRow);
-  const actionRow = el('div');
+  const actionRow = el('div','monopoly-action-row');
   extra.appendChild(actionRow);
   const settleBtn = el('button','btn',t('monopoly_settle_early'));
   settleBtn.addEventListener('click', () => {
@@ -402,11 +372,28 @@ function gameMonopoly(area, extra, n, opts){
     monopolyWaveBBoardDensity=density;
     const value=monopolyWaveBActive?density:null;
     [board,center,diceRow,monopolyWaveBStage,monopolyWaveBBoardFrame].forEach(node=>monopolyWaveBData(node,'monopoly-density',value));
+    syncMonopolyWaveBRollControl();
     return density;
+  }
+  function syncMonopolyWaveBRollControl(){
+    if(!rollBtn||!center)return false;
+    const useCommand=!!monopolyWaveBCommand&&monopolyWaveBBoardDensity!=='full';
+    if(useCommand){
+      if(rollBtn.parentNode!==monopolyWaveBCommand){
+        if(typeof monopolyWaveBCommand.insertBefore==='function')monopolyWaveBCommand.insertBefore(rollBtn,monopolyWaveBCommand.firstChild||null);
+        else monopolyWaveBCommand.appendChild(rollBtn);
+      }
+      monopolyWaveBData(rollBtn,'monopoly-compact-control','command');
+      return true;
+    }
+    if(rollBtn.parentNode!==center)center.appendChild(rollBtn);
+    monopolyWaveBData(rollBtn,'monopoly-compact-control',null);
+    return false;
   }
   function clearMonopolyWaveBLayoutDensity(){
     monopolyWaveBBoardDensity='full';
     [board,center,diceRow,monopolyWaveBStage,monopolyWaveBBoardFrame].forEach(node=>monopolyWaveBData(node,'monopoly-density',null));
+    syncMonopolyWaveBRollControl();
   }
   function monopolyWaveCProcessText(){
     const player=cur+1,cell=players[cur]&&CELLS[players[cur].pos];
@@ -435,10 +422,19 @@ function gameMonopoly(area, extra, n, opts){
     });
   }
   function setMonopolyWaveCProcess(next,detail){
-    monopolyWaveCProcess=MONOPOLY_WAVE_C_PROCESS_STEPS.includes(next)?next:'roll';
-    monopolyWaveCProcessDetail=detail===undefined||detail===null?'':String(detail);
+    const nextProcess=MONOPOLY_WAVE_C_PROCESS_STEPS.includes(next)?next:'roll';
+    const nextDetail=detail===undefined||detail===null?'':String(detail);
+    const changed=nextProcess!==monopolyWaveCProcess||nextDetail!==monopolyWaveCProcessDetail;
+    monopolyWaveCProcess=nextProcess;
+    monopolyWaveCProcessDetail=nextDetail;
     paintMonopolyWaveCProcess();
-    queueMonopolyGhost3DFrame();
+    if(changed&&typeof emitGameStage25DEvent==='function'&&['walk','land','buy','event','auction','turn-end'].includes(nextProcess))emitGameStage25DEvent({type:'phase',game:'monopoly',phase:nextProcess,detail:nextDetail,reducedMotion:prefersReducedMotion()});
+  }
+  function emitMonopolyTerminal25D(){
+    if(typeof emitGameStage25DEvent!=='function')return;
+    const viewer=opts.online?Number(opts.myIdx):0;
+    const outcome=spectator||!Number.isInteger(winner)||winner<0||!Number.isInteger(viewer)?'draw':(winner===viewer?'win':'loss');
+    emitGameStage25DEvent({type:'phase',game:'monopoly',phase:'terminal',detail:winner,reducedMotion:prefersReducedMotion(),outcome});
   }
   function monopolyWaveCProcessFromPhase(){
     if(over)return 'turn-end';
@@ -496,12 +492,10 @@ function gameMonopoly(area, extra, n, opts){
     monopolyWaveBMeta.appendChild(monopolyWaveBTrade);
     monopolyWaveBMeta.appendChild(monopolyWaveCProcessRail);
     monopolyWaveBBoardFrame.appendChild(board);
-    mountMonopolyGhost3DSlot();
     monopolyWaveBStage.appendChild(monopolyWaveBBoardFrame);
-    monopolyWaveBStage.appendChild(monopolyWaveBMeta);
     area.appendChild(monopolyWaveBStage);
     monopolyWaveBCommand=el('div','monopoly-wave-b-command');
-    [moneyRow,actionRow,settleBtn,stageState].forEach(node=>monopolyWaveBCommand.appendChild(node));
+    [moneyRow,actionRow,settleBtn,stageState,monopolyWaveBMeta].forEach(node=>monopolyWaveBCommand.appendChild(node));
     extra.appendChild(monopolyWaveBCommand);
     monopolyWaveBClass(area,'monopoly-wave-b-arena',true);
     monopolyWaveBClass(monopolyWaveBStage,'monopoly-wave-b-arena',true);
@@ -533,14 +527,11 @@ function gameMonopoly(area, extra, n, opts){
     monopolyWaveBData(stageState,'monopoly-region','command-state');
     monopolyWaveBData(monopolyWaveBTrade,'monopoly-trade','unavailable');
     paintMonopolyWaveCProcess();
-    syncMonopolyGhost3DBridge();
   }
   function releaseMonopolyWaveBPresentation(){
     // Restore the pre-Wave-B control location before detaching the command
     // tray. This keeps exact Wave A rollback independent of viewport size.
     clearMonopolyWaveBLayoutDensity();
-    disposeMonopolyGhost3DBridge();
-    monopolyGhost3DActive=false;
     clearMonopolyWaveBTransient(false);
     if(monopolyWaveBChanceModal){monopolyWaveBClass(monopolyWaveBChanceModal,'monopoly-wave-b-chance-modal',false);monopolyWaveBData(monopolyWaveBChanceModal,'monopoly-region',null);}
     if(monopolyWaveBChanceCard){monopolyWaveBClass(monopolyWaveBChanceCard,'monopoly-wave-b-chance-card',false);monopolyWaveBData(monopolyWaveBChanceCard,'monopoly-chance',null);}
@@ -548,6 +539,7 @@ function gameMonopoly(area, extra, n, opts){
     if(monopolyWaveBCommand&&monopolyWaveBCommand.parentNode===extra){
       const children=Array.from(monopolyWaveBCommand.children||[]);
       children.forEach(child=>{
+        if(child===monopolyWaveBMeta){removeMonopolyWaveBNode(child);return;}
         if(typeof extra.insertBefore==='function')extra.insertBefore(child,monopolyWaveBCommand);
         else extra.appendChild(child);
       });
@@ -605,507 +597,7 @@ function gameMonopoly(area, extra, n, opts){
     }
     monopolyWaveBActive=true;
     if(!monopolyWaveBStage)mountMonopolyWaveBPresentation();
-    if(monopolyWaveBActive&&monopolyWaveBStage)syncMonopolyGhost3DBridge();
     return true;
-  }
-  function mountMonopolyGhost3DSlot(){
-    if(!monopolyGhost3DActive||!monopolyWaveBBoardFrame||monopolyGhost3DSlot)return null;
-    const slot=el('div','monopoly-ghost3d-slot');
-    slot.setAttribute('aria-hidden','true');
-    slot.dataset.ghost3dReady='false';
-    slot.dataset.ghost3dGeneration=String(monopolyGhost3DGeneration);
-    monopolyGhost3DSlot=slot;
-    monopolyWaveBBoardFrame.appendChild(slot);
-    return slot;
-  }
-  function monopolyGhost3DCurrent(generation){
-    return !monopolyDestroyed&&!opts.destroyed&&!!monopolyGhost3DSlot&&generation===monopolyGhost3DGeneration;
-  }
-  // Foundation can replace an adapter after context loss without replacing its
-  // bridge host. Keep a second epoch so callbacks retained by the disposed
-  // adapter cannot mutate the new adapter's ready state or DOM controls.
-  function monopolyGhost3DNextAdapterEpoch(){
-    monopolyGhost3DAdapterEpoch++;
-    return monopolyGhost3DAdapterEpoch;
-  }
-  function monopolyGhost3DAdapterCurrent(generation,adapterEpoch){
-    return monopolyGhost3DCurrent(generation)&&adapterEpoch===monopolyGhost3DAdapterEpoch;
-  }
-  function syncMonopolyGhost3DRollControl(ready){
-    if(!rollBtn||!center)return false;
-    const commandControl=!!monopolyWaveBCommand&&(ready===true||monopolyWaveBBoardDensity!=='full');
-    if(commandControl){
-      if(rollBtn.parentNode!==monopolyWaveBCommand){
-        if(typeof monopolyWaveBCommand.insertBefore==='function')monopolyWaveBCommand.insertBefore(rollBtn,monopolyWaveBCommand.firstChild||null);
-        else monopolyWaveBCommand.appendChild(rollBtn);
-      }
-      monopolyWaveBData(rollBtn,'monopoly-ghost3d-control',ready===true?'dom-command':null);
-      monopolyWaveBData(rollBtn,'monopoly-compact-control',ready===true?null:'command');
-      return true;
-    }
-    if(rollBtn.parentNode!==center)center.appendChild(rollBtn);
-    monopolyWaveBData(rollBtn,'monopoly-ghost3d-control',null);
-    monopolyWaveBData(rollBtn,'monopoly-compact-control',null);
-    return false;
-  }
-  function monopolyGhost3DSetReady(ready,generation){
-    if(!monopolyGhost3DCurrent(generation))return false;
-    const value=ready===true?'true':'false';
-    monopolyGhost3DSlot.dataset.ghost3dReady=value;
-    if(monopolyWaveBBoardFrame&&monopolyWaveBBoardFrame.dataset)monopolyWaveBBoardFrame.dataset.ghost3dReady=value;
-    syncMonopolyGhost3DRollControl(ready===true);
-    return ready===true;
-  }
-  function monopolyGhost3DHostFailed(generation){
-    if(!monopolyGhost3DCurrent(generation))return false;
-    // Foundation has already rejected the current renderer and is entering its
-    // private fallback. Invalidate every callback retained by that adapter
-    // before it can revive readiness or request another recovery.
-    monopolyGhost3DNextAdapterEpoch();
-    monopolyGhost3DPendingMotion=null;
-    monopolyGhost3DLocalWalkHold=null;
-    monopolyGhost3DSetReady(false,generation);
-    return true;
-  }
-  function monopolyGhost3DReducedMotion(){
-    try{if(typeof prefersReducedMotion==='function')return !!prefersReducedMotion();}catch(_error){}
-    return !!(monopolyGhost3DMediaQuery&&monopolyGhost3DMediaQuery.matches);
-  }
-  function monopolyGhost3DFactory(){
-    const root=typeof globalThis!=='undefined'?globalThis:(typeof window!=='undefined'?window:null);
-    const factory=root&&root.Ghost3DFoundation;
-    return factory&&typeof factory.create==='function'?factory:null;
-  }
-  function monopolyGhost3DListen(target,type,handler,options){
-    if(!target||typeof target.addEventListener!=='function')return;
-    target.addEventListener(type,handler,options);
-    monopolyGhost3DListeners.push({target,type,handler,options,legacy:false});
-  }
-  function monopolyGhost3DListenLegacy(target,type,handler){
-    if(!target||typeof target.addListener!=='function')return;
-    target.addListener(handler);
-    monopolyGhost3DListeners.push({target,type,handler,legacy:true});
-  }
-  function releaseMonopolyGhost3DListeners(){
-    monopolyGhost3DListeners.forEach(listener=>{
-      if(!listener||!listener.target)return;
-      if(listener.legacy&&typeof listener.target.removeListener==='function')listener.target.removeListener(listener.handler);
-      else if(!listener.legacy&&typeof listener.target.removeEventListener==='function')listener.target.removeEventListener(listener.type,listener.handler,listener.options);
-    });
-    monopolyGhost3DListeners=[];
-    monopolyGhost3DMediaQuery=null;
-  }
-  function applyMonopolyGhost3DLifecycle(action,reason){
-    const host=monopolyGhost3DHost;
-    if(!host||typeof host.apply!=='function')return false;
-    try{return !!host.apply({type:'lifecycle',action,reason});}catch(_error){return false;}
-  }
-  function installMonopolyGhost3DListeners(){
-    if(!monopolyGhost3DActive||monopolyGhost3DListeners.length)return;
-    const doc=typeof document!=='undefined'?document:null;
-    const root=typeof window!=='undefined'?window:null;
-    monopolyGhost3DListen(doc,'visibilitychange',()=>{
-      const hidden=!!(doc&&doc.hidden);
-      applyMonopolyGhost3DLifecycle(hidden?'hidden':'visible','document');
-    });
-    monopolyGhost3DListen(root,'ghostgame:shellchange',event=>{
-      const detail=event&&event.detail?event.detail:null;
-      const active=!!(detail&&detail.active===true&&detail.gameId==='monopoly');
-      applyMonopolyGhost3DLifecycle(active?'resume':'suspend','shell');
-    });
-    try{monopolyGhost3DMediaQuery=root&&typeof root.matchMedia==='function'?root.matchMedia('(prefers-reduced-motion: reduce)'):null;}
-    catch(_error){monopolyGhost3DMediaQuery=null;}
-    if(monopolyGhost3DMediaQuery){
-      const onChange=event=>{
-        const host=monopolyGhost3DHost;
-        if(!host||typeof host.apply!=='function')return;
-        const reducedMotion=!!(event&&typeof event.matches==='boolean'?event.matches:monopolyGhost3DMediaQuery.matches);
-        try{host.apply({type:'environment',reducedMotion});}catch(_error){}
-      };
-      if(typeof monopolyGhost3DMediaQuery.addEventListener==='function')monopolyGhost3DListen(monopolyGhost3DMediaQuery,'change',onChange);
-      else monopolyGhost3DListenLegacy(monopolyGhost3DMediaQuery,'change',onChange);
-    }
-    if(doc&&doc.hidden)applyMonopolyGhost3DLifecycle('hidden','document');
-  }
-  function monopolyGhost3DFreeze(value){
-    if(Array.isArray(value))return Object.freeze(value.map(monopolyGhost3DFreeze));
-    if(value&&typeof value==='object'){
-      const copy={};
-      Object.keys(value).forEach(key=>{copy[key]=monopolyGhost3DFreeze(value[key]);});
-      return Object.freeze(copy);
-    }
-    return value;
-  }
-  function monopolyGhost3DPosition(value){
-    const number=Number(value);
-    return Number.isInteger(number)&&number>=0&&number<CELLS.length?number:null;
-  }
-  function monopolyGhost3DValidAuthorityMeta(meta){
-    return !!meta&&['live','room-restored','reconnect','spectator-bootstrap'].includes(meta.source)&&
-      typeof meta.matchId==='string'&&meta.matchId.length>0&&
-      Number.isSafeInteger(meta.authorityRevision)&&meta.authorityRevision>=0&&
-      typeof meta.stateHash==='string'&&meta.stateHash.length>0;
-  }
-  function monopolyGhost3DTokenMoved(actorPlayerId,from,to,steps,direction){
-    const actor=Number(actorPlayerId),start=monopolyGhost3DPosition(from),end=monopolyGhost3DPosition(to);
-    const signed=Number(steps),travelDirection=Number(direction);
-    const forward=Number.isSafeInteger(signed)&&signed>=2&&signed<=12;
-    const backward=signed===-2;
-    if(!Number.isSafeInteger(actor)||actor<0||actor>=players.length||start===null||end===null||
-      (!forward&&!backward)||!Number.isSafeInteger(travelDirection)||
-      (forward&&travelDirection!==1)||(backward&&travelDirection!==-1)||
-      signed!==travelDirection*Math.abs(signed)||
-      ((start+signed)%CELLS.length+CELLS.length)%CELLS.length!==end)return null;
-    return {type:'token_moved',actorPlayerId:actor,from:start,to:end,steps:signed,direction:travelDirection};
-  }
-  function monopolyGhost3DBeginCommittedLocalWalk(actorPlayerId,from,to,steps){
-    if(opts.online||monopolyGhost3DReducedMotion()||!monopolyGhost3DActive||!monopolyGhost3DHost)return false;
-    const motion=monopolyGhost3DTokenMoved(actorPlayerId,from,to,steps,Number(steps)<0?-1:1);
-    const player=players[Number(actorPlayerId)];
-    if(!motion||!player||monopolyGhost3DPosition(player.pos)!==motion.to)return false;
-    monopolyGhost3DLocalWalkHold={...motion,generation:monopolyGhost3DGeneration};
-    monopolyGhost3DPendingMotion=motion;
-    return true;
-  }
-  function monopolyGhost3DReleaseLocalWalk(actorPlayerId,to){
-    const hold=monopolyGhost3DLocalWalkHold;
-    if(!hold||hold.generation!==monopolyGhost3DGeneration||hold.actorPlayerId!==actorPlayerId||hold.to!==to)return false;
-    monopolyGhost3DLocalWalkHold=null;
-    return true;
-  }
-  function monopolyGhost3DFailClosedOnline(generation){
-    if(generation!==undefined&&generation!==monopolyGhost3DGeneration)return false;
-    const staleHost=monopolyGhost3DHost;
-    monopolyGhost3DHost=null;
-    const invalidatedGeneration=++monopolyGhost3DGeneration;
-    monopolyGhost3DNextAdapterEpoch();
-    monopolyGhost3DQueued=false;
-    monopolyGhost3DRecoverQueued=false;
-    monopolyGhost3DAuthorityMeta=null;
-    monopolyGhost3DPresentationFrame=null;
-    monopolyGhost3DPendingMotion=null;
-    monopolyGhost3DLocalWalkHold=null;
-    monopolyGhost3DLastFingerprint='';
-    monopolyGhost3DAcceptedRevision=null;
-    if(staleHost&&typeof staleHost.dispose==='function'){
-      try{staleHost.dispose();}catch(_error){}
-    }
-    if(monopolyGhost3DSlot&&monopolyGhost3DSlot.dataset)monopolyGhost3DSlot.dataset.ghost3dGeneration=String(invalidatedGeneration);
-    monopolyGhost3DSetReady(false,invalidatedGeneration);
-    return false;
-  }
-  function monopolyGhost3DPublicCharacter(view){
-    const character=view&&view.character&&typeof view.character==='object'?view.character:null;
-    const defaults={body:'body-paper-01',face:'face-dot-01',hair:'hair-none',top:'top-hoodie-01',bottom:'bottom-shorts-01',footwear:'footwear-sneakers-01',accessory:'accessory-none'};
-    if(!character)return {schemaVersion:'player-character-v1',characterId:'character-base-01',slots:defaults};
-    const slots=character.slots&&typeof character.slots==='object'?character.slots:{};
-    const publicSlots={...defaults};
-    ['body','face','hair','top','bottom','footwear','accessory'].forEach(slot=>{
-      if(typeof slots[slot]==='string')publicSlots[slot]=slots[slot];
-    });
-    return {
-      schemaVersion:typeof character.schemaVersion==='string'?character.schemaVersion:'player-character-v1',
-      characterId:typeof character.characterId==='string'?character.characterId:'character-base-01',
-      slots:publicSlots,
-    };
-  }
-  function monopolyGhost3DOrigin(){
-    const meta=monopolyGhost3DAuthorityMeta;
-    if(!meta)return opts.online?null:{source:'local'};
-    if(!monopolyGhost3DValidAuthorityMeta(meta))return null;
-    return {source:meta.source,matchId:meta.matchId,authorityRevision:meta.authorityRevision,stateHash:meta.stateHash};
-  }
-  function monopolyGhost3DPlayerState(view,player,seatId){
-    const candidate=view&&typeof view.state==='string'?view.state:'';
-    if(MONOPOLY_GHOST3D_PLAYER_STATES.has(candidate))return candidate;
-    if(player.alive===false)return 'bankrupt';
-    if(over===true)return seatId===winner?'winner':'settled';
-    if(seatId!==cur)return 'idle';
-    if(phase==='moving'||phase==='resolving')return 'moving';
-    if(phase==='chance')return 'event';
-    if(phase==='buy')return 'purchase';
-    if(phase==='auction')return 'auction';
-    return 'turn';
-  }
-  function monopolyGhost3DFacing(view){
-    const candidate=view&&typeof view.facing==='string'?view.facing:'';
-    return MONOPOLY_GHOST3D_FACINGS.has(candidate)?candidate:'north';
-  }
-  function monopolyGhost3DFrame(){
-    if(players.length<2||players.length>5||!Number.isInteger(cur)||cur<0||cur>=players.length||!MONOPOLY_GHOST3D_PHASES.has(phase)||!MONOPOLY_GHOST3D_PROCESS_STAGES.has(monopolyWaveCProcess))return null;
-    const origin=monopolyGhost3DOrigin();
-    if(opts.online&&!origin)return null;
-    const localHold=!opts.online&&monopolyGhost3DLocalWalkHold&&monopolyGhost3DLocalWalkHold.generation===monopolyGhost3DGeneration?monopolyGhost3DLocalWalkHold:null;
-    const presentation=monopolyGhost3DPresentationFrame&&Array.isArray(monopolyGhost3DPresentationFrame.players)?monopolyGhost3DPresentationFrame.players:[];
-    const views=characterViews(monopolyGhost3DPresentationFrame?'snapshot':uiSource);
-    const projectedPlayers=[];
-    for(let seatId=0;seatId<players.length;seatId++){
-      const player=players[seatId];
-      if(!player||typeof player!=='object')return null;
-      const planned=presentation[seatId]||null;
-      const view=planned&&planned.presentation?planned.presentation:(views[seatId]||null);
-      const authorityPosition=monopolyGhost3DPosition(planned&&planned.authorityPosition!==undefined?planned.authorityPosition:player.pos);
-      const heldDisplayPosition=localHold&&localHold.actorPlayerId===seatId&&authorityPosition===localHold.to?localHold.from:undefined;
-      const displayPosition=monopolyGhost3DPosition(heldDisplayPosition!==undefined?heldDisplayPosition:(planned&&planned.displayPosition!==undefined?planned.displayPosition:player.visualPos));
-      if(authorityPosition===null||displayPosition===null)return null;
-      projectedPlayers.push({
-        playerId:seatId,
-        seatId,
-        authorityPosition,
-        displayPosition,
-        visible:player.alive!==false,
-        state:monopolyGhost3DPlayerState(view,player,seatId),
-        facing:monopolyGhost3DFacing(view),
-        publicCharacter:monopolyGhost3DPublicCharacter(view),
-        renderMode:'code-fallback',
-      });
-    }
-    const cells=[];
-    for(let index=0;index<CELLS.length;index++){
-      const cell=CELLS[index];
-      const owner=cell&&cell.type==='prop'&&Number.isInteger(cell.owner)?cell.owner:-1;
-      if(!cell||!['go','chance','prop','tax','rest'].includes(cell.type)||owner<-1||owner>=players.length)return null;
-      cells.push({index:index,type:cell.type,ownerPlayerId:owner});
-    }
-    const ranking=placement();
-    return {
-      kind:'monopoly-3d-frame-v1',
-      origin,
-      board:{cellCount:CELLS.length,cells:cells},
-      players:projectedPlayers,
-      turn:{activePlayerId:cur,phase},
-      process:{stage:monopolyWaveCProcess},
-      auction:{active:phase==='auction'&&!!(auctionState&&auctionState.auction)},
-      standings:ranking.map((playerId,index)=>({playerId,rank:index+1})),
-      terminal:over===true,
-      winnerPlayerId:over===true&&Number.isInteger(winner)&&winner>=0&&winner<players.length?winner:-1,
-    };
-  }
-  function monopolyGhost3DMotionFromPresentation(frame,source){
-    const animation=frame&&frame.animation;
-    if(source!=='live'||!animation||animation.mode!=='step'||monopolyGhost3DReducedMotion()||over===true)return null;
-    const motion=monopolyGhost3DTokenMoved(animation.player,animation.from,animation.to,animation.steps,animation.direction);
-    const player=motion&&players[motion.actorPlayerId];
-    const planned=motion&&Array.isArray(frame.players)?frame.players[motion.actorPlayerId]:null;
-    if(!motion||!player||monopolyGhost3DPosition(player.pos)!==motion.to||!planned||
-      monopolyGhost3DPosition(planned.authorityPosition)!==motion.to||
-      monopolyGhost3DPosition(planned.displayPosition)!==motion.from)return null;
-    return motion;
-  }
-  function monopolyGhost3DSnapPresentationFrame(frame){
-    if(!frame||!Array.isArray(frame.players))return null;
-    return {...frame,players:frame.players.map(player=>player&&typeof player==='object'?{...player,displayPosition:player.authorityPosition}:player),animation:{mode:'snap'}};
-  }
-  function publishMonopolyGhost3DFrame(generation){
-    if(!monopolyGhost3DCurrent(generation)||!monopolyGhost3DHost||typeof monopolyGhost3DHost.apply!=='function')return false;
-    const next=monopolyGhost3DFrame();
-    if(!next){
-      monopolyGhost3DPendingMotion=null;
-      if(opts.online)return monopolyGhost3DFailClosedOnline(generation);
-      monopolyGhost3DSetReady(false,generation);
-      return false;
-    }
-    const fingerprint=JSON.stringify(next);
-    if(fingerprint===monopolyGhost3DLastFingerprint&&!monopolyGhost3DPendingMotion)return false;
-    const revision=++monopolyGhost3DPresentationRevision;
-    const frame=monopolyGhost3DFreeze({...next,revision});
-    let result;
-    try{result=monopolyGhost3DHost.apply({type:'frame',frame});}catch(_error){return false;}
-    if(!result||result.accepted!==true)return false;
-    monopolyGhost3DLastFingerprint=fingerprint;
-    monopolyGhost3DAcceptedRevision=revision;
-    const motion=monopolyGhost3DPendingMotion;
-    monopolyGhost3DPendingMotion=null;
-    let hostSnapshot=null;
-    try{hostSnapshot=typeof monopolyGhost3DHost.snapshot==='function'?monopolyGhost3DHost.snapshot():null;}catch(_error){}
-    const rendererCanAnimate=!hostSnapshot||(!hostSnapshot.suspended&&!hostSnapshot.usingFallback&&hostSnapshot.adapterReady!==false);
-    if(motion&&!frame.terminal&&!monopolyGhost3DReducedMotion()&&rendererCanAnimate){
-      const event={...motion,revision,eventId:generation+':'+revision+':'+motion.actorPlayerId+':'+motion.from+':'+motion.to};
-      try{monopolyGhost3DHost.apply({type:'motion',event});}catch(_error){}
-    }
-    // Terminal is a presentation event, not a second authority frame.  It is
-    // delivered after the accepted terminal snapshot so the renderer can
-    // choose a winner/result shot while reduced-motion still settles the same
-    // readable pose immediately.
-    if(frame.terminal&&rendererCanAnimate){
-      const event={
-        type:'terminal',
-        revision,
-        winnerPlayerId:frame.winnerPlayerId,
-        eventId:generation+':'+revision+':terminal',
-      };
-      try{monopolyGhost3DHost.apply({type:'motion',event});}catch(_error){}
-    }
-    return true;
-  }
-  function queueMonopolyGhost3DFrame(){
-    if(!monopolyGhost3DActive||!monopolyGhost3DHost||monopolyGhost3DQueued||monopolyDestroyed||opts.destroyed)return;
-    const generation=monopolyGhost3DGeneration;
-    monopolyGhost3DQueued=true;
-    Promise.resolve().then(()=>{
-      monopolyGhost3DQueued=false;
-      publishMonopolyGhost3DFrame(generation);
-    });
-  }
-  function monopolyGhost3DContextLost(reason,generation,adapterEpoch){
-    if(!monopolyGhost3DAdapterCurrent(generation,adapterEpoch)||!monopolyGhost3DHost||typeof monopolyGhost3DHost.apply!=='function')return false;
-    monopolyGhost3DNextAdapterEpoch();
-    monopolyGhost3DSetReady(false,generation);
-    monopolyGhost3DPendingMotion=null;
-    monopolyGhost3DLocalWalkHold=null;
-    const safeReason=typeof reason==='string'?reason.slice(0,96):'renderer';
-    let result=null;
-    try{result=monopolyGhost3DHost.apply({type:'context-lost',reason:safeReason});}catch(_error){}
-    queueMonopolyGhost3DRecovery();
-    return result;
-  }
-  function monopolyGhost3DSupported(module){
-    if(!module||typeof module.isMonopoly3DSupported!=='function')return false;
-    try{return module.isMonopoly3DSupported()===true;}catch(_error){return false;}
-  }
-  function monopolyGhost3DCreateAdapter(module,generation){
-    const create=module&&typeof module.createMonopoly3DAdapter==='function'?module.createMonopoly3DAdapter:null;
-    if(!create||!monopolyGhost3DCurrent(generation))return null;
-    const adapterEpoch=monopolyGhost3DNextAdapterEpoch();
-    try{
-      return create({
-        mountElement:monopolyGhost3DSlot,
-        onContextLost:reason=>monopolyGhost3DContextLost(reason,generation,adapterEpoch),
-        onError:()=>monopolyGhost3DAdapterCurrent(generation,adapterEpoch)&&monopolyGhost3DSetReady(false,generation),
-        onReady:()=>monopolyGhost3DAdapterCurrent(generation,adapterEpoch)&&monopolyGhost3DSetReady(!opts.online||!!monopolyGhost3DOrigin(),generation),
-        quality:monopolyGhost3DInitialQuality(),
-        reducedMotion:monopolyGhost3DReducedMotion(),
-      });
-    }catch(_error){return null;}
-  }
-  function queueMonopolyGhost3DRecovery(){
-    if(!monopolyGhost3DActive||monopolyGhost3DRecoverQueued||!monopolyGhost3DModule||!monopolyGhost3DHost)return;
-    const generation=monopolyGhost3DGeneration;
-    monopolyGhost3DRecoverQueued=true;
-    Promise.resolve().then(()=>{
-      monopolyGhost3DRecoverQueued=false;
-      if(!monopolyGhost3DCurrent(generation)||!monopolyGhost3DHost||!monopolyGhost3DSupported(monopolyGhost3DModule))return;
-      const adapter=monopolyGhost3DCreateAdapter(monopolyGhost3DModule,generation);
-      if(!adapter)return;
-      let result=null;
-      try{result=monopolyGhost3DHost.apply({type:'recover',adapter});}catch(_error){}
-      if(!result||result.accepted!==true){
-        monopolyGhost3DNextAdapterEpoch();
-        try{if(typeof adapter.dispose==='function')adapter.dispose();}catch(_error){}
-        monopolyGhost3DSetReady(false,generation);
-      }else queueMonopolyGhost3DFrame();
-    });
-  }
-  function loadMonopolyGhost3DModule(){
-    if(!monopolyGhost3DActive||!monopolyGhost3DHost||!monopolyGhost3DSlot||monopolyDestroyed||opts.destroyed)return;
-    if(monopolyGhost3DModule){queueMonopolyGhost3DRecovery();return;}
-    if(monopolyGhost3DImportPending)return;
-    const generation=monopolyGhost3DGeneration;
-    monopolyGhost3DImportPending=true;
-    const root=typeof globalThis!=='undefined'?globalThis:(typeof window!=='undefined'?window:null);
-    const GameModuleLoader=root&&root.GameModuleLoader;
-    if(!GameModuleLoader||typeof GameModuleLoader.load!=='function'){
-      monopolyGhost3DImportPending=false;
-      if(monopolyGhost3DCurrent(generation))monopolyGhost3DSetReady(false,generation);
-      return;
-    }
-    try{if(typeof GameModuleLoader.prefetch==='function')GameModuleLoader.prefetch('monopoly');}catch(_error){}
-    Promise.resolve(GameModuleLoader.load('monopoly',{resource:'renderer'})).then(result=>{
-      monopolyGhost3DImportPending=false;
-      if(monopolyDestroyed||opts.destroyed||!monopolyGhost3DSlot)return;
-      const module=result&&result.ok===true?result.module:null;
-      if(!module){if(monopolyGhost3DCurrent(generation))monopolyGhost3DSetReady(false,generation);return;}
-      monopolyGhost3DModule=module;
-      if(!monopolyGhost3DCurrent(generation)){
-        if(monopolyGhost3DHost)loadMonopolyGhost3DModule();
-        return;
-      }
-      if(monopolyGhost3DSupported(module))queueMonopolyGhost3DRecovery();
-      else monopolyGhost3DSetReady(false,generation);
-    }).catch(()=>{
-      monopolyGhost3DImportPending=false;
-      if(monopolyGhost3DCurrent(generation))monopolyGhost3DSetReady(false,generation);
-    });
-  }
-  function restartMonopolyGhost3DHost(_reason){
-    if(!monopolyGhost3DActive||monopolyDestroyed||opts.destroyed||!monopolyGhost3DSlot)return false;
-    const factory=monopolyGhost3DFactory();
-    if(!factory)return false;
-    const previous=monopolyGhost3DHost;
-    const generation=++monopolyGhost3DGeneration;
-    monopolyGhost3DNextAdapterEpoch();
-    monopolyGhost3DQueued=false;
-    monopolyGhost3DRecoverQueued=false;
-    monopolyGhost3DLastFingerprint='';
-    monopolyGhost3DAcceptedRevision=null;
-    monopolyGhost3DPendingMotion=null;
-    monopolyGhost3DLocalWalkHold=null;
-    monopolyGhost3DSetReady(false,generation);
-    if(previous&&typeof previous.dispose==='function'){
-      try{previous.dispose();}catch(_error){}
-    }
-    try{
-      monopolyGhost3DHost=factory.create({
-        quality:monopolyGhost3DInitialQuality(),
-        reducedMotion:monopolyGhost3DReducedMotion(),
-        onFailure:()=>monopolyGhost3DHostFailed(generation),
-      });
-    }catch(_error){
-      monopolyGhost3DHost=null;
-      return false;
-    }
-    if(!monopolyGhost3DHost||typeof monopolyGhost3DHost.apply!=='function'){
-      monopolyGhost3DHost=null;
-      return false;
-    }
-    if(monopolyGhost3DSlot.dataset)monopolyGhost3DSlot.dataset.ghost3dGeneration=String(generation);
-    installMonopolyGhost3DListeners();
-    queueMonopolyGhost3DFrame();
-    loadMonopolyGhost3DModule();
-    return true;
-  }
-  function disposeMonopolyGhost3DBridge(){
-    monopolyGhost3DGeneration++;
-    monopolyGhost3DNextAdapterEpoch();
-    monopolyGhost3DQueued=false;
-    monopolyGhost3DRecoverQueued=false;
-    monopolyGhost3DPendingMotion=null;
-    monopolyGhost3DLocalWalkHold=null;
-    monopolyGhost3DLastFingerprint='';
-    monopolyGhost3DAcceptedRevision=null;
-    monopolyGhost3DPresentationFrame=null;
-    const host=monopolyGhost3DHost;
-    monopolyGhost3DHost=null;
-    if(host&&typeof host.dispose==='function'){
-      try{host.dispose();}catch(_error){}
-    }
-    syncMonopolyGhost3DRollControl(false);
-    releaseMonopolyGhost3DListeners();
-    if(monopolyGhost3DSlot){
-      monopolyGhost3DSlot.dataset.ghost3dReady='false';
-      if(typeof monopolyGhost3DSlot.remove==='function')monopolyGhost3DSlot.remove();
-      else if(monopolyGhost3DSlot.parentNode&&typeof monopolyGhost3DSlot.parentNode.removeChild==='function')monopolyGhost3DSlot.parentNode.removeChild(monopolyGhost3DSlot);
-    }
-    if(monopolyWaveBBoardFrame&&monopolyWaveBBoardFrame.dataset)delete monopolyWaveBBoardFrame.dataset.ghost3dReady;
-    monopolyGhost3DSlot=null;
-  }
-  function syncMonopolyGhost3DBridge(){
-    const enabled=monopolyGhost3DEnabled();
-    if(!enabled){
-      const active=monopolyGhost3DActive||!!monopolyGhost3DHost||!!monopolyGhost3DSlot||monopolyGhost3DListeners.length>0;
-      monopolyGhost3DActive=false;
-      if(active)disposeMonopolyGhost3DBridge();
-      return false;
-    }
-    monopolyGhost3DActive=true;
-    const slot=mountMonopolyGhost3DSlot()||monopolyGhost3DSlot;
-    if(!slot)return false;
-    if(opts.online&&!monopolyGhost3DValidAuthorityMeta(monopolyGhost3DAuthorityMeta)){
-      monopolyGhost3DSetReady(false,monopolyGhost3DGeneration);
-      return false;
-    }
-    if(!monopolyGhost3DHost)restartMonopolyGhost3DHost('mount');
-    return !!monopolyGhost3DHost;
   }
   function clearMonopolyWaveBTransient(removeChance){
     stopStageCountdown();
@@ -1264,6 +756,80 @@ function gameMonopoly(area, extra, n, opts){
     monopolyPresentationResizeObserver=null;
   }
 
+  function clearMonopolyFinalArtVfx(){
+    monopolyFinalArtVfxSeq++;
+    monopolyFinalArtVfxRole=null;
+    if(monopolyFinalArtLayers&&monopolyFinalArtLayers.vfxHost&&monopolyFinalArtLayers.vfxHost.parentNode){
+      monopolyFinalArtLayers.vfxHost.remove();
+      monopolyFinalArtLayers.vfxHost=null;
+    }
+  }
+
+  function renderMonopolyFinalArtLayers(){
+    if(!monopolyFinalArtActive||!monopolyFinalArtLayers)return null;
+    const host=el('div','monopoly-final-art-layers');
+    host.setAttribute('aria-hidden','true');
+    host.dataset.monopolyFinalArt=monopolyFinalArtState;
+    ['background','midground','foreground'].forEach((layer,index)=>{
+      const url=monopolyFinalArtLayers[layer];
+      if(!url)return;
+      const image=el('img','monopoly-final-art-layer monopoly-final-art-layer-'+layer);
+      image.alt=''; image.decoding='async'; image.loading='eager'; image.src=url;
+      image.dataset.monopolyFinalArtLayer=layer;
+      image.style.zIndex=String(index);
+      host.appendChild(image);
+    });
+    board.appendChild(host);
+    monopolyFinalArtLayers.host=host;
+    return host;
+  }
+
+  function showMonopolyFinalArtVfx(role){
+    if(!monopolyFinalArtActive||!monopolyFinalArtLayers||!monopolyFinalArtLayers.vfx)return false;
+    const url=monopolyFinalArtLayers.vfx[role];
+    if(!url)return false;
+    monopolyFinalArtVfxRole=role;
+    const host=monopolyFinalArtLayers.host||renderMonopolyFinalArtLayers();
+    if(!host)return false;
+    let vfxHost=monopolyFinalArtLayers.vfxHost;
+    if(!vfxHost){
+      vfxHost=el('div','monopoly-final-art-vfx-host');
+      vfxHost.setAttribute('aria-hidden','true');
+      host.appendChild(vfxHost);
+      monopolyFinalArtLayers.vfxHost=vfxHost;
+    }
+    const node=el('img','monopoly-final-art-vfx');
+    node.alt='';node.decoding='async';node.src=url;node.dataset.monopolyFinalArtVfx=role;
+    vfxHost.appendChild(node);
+    const seq=++monopolyFinalArtVfxSeq;
+    later(()=>{if(seq===monopolyFinalArtVfxSeq&&node.parentNode)node.remove();},prefersReducedMotion()?220:900);
+    return true;
+  }
+
+  function initMonopolyFinalArtSurface(){
+    if(!monopolyFinalArtRequested||typeof resolveMonopolyFinalArtUrl!=='function')return;
+    const request=++monopolyFinalArtRequest,reduced=prefersReducedMotion();
+    const boardRoles=['background','midground','foreground'].map(id=>'board-'+id);
+    const vfxRoles=['landing','opportunity','auction','purchase','payment','tax','bankruptcy','turn-result','final-result'].map(id=>'vfx-'+id);
+    Promise.all([
+      ...boardRoles.map(role=>resolveMonopolyFinalArtUrl(role,reduced)),
+      ...vfxRoles.map(role=>resolveMonopolyFinalArtUrl(role,reduced)),
+    ]).then(urls=>{
+      if(request!==monopolyFinalArtRequest||monopolyDestroyed||opts.destroyed)return;
+      const boardUrls=urls.slice(0,3),vfxUrls=urls.slice(3);
+      if(boardUrls.some(url=>!url)||vfxUrls.some(url=>!url)){
+        monopolyFinalArtState='fallback';monopolyFinalArtActive=false;renderBoard('fallback');return;
+      }
+      const probes=boardUrls.map(url=>new Promise(resolve=>{const image=monopolyFinalArtImageFactory();if(!image){resolve(false);return;}image.onload=()=>resolve(true);image.onerror=()=>resolve(false);image.src=url;}));
+      return Promise.all(probes).then(results=>{
+        if(request!==monopolyFinalArtRequest||monopolyDestroyed||opts.destroyed)return;
+        if(results.some(value=>!value)){monopolyFinalArtState='fallback';monopolyFinalArtActive=false;renderBoard('fallback');return;}
+        monopolyFinalArtLayers={background:boardUrls[0],midground:boardUrls[1],foreground:boardUrls[2],vfx:Object.fromEntries(vfxRoles.map((role,index)=>[role.slice(4),vfxUrls[index]])),host:null,vfxHost:null};
+        monopolyFinalArtActive=true;monopolyFinalArtState='active';renderBoard('live');
+      });
+    }).catch(()=>{if(request===monopolyFinalArtRequest&&!monopolyDestroyed){monopolyFinalArtState='fallback';monopolyFinalArtActive=false;renderBoard('fallback');}});
+  }
+
   function monopolyOutcomeOptions(){
     const order=placement();
     const terminalOnly = spectator || (!opts.online && !(opts.ai && typeof opts.ai.has === 'function' && opts.ai.size > 0));
@@ -1295,18 +861,7 @@ function gameMonopoly(area, extra, n, opts){
     if(!over||monopolyOutcomeVisible||typeof present!=='function')return false;
     monopolyOutcomePending=present;
     if(monopolyOutcomeScheduled)return true;
-    const quality=monopolyGhost3DInitialQuality();
-    const rendererReady=monopolyGhost3DActive&&monopolyGhost3DSlot&&monopolyGhost3DSlot.dataset&&monopolyGhost3DSlot.dataset.ghost3dReady==='true';
-    const delay=rendererReady&&!prefersReducedMotion()&&quality!=='LOW'?(quality==='HIGH'?520:420):0;
-    if(delay<=0)return revealMonopolyOutcome();
-    monopolyOutcomeScheduled=true;
-    const outcomeEpoch=epoch;
-    monopolyOutcomeTimer=setTimeout(()=>{
-      monopolyOutcomeTimer=null;
-      if(outcomeEpoch===epoch)revealMonopolyOutcome();
-    },delay);
-    if(monopolyOutcomeTimer&&typeof monopolyOutcomeTimer.unref==='function')monopolyOutcomeTimer.unref();
-    return true;
+    return revealMonopolyOutcome();
   }
   function clearMonopolyOutcomeTimer(){
     if(monopolyOutcomeTimer!==null)clearTimeout(monopolyOutcomeTimer);
@@ -1318,15 +873,13 @@ function gameMonopoly(area, extra, n, opts){
   function renderBoard(source){
     if(source)uiSource=source;
     syncMonopolyWaveBPresentation();
-    const w = monopolyWaveBBoardContentWidth() || area.clientWidth || 520;
-    const h = Number(area.clientHeight) || 0;
+    const preservedVfxRole=monopolyFinalArtVfxRole;
+    const arenaSize = typeof measureGameStageArena === 'function' ? measureGameStageArena(area,520,0) : {width:Number(area.clientWidth)||520,height:Number(area.clientHeight)||0};
+    const w = monopolyWaveBBoardContentWidth() || arenaSize.width || 520;
+    const h = arenaSize.height;
     const heightLimit = h > 320 ? Math.max(260, Math.min(680, h - 16)) : 640;
     S = Math.min(w, heightLimit);
     const density=applyMonopolyWaveBLayoutDensity(S);
-    // The optional renderer has no bearing on the permanent DOM layout. Both
-    // paths only reuse the one existing roll button and its existing handler.
-    const ghost3DReady=!!(monopolyGhost3DSlot&&monopolyGhost3DSlot.dataset&&monopolyGhost3DSlot.dataset.ghost3dReady==='true');
-    syncMonopolyGhost3DRollControl(ghost3DReady);
     if (board.style && typeof board.style.setProperty === 'function') board.style.setProperty('--monopoly-wave-c-board-size', S + 'px');
     board.style.width = S + 'px'; board.style.height = S + 'px';
     const tabletop = typeof tabletopArtEnabled === 'function' && tabletopArtEnabled();
@@ -1337,6 +890,16 @@ function gameMonopoly(area, extra, n, opts){
       ? 'radial-gradient(circle at 50% 45%,rgba(255,255,255,.82),rgba(236,253,245,.72) 42%,rgba(22,101,52,.34)),repeating-linear-gradient(105deg,#5f9f55 0 5px,#4f8e49 5px 9px)'
       : 'radial-gradient(circle at 50% 45%,rgba(255,255,255,.92),rgba(255,247,237,.88) 48%,rgba(146,64,14,.24)),repeating-linear-gradient(90deg,#c99b6b 0 8px,#b98555 8px 16px)';
     board.innerHTML = '';
+    if(monopolyFinalArtLayers){
+      // board.innerHTML invalidates the previous hosts. Clear their references
+      // before mounting again so VFX never targets a detached DOM subtree.
+      monopolyFinalArtLayers.host=null;
+      monopolyFinalArtLayers.vfxHost=null;
+    }
+    if(monopolyFinalArtActive){
+      renderMonopolyFinalArtLayers();
+      if(preservedVfxRole)showMonopolyFinalArtVfx(preservedVfxRole);
+    }
     rollBtn.disabled = !authorityReady || spectator || over || phase !== 'roll' || (opts.online && cur !== opts.myIdx) || (opts.ai && opts.ai.has(cur));
     const c = S/2, R = S*0.40;
     const ang = i => (-90 + i * 360/CELLS.length) * Math.PI/180;
@@ -1398,7 +961,8 @@ function gameMonopoly(area, extra, n, opts){
       board.appendChild(d);
     });
     const projectedCharacters=characterViews(source);
-    // 棋子标记：权威位置只经纯表现模块消费；未审批 ART-036 始终使用代码原生 fallback。
+    // 棋子标记：权威位置只经纯表现模块消费；已授权图层只改变表现层，
+    // 任何 manifest/解码失败仍由 playerCharacterLayeredNode 保留同族与代码 fallback。
     players.forEach((p, pi) => {
       if (!p.alive) return;
       const view=projectedCharacters[pi]||null;
@@ -1408,11 +972,18 @@ function gameMonopoly(area, extra, n, opts){
       const m = el('div','m-marker monopoly-character-token');
       if(m.style&&typeof m.style.setProperty==='function')m.style.setProperty('--monopoly-token-color',PLAYER_COLORS[pi]);else if(m.style)m.style['--monopoly-token-color']=PLAYER_COLORS[pi];
       const skin = tokenSkin(pi);
+      let renderedLayered=false;
       if(skin==='car'){m.classList.add('is-car');m.textContent='🚗';}
-      else{const fallback=el('span','monopoly-character-fallback',String(pi+1));fallback.setAttribute('aria-hidden','true');m.appendChild(fallback);}
+      else{
+        const layered=typeof playerCharacterLayeredNode==='function'&&view&&view.character
+          ? playerCharacterLayeredNode(view.character,{size:'128',className:'monopoly-player-character-art',fallbackText:String(pi+1),onRendererState:state=>{m.dataset.characterRenderer=state;}})
+          : null;
+        if(layered){renderedLayered=true;m.appendChild(layered);}
+        else{const fallback=el('span','monopoly-character-fallback',String(pi+1));fallback.setAttribute('aria-hidden','true');m.appendChild(fallback);}
+      }
       const tokenTitle=t('monopoly_token_title',pi+1,t(skin==='car'?'monopoly_token_car':'monopoly_token_character'));
       m.title=tokenTitle;m.setAttribute('role','img');m.setAttribute('aria-label',tokenTitle);
-      if(view){m.dataset.characterState=view.state;m.dataset.characterFacing=view.facing;m.dataset.characterTransition=view.transition;m.dataset.characterRenderer=view.renderMode;}
+      if(view){m.dataset.characterState=view.state;m.dataset.characterFacing=view.facing;m.dataset.characterTransition=view.transition;m.dataset.characterRenderer=renderedLayered&&m.children&&m.children[0]&&m.children[0].dataset?m.children[0].dataset.playerCharacterRenderer:view.renderMode;}
       m.style.left = (x + Math.cos(a)*7) + 'px';
       m.style.top = (y + Math.sin(a)*7) + 'px';
       if(monopolyWaveBActive){
@@ -1443,7 +1014,6 @@ function gameMonopoly(area, extra, n, opts){
       queueMonopolyOutcome(()=>showVictoryOverlay(area,monopolyOutcomeOptions()));
     }
     renderMoney();
-    queueMonopolyGhost3DFrame();
   }
   function renderMoney(){
     moneyRow.innerHTML = '';
@@ -1511,6 +1081,7 @@ function gameMonopoly(area, extra, n, opts){
     }
     p.pos = npos;
     audioCue('monopoly_land', { actionId:'monopoly-local-' + epoch + '-' + (++monopolyAudioSequence) + '-land', reaction:'move' }, .65);
+    showMonopolyFinalArtVfx('landing');
     setMonopolyWaveCProcess('walk', Math.abs(signed));
     if (prefersReducedMotion()){
       p.visualPos = npos;
@@ -1522,16 +1093,12 @@ function gameMonopoly(area, extra, n, opts){
     }
     const direction = signed < 0 ? -1 : 1;
     p.motionDirection = direction;
-    // This is deliberately after p.pos has committed.  The optional renderer
-    // never derives a move from dice or from the DOM interpolation below.
-    monopolyGhost3DBeginCommittedLocalWalk(pi,old,npos,signed);
     const total = Math.abs(signed);
     let step = 0;
     const motionDelay = total ? Math.max(55, Math.min(140, Math.floor(760 / total))) : 0;
     const advance = () => {
       if (step >= total){
         p.visualPos = npos;
-        monopolyGhost3DReleaseLocalWalk(pi,npos);
         renderBoard();
         setStatus(t('monopoly_landed',pi+1,monopolyCellName(npos)));
         setMonopolyWaveCProcess('land', npos);
@@ -1620,6 +1187,7 @@ function gameMonopoly(area, extra, n, opts){
         p.money -= cell.price; cell.owner = pi; p.props.push(p.pos);
         audioCue('monopoly_purchase', { actionId:'monopoly-local-' + epoch + '-' + (++monopolyAudioSequence) + '-purchase', reaction:'score' }, .9);
         toast(t('monopoly_bought',monopolyCellName(cell)));
+        showMonopolyFinalArtVfx('purchase');
         showCashChange(pi, -cell.price, t('monopoly_purchase_reason',monopolyCellName(cell)));
       } else {
         toast(t('monopoly_insufficient_cash'));
@@ -1636,16 +1204,19 @@ function gameMonopoly(area, extra, n, opts){
     const p = players[pi];
     p.money -= amt;
     if (Number.isFinite(amt) && amt > 0) audioCue('monopoly_pay', { actionId:'monopoly-local-' + epoch + '-' + (++monopolyAudioSequence) + '-pay', reaction:'tap' }, .75);
+    showMonopolyFinalArtVfx(why&&String(why).toLowerCase().includes('税')?'tax':'payment');
     showCashChange(pi, -amt, why || t('monopoly_cash_change'));
     if (p.money < 0){
       p.alive = false;
       p.props.forEach(idx => CELLS[idx].owner = -1);
       p.props = [];
+      showMonopolyFinalArtVfx('bankruptcy');
       audioCue('monopoly_bankrupt', { actionId:'monopoly-local-' + epoch + '-' + (++monopolyAudioSequence) + '-bankrupt', reaction:'capture' }, 1);
       toast(t('monopoly_bankrupt_toast',pi+1));
       const alive = aliveList();
       if (alive.length === 1){
         over = true; winner = alive[0];
+        emitMonopolyTerminal25D();
         creditGame();
         renderBoard();
         setStatus(t('result_winner',winner+1), true);
@@ -1664,6 +1235,7 @@ function gameMonopoly(area, extra, n, opts){
     const idx = chanceDeck.shift();
     chanceDeck.push(idx);
     const card = CHANCE[idx];
+    showMonopolyFinalArtVfx('opportunity');
     const modal = el('div','chance-modal');
     const box = el('div','chance-card');
     if(monopolyWaveBActive){
@@ -1726,7 +1298,7 @@ function gameMonopoly(area, extra, n, opts){
           q.props = [];
           toast(t('monopoly_bankrupt_toast',qi+1));
           const alive = aliveList();
-          if (alive.length === 1){ over = true; winner = alive[0]; ended = true; creditGame(); renderBoard(); setStatus(t('result_winner',winner+1), true); notifyIdle(); }
+          if (alive.length === 1){ over = true; winner = alive[0]; ended = true; emitMonopolyTerminal25D(); creditGame(); renderBoard(); setStatus(t('result_winner',winner+1), true); notifyIdle(); }
         }
       });
       if (ended) return;
@@ -1749,6 +1321,7 @@ function gameMonopoly(area, extra, n, opts){
   function nextTurn(){
     if (over) return;
     setMonopolyWaveCProcess('turn-end');
+    showMonopolyFinalArtVfx('turn-result');
     const previous=cur;
     phase = 'roll';
     actionRow.innerHTML = '';
@@ -1768,6 +1341,8 @@ function gameMonopoly(area, extra, n, opts){
     creditGame();
     const order = placement();
     winner = order[0];
+    showMonopolyFinalArtVfx('final-result');
+    emitMonopolyTerminal25D();
     renderBoard();
     const lines = order.map((i, k) => t('monopoly_settlement_line',k+1,i+1,netWorth(i),players[i].money,players[i].alive ? '' : t('monopoly_bankrupt_suffix')));
     const overlayAlreadyVisible=monopolyOutcomeVisible;
@@ -1799,24 +1374,30 @@ function gameMonopoly(area, extra, n, opts){
     }
     if(types.has('move')||types.has('land')){
       monopolyAuthorityCue(value,'monopoly_land',++cueIndex,'move',.65);emitted=true;
+      showMonopolyFinalArtVfx('landing');
     }
     if(types.has('purchase')){
       monopolyAuthorityCue(value,'monopoly_purchase',++cueIndex,'score',.9);emitted=true;
+      showMonopolyFinalArtVfx('purchase');
     }
     if(types.has('auction_open')||types.has('auction_bid')||types.has('auction_closed')){
       monopolyAuthorityCue(value,'monopoly_auction',++cueIndex,'tap',.8);emitted=true;
+      showMonopolyFinalArtVfx('auction');
     }
     const afterPlayers=value&&value.state&&Array.isArray(value.state.players)?value.state.players:[];
     const spent=Array.isArray(beforePlayers)&&beforePlayers.some((player,id)=>player&&afterPlayers[id]&&Number(afterPlayers[id].money)<Number(player.money));
     if(spent&&!types.has('purchase')&&!types.has('auction_closed')){
       monopolyAuthorityCue(value,'monopoly_pay',++cueIndex,'tap',.75);emitted=true;
+      showMonopolyFinalArtVfx('payment');
     }
     const bankrupt=Array.isArray(beforePlayers)&&beforePlayers.some((player,id)=>player&&player.alive!==false&&afterPlayers[id]&&afterPlayers[id].alive===false);
-    if(bankrupt){monopolyAuthorityCue(value,'monopoly_bankrupt',++cueIndex,'capture',1);emitted=true;}
+    if(bankrupt){monopolyAuthorityCue(value,'monopoly_bankrupt',++cueIndex,'capture',1);showMonopolyFinalArtVfx('bankruptcy');emitted=true;}
+    if(transition.action==='turn_end'){showMonopolyFinalArtVfx('turn-result');}
     return emitted;
   }
   function renderAuctionActions(){
     if(!auctionState||!auctionState.auction||auctionState.auction.status!=='open')return;
+    showMonopolyFinalArtVfx('auction');
     const auction=auctionState.auction,cell=CELLS[auction.propertyId];phase='auction';actionRow.innerHTML='';
     setMonopolyWaveCProcess('auction', auction.propertyId);
     setStatus(t('monopoly_auction_status',cell?monopolyCellName(cell):t('monopoly_property'),auction.currentBid,auction.currentBidder>=0?t('monopoly_bidder',auction.currentBidder+1):'',Math.ceil(Math.max(0,auction.endAt-Date.now())/1000)));
@@ -1911,9 +1492,8 @@ function gameMonopoly(area, extra, n, opts){
     clearMonopolyWaveBTransient(true);
     if(presentationAdapter)presentationAdapter.reset('new-match');
     authorityReady=true;uiSource='live';uiTransition=null;uiBankruptPlayer=-1;
-    monopolyGhost3DPresentationFrame=null;monopolyGhost3DAuthorityMeta=null;monopolyGhost3DPendingMotion=null;
+    monopolyPresentationMatchId='';
     init();
-    if(monopolyGhost3DHost)restartMonopolyGhost3DHost('reset');
     setMonopolyWaveCProcess('roll');
     remoteInputs = [];auctionState=null;auctionBidSeq=0;monopolySeq=0;monopolyAudioSequence=0;
     actionRow.innerHTML = '';
@@ -1931,6 +1511,7 @@ function gameMonopoly(area, extra, n, opts){
   }
   init();
   renderBoard();
+  if(monopolyFinalArtRequested)initMonopolyFinalArtSurface();
   installMonopolyPresentationResize();
   setStatus(t('monopoly_round_turn',1,MAX_ROUND,1));
   function snapshot(){
@@ -1981,27 +1562,48 @@ function gameMonopoly(area, extra, n, opts){
     if(stageCountdownTimer)return;
     stageCountdownTimer=later(()=>{stageCountdownTimer=null;renderStageState();},Math.min(1000,Math.max(120,Number(deadline)-Date.now())));
   }
+  function validMonopolyPresentationOrigin(meta){
+    return !!meta&&['live','room-restored','reconnect','spectator-bootstrap'].includes(meta.source)&&
+      typeof meta.matchId==='string'&&meta.matchId.length>0&&
+      Number.isSafeInteger(meta.authorityRevision)&&meta.authorityRevision>=0&&
+      typeof meta.stateHash==='string'&&meta.stateHash.length>0;
+  }
+  function monopolyPresentationPosition(value){
+    const number=Number(value);
+    return Number.isInteger(number)&&number>=0&&number<CELLS.length?number:null;
+  }
+  function monopolyPresentationMotion(frame,source){
+    const animation=frame&&frame.animation;
+    if(source!=='live'||!animation||animation.mode!=='step'||prefersReducedMotion()||over===true)return null;
+    const actor=Number(animation.player),from=monopolyPresentationPosition(animation.from),to=monopolyPresentationPosition(animation.to);
+    const steps=Number(animation.steps),direction=Number(animation.direction),forward=Number.isSafeInteger(steps)&&steps>=2&&steps<=12,backward=steps===-2;
+    if(!Number.isSafeInteger(actor)||actor<0||actor>=players.length||from===null||to===null||(!forward&&!backward)||
+      !Number.isSafeInteger(direction)||(forward&&direction!==1)||(backward&&direction!==-1)||steps!==direction*Math.abs(steps)||
+      ((from+steps)%CELLS.length+CELLS.length)%CELLS.length!==to)return null;
+    const player=players[actor],planned=Array.isArray(frame.players)?frame.players[actor]:null;
+    if(!player||monopolyPresentationPosition(player.pos)!==to||!planned||
+      monopolyPresentationPosition(planned.authorityPosition)!==to||monopolyPresentationPosition(planned.displayPosition)!==from)return null;
+    return {actor,from,to,steps,direction};
+  }
+  function snapMonopolyPresentationFrame(frame){
+    if(!frame||!Array.isArray(frame.players))return null;
+    return {...frame,players:frame.players.map(player=>player&&typeof player==='object'?{...player,displayPosition:player.authorityPosition}:player),animation:{mode:'snap'}};
+  }
   function onRestore(value,source,presentationFrame,originMeta,freshGeneration){
     const state = value && value.state ? value.state : value;
     if (!state || !Array.isArray(state.players)) return false;
     invalidateAsync();
     const restoreSource=source||'snapshot';
-    const hasAcceptedOnlineOrigin=monopolyGhost3DValidAuthorityMeta(originMeta);
-    // Online state is renderable only when its existing presentation adapter
-    // accepted the matching authority frame.  Never retain a prior match's
-    // meta, frame, or motion when that condition is absent.
+    const hasAcceptedOnlineOrigin=validMonopolyPresentationOrigin(originMeta);
+    // Online DOM/2.5D motion is renderable only when the presentation adapter
+    // accepted the matching authority frame. Authority state still renders.
     if(opts.online&&!hasAcceptedOnlineOrigin){
       presentationFrame=null;
-      monopolyGhost3DFailClosedOnline();
     }else if(opts.online){
-      monopolyGhost3DAuthorityMeta={source:originMeta.source,matchId:originMeta.matchId,authorityRevision:originMeta.authorityRevision,stateHash:originMeta.stateHash};
+      monopolyPresentationMatchId=originMeta.matchId;
     }else{
-      monopolyGhost3DAuthorityMeta=null;
+      monopolyPresentationMatchId='';
     }
-    // A local restore remains a new host as before.  Every online bootstrap
-    // also gets a fresh host, while its accepted adapter frame stays a snap.
-    if((!opts.online&&restoreSource!=='live'||freshGeneration===true)&&monopolyGhost3DHost)restartMonopolyGhost3DHost('restore');
-    monopolyGhost3DPresentationFrame=presentationFrame&&Array.isArray(presentationFrame.players)?presentationFrame:null;
     if(fullRuleAuthority)authorityReady=true;
     players = state.players.map((p,index) => ({
       money: Number(p.money) || 0, pos: Number(p.pos) || 0, visualPos: presentationFrame&&presentationFrame.players&&presentationFrame.players[index]?Number(presentationFrame.players[index].displayPosition):Number(p.pos) || 0, motionDirection: presentationFrame&&presentationFrame.animation&&presentationFrame.animation.player===index&&Number(presentationFrame.animation.direction)<0?-1:1,
@@ -2010,18 +1612,16 @@ function gameMonopoly(area, extra, n, opts){
     cur = Number.isInteger(state.cur) ? state.cur : 0;
     phase = ['roll','buy','chance','moving','done','auction','finished'].includes(state.phase) ? state.phase : 'roll';
     round = Number(state.round) || 1; over = !!state.over; winner = Number.isInteger(state.winner) ? state.winner : -1;
-    const pendingMotion=opts.online&&hasAcceptedOnlineOrigin?monopolyGhost3DMotionFromPresentation(monopolyGhost3DPresentationFrame,restoreSource):null;
+    const pendingMotion=opts.online&&hasAcceptedOnlineOrigin?monopolyPresentationMotion(presentationFrame,restoreSource):null;
     // A claimed step that does not pass the signed/circular contract is not a
     // partial visual state.  It becomes a static authority-position snap.
-    if(opts.online&&!pendingMotion&&monopolyGhost3DPresentationFrame&&monopolyGhost3DPresentationFrame.animation&&monopolyGhost3DPresentationFrame.animation.mode==='step'){
-      const snapped=monopolyGhost3DSnapPresentationFrame(monopolyGhost3DPresentationFrame);
+    if(opts.online&&!pendingMotion&&presentationFrame&&presentationFrame.animation&&presentationFrame.animation.mode==='step'){
+      const snapped=snapMonopolyPresentationFrame(presentationFrame);
       if(snapped){
-        monopolyGhost3DPresentationFrame=snapped;
         presentationFrame=snapped;
         players.forEach(player=>{player.visualPos=player.pos;player.motionDirection=1;});
       }
     }
-    monopolyGhost3DPendingMotion=pendingMotion;
     setMonopolyWaveCProcess(monopolyWaveCProcessFromPhase());
     CELLS.forEach((cell, i) => { if (cell.type === 'prop') cell.owner = Array.isArray(state.owners) && Number.isInteger(state.owners[i]) ? state.owners[i] : -1; });
     chanceDeck = Array.isArray(state.deck) && state.deck.length ? state.deck.slice() : CHANCE.map((_, i) => i);
@@ -2047,14 +1647,14 @@ function gameMonopoly(area, extra, n, opts){
     // A callback from an already replaced match is a no-op.  It must not
     // dismantle the current generation or revive its stale renderer state.
     if(String(value.matchId||'')!==expectedMatchId)return false;
-    const state=value.state;if(!state){monopolyGhost3DFailClosedOnline();return false;}
+    const state=value.state;if(!state)return false;
+    const wasOver=over;
     const beforeAudioPlayers=players.map(player=>({money:player.money,alive:player.alive}));
     const rawCause=typeof cause==='string'?cause:'live';
     const causeName=rawCause.toLowerCase();
     const explicitNewMatch=causeName==='started'||causeName==='new-match'||causeName==='new_match'||causeName==='new match';
     const incomingTerminal=!!(state.terminal||value.terminal);
-    const previousMeta=monopolyGhost3DAuthorityMeta;
-    const matchChanged=monopolyGhost3DValidAuthorityMeta(previousMeta)&&previousMeta.matchId!==String(value.matchId||'');
+    const matchChanged=!!monopolyPresentationMatchId&&monopolyPresentationMatchId!==String(value.matchId||'');
     const terminalToNewMatch=over===true&&!incomingTerminal;
     const reconnectGeneration=causeName==='reconnect'||causeName==='room-restored'||causeName==='spectator-bootstrap';
     const freshGeneration=explicitNewMatch||matchChanged||terminalToNewMatch||reconnectGeneration;
@@ -2066,11 +1666,11 @@ function gameMonopoly(area, extra, n, opts){
     const bridgeSource=reconnectGeneration?causeName:'live';
     const acceptedFrame=plan&&plan.accepted===true&&plan.frame?plan.frame:null;
     const originMeta=acceptedFrame?{source:bridgeSource,matchId:acceptedFrame.matchId,authorityRevision:acceptedFrame.revision,stateHash:acceptedFrame.stateHash}:null;
-    if(!monopolyGhost3DValidAuthorityMeta(originMeta)){monopolyGhost3DFailClosedOnline();return false;}
+    if(!validMonopolyPresentationOrigin(originMeta))return false;
     const owners=Array.from({length:CELLS.length},()=>-1);Object.keys(state.owners||{}).forEach(id=>{owners[Number(id)]=Number(state.owners[id]);});const snapshot={players:(state.players||[]).map(player=>({money:player.money,pos:player.pos,alive:player.alive,props:Array.isArray(player.props)?player.props.slice():[],buildings:0})),cur:state.current,phase:state.phase==='resolving'?'moving':state.phase,round:state.round,over:incomingTerminal,winner:Number.isInteger(state.winner)?state.winner:-1,owners,deck:Array.isArray(state.chanceDeck)?state.chanceDeck.slice():[]};
     if(value.auctionEndAt&&state.auction){auctionState={protocol:RULE_PROTOCOL,matchId:value.matchId,auction:{...state.auction,status:'open',startAt:Date.now(),endAt:value.auctionEndAt,eligiblePlayers:state.auction.eligiblePlayers||[]},cash:state.players.map(player=>player.money),ownership:{...state.owners}};}else auctionState=null;
     authorityReady=true;
-    const applied=onRestore(snapshot,bridgeSource,acceptedFrame,originMeta,freshGeneration);if(applied){uiSource=rawCause==='reconnect'?'reconnect':rawCause==='spectator-bootstrap'?'spectator-bootstrap':'live';uiTransition=transition||value.transition||null;uiBankruptPlayer=acceptedFrame&&acceptedFrame.changes&&acceptedFrame.changes.bankruptPlayers.length?acceptedFrame.changes.bankruptPlayers[0]:-1;emitMonopolyAuthorityCues(value,uiTransition,rawCause,beforeAudioPlayers);renderStageState(uiSource);renderRuleActions();}return applied;
+    const applied=onRestore(snapshot,bridgeSource,acceptedFrame,originMeta,freshGeneration);if(applied){uiSource=rawCause==='reconnect'?'reconnect':rawCause==='spectator-bootstrap'?'spectator-bootstrap':'live';uiTransition=transition||value.transition||null;uiBankruptPlayer=acceptedFrame&&acceptedFrame.changes&&acceptedFrame.changes.bankruptPlayers.length?acceptedFrame.changes.bankruptPlayers[0]:-1;emitMonopolyAuthorityCues(value,uiTransition,rawCause,beforeAudioPlayers);if(incomingTerminal&&!wasOver&&!reconnectGeneration&&!explicitNewMatch)emitMonopolyTerminal25D();renderStageState(uiSource);renderRuleActions();}return applied;
   }
   function onMonopolyRuleResult(value){return fullRuleAuthority&&value&&value.protocol===RULE_PROTOCOL?onMonopolyRuleState(value.state||value):false;}
   function setBoardTheme(theme){ boardTheme = theme === 'grass' ? 'grass' : 'classic'; renderBoard(); return boardTheme; }
@@ -2090,6 +1690,10 @@ function gameMonopoly(area, extra, n, opts){
     destroy: () => {
       invalidateAsync();
       clearMonopolyWaveBTransient(true);
+      monopolyFinalArtRequest++;
+      clearMonopolyFinalArtVfx();
+      monopolyFinalArtLayers=null;
+      monopolyFinalArtActive=false;
       if(presentationAdapter)presentationAdapter.destroy();
       monopolyDestroyed=true;opts.destroyed=true;
       releaseMonopolyPresentationResize();

@@ -81,6 +81,12 @@
     '.playline-card-header>.mini-avatar-stage{flex:0 0 auto;}',
     '.playline-card-author{min-width:0;overflow-wrap:anywhere;}',
     '.playline-card-body{white-space:pre-wrap;overflow-wrap:anywhere;}',
+    '.playline-card>.community-card-art{display:block;width:100%;height:auto;aspect-ratio:1200/630;object-fit:cover;border-radius:16px;border:1px solid color-mix(in srgb,var(--ghost-line,rgba(127,127,127,.2)) 82%,transparent);box-shadow:var(--elev-1);order:2;}',
+    '.playline-card-header{order:1;}',
+    '.playline-card-body{order:3;}',
+    '.playline-card-actions{order:4;}',
+    '.playline-card>.community-card-art[hidden]{display:none;}',
+    '@media (prefers-reduced-motion: reduce){.playline-card>.community-card-art{box-shadow:none;}}',
     '.playline-card-actions{display:flex;flex-wrap:wrap;gap:8px;}',
     '.playline-card-actions button,.playline-tab,.playline-composer button,.playline-load-older{min-height:44px;}',
     '.playline-composer{display:grid;gap:8px;padding-bottom:max(12px,env(safe-area-inset-bottom,0px));}',
@@ -365,6 +371,7 @@
   }
 
   function clearPlaylinePages() {
+    PLAYLINE_TABS.forEach(function (tab) { destroyPlaylineCardMap(playlineState.nodes && playlineState.nodes[tab]); });
     playlineState.page = { all: null, friends: null };
     playlineState.nodes = { all: new Map(), friends: new Map() };
     playlineState.request = null;
@@ -724,6 +731,21 @@
     return isFinite(n) ? String(Math.max(0, Math.floor(n))) : '';
   }
 
+  function playlineGameIconNode(gameId, className, size) {
+    var id = String(gameId || '');
+    var games = typeof GAMES !== 'undefined' ? GAMES : global && global.GAMES;
+    var meta = games && games[id];
+    var factory = typeof gameIconNode === 'function' ? gameIconNode : global && global.gameIconNode;
+    if (meta && typeof factory === 'function') {
+      try { return factory(id,{role:'icon',size:size||44,className:className||'playline-share-game-icon',fallback:meta.icon||'🎮'}); }
+      catch (_) {}
+    }
+    var fallback = makeElement('span',className||'playline-share-game-icon');
+    fallback.textContent = meta && meta.icon || '🎮';
+    fallback.setAttribute && fallback.setAttribute('aria-hidden','true');
+    return fallback;
+  }
+
   function cardLabelKey(kind) {
     return ({ text: 'playline_kind_text', game_share: 'playline_kind_game', result_share: 'playline_kind_result', record_share: 'playline_kind_record' })[kind] || 'playline_kind_text';
   }
@@ -734,6 +756,7 @@
       var gameLine = makeElement('div', 'playline-share-line');
       setSystemText(gameLine, 'playline_game_share_label');
       append(body, gameLine);
+      append(body,playlineGameIconNode(gameId,'playline-share-game-icon',64));
       var gameName = makeElement('strong', 'playline-share-value');
       setSystemText(gameName, gameId ? ('game_' + String(gameId)) : 'playline_unknown_game');
       append(body, gameName);
@@ -744,6 +767,7 @@
     var participantCount = postContentValue(post, 'participantCount');
     var line = makeElement('div', 'playline-share-line');
     if (gameId) {
+      append(line,playlineGameIconNode(gameId,'playline-share-game-icon',44));
       var game = makeElement('strong', 'playline-share-game');
       setSystemText(game, gameId ? ('game_' + String(gameId)) : 'playline_unknown_game');
       append(line, game);
@@ -776,6 +800,72 @@
     append(body, line);
   }
 
+  function shareTemplateModel(post, kind, role) {
+    var gameId = String(postContentValue(post, 'gameId') || postContentValue(post, 'game') || '');
+    var games = typeof GAMES !== 'undefined' ? GAMES : global && global.GAMES;
+    var title = games && games[gameId] ? translate('game_' + gameId) : translate('playline_unknown_game');
+    var outcome = String(postContentValue(post, 'outcome') || postContentValue(post, 'result') || '');
+    var placement = postContentValue(post, 'placement');
+    var value = postContentValue(post, 'value');
+    var metric = '';
+    if (kind === 'result_share') {
+      var outcomeKey = outcome === 'win' ? 'playline_outcome_win' : outcome === 'loss' ? 'playline_outcome_loss' : outcome === 'draw' ? 'playline_outcome_draw' : 'playline_outcome_finished';
+      metric = translate(outcomeKey);
+      if (placement !== undefined && placement !== null && placement !== '') metric += ' · ' + translate('playline_placement', formatNumber(placement));
+    } else if (kind === 'record_share') {
+      var recordKey = String(postContentValue(post, 'record') || postContentValue(post, 'recordKey') || '');
+      var recordMatch = /^(game_wins|mastery):(gomoku|ludo|monopoly|tank|tetris|xiangqi)$/.exec(recordKey);
+      if (recordKey === 'level') title = translate('playline_record_level');
+      else if (recordKey === 'total_wins') title = translate('playline_record_total_wins');
+      else if (recordMatch) {
+        title = translate(recordMatch[1] === 'mastery' ? 'playline_record_mastery' : 'playline_record_game_wins', translate('game_' + recordMatch[2]));
+      }
+      if (value !== undefined && value !== null && value !== '') metric = recordKey === 'level' ? 'Lv.' + formatNumber(value) : formatNumber(value);
+    }
+    return {
+      kind: kind, role: role,
+      tone: kind === 'record_share' ? 'record' : (outcome === 'win' || outcome === 'draw' || outcome === 'loss' ? outcome : 'neutral'),
+      kicker: translate(cardLabelKey(kind)), title: title, metric: metric,
+      detail: translate('playline_share_template_tagline'), brand: 'GHOST GAME'
+    };
+  }
+
+  function hydrateCommunityCardArt(card, role, post, kind) {
+    if (!card || !role) return;
+    if ((typeof socialShareTemplatesEnabled !== 'function' || socialShareTemplatesEnabled()) && typeof GhostSocialShareTemplate !== 'undefined' && GhostSocialShareTemplate && typeof GhostSocialShareTemplate.mount === 'function') {
+      try {
+        var mounted = GhostSocialShareTemplate.mount(card, shareTemplateModel(post, kind, role));
+        if (mounted) { card.__ghostSocialShareTemplateHandle = mounted; return; }
+      } catch (_) {}
+    }
+    if (typeof resolveCommunityReplayTournamentCardUrl !== 'function') return;
+    var art = makeElement('img', 'community-card-art');
+    art.alt = '';
+    art.setAttribute && art.setAttribute('aria-hidden', 'true');
+    art.loading = 'lazy';
+    art.decoding = 'async';
+    art.hidden = true;
+    append(card, art);
+    var staticFallback = !!(global && global.matchMedia && global.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    resolveCommunityReplayTournamentCardUrl(role, staticFallback).then(function (url) {
+      if (!url || art.isConnected === false) return;
+      art.onload = function () { if (art.isConnected !== false) art.hidden = false; };
+      art.onerror = function () { art.hidden = true; try { art.removeAttribute && art.removeAttribute('src'); } catch (_) {} };
+      art.src = url;
+    }).catch(function () {});
+  }
+
+  function destroyCommunityCardArt(card) {
+    var handle = card && card.__ghostSocialShareTemplateHandle;
+    if (handle && typeof handle.destroy === 'function') { try { handle.destroy(); } catch (_) {} }
+    if (card) card.__ghostSocialShareTemplateHandle = null;
+  }
+
+  function destroyPlaylineCardMap(map) {
+    if (!map || typeof map.forEach !== 'function') return;
+    map.forEach(function (card) { destroyCommunityCardArt(card); });
+  }
+
   function renderPlaylineCard(card, post) {
     var id = postId(post);
     var kind = postKind(post);
@@ -785,6 +875,7 @@
     classAdd(card, 'playline-card');
     classToggle(card, 'playline-card--text', kind === 'text');
     classToggle(card, 'playline-card--attachment', kind !== 'text');
+    destroyCommunityCardArt(card);
     removeChildren(card);
     var header = makeElement('header', 'playline-card-header');
     var author = postAuthor(post);
@@ -808,6 +899,8 @@
       append(header, time);
     }
     append(card, header);
+    var artRole = typeof communityReplayTournamentCardRoleForKind === 'function' ? communityReplayTournamentCardRoleForKind(kind) : '';
+    if (artRole) hydrateCommunityCardArt(card, artRole, post, kind);
     var body = makeElement('div', 'playline-card-body');
     if (kind === 'text') {
       setRawText(body, postContentValue(post, 'text') || '');
@@ -902,6 +995,7 @@
       Array.prototype.slice.call(feed.children).forEach(function (child) {
         var id = child.dataset && child.dataset.postId;
         if (child.getAttribute && child.getAttribute('data-playline-card') !== null && id && !wanted.has(String(id))) {
+          destroyCommunityCardArt(child);
           if (typeof child.remove === 'function') child.remove();
         } else if (child.dataset && child.dataset.playlineState === '1') {
           if (typeof child.remove === 'function') child.remove();
@@ -1119,6 +1213,7 @@
     if (changed || input.refresh || input.beforeSeq === undefined) {
       if (changed || input.refresh || !playlineState.page[tab]) {
         playlineState.page[tab] = null;
+        destroyPlaylineCardMap(playlineState.nodes[tab]);
         playlineState.nodes[tab] = new Map();
       }
     }
@@ -1249,7 +1344,7 @@
     }
     if(type==='playline_remove_ok'){
       var removedId=String(payload.postId||'');
-      if(removedId)PLAYLINE_TABS.forEach(function(tab){var page=ensurePage(tab);page.byId.delete(removedId);page.posts=Array.from(page.byId.values());var node=playlineState.nodes[tab]&&playlineState.nodes[tab].get(removedId);if(node&&typeof node.remove==='function')node.remove();if(playlineState.nodes[tab])playlineState.nodes[tab].delete(removedId);});
+      if(removedId)PLAYLINE_TABS.forEach(function(tab){var page=ensurePage(tab);page.byId.delete(removedId);page.posts=Array.from(page.byId.values());var node=playlineState.nodes[tab]&&playlineState.nodes[tab].get(removedId);destroyCommunityCardArt(node);if(node&&typeof node.remove==='function')node.remove();if(playlineState.nodes[tab])playlineState.nodes[tab].delete(removedId);});
       renderPlaylineState();return true;
     }
     if(type==='playline_invalidated'){
@@ -1266,6 +1361,7 @@
       if (payload.action === 'playline_list' || payload.action === 'playline_page' || type === 'playline_error') {
         if (reason === 'invalid_cursor' || reason === 'invalid_scope' || reason === 'invalid_filter') {
           playlineState.page[playlineState.tab] = null;
+          destroyPlaylineCardMap(playlineState.nodes[playlineState.tab]);
           playlineState.nodes[playlineState.tab] = new Map();
         }
       }

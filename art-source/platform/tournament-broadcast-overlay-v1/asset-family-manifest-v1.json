@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "productionUnitId": "P2-10",
+  "familyId": "P-TOURNAMENT-BROADCAST-OVERLAY-V1",
+  "assetId": "P-TOURNAMENT-BROADCAST-OVERLAY-V1-CODE-NATIVE",
+  "artworkVersion": 1,
+  "clearance": "OWNER_AUTHORIZED_ART_CLEARANCE",
+  "status": "implemented_local_release_evidence_pending",
+  "sourceLicense": "PROJECT_OWNED_CODE_NATIVE",
+  "runtimeType": "DOM_CSS_LAZY_GSAP",
+  "requirements": ["GAME-028", "GAME-029", "UI-034"],
+  "featureFlag": {
+    "id": "mg_art_tournament_broadcast_overlay_v1",
+    "enabledValue": "1",
+    "defaultEnabled": true,
+    "rollback": "0"
+  },
+  "runtimeFiles": [
+    {"path":"public/src/core/32-tournament-broadcast-overlay.js","bytes":13075,"sha256":"16BFA9D097073C5449EB97F42D0AA02323F12D5E5A7F984EB4F5A11796CAB2D7"},
+    {"path":"public/tournament-broadcast-motion-entry.js","bytes":2005,"sha256":"BAFAAA8749C879B1F856E6E9F0A2E29D19B1B37E6EB061416D22375CEECFA92E"}
+  ],
+  "integrationFiles": [
+    "public/src/core/06-assets.js",
+    "public/src/online/03-websocket.js",
+    "public/index-template.html",
+    "scripts/build.js"
+  ],
+  "reviewFiles": [
+    {"path":"art-source/platform/tournament-broadcast-overlay-v1/review/tournament-broadcast-overlay-review.html","bytes":7359,"sha256":"AD02C3BA6AD23D959A5FC7CE10C20359E11E027C0478DAF42E7BF1D8D2F8C24E"},
+    {"path":"art-source/platform/tournament-broadcast-overlay-v1/review/tournament-broadcast-overlay-1200x630.png","bytes":61896,"width":1200,"height":630,"sha256":"DAE239FDD9E0A3FAB772F7439A868B89AB7DC5499B35859EDF3A6DD190C87600"},
+    {"path":"art-source/platform/tournament-broadcast-overlay-v1/review/tournament-broadcast-overlay-contact-sheet.png","bytes":196520,"width":1200,"height":2088,"sha256":"FBE4A39CBB7BA700A62B4D6343AF31C71315D32FC0A4DCDC3A945D29C375346B"}
+  ],
+  "runtimeRasterBytesAdded": 0,
+  "reviewEvidenceBytes": 258416,
+  "runtimeByteBudget": 131072,
+  "externalReferenceInputs": 0,
+  "thirdPartyTransmissions": 0,
+  "authorityBoundary": "presentation-only; no live stream, video, audio, replay, tournament, spectator, room, rule, protocol, reward, identity, permission or persistence ownership",
+  "fallback": "existing owner-cleared card-tournament art plus localized Tournament DOM",
+  "releaseState": "LOCAL_ONLY_NOT_RELEASED"
+}

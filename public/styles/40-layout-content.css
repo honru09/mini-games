@@ -1,0 +1,204 @@
+/* Content density and dialog seams. This module owns placement, not motion. */
+html[data-layout-system="v1"] :is(.modal-backdrop, .direct-message-overlay) {
+  padding: max(12px, env(safe-area-inset-top, 0px)) max(12px, env(safe-area-inset-right, 0px)) max(12px, env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px));
+}
+
+html[data-layout-system="v1"] :is(.modal-card, .direct-message-dialog, .profile-editor-card, .achievements-modal-card) {
+  min-width: 0;
+  max-width: min(100%, 960px);
+  max-height: calc(100dvh - 24px);
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+html[data-layout-system="v1"] .modal-card > :is(.modal-header, .modal-actions),
+html[data-layout-system="v1"] .direct-message-dialog > :is(.direct-message-header, .direct-message-composer),
+html[data-layout-system="v1"] .profile-editor-card > :is(.modal-header, .modal-actions) {
+  min-width: 0;
+}
+
+html[data-layout-system="v1"] :is(.modal-card h3, .direct-message-dialog h3, .profile-editor-card h3, .achievements-modal-card h3) {
+  overflow-wrap: anywhere;
+}
+
+html[data-layout-system="v1"] :is(.modal-card .lines, .direct-message-message, .profile-editor-card .form-hint) {
+  max-width: 72ch;
+  overflow-wrap: anywhere;
+}
+
+html[data-layout-system="v1"] .direct-message-dialog {
+  width: min(900px, calc(100vw - 24px));
+}
+
+html[data-layout-system="v1"] .direct-message-layout {
+  min-width: 0;
+  grid-template-columns: minmax(180px, 260px) minmax(0, 1fr);
+}
+
+html[data-layout-system="v1"] :is(.direct-message-list, .direct-message-thread, .direct-message-messages) {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+html[data-layout-system="v1"] .direct-message-composer {
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 8px;
+}
+
+html[data-layout-system="v1"] .direct-message-composer :is(textarea, input) {
+  min-width: 0;
+  max-width: 100%;
+}
+
+html[data-layout-system="v1"] #screen-game.game-stage {
+  --stage-content-gap: clamp(8px, 1.2vw, 14px);
+}
+
+html[data-layout-system="v1"] #screen-game.game-stage .game-stage-header {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+html[data-layout-system="v1"] #screen-game.game-stage .game-stage-seats {
+  min-width: 0;
+  overflow: hidden;
+}
+
+html[data-layout-system="v1"] #screen-game.game-stage .game-stage-seats .player-bar {
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  justify-content: flex-start;
+  scrollbar-width: none;
+}
+
+html[data-layout-system="v1"] #screen-game.game-stage .game-stage-seats .player-bar::-webkit-scrollbar {
+  display: none;
+}
+
+html[data-layout-system="v1"] #screen-game.game-stage .game-stage-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(250px, 330px);
+  gap: var(--stage-content-gap);
+}
+
+html[data-layout-system="v1"] #screen-game.game-stage .game-stage-arena {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+html[data-layout-system="v1"] #screen-game.game-stage .game-stage-command {
+  min-width: 0;
+  min-height: 0;
+  max-height: 100%;
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+html[data-layout-system="v1"] #screen-game.game-stage .game-stage-command > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+html[data-layout-system="v1"] #screen-game.game-stage .game-stage-command .game-extra {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--stage-content-gap);
+  align-items: stretch;
+}
+
+html[data-layout-system="v1"] #screen-game.game-stage .game-stage-command .game-extra .btn {
+  min-width: var(--ghost-layout-control-height);
+  min-height: var(--ghost-layout-control-height);
+}
+
+@media (max-width: 900px) {
+  html[data-layout-system="v1"] #screen-game.game-stage .game-stage-main {
+    grid-template-columns: minmax(0, 1fr) minmax(220px, 280px);
+  }
+}
+
+@media (max-width: 720px) {
+  html[data-layout-system="v1"] :is(.modal-backdrop, .direct-message-overlay) {
+    padding: 0;
+  }
+
+  html[data-layout-system="v1"] :is(.modal-card, .direct-message-dialog, .profile-editor-card, .achievements-modal-card) {
+    width: min(100%, calc(100vw - 20px));
+    max-height: calc(100dvh - 20px);
+  }
+
+  html[data-layout-system="v1"] .direct-message-dialog {
+    width: 100%;
+    max-width: none;
+    max-height: none;
+    min-height: 100dvh;
+    border-radius: 0;
+  }
+
+  html[data-layout-system="v1"] .direct-message-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  html[data-layout-system="v1"] #screen-game.game-stage .game-stage-main {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+
+  html[data-layout-system="v1"] #screen-game.game-stage .game-stage-command {
+    max-height: min(38dvh, 320px);
+  }
+
+  html[data-layout-system="v1"] #screen-game.game-stage .game-stage-command .game-extra {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  html[data-layout-system="v1"] #screen-game.game-stage .game-stage-header {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas: "back title" "actions actions";
+  }
+
+  html[data-layout-system="v1"] #screen-game.game-stage .game-stage-header .game-stage-title-wrap {
+    grid-area: title;
+  }
+
+  html[data-layout-system="v1"] #screen-game.game-stage .game-stage-header .top-actions {
+    grid-area: actions;
+    justify-content: stretch;
+  }
+
+  html[data-layout-system="v1"] #screen-game.game-stage .game-stage-header .top-actions .btn {
+    flex: 1 1 44px;
+  }
+
+  html[data-layout-system="v1"] #screen-game.game-stage .game-stage-command {
+    padding: 11px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-layout-system="v1"] :is(.modal-card, .direct-message-dialog, .profile-editor-card, .achievements-modal-card) {
+    scroll-behavior: auto;
+  }
+}
+
+@media (forced-colors: active) {
+  html[data-layout-system="v1"] :is(.modal-card, .direct-message-dialog, .profile-editor-card, .achievements-modal-card) {
+    forced-color-adjust: auto;
+    border-color: CanvasText;
+    background: Canvas;
+    color: CanvasText;
+    box-shadow: none;
+  }
+}

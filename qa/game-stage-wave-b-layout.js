@@ -2,8 +2,9 @@
 
 const fs = require('fs');
 const path = require('path');
+const { readPresentationSource } = require('./presentation-source');
 
-const template = fs.readFileSync(path.join(__dirname, '..', 'public', 'index-template.html'), 'utf8');
+const template = readPresentationSource();
 const marker = '/* ================= Game Stage Wave B · Gomoku / Tetris =================';
 const start = template.indexOf(marker);
 const end = template.indexOf('</style>', start);

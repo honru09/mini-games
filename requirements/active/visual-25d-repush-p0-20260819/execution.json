@@ -1,13 +1,22 @@
 {
   "schemaVersion": 1,
   "task": "visual-25d-repush-p0-20260819",
-  "recordedAt": "2026-08-19T12:02:00+09:00",
+  "recordedAt": "2026-08-21T13:45:00+09:00",
   "implemented": [
     "2.5D 生产方向已由用户指南裁决并写入总指挥/路由",
     "DepthScene 三层 token 与精确 0 回滚",
     "CameraSystem 八模式、Honru 空间行为、页面转场与 GameStage 语义事件接入构建",
     "GSAP lazy timeline 适配器、性能/reduced-motion/销毁合同",
-    "Ghost3D 六款合同改为冻结可选层，不再阻塞 2.5D"
+    "Three/Ghost3D Foundation、六款 renderer/presenter、loader、SW 专属缓存和游戏分支已安全清除，2.5D 成为唯一运行时",
+    "Ludo/Monopoly/Xiangqi/Tetris/Tank 通过共享 GameStage25D phase 事件桥接接入已有 Wave C 过程链；镜头只由语义层驱动，保留静态回退与 reduced-motion",
+    "六款既有 accepted-action/phase/result 语义已映射为 ring/sweep/burst/lift/slash/focus/spin/result 八类差异化 FX，并按游戏配置色调、强度和方向",
+    "depth-motion-25d-v3 已移除常规 accepted-action 的横向位移/旋转抖动，保留非位移 scale pulse 与克制的 Enter/Focus/Result timeline；只动画 transform/autoAlpha 并在完成/中断后清理临时属性",
+    "FX 节点预算、手机减量、reduced-motion 静态核心、forced-colors 装饰隐藏、document.hidden 与 exit/clear/destroy 清理已进入实现和合同",
+    "Immersive Game Stage v2 使用固定全视口 Arena、紧凑 Header/Seat Rail、自适应 HUD Dock；低高度横屏改为单一右侧 HUD 轨道，桌面/平板/手机保留底部 Dock",
+    "六款拥有独立控制高度预算；Ludo/Monopoly 过程与排名 Meta 从 Arena 旧侧窗迁入 HUD DOM，规则、Authority、Protocol、Reward 与 Replay 不变",
+    "Gomoku/Xiangqi 建房悔棋开关、每局一次与仅最后落子者撤回已进入客户端、服务端和 Authority；AI 局回退一整轮",
+    "Gomoku 移除触屏方向盘，保持直接棋盘输入；落点反馈改为有限径向核心/射线/粒子并修复异步 pending VFX 永久残留",
+    "Gomoku 棋盘与 Canvas 在 390x844 保持 1:1，不再由整体 3D 倾斜压扁棋子"
   ],
   "verified": [
     "npm run test:visual-25d",
@@ -16,12 +25,22 @@
     "node --check public/src/core/26-ghost-mascot-motion.js",
     "node --check public/src/core/27-page-transition.js",
     "node --check public/src/core/28-game-stage-2_5d.js",
-    "node qa/ghost3d-default-on-contract.js (冻结可选层合同)"
+    "node qa/visual-25d-only-runtime.js (3D 退役与防回流合同)",
+    "历史 0DE4CD5C…0EE64E 构建：桌面 Home/Games/Gomoku、390×844 与真实落子 impact→active 部分可见证据",
+    "当前源码和 4BCB2727…96A98 构建通过完整 npm test 主链/E2E/WS/posttest（exit 0）与 QUALITY_GATES_FAST_ALL_PASS，唯一构建入口通过确定性双构建和 build --check（1,930,802 characters / 1,945,530 UTF-8 bytes）",
+    "共享桥接、八类语义 FX、方向传递、节点预算、退出/路由、快速重进、impact 恢复与 document.hidden 迟到 timer 行为通过 npm run test:visual-25d；未将历史浏览器证据升级为当前证据",
+    "node qa/gameplay-upgrade.js、node qa/dom-smoke.js、node qa/ai-games.js、node qa/gsap-dom-esm-graph.js、node qa/game-stage-input-continuity.js、node qa/game-stage-hud-density.js 与 npm run test:game-stage-density-final 通过",
+    "当前 4BCB2727…96A98 构建在单一 Codex in-app Chromium 完成 6 视口 × 6 游戏的 36 场景 Game Stage 布局/操作矩阵，六张截图与 hash 记录在 evidence/immersive-stage-20260820/current-build-visible-matrix.json",
+    "360×800 六款最终复核 document overflow 为 0，所有已渲染操作至少 44px；Tetris 最低操作底边 797、Tank 798，均在 800px 视口内",
+    "gameplay load 10/25/50 合成房间、1000 次创建/结束内存、timer audit、模拟设备矩阵和本地 50/100/200ms 确定性网络矩阵通过；未冒充真实设备、真实网络或低端 GPU/热量",
+    "当前 176D108F…37D9FC 聚焦专项通过 i18n、Gomoku/Xiangqi density、Room Launchpad、Rule Authority、双客户端 undo-online、visual-25d、immersive-shell、DOM smoke 与 build --check",
+    "当前构建 390x844 单 Chromium 聚焦检查记录于 evidence/gomoku-xiangqi-undo-20260821/current-build-focused-verification.json；旧 4BCB2727…96A98 六视口×六游戏矩阵保持 historical-as-of",
+    "当前 176D108F…37D9FC 构建通过完整 npm run quality:gates（QUALITY_GATES_FAST_ALL_PASS）与完整 npm test（exit 0），报告生成零漂移，最终 build --check 仍为 1,967,839 characters / 1,982,521 UTF-8 bytes / 同一 SHA"
   ],
   "pending": [
-    "当前构建稳定后的浏览器可见 Demo",
+    "当前最新构建的 Home→Games→六款 Game Stage→Result→Games 终局链路、三语言、双主题、visible reduced-motion 与逐语义 FX 全矩阵",
     "第二浏览器/真机/真实网络与低端性能",
-    "六款推广和美术分层资产族消费",
+    "六款终局 Transition、逐语义 FX 与美术分层资产族消费的当前构建可见验收",
     "commit/push/Pages/Render/生产发布"
   ],
   "scopeLimit": "表现层与动效，不改变 Rule/Authority/Protocol/AI/Reward/Replay/Social/Persistence",

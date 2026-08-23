@@ -1,0 +1,127 @@
+{
+  "schemaVersion": 1,
+  "productionUnitId": "P2-03",
+  "familyId": "P-COLLECTIBLE-STICKER-BOOK-V1",
+  "sourceAssetId": "P-COLLECTIBLE-STICKER-BOOK-V1",
+  "artworkVersion": 1,
+  "status": "OWNER_AUTHORIZED_ART_CLEARANCE",
+  "license": "project-owned-derived",
+  "sourceFamily": "P-HONRU-CONTEXT-REACTIONS-V1",
+  "runtimeVariants": [
+    {
+      "id": "ready",
+      "path": "public/assets/brand/honru/context-reactions-v1/contexts/honru-context-ready-v1.webp",
+      "sourceFamily": "P-HONRU-CONTEXT-REACTIONS-V1",
+      "role": "sticker-book-cell"
+    },
+    {
+      "id": "your-turn",
+      "path": "public/assets/brand/honru/context-reactions-v1/contexts/honru-context-your-turn-v1.webp",
+      "sourceFamily": "P-HONRU-CONTEXT-REACTIONS-V1",
+      "role": "sticker-book-cell"
+    },
+    {
+      "id": "thinking",
+      "path": "public/assets/brand/honru/context-reactions-v1/contexts/honru-context-thinking-v1.webp",
+      "sourceFamily": "P-HONRU-CONTEXT-REACTIONS-V1",
+      "role": "sticker-book-cell"
+    },
+    {
+      "id": "throw",
+      "path": "public/assets/brand/honru/context-reactions-v1/contexts/honru-context-throw-v1.webp",
+      "sourceFamily": "P-HONRU-CONTEXT-REACTIONS-V1",
+      "role": "sticker-book-cell"
+    },
+    {
+      "id": "hit",
+      "path": "public/assets/brand/honru/context-reactions-v1/contexts/honru-context-hit-v1.webp",
+      "sourceFamily": "P-HONRU-CONTEXT-REACTIONS-V1",
+      "role": "sticker-book-cell"
+    },
+    {
+      "id": "capture",
+      "path": "public/assets/brand/honru/context-reactions-v1/contexts/honru-context-capture-v1.webp",
+      "sourceFamily": "P-HONRU-CONTEXT-REACTIONS-V1",
+      "role": "sticker-book-cell"
+    },
+    {
+      "id": "score",
+      "path": "public/assets/brand/honru/context-reactions-v1/contexts/honru-context-score-v1.webp",
+      "sourceFamily": "P-HONRU-CONTEXT-REACTIONS-V1",
+      "role": "sticker-book-cell"
+    },
+    {
+      "id": "combo",
+      "path": "public/assets/brand/honru/context-reactions-v1/contexts/honru-context-combo-v1.webp",
+      "sourceFamily": "P-HONRU-CONTEXT-REACTIONS-V1",
+      "role": "sticker-book-cell"
+    },
+    {
+      "id": "warning",
+      "path": "public/assets/brand/honru/context-reactions-v1/contexts/honru-context-warning-v1.webp",
+      "sourceFamily": "P-HONRU-CONTEXT-REACTIONS-V1",
+      "role": "sticker-book-cell"
+    },
+    {
+      "id": "reconnect",
+      "path": "public/assets/brand/honru/context-reactions-v1/contexts/honru-context-reconnect-v1.webp",
+      "sourceFamily": "P-HONRU-CONTEXT-REACTIONS-V1",
+      "role": "sticker-book-cell"
+    },
+    {
+      "id": "spectator",
+      "path": "public/assets/brand/honru/context-reactions-v1/contexts/honru-context-spectator-v1.webp",
+      "sourceFamily": "P-HONRU-CONTEXT-REACTIONS-V1",
+      "role": "sticker-book-cell"
+    },
+    {
+      "id": "win",
+      "path": "public/assets/brand/honru/context-reactions-v1/contexts/honru-context-win-v1.webp",
+      "sourceFamily": "P-HONRU-CONTEXT-REACTIONS-V1",
+      "role": "sticker-book-cell"
+    },
+    {
+      "id": "lose",
+      "path": "public/assets/brand/honru/context-reactions-v1/contexts/honru-context-lose-v1.webp",
+      "sourceFamily": "P-HONRU-CONTEXT-REACTIONS-V1",
+      "role": "sticker-book-cell"
+    },
+    {
+      "id": "draw",
+      "path": "public/assets/brand/honru/context-reactions-v1/contexts/honru-context-draw-v1.webp",
+      "sourceFamily": "P-HONRU-CONTEXT-REACTIONS-V1",
+      "role": "sticker-book-cell"
+    },
+    {
+      "id": "rematch",
+      "path": "public/assets/brand/honru/context-reactions-v1/contexts/honru-context-rematch-v1.webp",
+      "sourceFamily": "P-HONRU-CONTEXT-REACTIONS-V1",
+      "role": "sticker-book-cell"
+    },
+    {
+      "id": "celebration",
+      "path": "public/assets/brand/honru/context-reactions-v1/contexts/honru-context-celebration-v1.webp",
+      "sourceFamily": "P-HONRU-CONTEXT-REACTIONS-V1",
+      "role": "sticker-book-cell"
+    }
+  ],
+  "featureFlags": {
+    "operator": "all",
+    "enabledValue": "1",
+    "defaultEnabled": true,
+    "ids": [
+      "mg_art_sticker_book_v1"
+    ]
+  },
+  "metrics": {
+    "sourceMasterCount": 0,
+    "runtimeVariantCount": 16,
+    "runtimeBytes": 388222,
+    "runtimeByteBudget": 2097152,
+    "withinBudget": true
+  },
+  "fallback": {
+    "chain": "sticker book → Unicode/localized label → empty read-only state"
+  },
+  "authority": "presentation-only inherited projections; no owned, purchase, reward, persistence, protocol, chat, replay, AI or Supabase capability"
+}

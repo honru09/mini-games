@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "familyId": "P-AUDIO-SPECTRUM-ART-V1",
+  "status": "LOCAL_CODE_NATIVE_CONTEXT_ONLY",
+  "inputs": [
+    "requirements/GHOST_GAME_MAINLINE_COMMAND.md",
+    "requirements/ART_GENERATION_SKILL_PIPELINE.md",
+    "public/src/core/15-feedback-bus.js",
+    "public/src/core/21-unified-feedback-adapter.js",
+    "public/src/core/22-audio-runtime.js",
+    "public/src/core/02-app-shell.js",
+    "public/index-template.html"
+  ],
+  "transmissionScope": "local-workspace-only",
+  "externalProvider": null,
+  "externalTaskId": null,
+  "containsPlayerData": false,
+  "containsSecrets": false
+}

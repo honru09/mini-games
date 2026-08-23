@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "evidenceClass": "LOCAL_SINGLE_CHROMIUM_HISTORICAL_AS_OF",
+  "capturedAt": "2026-08-21T14:35:00+09:00",
+  "build": {
+    "path": "public/index.html",
+    "characters": 1970555,
+    "bytes": 1985240,
+    "sha256": "C5AFEA971EA8DAD2CE86AC39E875E197898FFC4C146C73CF2AF53703B413929E"
+  },
+  "scenario": {
+    "id": "tank-middle-landscape-797x642",
+    "result": "PASS",
+    "facts": {
+      "viewport": {
+        "width": 797,
+        "height": 642,
+        "devicePixelRatio": 1
+      },
+      "middleLandscapeMediaMatched": true,
+      "tankFinalArtState": "active",
+      "decodedBoardLayers": 3,
+      "decoratedTanks": 2,
+      "decoratedWalls": 68,
+      "board": {
+        "width": 440.19,
+        "height": 381.5
+      },
+      "command": {
+        "width": 321.09,
+        "height": 515.68,
+        "horizontalOverflow": 0
+      },
+      "dpadMinimumTarget": 44.32,
+      "fireTarget": 66.47,
+      "boardCommandOverlapPixels": 0,
+      "hudInsideCommand": true,
+      "statusInsideCommand": true,
+      "controlDeckInsideCommand": true,
+      "documentHorizontalOverflow": 0,
+      "stageHorizontalOverflow": 0
+    }
+  },
+  "screenshot": {
+    "state": "VISIBLE_REVIEWED_NOT_PERSISTED",
+    "reason": "The in-app browser returned and displayed the viewport image but did not expose a local file export path."
+  },
+  "console": {
+    "state": "NOT_CAPTURED_FOR_THIS_NARROW_SCENARIO"
+  },
+  "laterNarrowing": {
+    "change": "The right-rail rule was restricted to orientation:landscape, then made continuous from width 600 upward so portrait layouts stay unchanged and the 720/721 plus 900/901 cliffs are removed.",
+    "visibleReexecution": "NOT_EXECUTED_AFTER_NARROWING",
+    "machineContracts": [
+      "qa/tank-final-art-contract.js",
+      "qa/immersive-game-shell.js",
+      "qa/ui-responsive-contract.js"
+    ]
+  },
+  "boundary": "This evidence is historical-as-of the named build and proves only the recorded single-Chromium middle-landscape scenario. It is not current-build, second-browser, physical-device, real-network or release evidence."
+}
