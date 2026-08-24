@@ -910,3 +910,76 @@
 - 修改 `server/index.js`：以 `supabase-outbox-sync` ServerClockTimer 统一 Reward/AI Learning retry，使用 `Promise.allSettled` 做类型级异常隔离。
 - 修改 `qa/timer-audit.js`、`PRODUCT_REQUIREMENTS_LEDGER.json`、`PROJECT_STATUS.json` 与进度入口，登记 P14；不新建重复 Requirement ID。
 - 修正 P14 回归中发现的 Windows `leaderboard.json.tmp` rename 竞争：Reward/AI drain 改为同一 lease 内串行并保持独立失败记录；Supabase Adapter 26 项专项复跑通过。
+2026-08-23 14:31：修改 server/index.js，将赛事 abort retry 与下一轮推进从原生 setTimeout 迁移为按赛事隔离的 ServerClockTimer lease；修改 timer audit 合同并保留原有恢复/回滚语义。
+2026-08-23 14:46：修改 server/index.js，将 match-expression 与 match-chat 观众延迟投递统一接入 ServerClockTimer，并补齐清理、Timer Audit 与社交合同。
+2026-08-23 14:56：修改 server/index.js，让普通房间广播 spectator delay 复用可取消 lease，并在房间清理时统一撤销。
+2026-08-23 15:10：修改 server/index.js，将 Tank/Tetris/Xiangqi/Monopoly 服务端 gameplay tick 统一迁移到按房间隔离的 ServerClockTimer repeat lease。
+2026-08-23 16:00：修改 server/index.js，将 Tank Snapshot spectator delay 从原生 one-shot timer 迁移到房间/帧隔离的 ServerClockTimer lease；同步更新 Timer Audit、主线台账、状态与报告索引。
+2026-08-23 17:00：修改 server/index.js 与 server/cluster-coordinator.js，统一 DeepSeek、Supabase REST、生产 Telemetry 的 outbound deadline；新增 TransportDeadline 深模块与专项 QA。
+2026-08-23 21:18：修改 Gameplay/Operational/Cluster/Telemetry Metrics，使 generatedAt 统一消费单次 serverNow epoch；同步 T7 台账、状态、质量门和进度入口，保持 metrics-v2/RPC/CSV/Telemetry wire 不变。
+2026-08-23 21:18：完整回归发现并修正 Metrics 补丁误命中 `scheduleMatchSocialDelay` 的 `at` 参数；新增静态防回归断言，局内房聊专项与随后完整 `npm test` 均通过。
+
+## 2026-08-24 01:05
+
+- 修改 Game Stage Header、Seat Rail、头像/名称、表达、房聊和举报入口的触控几何，统一 44px 下限并修复短横屏 3–5 人席位压缩裁切。
+- 修改 Tank 响应式控制布局：摇杆与 D-pad 互斥，外层 Grid 由 `tank-controls.css` 单一拥有；模式切换先提交 neutral，并动态更新三语 aria-label。
+- 修改浏览器证据治理、Service Worker、台账、PROJECT_STATUS、技术验收与分类报告，当前构建绑定 HTML/Presentation/Layout/Cache 四重身份。
+- `npm run quality:gates` 与完整 `npm test` 均退出码 0；保持本地未发布。
+- 修改 PROJECT_STATUS，将下一主线推进到 PROVE P5 已准备、执行待连接器恢复；未越级记录浏览器 PASS。
+- 修改本机 Codex `config.toml`：node_repl 增加 `--disable-sandbox`，绕开当前陈旧 kernel assets 沙箱路径；需 MCP 进程重启后生效。
+- 修改 PROVE P5 与 PROJECT_STATUS，登记浏览器修复待重启、DATA dry-run/静态/fake 验收通过和真实凭证缺口。
+
+## 2026-08-24 09:30
+
+- 修改 `shared/rules/gomoku.js`：反序列化补齐棋子奇偶、最后落子、终局类型和“终局前已存在五连”一致性校验。
+- 修改 `public/src/games/gomoku.js`：严格验证 `lastSeq/history.seq` 的数值与单调边界；重连、观战、恢复和销毁清理未确认的 AI 学习候选与输入 pending。
+- 修改 `README.md`、`AGENTS.md`、`requirements/PRODUCT_REQUIREMENTS_LEDGER.json`、`PROJECT_STATUS.json`：登记 GAME-017 已实现待外部闭环、协议表、测试命令、回滚边界与当前构建身份。
+- 修改 7 类分类进度报告与 PROVE P5 模板，当前构建同步为 1,822,901 characters / 1,836,754 bytes / SHA-256 `6187FF55581F3475DFB759413FFD268FA04A1940F82C9BD9314BA6581DBAC81B`。
+- 本批 asset-gen 适用性为 `NOT_APPLICABLE`，未生成图片/模型/动画；未部署、未 commit、未 push。
+
+- 修正 `qa/game-stage-density-process-gomoku.js` 的静态合同窗口，使其覆盖新增的 Authority pending 清理而不放宽行为边界；Gomoku Wave C 专项与完整 `npm test` 随后通过。
+- 修正 P5 证据模板与 PROJECT_STATUS 的表现身份：保留真实 `7477EE0D…CCD92DF` 身份，单独记录 CSS 聚合哈希，缓存版本统一为 `ghost-game-shell-v22-20260824`。
+- 最终 `npm run quality:gates` 输出 `QUALITY_GATES_FAST_ALL_PASS`；完整 `npm test` 输出 `E2E_ALL_PASS`，posttest 全链通过。
+
+## 2026-08-24 10:00
+
+- 同步 P5 当前构建模板与 `PROJECT_STATUS.json`：1,825,915 characters / 1,839,768 bytes / SHA-256 `86E6DF923C5DFD5A21E9ADBBCFFCA02CD7282CCFE979E5B74C1B4532429377E1`。
+- 记录完整 `npm test` exit code 0、`npm run build` 无漂移、`npm run test:progress-ledger` 与 `npm run quality:gates` 通过；历史浏览器证据仍保持 historical-as-of。
+
+## 2026-08-24 10:20
+
+- 修改 `server/index.js` 与 `package.json`：Rule Authority 成功动作写入独立有界 `replayInputLog`，回放落盘附带 `authorityInputLog`/脱敏 deterministic 摘要，并将 Replay Authority QA 纳入 `test:replay-sharing`。
+- 修改 `README.md`、`AGENTS.md`、`PROJECT_STATUS.json`、`requirements/PRODUCT_REQUIREMENTS_LEDGER.json` 与 7 类进度报告，明确 GAME-031 仍为 partial，Tetris server tick/garbage 与 Tank 时间轴未完成。
+- 完整 `npm test`（exit 0）、`npm run build -- --check`、`npm run test:progress-ledger`、`npm run quality:gates` 与 `node qa/brief-report-contract.js` 均通过；同步项目更新时间与简易报告索引。
+- 继续修改 GAME-031：Tetris server tick/garbage 自动动作纳入 Authority replay projection；专项回归扩展为 8 项断言并通过。Tank 时间轴与六款完整终局/自动推进对账仍保持 partial。
+- 同步 GAME-031 active plan、PROJECT_STATUS 与简易报告下一步：Tetris 自动事件已收口，下一剩余核心为 Tank Authority timeline 与六款终局/自动推进对账。
+- Tetris 事件补丁后的完整 `npm test`、`npm run quality:gates` 与确定性 `build --check` 再次通过；当前 HTML SHA/bytes 未变化。
+
+## 2026-08-24 12:02
+
+- 修改 `server/gameplay/replay-authority.js`：修正 Tank 时间轴解析并加入 fixed-tick、时间顺序、服务器 tick、来源、match 与 hash 的 fail-closed 校验。
+- 修改 `server/index.js`：`saveReplayForRoom()` 接入 TankAuthority replayLog，保存脱敏 `authorityInputLog` 并按 Tank 配置生成 deterministic 摘要，同时保留旧 moveLog。
+- 修改 GAME-031 acceptance/plan、PROJECT_STATUS、README、AGENTS、需求台账、Replay 简易报告及索引，明确 Tank timeline 已完成而六款完整终局/自动推进/重连/跨实例对账仍为 partial。
+
+## 2026-08-24 12:11
+
+- 加严 Tank replay verifier：每条事件必须具备合法 8 位 projection hash，事件 envelope 序号必须与 timelineSeq 一致，客户端输入的 serverTick 必须与重演状态一致；缺失或篡改均 fail-closed。
+- 修正 Tank 回放重演对空 clientTick 的兼容，保留原始未提供语义，避免长局回放被误判为过期 tick。
+
+## 2026-08-24 13:14
+
+- 修改 `server/gameplay/replay-authority.js` 与 `server/index.js`：六款回放保存统一写入并校验 lifecycle timeline、终局/排名/hash、自动事件、重连和实例顺序；deterministic 摘要增加 lifecycle 状态。
+- 修改 `server/gameplay/tetris-rule-authority.js`：时间限制结束写入 server-sourced finish 事件；修改 Tetris replay 解析支持 garbage/finish 自动事件。
+- 修改 `server/gameplay/monopoly-rule-authority.js`：自动 close-auction 写入 server-sourced input log。
+- 修改 `qa/replay-authority.js`、GAME-031 台账/验收/计划/PROJECT_STATUS、README、分类简报与索引，明确本地六款生命周期已收口、真实 Cluster/Supabase 证据仍待执行。
+
+## 2026-08-24 09:43
+
+- 修改 `server/gameplay/protocol.js`、`server/boundaries/match-protocol.js`、`server/index.js`：接入 `ludo-rule-v1` capability、Authority、AI/观战/重连快照、可信结算与旧 relay 回退。
+- 修改 `public/src/games/ludo.js`、`public/src/online/03-websocket.js`、`public/src/ui/07-roster.js`：权威模式只发送 roll/move 意图并消费服务端快照。
+- 修改台账、PROJECT_STATUS、AGENTS 与 7 类报告：GAME-018 登记为本地实现、发布证据待决；当前构建 SHA-256 `170F23D3AF43D78E6322A3D3E2A6EE4BE1BD37015EDD43AFAF1832CF14626283`。
+
+## 2026-08-24 13:31
+
+- 修改 GAME-031 台账、PROJECT_STATUS、Replay 验收件与简易报告：将早期“六款终局/自动/重连未完成”的阶段性描述标为历史，统一为“本地实现完成”；保留真实 Supabase Cluster、生产多实例、浏览器/真机/网络与发布证据待执行边界。
+- 修改报告构建指纹为 `public/index.html` 1,825,915 characters / 1,839,768 bytes / SHA-256 `86E6DF923C5DFD5A21E9ADBBCFFCA02CD7282CCFE979E5B74C1B4532429377E1`。

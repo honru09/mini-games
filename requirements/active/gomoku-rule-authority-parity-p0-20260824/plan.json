@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "taskId": "gomoku-rule-authority-parity-p0-20260824",
+  "requirementIds": ["GAME-017"],
+  "stage": "PARITY",
+  "status": "implemented_local_machine_verified_not_released",
+  "release": "LOCAL_ONLY_NOT_RELEASED",
+  "assetGen": {
+    "status": "NOT_APPLICABLE",
+    "reason": "本批只处理规则、协议、客户端状态和回归测试，不生成或接入游戏图片/模型/动画素材。"
+  },
+  "inScope": [
+    "15x15 freestyle Gomoku Rule Core",
+    "server Authority action sequence, revision, hash and reconnect snapshot",
+    "Match Protocol boundary, trusted terminal settlement and rollback",
+    "client capability negotiation, legacy fallback and non-optimistic state",
+    "AI confirmation only after accepted authoritative revision"
+  ],
+  "outOfScope": [
+    "deterministic replay for Authority input (GAME-031)",
+    "FlyChess Authority (GAME-018)",
+    "real browser/device/network/Supabase release evidence",
+    "commit, push, Pages, Render or production data writes"
+  ],
+  "rollback": "ENABLE_RULE_AUTHORITY_V2=0 or ENABLE_GOMOKU_RULE_AUTHORITY=0 returns eligible rooms to the legacy move relay; no legacy client is dynamically attached to an active Authority match.",
+  "evidence": [
+    "shared/rules/gomoku.js",
+    "server/gameplay/gomoku-rule-authority.js",
+    "server/boundaries/match-protocol.js",
+    "public/src/games/gomoku.js",
+    "public/src/online/03-websocket.js",
+    "qa/gomoku-rule-core.js",
+    "qa/gomoku-rule-authority.js",
+    "qa/gomoku-rule-authority-online.js",
+    "qa/gomoku-protocol-fallback-online.js",
+    "qa/game-stage-wave-b-gomoku.js",
+    "qa/match-protocol-boundary.js",
+    "qa/reconnect-online.js",
+    "qa/e2e-online.js",
+    "npm run quality:gates",
+    "npm test"
+  ],
+  "browserEvidence": {
+    "status": "NOT_EXECUTED",
+    "reason": "当前浏览器连接器内核资源路径错误；静态/VM/自动化证据不升级为真实可见验收。"
+  },
+  "externalGates": [
+    "second desktop browser",
+    "physical Android/iPhone/Tablet",
+    "real network shaping",
+    "production Supabase/RLS/backup/restore/concurrency"
+  ]
+}

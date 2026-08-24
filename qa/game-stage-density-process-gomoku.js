@@ -45,7 +45,7 @@ check('Wave C uses no GSAP, ScrollTrigger, or remote visual dependency', !/\bgsa
 check('presentation timers have an epoch guard and are cleared by reset, restore, and destroy',
   /clearGomokuWaveCProcessTimers\(\)/.test(SOURCE) && /gomokuWaveCProcessEpoch/.test(SOURCE) &&
   /function resetLocal\(\)[\s\S]{0,240}resetGomokuWaveCProcess\('turn'\)/.test(SOURCE) && /clearGomokuWaveCProcessTimers\(\)/.test(processResetSource) &&
-  /function onRestore\(value\)[\s\S]{0,520}clearGomokuWaveCProcessTimers\(\)/.test(SOURCE) &&
+  /function onRestore\(value\)[\s\S]{0,800}clearGomokuWaveCProcessTimers\(\)/.test(SOURCE) &&
   /destroy:\s*\(\)\s*=>\s*\{[\s\S]{0,520}clearGomokuWaveCProcessTimers\(\)/.test(SOURCE));
 check('reduced motion reaches an explanatory stable process without queued presentation work',
   /prefersReducedMotion\(\)[\s\S]{0,300}setGomokuWaveCProcess/.test(SOURCE));

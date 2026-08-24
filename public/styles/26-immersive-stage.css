@@ -2,8 +2,8 @@
    The Arena owns the viewport. Header, seats and commands are compact HUD
    rails instead of sibling windows. Rules, authority and input DOM stay put. */
 #screen-game.game-stage{
-  --stage-header-size:clamp(52px,6.6dvh,62px);
-  --stage-seat-size:clamp(54px,7.2dvh,66px);
+  --stage-header-size:clamp(54px,6.6dvh,64px);
+  --stage-seat-size:clamp(58px,7.2dvh,68px);
   --stage-command-size:clamp(110px,15dvh,138px);
   grid-template-rows:var(--stage-header-size) var(--stage-seat-size) minmax(0,1fr);
   gap:4px;
@@ -22,18 +22,18 @@
 #screen-game.game-stage .game-stage-header h2{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:clamp(17px,2vw,23px)!important}
 #screen-game.game-stage .game-stage-mode{flex:none;padding:2px 7px;font-size:9px}
 #screen-game.game-stage .game-stage-header .top-actions{display:flex;align-items:center;justify-content:flex-end;gap:5px;flex-wrap:nowrap}
-#screen-game.game-stage .game-stage-header .btn{min-width:44px;min-height:42px;padding:5px 10px;white-space:nowrap;box-shadow:none}
+#screen-game.game-stage .game-stage-header .btn{min-width:44px;min-height:44px;padding:5px 10px;white-space:nowrap;box-shadow:none}
 #screen-game.game-stage .game-stage-seats{height:100%;min-height:0;margin:0;overflow:hidden}
 #screen-game.game-stage .game-stage-seats .player-bar{height:100%;flex-wrap:nowrap;justify-content:center;align-items:center;gap:6px;overflow-x:auto;overflow-y:hidden;padding:2px 4px}
 #screen-game.game-stage .game-stage-seat{flex:0 1 clamp(136px,17vw,194px);min-width:136px;max-width:194px;min-height:48px;height:calc(100% - 4px);padding:4px 7px!important;border-width:1px!important;border-radius:13px!important;box-shadow:0 2px 7px rgba(43,32,37,.12)!important;transform:none!important}
 #screen-game.game-stage .game-stage-seat.is-current{border-width:2px!important;box-shadow:inset 0 -3px 0 var(--stage-seat-color,#e75a4d),0 2px 8px rgba(43,32,37,.15)!important}
-#screen-game.game-stage .game-stage-avatar-button{width:40px;height:40px}
+#screen-game.game-stage .game-stage-avatar-button{width:44px;height:44px}
 #screen-game.game-stage .game-stage-avatar-fallback,#screen-game.game-stage .game-stage-observer-mark{width:32px;height:32px;border-radius:10px}
-#screen-game.game-stage .game-stage-seat-copy{gap:1px}
-#screen-game.game-stage .game-stage-seat-name{font-size:12px}
+#screen-game.game-stage .game-stage-seat-copy{align-items:center;min-height:44px;gap:1px}
+#screen-game.game-stage .game-stage-seat-name{font-size:12px;padding-bottom:11px}
 #screen-game.game-stage .game-stage-seat-detail{display:none}
-#screen-game.game-stage .game-stage-name-button{min-height:22px}
-#screen-game.game-stage .game-stage-badges{gap:3px;max-height:18px;overflow:hidden}
+#screen-game.game-stage .game-stage-name-button{min-width:44px;min-height:44px}
+#screen-game.game-stage .game-stage-badges{position:absolute;right:5px;bottom:2px;z-index:2;max-width:calc(100% - 54px);justify-content:flex-end;gap:3px;max-height:18px;overflow:hidden;pointer-events:none}
 #screen-game.game-stage .game-stage-badge{min-height:14px;padding:1px 4px;font-size:7px}
 #screen-game.game-stage .game-stage-main,#screen-game.game-stage.arena-first .game-stage-main{position:relative;display:block;min-width:0;min-height:0;overflow:hidden}
 #screen-game.game-stage .game-stage-arena,#screen-game.game-stage.arena-first .game-stage-arena{
@@ -61,8 +61,8 @@
 #screen-game.game-stage .game-stage-secondary-tools:empty{display:none}
 #screen-game.game-stage .game-stage-secondary-tools>.hidden{display:none!important}
 #screen-game.game-stage .match-expression-panel,#screen-game.game-stage .match-chat-panel{flex:0 1 190px;min-width:150px;max-height:100%;padding:5px;overflow:auto}
-#screen-game.game-stage .match-expression-head,#screen-game.game-stage .match-chat-head{min-height:34px}
-#screen-game.game-stage .match-expression-panel .btn,#screen-game.game-stage .match-chat-panel .btn{min-height:34px;min-width:34px;padding:3px 6px}
+#screen-game.game-stage .match-expression-head,#screen-game.game-stage .match-chat-head{min-height:44px}
+#screen-game.game-stage .match-expression-panel .btn,#screen-game.game-stage .match-chat-panel .btn{min-height:44px;min-width:44px;padding:3px 6px}
 #screen-game.game-stage .game-stage-command .gomoku-turn-hud{display:none!important}
 #screen-game.game-stage[data-shell-game="gomoku"]{--stage-command-size:175px}
 #screen-game.game-stage[data-shell-game="ludo"]{--stage-command-size:180px}
@@ -86,7 +86,7 @@
 #screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-command>.monopoly-wave-b-meta{grid-area:meta;grid-template-columns:repeat(3,minmax(0,1fr));align-content:center;gap:4px;max-height:100%;padding:0;overflow:auto;background:transparent;box-shadow:none}
 #screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-command>.monopoly-wave-b-meta>output{min-height:28px;padding:5px 6px;font-size:9px}
 @media(max-width:720px){
-  #screen-game.game-stage{--stage-header-size:52px;--stage-seat-size:56px;--stage-command-size:clamp(136px,18dvh,156px);gap:3px}
+  #screen-game.game-stage{--stage-header-size:54px;--stage-seat-size:58px;--stage-command-size:clamp(136px,18dvh,156px);gap:3px}
   #screen-game.game-stage[data-shell-game="gomoku"]{--stage-command-size:220px}
   #screen-game.game-stage[data-shell-game="ludo"]{--stage-command-size:220px}
   #screen-game.game-stage[data-shell-game="monopoly"]{--stage-command-size:230px}
@@ -104,7 +104,7 @@
   #screen-game.game-stage .game-stage-header .ui-icon-label{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
   #screen-game.game-stage .game-stage-header h2{font-size:17px!important}
   #screen-game.game-stage .game-stage-seats .player-bar{justify-content:flex-start;padding:1px 2px;scroll-snap-type:x proximity}
-  #screen-game.game-stage .game-stage-seat{flex:0 0 min(168px,47vw);min-width:144px;max-width:168px;height:52px;scroll-snap-align:start}
+  #screen-game.game-stage .game-stage-seat{flex:0 0 min(168px,47vw);min-width:144px;max-width:168px;height:54px;padding:3px 5px!important;scroll-snap-align:start}
   #screen-game.game-stage .game-stage-badge:not(.mine):not(.turn){display:none}
   #screen-game.game-stage .game-stage-spectators{position:absolute;right:2px;top:2px;z-index:3;padding:3px 6px;font-size:8px}
   #screen-game.game-stage .game-stage-arena,#screen-game.game-stage.arena-first .game-stage-arena{padding:2px 2px calc(var(--stage-command-size) + 5px);border-radius:12px}
@@ -135,11 +135,6 @@
   #screen-game.game-stage[data-shell-game="tetris"] .tetris-wave-b-opponent-card{padding:3px!important}
   #screen-game.game-stage[data-shell-game="tetris"] .tetris-wave-b-preview-deck{gap:3px}
   #screen-game.game-stage[data-shell-game="tetris"] .tetris-preview-slot{min-height:42px;padding:3px}
-  #screen-game.game-stage .tank-control-deck{grid-template-columns:88px minmax(132px,1fr) 76px!important;grid-template-areas:"stick dpad fire"!important;gap:4px!important;padding:2px!important;border:0;background:transparent}
-  #screen-game.game-stage .tank-joystick{width:82px;height:82px;min-width:82px;min-height:82px}
-  #screen-game.game-stage .tank-fire{width:72px;height:72px;min-width:72px!important;min-height:72px!important}
-  #screen-game.game-stage .tank-control-hint{display:none}
-  #screen-game.game-stage .tank-joystick-direction{bottom:-12px;font-size:8px}
 }
 @media(min-width:721px) and (max-width:900px) and (orientation:portrait){
   #screen-game.game-stage[data-shell-game="ludo"]{--stage-command-size:200px}
@@ -162,7 +157,7 @@
 }
 @media(max-height:600px) and (orientation:landscape){
   #screen-game.game-stage{
-    --stage-header-size:48px;--stage-seat-size:0px;--stage-command-size:auto;
+    --stage-header-size:54px;--stage-seat-size:0px;--stage-command-size:auto;
     --stage-landscape-rail:min(42vw,352px);
     grid-template-rows:var(--stage-header-size) minmax(0,1fr);gap:4px
   }
@@ -171,16 +166,23 @@
     position:absolute;z-index:13;top:calc(max(4px,env(safe-area-inset-top,0px)) + var(--stage-header-size) + 4px);right:max(4px,env(safe-area-inset-right,0px));
     width:var(--stage-landscape-rail);height:48px;margin:0;overflow:hidden
   }
-  #screen-game.game-stage .game-stage-seats .player-bar{width:100%;gap:5px;padding:1px;overflow:hidden}
-  #screen-game.game-stage .game-stage-seat{flex:1 1 0;min-width:0;max-width:none;height:46px;padding:3px 5px!important}
+  #screen-game.game-stage .game-stage-seats .player-bar{
+    width:100%;justify-content:flex-start;gap:5px;padding:1px;overflow-x:auto;overflow-y:hidden;
+    overscroll-behavior-x:contain;touch-action:pan-x;scroll-padding-inline:1px;scroll-snap-type:x proximity
+  }
+  #screen-game.game-stage .game-stage-seat{
+    flex:0 0 clamp(116px,19vw,160px);min-width:116px;max-width:160px;height:48px;padding:1px 3px!important;
+    scroll-snap-align:start
+  }
   #screen-game.game-stage .game-stage-seat-detail{display:none}
-  #screen-game.game-stage .game-stage-avatar-button{width:36px;height:36px}
+  #screen-game.game-stage .game-stage-badges{display:none}
+  #screen-game.game-stage .game-stage-avatar-button{width:44px;height:44px}
   #screen-game.game-stage .game-stage-main,#screen-game.game-stage.arena-first .game-stage-main{grid-row:2}
   #screen-game.game-stage .game-stage-arena,#screen-game.game-stage.arena-first .game-stage-arena{
     align-items:center!important;justify-content:center;padding:3px calc(var(--stage-landscape-rail) + 8px) 3px 3px
   }
   #screen-game.game-stage .game-stage-command{
-    top:52px;right:3px;bottom:3px;left:auto;width:var(--stage-landscape-rail);height:auto;max-height:none;
+    top:calc(var(--stage-header-size) + 4px);right:3px;bottom:3px;left:auto;width:var(--stage-landscape-rail);height:auto;max-height:none;
     grid-template-columns:minmax(0,1fr) auto;grid-template-rows:22px 34px minmax(0,1fr);grid-template-areas:"state tools" "status tools" "controls controls";
     gap:3px 5px;padding:5px 6px
   }
@@ -204,10 +206,6 @@
   #screen-game.game-stage[data-shell-game="tetris"] .tetris-wave-b-layout{height:100%;overflow:hidden}
   #screen-game.game-stage[data-shell-game="tetris"] .game-stage-command .game-extra{align-content:center;flex-wrap:wrap}
   #screen-game.game-stage[data-shell-game="tank"] .game-stage-command .game-extra{overflow:hidden}
-  #screen-game.game-stage .tank-control-deck{grid-template-columns:76px minmax(132px,1fr) 70px!important;grid-template-areas:"stick dpad fire"!important;gap:4px!important;padding:2px!important;border:0;background:transparent}
-  #screen-game.game-stage .tank-joystick{width:72px;height:72px;min-width:72px;min-height:72px}
-  #screen-game.game-stage .tank-fire{width:66px;height:66px;min-width:66px!important;min-height:66px!important}
-  #screen-game.game-stage .tank-control-hint,#screen-game.game-stage .tank-joystick-direction{display:none}
 }
 @media(prefers-reduced-motion:reduce){#screen-game.game-stage .game-stage-header,#screen-game.game-stage .game-stage-seat,#screen-game.game-stage .game-stage-command{backdrop-filter:none;-webkit-backdrop-filter:none}}
 
@@ -352,4 +350,3 @@
   #screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-stage .monopoly-character-token,
   #screen-game.game-stage[data-shell-game="monopoly"] .monopoly-wave-b-board-frame{will-change:auto}
 }
-

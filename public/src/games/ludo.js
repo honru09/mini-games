@@ -1,6 +1,7 @@
 /* ================= 飞行棋 ================= */
 function gameLudo(area, extra, n, opts){
   opts = opts || {};
+  const ruleAuthority = !!(opts.online && opts.gameplayMeta && opts.gameplayMeta.protocol === 'ludo-rule-v1' && typeof opts.sendLudoAction === 'function');
   const acceptedAudioCue = typeof emitAcceptedAudioCue === 'function' ? emitAcceptedAudioCue : null;
   const audioCue = (type, context, intensity, pan) => {
     try {
@@ -23,7 +24,14 @@ function gameLudo(area, extra, n, opts){
   let spectator = !!opts.spectator, startedAt = Date.now(), finishedAt = 0;
   let captures = 0, takeoffs = 0;
   let movingToken = null;
-  let remoteInputs = [], drainingRemoteInputs = false, epoch = 0, audioRollSequence = 0, audioMoveSequence = 0;
+  let remoteInputs = [], drainingRemoteInputs = false, epoch = 0, audioRollSequence = 0, audioMoveSequence = 0, authorityActionSeq = 0, authorityPending = null, authorityRetryTimer = null;
+  function clearAuthorityPending(){ if(authorityRetryTimer!==null){clearTimeout(authorityRetryTimer);authorityRetryTimer=null;} authorityPending=null; }
+  function sendAuthorityAction(action){
+    if(!ruleAuthority||authorityPending)return false;
+    const pending={seq:++authorityActionSeq,action:{...action},attempts:0};authorityPending=pending;
+    const transmit=()=>{if(!authorityPending||authorityPending!==pending||opts.destroyed)return;pending.attempts++;opts.sendLudoAction({seq:pending.seq,action:pending.action});if(pending.attempts<4)authorityRetryTimer=setTimeout(()=>{authorityRetryTimer=null;transmit();},700);};
+    transmit();renderBoard();return true;
+  }
   let S = 520;
   const ludoFinalArtRequested = typeof ludoFinalArtEnabled === 'function' && ludoFinalArtEnabled();
   let ludoFinalArtActive = false, ludoFinalArtState = ludoFinalArtRequested ? 'loading' : 'disabled', ludoFinalBoardUrl = '', ludoFinalDieUrl = '', ludoFinalArtRequest = 0;
@@ -861,7 +869,7 @@ function gameLudo(area, extra, n, opts){
       const cnt = tokens[pi].filter(t => t === HOME).length;
       return t('ludo_home_progress',cnt);
     });
-    diceBtn.disabled = spectator || over || phase !== 'roll' || (opts.online && curIdx !== opts.myIdx) || (opts.ai && opts.ai.has(curIdx));
+    diceBtn.disabled = spectator || over || phase !== 'roll' || (opts.online && curIdx !== opts.myIdx) || (opts.ai && opts.ai.has(curIdx)) || (ruleAuthority && !!authorityPending);
     const diceSkin = playerCosmetic(curIdx).dice === 'cyber' ? 'cyber' : 'classic';
     diceBtn.dataset.diceSkin = diceSkin;
     dice3d.wrap.dataset.diceSkin = diceSkin;
@@ -877,6 +885,7 @@ function gameLudo(area, extra, n, opts){
     if (opts.isReplaying && opts.isReplaying()) return;
     if (opts.online && curIdx !== opts.myIdx) return;
     if (opts.ai && opts.ai.has(curIdx)) return;
+    if (ruleAuthority){ sendAuthorityAction({type:'roll'}); return; }
     const d = 1 + Math.floor(Math.random()*6);
     if (opts.onProgress) opts.onProgress({ dice: d });
     if (opts.online) opts.sendMove({ dice: d });
@@ -913,12 +922,14 @@ function gameLudo(area, extra, n, opts){
   }
   function pick(pid, ti){
     if (spectator || over || phase !== 'pick' || pid !== curPid()) return;
+    if (ruleAuthority && authorityPending) return;
     if (opts.isReplaying && opts.isReplaying()) return;
     if (opts.online && curIdx !== opts.myIdx) return;
     if (opts.ai && opts.ai.has(curIdx)) return;
     const pi = pids.indexOf(pid);
     const arr = tokens[pi];
     if (!canMove(arr[ti])) return;
+    if (ruleAuthority){ sendAuthorityAction({type:'move',token:ti}); return; }
     if (opts.onProgress) opts.onProgress({ ti });
     if (opts.online) opts.sendMove({ ti });
     applyPick(pid, ti);
@@ -1120,6 +1131,7 @@ function gameLudo(area, extra, n, opts){
   function resetLocal(){
     epoch++;
     clearLudoWaveCProcessTimers();
+    clearAuthorityPending();
     clearLudoOutcomeTimer();
     clearLudoFinalArtVfx();
     tokens = pids.map(() => Array(4).fill(-1));
@@ -1156,19 +1168,31 @@ function gameLudo(area, extra, n, opts){
     epoch++; audioMoveSequence = 0; clearLudoWaveCProcessTimers(); clearLudoOutcomeTimer(); clearLudoFinalArtVfx(); movingToken = null;
     ludoOutcomeScheduled = false; ludoOutcomeVisible = false;
     tokens = state.tokens.map(list => Array.isArray(list) ? list.slice(0, 4).map(v => Math.max(-1, Math.min(HOME, Number(v) || 0))) : Array(4).fill(-1));
-    curIdx = Math.max(0, Math.min(pids.length - 1, Number(state.curIdx) || 0)); phase = ['roll','rolling','pick'].includes(state.phase) ? state.phase : 'roll';
+    curIdx = Math.max(0, Math.min(pids.length - 1, Number(state.curIdx ?? state.current) || 0)); phase = ['roll','rolling','pick'].includes(state.phase) ? state.phase : 'roll';
     dice = Math.max(0, Math.min(6, Number(state.dice) || 0)); over = !!state.over; winner = Number.isInteger(state.winner) ? state.winner : -1;
     setLudoWaveCProcess(over ? 'ranking' : (phase === 'rolling' ? 'dice' : (phase === 'pick' ? 'pick' : 'roll')), '', false);
     if (value && value.presentation){ boardTheme = value.presentation.boardTheme === 'grass' ? 'grass' : 'classic'; cosmetic = normalizeCosmetic(value.presentation.cosmetic); }
     renderBoard(); notifyLudoIdle(); return true;
+  }
+  function onLudoRuleState(value){
+    if(!ruleAuthority||!value||String(value.matchId||opts.matchId||'')!==String(opts.matchId||''))return false;
+    if(Array.isArray(value.lastSeq))authorityActionSeq=Math.max(authorityActionSeq,Number(value.lastSeq[Number(opts.myIdx)]||0));
+    clearAuthorityPending();
+    const snapshot={...value,winner:Number.isInteger(value.winner)&&value.winner>=0?pids[value.winner]:-1};
+    const ok=onRestore(snapshot); if(ok){remoteInputs=[];renderBoard();} return ok;
+  }
+  function onLudoRuleResult(value){
+    if(!value||!Array.isArray(value.order))return false;
+    if(!over){over=true;const slot=Number.isInteger(value.winner)?value.winner:Number(value.order[0]);winner=pids[slot]===undefined?slot:pids[slot];finishedAt=Date.now();renderBoard();}
+    return true;
   }
   if(ludoFinalArtRequested)initLudoFinalArtSurface();
   renderBoard();
   installLudoPresentationResize();
   setStatus(t('ludo_initial_turn'));
   return {
-    reset, onMove: opts.onMove, onRestart: resetLocal,
-    destroy: () => { epoch++; clearLudoWaveCProcessTimers(); ludoFinalArtRequest++; clearLudoOutcomeTimer(); clearLudoFinalArtVfx(); ludoFinalPieceUrlCache.clear(); ludoFinalPieceRequests.clear(); ludoDestroyed = true; opts.destroyed = true; releaseLudoPresentationResize(); aiPending = false; remoteInputs = []; dice3d.reset(); releaseLudoWaveBPresentation(); area.style.touchAction = previousTouchAction; area.style.overscrollBehavior = previousOverscroll; notifyLudoIdle(true); },
+    reset, onMove: opts.onMove, onRestart: resetLocal, onLudoRuleState, onLudoRuleResult,
+    destroy: () => { epoch++; clearLudoWaveCProcessTimers(); clearAuthorityPending(); ludoFinalArtRequest++; clearLudoOutcomeTimer(); clearLudoFinalArtVfx(); ludoFinalPieceUrlCache.clear(); ludoFinalPieceRequests.clear(); ludoDestroyed = true; opts.destroyed = true; releaseLudoPresentationResize(); aiPending = false; remoteInputs = []; dice3d.reset(); releaseLudoWaveBPresentation(); area.style.touchAction = previousTouchAction; area.style.overscrollBehavior = previousOverscroll; notifyLudoIdle(true); },
     whenIdle: whenLudoIdle,
     snapshot, onRestore,
     serialize: () => ({ state: snapshot(), presentation: { boardTheme, cosmetic: { ...cosmetic, players:{...cosmetic.players} } }, stats: getMatchStats() }),

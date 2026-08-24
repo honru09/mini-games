@@ -14,6 +14,9 @@ function checkGomokuWin(grid, r, c){
 }
 function gameGomoku(area, extra, n, opts){
   opts = opts || {};
+  const RULE_PROTOCOL='gomoku-rule-v1';
+  const ruleAuthority=!!(opts.online&&opts.gameplayMeta&&opts.gameplayMeta.protocol===RULE_PROTOCOL&&typeof opts.sendGomokuAction==='function'&&typeof GomokuRules!=='undefined');
+  let authorityMoveSeq=0,authorityRevision=-1,authorityMoveNumber=0,authorityResultRevision=-1,authorityInputPending=false,pendingAuthorityAIChoice=null;
   const acceptedAudioCue = typeof emitAcceptedAudioCue === 'function' ? emitAcceptedAudioCue : null;
   const audioCue = (type, context, intensity, pan) => {
     try {
@@ -466,7 +469,10 @@ function gameGomoku(area, extra, n, opts){
       aiPending = false;
       updateGomokuWaveBPresentation(turnHud.textContent);
       aiSpeak(difficulty, 'think');
-      if (opts.online && opts.ai && opts.ai.has(turn) && typeof opts.sendBotMove === 'function') opts.sendBotMove(turn, gpArr);
+      if (opts.online && opts.ai && opts.ai.has(turn) && typeof opts.sendBotMove === 'function'){
+        opts.sendBotMove(turn,gpArr);
+        if(ruleAuthority){pendingAuthorityAIChoice=chosen;return;}
+      }
       if (applyMove(gpArr[0], gpArr[1]) && typeof confirmAIReady === 'function') {
         confirmAIReady('gomoku', chosen);
       }
@@ -1561,7 +1567,7 @@ function gameGomoku(area, extra, n, opts){
   }
   function canPlaceLocalGomokuMove(){
     return !opts.destroyed && !gomokuDestroyed && !over && !spectator &&
-      (!opts.online || cur === opts.myIdx) && !(opts.ai && opts.ai.has(cur));
+      (!opts.online || cur === opts.myIdx) && !(opts.ai && opts.ai.has(cur)) && !(ruleAuthority&&authorityInputPending);
   }
   function setGomokuKeyboardProcess(){
     const [r, c] = gomokuKeyboardCell;
@@ -1579,6 +1585,7 @@ function gameGomoku(area, extra, n, opts){
     setGomokuKeyboardCell(r, c);
     setGomokuWaveCProcess('select', gomokuWaveBCoordinate([r, c]));
     if (opts.onProgress) opts.onProgress([r, c]);
+    if(ruleAuthority){authorityInputPending=true;opts.sendGomokuAction({seq:++authorityMoveSeq,row:r,col:c});return true;}
     if (opts.online) opts.sendMove([r, c]);
     return applyMove(r, c);
   }
@@ -1653,7 +1660,7 @@ function gameGomoku(area, extra, n, opts){
       startGomokuWaveCMoveProcess(r, c, 'line');
       showGomokuFinalVfx('line', r, c);
       triggerMoveImpact(r,c);
-      if (opts.onEnd) opts.onEnd([
+      if (!ruleAuthority && opts.onEnd) opts.onEnd([
         { slot: cur, coins: 1, rank: 1 },
         { slot: cur ^ 1, coins: 0, rank: 2 },
       ]);
@@ -1674,7 +1681,7 @@ function gameGomoku(area, extra, n, opts){
       startGomokuWaveCMoveProcess(r, c, 'terminal');
       showGomokuFinalVfx('draw', r, c);
       triggerMoveImpact(r,c);
-      if (opts.onEnd) opts.onEnd([
+      if (!ruleAuthority && opts.onEnd) opts.onEnd([
         { slot: 0, coins: 0, rank: 1 },
         { slot: 1, coins: 0, rank: 1 },
       ]);
@@ -1695,6 +1702,7 @@ function gameGomoku(area, extra, n, opts){
     return true;
   }
   opts.onMove = (payload, player) => {
+    if(ruleAuthority)return;
     if (opts.online && (!Number.isInteger(player) || player !== cur)) return;
     if (Array.isArray(payload) && payload.length === 2) applyMove(payload);
   };
@@ -1721,6 +1729,7 @@ function gameGomoku(area, extra, n, opts){
     resetGomokuWaveCProcess('turn');
     grid = Array.from({length:N}, () => Array(N).fill(-1));
     cur = 0; over = false; hist = []; last = null; winLine = []; ghost = null; startedAt = Date.now(); finishedAt = 0; gomokuAudioSequence = 0;
+    authorityMoveSeq=0;authorityRevision=ruleAuthority&&Number(opts.gameplayMeta&&opts.gameplayMeta.revision)===0?0:-1;authorityMoveNumber=0;authorityResultRevision=-1;authorityInputPending=false;pendingAuthorityAIChoice=null;
     setGomokuKeyboardCell(Math.floor(N / 2), Math.floor(N / 2));
     area.style.touchAction = spectator ? 'auto' : 'none';
     applyPresentation();
@@ -1741,7 +1750,7 @@ function gameGomoku(area, extra, n, opts){
   function setCosmetic(value){ cosmetic = normalizeCosmetic(value); draw(); return { default:cosmetic.default, players:{...cosmetic.players} }; }
   function setSpectators(value){
     const nextSpectator = Array.isArray(value) ? value.includes(opts.viewerId) : !!value;
-    if (!spectator && nextSpectator) cancelAIWork();
+    if (!spectator && nextSpectator){cancelAIWork();pendingAuthorityAIChoice=null;authorityInputPending=false;}
     spectator = nextSpectator;
     spectators = Array.isArray(value) ? value.slice() : spectators;
     area.style.touchAction = spectator || over ? 'auto' : 'none';
@@ -1766,7 +1775,7 @@ function gameGomoku(area, extra, n, opts){
   function onRestore(value){
     const state = value && value.state ? value.state : value;
     if (!state || !Array.isArray(state.hist)) return false;
-    cancelAIWork();
+    cancelAIWork();pendingAuthorityAIChoice=null;authorityInputPending=false;
     gomokuAudioSession++; gomokuAudioSequence = 0;
     clearGomokuFinalArtVfx();
     if (value && value.reconnecting === true) showGomokuFinalVfx('reconnect');
@@ -1785,16 +1794,73 @@ function gameGomoku(area, extra, n, opts){
     if (value && value.presentation){ boardTheme = value.presentation.boardTheme === 'grass' ? 'grass' : 'classic'; cosmetic = normalizeCosmetic(value.presentation.cosmetic); }
     applyPresentation(); draw(); renderPlayers(cur, null); return true;
   }
+  function parseGomokuAuthoritySnapshot(value){
+    if(!ruleAuthority||!value||value.protocol!==RULE_PROTOCOL)return null;
+    const expected=String(typeof opts.getMatchId==='function'?opts.getMatchId():opts.matchId||'');
+    if(!expected||String(value.matchId||'')!==expected)return null;
+    const revision=Number(value.revision),moveNumber=Number(value.moveNumber);
+    if(!Number.isSafeInteger(revision)||revision<0||!Number.isSafeInteger(moveNumber)||moveNumber<0||moveNumber>N*N)return null;
+    let state;
+    try{state=GomokuRules.deserialize({protocol:RULE_PROTOCOL,board:value.board,current:value.current,moveNumber,last:value.last??null,terminal:!!value.terminal,winner:Number(value.winner),reason:value.reason||null,winLine:Array.isArray(value.winLine)?value.winLine:[]});}
+    catch(_error){return null;}
+    if(value.hash&&GomokuRules.hashState(state)!==String(value.hash))return null;
+    const history=Array.isArray(value.history)?value.history:[];
+    if(history.length!==moveNumber)return null;
+    if(!Array.isArray(value.lastSeq)||value.lastSeq.length!==2)return null;
+    const lastSeq=value.lastSeq.slice();
+    if(lastSeq.some(seq=>!Number.isSafeInteger(seq)||seq<0))return null;
+    const seen=new Set(),historySeq=[0,0];
+    for(let index=0;index<history.length;index++){
+      const item=history[index],row=item&&item.row,col=item&&item.col,player=item&&item.player,seq=item&&item.seq,key=row+','+col;
+      if(!Number.isInteger(row)||!Number.isInteger(col)||row<0||row>=N||col<0||col>=N||(player!==0&&player!==1)||player!==index%2||!Number.isSafeInteger(seq)||seq<1||seq<=historySeq[player]||seq>lastSeq[player]||seen.has(key)||state.board[row][col]!==player)return null;
+      historySeq[player]=seq;seen.add(key);
+    }
+    return{state,history,revision,moveNumber,lastSeq};
+  }
+  function restoreGomokuAuthoritySnapshot(parsed,source){
+    if(source!=='live')pendingAuthorityAIChoice=null;
+    cancelAIWork();clearGomokuFinalArtVfx();cancelGomokuBoardAI('authority-restore');gomokuWaveCProcessEpoch++;clearGomokuWaveCProcessTimers();moveImpact=null;
+    grid=parsed.state.board.map(row=>row.slice());hist=parsed.history.map(item=>[item.row,item.col]);cur=parsed.state.current;over=parsed.state.terminal;last=parsed.state.last?parsed.state.last.slice():null;winLine=(parsed.state.winLine||[]).map(cell=>cell.slice());
+    finishedAt=over?Date.now():0;ghost=null;gomokuWaveCTerminalPending=false;gomokuWaveCTerminalLocked=over;setGomokuWaveCProcess(over?'terminal':'turn');
+    if(source==='reconnect')showGomokuFinalVfx('reconnect');
+    applyPresentation();draw();renderPlayers(cur,null);updateHud();area.style.touchAction=spectator||over?'auto':'none';
+    if(!over)scheduleAI();
+    return true;
+  }
+  function localAuthorityStateMatches(parsed){
+    if(parsed.state.current!==cur||parsed.state.terminal!==over||parsed.state.moveNumber!==hist.length)return false;
+    for(let row=0;row<N;row++)for(let col=0;col<N;col++)if(parsed.state.board[row][col]!==grid[row][col])return false;
+    return true;
+  }
+  function onGomokuRuleState(value,source='live'){
+    const parsed=parseGomokuAuthoritySnapshot(value);if(!parsed||parsed.revision<=authorityRevision)return false;
+    authorityInputPending=false;
+    const contiguous=source==='live'&&parsed.revision===authorityRevision+1&&parsed.moveNumber===authorityMoveNumber+1&&parsed.state.last&&grid[parsed.state.last[0]]&&grid[parsed.state.last[0]][parsed.state.last[1]]===-1;
+    let restored=false;
+    if(contiguous){applyMove(parsed.state.last[0],parsed.state.last[1]);restored=localAuthorityStateMatches(parsed);}
+    if(!restored)restoreGomokuAuthoritySnapshot(parsed,source);
+    authorityRevision=parsed.revision;authorityMoveNumber=parsed.moveNumber;
+    const own=Number(opts.myIdx);if(Number.isInteger(own)&&Number.isSafeInteger(Number(parsed.lastSeq[own])))authorityMoveSeq=Math.max(authorityMoveSeq,Number(parsed.lastSeq[own]));
+    const lastEntry=parsed.history[parsed.history.length-1];
+    if(source==='live'&&pendingAuthorityAIChoice&&lastEntry&&opts.ai&&opts.ai.has(lastEntry.player)&&typeof confirmAIReady==='function'){confirmAIReady('gomoku',pendingAuthorityAIChoice);pendingAuthorityAIChoice=null;}
+    return true;
+  }
+  function onGomokuRuleResult(value){
+    if(!ruleAuthority||!value||value.protocol!==RULE_PROTOCOL||String(value.matchId||'')!==String(typeof opts.getMatchId==='function'?opts.getMatchId():opts.matchId||''))return false;
+    const revision=Number(value.revision);if(!Number.isSafeInteger(revision)||revision<authorityRevision||revision<=authorityResultRevision)return false;
+    authorityResultRevision=revision;authorityInputPending=false;return true;
+  }
+  function onGomokuRuleError(){authorityInputPending=false;pendingAuthorityAIChoice=null;setGomokuKeyboardProcess();draw();return true;}
   if (gomokuFinalArtRequested) initGomokuFinalArtSurface();
   if (!tabletopMode()) initStickerSurface();
   resetLocal();
   return {
-    reset, onMove: opts.onMove, onRestart: resetLocal, snapshot, onRestore,
+    reset, onMove: opts.onMove, onRestart: resetLocal, snapshot, onRestore, onGomokuRuleState, onGomokuRuleResult, onGomokuRuleError,
     serialize: () => ({ state: snapshot(), presentation: { boardTheme, cosmetic:{default:cosmetic.default,players:{...cosmetic.players}} }, stats: getMatchStats() }),
     setBoardTheme, setCosmetic, renderCosmetic: setCosmetic, setSpectators, startMatch, reportGameResult, getMatchStats, getPresentationState,
     whenIdle: () => Promise.resolve(),
     destroy: () => {
-      gomokuDestroyed = true; opts.destroyed = true; stickerAssetProbe = null; cancelAIWork(); gomokuWaveCProcessEpoch++; clearGomokuWaveCProcessTimers(); clearGomokuFinalArtVfx(); gomokuFinalArtPieceImages.clear(); gomokuFinalArtPieceRequests.clear(); disposeGomokuBoardAI();
+      gomokuDestroyed = true; opts.destroyed = true; stickerAssetProbe = null; cancelAIWork(); pendingAuthorityAIChoice=null; authorityInputPending=false; gomokuWaveCProcessEpoch++; clearGomokuWaveCProcessTimers(); clearGomokuFinalArtVfx(); gomokuFinalArtPieceImages.clear(); gomokuFinalArtPieceRequests.clear(); disposeGomokuBoardAI();
       if (typeof canvas.removeEventListener === 'function'){
         canvas.removeEventListener('focus', handleGomokuKeyboardFocus);
         canvas.removeEventListener('blur', handleGomokuKeyboardBlur);

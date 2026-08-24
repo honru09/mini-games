@@ -12833,7 +12833,7 @@ function renderPersonaRow(){
 if (typeof document !== 'undefined') initAiDifficulty();
 /* ================= 联机对战（WebSocket 中继） ================= */
 const ONLINE_CLIENT_CAPABILITIES = Object.freeze([
-  'tank-authority-v1','tetris-battle-authority-v1','tetris-rule-v3','spectator-room-v1','tournament-orchestrator-v1',
+  'gomoku-rule-v1','ludo-rule-v1','tank-authority-v1','tetris-battle-authority-v1','tetris-rule-v3','spectator-room-v1','tournament-orchestrator-v1',
   'xiangqi-clock-v1','xiangqi-rule-v2','monopoly-auction-v1','monopoly-rule-v2','game-cosmetic-presentation-v1',
   'username-password-auth-v2','ephemeral-guest-v1','honru-companion-v1','direct-chat-v1','match-expression-v1','match-chat-v1','playline-v1',
 ]);
@@ -13361,6 +13361,8 @@ const online = {
   addAI(difficulty, persona){ this.send({ type:'add_ai', payload:{ difficulty:difficulty || 'normal', persona:persona || 'teacher' } }); },
   removeAI(seatId){ this.send({ type:'remove_ai', payload:{ seatId } }); },
   sendBotMove(seatId, payload){ this.send({ type:'bot_move', payload:{ seatId, payload } }); },
+  sendGomokuAction(payload){ this.send({type:'gomoku_action',payload:{...(payload||{}),matchId:this.matchId}}); },
+  sendLudoAction(payload){ return this.send({type:'ludo_action',payload:{...(payload||{}),matchId:this.matchId}}); },
   sendBotTankInput(seatId, payload){ this.send({ type:'bot_tank_input', payload:{ ...(payload || {}), seatId, matchId:this.matchId } }); },
   sendBotTetrisAction(seatId, action){ this.send({ type:'bot_tetris_action', payload:{ seatId, action, matchId:this.matchId } }); },
   sendMove(payload){ this.send({type:'move', payload}); setTimeout(() => this.publishGameState(), 0); },
@@ -13393,7 +13395,7 @@ const online = {
   sendXiangqiAction(payload){ this.send({type:'xiangqi_action',payload:{...(payload||{}),matchId:this.matchId}}); },
   spectate(roomId,matchId){ this.send({type:'spectate_join',payload:{roomId,matchId}}); },
   publishGameState(){
-    if(!this.isHost||this.isSpectator||!this.matchId||!currentGame||typeof currentGame.serialize!=='function'||['tank','tetris'].includes(this.game))return;
+    if(!this.isHost||this.isSpectator||!this.matchId||!currentGame||typeof currentGame.serialize!=='function'||['tank','tetris'].includes(this.game)||(this.game==='gomoku'&&this.gameplayMeta&&this.gameplayMeta.protocol==='gomoku-rule-v1'))return;
     const ready=typeof currentGame.whenIdle==='function'?currentGame.whenIdle():Promise.resolve();
     Promise.resolve(ready).then(()=>{if(!this.isHost||!currentGame||!this.matchId)return;const snapshot=currentGame.serialize();const state=snapshot&&snapshot.state?snapshot.state:snapshot;if(this.game==='monopoly'&&state&&!state.over&&state.phase!=='roll')return;this.send({type:'game_state',payload:{matchId:this.matchId,snapshot}});}).catch(()=>{});
   },
@@ -13478,6 +13480,8 @@ const online = {
             const tankSnapshot=this.decodeTankSnapshot(p.tankSnapshot);
             if(tankSnapshot&&currentGame&&currentGame.onAuthoritySnapshot)currentGame.onAuthoritySnapshot(tankSnapshot,true);
             if(p.tetrisSnapshot&&currentGame&&currentGame.onBattleSnapshot)currentGame.onBattleSnapshot(p.tetrisSnapshot);
+            if(p.gomokuRuleSnapshot&&currentGame&&currentGame.onGomokuRuleState)currentGame.onGomokuRuleState(p.gomokuRuleSnapshot,'spectator-bootstrap');
+            if(p.ludoRuleSnapshot&&currentGame&&currentGame.onLudoRuleState)currentGame.onLudoRuleState(p.ludoRuleSnapshot,'spectator-bootstrap');
             if(p.tetrisRuleSnapshot&&currentGame&&currentGame.onTetrisRuleState)currentGame.onTetrisRuleState(p.tetrisRuleSnapshot,'spectator-bootstrap');
             if(Array.isArray(p.tetrisPresentation)&&currentGame&&currentGame.onTetrisState)p.tetrisPresentation.forEach(item=>currentGame.onTetrisState(item));
             if(p.xiangqiRuleSnapshot&&currentGame&&currentGame.onXiangqiRuleState)currentGame.onXiangqiRuleState(p.xiangqiRuleSnapshot,'spectator-bootstrap');
@@ -13500,6 +13504,8 @@ const online = {
             const tankSnapshot=this.decodeTankSnapshot(p.tankSnapshot);
             if(tankSnapshot&&currentGame&&currentGame.onAuthoritySnapshot)currentGame.onAuthoritySnapshot(tankSnapshot,true);
             if(p.tetrisSnapshot&&currentGame&&currentGame.onBattleSnapshot)currentGame.onBattleSnapshot(p.tetrisSnapshot);
+             if(p.gomokuRuleSnapshot&&currentGame&&currentGame.onGomokuRuleState)currentGame.onGomokuRuleState(p.gomokuRuleSnapshot,'spectator-bootstrap');
+             if(p.ludoRuleSnapshot&&currentGame&&currentGame.onLudoRuleState)currentGame.onLudoRuleState(p.ludoRuleSnapshot,'spectator-bootstrap');
              if(p.tetrisRuleSnapshot&&currentGame&&currentGame.onTetrisRuleState)currentGame.onTetrisRuleState(p.tetrisRuleSnapshot,'spectator-bootstrap');
              if(Array.isArray(p.tetrisPresentation)&&currentGame&&currentGame.onTetrisState)p.tetrisPresentation.forEach(item=>currentGame.onTetrisState(item));
              if(p.xiangqiRuleSnapshot&&currentGame&&currentGame.onXiangqiRuleState)currentGame.onXiangqiRuleState(p.xiangqiRuleSnapshot,'spectator-bootstrap');
@@ -13731,6 +13737,8 @@ const online = {
             const tankSnapshot=this.decodeTankSnapshot(p.tankSnapshot);
             if(tankSnapshot&&currentGame&&currentGame.onAuthoritySnapshot)currentGame.onAuthoritySnapshot(tankSnapshot,true);
             if(p.tetrisSnapshot&&currentGame&&currentGame.onBattleSnapshot)currentGame.onBattleSnapshot(p.tetrisSnapshot);
+            if(p.gomokuRuleSnapshot&&currentGame&&currentGame.onGomokuRuleState)currentGame.onGomokuRuleState(p.gomokuRuleSnapshot,'reconnect');
+            if(p.ludoRuleSnapshot&&currentGame&&currentGame.onLudoRuleState)currentGame.onLudoRuleState(p.ludoRuleSnapshot,'reconnect');
             if(p.tetrisRuleSnapshot&&currentGame&&currentGame.onTetrisRuleState)currentGame.onTetrisRuleState(p.tetrisRuleSnapshot,'reconnect');
             if(Array.isArray(p.tetrisPresentation)&&currentGame&&currentGame.onTetrisState)p.tetrisPresentation.forEach(item=>currentGame.onTetrisState(item));
             if(p.xiangqiRuleSnapshot&&currentGame&&currentGame.onXiangqiRuleState)currentGame.onXiangqiRuleState(p.xiangqiRuleSnapshot,'reconnect');
@@ -13909,6 +13917,7 @@ const online = {
       case 'gameplay_error':
         if(msg.payload&&msg.payload.reason){
           const reason=String(msg.payload.reason);
+          if(msg.payload.protocol==='gomoku-rule-v1'&&currentGame&&typeof currentGame.onGomokuRuleError==='function')currentGame.onGomokuRuleError(reason);
           if(currentGame&&typeof currentGame.onUndoRejected==='function'&&(
             msg.payload.protocol==='undo-v1'||reason.startsWith('ERR_UNDO_')||reason==='ERR_NOT_LAST_MOVER'
           ))currentGame.onUndoRejected(reason);
@@ -13921,6 +13930,18 @@ const online = {
           if(undoErrorKey)toast(t(undoErrorKey));
           else if(!['stale_seq','legacy_move_rejected'].includes(reason))console.warn('Gameplay protocol:',reason);
         }
+        break;
+      case 'gomoku_rule_state':
+        if(this.game==='gomoku'&&currentGame&&currentGame.onGomokuRuleState)currentGame.onGomokuRuleState(msg.payload||msg,'live');
+        break;
+      case 'ludo_rule_state':
+        if(this.game==='ludo'&&currentGame&&currentGame.onLudoRuleState)currentGame.onLudoRuleState(msg.payload||msg,'live');
+        break;
+      case 'ludo_result':
+        if(this.game==='ludo'&&currentGame&&currentGame.onLudoRuleResult)currentGame.onLudoRuleResult(msg.payload||msg,'live');
+        break;
+      case 'gomoku_result':
+        if(this.game==='gomoku'&&currentGame&&currentGame.onGomokuRuleResult)currentGame.onGomokuRuleResult(msg.payload||msg,'live');
         break;
       case 'restart':
         {
@@ -19232,6 +19253,8 @@ function showGame(id){
       getMatchId: () => online.matchId,
       allowUndo: online.roomInfo ? online.roomInfo.allowUndo !== false : true,
       sendMove: p => online.sendMove(p),
+      sendGomokuAction: p => online.sendGomokuAction(p),
+      sendLudoAction: p => online.sendLudoAction(p),
       sendUndo: () => online.send({ type:'undo', payload:{ matchId: online.matchId } }),
       sendBotMove: (seatId,p) => online.sendBotMove(seatId,p),
       sendTankInput: p => online.sendTankInput(p),
@@ -19596,6 +19619,93 @@ function parseHash(){
   renderHub();
   startGame(m[1]);
 }
+'use strict';
+
+(function expose(root,factory){
+  const api=factory();
+  if(typeof module!=='undefined'&&module.exports)module.exports=api;
+  if(root)root.GomokuRules=api;
+})(typeof globalThis!=='undefined'?globalThis:this,function createGomokuRules(){
+  const SIZE=15,PROTOCOL='gomoku-rule-v1';
+  const DIRECTIONS=Object.freeze([[1,0],[0,1],[1,1],[1,-1]].map(value=>Object.freeze(value)));
+
+  function emptyBoard(){return Array.from({length:SIZE},()=>Array(SIZE).fill(-1));}
+  function cloneBoard(board){return board.map(row=>row.slice());}
+  function cloneLine(line){return Array.isArray(line)?line.map(cell=>cell.slice(0,2)):[];}
+  function createInitialState(){return{protocol:PROTOCOL,board:emptyBoard(),current:0,moveNumber:0,last:null,terminal:false,winner:-1,reason:null,winLine:[]};}
+  function cloneState(state){return{protocol:PROTOCOL,board:cloneBoard(state.board),current:state.current,moveNumber:state.moveNumber,last:Array.isArray(state.last)?state.last.slice(0,2):null,terminal:!!state.terminal,winner:Number.isInteger(state.winner)?state.winner:-1,reason:state.reason||null,winLine:cloneLine(state.winLine)};}
+  function validCoordinate(value){return Number.isInteger(value)&&value>=0&&value<SIZE;}
+  function validPlayer(value){return value===0||value===1;}
+  function winningLine(board,row,col){
+    const player=board&&board[row]&&board[row][col];if(!validPlayer(player))return[];
+    for(const [dr,dc] of DIRECTIONS){
+      const before=[],after=[];
+      let r=row-dr,c=col-dc;
+      while(r>=0&&r<SIZE&&c>=0&&c<SIZE&&board[r][c]===player){before.unshift([r,c]);r-=dr;c-=dc;}
+      r=row+dr;c=col+dc;
+      while(r>=0&&r<SIZE&&c>=0&&c<SIZE&&board[r][c]===player){after.push([r,c]);r+=dr;c+=dc;}
+      const line=before.concat([[row,col]],after);if(line.length>=5)return line;
+    }
+    return[];
+  }
+  function validateAction(state,action,player=state&&state.current){
+    if(!state||state.protocol!==PROTOCOL||state.terminal)return{ok:false,reason:'ERR_MATCH_FINISHED'};
+    if(!validPlayer(player)||player!==state.current)return{ok:false,reason:'ERR_NOT_ACTIVE_PLAYER'};
+    if(!action||action.type!=='place'||!validCoordinate(action.row)||!validCoordinate(action.col))return{ok:false,reason:'ERR_INVALID_MOVE'};
+    if(!Array.isArray(state.board)||!state.board[action.row]||state.board[action.row][action.col]!==-1)return{ok:false,reason:'ERR_INVALID_MOVE'};
+    return{ok:true};
+  }
+  function applyAction(state,action,player=state&&state.current){
+    const validation=validateAction(state,action,player);if(!validation.ok)return validation;
+    const next=cloneState(state),row=action.row,col=action.col;
+    next.board[row][col]=player;next.moveNumber++;next.last=[row,col];
+    const line=winningLine(next.board,row,col);
+    if(line.length>=5){next.terminal=true;next.winner=player;next.reason='FIVE_IN_A_ROW';next.winLine=line;}
+    else if(next.moveNumber===SIZE*SIZE){next.terminal=true;next.winner=-1;next.reason='BOARD_FULL';next.winLine=[];}
+    else next.current=player^1;
+    return{ok:true,state:next,event:{type:'place',player,row,col,moveNumber:next.moveNumber,current:next.current,terminal:next.terminal,winner:next.winner,reason:next.reason,winLine:cloneLine(next.winLine)}};
+  }
+  function getLegalActions(state,player=state&&state.current){
+    if(!state||state.protocol!==PROTOCOL||state.terminal||player!==state.current)return[];
+    const actions=[];for(let row=0;row<SIZE;row++)for(let col=0;col<SIZE;col++)if(state.board[row][col]===-1)actions.push({type:'place',row,col});return actions;
+  }
+  function isTerminal(state){return!!(state&&state.terminal);}
+  function getResult(state){if(!isTerminal(state))return null;return state.winner<0?{draw:true,winner:-1,order:[0,1],reason:state.reason}:{draw:false,winner:state.winner,loser:state.winner^1,order:[state.winner,state.winner^1],reason:state.reason};}
+  function serialize(state){return JSON.stringify(state);}
+  function validBoard(board){return Array.isArray(board)&&board.length===SIZE&&board.every(row=>Array.isArray(row)&&row.length===SIZE&&row.every(cell=>cell===-1||cell===0||cell===1));}
+  function boardHasWinningLine(board){
+    for(let row=0;row<SIZE;row++)for(let col=0;col<SIZE;col++)if(board[row][col]!==-1&&winningLine(board,row,col).length>=5)return true;
+    return false;
+  }
+  function deserialize(value){
+    const parsed=typeof value==='string'?JSON.parse(value):value;
+    if(!parsed||parsed.protocol!==PROTOCOL||!validBoard(parsed.board)||!validPlayer(parsed.current)||!Number.isInteger(parsed.moveNumber)||parsed.moveNumber<0||parsed.moveNumber>SIZE*SIZE)throw new Error('invalid_gomoku_state');
+    const occupied=parsed.board.reduce((sum,row)=>sum+row.filter(cell=>cell!==-1).length,0);
+    if(occupied!==parsed.moveNumber||!Number.isInteger(parsed.winner)||parsed.winner< -1||parsed.winner>1||!Array.isArray(parsed.winLine))throw new Error('invalid_gomoku_state');
+    const black=parsed.board.reduce((sum,row)=>sum+row.filter(cell=>cell===0).length,0),white=occupied-black;
+    if(black<white||black>white+1)throw new Error('invalid_gomoku_state');
+    if(parsed.last!==null&&(!Array.isArray(parsed.last)||parsed.last.length!==2||!validCoordinate(parsed.last[0])||!validCoordinate(parsed.last[1])||parsed.board[parsed.last[0]][parsed.last[1]]===-1))throw new Error('invalid_gomoku_state');
+    const state=cloneState(parsed);
+    const expectedLast=occupied?((occupied-1)%2):null;
+    if((occupied===0&&state.last!==null)||(occupied>0&&(!state.last||state.board[state.last[0]][state.last[1]]!==expectedLast)))throw new Error('invalid_gomoku_state');
+    if(!state.terminal){
+      if(state.winner!==-1||state.reason!==null||state.winLine.length||state.current!==occupied%2)throw new Error('invalid_gomoku_state');
+      if(boardHasWinningLine(state.board))throw new Error('invalid_gomoku_state');
+    }else if(state.reason==='FIVE_IN_A_ROW'){
+      const actual=state.last?winningLine(state.board,state.last[0],state.last[1]):[];
+      if(!validPlayer(state.winner)||state.winner!==expectedLast||state.current!==state.winner||actual.length<5||JSON.stringify(actual)!==JSON.stringify(state.winLine))throw new Error('invalid_gomoku_state');
+      const previous=cloneBoard(state.board);previous[state.last[0]][state.last[1]]=-1;
+      if(boardHasWinningLine(previous))throw new Error('invalid_gomoku_state');
+    }else if(state.reason==='BOARD_FULL'){
+      if(occupied!==SIZE*SIZE||state.winner!==-1||state.current!==expectedLast||state.winLine.length)throw new Error('invalid_gomoku_state');
+      if(boardHasWinningLine(state.board))throw new Error('invalid_gomoku_state');
+    }else throw new Error('invalid_gomoku_state');
+    return state;
+  }
+  function hashState(state){const text=serialize(state);let hash=2166136261>>>0;for(let i=0;i<text.length;i++){hash^=text.charCodeAt(i);hash=Math.imul(hash,16777619)>>>0;}return hash.toString(16).padStart(8,'0');}
+
+  return{PROTOCOL,SIZE,createInitialState,validateAction,applyAction,getLegalActions,isTerminal,getResult,serialize,deserialize,hashState,winningLine};
+});
 'use strict';
 
 (function expose(root,factory){
@@ -20417,6 +20527,9 @@ function checkGomokuWin(grid, r, c){
 }
 function gameGomoku(area, extra, n, opts){
   opts = opts || {};
+  const RULE_PROTOCOL='gomoku-rule-v1';
+  const ruleAuthority=!!(opts.online&&opts.gameplayMeta&&opts.gameplayMeta.protocol===RULE_PROTOCOL&&typeof opts.sendGomokuAction==='function'&&typeof GomokuRules!=='undefined');
+  let authorityMoveSeq=0,authorityRevision=-1,authorityMoveNumber=0,authorityResultRevision=-1,authorityInputPending=false,pendingAuthorityAIChoice=null;
   const acceptedAudioCue = typeof emitAcceptedAudioCue === 'function' ? emitAcceptedAudioCue : null;
   const audioCue = (type, context, intensity, pan) => {
     try {
@@ -20869,7 +20982,10 @@ function gameGomoku(area, extra, n, opts){
       aiPending = false;
       updateGomokuWaveBPresentation(turnHud.textContent);
       aiSpeak(difficulty, 'think');
-      if (opts.online && opts.ai && opts.ai.has(turn) && typeof opts.sendBotMove === 'function') opts.sendBotMove(turn, gpArr);
+      if (opts.online && opts.ai && opts.ai.has(turn) && typeof opts.sendBotMove === 'function'){
+        opts.sendBotMove(turn,gpArr);
+        if(ruleAuthority){pendingAuthorityAIChoice=chosen;return;}
+      }
       if (applyMove(gpArr[0], gpArr[1]) && typeof confirmAIReady === 'function') {
         confirmAIReady('gomoku', chosen);
       }
@@ -21964,7 +22080,7 @@ function gameGomoku(area, extra, n, opts){
   }
   function canPlaceLocalGomokuMove(){
     return !opts.destroyed && !gomokuDestroyed && !over && !spectator &&
-      (!opts.online || cur === opts.myIdx) && !(opts.ai && opts.ai.has(cur));
+      (!opts.online || cur === opts.myIdx) && !(opts.ai && opts.ai.has(cur)) && !(ruleAuthority&&authorityInputPending);
   }
   function setGomokuKeyboardProcess(){
     const [r, c] = gomokuKeyboardCell;
@@ -21982,6 +22098,7 @@ function gameGomoku(area, extra, n, opts){
     setGomokuKeyboardCell(r, c);
     setGomokuWaveCProcess('select', gomokuWaveBCoordinate([r, c]));
     if (opts.onProgress) opts.onProgress([r, c]);
+    if(ruleAuthority){authorityInputPending=true;opts.sendGomokuAction({seq:++authorityMoveSeq,row:r,col:c});return true;}
     if (opts.online) opts.sendMove([r, c]);
     return applyMove(r, c);
   }
@@ -22056,7 +22173,7 @@ function gameGomoku(area, extra, n, opts){
       startGomokuWaveCMoveProcess(r, c, 'line');
       showGomokuFinalVfx('line', r, c);
       triggerMoveImpact(r,c);
-      if (opts.onEnd) opts.onEnd([
+      if (!ruleAuthority && opts.onEnd) opts.onEnd([
         { slot: cur, coins: 1, rank: 1 },
         { slot: cur ^ 1, coins: 0, rank: 2 },
       ]);
@@ -22077,7 +22194,7 @@ function gameGomoku(area, extra, n, opts){
       startGomokuWaveCMoveProcess(r, c, 'terminal');
       showGomokuFinalVfx('draw', r, c);
       triggerMoveImpact(r,c);
-      if (opts.onEnd) opts.onEnd([
+      if (!ruleAuthority && opts.onEnd) opts.onEnd([
         { slot: 0, coins: 0, rank: 1 },
         { slot: 1, coins: 0, rank: 1 },
       ]);
@@ -22098,6 +22215,7 @@ function gameGomoku(area, extra, n, opts){
     return true;
   }
   opts.onMove = (payload, player) => {
+    if(ruleAuthority)return;
     if (opts.online && (!Number.isInteger(player) || player !== cur)) return;
     if (Array.isArray(payload) && payload.length === 2) applyMove(payload);
   };
@@ -22124,6 +22242,7 @@ function gameGomoku(area, extra, n, opts){
     resetGomokuWaveCProcess('turn');
     grid = Array.from({length:N}, () => Array(N).fill(-1));
     cur = 0; over = false; hist = []; last = null; winLine = []; ghost = null; startedAt = Date.now(); finishedAt = 0; gomokuAudioSequence = 0;
+    authorityMoveSeq=0;authorityRevision=ruleAuthority&&Number(opts.gameplayMeta&&opts.gameplayMeta.revision)===0?0:-1;authorityMoveNumber=0;authorityResultRevision=-1;authorityInputPending=false;pendingAuthorityAIChoice=null;
     setGomokuKeyboardCell(Math.floor(N / 2), Math.floor(N / 2));
     area.style.touchAction = spectator ? 'auto' : 'none';
     applyPresentation();
@@ -22144,7 +22263,7 @@ function gameGomoku(area, extra, n, opts){
   function setCosmetic(value){ cosmetic = normalizeCosmetic(value); draw(); return { default:cosmetic.default, players:{...cosmetic.players} }; }
   function setSpectators(value){
     const nextSpectator = Array.isArray(value) ? value.includes(opts.viewerId) : !!value;
-    if (!spectator && nextSpectator) cancelAIWork();
+    if (!spectator && nextSpectator){cancelAIWork();pendingAuthorityAIChoice=null;authorityInputPending=false;}
     spectator = nextSpectator;
     spectators = Array.isArray(value) ? value.slice() : spectators;
     area.style.touchAction = spectator || over ? 'auto' : 'none';
@@ -22169,7 +22288,7 @@ function gameGomoku(area, extra, n, opts){
   function onRestore(value){
     const state = value && value.state ? value.state : value;
     if (!state || !Array.isArray(state.hist)) return false;
-    cancelAIWork();
+    cancelAIWork();pendingAuthorityAIChoice=null;authorityInputPending=false;
     gomokuAudioSession++; gomokuAudioSequence = 0;
     clearGomokuFinalArtVfx();
     if (value && value.reconnecting === true) showGomokuFinalVfx('reconnect');
@@ -22188,16 +22307,73 @@ function gameGomoku(area, extra, n, opts){
     if (value && value.presentation){ boardTheme = value.presentation.boardTheme === 'grass' ? 'grass' : 'classic'; cosmetic = normalizeCosmetic(value.presentation.cosmetic); }
     applyPresentation(); draw(); renderPlayers(cur, null); return true;
   }
+  function parseGomokuAuthoritySnapshot(value){
+    if(!ruleAuthority||!value||value.protocol!==RULE_PROTOCOL)return null;
+    const expected=String(typeof opts.getMatchId==='function'?opts.getMatchId():opts.matchId||'');
+    if(!expected||String(value.matchId||'')!==expected)return null;
+    const revision=Number(value.revision),moveNumber=Number(value.moveNumber);
+    if(!Number.isSafeInteger(revision)||revision<0||!Number.isSafeInteger(moveNumber)||moveNumber<0||moveNumber>N*N)return null;
+    let state;
+    try{state=GomokuRules.deserialize({protocol:RULE_PROTOCOL,board:value.board,current:value.current,moveNumber,last:value.last??null,terminal:!!value.terminal,winner:Number(value.winner),reason:value.reason||null,winLine:Array.isArray(value.winLine)?value.winLine:[]});}
+    catch(_error){return null;}
+    if(value.hash&&GomokuRules.hashState(state)!==String(value.hash))return null;
+    const history=Array.isArray(value.history)?value.history:[];
+    if(history.length!==moveNumber)return null;
+    if(!Array.isArray(value.lastSeq)||value.lastSeq.length!==2)return null;
+    const lastSeq=value.lastSeq.slice();
+    if(lastSeq.some(seq=>!Number.isSafeInteger(seq)||seq<0))return null;
+    const seen=new Set(),historySeq=[0,0];
+    for(let index=0;index<history.length;index++){
+      const item=history[index],row=item&&item.row,col=item&&item.col,player=item&&item.player,seq=item&&item.seq,key=row+','+col;
+      if(!Number.isInteger(row)||!Number.isInteger(col)||row<0||row>=N||col<0||col>=N||(player!==0&&player!==1)||player!==index%2||!Number.isSafeInteger(seq)||seq<1||seq<=historySeq[player]||seq>lastSeq[player]||seen.has(key)||state.board[row][col]!==player)return null;
+      historySeq[player]=seq;seen.add(key);
+    }
+    return{state,history,revision,moveNumber,lastSeq};
+  }
+  function restoreGomokuAuthoritySnapshot(parsed,source){
+    if(source!=='live')pendingAuthorityAIChoice=null;
+    cancelAIWork();clearGomokuFinalArtVfx();cancelGomokuBoardAI('authority-restore');gomokuWaveCProcessEpoch++;clearGomokuWaveCProcessTimers();moveImpact=null;
+    grid=parsed.state.board.map(row=>row.slice());hist=parsed.history.map(item=>[item.row,item.col]);cur=parsed.state.current;over=parsed.state.terminal;last=parsed.state.last?parsed.state.last.slice():null;winLine=(parsed.state.winLine||[]).map(cell=>cell.slice());
+    finishedAt=over?Date.now():0;ghost=null;gomokuWaveCTerminalPending=false;gomokuWaveCTerminalLocked=over;setGomokuWaveCProcess(over?'terminal':'turn');
+    if(source==='reconnect')showGomokuFinalVfx('reconnect');
+    applyPresentation();draw();renderPlayers(cur,null);updateHud();area.style.touchAction=spectator||over?'auto':'none';
+    if(!over)scheduleAI();
+    return true;
+  }
+  function localAuthorityStateMatches(parsed){
+    if(parsed.state.current!==cur||parsed.state.terminal!==over||parsed.state.moveNumber!==hist.length)return false;
+    for(let row=0;row<N;row++)for(let col=0;col<N;col++)if(parsed.state.board[row][col]!==grid[row][col])return false;
+    return true;
+  }
+  function onGomokuRuleState(value,source='live'){
+    const parsed=parseGomokuAuthoritySnapshot(value);if(!parsed||parsed.revision<=authorityRevision)return false;
+    authorityInputPending=false;
+    const contiguous=source==='live'&&parsed.revision===authorityRevision+1&&parsed.moveNumber===authorityMoveNumber+1&&parsed.state.last&&grid[parsed.state.last[0]]&&grid[parsed.state.last[0]][parsed.state.last[1]]===-1;
+    let restored=false;
+    if(contiguous){applyMove(parsed.state.last[0],parsed.state.last[1]);restored=localAuthorityStateMatches(parsed);}
+    if(!restored)restoreGomokuAuthoritySnapshot(parsed,source);
+    authorityRevision=parsed.revision;authorityMoveNumber=parsed.moveNumber;
+    const own=Number(opts.myIdx);if(Number.isInteger(own)&&Number.isSafeInteger(Number(parsed.lastSeq[own])))authorityMoveSeq=Math.max(authorityMoveSeq,Number(parsed.lastSeq[own]));
+    const lastEntry=parsed.history[parsed.history.length-1];
+    if(source==='live'&&pendingAuthorityAIChoice&&lastEntry&&opts.ai&&opts.ai.has(lastEntry.player)&&typeof confirmAIReady==='function'){confirmAIReady('gomoku',pendingAuthorityAIChoice);pendingAuthorityAIChoice=null;}
+    return true;
+  }
+  function onGomokuRuleResult(value){
+    if(!ruleAuthority||!value||value.protocol!==RULE_PROTOCOL||String(value.matchId||'')!==String(typeof opts.getMatchId==='function'?opts.getMatchId():opts.matchId||''))return false;
+    const revision=Number(value.revision);if(!Number.isSafeInteger(revision)||revision<authorityRevision||revision<=authorityResultRevision)return false;
+    authorityResultRevision=revision;authorityInputPending=false;return true;
+  }
+  function onGomokuRuleError(){authorityInputPending=false;pendingAuthorityAIChoice=null;setGomokuKeyboardProcess();draw();return true;}
   if (gomokuFinalArtRequested) initGomokuFinalArtSurface();
   if (!tabletopMode()) initStickerSurface();
   resetLocal();
   return {
-    reset, onMove: opts.onMove, onRestart: resetLocal, snapshot, onRestore,
+    reset, onMove: opts.onMove, onRestart: resetLocal, snapshot, onRestore, onGomokuRuleState, onGomokuRuleResult, onGomokuRuleError,
     serialize: () => ({ state: snapshot(), presentation: { boardTheme, cosmetic:{default:cosmetic.default,players:{...cosmetic.players}} }, stats: getMatchStats() }),
     setBoardTheme, setCosmetic, renderCosmetic: setCosmetic, setSpectators, startMatch, reportGameResult, getMatchStats, getPresentationState,
     whenIdle: () => Promise.resolve(),
     destroy: () => {
-      gomokuDestroyed = true; opts.destroyed = true; stickerAssetProbe = null; cancelAIWork(); gomokuWaveCProcessEpoch++; clearGomokuWaveCProcessTimers(); clearGomokuFinalArtVfx(); gomokuFinalArtPieceImages.clear(); gomokuFinalArtPieceRequests.clear(); disposeGomokuBoardAI();
+      gomokuDestroyed = true; opts.destroyed = true; stickerAssetProbe = null; cancelAIWork(); pendingAuthorityAIChoice=null; authorityInputPending=false; gomokuWaveCProcessEpoch++; clearGomokuWaveCProcessTimers(); clearGomokuFinalArtVfx(); gomokuFinalArtPieceImages.clear(); gomokuFinalArtPieceRequests.clear(); disposeGomokuBoardAI();
       if (typeof canvas.removeEventListener === 'function'){
         canvas.removeEventListener('focus', handleGomokuKeyboardFocus);
         canvas.removeEventListener('blur', handleGomokuKeyboardBlur);
@@ -22211,6 +22387,7 @@ function gameGomoku(area, extra, n, opts){
 /* ================= 飞行棋 ================= */
 function gameLudo(area, extra, n, opts){
   opts = opts || {};
+  const ruleAuthority = !!(opts.online && opts.gameplayMeta && opts.gameplayMeta.protocol === 'ludo-rule-v1' && typeof opts.sendLudoAction === 'function');
   const acceptedAudioCue = typeof emitAcceptedAudioCue === 'function' ? emitAcceptedAudioCue : null;
   const audioCue = (type, context, intensity, pan) => {
     try {
@@ -22233,7 +22410,14 @@ function gameLudo(area, extra, n, opts){
   let spectator = !!opts.spectator, startedAt = Date.now(), finishedAt = 0;
   let captures = 0, takeoffs = 0;
   let movingToken = null;
-  let remoteInputs = [], drainingRemoteInputs = false, epoch = 0, audioRollSequence = 0, audioMoveSequence = 0;
+  let remoteInputs = [], drainingRemoteInputs = false, epoch = 0, audioRollSequence = 0, audioMoveSequence = 0, authorityActionSeq = 0, authorityPending = null, authorityRetryTimer = null;
+  function clearAuthorityPending(){ if(authorityRetryTimer!==null){clearTimeout(authorityRetryTimer);authorityRetryTimer=null;} authorityPending=null; }
+  function sendAuthorityAction(action){
+    if(!ruleAuthority||authorityPending)return false;
+    const pending={seq:++authorityActionSeq,action:{...action},attempts:0};authorityPending=pending;
+    const transmit=()=>{if(!authorityPending||authorityPending!==pending||opts.destroyed)return;pending.attempts++;opts.sendLudoAction({seq:pending.seq,action:pending.action});if(pending.attempts<4)authorityRetryTimer=setTimeout(()=>{authorityRetryTimer=null;transmit();},700);};
+    transmit();renderBoard();return true;
+  }
   let S = 520;
   const ludoFinalArtRequested = typeof ludoFinalArtEnabled === 'function' && ludoFinalArtEnabled();
   let ludoFinalArtActive = false, ludoFinalArtState = ludoFinalArtRequested ? 'loading' : 'disabled', ludoFinalBoardUrl = '', ludoFinalDieUrl = '', ludoFinalArtRequest = 0;
@@ -23071,7 +23255,7 @@ function gameLudo(area, extra, n, opts){
       const cnt = tokens[pi].filter(t => t === HOME).length;
       return t('ludo_home_progress',cnt);
     });
-    diceBtn.disabled = spectator || over || phase !== 'roll' || (opts.online && curIdx !== opts.myIdx) || (opts.ai && opts.ai.has(curIdx));
+    diceBtn.disabled = spectator || over || phase !== 'roll' || (opts.online && curIdx !== opts.myIdx) || (opts.ai && opts.ai.has(curIdx)) || (ruleAuthority && !!authorityPending);
     const diceSkin = playerCosmetic(curIdx).dice === 'cyber' ? 'cyber' : 'classic';
     diceBtn.dataset.diceSkin = diceSkin;
     dice3d.wrap.dataset.diceSkin = diceSkin;
@@ -23087,6 +23271,7 @@ function gameLudo(area, extra, n, opts){
     if (opts.isReplaying && opts.isReplaying()) return;
     if (opts.online && curIdx !== opts.myIdx) return;
     if (opts.ai && opts.ai.has(curIdx)) return;
+    if (ruleAuthority){ sendAuthorityAction({type:'roll'}); return; }
     const d = 1 + Math.floor(Math.random()*6);
     if (opts.onProgress) opts.onProgress({ dice: d });
     if (opts.online) opts.sendMove({ dice: d });
@@ -23123,12 +23308,14 @@ function gameLudo(area, extra, n, opts){
   }
   function pick(pid, ti){
     if (spectator || over || phase !== 'pick' || pid !== curPid()) return;
+    if (ruleAuthority && authorityPending) return;
     if (opts.isReplaying && opts.isReplaying()) return;
     if (opts.online && curIdx !== opts.myIdx) return;
     if (opts.ai && opts.ai.has(curIdx)) return;
     const pi = pids.indexOf(pid);
     const arr = tokens[pi];
     if (!canMove(arr[ti])) return;
+    if (ruleAuthority){ sendAuthorityAction({type:'move',token:ti}); return; }
     if (opts.onProgress) opts.onProgress({ ti });
     if (opts.online) opts.sendMove({ ti });
     applyPick(pid, ti);
@@ -23330,6 +23517,7 @@ function gameLudo(area, extra, n, opts){
   function resetLocal(){
     epoch++;
     clearLudoWaveCProcessTimers();
+    clearAuthorityPending();
     clearLudoOutcomeTimer();
     clearLudoFinalArtVfx();
     tokens = pids.map(() => Array(4).fill(-1));
@@ -23366,19 +23554,31 @@ function gameLudo(area, extra, n, opts){
     epoch++; audioMoveSequence = 0; clearLudoWaveCProcessTimers(); clearLudoOutcomeTimer(); clearLudoFinalArtVfx(); movingToken = null;
     ludoOutcomeScheduled = false; ludoOutcomeVisible = false;
     tokens = state.tokens.map(list => Array.isArray(list) ? list.slice(0, 4).map(v => Math.max(-1, Math.min(HOME, Number(v) || 0))) : Array(4).fill(-1));
-    curIdx = Math.max(0, Math.min(pids.length - 1, Number(state.curIdx) || 0)); phase = ['roll','rolling','pick'].includes(state.phase) ? state.phase : 'roll';
+    curIdx = Math.max(0, Math.min(pids.length - 1, Number(state.curIdx ?? state.current) || 0)); phase = ['roll','rolling','pick'].includes(state.phase) ? state.phase : 'roll';
     dice = Math.max(0, Math.min(6, Number(state.dice) || 0)); over = !!state.over; winner = Number.isInteger(state.winner) ? state.winner : -1;
     setLudoWaveCProcess(over ? 'ranking' : (phase === 'rolling' ? 'dice' : (phase === 'pick' ? 'pick' : 'roll')), '', false);
     if (value && value.presentation){ boardTheme = value.presentation.boardTheme === 'grass' ? 'grass' : 'classic'; cosmetic = normalizeCosmetic(value.presentation.cosmetic); }
     renderBoard(); notifyLudoIdle(); return true;
+  }
+  function onLudoRuleState(value){
+    if(!ruleAuthority||!value||String(value.matchId||opts.matchId||'')!==String(opts.matchId||''))return false;
+    if(Array.isArray(value.lastSeq))authorityActionSeq=Math.max(authorityActionSeq,Number(value.lastSeq[Number(opts.myIdx)]||0));
+    clearAuthorityPending();
+    const snapshot={...value,winner:Number.isInteger(value.winner)&&value.winner>=0?pids[value.winner]:-1};
+    const ok=onRestore(snapshot); if(ok){remoteInputs=[];renderBoard();} return ok;
+  }
+  function onLudoRuleResult(value){
+    if(!value||!Array.isArray(value.order))return false;
+    if(!over){over=true;const slot=Number.isInteger(value.winner)?value.winner:Number(value.order[0]);winner=pids[slot]===undefined?slot:pids[slot];finishedAt=Date.now();renderBoard();}
+    return true;
   }
   if(ludoFinalArtRequested)initLudoFinalArtSurface();
   renderBoard();
   installLudoPresentationResize();
   setStatus(t('ludo_initial_turn'));
   return {
-    reset, onMove: opts.onMove, onRestart: resetLocal,
-    destroy: () => { epoch++; clearLudoWaveCProcessTimers(); ludoFinalArtRequest++; clearLudoOutcomeTimer(); clearLudoFinalArtVfx(); ludoFinalPieceUrlCache.clear(); ludoFinalPieceRequests.clear(); ludoDestroyed = true; opts.destroyed = true; releaseLudoPresentationResize(); aiPending = false; remoteInputs = []; dice3d.reset(); releaseLudoWaveBPresentation(); area.style.touchAction = previousTouchAction; area.style.overscrollBehavior = previousOverscroll; notifyLudoIdle(true); },
+    reset, onMove: opts.onMove, onRestart: resetLocal, onLudoRuleState, onLudoRuleResult,
+    destroy: () => { epoch++; clearLudoWaveCProcessTimers(); clearAuthorityPending(); ludoFinalArtRequest++; clearLudoOutcomeTimer(); clearLudoFinalArtVfx(); ludoFinalPieceUrlCache.clear(); ludoFinalPieceRequests.clear(); ludoDestroyed = true; opts.destroyed = true; releaseLudoPresentationResize(); aiPending = false; remoteInputs = []; dice3d.reset(); releaseLudoWaveBPresentation(); area.style.touchAction = previousTouchAction; area.style.overscrollBehavior = previousOverscroll; notifyLudoIdle(true); },
     whenIdle: whenLudoIdle,
     snapshot, onRestore,
     serialize: () => ({ state: snapshot(), presentation: { boardTheme, cosmetic: { ...cosmetic, players:{...cosmetic.players} } }, stats: getMatchStats() }),
@@ -25813,6 +26013,7 @@ function gameTank(area, extra, n, opts){
       const key = joystickActive ? 'tank_control_switch_to_dpad' : 'tank_control_switch_to_joystick';
       modeToggle.textContent = t(key);
       modeToggle.setAttribute('data-i18n', key);
+      modeToggle.setAttribute('data-i18n-aria-label', key);
       modeToggle.setAttribute('aria-label', t(key));
       modeToggle.setAttribute('aria-pressed', joystickActive ? 'false' : 'true');
       modeToggle.dataset.targetMode = nextMode;
@@ -25820,7 +26021,7 @@ function gameTank(area, extra, n, opts){
   }
   function toggleTankControlMode(event){
     if (event && event.preventDefault) event.preventDefault();
-    releaseAllControls(false);
+    releaseAllControls(true);
     tankControlMode = tankControlMode === 'joystick' ? 'dpad' : 'joystick';
     updateTankControlMode();
   }

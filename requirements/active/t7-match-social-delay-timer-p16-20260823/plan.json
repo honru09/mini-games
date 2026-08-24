@@ -1,0 +1,19 @@
+{
+  "batch": "T7-P16",
+  "title": "局内表达与房聊观众延迟 Timer 迁移",
+  "requirementIds": ["TECH-039", "TECH-040", "TECH-052", "SOC-012", "UI-035"],
+  "status": "implemented_local",
+  "stage": "CLOSE",
+  "scope": [
+    "match-expression-v1 观众延迟投递使用 ServerClockTimer one-shot lease",
+    "match-chat-v1 观众延迟投递使用 ServerClockTimer one-shot lease",
+    "房间 reset/结束/离开时统一撤销 pending social delay leases",
+    "保留 Block、session、match、spectator delay 和原有消息顺序合同"
+  ],
+  "outOfScope": [
+    "普通广播 spectator delay、gameplay tick、transport deadline",
+    "真实 Supabase、多实例、设备与真实网络",
+    "聊天图片、持久化正文和陌生人私信"
+  ],
+  "rollback": "保留 match chat/expression 原有消息与内存集合；lease 调度失败只记录 operational context，不发送不可信延迟消息。"
+}

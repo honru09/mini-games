@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 2,
+  "preparedAt": "2026-08-24T01:10:49+09:00",
+  "claim": "current_build_visible_matrix_template_not_evidence",
+  "currency": "prepared_not_executed",
+  "build": {
+    "path": "public/index.html",
+    "characters": 1825915,
+    "bytes": 1839768,
+    "sha256": "86E6DF923C5DFD5A21E9ADBBCFFCA02CD7282CCFE979E5B74C1B4532429377E1"
+  },
+  "presentationIdentity": {
+    "schemaVersion": 1,
+    "presentation": {"fileCount": 15, "bytes": 347640, "sha256": "7477EE0DAC1A74CFB3F0EE86D6F9E72F7ED3967E9D41A8249E2ED352DCCD92DF"},
+    "layout": {"fileCount": 6, "bytes": 24860, "sha256": "408AC7B541186FE51A32B2AD2C5BF1B3524A5159E9615BB53325B6D96A356159"},
+    "cacheVersion": "ghost-game-shell-v22-20260824"
+  },
+  "matrix": {
+    "routes": ["home", "games", "playline", "profile"],
+    "sharedSurfaces": ["auth", "shop", "direct_messages", "achievements", "room_lobby", "public_profile"],
+    "gameStages": ["gomoku", "ludo", "monopoly", "tank", "tetris", "xiangqi"],
+    "viewports": ["1440x900", "1024x768", "768x1024", "390x844", "844x390"],
+    "languages": ["zh-CN", "en-US", "uk-UA"],
+    "themes": ["light", "dark"],
+    "special": ["reduced_motion", "forced_colors", "deep_scroll_reset", "44px_targets", "short_landscape_seat_rail", "tank_joystick", "tank_dpad", "tank_mode_switch_neutral", "console_zero"],
+    "status": "NOT_EXECUTED"
+  },
+  "connector": {
+    "status": "LOCAL_CONFIG_FIX_APPLIED_RESTART_REQUIRED",
+    "knownBlocker": "failed to write kernel assets: system cannot find the specified path (os error 3)",
+    "lastRecordedEvidence": "requirements/active/current-build-visible-matrix-prove-p5-20260824/evidence/browser-connector-kernel-path-diagnosis-20260824.json"
+  },
+  "notGranted": ["browser_pass", "second_browser", "physical_android", "physical_iphone", "physical_tablet", "real_network_shaping", "low_end_performance", "production_supabase", "release"]
+}

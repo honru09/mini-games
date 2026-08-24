@@ -12,7 +12,7 @@
 
 const { PROTOCOL_VERSIONS, GAMEPLAY_ERROR_CODES, protocolError } = require('../gameplay/protocol');
 
-const HANDLED_TYPES = Object.freeze(new Set(['tetris_action', 'xiangqi_action', 'monopoly_action']));
+const HANDLED_TYPES = Object.freeze(new Set(['gomoku_action', 'ludo_action', 'tetris_action', 'xiangqi_action', 'monopoly_action']));
 const MAX_JOURNAL = 256;
 const MAX_REASON = 96;
 const MAX_MATCH_ID = 256;
@@ -20,11 +20,15 @@ const MAX_GENERATION = Number.MAX_SAFE_INTEGER;
 const MAX_PLAYERS = 5;
 
 const AUTHORITY_SPECS = Object.freeze({
+  gomoku: Object.freeze({ game: 'gomoku', protocol: PROTOCOL_VERSIONS.gomokuRules, key: 'gomokuRuleAuthority', action: 'acceptMove' }),
+  ludo: Object.freeze({ game: 'ludo', protocol: PROTOCOL_VERSIONS.ludoRules, key: 'ludoRuleAuthority', action: 'acceptAction' }),
   tetris: Object.freeze({ game: 'tetris', protocol: PROTOCOL_VERSIONS.tetrisRules, key: 'tetrisRuleAuthority', action: 'acceptAction' }),
   xiangqi: Object.freeze({ game: 'xiangqi', protocol: PROTOCOL_VERSIONS.xiangqiRules, key: 'xiangqiRuleAuthority', action: 'acceptMove' }),
   monopoly: Object.freeze({ game: 'monopoly', protocol: PROTOCOL_VERSIONS.monopolyRules, key: 'monopolyRuleAuthority', action: 'acceptAction' }),
 });
 const ACTION_SPECS = Object.freeze({
+  gomoku_action: AUTHORITY_SPECS.gomoku,
+  ludo_action: AUTHORITY_SPECS.ludo,
   tetris_action: AUTHORITY_SPECS.tetris,
   xiangqi_action: AUTHORITY_SPECS.xiangqi,
   monopoly_action: AUTHORITY_SPECS.monopoly,
@@ -96,9 +100,11 @@ function validEffect(value) {
   if (kind === 'record') return safeInteger(value.player, 0) !== null && !!value.action && typeof value.action === 'object';
   if (kind === 'turn') return safeInteger(value.value, 0, 1024) !== null;
   if (kind === 'terminal') {
-    return validMessage(value.message) && Array.isArray(value.order) && value.order.length > 0 &&
-      value.order.length <= MAX_PLAYERS && value.order.every(item => safeInteger(item, 0, MAX_PLAYERS - 1) !== null) &&
-      new Set(value.order).size === value.order.length && SAFE_REASON_RE.test(text(value.cause)) &&
+    const order=Array.isArray(value.order)?value.order:[];
+    const orderValid=order.length>0&&order.length<=MAX_PLAYERS&&order.every(item=>safeInteger(item,0,MAX_PLAYERS-1)!==null)&&new Set(order).size===order.length;
+    const resultSlots=Array.isArray(value.results)?value.results.map(item=>safeInteger(item&&item.slot,0,MAX_PLAYERS-1)):[];
+    const validResults=value.results===undefined||(Array.isArray(value.results)&&value.results.length===order.length&&resultSlots.every(slot=>slot!==null)&&new Set(resultSlots).size===resultSlots.length&&order.every(slot=>resultSlots.includes(slot))&&value.results.every(item=>safeInteger(item.rank,1,MAX_PLAYERS)!==null&&safeInteger(item.coins,0,1000000)!==null));
+    return validResults&&orderValid&&validMessage(value.message) && SAFE_REASON_RE.test(text(value.cause)) &&
       text(value.cause).length <= MAX_REASON;
   }
   return false;
@@ -258,7 +264,7 @@ function createCommitAdapter(options = {}, persistence = null) {
           if (room.gameplayResultSent && item.force !== true) continue;
           room.gameplayResultSent = true;
           handlers.broadcast(room, clone(item.message));
-          handlers.settle(room, clone(item.order), text(item.cause));
+          handlers.settle(room, clone(item.order), text(item.cause), clone(item.results));
           handlers.stop(room);
         }
         applied.push(item);
@@ -390,9 +396,10 @@ function createMatchProtocolBoundary(options = {}) {
     return commit(command, { ok: false, protocol, reason: safeValue || safeCode, terminal: false }, effects);
   }
   function unavailable(command, protocol, metrics = ['protocolErrors']) { return failure(command, protocol, 'ERR_INVALID_STATE', 'match_protocol_unavailable', metrics); }
-  function terminalEffect(message, order, cause, force = false) {
+  function terminalEffect(message, order, cause, force = false, results = undefined) {
     const output = { message: clone(message), order: clone(order), cause: safeReason(cause, 'rule_authority') };
     if (force === true) output.force = true;
+    if(Array.isArray(results))output.results=clone(results);
     return effect('terminal', output);
   }
   function fence(command, spec, payload, state) {
@@ -478,6 +485,50 @@ function createMatchProtocolBoundary(options = {}) {
     }
     return committed;
   }
+  function gomoku(command, player, payload, authority, state) {
+    const protocol=PROTOCOL_VERSIONS.gomokuRules;
+    const checked=playerFence(command,AUTHORITY_SPECS.gomoku,payload,authority,state,player);
+    if(!checked.ok)return failure(command,protocol,checked.reason,checked.reason,
+      checked.reason==='ERR_STALE_SEQ'||checked.reason==='ERR_DUPLICATE_ACTION'?['invalidGomokuMoves','protocolErrors']:['protocolErrors']);
+    const authoritySnapshot=snapshotAuthority(authority);
+    if(!authoritySnapshot)return unavailable(command,protocol);
+    let accepted;let at;
+    try{at=now();accepted=authority.acceptMove(checked.slot,payload,at);}catch(_error){restoreAuthority(authoritySnapshot);return unavailable(command,protocol);}
+    if(!accepted||accepted.ok!==true){
+      restoreAuthority(authoritySnapshot);
+      const reasonValue=safeReason(accepted&&accepted.reason,'ERR_INVALID_STATE');
+      return failure(command,protocol,reasonValue,reasonValue,['invalidGomokuMoves','protocolErrors']);
+    }
+    if(!accepted.event||typeof accepted.event!=='object'){restoreAuthority(authoritySnapshot);return unavailable(command,protocol);}
+    const eventsValid=validateEvents(command.room,state,protocol,[accepted.event,accepted.result]);
+    if(!eventsValid.ok){restoreAuthority(authoritySnapshot);return failure(command,protocol,eventsValid.reason,eventsValid.reason,['protocolErrors']);}
+    const effects=[
+      effect('metric',{name:'gomokuMoves'}),
+      effect('record',{player:checked.slot,action:{protocol,r:Number(payload&&payload.row),c:Number(payload&&payload.col)}}),
+      effect('broadcast',{message:clone(accepted.event)}),
+    ];
+    const terminal=!!(accepted.result&&!command.room.gameplayResultSent);
+    if(terminal)effects.push(terminalEffect(accepted.result,accepted.result.order,'gomoku_rule_authority',false,accepted.result.results));
+    const committed=commitWithAuthorityRollback(authoritySnapshot,{...command,at},{ok:true,protocol,reason:null,terminal},effects,commit);
+    if(committed.ok){
+      if(checked.seq!==null)state.seq.set(checked.slot,checked.seq);
+      const revision=eventRevision(accepted.event);if(revision!==null)state.revisions.set(protocol,Math.max(state.revisions.get(protocol)||0,revision));
+    }
+    return committed;
+  }
+  function ludo(command, player, payload, authority, state) {
+    const protocol=PROTOCOL_VERSIONS.ludoRules;
+    const checked=playerFence(command,AUTHORITY_SPECS.ludo,payload,authority,state,player);
+    if(!checked.ok)return failure(command,protocol,checked.reason,checked.reason,checked.reason==='ERR_STALE_SEQ'||checked.reason==='ERR_DUPLICATE_ACTION'?['invalidLudoActions','protocolErrors']:['protocolErrors']);
+    const authoritySnapshot=snapshotAuthority(authority);if(!authoritySnapshot)return unavailable(command,protocol);
+    let accepted;let at;try{at=now();accepted=authority.acceptAction(checked.slot,payload,at);}catch(_error){restoreAuthority(authoritySnapshot);return unavailable(command,protocol);}
+    if(!accepted||accepted.ok!==true){restoreAuthority(authoritySnapshot);const reasonValue=safeReason(accepted&&accepted.reason,'ERR_INVALID_STATE');return failure(command,protocol,reasonValue,reasonValue,['invalidLudoActions','protocolErrors']);}
+    if(!accepted.event||typeof accepted.event!=='object'){restoreAuthority(authoritySnapshot);return unavailable(command,protocol);}
+    const eventsValid=validateEvents(command.room,state,protocol,[accepted.event,accepted.result]);if(!eventsValid.ok){restoreAuthority(authoritySnapshot);return failure(command,protocol,eventsValid.reason,eventsValid.reason,['protocolErrors']);}
+    const action=payload&&payload.action||{};const effects=[effect('metric',{name:'ludoActions'}),effect('record',{player:checked.slot,action:{protocol,type:action.type,token:Number.isInteger(action.token)?action.token:null}}),effect('broadcast',{message:clone(accepted.event)})];
+    const terminal=!!(accepted.result&&!command.room.gameplayResultSent);if(terminal)effects.push(terminalEffect(accepted.result,accepted.result.payload.order,'ludo_rule_authority',false,accepted.result.payload.results));
+    const committed=commitWithAuthorityRollback(authoritySnapshot,{...command,at},{ok:true,protocol,reason:null,terminal},effects,commit);if(committed.ok){if(checked.seq!==null)state.seq.set(checked.slot,checked.seq);const revision=eventRevision(accepted.event);if(revision!==null)state.revisions.set(protocol,Math.max(state.revisions.get(protocol)||0,revision));}return committed;
+  }
   function xiangqi(command, player, payload, authority, state) {
     const protocol = PROTOCOL_VERSIONS.xiangqiRules;
     const checked = playerFence(command, AUTHORITY_SPECS.xiangqi, payload, authority, state, player);
@@ -553,6 +604,7 @@ function createMatchProtocolBoundary(options = {}) {
   function transitionSpec(input) {
     const type = text(input && input.type);
     if (/^tetris_(?:transition|advance)$/.test(type) || text(input && input.game) === 'tetris') return AUTHORITY_SPECS.tetris;
+    if (/^ludo_(?:transition|advance)$/.test(type) || text(input && input.game) === 'ludo') return AUTHORITY_SPECS.ludo;
     if (/^xiangqi_(?:transition|advance)$/.test(type) || text(input && input.game) === 'xiangqi') return AUTHORITY_SPECS.xiangqi;
     if (/^monopoly_(?:transition|advance)$/.test(type) || text(input && input.game) === 'monopoly') return AUTHORITY_SPECS.monopoly;
     return null;
@@ -619,6 +671,8 @@ function createMatchProtocolBoundary(options = {}) {
     adoptInputGeneration(state, room, input, payload);
     if (!payload || typeof payload !== 'object') return failure(commandInput, spec.protocol, 'ERR_INVALID_STATE', 'invalid_match', ['protocolErrors']);
     const player = input.player !== undefined ? input.player : session.player;
+    if (spec === AUTHORITY_SPECS.gomoku) return gomoku(commandInput, player, payload, authority, state);
+    if (spec === AUTHORITY_SPECS.ludo) return ludo(commandInput, player, payload, authority, state);
     if (spec === AUTHORITY_SPECS.tetris) return tetris(commandInput, player, payload, authority, state);
     if (spec === AUTHORITY_SPECS.xiangqi) return xiangqi(commandInput, player, payload, authority, state);
     return monopoly(commandInput, player, payload, authority, state);

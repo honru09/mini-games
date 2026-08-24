@@ -41,8 +41,16 @@ const { TetrisBattleAuthority } = require('./gameplay/tetris-battle');
 const { XiangqiClockAuthority, MonopolyAuctionAuthority } = require('./gameplay/turn-protocols');
 const { TournamentOrchestrator } = require('./gameplay/tournament');
 const { TetrisRuleAuthority } = require('./gameplay/tetris-rule-authority');
+const { GomokuRuleAuthority } = require('./gameplay/gomoku-rule-authority');
+const { LudoRuleAuthority } = require('./gameplay/ludo-rule-authority');
 const { XiangqiRuleAuthority } = require('./gameplay/xiangqi-rule-authority');
 const { MonopolyRuleAuthority } = require('./gameplay/monopoly-rule-authority');
+const {
+  PROTOCOL: REPLAY_AUTHORITY_PROTOCOL,
+  LIFECYCLE_PROTOCOL: REPLAY_LIFECYCLE_PROTOCOL,
+  verifyReplayInputs,
+  verifyReplayLifecycle,
+} = require('./gameplay/replay-authority');
 const { PROTOCOL_VERSIONS, capabilities: gameplayCapabilities } = require('./gameplay/protocol');
 const {
   increment: incrementGameplayMetric,
@@ -81,6 +89,7 @@ const {
   createJsonRuntimeRewardProgressionAdapter,
 } = require('./boundaries/reward-progression');
 const { createServerClockTimer } = require('./boundaries/server-clock-timer');
+const { createTransportDeadline } = require('./boundaries/transport-deadline');
 const { createHeartbeatSweepIsolation } = require('./boundaries/heartbeat-sweep-isolation');
 let operationalMetricsBoundary = null;
 let authProfileBoundary = null;
@@ -97,6 +106,11 @@ const serverClockTimer = createServerClockTimer({
   },
 });
 const serverNow = () => serverClockTimer.now();
+const transportDeadline = createTransportDeadline({
+  timer: serverClockTimer,
+  ownerPrefix: 'transport-deadline:',
+  onError: (context, error) => recordOperationalError(context, error),
+});
 const rewardProgressionPolicy = createRewardProgressionPolicy({
   validGames: VALID_GAMES,
   dayKey,
@@ -128,17 +142,17 @@ function recordOperationalError(context,error){
   incrementGameplayMetric('serverErrors');
   return { recorded:false, context:'bootstrap', kind:'Error' };
 }
-function currentGameplayMetrics(){
+function currentGameplayMetrics(at=serverNow()){
   const snapshot=gameplayMetricsSnapshot({
     activeMatches:[...rooms.values()].filter(room=>room.started&&!room.settled).length,
     activeSpectators:[...rooms.values()].reduce((sum,room)=>sum+(room.spectators instanceof Map?room.spectators.size:0),0),
     activeTournaments:tournaments.size,
-  });
+  },at);
   return safeGameplayMetricsSnapshot({
     ...snapshot,
     engagementIntegrityShadowEnabled:ENGAGEMENT_INTEGRITY_SHADOW_ENABLED?1:0,
     engagementIntegrityActiveAnalyzers:activeEngagementIntegrityAnalyzerCount(),
-  });
+  },at);
 }
 const { SpectatorAccessGuard, TournamentGuard } = require('./gameplay/guards');
 const { AI_STRATEGY_VERSION, aiStrategyPrompt } = require('./ai-strategy-skills');
@@ -247,8 +261,8 @@ function buildAIPrompt(game, state, options){
 }
 
 async function callDeepSeek(messages, temperature, maxTokens){
-  const deadline = Date.now() + AI_UPSTREAM_TIMEOUT_MS;
-  const timeoutSignal = () => AbortSignal.timeout(Math.max(250, deadline - Date.now()));
+  const deadline = transportDeadline.open({label:'deepseek',timeoutMs:AI_UPSTREAM_TIMEOUT_MS});
+  if (!deadline.ok) throw new Error(deadline.reason || 'transport_deadline_unavailable');
   const payload = {
     model: DEEPSEEK_MODEL,
     messages,
@@ -257,28 +271,32 @@ async function callDeepSeek(messages, temperature, maxTokens){
     stream: false,
     response_format: { type: 'json_object' },
   };
-  const res = await fetch('https://api.deepseek.com/chat/completions', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + DEEPSEEK_KEY },
-    body: JSON.stringify(payload),
-    signal: timeoutSignal(),
-  });
-  if (res.status === 400){
-    // 部分模型不支持 json_object：去掉后重试一次
-    delete payload.response_format;
-    const res2 = await fetch('https://api.deepseek.com/chat/completions', {
+  try {
+    const res = await fetch('https://api.deepseek.com/chat/completions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + DEEPSEEK_KEY },
       body: JSON.stringify(payload),
-      signal: timeoutSignal(),
+      signal: deadline.signal,
     });
-    if (!res2.ok) throw new Error('deepseek ' + res2.status + ': ' + (await res2.text()).slice(0, 160));
-    const data2 = await res2.json();
-    return data2.choices && data2.choices[0] && data2.choices[0].message ? data2.choices[0].message.content : '';
+    if (res.status === 400){
+      // 部分模型不支持 json_object：去掉后重试一次；两次请求共享同一截止时间。
+      delete payload.response_format;
+      const res2 = await fetch('https://api.deepseek.com/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + DEEPSEEK_KEY },
+        body: JSON.stringify(payload),
+        signal: deadline.signal,
+      });
+      if (!res2.ok) throw new Error('deepseek ' + res2.status + ': ' + (await res2.text()).slice(0, 160));
+      const data2 = await res2.json();
+      return data2.choices && data2.choices[0] && data2.choices[0].message ? data2.choices[0].message.content : '';
+    }
+    if (!res.ok) throw new Error('deepseek ' + res.status + ': ' + (await res.text()).slice(0, 160));
+    const data = await res.json();
+    return data.choices && data.choices[0] && data.choices[0].message ? data.choices[0].message.content : '';
+  } finally {
+    deadline.cancel();
   }
-  if (!res.ok) throw new Error('deepseek ' + res.status + ': ' + (await res.text()).slice(0, 160));
-  const data = await res.json();
-  return data.choices && data.choices[0] && data.choices[0].message ? data.choices[0].message.content : '';
 }
 
 async function askDeepSeek(game, state, options, persona){
@@ -546,7 +564,7 @@ const spectatorAccessGuard = new SpectatorAccessGuard({
 });
 const ROOM_PRESENCE_RETRY_LIMIT=Math.max(1,Math.min(8,Number(process.env.ROOM_PRESENCE_RETRY_LIMIT)||5));
 const ROOM_PRESENCE_QUARANTINED_MUTATIONS=new Set([
-  'match_expression','match_chat_send','move','bot_move','tank_input','bot_tank_input','tetris_lock_claim','tetris_attack_claim',
+  'match_expression','match_chat_send','move','bot_move','gomoku_action','ludo_action','tank_input','bot_tank_input','tetris_lock_claim','tetris_attack_claim',
   'tetris_ko_claim','tetris_action','bot_tetris_action','tetris_state','xiangqi_action','monopoly_action','monopoly_auction_open','monopoly_bid','monopoly_turn_end',
   'game_state','result','start','restart','end_game','select_game','ready','room_settings','undo','add_ai','remove_ai','invite',
 ]);
@@ -556,12 +574,49 @@ function roomPresenceRetryDelay(attempt){
 }
 const RECONNECT_TIMER_OWNER_PREFIX='reconnect-expiry:';
 const ROOM_REMOVAL_RETRY_TIMER_OWNER_PREFIX='room-removal-retry:';
+const TOURNAMENT_ABORT_TIMER_OWNER_PREFIX='tournament-abort:';
+const TOURNAMENT_ADVANCE_TIMER_OWNER_PREFIX='tournament-advance:';
+const MATCH_SOCIAL_DELAY_TIMER_OWNER_PREFIX='match-social-delay:';
+const MATCH_SOCIAL_DELAY_MAX_PENDING=256;
+const GAMEPLAY_TIMER_OWNER_PREFIX='gameplay:';
+const TANK_SNAPSHOT_DELAY_TIMER_OWNER_PREFIX='tank-snapshot-delay:';
+let matchSocialDelaySequence=0;
+let tankSnapshotDelaySequence=0;
 function cancelServerTimer(timer){
   if(!timer)return false;
   if(typeof timer.cancel==='function'){
     try{if(timer.cancel())return true;}catch(_error){}
   }
   try{clearTimeout(timer);return true;}catch(_error){return false;}
+}
+function cancelServerTimerSet(timers){
+  if(!(timers instanceof Set))return false;
+  for(const timer of timers)cancelServerTimer(timer);
+  timers.clear();
+  return true;
+}
+function scheduleMatchSocialDelay(room,session,delayMs,text,timers,canSend,reason){
+  if(!room||!session||!(timers instanceof Set))return false;
+  matchSocialDelaySequence=(matchSocialDelaySequence+1)%1000000000;
+  const owner=MATCH_SOCIAL_DELAY_TIMER_OWNER_PREFIX+String(room.id||'room')+':'+matchSocialDelaySequence;
+  let lease=null;
+  lease=serverClockTimer.schedule({
+    owner,
+    delayMs,
+    run:()=>{
+      timers.delete(lease);
+      if(typeof canSend==='function'&&canSend())session.sendText(text);
+    },
+  });
+  if(lease.ok){
+    while(timers.size>=MATCH_SOCIAL_DELAY_MAX_PENDING){
+      const oldest=timers.values().next().value;
+      cancelServerTimer(oldest);timers.delete(oldest);
+    }
+    timers.add(lease);
+  }
+  else recordOperationalError(reason||'match_social_delay_schedule',new Error(lease.reason||'clock_timer_unavailable'));
+  return lease.ok;
 }
 function cancelReconnectTimer(session){
   if(!session)return false;
@@ -607,6 +662,16 @@ function scheduleRoomRemovalRetryTimer(session,room,delayMs){
   if(lease.ok)session.roomRemovalRetryTimer=lease;
   else recordOperationalError('room_removal_retry_schedule',new Error(lease.reason||'clock_timer_unavailable'));
   return lease.ok?lease:null;
+}
+function cancelTournamentTimer(entry,field){
+  if(!entry)return false;
+  const timer=entry[field];
+  entry[field]=null;
+  return cancelServerTimer(timer);
+}
+function cancelTournamentLifecycleTimers(entry){
+  cancelTournamentTimer(entry,'abortTimer');
+  cancelTournamentTimer(entry,'advanceTimer');
 }
 const ROOM_GRAPH_RECOVERY_SWEEP_MS=Math.max(1000,Math.min(5*60*1000,Number(process.env.ROOM_GRAPH_RECOVERY_SWEEP_MS)||30000));
 const roomGraphRecoveryQueue=new Map();
@@ -803,7 +868,7 @@ function createTournamentMatchRoom(entry,pairing,sessionMap){
   const room={
     id:roomId,host:participants[0],clients:new Map(participants.map((session,player)=>[session,player])),game:entry.tournament.gameId,capacity:2,
     started:false,matchId:crypto.randomBytes(12).toString('base64url'),resultClaims:new Map(),settled:false,disputed:false,
-    moveSeq:0,moveLog:[],moveLogBytes:0,moveLogTruncated:false,
+    moveSeq:0,moveLog:[],moveLogBytes:0,moveLogTruncated:false,replayInputLog:[],
     tankInputSeq:{},tankAuthoritySeq:0,tankFinalSent:false,
     startedAt:0,rewardProgress:null,resultRewards:new Map(),
     spectators:new Map(),maxSpectators:Math.max(1,Math.min(50,Number(process.env.MAX_SPECTATORS)||12)),
@@ -848,26 +913,35 @@ function recoverQuarantinedTournamentAbort(entry,plans,sessionsReady,transaction
   entry.abortAttempts=0;entry.abortQuarantined=false;
   return true;
 }
+function quarantineTournamentAbort(entry,plans,sessionsReady,transaction,reason){
+  entry.abortQuarantined=true;
+  enqueueRoomGraphRecovery('tournament:'+entry.tournament.tournamentId,{
+    recover:()=>recoverQuarantinedTournamentAbort(entry,plans,sessionsReady,transaction),
+    onRecovered:()=>{broadcastTournament(entry);broadcastLobby();},
+  });
+  for(const session of sessionsReady.byUid.values())if(session&&session.alive)session.sendText(JSON.stringify({type:'tournament_error',msg:'赛事房间已进入安全恢复队列',reason:'tournament_room_cleanup_quarantined'}));
+  broadcastTournament(entry);broadcastLobby();
+  return{ok:false,reason:reason||'tournament_room_cleanup_quarantined'};
+}
 function scheduleTournamentAbortRetry(entry,plans,sessionsReady,transaction,reason){
   const attempts=Number(entry.abortAttempts)||0;
-  if(attempts>=TOURNAMENT_ABORT_RETRY_LIMIT){
-    entry.abortQuarantined=true;
-    enqueueRoomGraphRecovery('tournament:'+entry.tournament.tournamentId,{
-      recover:()=>recoverQuarantinedTournamentAbort(entry,plans,sessionsReady,transaction),
-      onRecovered:()=>{broadcastTournament(entry);broadcastLobby();},
-    });
-    for(const session of sessionsReady.byUid.values())if(session&&session.alive)session.sendText(JSON.stringify({type:'tournament_error',msg:'赛事房间已进入安全恢复队列',reason:'tournament_room_cleanup_quarantined'}));
-    broadcastTournament(entry);broadcastLobby();
-    return{ok:false,reason:'tournament_room_cleanup_quarantined'};
-  }
+  if(attempts>=TOURNAMENT_ABORT_RETRY_LIMIT)return quarantineTournamentAbort(entry,plans,sessionsReady,transaction);
   entry.abortAttempts=attempts+1;
   if(!entry.abortTimer){
-    entry.abortTimer=setTimeout(()=>{
-      entry.abortTimer=null;
-      const retried=abortCommittedTournamentMatchRooms(entry,plans,sessionsReady,transaction,reason);
-      if(retried.recovered){broadcastTournament(entry);broadcastLobby();}
-    },Math.min(30000,TOURNAMENT_ABORT_RETRY_MS*Math.pow(2,attempts)));
-    if(entry.abortTimer&&entry.abortTimer.unref)entry.abortTimer.unref();
+    const lease=serverClockTimer.schedule({
+      owner:TOURNAMENT_ABORT_TIMER_OWNER_PREFIX+String(entry.tournament.tournamentId),
+      delayMs:Math.min(30000,TOURNAMENT_ABORT_RETRY_MS*Math.pow(2,attempts)),
+      run:()=>{
+        entry.abortTimer=null;
+        const retried=abortCommittedTournamentMatchRooms(entry,plans,sessionsReady,transaction,reason);
+        if(retried.recovered){broadcastTournament(entry);broadcastLobby();}
+      },
+    });
+    if(lease.ok)entry.abortTimer=lease;
+    else{
+      recordOperationalError('tournament_abort_schedule',new Error(lease.reason||'clock_timer_unavailable'));
+      return quarantineTournamentAbort(entry,plans,sessionsReady,transaction,'tournament_room_cleanup_retry_schedule_failed');
+    }
   }
   return{ok:false,reason:'tournament_room_cleanup_retry_scheduled'};
 }
@@ -942,16 +1016,21 @@ function tournamentRoundCanRetry(entry,guardState){
 }
 function scheduleTournamentNextRound(entry){
   if(!entry||entry.advanceTimer||entry.tournament.status!=='round_complete')return;
-  entry.advanceTimer=setTimeout(()=>{
-    entry.advanceTimer=null;if(entry.tournament.status!=='round_complete')return;
-    const ready=tournamentParticipantSessions(entry);if(!ready.ok){broadcastTournament(entry);return;}
-    const next=entry.tournament.advance();
-    if(!next){if(typeof tournamentGuard.finish==='function')tournamentGuard.finish(entry.tournament.tournamentId,entry.ownerUid);broadcastTournament(entry);return;}
-    if(!registerTournamentPairings(entry)){broadcastTournament(entry);return;}
-    const created=autoCreateTournamentRound(entry,ready);
-    if(!created.ok)for(const session of ready.byUid.values())session.sendText(JSON.stringify({type:'tournament_error',msg:'自动建桌失败：'+created.reason,reason:created.reason}));
-  },800);
-  if(entry.advanceTimer&&entry.advanceTimer.unref)entry.advanceTimer.unref();
+  const lease=serverClockTimer.schedule({
+    owner:TOURNAMENT_ADVANCE_TIMER_OWNER_PREFIX+String(entry.tournament.tournamentId),
+    delayMs:800,
+    run:()=>{
+      entry.advanceTimer=null;if(entry.tournament.status!=='round_complete')return;
+      const ready=tournamentParticipantSessions(entry);if(!ready.ok){broadcastTournament(entry);return;}
+      const next=entry.tournament.advance();
+      if(!next){if(typeof tournamentGuard.finish==='function')tournamentGuard.finish(entry.tournament.tournamentId,entry.ownerUid);broadcastTournament(entry);return;}
+      if(!registerTournamentPairings(entry)){broadcastTournament(entry);return;}
+      const created=autoCreateTournamentRound(entry,ready);
+      if(!created.ok)for(const session of ready.byUid.values())session.sendText(JSON.stringify({type:'tournament_error',msg:'自动建桌失败：'+created.reason,reason:created.reason}));
+    },
+  });
+  if(lease.ok)entry.advanceTimer=lease;
+  else recordOperationalError('tournament_advance_schedule',new Error(lease.reason||'clock_timer_unavailable'));
 }
 function reportTournamentRoomResult(r,results,options={}){
   const binding=r&&r.tournamentBinding;
@@ -976,7 +1055,10 @@ function reportTournamentRoomResult(r,results,options={}){
   const reported=entry.tournament.reportServerResult(r.id,outcome,{source:'server',matchRoomId:r.id});
   if(!reported.ok)return false;
   if(entry.tournament.status==='round_complete')scheduleTournamentNextRound(entry);
-  else if(entry.tournament.status==='finished'&&typeof tournamentGuard.finish==='function')tournamentGuard.finish(binding.tournamentId,entry.ownerUid);
+  else if(entry.tournament.status==='finished'){
+    cancelTournamentLifecycleTimers(entry);
+    if(typeof tournamentGuard.finish==='function')tournamentGuard.finish(binding.tournamentId,entry.ownerUid);
+  }
   broadcastTournament(entry);
   return true;
 }
@@ -1050,8 +1132,11 @@ const matchProtocolAdapter=createJsonRuntimeMatchProtocolAdapter({
   send:(session,message)=>session&&session.sendText(JSON.stringify(message)),
   broadcast:(room,message)=>broadcast(room,message),
   incrementMetric:incrementGameplayMetric,
-  recordAction:(room,player,action)=>recordRoomAction(room,player,action),
-  settle:(room,order,cause)=>settleAuthoritativeRoom(room,order,cause),
+  recordAction:(room,player,action)=>{
+    recordRoomAction(room,player,action);
+    recordAuthoritativeReplayAction(room,player,action);
+  },
+  settle:(room,order,cause,results)=>{if(!settleAuthoritativeRoom(room,order,cause,results))throw new Error('authoritative_settlement_rejected');},
   stop:room=>stopRoomGameplayTimer(room),
 });
 matchProtocolBoundary=createMatchProtocolBoundary({adapter:matchProtocolAdapter,now:serverNow});
@@ -1254,31 +1339,39 @@ async function handleCompanion(req,res){
   }finally{companionConcurrentUser.delete(user.uid);companionGlobalConcurrent=Math.max(0,companionGlobalConcurrent-1);}
 }
 async function sbFetch(path, options = {}){
-  const res = await fetch(SUPABASE_URL + '/rest/v1/' + path, {
-    ...options,
-    signal: options.signal || AbortSignal.timeout(15000),
-    headers: {
-      apikey: SUPABASE_KEY,
-      Authorization: 'Bearer ' + SUPABASE_KEY,
-      'Content-Type': 'application/json',
-      ...(options.headers || {}),
-    },
-  });
-  if (!res.ok) throw new Error('supabase ' + res.status + ': ' + (await res.text()).slice(0, 200));
-  if (res.status === 204) return null;
-  const text = await res.text();
-  if (!text.trim()) return null;
-  try { return JSON.parse(text); }
-  catch { throw new Error('supabase 返回了无效 JSON（status=' + res.status + '）'); }
+  const deadline = transportDeadline.open({label:'supabase',timeoutMs:15000,signal:options.signal});
+  if (!deadline.ok) throw new Error(deadline.reason || 'transport_deadline_unavailable');
+  try {
+    const res = await fetch(SUPABASE_URL + '/rest/v1/' + path, {
+      ...options,
+      signal: deadline.signal,
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: 'Bearer ' + SUPABASE_KEY,
+        'Content-Type': 'application/json',
+        ...(options.headers || {}),
+      },
+    });
+    if (!res.ok) throw new Error('supabase ' + res.status + ': ' + (await res.text()).slice(0, 200));
+    if (res.status === 204) return null;
+    const text = await res.text();
+    if (!text.trim()) return null;
+    try { return JSON.parse(text); }
+    catch { throw new Error('supabase 返回了无效 JSON（status=' + res.status + '）'); }
+  } finally {
+    deadline.cancel();
+  }
 }
 const clusterCoordinator = new ClusterCoordinator({
   enabled:useSupabase && String(process.env.ENABLE_CLUSTER_COORDINATION || '') === '1',
   rpc:(name,payload)=>sbFetch('rpc/'+name,{method:'POST',body:JSON.stringify(payload)}),
   instanceId:process.env.RENDER_INSTANCE_ID || process.env.INSTANCE_ID,
   deploymentId:process.env.RENDER_GIT_COMMIT || process.env.DEPLOYMENT_ID,
+  now:serverNow,
   telemetryUrl:process.env.TELEMETRY_WEBHOOK_URL,
   telemetryToken:process.env.TELEMETRY_WEBHOOK_TOKEN,
   telemetryAllowlist:process.env.TELEMETRY_WEBHOOK_ALLOWLIST,
+  transportDeadline:(spec)=>transportDeadline.open(spec),
   onEvent:handleClusterEvent,
   onError:recordOperationalError,
 });
@@ -2046,6 +2139,10 @@ function resetRoomMatch(r){
   r.moveLog = [];
   r.moveLogBytes = 0;
   r.moveLogTruncated = false;
+  r.replayInputLog = [];
+  r.replayServerSeq = 0;
+  r.replayReconnectLog = [];
+  r.replayReconnectEpoch = [];
   r.undoUsed = false;
   r.tankInputSeq = {};
   r.tankAuthoritySeq = 0;
@@ -2134,6 +2231,7 @@ function detachForReconnect(session){
   forgetTankSnapshotRecipient(r,session);
   const detached = roomPresenceBoundary.room({action:'detach',room:r,session,graceMs:RECONNECT_GRACE_MS,allowUnregistered:true});
   if (!detached.ok) return false;
+  recordRoomReplayReconnect(r, session.player, 'disconnect', Date.now());
   // A disconnected Tank must stop receiving the last held input while the
   // reconnect grace window is open.  The authority will accept fresh input
   // only after the player has resumed with a live authenticated session.
@@ -2149,13 +2247,22 @@ function tryResumeSession(session){
   if (!session.uid || !session.tokenHash) return false;
   clearExpiredResumes();
   const now = Date.now();
+  for(const room of rooms.values()){
+    if(!room||!room.gomokuRuleAuthority||!(room.clients instanceof Map))continue;
+    const detached=[...room.clients.keys()].find(candidate=>candidate&&candidate.alive===false&&candidate.uid===session.uid&&candidate.tokenHash===session.tokenHash);
+    if(detached&&!sessionSupports(session,PROTOCOL_VERSIONS.gomokuRules)){
+      session.sendText(JSON.stringify({type:'resume_expired',payload:{room:room.id,player:room.clients.get(detached),reason:'protocol_upgrade_required',protocol:PROTOCOL_VERSIONS.gomokuRules}}));
+      return false;
+    }
+  }
   const resumed = roomPresenceBoundary.room({action:'resume',session});
   if (resumed.ok){
       const r = rooms.get(resumed.roomId || session.room);
       if (!r) return false;
       const player = resumed.player;
+      recordRoomReplayReconnect(r, player, 'resume', now);
       markRoomEngagementIntegrityReconnect(r,player);
-      const hasAuthoritySnapshot = !!(r.tankAuthority || r.tetrisAuthority || r.tetrisRuleAuthority || r.xiangqiRuleAuthority || r.monopolyRuleAuthority);
+      const hasAuthoritySnapshot = !!(r.tankAuthority || r.tetrisAuthority || r.gomokuRuleAuthority || r.ludoRuleAuthority || r.tetrisRuleAuthority || r.xiangqiRuleAuthority || r.monopolyRuleAuthority);
       const replayUnavailable = !!(r.started && r.moveLogTruncated && !hasAuthoritySnapshot);
       const replayReset=replayUnavailable?resetRoomMatch(r):{ok:true};
       if(!replayReset.ok)session.sendText(JSON.stringify({type:'error',msg:'房间状态暂不可用',reason:replayReset.reason||'room_presence_unavailable'}));
@@ -2169,6 +2276,8 @@ function tryResumeSession(session){
         presentation:gameplayPresentation(r),
         tankSnapshot: r.tankAuthority ? r.tankAuthority.snapshot(now) : null,
         tetrisSnapshot: r.tetrisAuthority ? r.tetrisAuthority.snapshot() : null,
+        gomokuRuleSnapshot:r.gomokuRuleAuthority ? r.gomokuRuleAuthority.snapshot(now) : null,
+        ludoRuleSnapshot:r.ludoRuleAuthority ? r.ludoRuleAuthority.snapshot(now) : null,
         tetrisRuleSnapshot: r.tetrisRuleAuthority ? r.tetrisRuleAuthority.snapshot(now) : null,
         tetrisPresentation:tetrisPresentationPayload(r),
         xiangqiRuleSnapshot:r.xiangqiRuleAuthority ? r.xiangqiRuleAuthority.snapshot(now) : null,
@@ -3258,6 +3367,82 @@ function recordRoomAction(r, player, payload){
   if (fingerprint) progress.uniqueActions.add(fingerprint);
   return true;
 }
+
+function appendReplayAuthorityEvent(r, player, payload){
+  if (!r || !payload || typeof payload !== 'object') return false;
+  if (!Array.isArray(r.replayInputLog)) r.replayInputLog = [];
+  r.replayInputLog.push({ seq: r.replayInputLog.length + 1, player: Number(player), payload });
+  if (r.replayInputLog.length > 20000) r.replayInputLog.splice(0, r.replayInputLog.length - 20000);
+  return true;
+}
+
+// Rule Authority inputs are kept in a separate bounded projection.  The
+// legacy moveLog is still used by the existing visual player; keeping this
+// canonical input stream separate lets old clients continue to replay while
+// new consumers can verify the same actions against the shared Rule Core.
+function recordAuthoritativeReplayAction(r, player, action){
+  if (!r || !r.started || !r.matchId || !action || typeof action !== 'object') return false;
+  const protocol = String(action.protocol || '');
+  const gameByProtocol = {
+    [PROTOCOL_VERSIONS.gomokuRules]: 'gomoku',
+    [PROTOCOL_VERSIONS.ludoRules]: 'ludo',
+    [PROTOCOL_VERSIONS.tetrisRules]: 'tetris',
+    [PROTOCOL_VERSIONS.xiangqiRules]: 'xiangqi',
+    [PROTOCOL_VERSIONS.monopolyRules]: 'monopoly',
+  };
+  const game = gameByProtocol[protocol];
+  if (!game) return false;
+  const authorityKey = {
+    gomoku: 'gomokuRuleAuthority', ludo: 'ludoRuleAuthority', tetris: 'tetrisRuleAuthority',
+    xiangqi: 'xiangqiRuleAuthority', monopoly: 'monopolyRuleAuthority',
+  }[game];
+  const authority = r[authorityKey];
+  const latest = authority && Array.isArray(authority.inputLog)
+    ? [...authority.inputLog].reverse().find(item => Number(item && item.player) === Number(player)) : null;
+  if (!latest || !Number.isSafeInteger(Number(latest.seq)) || Number(latest.seq) < 1) return false;
+  let canonicalAction = null;
+  if (game === 'gomoku') canonicalAction = { type: 'place', row: Number(action.r), col: Number(action.c) };
+  else if (game === 'ludo') canonicalAction = { ...(latest.action || {}) };
+  else if (game === 'xiangqi') canonicalAction = { type: 'move', from: Array.isArray(action.from) ? action.from.slice(0, 2) : null, to: Array.isArray(action.to) ? action.to.slice(0, 2) : null };
+  else if (game === 'monopoly' || game === 'tetris') canonicalAction = { ...(latest.action || action.action || {}) };
+  if (!canonicalAction || typeof canonicalAction !== 'object') return false;
+  const event = {
+    protocol,
+    replayProtocol: REPLAY_AUTHORITY_PROTOCOL,
+    matchId: String(r.matchId),
+    seq: Number(latest.seq),
+    action: canonicalAction,
+  };
+  if (!Array.isArray(r.replayInputLog)) r.replayInputLog = [];
+  const duplicate = r.replayInputLog.some(item => Number(item && item.player) === Number(player) && Number(item && item.payload && item.payload.seq) === Number(event.seq));
+  if (duplicate) return false;
+  return appendReplayAuthorityEvent(r, player, event);
+}
+
+function recordTetrisReplayTransitions(r, fromIndex){
+  const authority = r && r.tetrisRuleAuthority;
+  if (!authority || !Array.isArray(authority.inputLog)) return;
+  const start = Math.max(0, Number(fromIndex) || 0);
+  authority.inputLog.slice(start).forEach(item => {
+    const player = Number(item && item.player);
+    const action = item && item.action;
+    if (!Number.isInteger(player) || !action || typeof action !== 'object') return;
+    const envelopePlayer = action.type === 'finish' ? 0 : player;
+    const source = item.source === 'server' ? 'server' : 'client';
+    const payload = {
+      protocol: PROTOCOL_VERSIONS.tetrisRules,
+      replayProtocol: REPLAY_AUTHORITY_PROTOCOL,
+      matchId: String(r.matchId),
+      player: envelopePlayer,
+      source,
+      action: { ...action },
+    };
+    if (source === 'server') payload.serverSeq = (Number(r.replayServerSeq) || 0) + 1;
+    else payload.seq = Number(item.seq);
+    if (source === 'server') r.replayServerSeq = payload.serverSeq;
+    appendReplayAuthorityEvent(r, envelopePlayer, payload);
+  });
+}
 function roomRewardEligibility(r, now){
   const progress = roomProgress(r);
   const mode = humanRoomSeats(r).length >= 2 ? 'online' : 'ai';
@@ -3426,6 +3611,8 @@ function stopRoomAuthorities(r){
   r.tankLastBroadcastTick = -1;
   r.tankAuthority = null;
   r.tetrisAuthority = null;
+  r.gomokuRuleAuthority = null;
+  r.ludoRuleAuthority = null;
   r.xiangqiClock = null;
   r.monopolyAuction = null;
   r.tetrisRuleAuthority = null;
@@ -3434,8 +3621,9 @@ function stopRoomAuthorities(r){
 }
 function clearRoomMatchSocialState(r){
   if (!r) return;
-  if(r.matchExpressionDelayTimers instanceof Set){for(const timer of r.matchExpressionDelayTimers)clearTimeout(timer);r.matchExpressionDelayTimers.clear();}
-  if(r.matchChatDelayTimers instanceof Set){for(const timer of r.matchChatDelayTimers)clearTimeout(timer);r.matchChatDelayTimers.clear();}
+  cancelServerTimerSet(r.matchExpressionDelayTimers);
+  cancelServerTimerSet(r.matchChatDelayTimers);
+  cancelServerTimerSet(r.spectatorDelayTimers);
   r.matchExpressionSeen = new Map();
   r.matchExpressionRates = new Map();
   r.matchExpressionCounts = new Map();
@@ -3446,8 +3634,21 @@ function clearRoomMatchSocialState(r){
 }
 function stopRoomGameplayTimer(r){
   if (!r) return;
-  if (r.gameplayTimer) clearInterval(r.gameplayTimer);
+  if (r.gameplayTimer) cancelServerTimer(r.gameplayTimer);
   r.gameplayTimer = null;
+}
+function scheduleRoomGameplayTimer(r,delayMs,run,reason){
+  if(!r||typeof run!=='function')return null;
+  stopRoomGameplayTimer(r);
+  const lease=serverClockTimer.schedule({
+    owner:GAMEPLAY_TIMER_OWNER_PREFIX+String(r.id||r.matchId||'room'),
+    delayMs,
+    repeat:true,
+    run,
+  });
+  if(lease.ok)r.gameplayTimer=lease;
+  else recordOperationalError(reason||'gameplay_timer_schedule',new Error(lease.reason||'clock_timer_unavailable'));
+  return lease.ok?lease:null;
 }
 function authoritativeResults(order){
   return order.map((slot, index) => ({ slot, rank:index + 1, coins:index === 0 ? 1 : 0 }));
@@ -3457,6 +3658,8 @@ function sessionSupports(session, protocol){
   return values.includes(protocol)||values.includes(String(protocol).replace(/-/g,'_'));
 }
 const RULE_AUTHORITY_V2_ENABLED=String(process.env.ENABLE_RULE_AUTHORITY_V2||'1')!=='0';
+const GOMOKU_RULE_AUTHORITY_ENABLED=String(process.env.ENABLE_GOMOKU_RULE_AUTHORITY||'1')!=='0';
+const LUDO_RULE_AUTHORITY_ENABLED=String(process.env.ENABLE_LUDO_RULE_AUTHORITY||'1')!=='0';
 const TETRIS_ADVANCED_SCORING_ENABLED=String(process.env.TETRIS_GUIDELINE_SCORING||'1')!=='0';
 // Transport-only experiment.  It never changes Tank Authority, and every
 // recipient keeps the original full snapshot fallback until this is enabled.
@@ -3614,7 +3817,7 @@ function finalizeRoomEngagementIntegrity(r){
 function clearTankSnapshotDelayTimers(r){
   if(!r||!(r.tankSnapshotDelayTimers instanceof Set))return 0;
   const count=r.tankSnapshotDelayTimers.size;
-  for(const timer of r.tankSnapshotDelayTimers)clearTimeout(timer);
+  for(const timer of r.tankSnapshotDelayTimers)cancelServerTimer(timer);
   r.tankSnapshotDelayTimers.clear();
   return count;
 }
@@ -3643,12 +3846,17 @@ function scheduleDelayedTankSnapshot(r,state,delayMs){
   if(!(r.tankSnapshotDelayTimers instanceof Set))r.tankSnapshotDelayTimers=new Set();
   while(r.tankSnapshotDelayTimers.size>=TANK_SNAPSHOT_DELAY_TIMER_LIMIT){
     const oldest=r.tankSnapshotDelayTimers.values().next().value;
-    clearTimeout(oldest);r.tankSnapshotDelayTimers.delete(oldest);
+    cancelServerTimer(oldest);r.tankSnapshotDelayTimers.delete(oldest);
   }
   const expectedMatchId=String(state.matchId||'');
   const expectedRoomId=String(r.id||'');
   const recipients=[...r.spectators.entries()].slice(0,Math.max(1,Number(r.maxSpectators)||50)).map(([session,marker])=>({session,marker}));
-  const timer=setTimeout(()=>{
+  tankSnapshotDelaySequence=(tankSnapshotDelaySequence+1)%1000000000;
+  let timer=null;
+  timer=serverClockTimer.schedule({
+    owner:TANK_SNAPSHOT_DELAY_TIMER_OWNER_PREFIX+String(expectedRoomId)+':'+tankSnapshotDelaySequence,
+    delayMs:delay,
+    run:()=>{
     if(r.tankSnapshotDelayTimers instanceof Set)r.tankSnapshotDelayTimers.delete(timer);
     if(!expectedMatchId||String(r.matchId||'')!==expectedMatchId||String(state.matchId||'')!==expectedMatchId)return;
     for(const recipient of recipients){
@@ -3657,10 +3865,11 @@ function scheduleDelayedTankSnapshot(r,state,delayMs){
           !(r.spectators instanceof Map)||r.spectators.get(session)!==recipient.marker)continue;
       deliverTankSnapshot(r,session,state,false);
     }
-  },delay);
-  r.tankSnapshotDelayTimers.add(timer);
-  if(timer&&timer.unref)timer.unref();
-  return true;
+  },
+  });
+  if(timer.ok)r.tankSnapshotDelayTimers.add(timer);
+  else recordOperationalError('tank_snapshot_delay_schedule',new Error(timer.reason||'clock_timer_unavailable'));
+  return timer.ok;
 }
 function broadcastTankSnapshot(r, state){
   if(!r||!state)return;
@@ -3676,6 +3885,14 @@ function broadcastTankSnapshot(r, state){
 }
 function gameplayMetadata(r){
   if (!r || !r.started) return null;
+  if(r.gomokuRuleAuthority){
+    const state=r.gomokuRuleAuthority.snapshot();
+    return{protocol:PROTOCOL_VERSIONS.gomokuRules,rulesetVersion:'freestyle-15x15-v1',revision:state.revision};
+  }
+  if(r.ludoRuleAuthority){
+    const state=r.ludoRuleAuthority.snapshot();
+    return{protocol:PROTOCOL_VERSIONS.ludoRules,rulesetVersion:'52-track-v1',playerCount:state.playerCount,revision:state.revision};
+  }
   if (r.tankAuthority){
     const state = r.tankAuthority.snapshot();
     return { protocol:'tank-authority-v1', serverTick:state.serverTick, startedAt:state.startedAt, endAt:state.endAt, season:state.season };
@@ -3715,10 +3932,13 @@ function gameplayPresentation(r){
   });
   return{protocol:'game-cosmetic-presentation-v1',cosmeticSchemaVersion:1,gameId:r.game,cosmetic,players};
 }
-function settleAuthoritativeRoom(r, order, cause){
-  if (!r || r.settled || !Array.isArray(order) || order.length !== activeSeatCount(r)) return;
-  const results = authoritativeResults(order);
+function settleAuthoritativeRoom(r, order, cause, resultsOverride){
+  if (!r || r.settled || !Array.isArray(order) || order.length !== activeSeatCount(r)) return false;
+  const trusted=resultsOverride===undefined?null:normalizeRoomResults(resultsOverride,activeSeatCount(r));
+  if(resultsOverride!==undefined&&!trusted)return false;
+  const results = trusted || authoritativeResults(order);
   settleRoomResult(r, results, { cause:cause || 'authoritative_gameplay' });
+  return true;
 }
 // Rule timers use the same Match Protocol seam as client actions. The helper
 // deliberately returns `null` only during bootstrap/rollback, allowing the
@@ -3738,7 +3958,11 @@ function runMatchProtocolTransition(room, game){
 function startRoomAuthorities(r){
   stopRoomAuthorities(r);
   if (!r || !r.started || !r.matchId) return;
-  if (r.game === 'tank'){
+  if(r.game==='gomoku'){
+    if(GOMOKU_RULE_AUTHORITY_ENABLED&&roomSupports(r,PROTOCOL_VERSIONS.gomokuRules))r.gomokuRuleAuthority=new GomokuRuleAuthority({matchId:r.matchId});
+  }else if (r.game === 'ludo'){
+    if(LUDO_RULE_AUTHORITY_ENABLED&&roomSupports(r,PROTOCOL_VERSIONS.ludoRules))r.ludoRuleAuthority=new LudoRuleAuthority({matchId:r.matchId,playerCount:activeSeatCount(r),matchSeed:r.matchId});
+  }else if (r.game === 'tank'){
     r.tankAuthority = new TankAuthority({
       matchId:r.matchId, playerCount:activeSeatCount(r), startedAt:r.startedAt,
       durationMs:Math.max(10000, Number(process.env.TANK_MATCH_DURATION_MS) || 180000),
@@ -3759,9 +3983,9 @@ function startRoomAuthorities(r){
         });
       }catch(_error){r.tankSnapshotStream=null;}
     }
-    r.gameplayTimer = setInterval(() => {
+    scheduleRoomGameplayTimer(r,50,({now})=>{
       if (!r.started || !r.tankAuthority) return;
-      const state = r.tankAuthority.advance(Date.now());
+      const state = r.tankAuthority.advance(now);
       if (state.serverTick % 2 === 0 && state.serverTick > r.tankLastBroadcastTick){
         r.tankLastBroadcastTick=state.serverTick;
         incrementGameplayMetric('tankSnapshots');broadcastTankSnapshot(r,state);
@@ -3772,43 +3996,44 @@ function startRoomAuthorities(r){
         settleAuthoritativeRoom(r, state.order, 'tank_authority');
         stopRoomGameplayTimer(r);
       }
-    }, 50);
+    },'tank_gameplay_timer_schedule');
   } else if (r.game === 'tetris'){
     const startAt = Date.now() + 3000;
     const matchEndAt=startAt+Math.max(15000,Number(process.env.TETRIS_MATCH_DURATION_MS)||300000);
     if(TETRIS_ADVANCED_SCORING_ENABLED&&roomSupports(r,PROTOCOL_VERSIONS.tetrisRules)){
       r.tetrisRuleAuthority=new TetrisRuleAuthority({matchId:r.matchId,playerCount:activeSeatCount(r),startAt,matchEndAt,matchSeed:r.matchId});
-      r.gameplayTimer=setInterval(()=>{
+      scheduleRoomGameplayTimer(r,50,({now})=>{
         if(!r.started||!r.tetrisRuleAuthority)return;
+        const replayCursor = r.tetrisRuleAuthority.inputLog.length;
         const routed=runMatchProtocolTransition(r,'tetris');
-        if(routed&&routed.handled)return;
-        const advanced=r.tetrisRuleAuthority.advance(Date.now());
+        if(routed&&routed.handled){recordTetrisReplayTransitions(r, replayCursor);return;}
+        const advanced=r.tetrisRuleAuthority.advance(now);
+        recordTetrisReplayTransitions(r, replayCursor);
         if(advanced.changed){incrementGameplayMetric('tetrisSnapshots');broadcast(r,advanced.stateEvent||r.tetrisRuleAuthority.stateEvent());}
         if(advanced.result&&!r.gameplayResultSent){r.gameplayResultSent=true;broadcast(r,advanced.result);settleAuthoritativeRoom(r,advanced.result.order,'tetris_rule_authority');stopRoomGameplayTimer(r);}
-      },50);
+      },'tetris_rule_gameplay_timer_schedule');
     }else{
       r.tetrisAuthority = new TetrisBattleAuthority({matchId:r.matchId,playerCount:activeSeatCount(r),startAt,matchEndAt,matchSeed:r.matchId});
-      r.gameplayTimer=setInterval(()=>{if(!r.started||!r.tetrisAuthority)return;const due=r.tetrisAuthority.advance(Date.now());due.forEach(item=>broadcast(r,{type:'tetris_garbage_due',payload:{matchId:r.matchId,revision:r.tetrisAuthority.revision,...item}}));if(r.tetrisAuthority.finished&&!r.gameplayResultSent){r.gameplayResultSent=true;const result=r.tetrisAuthority.result();broadcast(r,result);settleAuthoritativeRoom(r,result.order,'tetris_authority');stopRoomGameplayTimer(r);}},100);
+      scheduleRoomGameplayTimer(r,100,({now})=>{if(!r.started||!r.tetrisAuthority)return;const due=r.tetrisAuthority.advance(now);due.forEach(item=>broadcast(r,{type:'tetris_garbage_due',payload:{matchId:r.matchId,revision:r.tetrisAuthority.revision,...item}}));if(r.tetrisAuthority.finished&&!r.gameplayResultSent){r.gameplayResultSent=true;const result=r.tetrisAuthority.result();broadcast(r,result);settleAuthoritativeRoom(r,result.order,'tetris_authority');stopRoomGameplayTimer(r);}},'tetris_gameplay_timer_schedule');
     }
   } else if (r.game === 'xiangqi'){
     const initialMs=Math.max(1000,Number(process.env.XIANGQI_CLOCK_MS)||10*60*1000);
     if(roomSupports(r,PROTOCOL_VERSIONS.xiangqiRules)){
       r.xiangqiRuleAuthority=new XiangqiRuleAuthority({matchId:r.matchId,startedAt:r.startedAt,initialMs});
-      r.gameplayTimer=setInterval(()=>{if(!r.started||!r.xiangqiRuleAuthority||r.gameplayResultSent)return;const routed=runMatchProtocolTransition(r,'xiangqi');if(routed&&routed.handled)return;const advanced=r.xiangqiRuleAuthority.advance(Date.now());if(advanced.event){r.gameplayResultSent=true;broadcast(r,advanced.event);if(advanced.result)settleAuthoritativeRoom(r,advanced.result.order,'xiangqi_rule_timeout');stopRoomGameplayTimer(r);}},250);
+      scheduleRoomGameplayTimer(r,250,({now})=>{if(!r.started||!r.xiangqiRuleAuthority||r.gameplayResultSent)return;const routed=runMatchProtocolTransition(r,'xiangqi');if(routed&&routed.handled)return;const advanced=r.xiangqiRuleAuthority.advance(now);if(advanced.event){r.gameplayResultSent=true;broadcast(r,advanced.event);if(advanced.result)settleAuthoritativeRoom(r,advanced.result.order,'xiangqi_rule_timeout');stopRoomGameplayTimer(r);}},'xiangqi_rule_gameplay_timer_schedule');
     }else{
       r.xiangqiClock=new XiangqiClockAuthority({matchId:r.matchId,startedAt:r.startedAt,initialMs});
-      r.gameplayTimer=setInterval(()=>{if(!r.started||!r.xiangqiClock||r.gameplayResultSent)return;const timeout=r.xiangqiClock.timeout(Date.now());if(!timeout)return;r.gameplayResultSent=true;broadcast(r,timeout);settleAuthoritativeRoom(r,[timeout.payload.winner,timeout.payload.loser],'xiangqi_clock_timeout');stopRoomGameplayTimer(r);},250);
+      scheduleRoomGameplayTimer(r,250,({now})=>{if(!r.started||!r.xiangqiClock||r.gameplayResultSent)return;const timeout=r.xiangqiClock.timeout(now);if(!timeout)return;r.gameplayResultSent=true;broadcast(r,timeout);settleAuthoritativeRoom(r,[timeout.payload.winner,timeout.payload.loser],'xiangqi_clock_timeout');stopRoomGameplayTimer(r);},'xiangqi_clock_gameplay_timer_schedule');
     }
   } else if (r.game === 'monopoly'){
     if(roomSupports(r,PROTOCOL_VERSIONS.monopolyRules)){
       r.monopolyRuleAuthority=new MonopolyRuleAuthority({matchId:r.matchId,playerCount:activeSeatCount(r),matchSeed:r.matchId,auctionDurationMs:Math.max(1000,Number(process.env.MONOPOLY_AUCTION_MS)||5000)});
-      r.gameplayTimer=setInterval(()=>{if(!r.started||!r.monopolyRuleAuthority)return;const routed=runMatchProtocolTransition(r,'monopoly');if(routed&&routed.handled)return;const advanced=r.monopolyRuleAuthority.advance(Date.now());if(advanced.event)broadcast(r,advanced.event);if(advanced.result&&!r.gameplayResultSent){r.gameplayResultSent=true;broadcast(r,advanced.result);settleAuthoritativeRoom(r,advanced.result.order,'monopoly_rule_authority');stopRoomGameplayTimer(r);}},100);
+      scheduleRoomGameplayTimer(r,100,({now})=>{if(!r.started||!r.monopolyRuleAuthority)return;const routed=runMatchProtocolTransition(r,'monopoly');if(routed&&routed.handled)return;const advanced=r.monopolyRuleAuthority.advance(now);if(advanced.event)broadcast(r,advanced.event);if(advanced.result&&!r.gameplayResultSent){r.gameplayResultSent=true;broadcast(r,advanced.result);settleAuthoritativeRoom(r,advanced.result.order,'monopoly_rule_authority');stopRoomGameplayTimer(r);}},'monopoly_rule_gameplay_timer_schedule');
     }else{
       r.monopolyAuction=new MonopolyAuctionAuthority({matchId:r.matchId,playerCount:activeSeatCount(r),durationMs:Math.max(1000,Number(process.env.MONOPOLY_AUCTION_MS)||5000)});r.monopolyTurn=0;
-      r.gameplayTimer=setInterval(()=>{if(!r.started||!r.monopolyAuction)return;const closed=r.monopolyAuction.close(Date.now());if(closed)broadcast(r,closed);},100);
+      scheduleRoomGameplayTimer(r,100,({now})=>{if(!r.started||!r.monopolyAuction)return;const closed=r.monopolyAuction.close(now);if(closed)broadcast(r,closed);},'monopoly_auction_gameplay_timer_schedule');
     }
   }
-  if (r.gameplayTimer && r.gameplayTimer.unref) r.gameplayTimer.unref();
 }
 function announceRoomMatch(r){
   const playerCount=activeSeatCount(r);
@@ -3836,6 +4061,10 @@ function startRoomMatch(r, options={}){
   r.moveLog = [];
   r.moveLogBytes = 0;
   r.moveLogTruncated = false;
+  r.replayInputLog = [];
+  r.replayServerSeq = 0;
+  r.replayReconnectLog = [];
+  r.replayReconnectEpoch = [];
   r.undoUsed = false;
   r.tankInputSeq = {};
   r.tankAuthoritySeq = 0;
@@ -3981,14 +4210,153 @@ function settleRoomResult(r, results, options = {}){
   reportTournamentRoomResult(r,results,options);
   broadcastLeaderboard();
 }
+function recordRoomReplayReconnect(r, player, phase, at = Date.now()){
+  if (!r || !Number.isInteger(Number(player)) || !['disconnect', 'resume'].includes(String(phase))) return false;
+  if (!Array.isArray(r.replayReconnectLog)) r.replayReconnectLog = [];
+  if (!Array.isArray(r.replayReconnectEpoch)) r.replayReconnectEpoch = [];
+  const slot = Number(player);
+  const previous = Number(r.replayReconnectEpoch[slot]) || 0;
+  const epoch = String(phase) === 'disconnect' ? previous + 1 : previous;
+  if (epoch < 1) return false;
+  r.replayReconnectEpoch[slot] = epoch;
+  r.replayReconnectLog.push({ player: slot, phase: String(phase), epoch, at: Number(at) || Date.now() });
+  if (r.replayReconnectLog.length > 256) r.replayReconnectLog.splice(0, r.replayReconnectLog.length - 256);
+  return true;
+}
+
+function roomAuthorityReplayHash(r){
+  if (!r) return null;
+  let value = null;
+  try {
+    if (r.game === 'tank' && r.tankAuthority) return r.tankAuthority.replaySnapshotHash();
+    if (r.gomokuRuleAuthority) value = r.gomokuRuleAuthority.snapshot();
+    else if (r.ludoRuleAuthority) value = r.ludoRuleAuthority.snapshot();
+    else if (r.tetrisRuleAuthority) value = r.tetrisRuleAuthority.snapshot();
+    else if (r.tetrisAuthority) value = r.tetrisAuthority.snapshot();
+    else if (r.xiangqiRuleAuthority) value = r.xiangqiRuleAuthority.snapshot();
+    else if (r.xiangqiClock) value = r.xiangqiClock.snapshot();
+    else if (r.monopolyRuleAuthority) value = r.monopolyRuleAuthority.snapshot();
+    else if (r.monopolyAuction) value = r.monopolyAuction.snapshot();
+    else return null;
+    if (value && typeof value === 'object') {
+      if (typeof value.hash === 'string' && /^[0-9a-f]{8,128}$/i.test(value.hash)) return value.hash;
+      if (r.tetrisRuleAuthority && Array.isArray(value.players) && value.players.every(item => typeof item.hash === 'string')) {
+        return value.players.map(item => item.hash).join(':');
+      }
+      if (r.monopolyRuleAuthority && typeof value.stateHash === 'string') return value.stateHash;
+      const copy = JSON.parse(JSON.stringify(value));
+      delete copy.serverNow;
+      return crypto.createHash('sha256').update(JSON.stringify(copy)).digest('hex');
+    }
+  } catch (_error) { return null; }
+  return null;
+}
+
+function replayLifecycleEventsForRoom(r, finalResult, authorityInputLog, createdAt){
+  if (!r || !r.matchId || !finalResult) return [];
+  const events = [{ at: Number(r.startedAt) || createdAt, kind: 'start', source: 'server' }];
+  (Array.isArray(authorityInputLog) ? authorityInputLog : []).forEach((event, index) => {
+    const payload = event && event.payload && typeof event.payload === 'object' ? event.payload : {};
+    const source = payload.source === 'server' ? 'server' : 'client';
+    const kind = source === 'server' ? 'automatic' : 'authority';
+    const record = { at: Number(payload.at) || (Number(r.startedAt) || createdAt) + index, kind, source, authoritySeq: Number(event && (event.seq || payload.seq || payload.serverSeq)) || index + 1 };
+    if (payload.serverTick !== undefined) record.serverTick = Number(payload.serverTick) || 0;
+    if (payload.hash) record.eventHash = String(payload.hash).slice(0, 128);
+    events.push(record);
+  });
+  (Array.isArray(r.replayReconnectLog) ? r.replayReconnectLog : []).forEach(item => {
+    events.push({ at: Number(item.at) || createdAt, kind: 'reconnect', source: 'server', player: Number(item.player), phase: item.phase, epoch: Number(item.epoch) });
+  });
+  events.push({
+    at: createdAt,
+    kind: 'instance',
+    source: 'server',
+    instanceId: String(clusterCoordinator.instanceId),
+    instanceSeq: 1,
+    globalOrder: 1,
+  });
+  events.push({
+    at: createdAt,
+    kind: 'terminal',
+    source: 'server',
+    terminal: true,
+    order: Array.isArray(finalResult.results) ? finalResult.results.map(item => Number(item.slot)) : [],
+    authorityHash: roomAuthorityReplayHash(r) || crypto.createHash('sha256').update(JSON.stringify(finalResult)).digest('hex'),
+  });
+  const priority = { start: 0, authority: 1, automatic: 1, reconnect: 2, instance: 3, terminal: 9 };
+  events.sort((a, b) => Number(a.at) - Number(b.at) || priority[a.kind] - priority[b.kind]);
+  return events.map((event, index) => ({
+    seq: index + 1,
+    player: event.player === undefined ? null : event.player,
+    payload: {
+      protocol: REPLAY_LIFECYCLE_PROTOCOL,
+      matchId: String(r.matchId),
+      timelineSeq: index + 1,
+      ...event,
+    },
+  }));
+}
+
+function tankReplayAuthorityLog(r){
+  const authority = r && r.tankAuthority;
+  if (!authority || !Array.isArray(authority.replayLog)) return [];
+  return authority.replayLog.map(item => {
+    const source = item && item.kind === 'tick' ? 'server' : 'client';
+    const payload = {
+      protocol: 'tank-authority-v1',
+      replayProtocol: REPLAY_AUTHORITY_PROTOCOL,
+      matchId: String(r.matchId || authority.matchId || ''),
+      source,
+      kind: String(item && item.kind || ''),
+      at: Number(item && item.at),
+      timelineSeq: Number(item && item.timelineSeq),
+      serverTick: Number(item && item.serverTick),
+      hash: String(item && item.hash || ''),
+      player: source === 'client' ? Number(item && item.player) : null,
+    };
+    if (source === 'client') {
+      payload.seq = Number(item && item.seq);
+      payload.clientTick = item && item.clientTick === null ? null : Number(item && item.clientTick);
+      payload.input = item && item.input && typeof item.input === 'object' ? { ...item.input } : {};
+    }
+    return { seq: Number(item && item.timelineSeq), player: source === 'client' ? Number(item && item.player) : null, payload };
+  }).filter(event => Number.isSafeInteger(event.seq) && event.seq >= 1 && event.payload.kind && Number.isFinite(event.payload.at));
+}
 function saveReplayForRoom(r, finalResult){
-  if (!r || !r.matchId || !Array.isArray(r.moveLog) || !r.moveLog.length) return null;
+  const moveLog = Array.isArray(r && r.moveLog) ? r.moveLog : [];
+  const authorityInputLog = r && r.game === 'tank'
+    ? tankReplayAuthorityLog(r)
+    : (Array.isArray(r && r.replayInputLog) ? r.replayInputLog : []);
+  if (!r || !r.matchId || (!moveLog.length && !authorityInputLog.length)) return null;
   const uids=[...r.clients.keys()].map(session=>session.uid).filter(Boolean);
   if (uids.some(testAdmin.shouldHidePublicUid)) return null;
   const createdAt=Date.now(),visibility=normalizeRoomVisibility(r.visibility);
-  const replay={version:'replay-v1.1',replayId:'rep_'+crypto.randomBytes(10).toString('base64url'),matchId:r.matchId,game:r.game,createdAt,expiresAt:createdAt+REPLAY_TTL_MS,publicAt:visibility==='public'?createdAt+REPLAY_PUBLIC_DELAY_MS:0,visibility,uids,shareTokenHash:null,shareExpiresAt:0,moveLog:r.moveLog.map(event=>({seq:event.seq,player:event.player,payload:event.payload})),moveLogTruncated:!!r.moveLogTruncated,finalResult:{...finalResult}};
+  const deterministic = authorityInputLog.length ? verifyReplayInputs({
+    game:r.game,
+    matchId:r.matchId,
+    playerCount:r.game === 'tank' && r.tankAuthority ? r.tankAuthority.playerCount : activeSeatCount(r),
+    seed:r.matchId,
+    startedAt:r.game === 'tank' && r.tankAuthority ? r.tankAuthority.startedAt : undefined,
+    durationMs:r.game === 'tank' && r.tankAuthority ? r.tankAuthority.durationMs : undefined,
+    expectedTerminal:!!(r.gomokuRuleAuthority||r.ludoRuleAuthority||r.tankAuthority||r.tetrisRuleAuthority||r.xiangqiRuleAuthority||r.monopolyRuleAuthority),
+    expectedHash:roomAuthorityReplayHash(r) || undefined,
+    events:authorityInputLog,
+  }) : { ok:false, status:'not_available', reason:'replay_inputs_missing', eventCount:0 };
+  const lifecycleEvents = replayLifecycleEventsForRoom(r, finalResult, authorityInputLog, createdAt);
+  const deterministicAuthorityHash = deterministic.ok && deterministic.hash
+    ? crypto.createHash('sha256').update(String(deterministic.hash)).digest('hex')
+    : null;
+  if (deterministicAuthorityHash && lifecycleEvents.length) lifecycleEvents[lifecycleEvents.length - 1].payload.authorityHash = deterministicAuthorityHash;
+  const lifecycle = verifyReplayLifecycle({
+    game:r.game,
+    matchId:r.matchId,
+    events:lifecycleEvents,
+    expected:{ terminal:true, order:lifecycleEvents.length ? lifecycleEvents[lifecycleEvents.length - 1].payload.order : [], authorityHash:deterministicAuthorityHash || undefined },
+    clusterEnabled:clusterCoordinator.enabled,
+  });
+  const replay={version:'replay-v1.1',replayId:'rep_'+crypto.randomBytes(10).toString('base64url'),matchId:r.matchId,game:r.game,createdAt,expiresAt:createdAt+REPLAY_TTL_MS,publicAt:visibility==='public'?createdAt+REPLAY_PUBLIC_DELAY_MS:0,visibility,uids,shareTokenHash:null,shareExpiresAt:0,moveLog:moveLog.map(event=>({seq:event.seq,player:event.player,payload:event.payload})),authorityInputLog:authorityInputLog.map(event=>({seq:event.seq,player:event.player,payload:event.payload})),lifecycle:lifecycleEvents,deterministic:{ok:deterministic.ok,status:deterministic.status,protocol:deterministic.protocol||REPLAY_AUTHORITY_PROTOCOL,eventCount:deterministic.eventCount||0,hash:deterministic.hash||null,reason:deterministic.reason||null,terminal:deterministic.terminal===true,lifecycleOk:lifecycle.ok,lifecycleStatus:lifecycle.status||null,automaticEventCount:lifecycle.automaticEventCount||0,reconnectVerified:lifecycle.reconnectVerified===true,crossInstanceStatus:lifecycle.crossInstanceStatus||'not_available_without_cluster'},moveLogTruncated:!!r.moveLogTruncated,finalResult:{...finalResult}};
   db.replays=(db.replays||[]).filter(item=>item&&item.matchId!==r.matchId);db.replays.push(replay);trimAuditData();saveDB();
-  recordAnalytics('replay_created',{matchId:r.matchId,game:r.game,metadata:{replayId:replay.replayId,eventCount:replay.moveLog.length,truncated:replay.moveLogTruncated}});
+  recordAnalytics('replay_created',{matchId:r.matchId,game:r.game,metadata:{replayId:replay.replayId,eventCount:replay.moveLog.length,authorityInputCount:replay.authorityInputLog.length,deterministic:replay.deterministic.status,truncated:replay.moveLogTruncated}});
   return replay;
 }
 function replayPublicAt(replay){return Number(replay&&replay.publicAt)||((replay&&replay.visibility)==='public'?Number(replay.createdAt||0)+REPLAY_PUBLIC_DELAY_MS:0);}
@@ -4003,7 +4371,7 @@ function replayVisibleById(replay,uid,now=Date.now()){
 }
 function replayMeta(replay,viewerUid){
   const canShare=replayParticipant(replay,viewerUid),shared=canShare&&Number(replay.shareExpiresAt||0)>Date.now()&&!!replay.shareTokenHash;
-  return{version:replay.version||'replay-v1',replayId:replay.replayId,matchId:replay.matchId,game:replay.game,createdAt:replay.createdAt,expiresAt:replay.expiresAt,publicAt:replayPublicAt(replay),visibility:replay.visibility,eventCount:replay.moveLog.length,moveLogTruncated:!!replay.moveLogTruncated,finalResult:replay.finalResult,canShare,shared,shareExpiresAt:shared?replay.shareExpiresAt:0};
+  return{version:replay.version||'replay-v1',replayId:replay.replayId,matchId:replay.matchId,game:replay.game,createdAt:replay.createdAt,expiresAt:replay.expiresAt,publicAt:replayPublicAt(replay),visibility:replay.visibility,eventCount:Array.isArray(replay.moveLog)?replay.moveLog.length:0,authorityInputCount:Array.isArray(replay.authorityInputLog)?replay.authorityInputLog.length:0,lifecycleEventCount:Array.isArray(replay.lifecycle)?replay.lifecycle.length:0,deterministic:replay.deterministic||null,moveLogTruncated:!!replay.moveLogTruncated,finalResult:replay.finalResult,canShare,shared,shareExpiresAt:shared?replay.shareExpiresAt:0};
 }
 function settleRoomNoContest(r, reason){
   if (!r || !r.started || r.settled || !r.matchId) return;
@@ -4041,11 +4409,13 @@ function submitRoomResult(session, payload, r){
   // fully authoritative Monopoly room before the server simulation reaches
   // its terminal state.  Administrative forfeit/no-contest paths call
   // settleRoomResult directly and remain available for disconnect handling.
-  const authorityProtocol = r.tankAuthority ? 'tank-authority-v1' :
+  const authorityProtocol = r.gomokuRuleAuthority ? PROTOCOL_VERSIONS.gomokuRules :
+    (r.ludoRuleAuthority ? PROTOCOL_VERSIONS.ludoRules :
+    (r.tankAuthority ? 'tank-authority-v1' :
     (r.tetrisRuleAuthority ? PROTOCOL_VERSIONS.tetrisRules :
       (r.tetrisAuthority ? 'tetris-battle-authority-v1' :
         (r.xiangqiRuleAuthority ? PROTOCOL_VERSIONS.xiangqiRules :
-          (r.xiangqiClock ? 'xiangqi-clock-v1' : (r.monopolyRuleAuthority ? PROTOCOL_VERSIONS.monopolyRules : '')))));
+          (r.xiangqiClock ? 'xiangqi-clock-v1' : (r.monopolyRuleAuthority ? PROTOCOL_VERSIONS.monopolyRules : '')))))));
   if (authorityProtocol){
     incrementGameplayMetric('clientResultRejected');
     session.sendText(JSON.stringify({
@@ -4369,8 +4739,8 @@ function broadcast(room, msg, except){
       if (c === except) continue;
       if (!delay) c.sendText(text);
       else {
-        const timer = setTimeout(() => { if (c.alive && room.spectators && room.spectators.has(c)) c.sendText(text); }, delay);
-        if (timer && timer.unref) timer.unref();
+        if(!(room.spectatorDelayTimers instanceof Set))room.spectatorDelayTimers=new Set();
+        scheduleMatchSocialDelay(room,c,delay,text,room.spectatorDelayTimers,()=>c.alive&&room.spectators&&room.spectators.has(c),'spectator_broadcast_delay_schedule');
       }
     }
   }
@@ -4417,9 +4787,7 @@ function deliverMatchExpression(room,event){
     if(!delay)session.sendText(text);
     else{
       matchExpressionStores(room);
-      const timer=setTimeout(()=>{room.matchExpressionDelayTimers.delete(timer);if(room.started&&!room.settled&&String(room.matchId)===String(event.matchId)&&room.spectators&&room.spectators.has(session)&&matchExpressionRecipientAllowed(session,event.senderUid))session.sendText(text);},delay);
-      room.matchExpressionDelayTimers.add(timer);
-      if(timer&&timer.unref)timer.unref();
+      scheduleMatchSocialDelay(room,session,delay,text,room.matchExpressionDelayTimers,()=>room.started&&!room.settled&&String(room.matchId)===String(event.matchId)&&room.spectators&&room.spectators.has(session)&&matchExpressionRecipientAllowed(session,event.senderUid),'match_expression_delay_schedule');
     }
   }
 }
@@ -4520,8 +4888,7 @@ function deliverMatchChat(room,event){
     if(!delay)session.sendText(text);
     else{
       matchChatStores(room);
-      const timer=setTimeout(()=>{room.matchChatDelayTimers.delete(timer);if(room.started&&!room.settled&&String(room.matchId)===String(event.matchId)&&room.spectators&&room.spectators.has(session)&&matchChatRecipientAllowed(session,event.senderUid))session.sendText(text);},delay);
-      room.matchChatDelayTimers.add(timer);if(timer&&timer.unref)timer.unref();
+      scheduleMatchSocialDelay(room,session,delay,text,room.matchChatDelayTimers,()=>room.started&&!room.settled&&String(room.matchId)===String(event.matchId)&&room.spectators&&room.spectators.has(session)&&matchChatRecipientAllowed(session,event.senderUid),'match_chat_delay_schedule');
     }
   }
 }
@@ -4600,6 +4967,13 @@ function handleRoomUndo(session, room, payload){
     session.sendText(JSON.stringify({type:'gameplay_error',payload:{protocol:'undo-v1',reason:'ERR_UNSUPPORTED_GAME'}}));
     return true;
   }
+  if(room.game==='gomoku'&&room.gomokuRuleAuthority){
+    const accepted=room.gomokuRuleAuthority.undo(seat.seatId,Date.now());
+    if(!accepted.ok){session.sendText(JSON.stringify({type:'gameplay_error',payload:{protocol:PROTOCOL_VERSIONS.gomokuRules,reason:accepted.reason}}));return true;}
+    room.undoUsed=true;
+    broadcast(room,accepted.event);
+    return true;
+  }
   if (room.game === 'xiangqi' && room.xiangqiRuleAuthority){
     const accepted=room.xiangqiRuleAuthority.undo(seat.seatId,Date.now());
     if(!accepted.ok){session.sendText(JSON.stringify({type:'gameplay_error',payload:{protocol:PROTOCOL_VERSIONS.xiangqiRules,reason:accepted.reason}}));return true;}
@@ -4636,6 +5010,8 @@ function spectatorSnapshot(r){
     moveLogTruncated:!!r.moveLogTruncated,
     tankSnapshot:r.tankAuthority ? r.tankAuthority.snapshot() : null,
     tetrisSnapshot:r.tetrisAuthority ? r.tetrisAuthority.snapshot() : null,
+    gomokuRuleSnapshot:r.gomokuRuleAuthority ? r.gomokuRuleAuthority.snapshot() : null,
+    ludoRuleSnapshot:r.ludoRuleAuthority ? r.ludoRuleAuthority.snapshot() : null,
     tetrisRuleSnapshot:r.tetrisRuleAuthority ? r.tetrisRuleAuthority.snapshot() : null,
     tetrisPresentation:tetrisPresentationPayload(r),
     clockSnapshot:r.xiangqiClock ? r.xiangqiClock.snapshot() : null,
@@ -4964,7 +5340,7 @@ class Session {
       const replayRef=String(payload&&(payload.replayId||payload.shareToken)||''),now=Date.now();
       const replay=(db.replays||[]).find(item=>item&&Number(item.expiresAt||0)>now&&(item.replayId===replayRef||replayShareValid(item,replayRef,now)));
       if(!replay||!(replayVisibleById(replay,u.uid,now)||replayShareValid(replay,replayRef,now))){this.sendText(JSON.stringify({type:'replay_error',msg:'回放不存在或无权访问',reason:'replay_forbidden'}));return;}
-      this.sendText(JSON.stringify({type:'replay_data',payload:{...replayMeta(replay,u.uid),moveLog:replay.moveLog}}));return;
+      this.sendText(JSON.stringify({type:'replay_data',payload:{...replayMeta(replay,u.uid),moveLog:Array.isArray(replay.moveLog)?replay.moveLog:[],authorityInputLog:Array.isArray(replay.authorityInputLog)?replay.authorityInputLog:[],lifecycle:Array.isArray(replay.lifecycle)?replay.lifecycle:[]}}));return;
     }
     if (type === 'profile'){
       const u = this.requireUser();
@@ -5237,7 +5613,7 @@ class Session {
         allowUndo:testSandbox ? false : payload && payload.allowUndo !== false, undoUsed:false,
         testAdminSandbox:testSandbox,
         started: false, matchId: null, resultClaims: new Map(), settled: false, disputed: false,
-        moveSeq: 0, moveLog: [], moveLogBytes: 0, moveLogTruncated: false,
+        moveSeq: 0, moveLog: [], moveLogBytes: 0, moveLogTruncated: false, replayInputLog: [],
         tankInputSeq: {}, tankAuthoritySeq: 0, tankFinalSent: false,
         startedAt: 0, rewardProgress: null, resultRewards: new Map(),
         spectators:new Map(), maxSpectators:Math.max(1,Math.min(50,Number(process.env.MAX_SPECTATORS)||12)),
@@ -5456,7 +5832,7 @@ class Session {
       return;
     }
     if (this.spectatorRoom){
-      if (['move','bot_move','tank_input','bot_tank_input','tetris_lock_claim','tetris_attack_claim','tetris_ko_claim','tetris_action','xiangqi_action','monopoly_action','monopoly_auction_open','monopoly_bid','game_state','start','restart','end_game','select_game','ready','room_settings','undo','add_ai','remove_ai'].includes(type)){
+      if (['move','bot_move','gomoku_action','tank_input','bot_tank_input','tetris_lock_claim','tetris_attack_claim','tetris_ko_claim','tetris_action','xiangqi_action','monopoly_action','monopoly_auction_open','monopoly_bid','game_state','start','restart','end_game','select_game','ready','room_settings','undo','add_ai','remove_ai'].includes(type)){
         this.sendText(JSON.stringify({ type:'spectator_error', msg:'观战模式为只读，不能发送游戏输入', reason:'spectator_readonly' }));
       }
       return;
@@ -5611,6 +5987,20 @@ class Session {
       }
       r.aiInputSeq = r.aiInputSeq || {};
       const seq = (Number(r.aiInputSeq[seat.seatId]) || 0) + 1;
+      if(r.gomokuRuleAuthority){
+        const row=Array.isArray(move)?Number(move[0]):Number(move.row??move.r),col=Array.isArray(move)?Number(move[1]):Number(move.col??move.c);
+        const routed=matchProtocolBoundary&&matchProtocolBoundary.command({type:'gomoku_action',room:r,session:this,player:seat.seatId,payload:{matchId:r.matchId,seq,row,col}});
+        if(routed&&routed.handled){if(routed.ok)r.aiInputSeq[seat.seatId]=seq;return;}
+        this.sendText(JSON.stringify({type:'gameplay_error',payload:{protocol:PROTOCOL_VERSIONS.gomokuRules,reason:'match_protocol_unavailable'}}));
+        return;
+      }
+      if(r.ludoRuleAuthority){
+        const action=move&&move.action&&typeof move.action==='object'?move.action:(move&&move.dice!==undefined?{type:'roll'}:(move&&move.ti!==undefined?{type:'move',token:Number(move.ti)}:null));
+        if(!action){this.sendText(JSON.stringify({type:'gameplay_error',payload:{protocol:PROTOCOL_VERSIONS.ludoRules,reason:'ERR_INVALID_MOVE'}}));return;}
+        const routed=matchProtocolBoundary&&matchProtocolBoundary.command({type:'ludo_action',room:r,session:this,player:seat.seatId,payload:{matchId:r.matchId,seq,action}});
+        if(routed&&routed.handled){if(routed.ok)r.aiInputSeq[seat.seatId]=seq;return;}
+        this.sendText(JSON.stringify({type:'gameplay_error',payload:{protocol:PROTOCOL_VERSIONS.ludoRules,reason:'match_protocol_unavailable'}}));return;
+      }
       if (r.xiangqiRuleAuthority){
         const routed=matchProtocolBoundary&&matchProtocolBoundary.command({
           type:'xiangqi_action',room:r,session:this,player:seat.seatId,
@@ -5696,7 +6086,7 @@ class Session {
       return;
     }
     if (type === 'game_state'){
-      if(r.tankAuthority||r.tetrisAuthority||r.tetrisRuleAuthority||r.xiangqiRuleAuthority||r.monopolyRuleAuthority){
+      if(r.gomokuRuleAuthority||r.tankAuthority||r.tetrisAuthority||r.tetrisRuleAuthority||r.xiangqiRuleAuthority||r.monopolyRuleAuthority){
         this.sendText(JSON.stringify({type:'gameplay_error',payload:{protocol:gameplayMetadata(r)&&gameplayMetadata(r).protocol||'server-authority',reason:'client_snapshot_rejected'}}));
         return;
       }
@@ -5807,7 +6197,7 @@ class Session {
     if (type === 'move'){
       if (!r.started) return;
       if (!payload || typeof payload !== 'object') return;
-      const ruleProtocol=r.tankAuthority?'tank-authority-v1':r.tetrisRuleAuthority?PROTOCOL_VERSIONS.tetrisRules:
+      const ruleProtocol=r.gomokuRuleAuthority?PROTOCOL_VERSIONS.gomokuRules:r.ludoRuleAuthority?PROTOCOL_VERSIONS.ludoRules:r.tankAuthority?'tank-authority-v1':r.tetrisRuleAuthority?PROTOCOL_VERSIONS.tetrisRules:
         r.tetrisAuthority?'tetris-battle-authority-v1':r.xiangqiRuleAuthority?PROTOCOL_VERSIONS.xiangqiRules:
           r.monopolyRuleAuthority?PROTOCOL_VERSIONS.monopolyRules:'';
       if (ruleProtocol){
@@ -5866,6 +6256,8 @@ class Session {
       r.moveLog = [];
       r.moveLogBytes = 0;
       r.moveLogTruncated = false;
+        r.replayInputLog = [];
+      r.replayServerSeq = 0;
       r.tankInputSeq = {};
       r.tankAuthoritySeq = 0;
       r.tankFinalSent = false;
@@ -6057,6 +6449,7 @@ const heartbeatSweep=serverClockTimer.schedule({
         if(!state||['expired','declined','cancelled'].includes(state.status)||
             (state.status==='finished'&&now-Number(state.lastActivityAt||0)>60*60*1000)){
           if(state)broadcastTournament(entry);
+          cancelTournamentLifecycleTimers(entry);
           tournaments.delete(tournamentId);
         }
       });

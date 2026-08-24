@@ -10,6 +10,7 @@ const MODULE_PATH = path.join(ROOT, 'server', 'boundaries', 'match-protocol.js')
 const SOURCE = fs.readFileSync(MODULE_PATH, 'utf8');
 const SERVER_SOURCE = fs.readFileSync(path.join(ROOT, 'server', 'index.js'), 'utf8');
 const { PROTOCOL_VERSIONS } = require('../server/gameplay/protocol');
+const { GomokuRuleAuthority } = require('../server/gameplay/gomoku-rule-authority');
 const {
   createMatchProtocolBoundary,
   createJsonRuntimeMatchProtocolAdapter,
@@ -67,6 +68,23 @@ check('unknown message is not handled and produces no effects', () => {
   assert.deepStrictEqual(outcome, { handled:false });
   assert.deepStrictEqual(runtime.trace, []);
   assert(Object.isFrozen(outcome));
+});
+
+check('Gomoku accepted action commits metric, normalized audit, state and trusted terminal results in order', () => {
+  const runtime=fixture();runtime.room.game='gomoku';
+  runtime.room.gomokuRuleAuthority={matchId:'match-01',lastSeq:[0,0],revision:0,acceptMove(player,payload){this.lastSeq[player]=payload.seq;this.revision=1;return{ok:true,event:{type:'gomoku_rule_state',payload:{matchId:'match-01',revision:1}},result:{type:'gomoku_result',protocol:PROTOCOL_VERSIONS.gomokuRules,matchId:'match-01',revision:1,order:[1,0],results:[{slot:1,rank:1,coins:1},{slot:0,rank:2,coins:0}]}};}};
+  const outcome=runtime.boundary.command({type:'gomoku_action',room:runtime.room,session:runtime.session,payload:{matchId:'match-01',seq:1,row:7,col:7}});
+  assert.strictEqual(outcome.ok,true);assert.strictEqual(outcome.terminal,true);
+  assert.deepStrictEqual(effectKinds(runtime.trace),['metric:gomokuMoves','record','broadcast','terminal']);
+  assert.deepStrictEqual(runtime.trace[1].action,{protocol:PROTOCOL_VERSIONS.gomokuRules,r:7,c:7});
+  assert.deepStrictEqual(runtime.trace[3].results,[{slot:1,rank:1,coins:1},{slot:0,rank:2,coins:0}]);
+});
+
+check('Gomoku malformed result override fails closed before settlement', () => {
+  const calls=[];
+  const adapter=createRuntimeMatchProtocolAdapter({send(){},broadcast(){calls.push('broadcast');},incrementMetric(){calls.push('metric');},recordAction(){calls.push('record');},settle(){calls.push('settle');},stop(){calls.push('stop');}});
+  const outcome=adapter.commit({room:{gameplayResultSent:false},session:{},effects:[{kind:'terminal',message:{type:'gomoku_result'},order:[0,1],results:[{slot:0,rank:1,coins:0},{slot:0,rank:1,coins:0}],cause:'gomoku_rule_authority'}]});
+  assert.strictEqual(outcome.ok,false);assert.deepStrictEqual(calls,[]);
 });
 
 check('Tetris missing Authority and wrong match return stable gameplay_error effects', () => {
@@ -235,6 +253,15 @@ check('Adapter effect failure rolls back Authority state before a retry', () => 
   assert.deepStrictEqual(authority.lastSeq, [0, 0]);
   assert.strictEqual(authority.revision, 0);
   assert.strictEqual(authority.state.pieces, 0);
+});
+
+check('Gomoku Adapter failure rolls back board, seq, revision and audit atomically', () => {
+  const authority=new GomokuRuleAuthority({matchId:'gomoku-rollback'}),before=authority.snapshot(5);
+  const adapter=createRuntimeMatchProtocolAdapter({send(){},broadcast(){throw new Error('wire failed');},incrementMetric(){},recordAction(){},settle(){},stop(){}});
+  const boundary=createMatchProtocolBoundary({adapter,now:()=>5}),session={player:0},room={matchId:'gomoku-rollback',started:true,clients:new Map(),gameplayResultSent:false,gomokuRuleAuthority:authority};room.clients.set(session,0);
+  const failed=boundary.command({type:'gomoku_action',room,session,payload:{matchId:'gomoku-rollback',seq:1,row:7,col:7}});
+  assert.strictEqual(failed.reason,'match_protocol_unavailable');
+  assert.deepStrictEqual(authority.snapshot(5),before);assert.deepStrictEqual(authority.lastSeq,[0,0]);assert.strictEqual(authority.inputLog.length,0);assert.strictEqual(authority.undoHistory.length,0);
 });
 
 check('runtime Adapter applies the fixed effect vocabulary in order', () => {
@@ -410,7 +437,7 @@ check('adapter/authority faults fail closed and restore local room mutation', ()
   assert.deepStrictEqual(calls, ['broadcast','settle']);
 });
 
-check('server consumes the single command Interface for all three human Rule Authority messages', () => {
+check('server consumes the single command Interface for all four human Rule Authority messages', () => {
   assert(SERVER_SOURCE.includes("require('./boundaries/match-protocol')"));
   assert(SERVER_SOURCE.includes("matchProtocolBoundary.command({type,room:r,session:this,payload})"));
   assert(SERVER_SOURCE.includes('matchProtocolBoundary.transition'));
@@ -418,6 +445,8 @@ check('server consumes the single command Interface for all three human Rule Aut
   assert(SERVER_SOURCE.includes("type:'xiangqi_action',room:r,session:this,player:seat.seatId"));
   assert(SERVER_SOURCE.includes("type:'monopoly_action',room:r,session:this,player:seat.seatId"));
   assert(SERVER_SOURCE.includes("type:'tetris_action',room:r,session:this,player:seat.seatId"));
+  assert(SERVER_SOURCE.includes("type:'gomoku_action',room:r,session:this,player:seat.seatId"));
+  assert(!SERVER_SOURCE.includes("if (type === 'gomoku_action'){"));
   assert(!SERVER_SOURCE.includes("if (type === 'tetris_action'){"));
   assert(!SERVER_SOURCE.includes("if (type === 'xiangqi_action'){"));
   assert(!SERVER_SOURCE.includes("if (type === 'monopoly_action'){"));

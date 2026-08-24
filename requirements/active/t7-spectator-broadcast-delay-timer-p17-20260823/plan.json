@@ -1,0 +1,17 @@
+{
+  "batch": "T7-P17",
+  "title": "普通广播观众延迟 Timer 迁移",
+  "requirementIds": ["TECH-039", "TECH-040", "TECH-052", "SOC-012", "UI-035"],
+  "status": "implemented_local",
+  "stage": "CLOSE",
+  "scope": [
+    "房间普通 broadcast 的 spectator delay 使用可取消 ServerClockTimer lease",
+    "房间 reset/结束/离开时清理普通广播 pending leases",
+    "保留 spectator membership、alive 与原有消息顺序"
+  ],
+  "outOfScope": [
+    "gameplay tick、transport deadline、真实网络与生产 Supabase",
+    "普通玩家即时广播、局内表达/房聊协议字段和 UI"
+  ],
+  "rollback": "普通广播仍使用既有 JSON wire；lease 失败只记录 operational context，不改变玩家席位或权威状态。"
+}

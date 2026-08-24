@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-08-24T01:21:44+09:00",
+  "state": "MACHINE_VERIFIED_LOCAL",
+  "credentials": "NOT_PRESENT_IN_CURRENT_PROCESS",
+  "checks": [
+    {"command": "scripts/supabase-production-ops.ps1 -Action plan", "result": "PASS_DRY_RUN_NO_CONNECTION_NO_WRITE"},
+    {"command": "npm run test:production-readiness", "result": "PASS"},
+    {"command": "npm run test:schema", "result": "PASS"},
+    {"command": "npm run test:supabase", "result": "PASS", "assertions": 26}
+  ],
+  "notGranted": ["real_sql", "real_rls", "encrypted_backup", "isolated_restore", "rollback", "concurrency", "multi_instance", "production", "release"]
+}

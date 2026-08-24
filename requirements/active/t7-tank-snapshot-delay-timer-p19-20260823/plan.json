@@ -1,0 +1,17 @@
+{
+  "batch": "T7-P19",
+  "title": "Tank Snapshot spectator delay Timer 迁移",
+  "requirementIds": ["TECH-039", "TECH-040", "TECH-052", "GAME-013", "UI-035"],
+  "status": "implemented_local",
+  "stage": "CLOSE",
+  "scope": [
+    "Tank Authority 观众 snapshot delay 使用按房间/帧隔离的 ServerClockTimer one-shot lease",
+    "pending snapshot lease 保留有界容量、match fence、spectator membership marker 与发送前存活复核",
+    "房间 reset/settle/leave/server close 通过既有统一 cancel seam 清理所有 Tank snapshot delay lease"
+  ],
+  "outOfScope": [
+    "Tank Authority、snapshot wire codec、普通玩家即时帧、Rule/Reward/Replay 与协议字段",
+    "transport deadline、真实 Supabase/RLS/并发/备份恢复、多实例、第二浏览器、真机、真实网络和线上发布"
+  ],
+  "rollback": "Tank snapshot delay lease 创建失败只记录 operational context；既有 full snapshot delivery、room lifecycle 与 fail-closed membership checks 保持可用。"
+}

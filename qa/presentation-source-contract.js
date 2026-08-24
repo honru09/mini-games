@@ -32,7 +32,7 @@ for (const filePath of paths) {
 }
 assert.ok(css.length > 300000, 'legacy platform CSS remains fully represented in the external source seam');
 assert.ok(splitRuntime.equals(archive), 'V5 platform modules preserve byte-exact V4 source archive');
-assert.strictEqual(crypto.createHash('sha256').update(splitRuntime).digest('hex').toUpperCase(), '978A627B7B36B11ECC9550637C1A2AB8C73E6BE028178A379CC6EA6EF6634040', 'V5 platform archive hash is stable');
+assert.strictEqual(crypto.createHash('sha256').update(splitRuntime).digest('hex').toUpperCase(), '0DB9AA1B96EA2EF1BBC6C057CC329853F3F50BC63E47099E317FBA7782C6D770', 'V5 platform archive hash is stable');
 assert.ok(readPresentationSource().includes('data-qa-presentation-source'), 'QA source seam combines template and external CSS');
 assert.match(hash, /^[A-F0-9]{64}$/);
 

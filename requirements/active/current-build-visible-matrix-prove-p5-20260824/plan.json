@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "taskId": "current-build-visible-matrix-prove-p5-20260824",
+  "stage": "PROVE",
+  "status": "prepared_execution_not_executed",
+  "requirements": ["TECH-027", "UI-027", "UI-028", "UI-031", "TECH-030"],
+  "steps": [
+    {"id": "P5-1", "title": "冻结当前 HTML/Presentation/Layout/Cache 四重身份", "status": "completed"},
+    {"id": "P5-2", "title": "准备四区、共享表面、六款 Game Stage 与可访问性矩阵", "status": "completed"},
+    {"id": "P5-3", "title": "运行当前单浏览器可见矩阵", "status": "not_executed", "reason": "local node_repl sandbox-path fix applied; current MCP process requires restart before browser execution"},
+    {"id": "P5-4", "title": "第二浏览器、真机、真实网络与低端性能", "status": "release_evidence_pending"}
+  ],
+  "connectorRepair": {
+    "status": "local_config_fix_applied_restart_required",
+    "evidence": "requirements/active/current-build-visible-matrix-prove-p5-20260824/evidence/browser-connector-kernel-path-diagnosis-20260824.json"
+  },
+  "release": "LOCAL_ONLY_NOT_RELEASED"
+}

@@ -4,6 +4,7 @@ const assert = require('assert');
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
+const { readPresentationIdentity, matchesPresentationIdentity } = require('../shared/presentation/presentation-identity');
 
 const ROOT = path.resolve(__dirname, '..');
 const BUILD_PATH = path.join(ROOT, 'public', 'index.html');
@@ -50,6 +51,7 @@ const evidence = JSON.parse(fs.readFileSync(EVIDENCE_PATH, 'utf8'));
 const ledger = JSON.parse(fs.readFileSync(LEDGER_PATH, 'utf8'));
 const routing = JSON.parse(fs.readFileSync(ROUTING_PATH, 'utf8'));
 const reportGenerator = fs.readFileSync(REPORT_GENERATOR_PATH, 'utf8');
+const presentationIdentity = readPresentationIdentity({ root: ROOT });
 const requirementById = new Map(ledger.requirements.map((item) => [item.id, item]));
 const requiredNotGranted = [
   'second_browser',
@@ -124,6 +126,8 @@ if (mode === 'current') {
     'evidence marked current must match the current built HTML SHA-256');
   assert.strictEqual(evidence.build.bytes, build.length,
     'evidence marked current must match the current built HTML byte length');
+  assert(matchesPresentationIdentity(evidence.presentationIdentity, presentationIdentity),
+    'evidence marked current must match presentation, layout and Service Worker cache identity');
 } else {
   assert.notStrictEqual(evidence.build.sha256, buildSha,
     'historical as-of evidence must not be represented as the current built HTML');
@@ -206,6 +210,8 @@ assert.strictEqual(routing.sharedGates['GATE-DEVICE-BROWSER-NETWORK'].releaseSta
   'single-browser evidence must not release the shared Gate');
 assert(reportGenerator.includes('currentBrowserEvidenceSummary'),
   'progress reports must derive current/historical browser wording from the build hash');
+assert(reportGenerator.includes('matchesPresentationIdentity(evidence.presentationIdentity, presentationIdentity)'),
+  'progress reports must not call CSS-stale browser evidence current from HTML SHA alone');
 assert(fs.existsSync(T1_EVIDENCE_PATH), 'the legacy T1-named artifact must remain present with an explicit provenance correction');
 const t1Evidence = JSON.parse(fs.readFileSync(T1_EVIDENCE_PATH, 'utf8'));
 assert.strictEqual(t1Evidence.claim, 'historical_as_of_mislabeled_t1_artifact',

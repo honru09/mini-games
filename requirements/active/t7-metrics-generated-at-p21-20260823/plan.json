@@ -1,0 +1,17 @@
+{
+  "batch": "T7-P21",
+  "title": "Metrics generatedAt 统一时间 seam",
+  "requirementIds": ["TECH-039", "TECH-040", "TECH-052"],
+  "status": "implemented_local",
+  "stage": "CLOSE",
+  "scope": [
+    "Gameplay Metrics、Operational Metrics、Cluster Metrics 与 Telemetry 复用同一个 serverNow epoch 签发 generatedAt",
+    "Operational Metrics 单次 capture 只采样一次时间，并把同一 epoch 传给 currentMetrics 与 safeSnapshot",
+    "保留 metrics-v2 JSON、history、CSV、alerts、incident、Supabase RPC 与 Telemetry payload 形状"
+  ],
+  "outOfScope": [
+    "server/index.js 其余业务 Date.now 调用、指标字段、告警阈值、管理员 API 与生产配置",
+    "真实 Supabase/RLS/并发/备份恢复、多实例、第二浏览器、真机、真实网络和线上发布"
+  ],
+  "rollback": "撤销显式 at/now 注入即可恢复旧 generatedAt 生成方式；不需要 schema、协议、奖励或玩家数据迁移。"
+}

@@ -1,6 +1,6 @@
 /* ================= 联机对战（WebSocket 中继） ================= */
 const ONLINE_CLIENT_CAPABILITIES = Object.freeze([
-  'tank-authority-v1','tetris-battle-authority-v1','tetris-rule-v3','spectator-room-v1','tournament-orchestrator-v1',
+  'gomoku-rule-v1','ludo-rule-v1','tank-authority-v1','tetris-battle-authority-v1','tetris-rule-v3','spectator-room-v1','tournament-orchestrator-v1',
   'xiangqi-clock-v1','xiangqi-rule-v2','monopoly-auction-v1','monopoly-rule-v2','game-cosmetic-presentation-v1',
   'username-password-auth-v2','ephemeral-guest-v1','honru-companion-v1','direct-chat-v1','match-expression-v1','match-chat-v1','playline-v1',
 ]);
@@ -528,6 +528,8 @@ const online = {
   addAI(difficulty, persona){ this.send({ type:'add_ai', payload:{ difficulty:difficulty || 'normal', persona:persona || 'teacher' } }); },
   removeAI(seatId){ this.send({ type:'remove_ai', payload:{ seatId } }); },
   sendBotMove(seatId, payload){ this.send({ type:'bot_move', payload:{ seatId, payload } }); },
+  sendGomokuAction(payload){ this.send({type:'gomoku_action',payload:{...(payload||{}),matchId:this.matchId}}); },
+  sendLudoAction(payload){ return this.send({type:'ludo_action',payload:{...(payload||{}),matchId:this.matchId}}); },
   sendBotTankInput(seatId, payload){ this.send({ type:'bot_tank_input', payload:{ ...(payload || {}), seatId, matchId:this.matchId } }); },
   sendBotTetrisAction(seatId, action){ this.send({ type:'bot_tetris_action', payload:{ seatId, action, matchId:this.matchId } }); },
   sendMove(payload){ this.send({type:'move', payload}); setTimeout(() => this.publishGameState(), 0); },
@@ -560,7 +562,7 @@ const online = {
   sendXiangqiAction(payload){ this.send({type:'xiangqi_action',payload:{...(payload||{}),matchId:this.matchId}}); },
   spectate(roomId,matchId){ this.send({type:'spectate_join',payload:{roomId,matchId}}); },
   publishGameState(){
-    if(!this.isHost||this.isSpectator||!this.matchId||!currentGame||typeof currentGame.serialize!=='function'||['tank','tetris'].includes(this.game))return;
+    if(!this.isHost||this.isSpectator||!this.matchId||!currentGame||typeof currentGame.serialize!=='function'||['tank','tetris'].includes(this.game)||(this.game==='gomoku'&&this.gameplayMeta&&this.gameplayMeta.protocol==='gomoku-rule-v1'))return;
     const ready=typeof currentGame.whenIdle==='function'?currentGame.whenIdle():Promise.resolve();
     Promise.resolve(ready).then(()=>{if(!this.isHost||!currentGame||!this.matchId)return;const snapshot=currentGame.serialize();const state=snapshot&&snapshot.state?snapshot.state:snapshot;if(this.game==='monopoly'&&state&&!state.over&&state.phase!=='roll')return;this.send({type:'game_state',payload:{matchId:this.matchId,snapshot}});}).catch(()=>{});
   },
@@ -645,6 +647,8 @@ const online = {
             const tankSnapshot=this.decodeTankSnapshot(p.tankSnapshot);
             if(tankSnapshot&&currentGame&&currentGame.onAuthoritySnapshot)currentGame.onAuthoritySnapshot(tankSnapshot,true);
             if(p.tetrisSnapshot&&currentGame&&currentGame.onBattleSnapshot)currentGame.onBattleSnapshot(p.tetrisSnapshot);
+            if(p.gomokuRuleSnapshot&&currentGame&&currentGame.onGomokuRuleState)currentGame.onGomokuRuleState(p.gomokuRuleSnapshot,'spectator-bootstrap');
+            if(p.ludoRuleSnapshot&&currentGame&&currentGame.onLudoRuleState)currentGame.onLudoRuleState(p.ludoRuleSnapshot,'spectator-bootstrap');
             if(p.tetrisRuleSnapshot&&currentGame&&currentGame.onTetrisRuleState)currentGame.onTetrisRuleState(p.tetrisRuleSnapshot,'spectator-bootstrap');
             if(Array.isArray(p.tetrisPresentation)&&currentGame&&currentGame.onTetrisState)p.tetrisPresentation.forEach(item=>currentGame.onTetrisState(item));
             if(p.xiangqiRuleSnapshot&&currentGame&&currentGame.onXiangqiRuleState)currentGame.onXiangqiRuleState(p.xiangqiRuleSnapshot,'spectator-bootstrap');
@@ -667,6 +671,8 @@ const online = {
             const tankSnapshot=this.decodeTankSnapshot(p.tankSnapshot);
             if(tankSnapshot&&currentGame&&currentGame.onAuthoritySnapshot)currentGame.onAuthoritySnapshot(tankSnapshot,true);
             if(p.tetrisSnapshot&&currentGame&&currentGame.onBattleSnapshot)currentGame.onBattleSnapshot(p.tetrisSnapshot);
+             if(p.gomokuRuleSnapshot&&currentGame&&currentGame.onGomokuRuleState)currentGame.onGomokuRuleState(p.gomokuRuleSnapshot,'spectator-bootstrap');
+             if(p.ludoRuleSnapshot&&currentGame&&currentGame.onLudoRuleState)currentGame.onLudoRuleState(p.ludoRuleSnapshot,'spectator-bootstrap');
              if(p.tetrisRuleSnapshot&&currentGame&&currentGame.onTetrisRuleState)currentGame.onTetrisRuleState(p.tetrisRuleSnapshot,'spectator-bootstrap');
              if(Array.isArray(p.tetrisPresentation)&&currentGame&&currentGame.onTetrisState)p.tetrisPresentation.forEach(item=>currentGame.onTetrisState(item));
              if(p.xiangqiRuleSnapshot&&currentGame&&currentGame.onXiangqiRuleState)currentGame.onXiangqiRuleState(p.xiangqiRuleSnapshot,'spectator-bootstrap');
@@ -898,6 +904,8 @@ const online = {
             const tankSnapshot=this.decodeTankSnapshot(p.tankSnapshot);
             if(tankSnapshot&&currentGame&&currentGame.onAuthoritySnapshot)currentGame.onAuthoritySnapshot(tankSnapshot,true);
             if(p.tetrisSnapshot&&currentGame&&currentGame.onBattleSnapshot)currentGame.onBattleSnapshot(p.tetrisSnapshot);
+            if(p.gomokuRuleSnapshot&&currentGame&&currentGame.onGomokuRuleState)currentGame.onGomokuRuleState(p.gomokuRuleSnapshot,'reconnect');
+            if(p.ludoRuleSnapshot&&currentGame&&currentGame.onLudoRuleState)currentGame.onLudoRuleState(p.ludoRuleSnapshot,'reconnect');
             if(p.tetrisRuleSnapshot&&currentGame&&currentGame.onTetrisRuleState)currentGame.onTetrisRuleState(p.tetrisRuleSnapshot,'reconnect');
             if(Array.isArray(p.tetrisPresentation)&&currentGame&&currentGame.onTetrisState)p.tetrisPresentation.forEach(item=>currentGame.onTetrisState(item));
             if(p.xiangqiRuleSnapshot&&currentGame&&currentGame.onXiangqiRuleState)currentGame.onXiangqiRuleState(p.xiangqiRuleSnapshot,'reconnect');
@@ -1076,6 +1084,7 @@ const online = {
       case 'gameplay_error':
         if(msg.payload&&msg.payload.reason){
           const reason=String(msg.payload.reason);
+          if(msg.payload.protocol==='gomoku-rule-v1'&&currentGame&&typeof currentGame.onGomokuRuleError==='function')currentGame.onGomokuRuleError(reason);
           if(currentGame&&typeof currentGame.onUndoRejected==='function'&&(
             msg.payload.protocol==='undo-v1'||reason.startsWith('ERR_UNDO_')||reason==='ERR_NOT_LAST_MOVER'
           ))currentGame.onUndoRejected(reason);
@@ -1088,6 +1097,18 @@ const online = {
           if(undoErrorKey)toast(t(undoErrorKey));
           else if(!['stale_seq','legacy_move_rejected'].includes(reason))console.warn('Gameplay protocol:',reason);
         }
+        break;
+      case 'gomoku_rule_state':
+        if(this.game==='gomoku'&&currentGame&&currentGame.onGomokuRuleState)currentGame.onGomokuRuleState(msg.payload||msg,'live');
+        break;
+      case 'ludo_rule_state':
+        if(this.game==='ludo'&&currentGame&&currentGame.onLudoRuleState)currentGame.onLudoRuleState(msg.payload||msg,'live');
+        break;
+      case 'ludo_result':
+        if(this.game==='ludo'&&currentGame&&currentGame.onLudoRuleResult)currentGame.onLudoRuleResult(msg.payload||msg,'live');
+        break;
+      case 'gomoku_result':
+        if(this.game==='gomoku'&&currentGame&&currentGame.onGomokuRuleResult)currentGame.onGomokuRuleResult(msg.payload||msg,'live');
         break;
       case 'restart':
         {

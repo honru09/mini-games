@@ -80,7 +80,9 @@ function safeNow(clock) {
     const value = Number(clock());
     if (Number.isFinite(value) && value >= 0) return value;
   } catch (_error) {}
-  return Date.now();
+  // Production receives ServerClockTimer.now(), which already retains its
+  // last valid epoch.  Do not escape that seam by consulting a second clock.
+  return 0;
 }
 
 function safeContext(value) {
@@ -159,7 +161,7 @@ function createOperationalMetricsBoundary(options = {}) {
 
   function capture(force = false) {
     const now = safeNow(clock);
-    const current = frozen(safeSnapshot(currentMetrics()));
+    const current = frozen(safeSnapshot(currentMetrics(now), now));
     const state = loadState();
     const last = state.history[state.history.length - 1];
     const lastAt = last ? Date.parse(last.generatedAt) : 0;

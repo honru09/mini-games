@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "taskId": "game-stage-interaction-targets-close-p1-20260824",
+  "stage": "CLOSE",
+  "status": "machine_verified_local_browser_not_executed",
+  "release": "LOCAL_ONLY_NOT_RELEASED",
+  "requirements": ["UI-027", "UI-028", "UI-035", "GAME-044", "TECH-027", "TECH-049"],
+  "changes": [
+    "44px Game Stage interaction target and container geometry",
+    "responsive expression/chat wrapping",
+    "single Tank outer control-grid owner and neutral mode switching",
+    "presentation/layout/cache evidence identity"
+  ],
+  "browserEvidence": {
+    "status": "NOT_EXECUTED",
+    "reason": "Codex in-app browser connector failed to write kernel assets because the local kernel resource path was not found"
+  },
+  "machineEvidence": {
+    "status": "PASS",
+    "path": "requirements/active/game-stage-interaction-targets-close-p1-20260824/evidence/local-machine-verification-20260824.json"
+  },
+  "externalGates": [
+    "second browser",
+    "physical Android/iPhone/Tablet",
+    "real network shaping",
+    "real low-end performance"
+  ]
+}

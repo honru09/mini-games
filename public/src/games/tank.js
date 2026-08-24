@@ -710,6 +710,7 @@ function gameTank(area, extra, n, opts){
       const key = joystickActive ? 'tank_control_switch_to_dpad' : 'tank_control_switch_to_joystick';
       modeToggle.textContent = t(key);
       modeToggle.setAttribute('data-i18n', key);
+      modeToggle.setAttribute('data-i18n-aria-label', key);
       modeToggle.setAttribute('aria-label', t(key));
       modeToggle.setAttribute('aria-pressed', joystickActive ? 'false' : 'true');
       modeToggle.dataset.targetMode = nextMode;
@@ -717,7 +718,7 @@ function gameTank(area, extra, n, opts){
   }
   function toggleTankControlMode(event){
     if (event && event.preventDefault) event.preventDefault();
-    releaseAllControls(false);
+    releaseAllControls(true);
     tankControlMode = tankControlMode === 'joystick' ? 'dpad' : 'joystick';
     updateTankControlMode();
   }

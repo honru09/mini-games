@@ -1,6 +1,8 @@
 'use strict';
 
 const PROTOCOL_VERSIONS=Object.freeze({
+  gomokuRules:'gomoku-rule-v1',
+  ludoRules:'ludo-rule-v1',
   tank:'tank-authority-v1',
   tankSnapshotDelta:'tank-snapshot-delta-v2',
   tetrisCoordination:'tetris-battle-authority-v1',

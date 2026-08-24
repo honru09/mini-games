@@ -107,7 +107,7 @@
     "boundary": "AUDIT_ONLY / NO_REWARD_EFFECT / LOCAL_ONLY / NOT_RELEASED."
   },
   "technicalOptimizationT7Partial": {
-    "status": "partial",
+    "status": "implemented_local",
     "evidence": [
       "requirements/ADR/003-server-boundary-adapters-metrics.md",
       "requirements/active/t7-auth-profile-boundary-p1-20260816",
@@ -118,6 +118,19 @@
       "requirements/active/t7-server-clock-timer-p6-20260817",
       "requirements/active/t7-reward-progression-projection-p7-20260818",
       "requirements/active/t7-server-boundary-clock-injection-p8-20260818",
+      "requirements/active/t7-room-graph-recovery-timer-p9-20260818",
+      "requirements/active/t7-ephemeral-cleanup-timer-p10-20260818",
+      "requirements/active/t7-reconnect-lifecycle-timer-p11-20260818",
+      "requirements/active/t7-heartbeat-sweep-timer-p12-20260819",
+      "requirements/active/t7-auth-token-ttl-sweep-p13-20260823",
+      "requirements/active/t7-supabase-outbox-cadence-p14-20260823",
+      "requirements/active/t7-tournament-lifecycle-timer-p15-20260823",
+      "requirements/active/t7-match-social-delay-timer-p16-20260823",
+      "requirements/active/t7-spectator-broadcast-delay-timer-p17-20260823",
+      "requirements/active/t7-gameplay-tick-timer-p18-20260823",
+      "requirements/active/t7-tank-snapshot-delay-timer-p19-20260823",
+      "requirements/active/t7-transport-deadline-p20-20260823",
+      "requirements/active/t7-metrics-generated-at-p21-20260823",
       "server/boundaries/operational-metrics.js",
       "server/boundaries/auth-profile.js",
       "server/boundaries/room-presence.js",
@@ -135,6 +148,7 @@
       "qa/reward-economy-boundary.js (14 assertions)",
       "qa/reward-progression.js (15 assertions)",
       "qa/server-clock-timer.js (23 scenarios)",
+      "qa/metrics-clock-seam.js (5 checks)",
       "qa/timer-audit.js",
       "npm run test:technical-optimization-t7",
       "focused online reward/daily/security/chat/playline/reconnect/e2e (exit 0)"
@@ -146,16 +160,17 @@
       "P6 ServerClockTimer now/schedule/dispose Interface with Node/Manual Adapters and Operational Metrics cadence",
       "P7 Reward/Progression apply Interface for profile/daily/achievement/recentResults/history/ledger/Analytics projection",
       "P8 single serverNow injection consumed by Auth/Profile, Room/Presence, Match Protocol, Chat/Playline, Reward/Economy and Reward/Progression",
+      "P9 room graph recovery、P10 ephemeral cleanup、P11 reconnect lifecycle、P12 heartbeat sweep、P13 auth token TTL、P14 Supabase outbox、P15 Tournament lifecycle、P16 Match Social delay、P17 Spectator Broadcast delay、P18 Gameplay tick、P19 Tank Snapshot spectator delay、P20 outbound transport deadline 与 P21 Metrics generatedAt 均使用统一 ServerClockTimer/serverNow seam",
       "existing Rule/Authority/Reward Resolver/P5 outbox/daily claim/wire/Supabase ownership preserved"
     ],
     "notExecuted": [
-      "remaining lifecycle timers, heartbeat, reconnect cleanup, Room/Tournament retry, spectator/chat/expression delay, Reward/AI outbox cadence, gameplay tick and transport deadline",
+      "server/index.js 其余业务 Date.now（不属于 T7 冻结范围）",
       "current browser/second browser/physical devices/real network",
       "real Supabase migrations/RLS/backup/restore/multi-instance",
       "commit/push/Pages/Render or production release"
     ],
-    "boundary": "T7_P8_BOUNDARY_CLOCK_INJECTION_VERIFIED_LOCAL / T7_PARTIAL / LOCAL_ONLY / NOT_RELEASED.",
-      "currentNode": "P7 Reward/Progression Projection、P8 六 Boundary 显式 now 注入、P12 heartbeat sweep、P13 正式 Session Token TTL sweep 与 P14 Supabase outbox cadence 已完成本地实现和集中回归；下一 owner 为其他低风险 lifecycle timer。gameplay tick、transport deadline 与全部外部发布证据仍未执行。"
+    "boundary": "T7_P21_METRICS_GENERATED_AT_IMPLEMENTED_LOCAL / T7_LOCAL_SCOPE_COMPLETE / LOCAL_ONLY / NOT_RELEASED.",
+      "currentNode": "P7–P21 冻结范围已完成本地实现；Metrics generatedAt 已统一到 serverNow seam。下一步回到 CLOSE 阶段审阅实际不足，外部设备、真实网络与 Supabase 发布证据仍未执行。"
   },
   "ownerArtGateClearance20260816": {
     "status": "implemented",
@@ -388,25 +403,25 @@
     "boundary": "LOCAL_ONLY / NOT_RELEASED; Rule v2, clock, Authority, protocol, Replay, AI and Reward are unchanged."
   },
   "project": "Ghost Game / Mini Games Platform",
-  "updatedAt": "2026-08-22T16:54:00+09:00",
+  "updatedAt": "2026-08-24T10:53:40+09:00",
   "parallelBuildDrift20260819": {
-    "status": "active",
-    "observedAt": "2026-08-22T16:02:00+09:00",
+    "status": "resolved",
+    "observedAt": "2026-08-24T10:18:00+09:00",
     "artifact": {
-      "characters": 2106322,
-      "bytes": 2121076,
-      "sha256": "DA2111F606D13F6BFFE5CFBB685382A43984D2F5E460F21954B30520C3161EF4"
+      "characters": 1825915,
+      "bytes": 1839768,
+      "sha256": "86E6DF923C5DFD5A21E9ADBBCFFCA02CD7282CCFE979E5B74C1B4532429377E1"
     },
     "expectedFromSources": {
-      "characters": 2106322,
-      "bytes": 2121076,
-      "sha256": "DA2111F606D13F6BFFE5CFBB685382A43984D2F5E460F21954B30520C3161EF4"
+      "characters": 1825915,
+      "bytes": 1839768,
+      "sha256": "86E6DF923C5DFD5A21E9ADBBCFFCA02CD7282CCFE979E5B74C1B4532429377E1"
     },
     "owner": "parallel frontend/2.5D/art integration with deterministic build aggregation",
     "rule": "artifact and expectedFromSources are an observed snapshot, not a perpetual current claim; current identity comes from the generated TECH-027 report plus a passing node scripts/build.js --check"
   },
-  "lastVerifiedCommit": "b8176cc8ebcd3cc6c2c779cd20f0eaad1c3af3ec",
-  "lastReleasedCommit": "b8176cc8ebcd3cc6c2c779cd20f0eaad1c3af3ec",
+  "lastVerifiedCommit": "e990fce4bfb94097028a1169725a8bbb006f39b1",
+  "lastReleasedCommit": "e990fce4bfb94097028a1169725a8bbb006f39b1",
   "stateVocabulary": [
     "planned",
     "partial",
@@ -421,11 +436,11 @@
     "currentStage": "CLOSE",
     "nextStage": "PROVE",
     "source": "requirements/MAINLINE_CONTROL_ROUTING.json",
-    "note": "technicalOptimizationT7HeartbeatSweepTimerP1220260819 为当前最新 T7 lifecycle timer 节点；technicalOptimizationT7ReconnectLifecycleTimerP1120260818、technicalOptimizationT7Partial、T7 Clock/Timer、latest browser 与所有者 Gate 仍提供完整背景，较早的 T0–T4/Gate/visualBrowser 文案只作历史批次快照。"
+    "note": "currentBuildVisibleMatrixProveP5 为当前 PROVE 准备节点；gameStageInteractionTargetsCloseP1 已完成 CLOSE 机器收口，technicalOptimizationT7MetricsGeneratedAtP2120260823 与 P9–P20、T7 Clock/Timer、历史浏览器证据和所有者 Gate 仍提供完整背景。"
   },
   "releaseCandidate": {
     "status": "not_executed",
-    "reason": "本地 T5/T6/T7 与所有者 Gate 政策尚未 commit、push、Pages 或 Render deploy，且当前没有新的明确发布命令。原创 Ghost-native 美术不再受人工/Reviewer B/IP/逐资产 Golden Set 内部门禁阻塞，但必须完成 OWNER_AUTHORIZED_ART_CLEARANCE；外部 blocked-license 素材仍禁止进入产品。真实 Supabase、多实例、第二浏览器、真机和真实网络证据仍为 RELEASE_EVIDENCE_PENDING，不能冒充已验证。"
+    "reason": "基线提交 e990fce 已完成 GitHub Pages 与 Render 发布；本轮 T7 P15–P21 仅完成本地实现与回归，待下一次明确发布命令后再提交线上。原创 Ghost-native 美术不再受人工/Reviewer B/IP/逐资产 Golden Set 内部门禁阻塞，但必须完成 OWNER_AUTHORIZED_ART_CLEARANCE；外部 blocked-license 素材仍禁止进入产品。真实 Supabase、多实例、第二浏览器、真机和真实网络证据仍为 RELEASE_EVIDENCE_PENDING，不能冒充已验证。"
   },
   "capabilities": {
     "controlledLocalTransportPreflightP0": {
@@ -4190,6 +4205,178 @@
     ],
     "boundary": "IMPLEMENTED_LOCAL / T7_PARTIAL / LOCAL_ONLY / NOT_RELEASED"
   },
+  "technicalOptimizationT7TournamentLifecycleTimerP1520260823": {
+    "status": "implemented_local",
+    "evidence": [
+      "requirements/active/t7-tournament-lifecycle-timer-p15-20260823",
+      "server/index.js tournament-abort/tournament-advance owner leases",
+      "qa/timer-audit.js",
+      "qa/room-presence-boundary.js",
+      "qa/tournament.js",
+      "qa/tournament-auto-room.js",
+      "npm run test:tournament-auto-online",
+      "node --check server/index.js"
+    ],
+    "implementedScope": [
+      "Tournament abort retry uses a tournament-scoped ServerClockTimer one-shot lease",
+      "Tournament next-round delay uses a tournament-scoped ServerClockTimer one-shot lease",
+      "finished/expired/declined/cancelled lifecycle cleanup cancels both leases",
+      "schedule failure is recorded and enters the existing quarantine recovery queue"
+    ],
+    "notExecuted": [
+      "真实 Supabase/RLS/并发/备份恢复与多实例生产租约",
+      "第二浏览器、物理 Android/iPhone/Tablet、真实网络与低端性能",
+      "gameplay tick、transport deadline、match chat/expression delay 与 Metrics generatedAt",
+      "本批修改尚未重新提交线上"
+    ],
+    "boundary": "IMPLEMENTED_LOCAL / T7_PARTIAL / LOCAL_ONLY / NOT_RELEASED"
+  },
+  "technicalOptimizationT7MatchSocialDelayTimerP1620260823": {
+    "status": "implemented_local",
+    "evidence": [
+      "requirements/active/t7-match-social-delay-timer-p16-20260823",
+      "server/index.js match-social-delay owner lease",
+      "qa/timer-audit.js",
+      "qa/social-match-contract.js",
+      "qa/match-chat-contract.js",
+      "qa/match-chat-online.js",
+      "node --check server/index.js"
+    ],
+    "implementedScope": [
+      "match-expression spectator delay uses a cancellable ServerClockTimer one-shot lease",
+      "match-chat spectator delay uses the same lease seam",
+      "room reset/settle/leave cancels all pending social delay leases",
+      "recipient/session/match/Block checks remain at delivery time"
+    ],
+    "notExecuted": [
+      "普通广播 spectator delay、gameplay tick、transport deadline 与 Metrics generatedAt",
+      "真实 Supabase/RLS/并发/备份恢复与多实例生产租约",
+      "第二浏览器、物理 Android/iPhone/Tablet、真实网络与低端性能",
+      "本批修改尚未重新提交线上"
+    ],
+    "boundary": "IMPLEMENTED_LOCAL / T7_PARTIAL / LOCAL_ONLY / NOT_RELEASED"
+  },
+  "technicalOptimizationT7SpectatorBroadcastDelayTimerP1720260823": {
+    "status": "implemented_local",
+    "evidence": [
+      "requirements/active/t7-spectator-broadcast-delay-timer-p17-20260823",
+      "server/index.js spectator broadcast delay lease",
+      "qa/timer-audit.js",
+      "qa/social-match-contract.js",
+      "qa/match-chat-contract.js",
+      "qa/match-chat-online.js",
+      "node --check server/index.js"
+    ],
+    "implementedScope": [
+      "ordinary room broadcast spectator delay uses a cancellable ServerClockTimer lease",
+      "room reset/settle/leave cancels ordinary broadcast, expression and chat delays",
+      "delivery rechecks spectator liveness and room membership"
+    ],
+    "notExecuted": [
+      "gameplay tick、transport deadline 与 Metrics generatedAt",
+      "真实 Supabase/RLS/并发/备份恢复与多实例生产租约",
+      "第二浏览器、物理 Android/iPhone/Tablet、真实网络与低端性能",
+      "本批修改尚未重新提交线上"
+    ],
+    "boundary": "IMPLEMENTED_LOCAL / T7_PARTIAL / LOCAL_ONLY / NOT_RELEASED"
+  },
+  "technicalOptimizationT7GameplayTickTimerP1820260823": {
+    "status": "implemented_local",
+    "evidence": [
+      "requirements/active/t7-gameplay-tick-timer-p18-20260823",
+      "server/index.js gameplay owner lease",
+      "qa/timer-audit.js",
+      "qa/gameplay-upgrade.js",
+      "qa/rule-authority-online.js",
+      "qa/tournament-auto-online.js",
+      "node --check server/index.js"
+    ],
+    "implementedScope": [
+      "Tank/Tetris/Xiangqi/Monopoly gameplay tick uses a room-scoped ServerClockTimer repeat lease",
+      "all four Rule Authority paths consume the sampled lease now",
+      "stop/restart/settle/server close cancel gameplay tick leases"
+    ],
+    "notExecuted": [
+      "transport deadline、真实 Supabase/RLS/并发/备份恢复与多实例生产租约",
+      "第二浏览器、物理 Android/iPhone/Tablet、真实网络与低端性能",
+      "本批修改尚未重新提交线上"
+    ],
+    "boundary": "IMPLEMENTED_LOCAL / T7_PARTIAL / LOCAL_ONLY / NOT_RELEASED"
+  },
+  "technicalOptimizationT7TankSnapshotDelayTimerP1920260823": {
+    "status": "implemented_local",
+    "evidence": [
+      "requirements/active/t7-tank-snapshot-delay-timer-p19-20260823",
+      "server/index.js Tank snapshot delay owner lease",
+      "qa/timer-audit.js",
+      "qa/tank-snapshot-delta-online.js",
+      "qa/tank-snapshot-default-off-online.js",
+      "qa/tank-authority.js",
+      "node --check server/index.js"
+    ],
+    "implementedScope": [
+      "Tank spectator snapshot delay uses a room/frame-scoped ServerClockTimer one-shot lease",
+      "bounded pending lease set preserves match, spectator membership marker and session-alive checks",
+      "room reset/settle/leave/server close cancel delayed Tank snapshot leases through the unified seam"
+    ],
+    "notExecuted": [
+      "transport deadline、Metrics generatedAt",
+      "真实 Supabase/RLS/并发/备份恢复与多实例生产租约",
+      "第二浏览器、物理 Android/iPhone/Tablet、真实网络与低端性能",
+      "本批修改尚未重新提交线上"
+    ],
+    "boundary": "IMPLEMENTED_LOCAL / T7_PARTIAL / LOCAL_ONLY / NOT_RELEASED"
+  },
+  "technicalOptimizationT7TransportDeadlineP2020260823": {
+    "status": "implemented_local",
+    "evidence": [
+      "requirements/active/t7-transport-deadline-p20-20260823",
+      "server/boundaries/transport-deadline.js",
+      "server/index.js DeepSeek/Supabase deadline wiring",
+      "server/cluster-coordinator.js Telemetry deadlineFactory",
+      "qa/transport-deadline.js",
+      "qa/timer-audit.js",
+      "qa/technical-optimization-mainline-contract.js",
+      "qa/production-readiness-contract.js"
+    ],
+    "implementedScope": [
+      "TransportDeadline open/dispose/activeCount deep seam over ServerClockTimer one-shot lease",
+      "DeepSeek, Supabase REST and production Telemetry outbound requests share deadline cancellation",
+      "parent signal, explicit cancel, disposal and schedule failure remain fail-closed"
+    ],
+    "notExecuted": [
+      "Metrics generatedAt",
+      "真实 Supabase/RLS/并发/备份恢复与多实例生产租约",
+      "第二浏览器、物理 Android/iPhone/Tablet、真实网络与低端性能",
+      "本批修改尚未重新提交线上"
+    ],
+    "boundary": "IMPLEMENTED_LOCAL / T7_PARTIAL / LOCAL_ONLY / NOT_RELEASED"
+  },
+  "technicalOptimizationT7MetricsGeneratedAtP2120260823": {
+    "status": "implemented_local",
+    "evidence": [
+      "requirements/active/t7-metrics-generated-at-p21-20260823",
+      "server/gameplay/metrics.js explicit epoch",
+      "server/boundaries/operational-metrics.js single capture epoch",
+      "server/cluster-coordinator.js injected now",
+      "server/index.js serverNow wiring",
+      "qa/metrics-clock-seam.js",
+      "qa/timer-audit.js",
+      "qa/technical-optimization-mainline-contract.js"
+    ],
+    "implementedScope": [
+      "Gameplay, Operational, Cluster and Telemetry generatedAt share one serverNow epoch",
+      "Operational capture passes one sample through currentMetrics and safeSnapshot",
+      "metrics-v2, history, CSV, alerts, incidents, RPC and Telemetry payload shapes remain unchanged"
+    ],
+    "notExecuted": [
+      "server/index.js 其余业务 Date.now",
+      "真实 Supabase/RLS/并发/备份恢复与多实例生产租约",
+      "第二浏览器、物理 Android/iPhone/Tablet、真实网络与低端性能",
+      "本批修改尚未重新提交线上"
+    ],
+    "boundary": "IMPLEMENTED_LOCAL / T7_LOCAL_SCOPE_COMPLETE / LOCAL_ONLY / NOT_RELEASED"
+  },
   "technicalOptimizationT7RoomGraphRecoveryTimerP920260818": {
     "status": "verified_local",
     "evidence": [
@@ -5123,13 +5310,15 @@
   },
   "currentLayoutSystemV5": {
     "status": "implemented_local_not_browser_verified",
-    "build": "public/index.html 1808578 characters / 1822431 bytes / SHA-256 6AA8EF0C1CE035DD8008C7A5479495029B54779088404977F2FFA735219E9246",
+    "build": "public/index.html 1822901 characters / 1836754 bytes / SHA-256 6187FF55581F3475DFB759413FFD268FA04A1940F82C9BD9314BA6581DBAC81B",
     "implementedScope": [
-      "platform-runtime.css 的 11 个既有职责段已按稳定 seam 拆为独立表现模块，原始 333888 bytes 拼接无漂移",
+      "platform-runtime.css 的 11 个既有职责段已按稳定 seam 拆为独立表现模块，当前 332030 bytes / SHA-256 0DB9AA1B96EA2EF1BBC6C057CC329853F3F50BC63E47099E317FBA7782C6D770 拼接无漂移",
       "模板保留原表现层级联顺序，现有 community/identity/profile/tank 模块继续位于同一表现链",
       "迁移脚本与 QA presentation-source seam 由 5 模块升级为 15 模块，并增加 2.5D 与游戏图标 seam 断言",
-      "Service Worker v20 预缓存全部 15 个表现模块，未引入 Three.js、旧 Renderer 或网络依赖",
-      "确定性 build、layout QA、presentation migration check 与 git diff check 通过"
+      "Service Worker ghost-game-shell-v21-20260824 预缓存全部 15 个表现模块，未引入 Three.js、旧 Renderer 或网络依赖",
+      "Game Stage 顶栏、Seat Rail、表情与房聊交互统一 44px 下限，短横屏席位横滚避免 3–5 人压缩裁切",
+      "Tank 外层 Grid 由 tank-controls.css 单一拥有，摇杆/D-pad 切换先提交 neutral",
+      "表现身份 7477EE0DAC1A74CFB3F0EE86D6F9E72F7ED3967E9D41A8249E2ED352DCCD92DF、布局身份 408AC7B541186FE51A32B2AD2C5BF1B3524A5159E9615BB53325B6D96A356159；确定性 build 与机器合同通过"
     ],
     "evidence": [
       "public/styles/00-platform-foundation.css",
@@ -5154,6 +5343,9 @@
       "scripts/migrate-presentation-styles.js",
       "qa/presentation-source.js",
       "qa/presentation-source-contract.js",
+      "shared/presentation/presentation-identity.js",
+      "qa/presentation-evidence-identity.js",
+      "qa/game-stage-interaction-targets.js",
       "qa/layout-system-v1.js",
       "node scripts/build.js --check",
       "requirements/active/latest-browser-visible-matrix-prove-p4-20260815/evidence/browser-connector-preflight-202608231210.json",
@@ -5162,6 +5354,114 @@
     "notExecuted": ["current browser visible matrix after this build", "second browser", "physical Android/iPhone/Tablet", "real network shaping", "production Supabase/release"],
     "boundary": "PRESENTATION_ONLY / LOCAL_ONLY / NOT_RELEASED / RELEASE_EVIDENCE_PENDING",
     "next": "PROVE / current-build browser visible evidence, then external device/network/data gates"
+  },
+  "gameStageInteractionTargetsCloseP1": {
+    "status": "implemented_local_not_browser_verified",
+    "requirements": ["UI-027", "UI-028", "UI-035", "GAME-044", "TECH-027", "TECH-049"],
+    "implementedScope": [
+      "Game Stage Header、Seat Rail、玩家身份、局内表达、房聊与举报入口至少 44x44",
+      "短横屏 Seat Rail 使用固定席位宽度、横向滚动与 scroll snap",
+      "Tank 摇杆与 D-pad 互斥，外层 Grid 单一 owner，切换模式先提交 neutral",
+      "浏览器证据 current 判定同时匹配 HTML、表现身份、布局身份和 SW cache generation"
+    ],
+    "evidence": [
+      "requirements/active/game-stage-interaction-targets-close-p1-20260824",
+      "qa/game-stage-interaction-targets.js",
+      "qa/tank-controls.js",
+      "shared/presentation/presentation-identity.js",
+      "qa/presentation-evidence-identity.js"
+    ],
+    "notExecuted": ["current browser visible matrix", "second browser", "physical Android/iPhone/Tablet", "real network shaping", "real low-end performance"],
+    "boundary": "PRESENTATION_ONLY / LOCAL_ONLY / NOT_RELEASED / RELEASE_EVIDENCE_PENDING"
+  },
+  "gomokuRuleAuthorityParityP020260824": {
+    "status": "implemented_local_not_browser_verified",
+    "stage": "PARITY",
+    "requirementIds": ["GAME-017"],
+    "protocol": "gomoku-rule-v1",
+    "implementedScope": [
+      "15x15 freestyle Gomoku shared Rule Core with >=5 win and full-board draw",
+      "server Authority owns state, turn, action seq, revision, hash, reconnect snapshot and trusted result",
+      "Match Protocol owns capability/fallback fence, trusted terminal result validation and Adapter rollback",
+      "client waits for authoritative snapshot, validates history/seq and clears stale AI learning candidates",
+      "legacy move relay remains available only for old capability or explicit emergency switch"
+    ],
+    "evidence": [
+      "requirements/active/gomoku-rule-authority-parity-p0-20260824",
+      "shared/rules/gomoku.js",
+      "server/gameplay/gomoku-rule-authority.js",
+      "server/boundaries/match-protocol.js",
+      "public/src/games/gomoku.js",
+      "public/src/online/03-websocket.js",
+      "qa/gomoku-rule-core.js",
+      "qa/gomoku-rule-authority.js",
+      "qa/gomoku-rule-authority-online.js",
+      "qa/gomoku-protocol-fallback-online.js",
+      "qa/game-stage-wave-b-gomoku.js",
+      "qa/match-protocol-boundary.js"
+    ],
+    "passed": [
+      "npm run test:gomoku-rule-core",
+      "npm run test:gomoku-rule-authority",
+      "node qa/game-stage-wave-b-gomoku.js",
+      "node qa/match-protocol-boundary.js"
+    ],
+    "notExecuted": [
+      "current browser visible matrix",
+      "second desktop browser",
+      "physical Android/iPhone/Tablet",
+      "real network shaping",
+      "production Supabase/RLS/backup/restore/concurrency/multi-instance",
+      "deterministic Authority replay (GAME-031)",
+      "commit/push/Pages/Render/release"
+    ],
+    "assetGen": "NOT_APPLICABLE",
+    "boundary": "IMPLEMENTED_LOCAL / BROWSER_NOT_EXECUTED / LOCAL_ONLY / NOT_RELEASED / RELEASE_EVIDENCE_PENDING",
+    "next": "集中完整回归后评估 GAME-018 飞行棋 Authority；先补外部 PROVE/DATA 证据，不伪造发布验证"
+  },
+  "ludoRuleAuthorityParityP120260824": {
+    "status": "implemented_local_not_browser_verified",
+    "stage": "PARITY",
+    "requirementIds": ["GAME-018"],
+    "protocol": "ludo-rule-v1",
+    "implementedScope": [
+      "52 格飞行棋共享 Rule Core：2/3/4 人阵营、骰子、起飞、路径、碰撞、终点、六点额外回合与排名",
+      "服务端 Authority 生成骰面并拥有动作序号、revision、hash、重连快照和可信结果",
+      "Match Protocol capability/fallback fence、Adapter 回滚、AI Controller、观战与旧 move relay 回退",
+      "客户端权威模式不再提交客户端骰面，等待服务端 ludo_rule_state"
+    ],
+    "evidence": ["requirements/active/ludo-rule-authority-parity-p1-20260824","shared/rules/ludo.js","server/gameplay/ludo-rule-authority.js","server/boundaries/match-protocol.js","server/index.js","public/src/games/ludo.js","public/src/online/03-websocket.js","qa/ludo-rule-core.js","qa/ludo-rule-authority.js","qa/protocol-version.js","qa/match-protocol-boundary.js","qa/dom-smoke.js"],
+    "passed": ["npm run test:ludo-rule-core","npm run test:ludo-rule-authority","npm run test:protocol-version","npm run test:match-protocol-boundary","node qa/dom-smoke.js","npm run build"],
+    "notExecuted": ["current browser visible matrix","second desktop browser","physical Android/iPhone/Tablet","real network shaping","production Supabase/RLS/backup/restore/concurrency/multi-instance","deterministic Authority replay (GAME-031)","commit/push/Pages/Render/release"],
+    "assetGen": "NOT_APPLICABLE",
+    "boundary": "IMPLEMENTED_LOCAL / BROWSER_NOT_EXECUTED / LOCAL_ONLY / NOT_RELEASED / RELEASE_EVIDENCE_PENDING",
+    "next": "集中完整回归后进入 GAME-031 Replay Authority 输入接入；外部 PROVE/DATA 证据仍按共享 Gate 独立推进"
+  },
+  "replayAuthorityInputP0_20260824": {
+    "status": "implemented_local_release_evidence_pending",
+    "requirement": "GAME-031",
+    "protocol": "replay-authority-v1",
+    "evidence": ["requirements/active/replay-authority-input-p0-20260824", "server/gameplay/replay-authority.js", "server/gameplay/tank-sim.js", "qa/replay-authority.js", "server/index.js", "qa/replay-sharing.js"],
+    "implementedScope": ["Gomoku/Ludo/Tetris/Xiangqi/Monopoly server-signed Authority input projection", "Tetris client action, server tick/garbage and time-limit finish projection", "Monopoly server close-auction automatic event projection", "Tank Authority input + fixed-tick timeline projection with signed hashes", "six-game replay-lifecycle-v1 terminal/automatic/reconnect/instance ordering contract", "bounded privacy-safe deterministic summary", "shared Rule Core seq/match/action/hash verification", "legacy moveLog and Replay cinematic compatibility"],
+    "notExecuted": ["real Supabase Cluster cross-instance replay evidence", "lease/fencing, backup/restore and production multi-instance concurrency", "current browser visible matrix", "second desktop browser", "physical Android/iPhone/Tablet", "real network shaping", "production Supabase/RLS/backup/restore/concurrency/multi-instance", "commit/push/Pages/Render/release"],
+    "boundary": "IMPLEMENTED_LOCAL / BROWSER_NOT_EXECUTED / LOCAL_ONLY / NOT_RELEASED / RELEASE_EVIDENCE_PENDING",
+    "next": "Run the completed lifecycle contract against real Supabase Cluster lease/fencing, backup/restore and multi-instance replay evidence when production credentials and isolated targets are available."
+  },
+  "currentBuildVisibleMatrixProveP5": {
+    "status": "local_connector_fix_applied_restart_required",
+    "stage": "PROVE",
+    "build": "86E6DF923C5DFD5A21E9ADBBCFFCA02CD7282CCFE979E5B74C1B4532429377E1 / 1839768 bytes",
+    "identity": "presentation 7477EE0D...CCD92DF / layout 408AC7B5...A356159 / ghost-game-shell-v22-20260824",
+    "evidence": ["requirements/active/current-build-visible-matrix-prove-p5-20260824", "requirements/active/current-build-visible-matrix-prove-p5-20260824/evidence/browser-connector-kernel-path-diagnosis-20260824.json"],
+    "notExecuted": ["current single-browser visible matrix", "second browser", "physical devices", "real network shaping", "low-end performance"],
+    "boundary": "PREPARATION_ONLY / LOCAL_ONLY / NOT_RELEASED / RELEASE_EVIDENCE_PENDING"
+  },
+  "dataProductionReadinessPreflightP1": {
+    "status": "machine_verified_local_real_credentials_not_available",
+    "stage": "DATA_PREPARATION",
+    "evidence": ["requirements/active/data-production-readiness-preflight-p1-20260824", "qa/production-readiness-contract.js", "qa/supabase-schema.js", "qa/supabase-adapter.js"],
+    "notExecuted": ["real Supabase SQL/RLS", "encrypted backup", "isolated restore", "rollback", "concurrency", "multi-instance", "production release"],
+    "boundary": "FAKE_STATIC_DRY_RUN_ONLY / LOCAL_ONLY / NOT_RELEASED / RELEASE_EVIDENCE_PENDING"
   },
   "qualityGates": {
     "syntax": "pass",

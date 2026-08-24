@@ -1,10 +1,15 @@
 'use strict';
 
 const {TetrisRuleAuthority}=require('../server/gameplay/tetris-rule-authority');
+const {GomokuRuleAuthority}=require('../server/gameplay/gomoku-rule-authority');
 const {XiangqiRuleAuthority}=require('../server/gameplay/xiangqi-rule-authority');
 const {MonopolyRuleAuthority}=require('../server/gameplay/monopoly-rule-authority');
 const failures=[];
 function check(name,value,detail){console.log((value?'PASS':'FAIL')+'  '+name+(value||!detail?'':' :: '+detail));if(!value)failures.push(name);}
+
+const g=new GomokuRuleAuthority({matchId:'g-rule'}),g1=g.acceptMove(0,{matchId:'g-rule',seq:1,row:7,col:7},1000),gBad=g.acceptMove(1,{matchId:'g-rule',seq:1,row:7,col:7},1001);
+check('Gomoku Rule Authority：Server State/Hash 与非法动作不消费 seq',g1.ok&&g1.event.payload.hash&&gBad.reason==='ERR_INVALID_MOVE'&&g.lastSeq.join(',')==='1,0'&&g.revision===1);
+check('Gomoku Rule Authority：Reconnect Snapshot 含 Board/History/Last Seq',g.snapshot(1002).board.length===15&&g.snapshot(1002).history.length===1&&g.snapshot(1002).lastSeq.join(',')==='1,0');
 
 const t=new TetrisRuleAuthority({matchId:'t-rule',playerCount:2,startAt:1,matchEndAt:100000,matchSeed:'t-rule'});
 const t1=t.acceptAction(0,{matchId:'t-rule',seq:1,action:{type:'hard_drop'}},1000),tdup=t.acceptAction(0,{matchId:'t-rule',seq:1,action:{type:'hard_drop'}},1001);

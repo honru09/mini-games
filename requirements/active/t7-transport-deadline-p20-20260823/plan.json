@@ -1,0 +1,17 @@
+{
+  "batch": "T7-P20",
+  "title": "Outbound Transport Deadline 迁移",
+  "requirementIds": ["TECH-039", "TECH-040", "TECH-052"],
+  "status": "implemented_local",
+  "stage": "CLOSE",
+  "scope": [
+    "DeepSeek AI 上游请求、Supabase REST 请求与生产多实例遥测请求统一通过 TransportDeadline 深模块创建 AbortSignal",
+    "所有 deadline 调度由注入的 ServerClockTimer one-shot lease 负责，支持父 signal、主动取消、dispose 与超时 fail-closed",
+    "保留上游回退、Supabase 幂等/重试、Telemetry allowlist 与既有 wire；不改变协议、奖励、数据模型或生产配置"
+  ],
+  "outOfScope": [
+    "ClusterCoordinator 自身维护/轮询 repeat cadence、业务重试 backoff 与客户端网络整形",
+    "真实 Supabase/RLS/并发/备份恢复、多实例生产、第二浏览器、真机、真实网络和线上发布"
+  ],
+  "rollback": "TransportDeadline 创建或调度失败时调用方 fail-closed 并沿用既有错误/回退路径；兼容测试工具未注入 deadlineFactory 时保留 TelemetryExporter 的无信号回退。"
+}

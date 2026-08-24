@@ -1,6 +1,6 @@
 'use strict';
 
-const CACHE_VERSION='ghost-game-shell-v20-20260823';
+const CACHE_VERSION='ghost-game-shell-v22-20260824';
 const LOCALE_FILES=['./locales/zh-CN.json','./locales/en-US.json','./locales/uk-UA.json'];
 const LOCALE_URLS=new Set(LOCALE_FILES.map(file=>new URL(file,self.location.href).href));
 const PRESENTATION_STYLES=['./styles/00-platform-foundation.css','./styles/05-game-tabletops.css','./styles/08-responsive-accessibility.css','./styles/10-outcome-profile.css','./styles/12-motion-design.css','./styles/14-brand-shell.css','./styles/20-game-stage-base.css','./styles/22-game-stage-wave.css','./styles/24-depth-spatial.css','./styles/26-immersive-stage.css','./styles/28-game-icon-system.css','./styles/community-ai-surfaces.css','./styles/identity-broadcast.css','./styles/profile-adaptive-hero.css','./styles/tank-controls.css'];

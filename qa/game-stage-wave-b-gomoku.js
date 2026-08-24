@@ -9,6 +9,7 @@ const vm = require('vm');
 
 const ROOT = path.join(__dirname, '..');
 const SOURCE = fs.readFileSync(path.join(ROOT, 'public', 'src', 'games', 'gomoku.js'), 'utf8');
+const GomokuRules=require('../shared/rules/gomoku');
 let failures = 0;
 function check(name, value, detail) {
   console.log((value ? 'PASS  ' : 'FAIL  ') + name + (value || !detail ? '' : ' :: ' + detail));
@@ -78,6 +79,12 @@ function findByClass(root, className) {
   return null;
 }
 
+function contextState(moves,matchId,revision,lastSeq){
+  let state=GomokuRules.createInitialState();
+  moves.forEach((move,index)=>{const applied=GomokuRules.applyAction(state,{type:'place',row:move[0],col:move[1]},index%2);if(!applied.ok)throw new Error('invalid authority fixture');state=applied.state;});
+  return{protocol:'gomoku-rule-v1',matchId,revision,serverNow:1,board:state.board,current:state.current,moveNumber:state.moveNumber,last:state.last,terminal:state.terminal,winner:state.winner,reason:state.reason,winLine:state.winLine,history:moves.map((move,index)=>({player:index%2,row:move[0],col:move[1],seq:Math.floor(index/2)+1})),lastSeq:lastSeq.slice(),hash:GomokuRules.hashState(state)};
+}
+
 function run(flag, options) {
   options = options || {};
   const area = createNode('div');
@@ -98,12 +105,13 @@ function run(flag, options) {
     t(key, ...args) { return key + (args.length ? ':' + args.join(',') : ''); },
     gameArtEnabled() { return false; }, stickerArtEnabled() { return false; }, tabletopArtEnabled() { return false; },
     prefersReducedMotion() { return !!options.reducedMotion; }, playFeedback() {}, setStatus() {}, renderPlayers() {}, aiChoose: async () => null, aiSpeak() {},
+    GomokuRules,
     online: { room: null, isHost: false }, toast() {}, showVictoryOverlay(_area, value) { outcomes.push(value || null); }, shareGameLink() {}, openInvitePicker() {},
   };
   const context = vm.createContext(sandbox);
   vm.runInContext(SOURCE, context, { filename: 'gomoku.js' });
-  const instance = context.gameGomoku(area, extra, 2, {});
-  return { area, extra, instance, outcomes, timers: () => timers };
+  const instance = context.gameGomoku(area, extra, 2, options.gameOptions || {});
+  return { area, extra, instance, outcomes, canvas:findByClass(area,'gomoku-board'), timers: () => timers };
 }
 
 // Red-light source contract. The exact state values are intentionally stable
@@ -149,6 +157,23 @@ try {
   reduced.instance.onMove([7, 7], 0);
   check('reduced-motion move keeps Wave B status static and starts no presentation timer', reduced.timers() === 0 && findByClass(reduced.area, 'gomoku-wave-b-last-move').textContent === 'H8');
   reduced.instance.destroy();
+
+  const authorityActions=[],authorityEnds=[];
+  const authority=run(null,{gameOptions:{online:true,myIdx:0,gameplayMeta:{protocol:'gomoku-rule-v1',revision:0},matchId:'authority-match',getMatchId:()=> 'authority-match',sendGomokuAction:action=>authorityActions.push(action),sendRestart(){},onEnd:result=>authorityEnds.push(result)}});
+  authority.canvas.dispatch('click',{clientX:260,clientY:260});authority.canvas.dispatch('click',{clientX:260,clientY:260});
+  check('Gomoku Authority Client：点击只发送一次 pending 动作且不乐观改盘',authorityActions.length===1&&authorityActions[0].seq===1&&authority.instance.snapshot().hist.length===0);
+  authority.instance.onGomokuRuleError('ERR_INVALID_STATE');authority.canvas.dispatch('click',{clientX:260,clientY:260});
+  check('Gomoku Authority Client：权威错误释放输入 pending 并推进客户端序号',authorityActions.length===2&&authorityActions[1].seq===2&&authority.instance.snapshot().hist.length===0);
+  const authorityState=contextState([[7,7]],'authority-match',1,[2,0]);
+  check('Gomoku Authority Client：匹配权威快照到达后才更新棋盘',authority.instance.onGomokuRuleState(authorityState,'live')===true&&JSON.stringify(authority.instance.snapshot().hist)===JSON.stringify([[7,7]]));
+  const stale={...authorityState,board:authorityState.board.map(row=>row.slice())};stale.board[0][0]=1;
+  check('Gomoku Authority Client：重复 Revision 与错误 matchId 快照均 fail-closed',authority.instance.onGomokuRuleState(stale,'live')===false&&authority.instance.onGomokuRuleState({...authorityState,revision:2,matchId:'other-match'},'live')===false&&authority.instance.snapshot().hist.length===1);
+  const malformedSeq={...authorityState,revision:2,lastSeq:['2',0]};
+  const malformedHistory={...authorityState,revision:2,lastSeq:[2,0],history:authorityState.history.map((item,index)=>({...item,seq:index===0?0:item.seq}))};
+  check('Gomoku Authority Client：非数值 Last Seq 与畸形历史序号均 fail-closed',authority.instance.onGomokuRuleState(malformedSeq,'live')===false&&authority.instance.onGomokuRuleState(malformedHistory,'live')===false&&authority.instance.snapshot().hist.length===1);
+  const terminalState=contextState([[7,7],[0,0],[7,8],[0,1],[7,9],[0,2],[7,10],[0,3],[7,11]],'authority-match',9,[5,4]);
+  check('Gomoku Authority Client：服务端终局快照不会重新提交客户端 result claim',authority.instance.onGomokuRuleState(terminalState,'live')===true&&authority.instance.snapshot().over===true&&authorityEnds.length===0);
+  authority.instance.destroy();
 } catch (error) {
   check('Wave B Gomoku runtime matrix executes', false, error && error.stack || String(error));
 }

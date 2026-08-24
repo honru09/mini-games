@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-08-24T01:21:44+09:00",
+  "symptom": "failed to write kernel assets: system cannot find the specified path (os error 3)",
+  "reproduction": {
+    "status": "REPRODUCED_TWICE",
+    "path": "browser-client setup through the configured node_repl MCP service",
+    "result": "FAIL_BEFORE_BROWSER_SELECTION"
+  },
+  "probes": [
+    {"name": "browser_plugin_inventory", "result": "PASS", "detail": "browser-client, browser-service, wasm, docs and assets are present"},
+    {"name": "runtime_inventory", "result": "PASS", "detail": "node_repl.exe, node.exe and configured node_modules exist"},
+    {"name": "fresh_process_disable_sandbox", "result": "PASS", "detail": "MCP initialize and js 1+1 returned 2"},
+    {"name": "fresh_process_default_sandbox", "result": "PASS", "detail": "MCP initialize and js 1+1 returned 2"},
+    {"name": "current_mcp_kernel_reset", "result": "FAIL_SAME_SYMPTOM", "detail": "kernel reset does not restart the owning MCP process"}
+  ],
+  "diagnosis": "The project and bundled runtime are intact. The current Codex task holds a stale sandbox asset path in its long-lived node_repl MCP process.",
+  "fix": {
+    "path": "C:/Users/wangxr/.codex/config.toml",
+    "change": "mcp_servers.node_repl args set to --disable-sandbox",
+    "scope": "bypass the broken duplicate sandbox layer while retaining trusted-code paths, trusted services and browser-client hash allowlist",
+    "activation": "REQUIRES_CODEX_MCP_PROCESS_RESTART"
+  },
+  "currentBrowserEvidence": "NOT_EXECUTED",
+  "release": "NOT_GRANTED"
+}

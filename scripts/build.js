@@ -80,6 +80,7 @@ const MODULES = Object.freeze([
   'shop/05-profile.js',
   'shop/06-shop.js',
   'ui/07-roster.js',
+  '../../shared/rules/gomoku.js',
   '../../shared/rules/tetris.js',
   '../../shared/rules/xiangqi.js',
   '../../shared/rules/monopoly.js',

@@ -782,3 +782,56 @@
 
 - 新增 P2-11 商店限定套装本地收口事实：四季 Ghost-native 策展卡、原创主视觉桌面/移动/poster 派生、P2-11 Local Acceptance、中文简易报告与项目状态条目。
 - 新增 `scripts/generate-shop-limited-sets-v1.js` 的代码健康 allowlist 登记；新增 P2-11 专项证据入口与下一主线 P2-12 路由。
+2026-08-23 14:31：新增 T7-P15 赛事生命周期 Timer 本地收口任务记录、验收记录、执行记录和简易报告。
+2026-08-23 14:46：新增 T7-P16 局内表达与房聊延迟 Timer 本地收口任务记录、验收记录、执行记录和简易报告。
+2026-08-23 14:56：新增 T7-P17 普通广播观众延迟 Timer 本地收口任务记录、验收记录、执行记录和简易报告。
+2026-08-23 15:10：新增 T7-P18 Rule Authority Gameplay Tick Timer 本地收口任务记录、验收记录、执行记录和简易报告。
+2026-08-23 16:00：新增 T7-P19 Tank Snapshot spectator delay Timer 本地收口任务记录、验收记录、执行记录和简易报告。
+2026-08-23 17:00：新增 T7-P20 outbound Transport Deadline 本地收口任务记录、验收记录、执行记录和简易报告。
+2026-08-23 21:18：新增 T7-P21 Metrics generatedAt 统一时间 seam 的任务记录、5 项专项 QA、验收/执行证据和中文简易报告。
+
+## 2026-08-24 01:05
+
+- 新增 `shared/presentation/presentation-identity.js`，统一计算 15 个表现模块、布局模块与 Service Worker cache generation 身份。
+- 新增 `qa/game-stage-interaction-targets.js`、`qa/presentation-evidence-identity.js` 和 Game Stage 交互目标 active task/本地机器证据。
+- 新增《GameStage交互目标与Tank控制布局收口-202608240105.md》，记录三名子 agent 审计、主负责人复核、完整回归和下一条 PROVE 准备边界。
+- 新增 PROVE P5 四重身份执行包与《当前构建PROVE-P5四重身份准备-202608240110.md》，所有浏览器场景初态均为 NOT_EXECUTED。
+- 新增浏览器连接器根因证据、DATA 生产准备只读预检任务与《浏览器连接器内核路径诊断与DATA预检-202608240121.md》。
+
+## 2026-08-24 09:30
+
+- 新增 `requirements/active/gomoku-rule-authority-parity-p0-20260824/`：GAME-017 五子棋 `gomoku-rule-v1` 规则权威的计划、验收与机器证据入口。
+- 新增 `shared/rules/gomoku.js`、`server/gameplay/gomoku-rule-authority.js` 及五子棋核心、Authority、在线兼容回退专项 QA（原有文件中已登记的并行产物保持不覆盖）。
+- 新增五子棋终局前五连伪造快照与客户端历史序号 fail-closed 回归断言。
+
+## 2026-08-24 09:43
+
+- 新增 `shared/rules/ludo.js`、`server/gameplay/ludo-rule-authority.js`：GAME-018 飞行棋服务端规则权威核心。
+- 新增 `requirements/active/ludo-rule-authority-parity-p1-20260824/`、`qa/ludo-rule-core.js`、`qa/ludo-rule-authority.js`。
+
+## 2026-08-24 10:00
+
+- 新增 GAME-018 最终本地机器收口记录：完整 `npm test`、构建、进度台账与 Quality Gates 均通过；当前构建身份为 `86E6DF923C5DFD5A21E9ADBBCFFCA02CD7282CCFE979E5B74C1B4532429377E1`。
+
+## 2026-08-24 10:20
+
+- 新增 `server/gameplay/replay-authority.js`、`qa/replay-authority.js` 与 `requirements/active/replay-authority-input-p0-20260824/`：GAME-031 Authority 输入投影和 shared Rule Core 确定性校验入口。
+- 新增 `简易报告/Replay-Authority-Input-P0-202608241020.md`，记录本批完成范围、回归结果、限制与下一主线。
+
+## 2026-08-24 12:02
+
+- 新增 Tank Authority replay timeline：记录客户端 input 与服务器 fixed tick 的时间轴序号、服务器 tick、projection hash，并新增 Tank Replay Authority 专项回归场景。
+
+## 2026-08-24 12:11
+
+- 新增 Tank timeline 严格完整性断言：hash、envelope/timelineSeq、输入 serverTick 与空 clientTick 语义回归。
+
+## 2026-08-24 13:14
+
+- 新增 `replay-lifecycle-v1` 六款生命周期回放合同与 13 项专项断言：终局、服务器自动事件、断线恢复 epoch、实例全局顺序及 Tetris 时间终局。
+
+- 新增 GAME-017 最终本地机器证据：在线权威、开关回退、Quality Gates 与完整 `npm test` 均 PASS；当前构建身份绑定为 `6187FF55581F3475DFB759413FFD268FA04A1940F82C9BD9314BA6581DBAC81B`。
+
+## 2026-08-24 13:31
+
+- 新增 GAME-031 最终本地核销记录：六款终局、服务器自动推进、重连恢复、实例顺序与逐事件 hash 对账均由 `replay-lifecycle-v1` 覆盖；完整回归、质量门、台账、简报和构建检查全部通过。

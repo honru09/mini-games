@@ -106,8 +106,11 @@ node qa/gameplay-upgrade.js     # 六款共享 Gameplay 接口
 node qa/tank-controls.js       # Tank Controls P0：摇杆/D-pad/开火/释放
 node qa/tank-authority.js
 node qa/tetris-battle-protocol.js
-node qa/tetris-rule-core.js
-node qa/xiangqi-rule-core.js
+  node qa/tetris-rule-core.js
+  npm run test:gomoku-rule-core
+  npm run test:gomoku-rule-authority
+  npm run test:gomoku-rule-online
+  node qa/xiangqi-rule-core.js
 node qa/monopoly-rule-core.js
 node qa/rule-authority.js
 node --experimental-websocket qa/rule-authority-online.js
@@ -144,7 +147,7 @@ node server/index.js
 ## 5. 架构与关键设计（改代码前必读）
 
 ### 联机
-- 五子棋/飞行棋仍是服务端顺序与身份校验 + 客户端规则/稳定快照；Tank 使用 `tank-authority-v1` 服务端模拟；Tetris 默认协商 `tetris-rule-v3`（T-Spin/B2B/Combo/Perfect Clear Advanced Battle Score），象棋/大富翁协商各自 v2。旧 Tetris v2 客户端与 `TETRIS_GUIDELINE_SCORING=0` 均回退 v1 Coordination，避免严格字段白名单在滚动发布时拒绝新状态。
+- 五子棋已默认协商 `gomoku-rule-v1` 服务端完整规则权威（15×15 自由五子棋、动作序号、revision/哈希快照、可信终局/和棋、重连与旧客户端回退）；飞行棋仍是服务端顺序与身份校验 + 客户端规则/稳定快照。Tank 使用 `tank-authority-v1` 服务端模拟；Tetris 默认协商 `tetris-rule-v3`（T-Spin/B2B/Combo/Perfect Clear Advanced Battle Score），象棋/大富翁协商各自 v2。旧 Tetris v2 客户端与 `TETRIS_GUIDELINE_SCORING=0` 均回退 v1 Coordination，避免严格字段白名单在滚动发布时拒绝新状态。
 - 连接必须先用服务端签发的 session token 鉴权；uid 本身不是凭证。
 - 对局开始时服务端下发一次性 `matchId`，保留有限 `moveLog`；异常掉线进入重连窗口，显式离开仍立即释放席位。
 - 服务端在实时广播和 `moveLog` 中附带可信 `player`；客户端只接受当前行动者的输入，大富翁提前结算另由服务端限制为房主。
@@ -234,7 +237,7 @@ node server/index.js
 ### 安全边界
 - `owned`、金币、XP、等级、连胜、胜场、局数、成就等权威字段不可由客户端 profile 消息写入；商城价格与扣款在服务端完成。
 - `/api/ai` 要求 Bearer token，并限制 Origin、请求体、并发和速率。
-- Tetris/象棋/大富翁 v2 动作由服务端共享 Rule Core 验证；五子棋/飞行棋仍不是完整规则权威，恶意客户端串通的边界继续存在。v1 compatibility adapter、客户端签名或 DeepSeek 返回都不得描述为防作弊。
+- 五子棋、Tetris、象棋和大富翁的正式动作由服务端共享 Rule Core/Authority 验证；飞行棋仍不是完整规则权威，恶意客户端串通的边界继续存在。v1 compatibility adapter、客户端签名或 DeepSeek 返回都不得描述为防作弊。
 - Profile 的 `gameCosmetics` 只接受六款游戏白名单 ID；比赛仅广播 `cosmeticSchemaVersion` 与装备 ID，禁止暴露 owned、余额、价格、PIN、session token 或购买记录。
 
 ### 国际化 (i18n)
@@ -728,6 +731,14 @@ Chat 空态、公开 Profile/社交弹层、背景预览和访客只读态已分
 - 首个 Demo 固定为 `Home → Games → Gomoku → Result → Games`。桌面/390×844、卡片 `matrix3d`、Gomoku 落子 `impact → active` 只有历史构建部分可见证据；当前构建仍需完整 Result 回流和最新浏览器复核，第二浏览器、真机、真实网络、低端 GPU/FPS/热量/内存继续为 `NOT_EXECUTED / RELEASE_EVIDENCE_PENDING`。
 - 本批未生成新图片、贴图、GLB、角色或 Sprite，godogen `asset-gen` 路由为 `NOT_APPLICABLE`，没有调用付费 API。未来产生新游戏资产时继续按第 14 节执行资产生成与治理流程。
 
+## 18. GAME-018 飞行棋完整服务端规则权威（2026-08-24）
+
+- `requirements/active/ludo-rule-authority-parity-p1-20260824/` 复用原子需求 `GAME-018`，协议冻结为 `ludo-rule-v1`。共享 Rule Core 覆盖 2/3/4 人阵营、52 格公共轨道、服务端骰子、起飞、路径、碰撞、终点 56、六点额外回合、回合与可信排名。
+- `LudoRuleAuthority` 维护服务端 state、seq、revision、稳定 hash、重连快照和 `ludo_result`；`Match Protocol` 完成 capability/代数/席位 fence、Adapter 原子回滚、AI Controller 与旧 relay 回退。Authority 对局拒绝客户端骰面、状态和结果 claim。
+- 客户端 `ludo.js` 在权威模式只发送 `ludo_action` 的 roll/move 意图，等待 `ludo_rule_state` 更新，旧客户端或 `ENABLE_LUDO_RULE_AUTHORITY=0` 回退旧 `move` relay；观战/重连使用同一快照。
+- 本批新增 `qa/ludo-rule-core.js`、`qa/ludo-rule-authority.js`，并通过协议、Match Protocol、DOM 冒烟和确定性 build。当前构建为 `public/index.html` 1,825,057 characters / 1,838,910 UTF-8 bytes / SHA-256 `170F23D3AF43D78E6322A3D3E2A6EE4BE1BD37015EDD43AFAF1832CF14626283`。
+- `asset-gen` 路由为 `NOT_APPLICABLE`；没有生成或接入新图片/模型/贴图。浏览器连接器、第二浏览器、真机、真实网络、真实 Supabase/RLS/备份恢复/并发与发布仍为 `NOT_EXECUTED / RELEASE_EVIDENCE_PENDING`；未 commit、push 或部署。下一主线为 GAME-031 Replay Authority 输入接入。
+
 ## 16. P0-11 Avatar Frame / Effect 当前节点（2026-08-19）
 
 - `P-AVATAR-FRAME-EFFECT-V1` 已取得 `OWNER_AUTHORIZED_ART_CLEARANCE` 并进入本地 default-on 候选：8 个头像框、8 个头像效果，覆盖 44/64/96/192 四档与 static/dynamic/high-contrast 三种模式；运行时 192 个透明 WebP 变体共 533844 bytes，源稿与 contact sheet 均保留；生成器使用跨进程独占锁阻止并发 reset/写入造成的哈希漂移。
@@ -735,3 +746,20 @@ Chat 空态、公开 Profile/社交弹层、背景预览和访客只读态已分
 - `prefers-reduced-motion` 选择 static，`forced-colors` 选择 high-contrast；动效仅改变 presentation atom 的 transform/opacity，不进入规则、Authority、Protocol、Reward、AI、Replay、经济、账号或持久化。
 - `node qa/avatar-frame-effect-art-v1.js`、`node scripts/asset-library-audit.js`、`node scripts/build.js --check`、身份/商城/Manifest 专项均已通过；本批未执行第二浏览器、真机、真实网络、生产 Supabase 或线上部署。
 - 当前美术生产进度为 `11 / 33 = 33.33%`，P0 为 `11 / 12 = 91.67%`；下一单元为 `P0-12 / P-GAME-ICON-SYSTEM-V2`。继续保持发布冻结，用户明确“输出线上/部署”前不得提交、推送或触发 Pages/Render。
+
+## 17. GAME-017 五子棋完整服务端规则权威（2026-08-24）
+
+- `requirements/active/gomoku-rule-authority-parity-p0-20260824/` 复用原子需求 `GAME-017`，不新增 Requirement ID。协议冻结为 `gomoku-rule-v1`：15×15 自由五子棋、>=5 判胜、满盘无五连和棋、`gomoku_action` 动作序号、权威 revision/哈希快照与可信 `gomoku_result`。
+- 两级开关 `ENABLE_RULE_AUTHORITY_V2` + `ENABLE_GOMOKU_RULE_AUTHORITY` 和 capability 协商共同决定启用；任一旧客户端或任一开关关闭时回退旧 `move` relay。Authority 房间拒绝旧 `move`、客户端 `game_state` 和客户端结果 claim；旧客户端不能恢复正在运行的 Authority 对局。
+- `shared/rules/gomoku.js` 是唯一纯规则核心；`server/gameplay/gomoku-rule-authority.js` 维护 state/seq/revision/undo/input log；Match Protocol 负责席位/代数/结果合同、效果顺序和 Adapter 失败回滚。真人、AI Controller、观众/重连均消费同一权威快照。
+- 客户端在权威快照到达后才更新棋盘，严格校验 `lastSeq/history.seq`；AI 仅在服务端接受动作的 live revision 后确认学习。恢复、重连、观战、注销/销毁会清理迟到输入和学习候选。
+- 终局序列化会拒绝终局前已存在五连、错误奇偶/最后落子/胜线/和棋状态。Undo 每局一次且不回退 seq/revision。Authority 输入暂未并入旧 Replay/moveLog，确定性回放保留给 `GAME-031`。
+- 本批 `asset-gen` 路由为 `NOT_APPLICABLE`，未生成或接入新图片、模型、贴图或动画；规则与协议批次不改变当前 2.5D 表现主线。
+- 当前为 `IMPLEMENTED_LOCAL / BROWSER_NOT_EXECUTED / LOCAL_ONLY / NOT_RELEASED`。浏览器连接器内核路径错误、第二浏览器、Android/iPhone/Tablet、真实网络、真实 Supabase/RLS/备份恢复/并发与发布证据仍保持 `RELEASE_EVIDENCE_PENDING`；未 commit、push 或部署。
+
+## 19. GAME-031 Replay Authority 输入投影（2026-08-24）
+
+- `requirements/active/replay-authority-input-p0-20260824/` 复用 `GAME-031`，不新增 Requirement ID。`server/gameplay/replay-authority.js` 对 Gomoku/Ludo/Tetris/Xiangqi/Monopoly 的服务端 Authority 输入执行有界、脱敏、seq/match/动作合法性与 shared Rule Core hash 校验；Tank 由 `TankAuthority.replayLog` 提供 input/fixed-tick timeline。
+- Match Protocol 成功提交后，服务端单独保存 `replayInputLog`；旧视觉 `moveLog`、Replay v1.1 TTL/分享/撤销和 2.5D cinematic 播放器保持兼容。落盘回放附带 `authorityInputLog` 与不含隐私的 `deterministic` 摘要，缺输入或校验失败绝不升级为 deterministic。
+- 当前已完成 Rule Authority input projection、Tetris server tick/garbage/time-limit finish、Monopoly automatic close-auction、Tank Authority input/fixed-tick timeline，以及六款统一 `replay-lifecycle-v1` 的终局/自动推进/重连/实例顺序合同（含保存接线、时间轴/哈希 fail-closed）；真实 Supabase Cluster 的跨实例 fencing、备份恢复与线上证据仍属于 GAME-031 后续，不能把本批描述为生产级 Replay verified。
+- `node qa/replay-authority.js`（13 项）、`npm run test:replay-sharing`、`node --check server/gameplay/replay-authority.js` 与 `node --check server/index.js` 已通过；当前构建继续以 `node scripts/build.js --check` 的 `86E6DF923C5DFD5A21E9ADBBCFFCA02CD7282CCFE979E5B74C1B4532429377E1` 为准。未 commit、push、Pages、Render 或生产数据写入。

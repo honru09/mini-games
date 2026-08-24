@@ -661,6 +661,28 @@
 - 未删除坦克摇杆/D-pad 资源；仅改为单一互斥显示并增加切换入口。
 - 未执行线上删除、commit、push、GitHub Pages、Render 或生产 Supabase 写入。
 
+## 2026-08-24 12:02
+
+- 本次无删除：未删除任何规则、协议、素材、音频、玩家数据、报告、旧 Replay/moveLog 或其他窗口成果；未执行线上删除、commit、push、Pages、Render 或生产 Supabase 写入。
+
+## 2026-08-24 12:11
+
+- 本次无删除：未删除任何规则、协议、素材、音频、玩家数据、报告或其他窗口成果；未执行线上删除、commit、push、Pages、Render 或生产 Supabase 写入。
+
+## 2026-08-24 13:14
+
+- 本次无删除：未删除任何游戏、规则、Replay、素材、玩家数据、历史报告或其他窗口成果；未执行线上删除、commit、push、Pages、Render 或生产 Supabase 写入。
+
+## 2026-08-24 10:00
+
+- 本次无删除；仅修正文档构建身份数字，未删除历史浏览器证据、并行窗口成果、规则协议、素材、音频或数据。
+
+## 2026-08-24 10:20
+
+- 本次无删除；保留旧视觉 `moveLog`、Replay 分享/撤销、历史证据、并行窗口成果与所有规则/素材/数据路径，新增投影可独立回滚。
+
+- 本批未删除任何 QA/报告历史；仅删除了过时的“待集中回归”文字，改为真实 PASS 证据记录。
+
 ## 2026-08-23 11:02
 
 - 从 `public/index-template.html` 删除 5 个历史内联 `<style>` 表现载体；对应 CSS 完整迁移到外部模块，未删除任何视觉规则、DOM、游戏能力、素材、协议或数据。
@@ -718,3 +740,34 @@
 
 - 从 `public/index-template.html` 删除 5 个历史内联 `<style>` 表现载体；对应 CSS 完整迁移到外部模块，未删除任何视觉规则、DOM、游戏能力、素材、协议或数据。
 - 未删除任何并行窗口产物、测试、报告、用户数据或线上资源；未执行线上删除、commit、push、GitHub Pages、Render 或生产 Supabase 写入。
+2026-08-23 14:31：删除赛事 abort retry 与下一轮推进对原生 setTimeout 的直接持有；未删除任何运行时功能，均由可取消 lease 替代。
+2026-08-23 14:46：删除局内表达与房聊观众延迟对原生 setTimeout 的直接持有，改由可取消的社交延迟 lease 管理。
+2026-08-23 14:56：删除普通广播观众延迟对原生 setTimeout 的直接持有，改由 ServerClockTimer 管理。
+2026-08-23 15:10：删除四类 Rule Authority gameplay tick 对原生 setInterval 的直接持有，改由可取消 lease 管理。
+2026-08-23 16:00：删除 Tank Snapshot spectator delay 对原生 one-shot timer 的直接持有，改由可取消 ServerClockTimer lease 管理；未删除任何产品能力或素材。
+2026-08-23 17:00：删除 server/index.js 对 DeepSeek/Supabase `AbortSignal.timeout` 的直接持有，改由 TransportDeadline + ServerClockTimer 管理；未删除任何业务能力。
+2026-08-23 21:18：删除 Operational Metrics 注入时钟异常后绕开 seam 读取第二套系统时钟的路径；未删除任何指标、历史、告警、管理接口、业务能力或素材。
+
+## 2026-08-24 01:05
+
+- 删除旧 Tank `stick dpad fire` 双移动面外层布局声明及其他 CSS owner 的冲突 columns/areas；没有删除摇杆、D-pad、开火、键盘或触控能力。
+- 删除 22/34/40/42px 的局内交互目标回流和身份徽章占据 Seat Rail 正常布局流的冲突规则。
+- 未删除任何游戏、规则、协议、美术、音频、玩家数据、P15–P21 成果或线上资源；未执行 commit、push、GitHub Pages、Render 或生产 Supabase 写入。
+- PROVE P5 准备未删除历史浏览器证据；旧证据只按身份规则保留 historical-as-of。
+- 浏览器修复与 DATA 预检未删除插件、运行时、配置白名单、数据库文件或历史证据；未执行任何生产删除。
+
+## 2026-08-24 09:30
+
+- 未删除任何游戏、规则、协议、素材、音频、玩家数据、报告或其他窗口成果。
+- 未删除旧 `move` relay；仅以 capability/开关边界限制其适用范围，保留滚动发布回退。
+- 未删除 Replay、飞行棋 Authority 或 Supabase 生产路径；这些仍按 GAME-031、GAME-018 与 DATA Gate 的后续主线处理。
+
+## 2026-08-24 09:43
+
+- 本次无删除：未删除任何规则、协议、旧 relay、Replay、素材、音频、报告、玩家数据或其他窗口成果。
+- 未执行线上删除、commit、push、GitHub Pages、Render 或生产 Supabase 写入。
+
+## 2026-08-24 13:31
+
+- 本次无删除：只修正 GAME-031 的阶段性报告/台账状态，未删除任何代码、规则、协议、Replay、素材、音频、玩家数据或其他窗口成果。
+- 未执行线上删除、commit、push、GitHub Pages、Render 或生产 Supabase 写入。

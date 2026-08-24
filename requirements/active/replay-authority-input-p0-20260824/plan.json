@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "id": "GAME-031",
+  "title": "Replay Authority input projection",
+  "status": "implemented_local",
+  "stage": "PARITY",
+  "scope": {
+    "in": ["server-signed Rule Authority inputs", "bounded replay projection", "shared Rule Core verification", "privacy-safe deterministic summary"],
+    "out": ["browser/device release evidence", "production Supabase/Cluster cross-instance evidence", "new public social actions"]
+  },
+  "rollback": "Remove replayInputLog and deterministic metadata; existing replay-v1.1 moveLog and cinematic player remain compatible.",
+  "next": "Use the completed local lifecycle contract for real Supabase Cluster lease/fencing, backup/restore and multi-instance replay evidence; keep browser/device release evidence separate."
+}

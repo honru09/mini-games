@@ -18,6 +18,42 @@ function normalizeInput(value){
   return input;
 }
 
+function replayProjection(snapshot){
+  const source = snapshot && typeof snapshot === 'object' ? snapshot : {};
+  return {
+    protocol: 'tank-authority-v1',
+    matchId: String(source.matchId || ''),
+    serverTick: Number(source.serverTick) || 0,
+    season: String(source.season || ''),
+    players: Array.isArray(source.players) ? source.players.map(tank => ({
+      id: Number(tank.id), x: Number(tank.x), y: Number(tank.y), d: Number(tank.d), hp: Number(tank.hp),
+      alive: tank.alive === true, respawnAt: Number(tank.respawnAt) || 0, invulnerableUntil: Number(tank.invulnerableUntil) || 0,
+      fireReadyAt: Number(tank.fireReadyAt) || 0, input: normalizeInput(tank.input), kills: Number(tank.kills) || 0,
+      deaths: Number(tank.deaths) || 0, damage: Number(tank.damage) || 0, shots: Number(tank.shots) || 0,
+      hits: Number(tank.hits) || 0, placement: Number(tank.placement) || 0,
+    })) : [],
+    projectiles: Array.isArray(source.projectiles) ? source.projectiles.map(projectile => ({
+      id: Number(projectile.id), owner: Number(projectile.owner), x: Number(projectile.x), y: Number(projectile.y),
+      d: Number(projectile.d), ttl: Number(projectile.ttl),
+    })) : [],
+    destructibles: Array.isArray(source.destructibles) ? source.destructibles.map(row => Array.isArray(row) ? row.slice() : []) : [],
+    ack: Array.isArray(source.ack) ? source.ack.map(value => Number(value) || 0) : [],
+    finished: source.finished === true, finishReason: source.finishReason || null,
+    stopped: source.stopped === true, stopReason: source.stopReason || null,
+    order: Array.isArray(source.order) ? source.order.slice() : null,
+  };
+}
+
+function hashReplayProjection(value){
+  const text = JSON.stringify(replayProjection(value));
+  let hash = 2166136261 >>> 0;
+  for (let index = 0; index < text.length; index++) {
+    hash ^= text.charCodeAt(index);
+    hash = Math.imul(hash, 16777619) >>> 0;
+  }
+  return hash.toString(16).padStart(8, '0');
+}
+
 class TankAuthority {
   constructor(options = {}){
     this.matchId = String(options.matchId || '');
@@ -46,6 +82,21 @@ class TankAuthority {
     this.stoppedAt = null;
     this.stopReason = null;
     this.order = null;
+    this.replayLog = [];
+    this.replayEventSeq = 0;
+  }
+
+  recordReplayEvent(event, at){
+    if (!event || typeof event !== 'object') return;
+    const snapshot = this.snapshot(at);
+    this.replayLog.push({
+      timelineSeq: ++this.replayEventSeq,
+      at: Number(at) || 0,
+      ...event,
+      serverTick: this.serverTick,
+      hash: hashReplayProjection(snapshot),
+    });
+    if (this.replayLog.length > 20000) this.replayLog.splice(0, this.replayLog.length - 20000);
   }
 
   buildMap(){
@@ -78,6 +129,7 @@ class TankAuthority {
     if (times.length>=40) return {ok:false,reason:'rate_limited'};
     times.push(now);this.inputTimes[player]=times;this.lastSeq[player]=seq;
     this.players[player].input=normalizeInput(payload.input);
+    this.recordReplayEvent({kind:'input',player,seq,clientTick:Number.isFinite(clientTick)?clientTick:null,input:{...this.players[player].input}},now);
     return {ok:true,ack:seq};
   }
 
@@ -160,6 +212,7 @@ class TankAuthority {
     });
     this.projectiles=next;this.serverTick++;
     if(now>=this.endAt)this.finish(now,'time_limit');
+    this.recordReplayEvent({kind:'tick'},now);
   }
 
   advance(now = Date.now()){
@@ -193,6 +246,8 @@ class TankAuthority {
       projectiles:this.projectiles.map(p=>({...p})),destructibles:this.grid.map(row=>row.slice()),ack:this.lastSeq.slice(),finished:this.finished,finishedAt:this.finishedAt,
       finishReason:this.finishReason,stopped:this.stopped,stoppedAt:this.stoppedAt,stopReason:this.stopReason,order:this.order?this.order.slice():null};
   }
+
+  replaySnapshotHash(now = Date.now()) { return hashReplayProjection(this.snapshot(now)); }
 }
 
-module.exports={TankAuthority,normalizeInput,hashString};
+module.exports={TankAuthority,normalizeInput,hashString,hashReplayProjection,replayProjection};

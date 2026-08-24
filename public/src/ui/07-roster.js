@@ -1167,6 +1167,8 @@ function showGame(id){
       getMatchId: () => online.matchId,
       allowUndo: online.roomInfo ? online.roomInfo.allowUndo !== false : true,
       sendMove: p => online.sendMove(p),
+      sendGomokuAction: p => online.sendGomokuAction(p),
+      sendLudoAction: p => online.sendLudoAction(p),
       sendUndo: () => online.send({ type:'undo', payload:{ matchId: online.matchId } }),
       sendBotMove: (seatId,p) => online.sendBotMove(seatId,p),
       sendTankInput: p => online.sendTankInput(p),

@@ -57,12 +57,24 @@ check('模板提供可切换的摇杆/D-pad、独立开火与安全区样式', [
 
 const h=harness(), joystick=h.extra.querySelector('.tank-joystick'), joystickWrap=h.extra.querySelector('.tank-joystick-wrap'), fire=h.extra.querySelector('.tank-fire'), dpad=h.extra.querySelector('.tank-dpad'), dpadRight=h.extra.querySelector('.tank-dpad-right'), modeToggle=h.extra.querySelector('.tank-control-mode-toggle');
 check('默认只显示摇杆并提供切换按钮', h.extra.querySelector('.tank-control-deck').dataset.tankControlMode==='joystick' && joystickWrap.hidden===false && dpad.hidden===true && !!modeToggle);
+check('模式切换按钮声明动态 i18n 可访问名称', modeToggle.getAttribute('data-i18n-aria-label')==='tank_control_switch_to_dpad' && modeToggle.getAttribute('aria-label')==='tank_control_switch_to_dpad');
 joystick.dispatch('pointerdown',{pointerId:1,clientX:190,clientY:100,buttons:1,preventDefault(){}});
 check('摇杆主方向映射为向右', h.game.snapshot().tanks[0].input.right===true && h.game.snapshot().tanks[0].input.up===false);
 joystick.dispatch('pointermove',{pointerId:1,clientX:190,clientY:10,buttons:1});
 check('摇杆斜向映射为上+右且有方向反馈', h.game.snapshot().tanks[0].input.right===true && h.game.snapshot().tanks[0].input.up===true && joystick.dataset.direction==='upright' && joystick.querySelector('.tank-joystick-knob').style.transform);
 joystick.dispatch('pointerup',{pointerId:1});
 check('摇杆释放回中并清除移动', Object.values(h.game.snapshot().tanks[0].input).every(value=>value===false));
+
+const switchHarness=harness(), switchJoystick=switchHarness.extra.querySelector('.tank-joystick'), switchToggle=switchHarness.extra.querySelector('.tank-control-mode-toggle');
+switchJoystick.dispatch('pointerdown',{pointerId:9,clientX:190,clientY:100,buttons:1,preventDefault(){}});
+switchToggle.dispatch('click',{preventDefault(){}});
+check('按住移动时切换控制面会先发送中性输入', switchHarness.extra.querySelector('.tank-control-deck').dataset.tankControlMode==='dpad' && Object.values(switchHarness.game.snapshot().tanks[0].input).every(value=>value===false));
+
+const switchDpadHarness=harness(), switchDpadToggle=switchDpadHarness.extra.querySelector('.tank-control-mode-toggle'), switchDpadRight=switchDpadHarness.extra.querySelector('.tank-dpad-right');
+switchDpadToggle.dispatch('click',{preventDefault(){}});
+switchDpadRight.dispatch('pointerdown',{pointerId:10,preventDefault(){}});
+switchDpadToggle.dispatch('click',{preventDefault(){}});
+check('按住 D-pad 时切回摇杆也先发送中性输入', switchDpadHarness.extra.querySelector('.tank-control-deck').dataset.tankControlMode==='joystick' && Object.values(switchDpadHarness.game.snapshot().tanks[0].input).every(value=>value===false));
 
 fire.dispatch('pointerdown',{pointerId:2,preventDefault(){}});
 joystick.dispatch('pointerdown',{pointerId:3,clientX:190,clientY:100,buttons:1,preventDefault(){}});

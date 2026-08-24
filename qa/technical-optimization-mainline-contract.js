@@ -56,7 +56,11 @@ assert.strictEqual(plan.waves[3].status, 'implemented', 'T3 feedback/input/spati
 assert.strictEqual(plan.waves[4].status, 'implemented', 'T4 board AI worker vertical slice must be recorded as implemented');
 assert.strictEqual(plan.waves[5].status, 'implemented', 'T5 Tank transport/prediction vertical slice must be recorded as implemented');
 assert.strictEqual(plan.waves[6].status, 'implemented', 'T6 Tank shadow vertical slice must be recorded as implemented');
-assert.strictEqual(plan.waves[7].status, 'partial', 'T7 must record the truthful Operational Metrics first slice without claiming all server ownership moved');
+assert.strictEqual(plan.waves[7].status, 'implemented', 'T7 P7-P21 frozen local scope must be recorded as implemented');
+assert(plan.waves[7].boundary.includes('server 其余业务 Date.now') &&
+  plan.waves[7].boundary.includes('真实 Supabase') &&
+  plan.waves[7].boundary.includes('发布证据'),
+  'T7 local completion must not claim all server time or external release evidence moved');
 assert(plan.waves.slice(8).every(wave => wave.status === 'planned'), 'future technical waves after T7 must not be claimed as implemented');
 assert.strictEqual(plan.release, 'LOCAL_ONLY_NOT_RELEASED', 'technical authorization must not grant release');
 
@@ -194,7 +198,10 @@ for (const [relative, marker] of [
   ['server/boundaries/reward-economy.js', 'createRewardEconomyBoundary'],
   ['qa/reward-economy-boundary.js', 'REWARD_ECONOMY_BOUNDARY_ALL_PASS'],
   ['server/boundaries/server-clock-timer.js', 'createServerClockTimer'],
+  ['server/boundaries/transport-deadline.js', 'createTransportDeadline'],
   ['qa/server-clock-timer.js', 'SERVER_CLOCK_TIMER_ALL_PASS'],
+  ['qa/transport-deadline.js', 'TRANSPORT_DEADLINE_ALL_PASS'],
+  ['qa/metrics-clock-seam.js', 'METRICS_CLOCK_SEAM_ALL_PASS'],
   ['server/boundaries/heartbeat-sweep-isolation.js', 'createHeartbeatSweepIsolation'],
   ['qa/heartbeat-sweep.js', 'HEARTBEAT_SWEEP_ALL_PASS'],
   ['server/boundaries/reward-progression.js', 'createRewardProgression'],
@@ -237,6 +244,21 @@ assert(packageJson.scripts['test:server-clock-timer'].includes('qa/server-clock-
   read('server/index.js').includes("owner:'operational-metrics-history'") &&
   read('server/index.js').includes('serverClockTimer.schedule'),
   'T7 ServerClockTimer metrics slice must be registered, consumed and gated');
+assert(packageJson.scripts['test:transport-deadline'].includes('qa/transport-deadline.js') &&
+  packageJson.scripts['test:technical-optimization-t7-transport'].includes('test:transport-deadline') &&
+  read('server/index.js').includes('transportDeadline.open') &&
+  read('server/cluster-coordinator.js').includes('deadlineFactory'),
+  'T7 transport deadline seam must be registered and injected into outbound callers');
+assert(packageJson.scripts['test:technical-optimization-t7-metrics'].includes('qa/metrics-clock-seam.js') &&
+  packageJson.scripts['test:technical-optimization-t7'].includes('qa/metrics-clock-seam.js') &&
+  read('scripts/quality-gates.js').includes("run('metrics-clock-seam-t7'") &&
+  read('server/index.js').includes('currentGameplayMetrics(at=serverNow())') &&
+  read('server/index.js').includes('now:serverNow') &&
+  read('server/boundaries/operational-metrics.js').includes('currentMetrics(now), now') &&
+  read('server/cluster-coordinator.js').includes('safeMetrics(snapshot,safeEpoch(this.now))'),
+  'T7 Metrics generatedAt must use the shared server clock seam end to end');
+assert(!/scheduleMatchSocialDelay\([\s\S]{0,700}?serverClockTimer\.schedule\(\{[\s\S]{0,500}?\},at\)/.test(read('server/index.js')),
+  'Metrics epoch wiring must not leak into match social timer scheduling');
 assert(p12Plan.state === 'IMPLEMENTED_LOCAL' && p12Plan.requirements.includes('TECH-039') &&
   p12Plan.requirements.includes('TECH-040') && p12Plan.requirements.includes('TECH-052') &&
   p12Contract.includes('heartbeat-sweep') && p12Contract.includes('session.close(true)') &&

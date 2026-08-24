@@ -1,0 +1,18 @@
+{
+  "batch": "T7-P18",
+  "title": "Rule Authority Gameplay Tick Timer 迁移",
+  "requirementIds": ["TECH-039", "TECH-040", "TECH-052", "GAME-013", "GAME-015", "GAME-017", "GAME-018"],
+  "status": "implemented_local",
+  "stage": "CLOSE",
+  "scope": [
+    "Tank/Tetris/Xiangqi/Monopoly 服务端 gameplay tick 使用按房间隔离的 ServerClockTimer repeat lease",
+    "统一使用 lease 提供的 now 样本推进 Rule Authority",
+    "房间结束、重开、异常和 server close 可取消 tick lease"
+  ],
+  "outOfScope": [
+    "客户端输入、Rule Authority 规则和 Reward 数值",
+    "transport deadline、普通 spectator delay、真实 Supabase/多实例",
+    "第二浏览器、真机、真实网络和线上发布"
+  ],
+  "rollback": "tick lease 创建失败只记录 operational context；既有 Authority 与房间结束安全路径保持 fail-closed。"
+}

@@ -25,8 +25,13 @@ function privateAddress(address){
   }
   return true;
 }
-function safeMetrics(input){
-  const output={generatedAt:String(input&&input.generatedAt||new Date().toISOString())};
+function safeEpoch(clock){
+  try{const value=Number(clock());if(Number.isFinite(value)&&value>=0)return value;}catch(_error){}
+  return 0;
+}
+function safeMetrics(input,at=Date.now()){
+  const value=Number(at),epoch=Number.isFinite(value)&&value>=0?value:0;
+  const output={generatedAt:String(input&&input.generatedAt||new Date(epoch).toISOString())};
   for(const [key,value] of Object.entries(input||{})){
     if(key==='generatedAt'||BANNED_KEY.test(key)||!/^[A-Za-z][A-Za-z0-9]{0,63}$/.test(key))continue;
     const number=Number(value);if(Number.isFinite(number))output[key]=number;
@@ -40,6 +45,8 @@ class TelemetryExporter {
     this.token=String(options.token||'');
     this.allowlist=new Set(String(options.allowlist||'').split(',').map(item=>item.trim().toLowerCase()).filter(Boolean));
     this.fetch=options.fetchImpl||globalThis.fetch;
+    this.now=typeof options.now==='function'?options.now:Date.now;
+    this.deadlineFactory=typeof options.deadlineFactory==='function'?options.deadlineFactory:null;
     this.onError=typeof options.onError==='function'?options.onError:()=>{};
     this.inFlight=false;
   }
@@ -59,17 +66,23 @@ class TelemetryExporter {
     try{
       await this.validate();
       const body=JSON.stringify({version:'telemetry-export-v1',instanceId:String(metadata.instanceId||''),
-        deploymentId:String(metadata.deploymentId||'').slice(0,160),metrics:safeMetrics(snapshot)});
+        deploymentId:String(metadata.deploymentId||'').slice(0,160),metrics:safeMetrics(snapshot,safeEpoch(this.now))});
       if(Buffer.byteLength(body)>65536)throw new Error('telemetry_batch_too_large');
+      const deadline=this.deadlineFactory?this.deadlineFactory({label:'telemetry',timeoutMs:5000}):null;
+      if(this.deadlineFactory&&(!deadline||deadline.ok!==true))throw new Error(deadline&&deadline.reason||'transport_deadline_unavailable');
       let lastError;
-      for(let attempt=0;attempt<3;attempt++){
-        try{
-          const response=await this.fetch(this.url,{method:'POST',redirect:'manual',signal:AbortSignal.timeout(5000),
-            headers:{'Content-Type':'application/json','User-Agent':'ghost-game-telemetry-v1',...(this.token?{Authorization:'Bearer '+this.token}:{})},body});
-          if(response.status>=300&&response.status<400)throw new Error('telemetry_redirect_rejected');
-          if(!response.ok)throw new Error('telemetry_http_'+response.status);
-          return true;
-        }catch(error){lastError=error;if(attempt<2)await new Promise(resolve=>setTimeout(resolve,250*Math.pow(2,attempt)));}
+      try {
+        for(let attempt=0;attempt<3;attempt++){
+          try{
+            const response=await this.fetch(this.url,{method:'POST',redirect:'manual',signal:deadline&&deadline.signal,
+              headers:{'Content-Type':'application/json','User-Agent':'ghost-game-telemetry-v1',...(this.token?{Authorization:'Bearer '+this.token}:{})},body});
+            if(response.status>=300&&response.status<400)throw new Error('telemetry_redirect_rejected');
+            if(!response.ok)throw new Error('telemetry_http_'+response.status);
+            return true;
+          }catch(error){lastError=error;if(attempt<2)await new Promise(resolve=>setTimeout(resolve,250*Math.pow(2,attempt)));}
+        }
+      } finally {
+        if(deadline&&typeof deadline.cancel==='function')deadline.cancel();
       }
       throw lastError||new Error('telemetry_delivery_failed');
     }catch(error){this.onError('telemetry_export',error);return false;}
@@ -85,6 +98,7 @@ class ClusterCoordinator {
     this.onError=typeof options.onError==='function'?options.onError:()=>{};
     this.instanceId=safeId(options.instanceId,'mg-'+crypto.randomBytes(12).toString('hex'));
     this.deploymentId=String(options.deploymentId||'').slice(0,160);
+    this.now=typeof options.now==='function'?options.now:Date.now;
     this.leaseKey='maintenance:outbox';
     this.leaseToken='0';
     this.leader=false;
@@ -93,7 +107,7 @@ class ClusterCoordinator {
     this.cleaning=false;
     this.timers=[];
     this.exporter=new TelemetryExporter({url:options.telemetryUrl,token:options.telemetryToken,
-      allowlist:options.telemetryAllowlist,fetchImpl:options.fetchImpl,onError:this.onError});
+      allowlist:options.telemetryAllowlist,fetchImpl:options.fetchImpl,deadlineFactory:options.transportDeadline,now:this.now,onError:this.onError});
   }
   async call(name,payload){
     if(!this.enabled||typeof this.rpc!=='function')return null;
@@ -147,7 +161,7 @@ class ClusterCoordinator {
   }
   async recordMetrics(snapshot){
     if(!this.enabled)return false;
-    const safe=safeMetrics(snapshot),generatedAt=safe.generatedAt;
+    const safe=safeMetrics(snapshot,safeEpoch(this.now)),generatedAt=safe.generatedAt;
     try{
       const stored=await this.call('append_metrics_snapshot_v1',{p_instance_id:this.instanceId,p_generated_at:generatedAt,p_payload:safe});
       if(this.leader)await this.publish('metrics_snapshot','metrics:'+String(stored&&stored.id||crypto.createHash('sha256').update(generatedAt).digest('hex').slice(0,16)),

@@ -8,7 +8,7 @@ const failures=[];
 function check(name,value){console.log((value?'PASS':'FAIL')+'  '+name);if(!value)failures.push(name);}
 
 const expected={
-  tank:'tank-authority-v1',tankSnapshotDelta:'tank-snapshot-delta-v2',tetrisCoordination:'tetris-battle-authority-v1',tetrisRules:'tetris-rule-v3',
+  gomokuRules:'gomoku-rule-v1',ludoRules:'ludo-rule-v1',tank:'tank-authority-v1',tankSnapshotDelta:'tank-snapshot-delta-v2',tetrisCoordination:'tetris-battle-authority-v1',tetrisRules:'tetris-rule-v3',
   spectator:'spectator-room-v1',tournament:'tournament-orchestrator-v1',xiangqiClock:'xiangqi-clock-v1',
   xiangqiRules:'xiangqi-rule-v2',monopolyAuction:'monopoly-auction-v1',monopolyRules:'monopoly-rule-v2',
   cosmetic:'game-cosmetic-presentation-v1',
@@ -22,9 +22,11 @@ const sample=protocolError(PROTOCOL_VERSIONS.xiangqiRules,'ERR_INVALID_MOVE',{re
 check('Protocol Registry：错误载荷包含 protocol/code/message/reason',sample.protocol===PROTOCOL_VERSIONS.xiangqiRules&&sample.code==='ERR_INVALID_MOVE'&&sample.message&&sample.reason==='horse_leg');
 const client=fs.readFileSync(path.join(ROOT,'public','src','online','03-websocket.js'),'utf8');
 const server=fs.readFileSync(path.join(ROOT,'server','index.js'),'utf8');
-check('Protocol Registry：客户端 hello 声明 Tetris v3 与两套 v2 规则协议',[expected.tetrisRules,expected.xiangqiRules,expected.monopolyRules].every(value=>client.includes("'"+value+"'")));
+check('Protocol Registry：客户端 hello 声明 Gomoku/Ludo、Tetris v3 与两套 v2 规则协议',[expected.gomokuRules,expected.ludoRules,expected.tetrisRules,expected.xiangqiRules,expected.monopolyRules].every(value=>client.includes("'"+value+"'")));
 check('Protocol Registry：Tank delta v2 只作为能力协商，不替换 tank-authority-v1',[expected.tank,expected.tankSnapshotDelta].every(value=>client.includes("'"+value+"'"))&&server.includes('TANK_SNAPSHOT_DELTA_V2_ENABLED')&&server.includes('sessionSupports(session,TANK_SNAPSHOT_DELTA_PROTOCOL)')&&server.includes("payload:state"));
 check('Protocol Registry：服务端以 capability 协商 v2，不静默强制升级',server.includes('roomSupports(r,PROTOCOL_VERSIONS.tetrisRules)')&&server.includes('roomSupports(r,PROTOCOL_VERSIONS.xiangqiRules)')&&server.includes('roomSupports(r,PROTOCOL_VERSIONS.monopolyRules)'));
+check('Protocol Registry：Gomoku v1 同时受全局与独立紧急回退开关保护',server.includes('GOMOKU_RULE_AUTHORITY_ENABLED&&roomSupports(r,PROTOCOL_VERSIONS.gomokuRules)')&&server.includes("ENABLE_GOMOKU_RULE_AUTHORITY||'1'"));
+check('Protocol Registry：Ludo v1 以 capability 协商并支持独立回退开关',server.includes('LUDO_RULE_AUTHORITY_ENABLED&&roomSupports(r,PROTOCOL_VERSIONS.ludoRules)')&&server.includes("ENABLE_LUDO_RULE_AUTHORITY||'1'"));
 check('Protocol Registry：Tetris v3 有独立紧急回退开关且旧客户端退回 v1 Coordination',server.includes('TETRIS_ADVANCED_SCORING_ENABLED&&roomSupports(r,PROTOCOL_VERSIONS.tetrisRules)')&&server.includes('new TetrisBattleAuthority'));
 
 if(failures.length){console.error('PROTOCOL_VERSION_FAILED:',failures.join('、'));process.exitCode=1;}else console.log('PROTOCOL_VERSION_ALL_PASS');

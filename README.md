@@ -137,7 +137,9 @@ WebSocket 端点 `/ws`，所有消息为 JSON：
 | C→S | `invite` / `invite_accept` / `invite_decline` | 邀请及应答 |
 | C→S | `select_game` | 房主选游戏 |
 | C→S | `start` | 房主开始 |
-| C→S | `move` / `game_state` | 回合制走子与稳定点快照；服务端记录有限 moveLog 并附带可信 `player`；Tank/Tetris 正式路径另用权威协议，旧 relay 仅兼容 |
+| C→S | `move` / `game_state` | 飞行棋与旧版五子棋回退路径的回合走子和稳定点快照；服务端记录有限 moveLog 并附带可信 `player`；已协商的权威房间拒绝旧 relay |
+| C→S | `gomoku_action` | `gomoku-rule-v1`：15×15 自由五子棋 `{matchId,seq,row,col}`；服务端验证回合、占位、五连/满盘、动作序号与重连状态 |
+| C→S | `ludo_action` | `ludo-rule-v1`：`{matchId,seq,action:{type:'roll'|'move',token?}}`；服务端生成骰面并验证 52 格路径、起飞、碰撞、终点、六点额外回合、动作序号与重连状态 |
 | C→S | `tank_input` | `tank-authority-v1` 单调输入序列；坐标、炮弹、伤害、重生和最终排名由 20Hz 服务端模拟决定；`tank-snapshot-delta-v2` 只属于 S→C 快照传输能力，不替换该输入协议 |
 | C→S | `tetris_lock_claim` / `tetris_ko_claim` / `tetris_state` | `tetris-battle-authority-v1` 落块/KO 申报与只读棋盘展示；目标、垃圾队列、KO/名次由服务端协调 |
 | C→S | `tetris_action` | `tetris-rule-v3` 单调输入；服务端共享 Rule Core 执行移动/旋转/Hold/Lock/Clear/Garbage/Top Out，并权威计算 T-Spin/B2B/Combo/Perfect Clear；旧 v2 客户端回退 v1 Coordination |
@@ -154,6 +156,8 @@ WebSocket 端点 `/ws`，所有消息为 JSON：
 | S→C | `chat_state` / `chat_history` / `chat_message` / `chat_send_ok` / `chat_read_ok` / `chat_error` | 服务端权威消息 ID、十进制字符串 seq、时间、发送者、未读/已读与稳定错误 reason；正文只发给会话参与者 |
 | S→C | `playline_state` / `playline_publish_ok` / `playline_remove_ok` / `playline_invalidated` / `playline_error` | viewer-specific 动态投影、签名 cursor、幂等发布/删除回执与失效通知；guest/test-admin/伪造结果或记录/篡改游标拒绝 |
 | S→C | `match_expression` / `match_expression_ok` / `match_expression_error` | 局内表达事件、幂等回执与稳定错误；接收前按每个玩家重新执行 Block，观众只读且遵循延迟；不进入 Replay、规则、奖励或数据库 |
+| S→C | `gomoku_rule_state` / `gomoku_result` / `gameplay_error` | `gomoku-rule-v1` 权威棋盘快照、单调 revision、Last Seq、稳定哈希、可信终局/和棋结果与分类错误；旧 capability 或任一开关关闭时回退 `move` |
+| S→C | `ludo_rule_state` / `ludo_result` / `gameplay_error` | `ludo-rule-v1` 权威飞行棋快照、服务端骰面、revision、Last Seq、稳定哈希与可信排名；旧 capability 或 `ENABLE_LUDO_RULE_AUTHORITY=0` 时回退 `move` |
 | S→C | `match_chat_state` / `match_chat_message` / `match_chat_ok` / `match_chat_error` | 本局房间文字历史、实时消息、幂等回执与稳定错误；服务端签发 sender/seat/time，观众延迟接收，逐接收者 Block 过滤；不进入 Replay、规则、奖励、AI、Analytics 或数据库 |
 | S→C | `lobby` | 可加入的等待房与可观战的进行中房间列表 |
 | S→C | `created` / `joined` / `room_update` / `started` | 加房结果、房间实时状态和开局信息（含 `matchId`） |
@@ -188,6 +192,7 @@ WebSocket 端点 `/ws`，所有消息为 JSON：
 - AI：胜/平/负为 `1/0/0💵` 与 `8/6/5 XP`，每账号每天通过 AI 触发的最终货币总额最多 `3💵`（含等级里程碑）；达到上限后仍得 XP。
 - 每日首次有效联机胜利额外 `+2💵/+5 XP`；3/5/8+ 连胜额外 `+2/+4/+6 XP`。
 - 每日任务由服务端按 `taskKey + date + claimId` 记录进度与领取，正式奖励进入经济流水；Replay v1.1 保存 7 天，支持列表、播放/暂停、进度、倍速、公开延迟和可撤销分享链接。
+- GAME-031 当前已接入 `replay-authority-v1` 与 `replay-lifecycle-v1`：六款 Authority 输入、Tetris tick/garbage/时间终局、Monopoly 自动 close-auction、Tank input/fixed-tick timeline 均进入有界投影；回放落盘会校验终局 hash/排名、自动事件、断线恢复 epoch 与实例顺序，并保留旧 Replay v1.1 兼容。真实 Supabase Cluster 的租约 fencing、跨实例事件和生产备份/恢复仍属于外部证据，当前不能描述为生产级六款 Replay verified。
 - 同一玩家组合 24 小时内第 11–20 局货币减半；第 21 局起货币为 0、XP 为 50%。
 - 等级曲线：`XPNext(level)=min(200, 30+5×level)`；每跨越 5 级里程碑奖励 `5💵`。
 - 胜场使用独立的 `wins`（按游戏）与 `totalWins`（总胜场）权威字段，只在有效正式胜利结算时增长，与 💵 余额完全解耦。

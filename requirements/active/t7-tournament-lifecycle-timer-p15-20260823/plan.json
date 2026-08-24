@@ -1,0 +1,19 @@
+{
+  "batch": "T7-P15",
+  "title": "Tournament 生命周期 Timer 迁移",
+  "requirementIds": ["TECH-039", "TECH-040", "TECH-052"],
+  "status": "implemented_local",
+  "stage": "CLOSE",
+  "scope": [
+    "赛事房间补偿 abort retry 使用按赛事隔离的 ServerClockTimer one-shot lease",
+    "赛事下一轮推进使用按赛事隔离的 ServerClockTimer one-shot lease",
+    "赛事终态/过期清理统一取消两类 lease",
+    "保留原有赛事顺序、失败恢复、quarantine 与 wire 合同"
+  ],
+  "outOfScope": [
+    "真实 Supabase、跨实例租约与生产恢复",
+    "局内 gameplay tick、transport deadline、match chat delay",
+    "赛事规则、奖励、匹配协议和 UI 改动"
+  ],
+  "rollback": "ServerClockTimer lease 失败进入既有 tournament recovery queue；不恢复原生 timer，不改变赛事权威状态。"
+}

@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "taskId": "data-production-readiness-preflight-p1-20260824",
+  "stage": "DATA_PREPARATION_DURING_NON_BLOCKING_PROVE_GATE",
+  "status": "machine_verified_local_real_credentials_not_available",
+  "checks": ["dry_run_plan", "production_readiness", "schema_rls_rpc", "fake_supabase_adapter"],
+  "externalPending": ["SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY", "SUPABASE_DB_URL", "encrypted backup", "transaction migration", "production acceptance", "isolated restore drill", "non-destructive rollback", "multi-instance browser verification"],
+  "release": "LOCAL_ONLY_NOT_RELEASED"
+}

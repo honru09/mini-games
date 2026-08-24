@@ -2,9 +2,13 @@
 
 const counters=Object.create(null);
 function increment(name,amount=1){const key=String(name||'unknown');counters[key]=(Number(counters[key])||0)+Math.max(0,Number(amount)||0);}
-function snapshot(dynamic={}){return{...Object.fromEntries(Object.keys(counters).sort().map(key=>[key,counters[key]])),activeMatches:Number(dynamic.activeMatches)||0,activeSpectators:Number(dynamic.activeSpectators)||0,activeTournaments:Number(dynamic.activeTournaments)||0,generatedAt:new Date().toISOString()};}
-function safeSnapshot(input){
-  const out={generatedAt:String(input&&input.generatedAt||new Date().toISOString())};
+function generatedAt(at=Date.now()){
+  const value=Number(at);
+  return new Date(Number.isFinite(value)&&value>=0?value:0).toISOString();
+}
+function snapshot(dynamic={},at=Date.now()){return{...Object.fromEntries(Object.keys(counters).sort().map(key=>[key,counters[key]])),activeMatches:Number(dynamic.activeMatches)||0,activeSpectators:Number(dynamic.activeSpectators)||0,activeTournaments:Number(dynamic.activeTournaments)||0,generatedAt:generatedAt(at)};}
+function safeSnapshot(input,at=0){
+  const out={generatedAt:String(input&&input.generatedAt||generatedAt(at))};
   for(const [key,value] of Object.entries(input||{})){
     if(key==='generatedAt'||!/^[A-Za-z][A-Za-z0-9]{0,63}$/.test(key))continue;
     const numeric=Number(value);if(Number.isFinite(numeric))out[key]=numeric;

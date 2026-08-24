@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "taskId": "game-stage-interaction-targets-close-p1-20260824",
+  "capturedAt": "2026-08-24T01:05:38+09:00",
+  "state": "MACHINE_VERIFIED_LOCAL",
+  "release": "LOCAL_ONLY_NOT_RELEASED",
+  "build": {
+    "path": "public/index.html",
+    "characters": 1808637,
+    "bytes": 1822490,
+    "sha256": "8E20C9F4A10F10A97931185742A13974C019F8FCFCD3D20AA3A34FA2FF0B5661"
+  },
+  "presentationIdentity": {
+    "schemaVersion": 1,
+    "presentation": {
+      "fileCount": 15,
+      "bytes": 347640,
+      "sha256": "7477EE0DAC1A74CFB3F0EE86D6F9E72F7ED3967E9D41A8249E2ED352DCCD92DF"
+    },
+    "layout": {
+      "fileCount": 6,
+      "bytes": 24860,
+      "sha256": "408AC7B541186FE51A32B2AD2C5BF1B3524A5159E9615BB53325B6D96A356159"
+    },
+    "cacheVersion": "ghost-game-shell-v21-20260824"
+  },
+  "checks": [
+    {"command": "node qa/game-stage-interaction-targets.js", "result": "PASS"},
+    {"command": "node qa/tank-controls.js", "result": "PASS"},
+    {"command": "node qa/presentation-evidence-identity.js", "result": "PASS"},
+    {"command": "node qa/code-health-sweep.js", "result": "PASS"},
+    {"command": "node qa/approval-gate-policy.js", "result": "PASS"},
+    {"command": "node qa/technical-optimization-mainline-contract.js", "result": "PASS"},
+    {"command": "npm run quality:gates", "result": "PASS", "exitCode": 0},
+    {"command": "npm test", "result": "PASS", "exitCode": 0},
+    {"command": "node scripts/build.js --check", "result": "PASS"},
+    {"command": "git diff --check", "result": "PASS_WITH_LINE_ENDING_WARNINGS_ONLY"}
+  ],
+  "browserEvidence": {
+    "status": "NOT_EXECUTED",
+    "reason": "Codex in-app browser connector failed to write kernel assets because the local kernel resource path was not found"
+  },
+  "notGranted": [
+    "current_browser_visible_matrix",
+    "second_browser",
+    "physical_android_iphone_tablet",
+    "real_network_shaping",
+    "real_low_end_performance",
+    "release"
+  ]
+}

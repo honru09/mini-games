@@ -44,6 +44,7 @@ run('platform-audio-cues', process.platform === 'win32' ? 'node.exe' : 'node', [
 run('unified-feedback-adapter', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/unified-feedback-adapter.js']);
 run('build-check-write', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/build-check-write.js']);
 run('presentation-source', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/presentation-source-contract.js']);
+run('presentation-evidence-identity', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/presentation-evidence-identity.js']);
 run('feedback-bus', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/feedback-bus.js']);
 run('gameplay-input-gate', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/gameplay-input-gate.js']);
 run('local-feedback-adapter', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/local-feedback-adapter.js']);
@@ -69,10 +70,16 @@ run('room-presence-boundary-t7', process.platform === 'win32' ? 'node.exe' : 'no
 run('server-test-isolation-t7', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/server-test-isolation.js']);
 run('node-process-isolation-t7', process.platform === 'win32' ? 'node.exe' : 'node', ['--check', 'server/testing/isolated-node-process.js']);
 run('match-protocol-boundary-t7', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/match-protocol-boundary.js']);
+run('gomoku-rule-core-parity', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/gomoku-rule-core.js']);
+run('gomoku-rule-authority-parity', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/gomoku-rule-authority.js']);
+run('gomoku-rule-authority-online-parity', process.platform === 'win32' ? 'node.exe' : 'node', ['--experimental-websocket', 'qa/gomoku-rule-authority-online.js']);
+run('gomoku-protocol-fallback-parity', process.platform === 'win32' ? 'node.exe' : 'node', ['--experimental-websocket', 'qa/gomoku-protocol-fallback-online.js']);
 run('chat-playline-boundary-t7', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/chat-playline-boundary.js']);
 run('reward-economy-boundary-t7', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/reward-economy-boundary.js']);
 run('reward-progression-t7', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/reward-progression.js']);
 run('server-clock-timer-t7', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/server-clock-timer.js']);
+run('transport-deadline-t7', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/transport-deadline.js']);
+run('metrics-clock-seam-t7', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/metrics-clock-seam.js']);
 run('heartbeat-sweep-t7', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/heartbeat-sweep.js']);
 run('timer-audit-t7', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/timer-audit.js']);
 run('progress-ledger', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/progress-ledger.js']);
@@ -116,6 +123,7 @@ run('surface-motion-runtime', process.platform === 'win32' ? 'node.exe' : 'node'
 run('surface-motion-adapter', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/surface-motion-adapter.js']);
 run('game-stage-input-continuity', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/game-stage-input-continuity.js']);
 run('game-stage-hud-density', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/game-stage-hud-density.js']);
+run('game-stage-interaction-targets', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/game-stage-interaction-targets.js']);
 run('controlled-transport-preflight', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/controlled-transport-preflight.js']);
 run('profile-design-system', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/profile-design-system-contract.js']);
 run('profile-request-lifecycle', process.platform === 'win32' ? 'node.exe' : 'node', ['qa/profile-request-lifecycle.js']);

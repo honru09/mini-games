@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "taskId": "gomoku-rule-authority-parity-p0-20260824",
+  "status": "PASS_LOCAL_MACHINE_FINAL_CHAIN",
+  "assetGen": "NOT_APPLICABLE",
+  "passedBeforeFinalChain": [
+    "npm run test:gomoku-rule-core",
+    "npm run test:gomoku-rule-authority",
+    "node qa/game-stage-wave-b-gomoku.js",
+    "node qa/match-protocol-boundary.js"
+  ],
+  "finalChain": {
+    "gomokuRuleOnline": "PASS",
+    "gomokuProtocolFallback": "PASS",
+    "qualityGates": "PASS",
+    "fullNpmTest": "PASS"
+  },
+  "browser": "NOT_EXECUTED",
+  "release": "LOCAL_ONLY_NOT_RELEASED"
+}

@@ -4,6 +4,7 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const { readPresentationIdentity, matchesPresentationIdentity } = require('../shared/presentation/presentation-identity');
 
 const ROOT = path.resolve(__dirname, '..');
 const LEDGER_PATH = path.join(ROOT, 'requirements', 'PRODUCT_REQUIREMENTS_LEDGER.json');
@@ -59,13 +60,19 @@ function currentBrowserEvidenceSummary() {
   }
   const build = fs.readFileSync(buildPath);
   const sha = crypto.createHash('sha256').update(build).digest('hex').toUpperCase();
+  const presentationIdentity = readPresentationIdentity({ root: ROOT });
+  const isCurrentEvidence = (evidence) => {
+    const evidenceBytes = evidence && evidence.build && (evidence.build.bytes ?? evidence.build.utf8Bytes);
+    return !!(evidence && evidence.build && evidence.build.sha256 === sha && evidenceBytes === build.length &&
+      matchesPresentationIdentity(evidence.presentationIdentity, presentationIdentity));
+  };
   const drift = readStatus().parallelBuildDrift20260819;
   if (drift && drift.status === 'active' && drift.artifact && drift.expectedFromSources && drift.artifact.sha256 === sha) {
     return `并行前端/3D 窗口仍在写入：现有构建产物 SHA-256 ${sha} 落后于当前源码期望 ${drift.expectedFromSources.sha256}，两者均不能冒充稳定当前构建或当前浏览器证据。`;
   }
   if (fs.existsSync(CURRENT_TANK_FINAL_ART_EVIDENCE_PATH)) {
     const evidence = JSON.parse(fs.readFileSync(CURRENT_TANK_FINAL_ART_EVIDENCE_PATH, 'utf8'));
-    const isCurrent = evidence.build && evidence.build.sha256 === sha && evidence.build.bytes === build.length;
+    const isCurrent = isCurrentEvidence(evidence);
     if (isCurrent && evidence.evidenceClass === 'LOCAL_SINGLE_CHROMIUM_SIMULATION_ONLY' &&
         Array.isArray(evidence.scenarios) && evidence.scenarios.length === 6 && evidence.scenarios.every(scenario => scenario.result === 'PASS') &&
         evidence.console && evidence.console.warningCount === 0 && evidence.console.errorCount === 0) {
@@ -74,7 +81,7 @@ function currentBrowserEvidenceSummary() {
   }
   if (fs.existsSync(CURRENT_MAINTENANCE_VISIBLE_EVIDENCE_PATH)) {
     const evidence = JSON.parse(fs.readFileSync(CURRENT_MAINTENANCE_VISIBLE_EVIDENCE_PATH, 'utf8'));
-    const isCurrent = evidence.build && evidence.build.sha256 === sha && evidence.build.bytes === build.length;
+    const isCurrent = isCurrentEvidence(evidence);
     if (isCurrent && evidence.evidenceClass === 'LOCAL_SINGLE_CHROMIUM_VISIBLE_PARTIAL_ONLY' && evidence.claim === 'current_build_single_browser_maintenance_partial' &&
         Array.isArray(evidence.scenarios) && evidence.scenarios.length === 6 && evidence.scenarios.every(scenario => scenario.result === 'PASS') &&
         evidence.browser && evidence.browser.consoleWarningCount === 0 && evidence.browser.consoleErrorCount === 0) {
@@ -83,7 +90,7 @@ function currentBrowserEvidenceSummary() {
   }
   if (fs.existsSync(CURRENT_IMMERSIVE_STAGE_EVIDENCE_PATH)) {
     const evidence = JSON.parse(fs.readFileSync(CURRENT_IMMERSIVE_STAGE_EVIDENCE_PATH, 'utf8'));
-    const isCurrent = evidence.build && evidence.build.sha256 === sha && evidence.build.utf8Bytes === build.length;
+    const isCurrent = isCurrentEvidence(evidence);
     if (isCurrent && evidence.evidenceClass === 'LOCAL_SINGLE_CHROMIUM_SIMULATION_ONLY' &&
         evidence.matrix && evidence.matrix.scenarioCount === 36 && evidence.matrix.result === 'PASS') {
       return `单一 Codex in-app Chromium 已对当前 SHA-256 ${sha} 完成六视口 × 六款游戏共 36 个 Immersive Game Stage 布局/操作场景：页面零横纵溢出、操作至少 44px，六张截图已归档；这不是完整路由/终局/三语/双主题/逐 FX 矩阵，也不是第二浏览器、真机、真实网络或低端 GPU/热量证据。`;
@@ -91,28 +98,28 @@ function currentBrowserEvidenceSummary() {
   }
   if (fs.existsSync(CURRENT_P5_BROWSER_EVIDENCE_PATH)) {
     const evidence = JSON.parse(fs.readFileSync(CURRENT_P5_BROWSER_EVIDENCE_PATH, 'utf8'));
-    const isCurrent = evidence.build && evidence.build.sha256 === sha && evidence.build.bytes === build.length;
+    const isCurrent = isCurrentEvidence(evidence);
     if (isCurrent && evidence.currency === 'current' && evidence.claim === 'current_build_single_browser_visible_matrix_p4' && evidence.fullRouteMatrixCurrentBuild === true) {
       return `单一 Codex in-app Chromium 已对当前 SHA-256 ${sha} 完成五档视口 × Home/Games/Playline/Profile 20/20、Shop/DM/成就/房间大厅、六款 Game Stage、三语言、双主题、visible reduced-motion、forced-colors、深滚动回顶、零横溢出、零裸 key 与 console 0 的当前可见矩阵；第二浏览器、真机和真实网络仍是发布证据待决。`;
     }
   }
   if (fs.existsSync(CURRENT_HONRU_BROWSER_EVIDENCE_PATH)) {
     const evidence = JSON.parse(fs.readFileSync(CURRENT_HONRU_BROWSER_EVIDENCE_PATH, 'utf8'));
-    const isCurrent = evidence.build && evidence.build.sha256 === sha && evidence.build.bytes === build.length;
+    const isCurrent = isCurrentEvidence(evidence);
     if (isCurrent && evidence.currency === 'current' && evidence.claim === 'current_build_single_browser_honru_art_runtime_partial') {
       return `单一 Codex in-app Chromium 已对当前 SHA-256 ${sha} 完成 Honru/Emoji 窄范围可见复核：idle/check-in、十枚 Emoji 选择器、头像气泡、目标席位投掷、reduced-motion、390×844、三语言、双主题与该场景 console 0；两个 hostname 会话只用于存储隔离，不是第二浏览器，也不宣称当前五档四区/六款 Game Stage 完整矩阵。`;
     }
   }
   if (fs.existsSync(CURRENT_T3_BROWSER_EVIDENCE_PATH)) {
     const evidence = JSON.parse(fs.readFileSync(CURRENT_T3_BROWSER_EVIDENCE_PATH, 'utf8'));
-    const isCurrent = evidence.build && evidence.build.sha256 === sha && evidence.build.bytes === build.length;
+    const isCurrent = isCurrentEvidence(evidence);
     if (isCurrent && evidence.currency === 'current' && evidence.claim === 'current_build_single_browser_narrow_t3') {
       return `单一 Codex in-app Chromium 已对当前 SHA-256 ${sha} 完成 T3 窄范围复核：568×726 四区、Tetris/Tank 默认关闭回归、零横溢出/裸 key 与最终清理；未采集 console，且不宣称当前五档完整矩阵、第二浏览器、真机或真实网络 Gate。`;
     }
   }
   if (fs.existsSync(CURRENT_BROWSER_EVIDENCE_PATH)) {
     const evidence = JSON.parse(fs.readFileSync(CURRENT_BROWSER_EVIDENCE_PATH, 'utf8'));
-    const isCurrent = evidence.build && evidence.build.sha256 === sha && evidence.build.bytes === build.length;
+    const isCurrent = isCurrentEvidence(evidence);
     if (isCurrent && evidence.coverage && evidence.coverage.fullRouteMatrixCurrentBuild === true) {
       return `单一 Codex in-app Chromium 已完成与当前 SHA-256 ${sha} 匹配的五档四区、共享弹层、六款 Game Stage、三语言、双主题、reduced-motion 与 forced-colors 可见矩阵。`;
     }
@@ -120,7 +127,7 @@ function currentBrowserEvidenceSummary() {
 
   if (fs.existsSync(CURRENT_GCOINS_BROWSER_EVIDENCE_PATH)) {
     const evidence = JSON.parse(fs.readFileSync(CURRENT_GCOINS_BROWSER_EVIDENCE_PATH, 'utf8'));
-    const isCurrent = evidence.build && evidence.build.sha256 === sha && evidence.build.bytes === build.length;
+    const isCurrent = isCurrentEvidence(evidence);
     if (isCurrent && evidence.claim === 'current_build_single_browser_gcoins_presentation_partial') {
       return `旧五档四区完整矩阵只保留为 historical as-of；单一 Codex in-app Chromium 已对当前 SHA-256 ${sha} 完成 Profile、Shop、排行榜、玩家列表、三语言、双主题与 390×844 的 G Coins 窄范围可见复核，不能冒充当前完整矩阵。`;
     }
@@ -129,8 +136,8 @@ function currentBrowserEvidenceSummary() {
   if (fs.existsSync(CURRENT_IDENTITY_BADGE_EVIDENCE_PATH)) {
     const evidence = JSON.parse(fs.readFileSync(CURRENT_IDENTITY_BADGE_EVIDENCE_PATH, 'utf8'));
     const auth = fs.existsSync(CURRENT_AUTH_VISIBLE_EVIDENCE_PATH) ? JSON.parse(fs.readFileSync(CURRENT_AUTH_VISIBLE_EVIDENCE_PATH, 'utf8')) : null;
-    const isCurrent = evidence.build && evidence.build.sha256 === sha && evidence.build.bytes === build.length;
-    const authCurrent = auth && auth.build && auth.build.sha256 === sha && auth.build.bytes === build.length &&
+    const isCurrent = isCurrentEvidence(evidence);
+    const authCurrent = isCurrentEvidence(auth) &&
       Array.isArray(auth.scenarios) && auth.scenarios.length === 5 && auth.scenarios.every(scenario => scenario.result === 'PASS');
     if (isCurrent && evidence.familyId === 'P-IDENTITY-BADGE-SYSTEM-V1' && evidence.desktop && evidence.mobile390x844) {
       return `单一 Codex in-app Chromium 已对当前 SHA-256 ${sha} 完成 P1-09 身份徽章聚焦复核：Games 排行榜、Profile、成就墙、Shop、390×844、资源解码与零横向溢出；${authCurrent ? '同一当前构建还完成认证页 1280×720/390×844、三语言、双主题、黑夜 Logo 反白、44px 与 console 0 窄复核；' : ''}尚无全站路由/终局/六款逐 FX 完整矩阵，也不是第二浏览器、真机、真实网络或低端性能证据。`;
@@ -139,7 +146,7 @@ function currentBrowserEvidenceSummary() {
 
   if (fs.existsSync(CURRENT_AUTH_VISIBLE_EVIDENCE_PATH)) {
     const evidence = JSON.parse(fs.readFileSync(CURRENT_AUTH_VISIBLE_EVIDENCE_PATH, 'utf8'));
-    const isCurrent = evidence.build && evidence.build.sha256 === sha && evidence.build.bytes === build.length;
+    const isCurrent = isCurrentEvidence(evidence);
     if (isCurrent && evidence.claim === 'current_build_single_browser_auth_visible_partial' &&
         evidence.evidenceClass === 'LOCAL_SINGLE_CHROMIUM_VISIBLE_PARTIAL_ONLY' &&
         Array.isArray(evidence.scenarios) && evidence.scenarios.length === 5 && evidence.scenarios.every(scenario => scenario.result === 'PASS')) {
@@ -171,12 +178,18 @@ function tech027BuildIdentitySummary() {
   if (!fs.existsSync(buildPath)) throw new Error('missing current public/index.html for TECH-027 build identity');
   const current = fs.readFileSync(buildPath);
   const currentSha = crypto.createHash('sha256').update(current).digest('hex').toUpperCase();
+  const presentationIdentity = readPresentationIdentity({ root: ROOT });
+  const isCurrentEvidence = (evidence) => {
+    const evidenceBytes = evidence && evidence.build && (evidence.build.bytes ?? evidence.build.utf8Bytes);
+    return !!(evidence && evidence.build && evidence.build.sha256 === currentSha && evidenceBytes === current.length &&
+      matchesPresentationIdentity(evidence.presentationIdentity, presentationIdentity));
+  };
   const drift = readStatus().parallelBuildDrift20260819;
   let currentVisible = '尚无与其匹配的浏览器可见证据';
   if (fs.existsSync(CURRENT_TANK_FINAL_ART_EVIDENCE_PATH)) {
     const evidence = JSON.parse(fs.readFileSync(CURRENT_TANK_FINAL_ART_EVIDENCE_PATH, 'utf8'));
     if (evidence.evidenceClass === 'LOCAL_SINGLE_CHROMIUM_SIMULATION_ONLY' && Array.isArray(evidence.scenarios) && evidence.scenarios.length === 6 &&
-        evidence.scenarios.every(scenario => scenario.result === 'PASS') && evidence.build && evidence.build.sha256 === currentSha && evidence.build.bytes === current.length) {
+        evidence.scenarios.every(scenario => scenario.result === 'PASS') && isCurrentEvidence(evidence)) {
       currentVisible = '已有与其匹配的 Tank desktop light/dark、390×844、reduced-motion、forced-colors 与 live-fire 单 Chromium 聚焦矩阵，但尚无完整路由/终局/三语/双主题/六款逐 FX 矩阵';
     }
   }
@@ -184,44 +197,44 @@ function tech027BuildIdentitySummary() {
     const evidence = JSON.parse(fs.readFileSync(CURRENT_MAINTENANCE_VISIBLE_EVIDENCE_PATH, 'utf8'));
     if (evidence.evidenceClass === 'LOCAL_SINGLE_CHROMIUM_VISIBLE_PARTIAL_ONLY' && evidence.claim === 'current_build_single_browser_maintenance_partial' &&
         Array.isArray(evidence.scenarios) && evidence.scenarios.length === 6 && evidence.scenarios.every(scenario => scenario.result === 'PASS') &&
-        evidence.build && evidence.build.sha256 === currentSha && evidence.build.bytes === current.length) {
+        isCurrentEvidence(evidence)) {
       currentVisible = '已有与其匹配的当前构建认证页/Home/Games、坦克摇杆/D-pad 与五子棋无方向键 6 场景单 Chromium 维护窄证据，但尚无完整路由/终局/三语/双主题矩阵';
     }
   }
   if (currentVisible === '尚无与其匹配的浏览器可见证据' && fs.existsSync(CURRENT_IMMERSIVE_STAGE_EVIDENCE_PATH)) {
     const evidence = JSON.parse(fs.readFileSync(CURRENT_IMMERSIVE_STAGE_EVIDENCE_PATH, 'utf8'));
     if (evidence.evidenceClass === 'LOCAL_SINGLE_CHROMIUM_SIMULATION_ONLY' && evidence.matrix && evidence.matrix.scenarioCount === 36 &&
-        evidence.matrix.result === 'PASS' && evidence.build && evidence.build.sha256 === currentSha && evidence.build.utf8Bytes === current.length) {
+        evidence.matrix.result === 'PASS' && isCurrentEvidence(evidence)) {
       currentVisible = '已有与其匹配的六视口 × 六游戏 36 场景 Immersive Stage 布局/操作单 Chromium 矩阵，但尚无完整路由/终局/三语/双主题/逐 FX 矩阵';
     }
   }
   if (currentVisible === '尚无与其匹配的浏览器可见证据' && fs.existsSync(CURRENT_P5_BROWSER_EVIDENCE_PATH)) {
     const evidence = JSON.parse(fs.readFileSync(CURRENT_P5_BROWSER_EVIDENCE_PATH, 'utf8'));
     if (evidence.currency === 'current' && evidence.claim === 'current_build_single_browser_visible_matrix_p4' && evidence.fullRouteMatrixCurrentBuild === true &&
-        evidence.build && evidence.build.sha256 === currentSha && evidence.build.bytes === current.length) {
+        isCurrentEvidence(evidence)) {
       currentVisible = '已有与其匹配的当前五档四区/六款 Game Stage 完整单 Chromium 矩阵';
     }
   }
   if (currentVisible === '尚无与其匹配的浏览器可见证据' && fs.existsSync(CURRENT_HONRU_BROWSER_EVIDENCE_PATH)) {
     const evidence = JSON.parse(fs.readFileSync(CURRENT_HONRU_BROWSER_EVIDENCE_PATH, 'utf8'));
     if (evidence.currency === 'current' && evidence.claim === 'current_build_single_browser_honru_art_runtime_partial' &&
-        evidence.build && evidence.build.sha256 === currentSha && evidence.build.bytes === current.length) {
+        isCurrentEvidence(evidence)) {
       currentVisible = '已有与其匹配的 Honru/Emoji 单 Chromium 窄证据，但尚无当前五档四区/六款 Game Stage 完整矩阵';
     }
   }
   if (currentVisible === '尚无与其匹配的浏览器可见证据' && fs.existsSync(CURRENT_AUTH_VISIBLE_EVIDENCE_PATH)) {
     const evidence = JSON.parse(fs.readFileSync(CURRENT_AUTH_VISIBLE_EVIDENCE_PATH, 'utf8'));
     if (evidence.evidenceClass === 'LOCAL_SINGLE_CHROMIUM_VISIBLE_PARTIAL_ONLY' && Array.isArray(evidence.scenarios) && evidence.scenarios.length === 5 &&
-        evidence.scenarios.every(scenario => scenario.result === 'PASS') && evidence.build && evidence.build.sha256 === currentSha && evidence.build.bytes === current.length) {
+        evidence.scenarios.every(scenario => scenario.result === 'PASS') && isCurrentEvidence(evidence)) {
       currentVisible = '已有与其匹配的认证页 1280×720/390×844、三语、双主题、黑夜 Logo、44px 与零横溢出单 Chromium 窄证据，但尚无登录后四区/六款 Game Stage/终局/逐 FX 完整矩阵';
     }
   }
   if (fs.existsSync(CURRENT_IDENTITY_BADGE_EVIDENCE_PATH)) {
     const evidence = JSON.parse(fs.readFileSync(CURRENT_IDENTITY_BADGE_EVIDENCE_PATH, 'utf8'));
     if (evidence.familyId === 'P-IDENTITY-BADGE-SYSTEM-V1' && evidence.desktop && evidence.mobile390x844 &&
-        evidence.build && evidence.build.sha256 === currentSha && evidence.build.bytes === current.length) {
+        isCurrentEvidence(evidence)) {
       const auth = fs.existsSync(CURRENT_AUTH_VISIBLE_EVIDENCE_PATH) ? JSON.parse(fs.readFileSync(CURRENT_AUTH_VISIBLE_EVIDENCE_PATH, 'utf8')) : null;
-      const authCurrent = auth && auth.build && auth.build.sha256 === currentSha && auth.build.bytes === current.length;
+      const authCurrent = isCurrentEvidence(auth);
       currentVisible = `已有与其匹配的 P1-09 Games/Profile/成就墙/Shop/390×844 身份徽章聚焦矩阵${authCurrent ? '及认证页三语/双主题/44px 窄证据' : ''}，但尚无全站路由/终局/六款逐 FX 完整矩阵`;
     }
   }
@@ -537,6 +550,7 @@ function makeTotalReport(ledger, routing, routingIndex) {
   const categorySections = makeAllCategoryDetails(ledger, routingIndex);
   const onlineBaseline = String(readStatus().lastReleasedCommit || '').slice(0, 7) || 'unknown';
   const browserEvidenceSummary = currentBrowserEvidenceSummary();
+  const presentationIdentity = readPresentationIdentity({ root: ROOT });
 
   return [
     `# Ghost Game 项目总需求进度报告（${reportDate(ledger)}）`,
@@ -547,7 +561,7 @@ function makeTotalReport(ledger, routing, routingIndex) {
     '',
     `当前共收录 **${items.length} 项唯一原子需求**，分为六条互不混改的工作流。已验证关闭 **${counts.verified || 0}** 项；已有实现但仍待当前验证或最终闭环证据 **${counts.implemented || 0}** 项；功能性未完成、未执行或受阻 **${functionalUnfinished}** 项；合计 **${openLoop}** 项尚未达到 \`verified\`。`,
     '',
-    `当前产品节点分为两层：**线上是 \`${onlineBaseline}\` 的已发布基线；本地层包含尚未发布的 Playline、全局私信、Game Stage Wave B/Wave C、DOM/CSS/Canvas + GSAP 的唯一 2.5D 表现主线、UI Motion Closure P1、PWA Offline i18n v15 修复、G Coins 表现统一、T5 传输修复、T6 shadow，以及 T7 六类 Server Boundary、Node fresh-child、Reward/Economy outbox、Reward/Progression Projection 与 P8–P12 Clock/Timer owner 纵切。旧 Ghost3D/Three.js runtime 已退役并从构建、缓存和质量门清除，只保留 historical-as-of 文档证据。** 本地预检覆盖 Tetris 乱序/重复、Tank frame/tick 高水位、codec 健康协商、旧 WebSocket callback 与 DM 数值序去重；它不是实际网络整形。T7 继续保持 partial；P12 已迁移 heartbeat owner、单次时间采样和分域异常隔离，剩余正式 token TTL、其他 lifecycle、outbox/gameplay/transport timer 与 Metrics generatedAt 尚未迁移。${browserEvidenceSummary} Service Worker v15 的安全更新链与三语词典回退证据继续单独成立。第二浏览器、物理真机/触控、真实网络、线上最新构建、真实 Supabase 与真实性能仍未执行；设备与 Supabase Gate 是 NON_BLOCKING_FOR_DEVELOPMENT / RELEASE_EVIDENCE_PENDING。原创美术 Gate 已 OPEN_BY_OWNER_AUTHORIZATION；现有候选在逐族取得 OWNER_AUTHORIZED_ART_CLEARANCE 前仍保持原状态，但人工/Reviewer B/IP/Golden Set 咨询不再阻塞开发、runtime 或未来发布候选，且未执行时不得冒充 PASS。`,
+    `当前产品节点分为两层：**线上是 \`${onlineBaseline}\` 的已发布基线；本地层包含尚未发布的 Playline、全局私信、Game Stage Wave B/Wave C、DOM/CSS/Canvas + GSAP 的唯一 2.5D 表现主线、UI Motion Closure P1、PWA Offline i18n、G Coins 表现统一、T5 传输修复、T6 shadow，以及 T7 六类 Server Boundary、Node fresh-child、Reward/Economy outbox、Reward/Progression Projection 与 P8–P21 Clock/Timer、Lifecycle、Transport、Metrics 冻结范围。旧 Ghost3D/Three.js runtime 已退役并从构建、缓存和质量门清除，只保留 historical-as-of 文档证据。** 本地预检覆盖 Tetris 乱序/重复、Tank frame/tick 高水位、codec 健康协商、旧 WebSocket callback 与 DM 数值序去重；它不是实际网络整形。T7 继续保持 partial，但 P7–P21 冻结范围已完成本地实现；server 其余业务时间、真实 Supabase、多实例、设备、网络和发布证据仍不在该完成声明内。本批还完成 Game Stage 44px、短横屏 Seat Rail、Tank 单布局 owner 与表现证据身份收口。${browserEvidenceSummary} Service Worker \`${presentationIdentity.cacheVersion}\` 已绑定当前表现身份；三语离线安全链继续单独成立。第二浏览器、物理真机/触控、真实网络、线上最新构建、真实 Supabase 与真实性能仍未执行；设备与 Supabase Gate 是 NON_BLOCKING_FOR_DEVELOPMENT / RELEASE_EVIDENCE_PENDING。原创美术 Gate 已 OPEN_BY_OWNER_AUTHORIZATION；现有候选在逐族取得 OWNER_AUTHORIZED_ART_CLEARANCE 前仍保持原状态，但人工/Reviewer B/IP/Golden Set 咨询不再阻塞开发、runtime 或未来发布候选，且未执行时不得冒充 PASS。`,
     '',
     `CONTROL 已完成；权威路由当前仍为 \`${routing.authority.currentStage}\`，本地收口证据已准备好，下一授权阶段为 \`${routing.authority.nextStage}\` 取证：每一个原子需求都有且只有一个主线路由。\`NOW_CLOSURE\` 中的已验证项只作回归基线，\`NON_BLOCKING_FOR_DEVELOPMENT\` 收录开发可继续但发布证据仍待补齐的需求；三条共享 Gate 分别记录设备/网络、Supabase 生产证据与原创美术所有者清除，\`DEFERRED_MAINLINE\` 和 \`FUTURE_EXPANSION\` 不与当前取证批次混合。可确定性验证项默认由机器继续；设备与 Supabase 缺口只限制相应发布证据。原创 Ghost-native 美术使用 OWNER_AUTHORIZED_ART_CLEARANCE，人工清稿、独立 Reviewer B、IP/法律意见与逐资产 Golden Set 是 OPTIONAL_ADVISORY_EVIDENCE，不得伪造成 PASS，也不得继续作为施工或未来发布候选阻塞。任何线上发布仍只接受用户当前明确命令。`,
     '',

@@ -105,10 +105,10 @@ check('server implements both-direction Block rejection and recipient re-check',
   /function matchExpressionRecipientAllowed[\s\S]*socialBlockedBetween\(session\.uid,senderUid\)/.test(serverDelivery) &&
   /deliverMatchExpression\(room,event\)/.test(serverHandler));
 check('delayed spectator delivery revalidates the active match',
-  /setTimeout\(\(\)=>\{[\s\S]*if\(room\.started&&!room\.settled&&String\(room\.matchId\)===String\(event\.matchId\)/.test(serverDelivery));
+  /scheduleMatchSocialDelay\(room,session,delay,text,room\.matchExpressionDelayTimers[\s\S]*room\.started&&!room\.settled&&String\(room\.matchId\)===String\(event\.matchId\)/.test(serverDelivery));
 check('delayed spectator expression timers are tracked and cleared with room authorities',
-  /matchExpressionDelayTimers\.add\(timer\)/.test(serverDelivery) &&
-  /function stopRoomAuthorities\(r\)[\s\S]*matchExpressionDelayTimers[\s\S]*clearTimeout\(timer\)/.test(server));
+  /matchExpressionDelayTimers/.test(serverDelivery) &&
+  /function clearRoomMatchSocialState\(r\)[\s\S]*cancelServerTimerSet\(r\.matchExpressionDelayTimers\)/.test(server));
 check('server enforces ten-second, sixty-second, per-match and bounded idempotency limits',
   /now-at<10000/.test(server) && /now-at<60000/.test(server) && />=80/.test(server) &&
   /matchExpressionSeen\.size>300/.test(server) && /matchExpressionCounts\.set/.test(server));
