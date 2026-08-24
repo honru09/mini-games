@@ -41,12 +41,13 @@ assert.ok(fs.existsSync(path.join(ROOT, 'public', 'styles', '20-layout-surfaces.
 assert.ok(fs.existsSync(path.join(ROOT, 'public', 'styles', '30-layout-commerce.css')), 'commerce module exists');
 assert.ok(fs.existsSync(path.join(ROOT, 'public', 'styles', '40-layout-content.css')), 'content module exists');
 assert.ok(sw.includes("'./ghost-layout.css'"), 'offline shell pre-caches the external layout stylesheet');
-assert.ok(/CACHE_VERSION='ghost-game-shell-v22-20260824'/.test(sw), 'service worker cache version advances with the current presentation source');
+assert.ok(/CACHE_VERSION='ghost-game-shell-v23-20260825'/.test(sw), 'service worker cache version advances with the current presentation source');
 for (const asset of ['./styles/00-layout-tokens.css', './styles/10-layout-shell.css', './styles/20-layout-surfaces.css']) {
   assert.ok(sw.includes(`'${asset}'`), `offline shell pre-caches ${asset}`);
 }
 assert.ok(sw.includes("'./styles/30-layout-commerce.css'"), 'offline shell pre-caches commerce module');
 assert.ok(sw.includes("'./styles/40-layout-content.css'"), 'offline shell pre-caches content module');
+assert.ok(sw.includes("'./styles/99-visual-repair-p1.css'"), 'offline shell pre-caches visual repair module');
 assert.ok(modules.includes('game-stage-command'), 'content module keeps a bounded command rail seam');
 assert.ok(!/ghost-layout\.css[\s\S]{0,120}https?:\/\//.test(css), 'layout stylesheet has no remote dependency');
 

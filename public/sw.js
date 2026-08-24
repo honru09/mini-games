@@ -1,10 +1,10 @@
 'use strict';
 
-const CACHE_VERSION='ghost-game-shell-v22-20260824';
+const CACHE_VERSION='ghost-game-shell-v23-20260825';
 const LOCALE_FILES=['./locales/zh-CN.json','./locales/en-US.json','./locales/uk-UA.json'];
 const LOCALE_URLS=new Set(LOCALE_FILES.map(file=>new URL(file,self.location.href).href));
 const PRESENTATION_STYLES=['./styles/00-platform-foundation.css','./styles/05-game-tabletops.css','./styles/08-responsive-accessibility.css','./styles/10-outcome-profile.css','./styles/12-motion-design.css','./styles/14-brand-shell.css','./styles/20-game-stage-base.css','./styles/22-game-stage-wave.css','./styles/24-depth-spatial.css','./styles/26-immersive-stage.css','./styles/28-game-icon-system.css','./styles/community-ai-surfaces.css','./styles/identity-broadcast.css','./styles/profile-adaptive-hero.css','./styles/tank-controls.css'];
-const SHELL=['./','./index.html','./ghost-layout.css','./styles/00-layout-tokens.css','./styles/10-layout-shell.css','./styles/20-layout-surfaces.css','./styles/30-layout-commerce.css','./styles/40-layout-content.css','./manifest.webmanifest','./assets/brand/ghost-game-mark.svg','./assets/brand/honru-mascot-v1.svg','./assets/brand/pwa/ghost-game-192.png','./assets/brand/pwa/ghost-game-512.png','./assets/brand/pwa/ghost-wake-v1/ghost-game-maskable-192-v1.png','./assets/brand/pwa/ghost-wake-v1/ghost-game-maskable-512-v1.png','./assets/ui/loading/ghost-boot-v1/honru-boot-controller-hug-320-v1.webp'];
+const SHELL=['./','./index.html','./ghost-layout.css','./styles/00-layout-tokens.css','./styles/10-layout-shell.css','./styles/20-layout-surfaces.css','./styles/30-layout-commerce.css','./styles/40-layout-content.css','./styles/99-visual-repair-p1.css','./manifest.webmanifest','./assets/brand/ghost-game-mark.svg','./assets/brand/honru-mascot-v1.svg','./assets/brand/pwa/ghost-game-192.png','./assets/brand/pwa/ghost-game-512.png','./assets/brand/pwa/ghost-wake-v1/ghost-game-maskable-192-v1.png','./assets/brand/pwa/ghost-wake-v1/ghost-game-maskable-512-v1.png','./assets/ui/loading/ghost-boot-v1/honru-boot-controller-hug-320-v1.webp'];
 const CACHEABLE_DESTINATIONS=new Set(['image','style','script','font','manifest']);
 SHELL.unshift(...PRESENTATION_STYLES);
 

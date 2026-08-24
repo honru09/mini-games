@@ -1,0 +1,230 @@
+/* Visual repair P1 — this file is intentionally last in the layout manifest.
+   It resolves the final cascade collisions found in real Chromium captures;
+   game rules and authority never depend on these presentation-only values. */
+
+/* The previous Wave-C caps made a desktop board resolve from a mobile-sized
+   height budget. Give Gomoku a real tabletop on wide screens while retaining
+   a square, command-rail-safe surface on compact viewports. */
+@media (min-width: 901px) and (min-height: 661px) {
+  #screen-game.game-stage .game-stage-command {
+    /* Monopoly/Tank presentation classes also carry a legacy height:100%;
+       the outer command rail must always remain a bottom HUD. */
+    height: var(--stage-command-size) !important;
+    max-height: var(--stage-command-size) !important;
+  }
+  #screen-game.game-stage[data-shell-game="gomoku"] {
+    --stage-command-size: 132px;
+  }
+  html[data-layout-system="v1"] #screen-game.game-stage[data-shell-game="gomoku"] .game-stage-arena {
+    /* 40-layout-content adds a 62px tabletop offset for legacy wide rails;
+       the current turn HUD is already inside the stage header budget. */
+    padding-top: 10px !important;
+    padding-bottom: calc(var(--stage-command-size) + 8px) !important;
+  }
+  #screen-game.game-stage[data-shell-game="gomoku"] .gomoku-wave-b-stage {
+    width: min(78vh, calc(100vw - 92px), 780px) !important;
+    height: auto !important;
+    max-height: none !important;
+    padding: 10px !important;
+  }
+  #screen-game.game-stage[data-shell-game="gomoku"] .gomoku-wave-b-board-frame {
+    width: 100%;
+  }
+  #screen-game.game-stage[data-shell-game="gomoku"] .gomoku-wave-c-process {
+    width: min(32%, 220px);
+  }
+}
+
+/* A short desktop landscape still needs a board that fits above the command
+   rail; this is deliberately separate from the portrait/mobile rules. */
+@media (min-width: 721px) and (max-height: 660px) {
+  #screen-game.game-stage[data-shell-game="gomoku"] {
+    --stage-command-size: 116px;
+  }
+  #screen-game.game-stage[data-shell-game="gomoku"] .gomoku-wave-b-stage {
+    width: min(calc(100dvh - 184px), calc(100vw - 34px), 620px) !important;
+    height: auto !important;
+    max-height: none !important;
+  }
+}
+
+/* The command rail is a HUD, not a second page. Keep its controls compact and
+   horizontal so Chinese/English/Ukrainian labels never become vertical bars. */
+#screen-game.game-stage[data-shell-game="gomoku"] .game-stage-command {
+  grid-template-columns: minmax(168px, 220px) minmax(0, 1fr) auto;
+}
+#screen-game.game-stage[data-shell-game="gomoku"] .game-stage-command .game-extra {
+  flex-wrap: nowrap;
+  align-items: center;
+}
+#screen-game.game-stage[data-shell-game="gomoku"] .game-stage-command .btn,
+#screen-game.game-stage[data-shell-game="gomoku"] .game-stage-command button {
+  white-space: nowrap;
+  writing-mode: horizontal-tb;
+  word-break: keep-all;
+  overflow-wrap: normal;
+}
+#screen-game.game-stage .game-stage-command .game-extra > button.btn,
+#screen-game.game-stage .game-stage-command .game-extra > .btn {
+  flex: 0 0 auto !important;
+  width: auto !important;
+  min-width: 112px;
+  max-width: 240px;
+  align-self: center;
+  justify-self: start;
+  white-space: nowrap;
+}
+
+/* Real edge-peek placement: the character is attached to the lower frame edge
+   and the visible art is clipped as if it is leaning over the window. It no
+   longer occupies the top-right settings/message zone. */
+.honru-edge-guide {
+  position: fixed !important;
+  z-index: 118 !important;
+  inset-block-start: auto !important;
+  inset-block-end: 8px !important;
+  inset-inline-end: clamp(14px, 3vw, 48px) !important;
+  width: 142px !important;
+  height: 122px !important;
+  overflow: hidden;
+  border-radius: 18px 18px 8px 8px;
+  clip-path: inset(0 0 0 0 round 18px 18px 8px 8px);
+  transform-origin: 78% 100%;
+  filter: drop-shadow(0 12px 12px rgba(4,7,12,.18));
+}
+.honru-edge-guide::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 52% -12% -14%;
+  border: 1px solid color-mix(in srgb, var(--ghost-line, #cbd5e1) 72%, transparent);
+  border-radius: 22px 22px 0 0;
+  background: color-mix(in srgb, var(--ghost-glass-strong, rgba(255,255,255,.72)) 88%, transparent);
+  box-shadow: 0 -5px 18px rgba(4,7,12,.12);
+}
+.honru-edge-guide img {
+  inset-block-start: -26px !important;
+  inset-inline-start: -10px !important;
+  width: 158px !important;
+  height: 144px !important;
+  object-fit: contain;
+  transform: rotate(-3deg);
+  transform-origin: 50% 92%;
+  animation: honruPeekBreathe 3.6s ease-in-out infinite;
+  will-change: transform;
+}
+.honru-edge-guide[data-honru-edge-role="edge-playline-wave"] {
+  inset-inline-start: auto !important;
+  inset-inline-end: clamp(14px, 3vw, 48px) !important;
+}
+.honru-edge-guide[data-honru-edge-role="edge-profile-grab"] {
+  inset-block-start: auto !important;
+  width: 142px !important;
+  height: 122px !important;
+}
+@keyframes honruPeekBreathe {
+  0%, 100% { transform: rotate(-3deg) translate3d(0, 2px, 0); }
+  50% { transform: rotate(1deg) translate3d(-3px, -5px, 0); }
+}
+
+/* Hero art gets a physical lower ledge and a calmer crop, so Honru reads as a
+   character peeking into the page instead of a sticker floating in a blank box. */
+.hero-slide .hero-honru {
+  justify-self: end;
+  align-self: end;
+  margin: 0 clamp(2px, 1vw, 16px) -18px 0;
+  width: min(42vw, 470px);
+  transform-origin: 72% 92%;
+  animation: honruHeroPeek 4.8s ease-in-out infinite;
+  will-change: transform;
+}
+.hero-slide .hero-honru::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  left: 8%; right: -2%; bottom: 4%; height: 17%;
+  border: 1px solid color-mix(in srgb, var(--ghost-line, #cbd5e1) 68%, transparent);
+  border-radius: 999px 999px 20px 20px;
+  background: linear-gradient(180deg, rgba(255,255,255,.6), rgba(127,127,127,.12));
+  box-shadow: 0 15px 24px rgba(4,7,12,.14);
+}
+@keyframes honruHeroPeek {
+  0%, 100% { transform: translate3d(0, 5px, 0) rotate(-1deg); }
+  50% { transform: translate3d(-4px, -7px, 0) rotate(1deg); }
+}
+
+/* Make authored animated identity atoms visibly alive even when their source
+   WebP is a single-poster fallback. The image remains the art source; the
+   compositor-only ring/glow is the continuous motion layer. */
+.avatar-stage,
+.mini-avatar-stage {
+  position: relative;
+  isolation: isolate;
+}
+.avatar-stage.avatar-frame-art-ready::before,
+.mini-avatar-stage.avatar-frame-art-ready::before {
+  content: "";
+  position: absolute;
+  z-index: 4;
+  inset: -8px;
+  border: 2px solid color-mix(in srgb, var(--identity-accent, #8b5cf6) 72%, transparent);
+  border-radius: 50%;
+  opacity: .6;
+  pointer-events: none;
+  animation: identityFramePulse 2.8s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+.avatar-stage.avatar-effect-art-ready::after,
+.mini-avatar-stage.avatar-effect-art-ready::after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  inset: -12px;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, transparent 0 28%, color-mix(in srgb, var(--identity-accent, #22d3ee) 58%, transparent) 42%, transparent 56% 100%);
+  opacity: .42;
+  pointer-events: none;
+  animation: identityEffectOrbit 5.2s linear infinite;
+  will-change: transform;
+}
+@keyframes identityFramePulse { 0%,100% { transform: scale(.98); opacity: .42; } 50% { transform: scale(1.06); opacity: .82; } }
+@keyframes identityEffectOrbit { to { transform: rotate(360deg); } }
+
+/* Animated premium backgrounds use a decoded animated WebP layer. A very
+   slow compositor-only drift keeps the motion perceptible in a profile card
+   without changing its crop or causing layout/paint churn. */
+.premium-background-motion-layer.is-active {
+  animation: premiumMotionDrift 14s ease-in-out infinite alternate;
+  transform-origin: 50% 50%;
+  will-change: transform;
+}
+@keyframes premiumMotionDrift {
+  0% { transform: scale(1.025) translate3d(-.6%, .3%, 0); }
+  100% { transform: scale(1.055) translate3d(.7%, -.5%, 0); }
+}
+
+@media (max-width: 720px) {
+  .honru-edge-guide,
+  .honru-edge-guide[data-honru-edge-role="edge-profile-grab"] {
+    inset-inline-end: 8px !important;
+    inset-block-end: calc(var(--ghost-nav-height, 74px) + 10px) !important;
+    width: 94px !important;
+    height: 86px !important;
+  }
+  .honru-edge-guide img { width: 110px !important; height: 100px !important; inset-block-start: -17px !important; inset-inline-start: -7px !important; }
+  .hero-slide .hero-honru { width: 210px; margin: 0 -4px -12px 0; }
+  #screen-game.game-stage .game-stage-command .game-extra > button.btn,
+  #screen-game.game-stage .game-stage-command .game-extra > .btn {
+    min-width: 132px;
+    max-width: min(88vw, 320px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .honru-edge-guide img,
+  .hero-slide .hero-honru,
+  .avatar-stage.avatar-frame-art-ready::before,
+  .mini-avatar-stage.avatar-frame-art-ready::before,
+  .avatar-stage.avatar-effect-art-ready::after,
+  .mini-avatar-stage.avatar-effect-art-ready::after,
+  .premium-background-motion-layer.is-active { animation: none !important; transform: none !important; }
+}
