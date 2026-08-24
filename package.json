@@ -62,6 +62,7 @@
     "evidence": "node scripts/evidence-manifest.js",
     "format:locales": "node scripts/format-locales.js",
     "test:layout-system": "node qa/layout-system-v1.js && node qa/presentation-source-contract.js && node qa/presentation-evidence-identity.js",
+    "test:visual-defects-repair": "node qa/visual-defects-repair-p1.js",
     "test:presentation-source-seam": "node qa/presentation-source.js",
     "test:dom": "node qa/dom-smoke.js",
     "test:assets": "node qa/asset-manifest-v2.js",

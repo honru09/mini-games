@@ -1898,9 +1898,15 @@ function applyPremiumBackground(element, id, context, options){
   element.dataset.backgroundId = String(item.id);
   element.dataset.backgroundAnimated = item.animated ? 'true' : 'false';
   setPremiumBackgroundImage(element, item, poster, fallback);
+  let motionLayer = null;
+  if(item.animated&&useContext!=='shop-grid'&&typeof document!=='undefined'&&document&&typeof document.createElement==='function'){
+    motionLayer=document.createElement('img');motionLayer.className='premium-background-motion-layer';motionLayer.alt='';motionLayer.decoding='async';motionLayer.loading='eager';motionLayer.draggable=false;if(typeof motionLayer.setAttribute==='function')motionLayer.setAttribute('aria-hidden','true');
+    if(typeof element.insertBefore==='function')element.insertBefore(motionLayer,element.firstChild||null);else if(typeof element.appendChild==='function')element.appendChild(motionLayer);
+  }
   let visible = true;
   let active = false;
   let observer = null;
+  let initialVisibilityTimer = null;
   let loader = null;
   let removeLoaderListeners = null;
   let loaderEpoch = 0;
@@ -1930,16 +1936,30 @@ function applyPremiumBackground(element, id, context, options){
   };
   const setPoster = () => {
     setPremiumBackgroundImage(element, item, poster, fallback);
+    if(motionLayer&&motionLayer.classList&&typeof motionLayer.classList.remove==='function')motionLayer.classList.remove('is-active');
     element.dataset.animationActive = 'false';
   };
+  const clearMotionSource = () => {
+    if (!motionLayer) return;
+    // Keep a decoded DOM layer warm across visibility/offscreen pauses. This
+    // avoids replaying an already-loaded animation and lets a resumed stage
+    // become active synchronously; releasePremiumBackground still removes it.
+    if (animationReady) return;
+    try {
+      if (typeof motionLayer.removeAttribute === 'function') motionLayer.removeAttribute('src');
+      else motionLayer.src = '';
+    } catch (error) {}
+    animationReady = false;
+  };
   const pause = () => {
-    if (active) setPoster();
+    if (active || motionLayer) setPoster();
+    clearMotionSource();
     active = false;
     element.dataset.animationActive = 'false';
   };
   const beginAnimatedPreload = () => {
     if (animationReady || animationFailed || loader || !mayAnimate()) return;
-    const probe = premiumBackgroundLoader();
+    const probe = motionLayer || premiumBackgroundLoader();
     // Non-browser consumers (such as minimal contract harnesses) have no
     // image lifecycle.  They retain the old deterministic direct seam.
     if (!probe || typeof probe !== 'object') {
@@ -1987,9 +2007,17 @@ function applyPremiumBackground(element, id, context, options){
     if (!next && loader) discardLoader(true);
     if (next && !animationReady) beginAnimatedPreload();
     if (next && animationReady){
-      if (!active) setPremiumBackgroundImage(element, item, item.asset, poster);
+      if (!active){
+        if(motionLayer&&motionLayer.classList&&typeof motionLayer.classList.add==='function')motionLayer.classList.add('is-active');
+        else setPremiumBackgroundImage(element, item, item.asset, poster);
+      }
       active = true;
       element.dataset.animationActive = 'true';
+    } else if (next && loader) {
+      // Keep the in-flight animated source attached while it decodes. Calling
+      // pause() here would remove src and create a poster-only deadlock.
+      active = false;
+      element.dataset.animationActive = 'false';
     } else pause();
     element.dataset.playbackDisabled = mayAnimate() ? 'false' : 'true';
     element.dataset.animationFailed = animationFailed ? 'true' : 'false';
@@ -2025,6 +2053,23 @@ function applyPremiumBackground(element, id, context, options){
       sync();
     }, { threshold:.05 });
     observer.observe(element);
+    /* Some embedded WebViews keep an already-visible node from receiving the
+       first IntersectionObserver notification until the next layout pass.
+       A single bounded viewport probe prevents an animated background from
+       remaining a poster forever; it never starts offscreen content. */
+    if (typeof setTimeout === 'function') {
+      initialVisibilityTimer = setTimeout(() => {
+        initialVisibilityTimer = null;
+        if (visible || !element || typeof element.getBoundingClientRect !== 'function') return;
+        let rect = null;
+        try { rect = element.getBoundingClientRect(); } catch (error) { rect = null; }
+        const viewportWidth = typeof window === 'undefined' ? 0 : Number(window.innerWidth) || 0;
+        const viewportHeight = typeof window === 'undefined' ? 0 : Number(window.innerHeight) || 0;
+        const inViewport = !!(rect && rect.width > 0 && rect.height > 0 && viewportWidth > 0 && viewportHeight > 0 &&
+          rect.right > 0 && rect.bottom > 0 && rect.left < viewportWidth && rect.top < viewportHeight);
+        if (inViewport) { visible = true; sync(); }
+      }, 120);
+    }
   }
   if (item.animated && useContext !== 'shop-grid' && typeof document !== 'undefined' && document.addEventListener){
     document.addEventListener('visibilitychange', onVisibility);
@@ -2043,6 +2088,8 @@ function applyPremiumBackground(element, id, context, options){
   };
   sync();
   element._premiumBackgroundCleanup = () => {
+    if (initialVisibilityTimer) clearTimeout(initialVisibilityTimer);
+    initialVisibilityTimer = null;
     if (observer) observer.disconnect();
     discardLoader(true);
     if (item.animated && useContext !== 'shop-grid' && typeof document !== 'undefined' && document.removeEventListener){
@@ -2053,6 +2100,8 @@ function applyPremiumBackground(element, id, context, options){
     active = false;
     playbackRequested = false;
     setPoster();
+    if(motionLayer&&typeof motionLayer.remove==='function')motionLayer.remove();
+    motionLayer=null;
     element.dataset.playbackRequested = 'false';
     playbackListeners.clear();
     delete element._premiumBackgroundPlayback;
