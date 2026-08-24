@@ -46,12 +46,15 @@ async function main(){
   check('非法用户名 fail-closed', invalidUsername.enabled === false && invalidUsername.fatal === true);
 
   const policy = createTestAdminPolicy(env());
+  const multiPolicy = createTestAdminPolicy(env({TEST_ADMIN_EXTRA_UIDS:'u_extraadmin01,u_extraadmin02'}));
   check('部署与运行时共享同一 UID 规则', isValidTestAdminUid('u_123456789abc') && isValidTestAdminUid('u_testadmin01') && !isValidTestAdminUid('u_bad value'));
-  check('Render 工具复用服务端 UID 校验且禁用时不写秘密', renderEnvSource.includes("require('../server/test-admin')") && renderEnvSource.includes('isValidTestAdminUid(testAdminUid)') && renderEnvSource.includes("testAdminEnabled !== '1' && (testAdminUid || testAdminUsername || testAdminPassword)"));
+  check('Render 工具复用服务端 UID 校验且禁用时不写秘密', renderEnvSource.includes("require('../server/test-admin')") && renderEnvSource.includes('isValidTestAdminUid(testAdminUid)') && renderEnvSource.includes("testAdminEnabled !== '1' && (testAdminUid || testAdminUsername || testAdminPassword || testAdminExtraUids)"));
   check('Supabase 启用时管理员远端引导失败会阻止监听', serverSource.includes('if (useSupabase && remotePersisted !== true) throw new Error(TestAdmin.TEST_ADMIN_REASON)'));
   check('完整环境可启用', policy.enabled === true && policy.uid === 'u_testadmin01' && policy.usernameKey === 'testadmin01');
   check('策略序列化不泄漏密码', !JSON.stringify(policy).includes('QaOnlyPass9!'));
   check('仅精确 UID 获得身份', policy.isTestAdminUid('u_testadmin01') && !policy.isTestAdminUid('U_TESTADMIN01') && !policy.isTestAdminUid('testadmin01'));
+  check('受控额外 UID 共享最高测试权限且不需要复制密码',multiPolicy.isTestAdminUid('u_testadmin01')&&multiPolicy.isTestAdminUid('u_extraadmin01')&&multiPolicy.hasCapability('u_extraadmin02','test_admin_unlimited_currency')&&multiPolicy.status().adminCount===3);
+  check('额外 UID 非法或在主开关关闭时 fail-closed',createTestAdminPolicy(env({TEST_ADMIN_EXTRA_UIDS:'bad uid'})).fatal===true&&createTestAdminPolicy({TEST_ADMIN_EXTRA_UIDS:'u_extraadmin01'}).fatal===true);
   check('能力为固定白名单', TEST_ADMIN_CAPABILITIES.length === 6 && policy.hasCapability('u_testadmin01', 'test_admin_unlimited_currency') && !policy.hasCapability('u_testadmin01', '*') && !policy.hasCapability('u_testadmin01', 'all') && !policy.hasCapability('u_otheradmin1', 'tournament_recover'));
 
   const users = {};

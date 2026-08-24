@@ -30,6 +30,7 @@ const CAPABILITY_SET = new Set(TEST_ADMIN_CAPABILITIES);
 function text(value){ return String(value === undefined || value === null ? '' : value); }
 function uid(value){ return text(value).trim(); }
 function isValidTestAdminUid(value){ return TEST_ADMIN_UID_PATTERN.test(uid(value)); }
+function parseExtraAdminUids(value){return [...new Set(text(value).split(',').map(uid).filter(Boolean))];}
 function safeIntegerIds(values){
   return [...new Set((Array.isArray(values) ? values : [])
     .map(Number)
@@ -40,17 +41,18 @@ function ownObject(value){ return value && typeof value === 'object' && !Array.i
 function configurationFrom(env = process.env){
   const source = env && typeof env === 'object' ? env : {};
   const requested = text(source.TEST_ADMIN_ENABLED) === '1';
-  if (!requested) return Object.freeze({ enabled:false, fatal:false, reason:'disabled', uid:'', username:'', usernameKey:'' });
+  const extraUids=parseExtraAdminUids(source.TEST_ADMIN_EXTRA_UIDS);
+  if (!requested) return Object.freeze({ enabled:false, fatal:extraUids.length>0, reason:extraUids.length>0?TEST_ADMIN_REASON:'disabled', uid:'', username:'', usernameKey:'', extraUids:[] });
 
   const configuredUid = uid(source.TEST_ADMIN_UID);
   const configuredUsername = text(source.TEST_ADMIN_USERNAME);
   const configuredPassword = text(source.TEST_ADMIN_PASSWORD);
   const username = validateUsername(configuredUsername);
   const password = validatePassword(configuredPassword);
-  if (!isValidTestAdminUid(configuredUid) || !username.valid || !password.valid){
+  if (!isValidTestAdminUid(configuredUid) || !username.valid || !password.valid || extraUids.some(value=>!isValidTestAdminUid(value))){
     // Do not put source values in this object: callers may log configuration
     // status during startup and should never leak an operator password.
-    return Object.freeze({ enabled:false, fatal:true, reason:TEST_ADMIN_REASON, uid:'', username:'', usernameKey:'' });
+    return Object.freeze({ enabled:false, fatal:true, reason:TEST_ADMIN_REASON, uid:'', username:'', usernameKey:'', extraUids:[] });
   }
   return Object.freeze({
     enabled:true,
@@ -59,6 +61,7 @@ function configurationFrom(env = process.env){
     uid:configuredUid,
     username:configuredUsername,
     usernameKey:username.normalized,
+    extraUids:Object.freeze(extraUids.filter(value=>value!==configuredUid)),
   });
 }
 
@@ -116,8 +119,9 @@ function createTestAdminPolicy(env = process.env){
   // status(), virtualProfile(), bootstrap() results, or a thrown message.
   const configuredPassword = config.enabled ? text(env && env.TEST_ADMIN_PASSWORD) : '';
   const enabled = config.enabled === true;
+  const adminUids=new Set(enabled?[config.uid,...(config.extraUids||[])]:[]);
 
-  function isTestAdminUid(value){ return enabled && uid(value) === config.uid; }
+  function isTestAdminUid(value){ return enabled && adminUids.has(uid(value)); }
   function hasCapability(value, capability){ return isTestAdminUid(value) && CAPABILITY_SET.has(text(capability)); }
   function shouldHidePublicUid(value){ return isTestAdminUid(value); }
   function socialAccess(aUid, bUid){
@@ -216,7 +220,7 @@ function createTestAdminPolicy(env = process.env){
     uid:config.uid,
     username:config.username,
     usernameKey:config.usernameKey,
-    status:() => Object.freeze({ enabled, fatal:config.fatal === true, reason:config.reason, uid:config.uid, username:config.username, usernameKey:config.usernameKey }),
+    status:() => Object.freeze({ enabled, fatal:config.fatal === true, reason:config.reason, uid:config.uid, username:config.username, usernameKey:config.usernameKey,adminCount:adminUids.size }),
     isTestAdminUid,
     hasCapability,
     shouldHidePublicUid,
@@ -236,6 +240,7 @@ module.exports = Object.freeze({
   TEST_ADMIN_COINS,
   TEST_ADMIN_CAPABILITIES,
   isValidTestAdminUid,
+  parseExtraAdminUids,
   configurationFrom,
   allOwnedFromCatalog,
   sandboxReward,

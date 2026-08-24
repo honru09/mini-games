@@ -18,6 +18,7 @@ const testAdminEnabled = (process.env.TEST_ADMIN_ENABLED || '').trim();
 const testAdminUid = (process.env.TEST_ADMIN_UID || '').trim();
 const testAdminUsername = (process.env.TEST_ADMIN_USERNAME || '').trim();
 const testAdminPassword = process.env.TEST_ADMIN_PASSWORD || '';
+const testAdminExtraUids = (process.env.TEST_ADMIN_EXTRA_UIDS || '').trim();
 const REQUEST_TIMEOUT_MS = 15000;
 if (!key) {
   console.error('RENDER_KEY env missing');
@@ -26,12 +27,12 @@ if (!key) {
 if (clusterEnabled && !/^[01]$/.test(clusterEnabled)) { console.error('ENABLE_CLUSTER_COORDINATION 只能是 0 或 1'); process.exit(1); }
 if (tetrisScoring && !/^[01]$/.test(tetrisScoring)) { console.error('TETRIS_GUIDELINE_SCORING 只能是 0 或 1'); process.exit(1); }
 if (testAdminEnabled && !/^[01]$/.test(testAdminEnabled)) { console.error('TEST_ADMIN_ENABLED 只能是 0 或 1'); process.exit(1); }
-const hasAnyTestAdminValue = !!(testAdminEnabled || testAdminUid || testAdminUsername || testAdminPassword);
+const hasAnyTestAdminValue = !!(testAdminEnabled || testAdminUid || testAdminUsername || testAdminPassword || testAdminExtraUids);
 if (testAdminEnabled === '1' && !(testAdminUid && testAdminUsername && testAdminPassword)) {
   console.error('测试管理员配置必须同时提供 ENABLED / UID / USERNAME / PASSWORD');
   process.exit(1);
 }
-if (testAdminEnabled !== '1' && (testAdminUid || testAdminUsername || testAdminPassword)) {
+if (testAdminEnabled !== '1' && (testAdminUid || testAdminUsername || testAdminPassword || testAdminExtraUids)) {
   console.error('未启用测试管理员时不得写入 UID / USERNAME / PASSWORD');
   process.exit(1);
 }
@@ -39,6 +40,7 @@ if (testAdminEnabled === '1') {
   if (!isValidTestAdminUid(testAdminUid)) { console.error('TEST_ADMIN_UID 格式无效'); process.exit(1); }
   if (!/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{4,20}$/.test(testAdminUsername)) { console.error('TEST_ADMIN_USERNAME 格式无效'); process.exit(1); }
   if (testAdminPassword.length < 8 || testAdminPassword.length > 64 || !/^[\x20-\x7e]+$/.test(testAdminPassword)) { console.error('TEST_ADMIN_PASSWORD 格式无效'); process.exit(1); }
+  if (testAdminExtraUids && !testAdminExtraUids.split(',').every(value => isValidTestAdminUid(value.trim()))) { console.error('TEST_ADMIN_EXTRA_UIDS 格式无效'); process.exit(1); }
 }
 if (telemetryUrl && !/^https:\/\//i.test(telemetryUrl)) { console.error('TELEMETRY_WEBHOOK_URL 必须使用 HTTPS'); process.exit(1); }
 if ((telemetryUrl || telemetryToken) && !telemetryAllowlist) { console.error('Telemetry URL/Token 需要同时提供 TELEMETRY_WEBHOOK_ALLOWLIST'); process.exit(1); }
@@ -88,6 +90,7 @@ function req(method, path, body) {
       testAdminUid ? ['TEST_ADMIN_UID', testAdminUid] : null,
       testAdminUsername ? ['TEST_ADMIN_USERNAME', testAdminUsername] : null,
       testAdminPassword ? ['TEST_ADMIN_PASSWORD', testAdminPassword] : null,
+      testAdminExtraUids ? ['TEST_ADMIN_EXTRA_UIDS', testAdminExtraUids] : null,
       // 最后才启用，避免 Render 在逐项更新期间以半配置状态重启。
       testAdminEnabled ? ['TEST_ADMIN_ENABLED', testAdminEnabled] : null,
     ].filter(Boolean);
